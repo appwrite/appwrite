@@ -431,7 +431,7 @@ App::post('/v1/teams/:teamId/memberships')
     });
 
 App::get('/v1/teams/:teamId/memberships')
-    ->desc('Get Team Memberships')
+    ->desc('List Team Memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])

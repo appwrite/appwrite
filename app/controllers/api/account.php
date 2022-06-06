@@ -38,6 +38,8 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/v1/auth/oauth2/success';
 $oauthDefaultFailure = '/v1/auth/oauth2/failure';
 
+// TODO: Reorder endpoints
+
 App::post('/v1/account')
     ->desc('Create Account')
     ->groups(['api', 'account', 'auth'])
@@ -1139,48 +1141,6 @@ App::get('/v1/account/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/account/sessions/:sessionId')
-    ->desc('Get Session By ID')
-    ->groups(['api', 'account'])
-    ->label('scope', 'account')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'getSession')
-    ->label('sdk.description', '/docs/references/account/get-session.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SESSION)
-    ->param('sessionId', null, new UID(), 'Session ID. Use the string \'current\' to get the current device session.')
-    ->inject('response')
-    ->inject('user')
-    ->inject('locale')
-    ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Database $dbForProject, Stats $usage) {
-
-        $sessions = $user->getAttribute('sessions', []);
-        $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
-            : $sessionId;
-
-        foreach ($sessions as $session) {/** @var Document $session */
-            if ($sessionId == $session->getId()) {
-                $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
-
-                $session
-                    ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
-                    ->setAttribute('countryName', $countryName)
-                ;
-
-                $usage->setParam('users.read', 1);
-
-                return $response->dynamic($session, Response::MODEL_SESSION);
-            }
-        }
-
-        throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
-    });
-
 App::patch('/v1/account/name')
     ->desc('Update Account Name')
     ->groups(['api', 'account'])
@@ -1392,77 +1352,42 @@ App::patch('/v1/account/status')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::delete('/v1/account/sessions/:sessionId')
-    ->desc('Delete Account Session')
+App::get('/v1/account/sessions/:sessionId')
+    ->desc('Get Account Session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'deleteSession')
-    ->label('sdk.description', '/docs/references/account/delete-session.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
-    ->label('abuse-limit', 100)
-    ->param('sessionId', null, new UID(), 'Session ID. Use the string \'current\' to delete the current device session.')
-    ->inject('request')
+    ->label('sdk.method', 'getSession')
+    ->label('sdk.description', '/docs/references/account/get-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->param('sessionId', null, new UID(), 'Session ID. Use the string \'current\' to get the current device session.')
     ->inject('response')
     ->inject('user')
-    ->inject('dbForProject')
     ->inject('locale')
-    ->inject('audits')
-    ->inject('events')
+    ->inject('dbForProject')
     ->inject('usage')
-    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Stats $usage) {
+    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Database $dbForProject, Stats $usage) {
 
-        $protocol = $request->getProtocol();
+        $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
 
-        $sessions = $user->getAttribute('sessions', []);
-
-        foreach ($sessions as $key => $session) {/** @var Document $session */
+        foreach ($sessions as $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
-                unset($sessions[$key]);
+                $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
-                $dbForProject->deleteDocument('sessions', $session->getId());
-
-                $audits->setResource('user/' . $user->getId());
-
-                $session->setAttribute('current', false);
-
-                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                    $session
-                        ->setAttribute('current', true)
-                        ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
-                    ;
-
-                    if (!Config::getParam('domainVerification')) {
-                        $response
-                            ->addHeader('X-Fallback-Cookies', \json_encode([]))
-                        ;
-                    }
-
-                    $response
-                        ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                        ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-                    ;
-                }
-
-                $dbForProject->deleteCachedDocument('users', $user->getId());
-
-                $events
-                    ->setParam('userId', $user->getId())
-                    ->setParam('sessionId', $session->getId())
-                    ->setPayload($response->output($session, Response::MODEL_SESSION))
+                $session
+                    ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
+                    ->setAttribute('countryName', $countryName)
                 ;
 
-                $usage
-                    ->setParam('users.sessions.delete', 1)
-                    ->setParam('users.update', 1)
-                ;
-                return $response->noContent();
+                $usage->setParam('users.read', 1);
+
+                return $response->dynamic($session, Response::MODEL_SESSION);
             }
         }
 
@@ -1551,6 +1476,83 @@ App::patch('/v1/account/sessions/:sessionId')
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
+            }
+        }
+
+        throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
+    });
+
+App::delete('/v1/account/sessions/:sessionId')
+    ->desc('Delete Account Session')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('event', 'users.[userId].sessions.[sessionId].delete')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'deleteSession')
+    ->label('sdk.description', '/docs/references/account/delete-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('abuse-limit', 100)
+    ->param('sessionId', null, new UID(), 'Session ID. Use the string \'current\' to delete the current device session.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('audits')
+    ->inject('events')
+    ->inject('usage')
+    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Stats $usage) {
+
+        $protocol = $request->getProtocol();
+        $sessionId = ($sessionId === 'current')
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            : $sessionId;
+
+        $sessions = $user->getAttribute('sessions', []);
+
+        foreach ($sessions as $key => $session) {/** @var Document $session */
+            if ($sessionId == $session->getId()) {
+                unset($sessions[$key]);
+
+                $dbForProject->deleteDocument('sessions', $session->getId());
+
+                $audits->setResource('user/' . $user->getId());
+
+                $session->setAttribute('current', false);
+
+                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                    $session
+                        ->setAttribute('current', true)
+                        ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
+                    ;
+
+                    if (!Config::getParam('domainVerification')) {
+                        $response
+                            ->addHeader('X-Fallback-Cookies', \json_encode([]))
+                        ;
+                    }
+
+                    $response
+                        ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+                        ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+                    ;
+                }
+
+                $dbForProject->deleteCachedDocument('users', $user->getId());
+
+                $events
+                    ->setParam('userId', $user->getId())
+                    ->setParam('sessionId', $session->getId())
+                    ->setPayload($response->output($session, Response::MODEL_SESSION))
+                ;
+
+                $usage
+                    ->setParam('users.sessions.delete', 1)
+                    ->setParam('users.update', 1)
+                ;
+                return $response->noContent();
             }
         }
 

@@ -360,84 +360,6 @@ App::get('/v1/users/:userId/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::patch('/v1/users/:userId/status')
-    ->desc('Update User Status')
-    ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.status')
-    ->label('scope', 'users.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateStatus')
-    ->label('sdk.description', '/docs/references/users/update-user-status.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new UID(), 'User ID.')
-    ->param('status', null, new Boolean(true), 'User Status. To activate the user pass `true` and to block the user pass `false`.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('usage')
-    ->inject('events')
-    ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Stats $usage, Event $events) {
-
-        $user = $dbForProject->getDocument('users', $userId);
-
-        if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
-        }
-
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
-
-        $usage
-            ->setParam('users.update', 1)
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-        ;
-
-        $response->dynamic($user, Response::MODEL_USER);
-    });
-
-App::patch('/v1/users/:userId/verification')
-    ->desc('Update Email Verification')
-    ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.verification')
-    ->label('scope', 'users.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateVerification')
-    ->label('sdk.description', '/docs/references/users/update-user-verification.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new UID(), 'User ID.')
-    ->param('emailVerification', false, new Boolean(), 'User email verification status.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('usage')
-    ->inject('events')
-    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Stats $usage, Event $events) {
-
-        $user = $dbForProject->getDocument('users', $userId);
-
-        if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
-        }
-
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
-
-        $usage
-            ->setParam('users.update', 1)
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-        ;
-
-        $response->dynamic($user, Response::MODEL_USER);
-    });
-
 App::patch('/v1/users/:userId/name')
     ->desc('Update Name')
     ->groups(['api', 'users'])
@@ -620,6 +542,131 @@ App::patch('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
+App::patch('/v1/users/:userId/status')
+    ->desc('Update User Status')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.status')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateStatus')
+    ->label('sdk.description', '/docs/references/users/update-user-status.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('status', null, new Boolean(true), 'User Status. To activate the user pass `true` and to block the user pass `false`.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+        }
+
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
+
+        $usage
+            ->setParam('users.update', 1)
+        ;
+
+        $events
+            ->setParam('userId', $user->getId())
+        ;
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/verification')
+    ->desc('Update Email Verification')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.verification')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateVerification')
+    ->label('sdk.description', '/docs/references/users/update-user-verification.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('emailVerification', false, new Boolean(), 'User email verification status.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+        }
+
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
+
+        $usage
+            ->setParam('users.update', 1)
+        ;
+
+        $events
+            ->setParam('userId', $user->getId())
+        ;
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::delete('/v1/users/:userId')
+    ->desc('Delete User')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].delete')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'delete')
+    ->label('sdk.description', '/docs/references/users/delete.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->inject('deletes')
+    ->inject('usage')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events, Delete $deletes, Stats $usage) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+        }
+
+        // clone user object to send to workers
+        $clone = clone $user;
+
+        $dbForProject->deleteDocument('users', $userId);
+
+        $deletes
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($clone)
+        ;
+
+        $events
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($clone, Response::MODEL_USER))
+        ;
+
+        $usage
+            ->setParam('users.delete', 1)
+        ;
+
+        $response->noContent();
+    });
+
 App::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete User Session')
     ->groups(['api', 'users'])
@@ -709,53 +756,6 @@ App::delete('/v1/users/:userId/sessions')
         $usage
             ->setParam('users.update', 1)
             ->setParam('users.sessions.delete', 1)
-        ;
-
-        $response->noContent();
-    });
-
-App::delete('/v1/users/:userId')
-    ->desc('Delete User')
-    ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].delete')
-    ->label('scope', 'users.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'delete')
-    ->label('sdk.description', '/docs/references/users/delete.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('userId', '', new UID(), 'User ID.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('events')
-    ->inject('deletes')
-    ->inject('usage')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events, Delete $deletes, Stats $usage) {
-
-        $user = $dbForProject->getDocument('users', $userId);
-
-        if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
-        }
-
-        // clone user object to send to workers
-        $clone = clone $user;
-
-        $dbForProject->deleteDocument('users', $userId);
-
-        $deletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($clone)
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-            ->setPayload($response->output($clone, Response::MODEL_USER))
-        ;
-
-        $usage
-            ->setParam('users.delete', 1)
         ;
 
         $response->noContent();

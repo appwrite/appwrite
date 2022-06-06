@@ -128,33 +128,6 @@ App::get('/v1/functions')
         ]), Response::MODEL_FUNCTION_LIST);
     });
 
-App::get('/v1/functions/runtimes')
-    ->groups(['api', 'functions'])
-    ->desc('List runtimes')
-    ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listRuntimes')
-    ->label('sdk.description', '/docs/references/functions/list-runtimes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_RUNTIME_LIST)
-    ->inject('response')
-    ->action(function (Response $response) {
-
-        $runtimes = Config::getParam('runtimes');
-
-        $runtimes = array_map(function ($key) use ($runtimes) {
-            $runtimes[$key]['$id'] = $key;
-            return $runtimes[$key];
-        }, array_keys($runtimes));
-
-        $response->dynamic(new Document([
-            'total' => count($runtimes),
-            'runtimes' => $runtimes
-        ]), Response::MODEL_RUNTIME_LIST);
-    });
-
 App::get('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Get Function')
@@ -1110,4 +1083,31 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             ->trigger();
 
         $response->noContent();
+    });
+
+App::get('/v1/functions/runtimes')
+    ->groups(['api', 'functions'])
+    ->desc('List runtimes')
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'listRuntimes')
+    ->label('sdk.description', '/docs/references/functions/list-runtimes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_RUNTIME_LIST)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        $runtimes = Config::getParam('runtimes');
+
+        $runtimes = array_map(function ($key) use ($runtimes) {
+            $runtimes[$key]['$id'] = $key;
+            return $runtimes[$key];
+        }, array_keys($runtimes));
+
+        $response->dynamic(new Document([
+            'total' => count($runtimes),
+            'runtimes' => $runtimes
+        ]), Response::MODEL_RUNTIME_LIST);
     });
