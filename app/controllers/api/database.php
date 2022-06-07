@@ -2473,7 +2473,7 @@ App::get('/v1/databases/:databaseId/collections/usage')
     $response->dynamic($usage, Response::MODEL_USAGE_DATABASE);
 });
 
-App::get('/v1/databases/:collectionId/usage')
+App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 ->desc('Get usage stats for a collection')
 ->groups(['api', 'database'])
 ->label('scope', 'collections.read')
@@ -2483,14 +2483,17 @@ App::get('/v1/databases/:collectionId/usage')
 ->label('sdk.response.code', Response::STATUS_CODE_OK)
 ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
 ->label('sdk.response.model', Response::MODEL_USAGE_COLLECTION)
+->param('databaseId', '', new UID(), 'Database ID.')
 ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
 ->param('collectionId', '', new UID(), 'Collection ID.')
 ->inject('response')
 ->inject('dbForProject')
-->action(function (string $range, string $collectionId, Response $response, Database $dbForProject) {
+->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject) {
 
-    $collectionDocument = $dbForProject->getDocument('collections', $collectionId);
-    $collection = $dbForProject->getCollection('collection_' . $collectionDocument->getInternalId());
+    $database = $dbForProject->getDocument('databases', $databaseId);
+
+    $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+    $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
 
     if ($collection->isEmpty()) {
         throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);

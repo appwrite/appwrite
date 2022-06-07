@@ -24,7 +24,7 @@ class DatabasePermissionsGuestTest extends Scope
             'name' => 'InvalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
-        $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
+        $this->assertEquals('InvalidDocumentDatabase', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
         $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
@@ -45,7 +45,7 @@ class DatabasePermissionsGuestTest extends Scope
 
         sleep(2);
 
-        return ['collectionId' => $collection['$id'], 'databaseId' => $databaseId];
+        return ['collectionId' => $collection['id'], 'databaseId' => $databaseId];
     }
 
     /**
