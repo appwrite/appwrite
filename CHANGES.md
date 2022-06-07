@@ -16,20 +16,19 @@
   - Node 18
 - Improved overall Migration speed
 
+
 # Version 0.14.1
 
 ## Bugs
-
-- Fixed scheduled Cloud Functions execution with cron-job by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3245
-- Fixed missing runtime icons by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3234
-- Fixed Google OAuth by @Meldiron in https://github.com/appwrite/appwrite/pull/3236
-- Fixed certificate generation when hostname was set to 'localhost' by @Meldiron in https://github.com/appwrite/appwrite/pull/3237
-- Fixed Installation overriding default env variables by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3241
+* Fixed scheduled Cloud Functions execution with cron-job by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3245
+* Fixed missing runtime icons by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3234
+* Fixed Google OAuth by @Meldiron in https://github.com/appwrite/appwrite/pull/3236
+* Fixed certificate generation when hostname was set to 'localhost' by @Meldiron in https://github.com/appwrite/appwrite/pull/3237
+* Fixed Installation overriding default env variables by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3241
 
 # Version 0.14.0
 
 ## Features
-
 - **BREAKING CHANGE** New Event Model
   - The new Event Model allows you to define events for Webhooks or Functions more granular
   - Account and Users events have been merged to just Users
@@ -60,7 +59,6 @@
 - Added Okta Oauth2 provider @tanay1337 in https://github.com/appwrite/appwrite/pull/3139
 
 ## Bugs
-
 - Fixed issues with `min`, `max` and `default` values for float attributes
 - Fixed account created with Magic URL to set a new password
 - Fixed Database to respect `null` values
@@ -93,12 +91,10 @@
 # Version 0.13.4
 
 ## Features
-
 - Added `detailedTrace` to Logger events
 - Added new `_APP_STORAGE_PREVIEW_LIMIT` environment variable to configure maximum preview file size
 
 ## Bugs
-
 - Fixed missing volume mount in Docker Compose
 - Fixed upload with Bucket File permission
 - Fixed custom ID validation in Console
@@ -109,9 +105,7 @@
 - Fixed float input precision in Console
 
 # Version 0.13.3
-
 ## Bugs
-
 - Fixed search for terms that inlcude `@` characters
 - Fixed Bucket permissions
 - Fixed file upload error in UI
@@ -119,9 +113,7 @@
 - Fixed `appwrite-executor` restart behavior in docker-compose.yml
 
 # Version 0.13.2
-
 ## Bugs
-
 - Fixed global issue with write permissions
 - Added missing `_APP_EXECUTOR_SECRET` environment variable for deletes worker
 - Increased execution `stdout` and `stderr` from 8000 to 16384 character limit
@@ -129,19 +121,14 @@
 - Fixed iOS platforms for origin validation by @stnguyen90 in https://github.com/appwrite/appwrite/pull/2907
 
 # Version 0.13.1
-
 ## Bugs
-
 - Fixed the Console UI redirect breaking the header and navigation
 - Fixed timeout in Functions API to respect the environment variable `_APP_FUNCTIONS_TIMEOUT`
 - Fixed team invite to be invalid after successful use by @Malte2036 in https://github.com/appwrite/appwrite/issues/2593
 
 # Version 0.13.0
-
 ## Features
-
 ### Functions
-
 - Synchronous function execution
 - Improved functions execution times by alot
 - Added a new worker to build deployments
@@ -150,9 +137,7 @@
 - Renamed `tagId` to `deplyomentId` in collections **Breaking Change**
 - Updated event names from `function.tags.*` to `function.deployments.*` **Breaking Change**
 - Java runtimes are currently not supported **Breaking Change**
-
 ### Storage
-
 - Added Buckets
 - Buckets allow you to configure following settings:
   - Maximum File Size
@@ -172,7 +157,6 @@
 - Added `buckets.read` and `buckets.write` scope to API keys
 
 ### Account
-
 - Renamed `providerToken` to `providerAccessToken` in sessions **Breaking Change**
 - New endpoint to refresh the OAuth Access Token
 - OAuth sessions now include `providerAccessTokenExpiry` and `providerRefreshToken`
@@ -180,12 +164,10 @@
 - Microsoft OAuth provider now supports custom domains
 
 ### Others
-
 - Renamed `sum` to `total` on multiple endpoints returning a list of resource **Breaking Change**
 - Added new `_APP_WORKER_PER_CORE` environment variable to configure the amount of internal workers per core for performance optimization
 
 ## Bugs
-
 - Fixed issue with 36 character long custom IDs
 - Fixed permission issues and is now more consistent and returns all resources
 - Fixed total amount of documents not being updated
@@ -200,7 +182,6 @@
 - Added dedicated internal permissions table for each Collection
 
 ## Security
-
 - Remove `appwrite.io` and `appwrite.test` from authorized domains for session verification
 
 ## Upgrades
@@ -212,18 +193,15 @@
 # Version 0.12.3
 
 ## Bugs
-
 - Fix update membership roles (#2799)
 - Fix migration to 0.12.x to populate search fields (#2799)
 
 ## Security
-
 - Fix URL schema Validation to only allow http/https (#2801)
 
 # Version 0.12.2
 
 ## Bugs
-
 - Fix security vulnerability in the Console (#2778)
 - Fix security vulnerability in the ACME-Challenge (#2780)
 
@@ -237,7 +215,6 @@
 # Version 0.12.1
 
 ## Bugs
-
 - Fixed some issues with the Migration
 - Fixed the UI to add Variables to Functions
 - Fixed wrong data type for String Attribute size
@@ -301,7 +278,7 @@
   - The `_APP_LOGGING_CONFIG` variable configures authentication to 3rd party error logging providers. If using Sentry, this should be 'SENTRY_API_KEY;SENTRY_APP_ID'. If using Raygun, this should be Raygun API key. If using AppSignal, this should be AppSignal API key.
 - Added new environment variable `_APP_USAGE_AGGREGATION_INTERVAL` to configure the usage worker interval
 - Added negative rotation values to file preview endpoint
-- Multiple responses from the Health service were changed to new (better) schema **Breaking Change**
+- Multiple responses from the Health service were changed to new (better) schema  **Breaking Change**
 - Method `health.getAntiVirus()` has been renamed to `health.getAntivirus()`
 - Added following langauges to the Locale service:
   - Latin
@@ -310,13 +287,11 @@
 - **DEPRECATED** Tasks service **Breaking Change**
 
 ## Bugs
-
 - Fixed `/v1/avatars/initials` when no space in the name, will try to split by `_`
 - Fixed all audit logs now saving all relevant informations
 - Fixed Health endpoints for `db` and `cache`
 
 ## Security
-
 - Increased minimum password length to 8 and removed maximum length
 - Limited User Preferences to 65kb total size
 - Upgraded Redis to 6.2
@@ -326,12 +301,10 @@
 # Version 0.11.1
 
 ## Bugs
-
 - Fix security vulnerability in the Console (#2777)
 - Fix security vulnerability in the ACME-Challenge (#2779)
 
 ## Upgrades
-
 - Upgraded redis extenstion to version 5.3.6
 - Upgraded swoole extenstion to version 4.8.6
 - Upgraded imagick extenstion to version 3.7.0
@@ -342,7 +315,6 @@
 # Version 0.11.0
 
 ## Features
-
 - Added Swift Platform Support
 - Added new Cloud Functions Runtimes:
   - Swift 5.5
@@ -390,7 +362,7 @@
   - Luxembourgish `lb` by @OscarRG in https://github.com/appwrite/appwrite/pull/1857
   - Catalan `ca` by @und1n3 in https://github.com/appwrite/appwrite/pull/1875
   - Chinese (Taiwan) `zh-TW` by @HelloSeaNation in https://github.com/appwrite/appwrite/pull/2134
-  - Chinese (PRC) `zh-CN` by @HelloSeaNation in https://github.com/appwrite/appwrite/pull/1836
+  - Chinese (PRC)	`zh-CN` by @HelloSeaNation in https://github.com/appwrite/appwrite/pull/1836
   - Bihari `bh` by @dazzlerkumar in https://github.com/appwrite/appwrite/pull/1841
   - Romanian `ro` by @cristina-sirbu in https://github.com/appwrite/appwrite/pull/1868
   - Slovak `sk` by @jakubhi in https://github.com/appwrite/appwrite/pull/1958
@@ -405,7 +377,6 @@
 - Added new audio mime-types for viewing audio files on browsers by @eldadfux in https://github.com/appwrite/appwrite/pull/2239
 
 ## Bugs
-
 - Fixed `sum` description by @eldadfux in https://github.com/appwrite/appwrite/pull/1659
 - Fixed `Add Team Membership` parameter order by @deshankoswatte in https://github.com/appwrite/appwrite/pull/1818
 - Fixed Storage File Preview on mobile devices by @m1ga in https://github.com/appwrite/appwrite/pull/2230
@@ -414,27 +385,22 @@
 # Version 0.10.4
 
 ## Bugs
-
 - Fixed another memory leak in realtime service (#1627)
 
 # Version 0.10.3
 
 ## Bugs
-
 - Fixed memory leak in realtime service (#1606)
 - Fixed function execution output now being UTF-8 encoded before saved (#1607)
-
 # Version 0.10.2
 
 ## Bugs
-
 - Fixed SSL certificates status not being updated (#1592)
 - Fixed failing team invites on console (#1580)
 
 # Version 0.10.1
 
 ## Bugs
-
 - Improved error messages on Migration regarding invalid document structures (#1576)
 - Fixed Console SDK endpoint to work with multiple proxies (#1575)
 - Fixed last function environments variables being corrupt (#1577)
@@ -443,7 +409,6 @@
 # Version 0.10.0
 
 ## Features
-
 - Added Realtime (#948)
 - Added Realtime statistics to the console (#948)
 - Added Magic URL login (#1552)
@@ -455,16 +420,14 @@
 - Added `updateName`, `updateEmail` and `updatePassword` to Users service and console (#1547)
 
 ## Bugs
-
 - Fixed MariaDB timeout after 24 hours (#1510)
 - Fixed upgrading installation with customized `docker-compose.yml` file (#1513)
 - Fixed usage stats on the dashboard displaying invalid total users count (#1514)
-
 # Version 0.9.4
-
 ## Security
 
 - Fixed security vulnerability that exposes project ID's from other admin users (#1453)
+
 
 # Version 0.9.3
 
@@ -508,21 +471,20 @@
 - Using a fixed commit to avoid breaking changes for imagemagick extension (#1274)
 - Updated the design of all the email templates (#1225)
 - Refactored Devices page in Console: (#1167)
-  - Renamed _Devices_ to _Sessions_
+  - Renamed *Devices* to *Sessions*
   - Add Provider Icon to each Session
   - Add Anonymous Account Placeholder
 - Upgraded phpmailer version to 6.5.0 (#1317)
 - Upgraded telegraf docker image version to v1.2.0
 - Added new environment variables to the `telegraf` service: (#1202)
-  - \_APP_INFLUXDB_HOST
-  - \_APP_INFLUXDB_PORT
+  - _APP_INFLUXDB_HOST
+  - _APP_INFLUXDB_PORT
 - Added `expires` parameter to Account Recovery and Email Validation URL's
 - Added new endpoint to get a session based on it's ID (#1294)
 - Added added a new version param to the migration script (#1342)
 - Improved Queue Interval for all workers from 5 seconds to 1 (#1308 Thanks to @Meldiron)
 
 ## Breaking Changes (Read before upgrading!)
-
 - Renamed `env` param on `/v1/functions` to `runtime` (#1314)
 - Renamed `deleteUser` method in all SDKs to `delete` (#1216)
 
@@ -548,13 +510,12 @@
 # Version 0.8.0
 
 ## Features
-
 - Refactoring SSL generation to work on every request so no domain environment variable is required for SSL generation (#1133)
 - Added Anonymous Login ([RFC-010](https://github.com/appwrite/rfc/blob/main/010-anonymous-login.md), #914)
 - Added events for functions and executions (#971)
 - Added JWT support (#784)
 - Added ARM support (#726)
-- New awesome image preview features, supports borderRadius, borderColor, borderWidth
+- New awesome image preview features, supports borderRadius, borderColor, borderWidth 
 - Split token & session models to become 2 different internal entities (#922)
 - Added Dart 2.12 as a new Cloud Functions runtime (#989)
 - Added option to disable email/password (#947)
@@ -562,7 +523,7 @@
 - Added option to disable JWT auth (#947)
 - Added option to disable team invites (#947)
 - Option to limit number of users (good for app launches + root account PR) (#947)
-- Added 2 new endpoints to the projects API to allow new settings
+- Added 2 new endpoints to the projects API to allow new settings 
 - Enabled 501 errors (Not Implemented) from the error handler
 - Added Python 3.9 as a new Cloud Functions runtime (#1044)
 - Added Deno 1.8 as a new Cloud Functions runtime (#989)
@@ -592,7 +553,7 @@
 - Environment variable `_APP_FUNCTIONS_ENVS` renamed to `_APP_FUNCTIONS_RUNTIMES` (#1101)
 - Only logged in users can execute functions (for guests, use anonymous login) (#976)
 - Only the user who has triggered the execution get access to the relevant execution logs (#1045)
-- Function execution environment variable `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA` (#1045)
+- Function execution environment variable `APPWRITE_FUNCTION_EVENT_PAYLOAD` renamed to `APPWRITE_FUNCTION_EVENT_DATA`  (#1045)
 - Function execution environment variable `APPWRITE_FUNCTION_ENV_NAME` renamed to `APPWRITE_FUNCTION_RUNTIME_NAME` (#1101)
 - Function execution environment variable `APPWRITE_FUNCTION_ENV_VERSION` renamed to `APPWRITE_FUNCTION_RUNTIME_VERSION` (#1101)
 - Introduces rate limits for:
@@ -617,7 +578,7 @@
 - Fixed certificates worker error on successful operations (#1010)
 - Fixed head requests not responding (#998)
 - Fixed bug when using auth credential for the Redis container (#993)
-- Fixed server warning logs on 3\*\* redirect endpoints (#1013)
+- Fixed server warning logs on 3** redirect endpoints (#1013)
 
 # Version 0.7.1
 
@@ -641,7 +602,7 @@
 - Upgraded phpmailer/phpmailer lib to version 6.3.0
 - Upgraded adhocore/jwt lib to version 1.1.2
 - Upgraded domnikl/statsd to slickdeals/statsd version 3.0
-
+ 
 ## Bug Fixes
 
 - Updated missing storage env vars
@@ -685,25 +646,25 @@
 - Webhooks payloads are now exactly the same as any of the API response objects, documentation added
 - Added new locale: Marathi -mr (@spielers)
 - New and consistent response format for all API object + new response examples in the docs
-  - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) \*\*
+  - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
-  - \*\* - might be changed before merging to master
+  - ** - might be changed before merging to master
   - Added fallback option to 0.6 format for backward compatibility with any changes (@christyjacob4 [#772](https://github.com/appwrite/appwrite/pull/772))
 - Added option to disable mail sending by setting an empty SMTP host value ([#730](https://github.com/appwrite/appwrite/issues/730))
 - Upgraded installation script ([#490](https://github.com/appwrite/appwrite/issues/490))
 - Added new environment variables for ClamAV hostname and port ([#780](https://github.com/appwrite/appwrite/pull/780))
 - New OAuth adapter for Box.com (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
-- New OAuth adapter for PayPal sandbox (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
-- New OAuth adapter for Tradeshift (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
-- New OAuth adapter for Tradeshift sandbox (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
+- New OAuth adapter for PayPal sandbox  (@armino-dev - [#420](https://github.com/appwrite/appwrite/issues/410))
+- New OAuth adapter for Tradeshift  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
+- New OAuth adapter for Tradeshift sandbox  (@armino-dev - [#855](https://github.com/appwrite/appwrite/pull/855))
 - Introducing new permssion types: role:guest & role:member
 - Disabled rate-limits on server side integrations
-- Refactored migration script
+- Refactored migration script 
 
 ### User Interface
 
 - Updated grid for OAuth2 providers list in the console ([#413](https://github.com/appwrite/appwrite/issues/413))
-- Added Google Fonts to Appwrite for offline availability
+- Added Google Fonts to Appwrite for offline availability 
 - Added option to delete user from the console (@PineappleIOnic - [#538](https://github.com/appwrite/appwrite/issues/538))
 - Added option to delete team from the console ([#380](https://github.com/appwrite/appwrite/issues/380))
 - Added option to view team members from the console ([#378](https://github.com/appwrite/appwrite/issues/378))
@@ -771,11 +732,11 @@
 ## Security
 
 - Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
-- Added option to force HTTPS connection to the Appwrite server (\_APP_OPTIONS_FORCE_HTTPS)
+- Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
 - Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
 - Block iframe access to Appwrite console using the `X-Frame-Options` header.
 - Fixed `roles` param input validator
-- API Keys are now stored encrypted
+- API Keys are now stored encrypted 
 - Disabled domains whitelist ACL for the Appwrite console
 
 # Version 0.6.2 (PRE-RELEASE)
@@ -787,8 +748,8 @@
 ## Bug Fixes
 
 - Fixed custom domain not setting correct domain
-- Fixed wrong SDK method type in avatars browser route
-- Fixed bug denied public documents (\*) to be accessed by guest users
+- Fixed wrong SDK method type in avatars browser route 
+- Fixed bug denied public documents (*) to be accessed by guest users
 - Fixed cache-control issue not allowing collection UI to update properly
 - Fixed a bug where single permission tag in the console was not being saved
 - Added missing webhooks events in the console
@@ -846,7 +807,7 @@
 
 - Fixed bug where multiple unique attribute were allowed
 - Blocked forms from being submitted unlimited times
-
+  
 # Version 0.5.2 (PRE-RELEASE)
 
 ## Bug Fixes
@@ -882,7 +843,7 @@
 - Upgraded MariaDB image to version 1.0.2
 - Upgraded SMTP image to version 1.0.1
 - File upload route (POST /v1/storage/files) now accept a single file per request
-- Added ENV vars to change system email sender name and address
+- Added ENV vars to change system email sender name and address 
 - Usage for requests made by project admin in the console are not counted as API usage
 - Added ENV var to change default file upload size limit. New default value is 100MB
 - Added option to delete file directly from the dashboard
@@ -952,7 +913,6 @@
 - New Locale API route for fetching a list of continents
 
 ## Bug Fixes
-
 - Fix for typos in PT-BR translations
 - Fix for UI crash when project user was missing a name
 - Fix for it locale including the en templates by mistake
