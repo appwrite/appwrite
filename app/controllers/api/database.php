@@ -118,7 +118,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
     $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
-    $usage->setParam('database.collections.update', 1);
+    $usage->setParam('databases.collections.update', 1);
 
     $database
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
@@ -220,7 +220,7 @@ App::post('/v1/databases')
         ;
 
         $events->setParam('databaseId', $database->getId());
-        $usage->setParam('database.databases.create', 1);
+        $usage->setParam('databases.create', 1);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($database, Response::MODEL_DATABASE);
@@ -249,9 +249,9 @@ App::get('/v1/databases')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
 
         if (!empty($cursor)) {
-            $cursorCollection = $dbForProject->getDocument('databases', $cursor);
+            $cursorDocument = $dbForProject->getDocument('databases', $cursor);
 
-            if ($cursorCollection->isEmpty()) {
+            if ($cursorDocument->isEmpty()) {
                 throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
@@ -262,10 +262,10 @@ App::get('/v1/databases')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        $usage->setParam('database.read', 1);
+        $usage->setParam('databases.read', 1);
 
         $response->dynamic(new Document([
-            'databases' => $dbForProject->find('databases', $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
+            'databases' => $dbForProject->find('databases', $queries, $limit, $offset, [], [$orderType], $cursorDocument ?? null, $cursorDirection),
             'total' => $dbForProject->count('databases', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_DATABASE_LIST);
     });
@@ -420,7 +420,7 @@ App::put('/v1/databases/:databaseId')
         ;
 
         $usage->setParam('databases.update', 1);
-        $events->setParam('collectionId', $database->getId());
+        $events->setParam('databaseId', $database->getId());
 
         $response->dynamic($database, Response::MODEL_DATABASE);
     });
@@ -458,7 +458,7 @@ App::delete('/v1/databases/:databaseId')
         $dbForProject->deleteCachedCollection('databases' . $database->getInternalId());
 
         $deletes
-            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setType(DELETE_TYPE_DATABASE)
             ->setDocument($database)
         ;
 
@@ -472,7 +472,7 @@ App::delete('/v1/databases/:databaseId')
             ->setPayload($database->getArrayCopy())
         ;
 
-        $usage->setParam('database.delete', 1);
+        $usage->setParam('databases.delete', 1);
 
         $response->noContent();
     });
@@ -536,7 +536,9 @@ App::post('/v1/databases/:databaseId/collections')
             ->setPayload($collection->getArrayCopy())
         ;
 
-        $events->setParam('collectionId', $collection->getId());
+        $events
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId());
         $usage->setParam('database.collections.create', 1);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -784,7 +786,9 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         ;
 
         $usage->setParam('database.collections.update', 1);
-        $events->setParam('collectionId', $collection->getId());
+        $events
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId());
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
@@ -829,11 +833,12 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
         $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
         $deletes
-            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setType(DELETE_TYPE_COLLECTIONS)
             ->setDocument($collection)
         ;
 
         $events
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setPayload($response->output($collection, Response::MODEL_COLLECTION))
         ;
@@ -1424,6 +1429,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         };
 
         $events
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('attributeId', $attribute->getId())
             ->setContext($collection)
@@ -1539,6 +1545,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         $usage->setParam('database.collections.update', 1);
 
         $events
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('indexId', $index->getId())
             ->setContext($collection)
@@ -1696,6 +1703,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         $usage->setParam('database.collections.update', 1);
 
         $events
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('indexId', $index->getId())
             ->setContext($collection)
@@ -1810,6 +1818,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $events
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
             ->setContext($collection)
@@ -1821,7 +1830,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         ;
 
         $audits
-            ->setResource('document/' . $document->getId())
+            ->setResource('database/' . $databaseId . '/collection/' .$collectionId . '/document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 
@@ -1932,6 +1941,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $usage
             ->setParam('database.documents.read', 1)
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
 
@@ -2003,6 +2013,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
         $usage
             ->setParam('database.documents.read', 1)
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
 
@@ -2049,7 +2060,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         $audit = new Audit($dbForProject);
-        $resource = 'document/' . $document->getId();
+        $resource = 'database/' . $databaseId . '/collection/' .$collectionId . '/document/' . $document->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
@@ -2218,6 +2229,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         }
 
         $events
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
             ->setContext($collection)
@@ -2225,11 +2237,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $usage
             ->setParam('database.documents.update', 1)
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
 
         $audits
-            ->setResource('document/' . $document->getId())
+            ->setResource('database/' . $databaseId . '/collection/' .$collectionId . '/document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 
@@ -2314,10 +2327,12 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $usage
             ->setParam('database.documents.delete', 1)
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
 
         $events
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
             ->setContext($collection)
@@ -2325,7 +2340,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         ;
 
         $audits
-            ->setResource('document/' . $document->getId())
+            ->setResource('database/' . $databaseId . '/collection/' .$collectionId . '/document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 

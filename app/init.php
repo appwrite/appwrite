@@ -118,6 +118,7 @@ const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
 // Deletion Types
+const DELETE_TYPE_DATABASE = 'database';
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
 const DELETE_TYPE_PROJECTS = 'projects';
