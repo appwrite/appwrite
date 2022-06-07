@@ -24,7 +24,7 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
-use Appwrite\Resque\Worker;
+use Appwrite\Storage\StorageDevice;
 
 
 Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
@@ -150,7 +150,7 @@ App::post('/v1/runtimes')
             /**
              * Copy code files from source to a temporary location on the executor
              */
-            $sourceDevice = Worker::getDevice("/");
+            $sourceDevice = StorageDevice::getDevice("/");
             $localDevice = new Local();
             $buffer = $sourceDevice->read($source);
             if (!$localDevice->write($tmpSource, $buffer)) {
@@ -238,7 +238,7 @@ App::post('/v1/runtimes')
                     throw new Exception('Something went wrong during the build process', 500);
                 }
 
-                $destinationDevice = Worker::getDevice($destination);
+                $destinationDevice = StorageDevice::getDevice($destination);
                 $outputPath = $destinationDevice->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
                 $buffer = $localDevice->read($tmpBuild);

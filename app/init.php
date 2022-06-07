@@ -56,7 +56,7 @@ use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Utopia\Database\Query;
 use Utopia\Storage\Device\Local;
-use Appwrite\Resque\Worker;
+use Appwrite\Storage\StorageDevice;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -884,15 +884,15 @@ App::setResource('deviceLocal', function () {
 });
 
 App::setResource('deviceFiles', function ($project) {
-    return Worker::getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+    return StorageDevice::getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
 App::setResource('deviceFunctions', function ($project) {
-    return Worker::getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+    return StorageDevice::getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);
 
 App::setResource('deviceBuilds', function ($project) {
-    return Worker::getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+    return StorageDevice::getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 
 

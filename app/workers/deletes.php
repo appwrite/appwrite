@@ -1,6 +1,7 @@
 <?php
 
 use Utopia\App;
+use Appwrite\Storage\StorageDevice;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -574,7 +575,7 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
         $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
 
-        $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+        $device = StorageDevice::getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
 
         $device->deletePath($document->getId());
     }
