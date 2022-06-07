@@ -94,7 +94,8 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         $attribute = new Document([
             '$id' => $db->getInternalId() . '_' . $collectionId . '_' . $key,
             'key' => $key,
-            'collectionId' => $db->getInternalId() . '_' . $collectionId,
+            'databaseId' => $db->getInternalId(),
+            'collectionId' => $collectionId,
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
@@ -1538,7 +1539,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 '$id' => $db->getInternalId() . '_' . $collectionId . '_' . $key,
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
-                'collectionId' => $db->getInternalId() . '_' . $collectionId,
+                'collectionId' => $collectionId,
+                'databaseId' => $db->getInternalId(),
                 'type' => $type,
                 'attributes' => $attributes,
                 'lengths' => $lengths,
@@ -1845,7 +1847,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         ;
 
         $audits
-            ->setResource('database/' . $databaseId . '/collection/' .$collectionId . '/document/' . $document->getId())
+            ->setResource('database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 
@@ -2075,7 +2077,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         $audit = new Audit($dbForProject);
-        $resource = 'database/' . $databaseId . '/collection/' .$collectionId . '/document/' . $document->getId();
+        $resource = 'database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
         $output = [];
@@ -2257,7 +2259,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         ;
 
         $audits
-            ->setResource('database/' . $databaseId . '/collection/' .$collectionId . '/document/' . $document->getId())
+            ->setResource('database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 
@@ -2355,7 +2357,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         ;
 
         $audits
-            ->setResource('database/' . $databaseId . '/collection/' .$collectionId . '/document/' . $document->getId())
+            ->setResource('database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId())
             ->setPayload($document->getArrayCopy())
         ;
 
