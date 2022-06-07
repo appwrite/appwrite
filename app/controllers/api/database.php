@@ -118,7 +118,9 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
     $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
-    $usage->setParam('databases.collections.update', 1);
+    $usage
+        ->setParam('databaseId', $databaseId)
+        ->setParam('databases.collections.update', 1);
 
     $database
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
@@ -129,6 +131,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     $events
         ->setContext($collection)
+        ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
         ->setParam('attributeId', $attribute->getId())
     ;
@@ -539,7 +542,10 @@ App::post('/v1/databases/:databaseId/collections')
         $events
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId());
-        $usage->setParam('database.collections.create', 1);
+
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('database.collections.create', 1);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($collection, Response::MODEL_COLLECTION);
@@ -588,7 +594,9 @@ App::get('/v1/databases/:databaseId/collections')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        $usage->setParam('database.collections.read', 1);
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('database.collections.read', 1);
 
         $response->dynamic(new Document([
             'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
@@ -625,7 +633,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $usage->setParam('database.collections.read', 1);
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('database.collections.read', 1);
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
@@ -785,7 +795,10 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
             ->setPayload($collection->getArrayCopy())
         ;
 
-        $usage->setParam('database.collections.update', 1);
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('database.collections.update', 1);
+
         $events
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId());
@@ -848,7 +861,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
             ->setPayload($collection->getArrayCopy())
         ;
 
-        $usage->setParam('database.collections.delete', 1);
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('database.collections.delete', 1);
 
         $response->noContent();
     });
