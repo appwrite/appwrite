@@ -177,6 +177,12 @@ App::post('/v1/runtimes')
     ->inject('response')
     ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
         if ($activeRuntimes->exists($runtimeId)) {
+
+            if ($activeRuntimes->get($runtimeId)['key'] == 'Pending') {
+                sleep(1);
+                throw new \Exception('A runtime with the same ID is already being created.', 500);
+            }
+
             throw new Exception('Runtime already exists.', 409);
         }
 
@@ -187,6 +193,17 @@ App::post('/v1/runtimes')
         $startTime = \time();
         $endTime = 0;
         $orchestration = $orchestrationPool->get();
+
+        $secret = \bin2hex(\random_bytes(16));
+
+        $activeRuntimes->set($runtimeId, [
+            'id' => $containerId,
+            'name' => $runtimeId,
+            'created' => $startTime,
+            'updated' => $endTime,
+            'status' => 'Pending',
+            'key' => $secret,
+        ]);
 
         try {
             Console::info('Building container : ' . $runtimeId);
@@ -219,7 +236,6 @@ App::post('/v1/runtimes')
             /**
              * Create container
              */
-            $secret = \bin2hex(\random_bytes(16));
             $vars = \array_merge($vars, [
                 'INTERNAL_RUNTIME_KEY' => $secret,
                 'INTERNAL_RUNTIME_ENTRYPOINT' => $entrypoint,
@@ -440,7 +456,6 @@ App::post('/v1/execution')
     ->inject('response')
     ->action(
         function (string $runtimeId, array $vars, string $data, $timeout, $activeRuntimes, Response $response) {
-
             if (!$activeRuntimes->exists($runtimeId)) {
                 throw new Exception('Runtime not found. Please create the runtime.', 404);
             }
