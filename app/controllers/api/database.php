@@ -1498,7 +1498,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         $count = $dbForProject->count('indexes', [
-            new Query('collectionId', Query::TYPE_EQUAL, [$db->getInternalId() . '_' . $collectionId])
+            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId]),
+            new Query('databaseId', Query::TYPE_EQUAL, [$db->getInternalId()])
         ], 61);
 
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
