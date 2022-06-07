@@ -182,6 +182,28 @@ class DatabaseCustomServerTest extends Scope
     /**
      * @depends testListDatabases
      */
+    public function testGetDatabase(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+        /**
+         * Test for SUCCESS
+         */
+        $database = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertEquals($databaseId, $database['body']['$id']);
+        $this->assertEquals('Test 1', $database['body']['name']);
+
+        return ['databaseId' => $database['body']['$id']];
+    }
+
+    /**
+     * @depends testListDatabases
+     */
     public function testDeleteDatabase($data)
     {
         $databaseId = $data['databaseId'];
