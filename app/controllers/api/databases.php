@@ -842,7 +842,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
         $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
         $deletes
-            ->setType(DELETE_TYPE_COLLECTIONS)
+            ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($collection)
         ;
 
