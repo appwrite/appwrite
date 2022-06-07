@@ -58,6 +58,12 @@ class Webhook extends Model
                 'default' => '',
                 'example' => 'password',
             ])
+            ->addRule('signatureKey', [
+                'type' => self::TYPE_STRING,
+                'description' => 'random string to be used as key to encrypt signature',
+                'default' => '',
+                'example' => 'ad3d581ca230e2b7059c545e5a0d1defd8c349f8979b12579e03890aab973bcd23318e4b0ff6190fa3be09d746358821e19147d995210d45855eb3c069f6fd6e',
+            ])
         ;
     }
 
