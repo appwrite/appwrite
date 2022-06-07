@@ -462,7 +462,7 @@ App::delete('/v1/databases/:databaseId')
         $dbForProject->deleteCachedCollection('databases' . $database->getInternalId());
 
         $deletes
-            ->setType(DELETE_TYPE_DATABASE)
+            ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($database)
         ;
 
