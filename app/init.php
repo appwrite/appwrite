@@ -118,7 +118,7 @@ const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
 // Deletion Types
-const DELETE_TYPE_DATABASE = 'database';
+const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
 const DELETE_TYPE_PROJECTS = 'projects';
@@ -258,7 +258,8 @@ Database::addFilter(
         $databaseId = str_replace('database_', '', $document->getAttribute('$collection'));
         return $database
             ->find('attributes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$databaseId . '_' . $document->getId()])
+                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()]),
+                new Query('databaseId', Query::TYPE_EQUAL, [$databaseId])
             ], $database->getAttributeLimit(), 0, []);
     }
 );
