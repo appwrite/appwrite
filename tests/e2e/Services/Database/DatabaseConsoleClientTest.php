@@ -20,7 +20,7 @@ class DatabaseConsoleClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'databaseId' => 'unique()',
-            'name' => 'InvalidDocumentDatabase',
+            'name' => 'invalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
@@ -46,7 +46,10 @@ class DatabaseConsoleClientTest extends Scope
         return ['moviesId' => $movies['body']['$id'], 'databaseId' => $databaseId];
     }
 
-    public function testGetDatabaseUsage()
+    /**
+     * @depends testCreateCollection
+     */
+    public function testGetDatabaseUsage(array $data)
     {
         $databaseId = $data['databaseId'];
         /**
