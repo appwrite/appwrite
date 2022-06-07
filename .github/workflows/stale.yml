@@ -1,0 +1,121 @@
+on:
+  schedule:
+    - cron: "0 0 * * *"
+name: Stale Bot workflow
+jobs:
+  build:
+    name: stale
+    runs-on: ubuntu-latest
+    steps:
+      - name: stale-repro-needed
+        id: stale-repro-needed
+        uses: actions/stale@v3.0.13
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 14
+          days-before-close: 14
+          stale-issue-label: "stale"
+          operations-per-run: 300
+          remove-stale-when-updated: true
+          only-labels: "blocked: repro needed"
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
+            Please leave a reply to keep it active.
+            Thanks for being a part of the Appwrite community! 🙏
+
+      - name: stale-retry-with-latest
+        id: stale-retry-with-latest
+        uses: actions/stale@v3.0.13
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 14
+          days-before-close: 14
+          stale-issue-label: "stale"
+          operations-per-run: 300
+          remove-stale-when-updated: true
+          only-labels: "blocked: retry with latest"
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
+            Please leave a reply to keep it active.
+            Thanks for being a part of the Appwrite community! 🙏
+
+
+      - name: stale-bug
+        id: stale-bug
+        uses: actions/stale@v3.0.13
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 180
+          days-before-close: 14
+          stale-issue-label: "stale"
+          operations-per-run: 300
+          remove-stale-when-updated: true
+          only-labels: "bug"
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
+            Please leave a reply to keep it active.
+            Thanks for being a part of the Appwrite community! 🙏
+
+      - name: stale-docs
+        id: stale-docs
+        uses: actions/stale@v3.0.13
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 180
+          days-before-close: 14
+          stale-issue-label: "stale"
+          operations-per-run: 300
+          remove-stale-when-updated: true
+          only-labels: "docs"
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
+            Please leave a reply to keep it active.
+            Thanks for being a part of the Appwrite community! 🙏
+
+      - name: stale-enhancement
+        id: stale-enhancement
+        uses: actions/stale@v3.0.13
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 250
+          days-before-close: 14
+          stale-issue-label: "stale"
+          operations-per-run: 300
+          remove-stale-when-updated: true
+          only-labels: "enhancement"
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
+            Please leave a reply to keep it active.
+            Thanks for being a part of the Appwrite community! 🙏
+
+      - name: stale-feature
+        id: stale-feature
+        uses: actions/stale@v3.0.13
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 250
+          days-before-close: 14
+          stale-issue-label: "stale"
+          operations-per-run: 300
+          remove-stale-when-updated: true
+          only-labels: "feature"
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
+            Please leave a reply to keep it active.
+            Thanks for being a part of the Appwrite community! 🙏
+
+      - name: stale-question
+        id: stale-question
+        uses: actions/stale@v3.0.13
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 45
+          days-before-close: 14
+          stale-issue-label: "stale"
+          operations-per-run: 300
+          remove-stale-when-updated: true
+          only-labels: "discussion"
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it hasn't had any recent activity. It will be closed in 14 days if no further activity occurs.
+            Please leave a reply to keep it active.
+            Thanks for being a part of the Appwrite community! 🙏
