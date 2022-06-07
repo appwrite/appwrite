@@ -134,8 +134,12 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     ;
 
     $events
+<<<<<<< HEAD:app/controllers/api/databases.php
         ->setContext('collection', $collection)
         ->setContext('database', $db)
+=======
+        ->setContext($collection)
+>>>>>>> 10cec65e0 (more usage updates):app/controllers/api/database.php
         ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
         ->setParam('attributeId', $attribute->getId())
@@ -546,7 +550,11 @@ App::post('/v1/databases/:databaseId/collections')
 
         $usage
             ->setParam('databaseId', $databaseId)
+<<<<<<< HEAD:app/controllers/api/databases.php
             ->setParam('databases.collections.create', 1);
+=======
+            ->setParam('database.collections.create', 1);
+>>>>>>> 10cec65e0 (more usage updates):app/controllers/api/database.php
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($collection, Response::MODEL_COLLECTION);
@@ -597,7 +605,11 @@ App::get('/v1/databases/:databaseId/collections')
 
         $usage
             ->setParam('databaseId', $databaseId)
+<<<<<<< HEAD:app/controllers/api/databases.php
             ->setParam('databases.collections.read', 1);
+=======
+            ->setParam('database.collections.read', 1);
+>>>>>>> 10cec65e0 (more usage updates):app/controllers/api/database.php
 
         $response->dynamic(new Document([
             'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
@@ -636,7 +648,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
 
         $usage
             ->setParam('databaseId', $databaseId)
+<<<<<<< HEAD:app/controllers/api/databases.php
             ->setParam('databases.collections.read', 1);
+=======
+            ->setParam('database.collections.read', 1);
+>>>>>>> 10cec65e0 (more usage updates):app/controllers/api/database.php
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
@@ -792,7 +808,11 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         $usage
             ->setParam('databaseId', $databaseId)
+<<<<<<< HEAD:app/controllers/api/databases.php
             ->setParam('databases.collections.update', 1);
+=======
+            ->setParam('database.collections.update', 1);
+>>>>>>> 10cec65e0 (more usage updates):app/controllers/api/database.php
 
         $events
             ->setContext('database', $database)
@@ -860,7 +880,11 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
 
         $usage
             ->setParam('databaseId', $databaseId)
+<<<<<<< HEAD:app/controllers/api/databases.php
             ->setParam('databases.collections.delete', 1);
+=======
+            ->setParam('database.collections.delete', 1);
+>>>>>>> 10cec65e0 (more usage updates):app/controllers/api/database.php
 
         $response->noContent();
     });
