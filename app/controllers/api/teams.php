@@ -295,12 +295,12 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('events')
     ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, EventAudit $audits, Mail $mails, Event $events) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
-        }
-
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
+
+        if (!$isPrivilegedUser && !$isAppUser && empty(App::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
+        }
 
         $email = \strtolower($email);
         $name = (empty($name)) ? $email : $name;
@@ -380,7 +380,7 @@ App::post('/v1/teams/:teamId/memberships')
             try {
                 $membership = Authorization::skip(fn() => $dbForProject->createDocument('memberships', $membership));
             } catch (Duplicate $th) {
-                throw new Exception('User has already been invited or is already a member of this team', 409, Exception::TEAM_INVITE_ALREADY_EXISTS);
+                throw new Exception('User is already a member of this team', 409, Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
             $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
             $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));

@@ -187,7 +187,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 });
 
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
-    Console::success('Worker ' . $workerId . ' started succefully');
+    Console::success('Worker ' . $workerId . ' started successfully');
 
     $attempts = 0;
     $start = time();
