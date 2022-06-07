@@ -1116,6 +1116,17 @@ $collections = [
         'name' => 'Tokens',
         'attributes' => [
             [
+                '$id' => 'userInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'userId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1186,7 +1197,7 @@ $collections = [
             [
                 '$id' => '_key_user',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['userId'],
+                'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -1198,6 +1209,17 @@ $collections = [
         '$id' => 'sessions',
         'name' => 'Sessions',
         'attributes' => [
+            [
+                '$id' => 'userInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'userId',
                 'type' => Database::VAR_STRING,
@@ -1463,7 +1485,7 @@ $collections = [
             [
                 '$id' => '_key_user',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['userId'],
+                'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -1536,6 +1558,17 @@ $collections = [
         '$id' => 'memberships',
         'name' => 'Memberships',
         'attributes' => [
+            [
+                '$id' => 'userInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'teamId',
                 'type' => Database::VAR_STRING,
@@ -1634,16 +1667,16 @@ $collections = [
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_team',
+                '$id' => '_key_internal',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['teamId'],
+                'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_user',
+                '$id' => '_key_team',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['userId'],
+                'attributes' => ['teamId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
