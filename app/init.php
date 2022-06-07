@@ -333,7 +333,7 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database->find('sessions', [
-            new Query('userId', Query::TYPE_EQUAL, [$document->getInternalId()])
+            new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
         ], APP_LIMIT_SUBQUERY));
     }
 );
@@ -346,7 +346,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn() => $database
             ->find('tokens', [
-                new Query('userId', Query::TYPE_EQUAL, [$document->getInternalId()])
+                new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY));
     }
 );
@@ -359,7 +359,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn() => $database
             ->find('memberships', [
-                new Query('userId', Query::TYPE_EQUAL, [$document->getInternalId()])
+                new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY));
     }
 );
