@@ -95,14 +95,14 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_PROJECT = 'usageProject';
 
     // Database
-    const MODEL_DATABASE = 'database';
-    const MODEL_DATABASE_LIST = 'databaseList';
-    const MODEL_COLLECTION = 'collection';
-    const MODEL_COLLECTION_LIST = 'collectionList';
-    const MODEL_INDEX = 'index';
-    const MODEL_INDEX_LIST = 'indexList';
-    const MODEL_DOCUMENT = 'document';
-    const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_DATABASE = 'database';
+    public const MODEL_DATABASE_LIST = 'databaseList';
+    public const MODEL_COLLECTION = 'collection';
+    public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_INDEX = 'index';
+    public const MODEL_INDEX_LIST = 'indexList';
+    public const MODEL_DOCUMENT = 'document';
+    public const MODEL_DOCUMENT_LIST = 'documentList';
 
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';

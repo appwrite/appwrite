@@ -131,7 +131,7 @@ class DeletesV1 extends Worker
 
         $dbForProject = $this->getProjectDB($projectId);
 
-        $this->deleteByGroup('database_' . $document->getInternalId(), [], $dbForProject, function($document) use($projectId) {
+        $this->deleteByGroup('database_' . $document->getInternalId(), [], $dbForProject, function ($document) use ($projectId) {
             $this->deleteCollection($document, $projectId);
         });
 

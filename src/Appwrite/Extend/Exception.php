@@ -113,8 +113,8 @@ class Exception extends \Exception
     public const EXECUTION_NOT_FOUND               = 'execution_not_found';
 
     /** Databases */
-    const DATABASE_NOT_FOUND              = 'collection_not_found';
-    const DATABASE_ALREADY_EXISTS         = 'collection_already_exists';
+    public const DATABASE_NOT_FOUND              = 'collection_not_found';
+    public const DATABASE_ALREADY_EXISTS         = 'collection_already_exists';
 
     /** Collections */
     public const COLLECTION_NOT_FOUND              = 'collection_not_found';
