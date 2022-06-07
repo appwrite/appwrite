@@ -273,7 +273,8 @@ Database::addFilter(
         $databaseId = str_replace('database_', '', $document->getAttribute('$collection'));
         return $database
             ->find('indexes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$databaseId . '_' . $document->getId()])
+                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()]),
+                new Query('databaseId', Query::TYPE_EQUAL, [$databaseId])
             ], 64, 0, []);
     }
 );
