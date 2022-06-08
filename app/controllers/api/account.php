@@ -21,6 +21,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Appwrite\Event\Audit;
+use Appwrite\Event\Phone as EventPhone;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -848,8 +849,9 @@ App::post('/v1/account/sessions/phone')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('events')
+    ->inject('messaging')
     ->inject('phone')
-    ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, Phone $phone) {
+    ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging, Phone $phone) {
         if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
             throw new Exception('Phone Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
         }
@@ -916,7 +918,10 @@ App::post('/v1/account/sessions/phone')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $phone->send(APP::getEnv('_APP_PHONE_FROM'), $number, $secret);
+        $messaging
+            ->setRecipient($number)
+            ->setMessage($secret)
+            ->trigger();
 
         $events->setPayload(
             $response->output(
@@ -2245,7 +2250,8 @@ App::post('/v1/account/verification/phone')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function (Request $request, Response $response, Phone $phone, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage) {
+    ->inject('messaging')
+    ->action(function (Request $request, Response $response, Phone $phone, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
@@ -2282,7 +2288,9 @@ App::post('/v1/account/verification/phone')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $phone->send(APP::getEnv('_APP_PHONE_FROM'), $user->getAttribute('phone'), $secret);
+        $messaging
+            ->setRecipient($user->getAttribute('phone'))
+            ->setMessage($secret);
 
         $events
             ->setParam('userId', $user->getId())
