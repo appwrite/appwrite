@@ -187,7 +187,7 @@ class Executor
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
                         $status = $response['headers']['status-code'];
 
-                        if($status < 400) {
+                        if ($status < 400) {
                             return $response['body'];
                         }
                         break;
@@ -195,7 +195,7 @@ class Executor
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
                         $status = $response['headers']['status-code'];
 
-                        if($status < 400) {
+                        if ($status < 400) {
                             return $response['body'];
                         }
                         break;
