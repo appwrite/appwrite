@@ -1751,7 +1751,6 @@ $collections = [
                 'signed' => true,
                 'required' => false,
                 'default' => null,
-                'array' => false,
                 'filters' => [],
             ],
             [
@@ -1912,7 +1911,6 @@ $collections = [
                 'signed' => true,
                 'required' => false,
                 'default' => null,
-                'array' => false,
                 'filters' => [],
             ],
             [
@@ -2192,7 +2190,6 @@ $collections = [
                 'signed' => true,
                 'required' => false,
                 'default' => null,
-                'array' => false,
                 'filters' => [],
             ],
             [
@@ -2620,7 +2617,6 @@ $collections = [
                 'signed' => true,
                 'required' => false,
                 'default' => null,
-                'array' => false,
                 'filters' => [],
             ],
             [
