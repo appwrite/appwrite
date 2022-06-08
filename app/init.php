@@ -884,15 +884,15 @@ App::setResource('deviceLocal', function () {
 });
 
 App::setResource('deviceFiles', function ($project) {
-    return StorageDevice::getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+    return StorageDevice::getFilesDevice($project->getId());
 }, ['project']);
 
 App::setResource('deviceFunctions', function ($project) {
-    return StorageDevice::getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+    return StorageDevice::getFunctionsDevice($project->getId());
 }, ['project']);
 
 App::setResource('deviceBuilds', function ($project) {
-    return StorageDevice::getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+    return StorageDevice::getBuildsDevice($project->getId());
 }, ['project']);
 
 

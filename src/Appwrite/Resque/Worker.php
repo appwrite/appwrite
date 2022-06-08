@@ -8,14 +8,6 @@ use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Adapter\MariaDB;
-use Utopia\Storage\Device;
-use Utopia\Storage\Storage;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Device\DOSpaces;
-use Utopia\Storage\Device\Linode;
-use Utopia\Storage\Device\Wasabi;
-use Utopia\Storage\Device\Backblaze;
-use Utopia\Storage\Device\S3;
 use Exception;
 
 abstract class Worker

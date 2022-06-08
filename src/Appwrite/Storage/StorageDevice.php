@@ -15,13 +15,26 @@ use Utopia\Storage\Device\S3;
 class StorageDevice
 {
     /**
+     * @var string
+     */
+    protected $projectId;
+
+    /**
+     * Constructor
+     */
+    public function __construct($projectId)
+    {
+        $this->$projectId = $projectId;
+    }
+
+    /**
      * Get Functions Storage Device
      * @param string $projectId of the project
      * @return Device
      */
-    protected function getFunctionsDevice($projectId): Device
+    public static function getFunctionsDevice($projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        return self::getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
     }
 
     /**
@@ -29,9 +42,9 @@ class StorageDevice
      * @param string $projectId of the project
      * @return Device
      */
-    protected function getFilesDevice($projectId): Device
+    public static function getFilesDevice($projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+        return self::getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
     }
 
 
@@ -40,9 +53,9 @@ class StorageDevice
      * @param string $projectId of the project
      * @return Device
      */
-    protected function getBuildsDevice($projectId): Device
+    public static function getBuildsDevice($projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        return self::getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
     }
 
     /**
