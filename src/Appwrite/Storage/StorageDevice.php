@@ -47,7 +47,6 @@ class StorageDevice
         return self::getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
     }
 
-
     /**
      * Get Builds Storage Device
      * @param string $projectId of the project
