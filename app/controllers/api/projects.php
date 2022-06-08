@@ -720,7 +720,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('httpPass', $httpPass)
         ;
 
-        if(!empty($signatureKey)){
+        if (!empty($signatureKey)) {
             $webhook->setAttribute('signatureKey', $signatureKey);
         }
 
