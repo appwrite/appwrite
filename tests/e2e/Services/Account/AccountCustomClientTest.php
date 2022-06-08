@@ -269,8 +269,10 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
+        \var_dump($response);
+
         $this->assertEquals($response['headers']['status-code'], 201);
-        $this->assertEquals($response['headers']['X-RateLimit-Remaining'], 99);
+        $this->assertEquals($response['headers']['x-ratelimit-remaining'], 99);
         $this->assertNotEmpty($response['body']['jwt']);
         $this->assertIsString($response['body']['jwt']);
 
