@@ -8,8 +8,8 @@ use Tests\E2E\Client;
 trait WebhooksBase
 {
 
-    public static function getWebhookSignature($webhook, $signatureKey) :string
-    {;
+    public static function getWebhookSignature($webhook, $signatureKey): string
+    {
         $payload = json_encode($webhook['data']);
         $url     = $webhook['url'];
         return base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
