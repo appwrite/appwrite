@@ -15,10 +15,10 @@ class TextMagic extends Phone
     private string $endpoint = 'https://rest.textmagic.com/api/v2';
 
     /**
-     * @param string $from 
-     * @param string $to 
-     * @param string $message 
-     * @return void 
+     * @param string $from
+     * @param string $to
+     * @param string $message
+     * @return void
      */
     public function send(string $from, string $to, string $message): void
     {
