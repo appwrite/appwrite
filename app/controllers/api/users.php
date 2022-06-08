@@ -27,6 +27,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\Boolean;
 use MaxMind\Db\Reader;
+use Utopia\Validator\ArrayList;
 
 App::post('/v1/users')
     ->desc('Create User')
@@ -99,17 +100,17 @@ App::get('/v1/users')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER_LIST)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('queries', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/database#querying-documents). Maximum of 100 queries are allowed, each 128 characters long.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of users to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the user used as the starting point for the query, excluding the user itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderAttributes', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes used to sort results. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' order attributes are allowed, each 128 characters long.', true)
+    ->param('orderTypes', [], new ArrayList(new WhiteList(['DESC', 'ASC'], true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' order types are allowed.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
-
+    ->action(function (array $queries, int $limit, int $offset, string $cursor, string $cursorDirection, array $orderAttributes, array $orderTypes, Response $response, Database $dbForProject, Stats $usage) {
         if (!empty($cursor)) {
             $cursorUser = $dbForProject->getDocument('users', $cursor);
 
