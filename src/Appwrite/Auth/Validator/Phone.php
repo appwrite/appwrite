@@ -32,7 +32,7 @@ class Phone extends Validator
      */
     public function isValid($value): bool
     {
-        return !!\preg_match('/^\+[1-9]\d{1,14}$/', $value);
+        return is_string($value) && !!\preg_match('/^\+[1-9]\d{1,14}$/', $value);
     }
 
     /**

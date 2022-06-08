@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -438,6 +439,45 @@ App::patch('/v1/users/:userId/verification')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
+App::patch('/v1/users/:userId/verification')
+    ->desc('Update Phone Verification')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.verification')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updatePhoneVerification')
+    ->label('sdk.description', '/docs/references/users/update-user-phone-verification.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('phoneVerification', false, new Boolean(), 'User phone verification status.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, bool $phoneVerification, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+        }
+
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('phoneVerification', $phoneVerification));
+
+        $usage
+            ->setParam('users.update', 1)
+        ;
+
+        $events
+            ->setParam('userId', $user->getId())
+        ;
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
 App::patch('/v1/users/:userId/name')
     ->desc('Update Name')
     ->groups(['api', 'users'])
@@ -555,7 +595,57 @@ App::patch('/v1/users/:userId/email')
 
         $user
             ->setAttribute('email', $email)
+            ->setAttribute('emailVerification', false)
             ->setAttribute('search', \implode(' ', [$user->getId(), $email, $user->getAttribute('name')]))
+        ;
+
+        try {
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        } catch (Duplicate $th) {
+            throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
+        }
+
+
+        $audits
+            ->setResource('user/' . $user->getId())
+        ;
+
+        $events
+            ->setParam('userId', $user->getId())
+        ;
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/users/:userId/email')
+    ->desc('Update Phone')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.phone')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updatePhone')
+    ->label('sdk.description', '/docs/references/users/update-user-phone.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('number', '', new Phone(), 'User phone number.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('audits')
+    ->inject('events')
+    ->action(function (string $userId, string $number, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+        }
+
+        $user
+            ->setAttribute('phone', $number)
+            ->setAttribute('phoneVerification', false)
         ;
 
         try {

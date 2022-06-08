@@ -1519,20 +1519,70 @@ App::patch('/v1/account/email')
         }
 
         $email = \strtolower($email);
-        $profile = $dbForProject->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
 
-        if ($profile) {
-            throw new Exception('User already registered', 409, Exception::USER_ALREADY_EXISTS);
-        }
+        $user
+            ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
+            ->setAttribute('email', $email)
+            ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
+            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')]));
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user
-                ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
-                ->setAttribute('email', $email)
-                ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-                ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')])));
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         } catch (Duplicate $th) {
             throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
+        }
+
+        $audits
+            ->setResource('user/' . $user->getId())
+            ->setUser($user)
+        ;
+
+        $usage->setParam('users.update', 1);
+        $events->setParam('userId', $user->getId());
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::patch('/v1/account/phone')
+    ->desc('Update Account Phone')
+    ->groups(['api', 'account'])
+    ->label('event', 'users.[userId].update.phone')
+    ->label('scope', 'account')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updatePhone')
+    ->label('sdk.description', '/docs/references/account/update-phone.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('number', '', new ValidatorPhone(), 'Phone number.')
+    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('audits')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
+
+        $isAnonymousUser = Auth::isAnonymousUser($user); // Check if request is from an anonymous account for converting
+
+        if (
+            !$isAnonymousUser &&
+            !Auth::passwordVerify($password, $user->getAttribute('password'))
+        ) { // Double check user password
+            throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
+        }
+
+        $user
+            ->setAttribute('phone', $phone)
+            ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
+            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')]));
+
+        try {
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        } catch (Duplicate $th) {
+            throw new Exception('Phone number already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
         $audits
@@ -2157,6 +2207,146 @@ App::put('/v1/account/verification')
         /**
          * We act like we're updating and validating
          *  the verification token but actually we don't need it anymore.
+         */
+        $dbForProject->deleteDocument('tokens', $verification);
+        $dbForProject->deleteCachedDocument('users', $profile->getId());
+
+        $audits->setResource('user/' . $user->getId());
+
+        $usage->setParam('users.update', 1);
+
+        $events
+            ->setParam('userId', $user->getId())
+            ->setParam('tokenId', $verificationDocument->getId())
+        ;
+
+        $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
+    });
+
+App::post('/v1/account/verification/phone')
+    ->desc('Create Phone Verification')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('event', 'users.[userId].verification.[tokenId].create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createPhoneVerification')
+    ->label('sdk.description', '/docs/references/account/create-phone-verification.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOKEN)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'userId:{userId}')
+    ->inject('request')
+    ->inject('response')
+    ->inject('phone')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('audits')
+    ->inject('events')
+    ->inject('usage')
+    ->action(function (Request $request, Response $response, Phone $phone, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage) {
+
+        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
+        }
+
+        if (empty($user->getAttribute('phone'))) {
+            throw new Exception('User has no phone number.', 400);
+        }
+
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
+        $verificationSecret = Auth::tokenGenerator();
+
+        $secret = $phone->generateSecretDigits();
+        $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
+
+        $verification = new Document([
+            '$id' => $dbForProject->getId(),
+            'userId' => $user->getId(),
+            'type' => Auth::TOKEN_TYPE_PHONE,
+            'secret' => $secret,
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+        ]);
+
+        Authorization::setRole('user:' . $user->getId());
+
+        $verification = $dbForProject->createDocument('tokens', $verification
+            ->setAttribute('$read', ['user:' . $user->getId()])
+            ->setAttribute('$write', ['user:' . $user->getId()]));
+
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $phone->send(APP::getEnv('_APP_PHONE_FROM'), $user->getAttribute('phone'), $secret);
+
+        $events
+            ->setParam('userId', $user->getId())
+            ->setParam('tokenId', $verification->getId())
+            ->setPayload($response->output(
+                $verification->setAttribute('secret', $verificationSecret),
+                Response::MODEL_TOKEN
+            ))
+        ;
+
+        // Hide secret for clients
+        $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
+
+        $audits->setResource('user/' . $user->getId());
+        $usage->setParam('users.update', 1);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($verification, Response::MODEL_TOKEN);
+    });
+
+App::put('/v1/account/verification/phone')
+    ->desc('Create Phone Verification (confirmation)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'public')
+    ->label('event', 'users.[userId].verification.[tokenId].update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updatePhoneVerification')
+    ->label('sdk.description', '/docs/references/account/update-phone-verification.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOKEN)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'userId:{param-userId}')
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('secret', '', new Text(256), 'Valid verification token.')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('audits')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
+
+        $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+
+        if ($profile->isEmpty()) {
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+        }
+
+        $verification = Auth::phoneTokenVerify($user->getAttribute('tokens', []), $secret);
+
+        if (!$verification) {
+            throw new Exception('Invalid verification token', 401, Exception::USER_INVALID_TOKEN);
+        }
+
+        Authorization::setRole('user:' . $profile->getId());
+
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('phoneVerification', true));
+
+        $verificationDocument = $dbForProject->getDocument('tokens', $verification);
+
+        /**
+         * We act like we're updating and validating the verification token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $verification);
         $dbForProject->deleteCachedDocument('users', $profile->getId());
