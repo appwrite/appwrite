@@ -551,11 +551,6 @@ App::patch('/v1/users/:userId/email')
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
-        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
-        if (!$isAnonymousUser) {
-            //TODO: Remove previous unique ID.
-        }
-
         $email = \strtolower($email);
 
         $user

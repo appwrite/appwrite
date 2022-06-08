@@ -175,6 +175,10 @@ services:
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_PHONE_PROVIDER
+      - _APP_PHONE_FROM
+      - _APP_PHONE_USER
+      - _APP_PHONE_SECRET
 
   appwrite-realtime:
     entrypoint: realtime
