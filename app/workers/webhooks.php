@@ -70,7 +70,7 @@ class WebhooksV1 extends Worker
                 'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
                 'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
                 'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
-                'X-' . APP_NAME . '-Webhook-Signature: ' . $webhook->getAttribute('signature', $signature),
+                'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
             ]
         );
 

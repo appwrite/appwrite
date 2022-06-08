@@ -718,11 +718,13 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('security', $security)
             ->setAttribute('httpUser', $httpUser)
             ->setAttribute('httpPass', $httpPass)
-            ->setAttribute('signatureKey', empty($signatureKey) ? \bin2hex(\random_bytes(64)) : $signatureKey)
         ;
 
-        $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
+        if(!empty($signatureKey)){
+            $webhook->setAttribute('signatureKey', $signatureKey);
+        }
 
+        $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);

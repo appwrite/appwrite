@@ -7,6 +7,15 @@ use Tests\E2E\Client;
 
 trait WebhooksBase
 {
+
+    public static function getWebhookSignature($webhook, $signatureKey) :string
+    {;
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        return base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+    }
+
+
     public function testCreateCollection(): array
     {
         /**
@@ -30,10 +39,7 @@ trait WebhooksBase
         $this->assertNotEmpty($actors['body']['$id']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -106,10 +112,7 @@ trait WebhooksBase
         sleep(10);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -139,10 +142,7 @@ trait WebhooksBase
         $this->assertEquals(204, $removed['headers']['status-code']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         // $this->assertEquals($webhook['method'], 'DELETE');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -195,10 +195,7 @@ trait WebhooksBase
         $this->assertNotEmpty($document['body']['$id']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -258,10 +255,7 @@ trait WebhooksBase
         $this->assertNotEmpty($document['body']['$id']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -328,10 +322,7 @@ trait WebhooksBase
         $this->assertEquals($document['headers']['status-code'], 204);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -385,10 +376,7 @@ trait WebhooksBase
         $this->assertNotEmpty($bucket['body']['$id']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -434,10 +422,7 @@ trait WebhooksBase
         $this->assertNotEmpty($bucket['body']['$id']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -498,10 +483,7 @@ trait WebhooksBase
         $this->assertNotEmpty($file['body']['$id']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -557,10 +539,7 @@ trait WebhooksBase
         $this->assertNotEmpty($file['body']['$id']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -611,10 +590,7 @@ trait WebhooksBase
         $this->assertEmpty($file['body']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -664,10 +640,7 @@ trait WebhooksBase
         $this->assertEmpty($bucket['body']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -706,10 +679,7 @@ trait WebhooksBase
         $this->assertNotEmpty($team['body']['$id']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -754,10 +724,7 @@ trait WebhooksBase
         $this->assertNotEmpty($team['body']['$id']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -806,10 +773,7 @@ trait WebhooksBase
         ], $this->getHeaders()));
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -864,10 +828,7 @@ trait WebhooksBase
         $membershipId = $team['body']['$id'];
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -939,10 +900,7 @@ trait WebhooksBase
         $this->assertEquals(204, $team['headers']['status-code']);
 
         $webhook = $this->getLastRequest();
-        $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
-        $url     = $webhook['url'];
-        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
