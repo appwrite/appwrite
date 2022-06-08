@@ -9,13 +9,13 @@ class Mock extends Phone
     /**
      * @var string
      */
-    static public string $defaultDigits = '123456';
+    public static string $defaultDigits = '123456';
 
     /**
      * @param string $from
      * @param string $to
      * @param string $message
-     * @return void 
+     * @return void
      */
     public function send(string $from, string $to, string $message): void
     {
@@ -24,7 +24,7 @@ class Mock extends Phone
 
     /**
      * @param int $digits
-     * @return string 
+     * @return string
      */
     public function generateSecretDigits(int $digits = 6): string
     {

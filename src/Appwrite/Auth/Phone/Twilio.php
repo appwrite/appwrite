@@ -15,10 +15,10 @@ class Twilio extends Phone
     private string $endpoint = 'https://api.twilio.com/2010-04-01';
 
     /**
-     * @param string $from 
-     * @param string $to 
-     * @param string $message 
-     * @return void 
+     * @param string $from
+     * @param string $to
+     * @param string $message
+     * @return void
      */
     public function send(string $from, string $to, string $message): void
     {
