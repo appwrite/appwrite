@@ -528,6 +528,32 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
+  appwrite-worker-messaging:
+    entrypoint: worker-messaging
+    <<: *x-logging
+    container_name: appwrite-worker-messaging
+    build:
+      context: .
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_PHONE_PROVIDER
+      - _APP_PHONE_USER
+      - _APP_PHONE_SECRET
+      - _APP_PHONE_FROM
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
+
   appwrite-maintenance:
     entrypoint: maintenance
     <<: *x-logging
