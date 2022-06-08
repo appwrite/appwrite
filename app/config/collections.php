@@ -1059,7 +1059,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'sessions',
+                '$id' => 'sessions', // TODO: Subqueries seems to be impossible to index. We dont have '.includes()' yet
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1092,7 +1092,7 @@ $collections = [
                 'filters' => ['subQueryMemberships'],
             ],
             [
-                '$id' => 'search',
+                '$id' => 'search', // TODO: We should probably rename this, as it will be users-facing. Maybe even remove it? But how would I search for user with mame "Matej" OR email "Matej"?
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1103,7 +1103,7 @@ $collections = [
                 'filters' => [],
             ]
         ],
-        'indexes' => [
+        'indexes' => [ // TODO: We should keep all indexes we have for internal purposes, and add index for each rule in response model. How do we add compound indexes?
             [
                 '$id' => '_key_email',
                 'type' => Database::INDEX_UNIQUE,

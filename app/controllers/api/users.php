@@ -119,18 +119,12 @@ App::get('/v1/users')
             }
         }
 
-        $queries = [];
-
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
-        }
-
         $usage
             ->setParam('users.read', 1)
         ;
 
         $response->dynamic(new Document([
-            'users' => $dbForProject->find('users', $queries, $limit, $offset, [], [$orderType], $cursorUser ?? null, $cursorDirection),
+            'users' => $dbForProject->find('users', $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorUser ?? null, $cursorDirection),
             'total' => $dbForProject->count('users', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
