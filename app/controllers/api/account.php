@@ -741,6 +741,8 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('events')
     ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audits, Event $events) {
 
+        /** @var Utopia\Database\Document $user */
+
         $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($user->isEmpty()) {
