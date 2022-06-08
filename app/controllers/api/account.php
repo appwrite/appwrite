@@ -2,7 +2,9 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Phone;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Auth\Validator\Phone as ValidatorPhone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
@@ -519,7 +521,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
-        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password'));
+        $isAnonymousUser = Auth::isAnonymousUser($user);
 
         if ($isAnonymousUser) {
             $user
@@ -788,6 +790,228 @@ App::put('/v1/account/sessions/magic-url')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $user->setAttribute('emailVerification', true);
+
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        if (false === $user) {
+            throw new Exception('Failed saving user to DB', 500, Exception::GENERAL_SERVER_ERROR);
+        }
+
+        $audits->setResource('user/' . $user->getId());
+
+        $events
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
+        ;
+
+        if (!Config::getParam('domainVerification')) {
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+        }
+
+        $protocol = $request->getProtocol();
+
+        $response
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ;
+
+        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+
+        $session
+            ->setAttribute('current', true)
+            ->setAttribute('countryName', $countryName)
+        ;
+
+        $response->dynamic($session, Response::MODEL_SESSION);
+    });
+
+App::post('/v1/account/sessions/phone')
+    ->desc('Create Phone session')
+    ->groups(['api', 'account'])
+    ->label('scope', 'public')
+    ->label('auth.type', 'phone')
+    ->label('sdk.auth', [])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createPhoneSession')
+    ->label('sdk.description', '/docs/references/account/create-phone-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOKEN)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('number', '', new ValidatorPhone, 'Phone number.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('audits')
+    ->inject('events')
+    ->inject('phone')
+    ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, Phone $phone) {
+        if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
+            throw new Exception('Phone Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
+        }
+
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
+        $user = $dbForProject->findOne('users', [new Query('phone', Query::TYPE_EQUAL, [$number])]);
+
+        if (!$user) {
+            $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
+
+            if ($limit !== 0) {
+                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+
+                if ($total >= $limit) {
+                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
+                }
+            }
+
+            $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+
+            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
+                '$id' => $userId,
+                '$read' => ['role:all'],
+                '$write' => ['user:' . $userId],
+                'email' => null,
+                'phone' => $number,
+                'emailVerification' => false,
+                'phoneVerification' => false,
+                'status' => true,
+                'password' => null,
+                'passwordUpdate' => 0,
+                'registration' => \time(),
+                'reset' => false,
+                'prefs' => new \stdClass(),
+                'sessions' => null,
+                'tokens' => null,
+                'memberships' => null,
+                'search' => implode(' ', [$userId, $number])
+            ])));
+        }
+
+        $secret = $phone->generateSecretDigits();
+
+        $expire = \time() + Auth::TOKEN_EXPIRATION_PHONE;
+
+        $token = new Document([
+            '$id' => $dbForProject->getId(),
+            'userId' => $user->getId(),
+            'type' => Auth::TOKEN_TYPE_PHONE,
+            'secret' => $secret,
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+        ]);
+
+        Authorization::setRole('user:' . $user->getId());
+
+        $token = $dbForProject->createDocument('tokens', $token
+            ->setAttribute('$read', ['user:' . $user->getId()])
+            ->setAttribute('$write', ['user:' . $user->getId()]));
+
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $phone->send(APP::getEnv('_APP_PHONE_FROM'), $number, $secret);
+
+        $events->setPayload(
+            $response->output(
+                $token->setAttribute('secret', $secret),
+                Response::MODEL_TOKEN
+            )
+        );
+
+        // Hide secret for clients
+        $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
+
+        $audits
+            ->setResource('user/' . $user->getId())
+            ->setUser($user)
+        ;
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($token, Response::MODEL_TOKEN)
+        ;
+    });
+
+App::put('/v1/account/sessions/phone')
+    ->desc('Create Phone session (confirmation)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'public')
+    ->label('event', 'users.[userId].sessions.[sessionId].create')
+    ->label('sdk.auth', [])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updatePhoneSession')
+    ->label('sdk.description', '/docs/references/account/update-phone-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->param('userId', '', new CustomId(), 'User ID.')
+    ->param('secret', '', new Text(256), 'Valid verification token.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('geodb')
+    ->inject('audits')
+    ->inject('events')
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audits, Event $events) {
+
+        $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+        }
+
+        $token = Auth::phoneTokenVerify($user->getAttribute('tokens', []), $secret);
+
+        if (!$token) {
+            throw new Exception('Invalid login token', 401, Exception::USER_INVALID_TOKEN);
+        }
+
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
+        $secret = Auth::tokenGenerator();
+        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $session = new Document(array_merge(
+            [
+                '$id' => $dbForProject->getId(),
+                'userId' => $user->getId(),
+                'provider' => Auth::SESSION_PROVIDER_PHONE,
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'expire' => $expiry,
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            ],
+            $detector->getOS(),
+            $detector->getClient(),
+            $detector->getDevice()
+        ));
+
+        Authorization::setRole('user:' . $user->getId());
+
+        $session = $dbForProject->createDocument('sessions', $session
+                ->setAttribute('$read', ['user:' . $user->getId()])
+                ->setAttribute('$write', ['user:' . $user->getId()]));
+
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        /**
+         * We act like we're updating and validating
+         *  the recovery token but actually we don't need it anymore.
+         */
+        $dbForProject->deleteDocument('tokens', $token);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $user->setAttribute('phoneVerification', true);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -1285,7 +1509,7 @@ App::patch('/v1/account/email')
     ->inject('events')
     ->action(function (string $email, string $password, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
-        $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
+        $isAnonymousUser = Auth::isAnonymousUser($user); // Check if request is from an anonymous account for converting
 
         if (
             !$isAnonymousUser &&

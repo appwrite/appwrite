@@ -23,6 +23,10 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Phone\Mock;
+use Appwrite\Auth\Phone\Telesign;
+use Appwrite\Auth\Phone\TextMagic;
+use Appwrite\Auth\Phone\Twilio;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
@@ -63,6 +67,8 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Wasabi;
+
+use function PHPUnit\Framework\matches;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -960,3 +966,17 @@ App::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
 }, ['register']);
+
+App::setResource('phone', function () {
+    $provider = App::getEnv('_APP_PHONE_PROVIDER');
+    $user = App::getEnv('_APP_PHONE_USER');
+    $secret = App::getEnv('_APP_PHONE_SECRET');
+
+    return match ($provider) {
+        'mock' => new Mock('', ''), // used for tests
+        'twilio' => new Twilio($user, $secret),
+        'text-magic' => new TextMagic($user, $secret),
+        'telesign' => new Telesign($user, $secret),
+        default => null
+    };
+});
