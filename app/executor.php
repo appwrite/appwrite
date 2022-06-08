@@ -178,9 +178,8 @@ App::post('/v1/runtimes')
     ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
         if ($activeRuntimes->exists($runtimeId)) {
 
-            if ($activeRuntimes->get($runtimeId)['key'] == 'Pending') {
-                sleep(1);
-                throw new \Exception('A runtime with the same ID is already being created.', 500);
+            if ($activeRuntimes->get($runtimeId)['key'] == 'pending') {
+                throw new \Exception('A runtime with the same ID is already being created. Attempt a execution soon.', 500);
             }
 
             throw new Exception('Runtime already exists.', 409);
@@ -196,14 +195,16 @@ App::post('/v1/runtimes')
 
         $secret = \bin2hex(\random_bytes(16));
 
-        $activeRuntimes->set($runtimeId, [
-            'id' => $containerId,
-            'name' => $runtimeId,
-            'created' => $startTime,
-            'updated' => $endTime,
-            'status' => 'Pending',
-            'key' => $secret,
-        ]);
+        if (!$remove) {
+            $activeRuntimes->set($runtimeId, [
+                'id' => $containerId,
+                'name' => $runtimeId,
+                'created' => $startTime,
+                'updated' => $endTime,
+                'status' => 'pending',
+                'key' => $secret,
+            ]);
+        }
 
         try {
             Console::info('Building container : ' . $runtimeId);
@@ -458,6 +459,19 @@ App::post('/v1/execution')
         function (string $runtimeId, array $vars, string $data, $timeout, $activeRuntimes, Response $response) {
             if (!$activeRuntimes->exists($runtimeId)) {
                 throw new Exception('Runtime not found. Please create the runtime.', 404);
+            }
+
+            for ($i = 0; $i < 5; $i++) {
+                if ($activeRuntimes->get($runtimeId)['status'] === 'pending') {
+                    Console::info('Waiting for runtime to be ready...');
+                    sleep(1);
+                } else {
+                    break;
+                }
+
+                if ($i === 4) {
+                    throw new Exception('Runtime failed to launch in allocated time.', 500);
+                }
             }
 
             $runtime = $activeRuntimes->get($runtimeId);

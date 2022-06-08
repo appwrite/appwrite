@@ -161,11 +161,13 @@ class Executor
             'timeout' => $timeout,
         ];
 
+
         /* Add 2 seconds as a buffer to the actual timeout value since there can be a slight variance*/
         $requestTimeout  = $timeout + 2;
 
+        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
+
         for ($attempts = 0; $attempts < 10; $attempts++) {
-            $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
             $status = $response['headers']['status-code'];
 
             try {
@@ -183,13 +185,9 @@ class Executor
                             entrypoint: $entrypoint,
                             commands: []
                         );
+
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
                         $status = $response['headers']['status-code'];
-
-                        // 500 usually means that the runtime is being created but is not ready, retry.
-                        if ($status == 500) {
-                            continue 2;
-                        }
 
                         break;
                     case $status === 406:
