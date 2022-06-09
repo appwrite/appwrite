@@ -439,7 +439,7 @@ App::patch('/v1/users/:userId/verification')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/verification')
+App::patch('/v1/users/:userId/verification/phone')
     ->desc('Update Phone Verification')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
