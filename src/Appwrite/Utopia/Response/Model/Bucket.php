@@ -7,7 +7,6 @@ use Appwrite\Utopia\Response\Model;
 
 class Bucket extends Model
 {
-
     public function __construct()
     {
         $this

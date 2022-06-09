@@ -223,8 +223,8 @@ class V13 extends Migration
     /**
      * Fix run on each document
      *
-     * @param \Utopia\Database\Document $document 
-     * @return \Utopia\Database\Document 
+     * @param \Utopia\Database\Document $document
+     * @return \Utopia\Database\Document
      */
     protected function fixDocument(Document $document)
     {
@@ -273,7 +273,9 @@ class V13 extends Migration
     public function migrateEvents(array $events): array
     {
         return array_filter(array_unique(array_map(function ($event) {
-            if (!in_array($event, $this->events)) return $event;
+            if (!in_array($event, $this->events)) {
+                return $event;
+            }
             $parts = \explode('.', $event);
             $first = array_shift($parts);
             switch ($first) {
@@ -317,7 +319,7 @@ class V13 extends Migration
                             return 'buckets.*.' . implode('.', $parts);
                         case 'files':
                             return 'buckets.*.' . $second . '.*.' . implode('.', $parts);
-                    }
+                    } // intentional fallthrough
                 case 'database':
                     $second = array_shift($parts);
                     switch ($second) {

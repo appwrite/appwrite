@@ -9,11 +9,11 @@ export let options = {
         {
             duration: '10s',
             target: 500
-        },
+    },
         {
             duration: '1m',
             target: 500
-        },
+    },
     ],
 }
 

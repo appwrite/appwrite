@@ -9,7 +9,6 @@ use Appwrite\Auth\OAuth2;
 
 class Spotify extends OAuth2
 {
-
     /**
      * @var string
      */
@@ -135,13 +134,13 @@ class Spotify extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
-     * Spotify does not assure that the email is verified 
-     * 
+     *
+     * Spotify does not assure that the email is verified
+     *
      * @link https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool

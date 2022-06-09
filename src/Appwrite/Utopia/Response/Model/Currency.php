@@ -60,7 +60,7 @@ class Currency extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Currency';
     }
@@ -70,7 +70,7 @@ class Currency extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_CURRENCY;
     }

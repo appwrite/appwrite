@@ -90,7 +90,7 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
 
-        $webhook = $this->client->call(Client::METHOD_POST, '/projects/'.$project['body']['$id'].'/webhooks', [
+        $webhook = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/webhooks', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -118,12 +118,14 @@ trait ProjectCustom
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
+            'signatureKey' => $webhook['body']['signatureKey'],
         ];
 
         return self::$project;
     }
 
-    public function getNewKey(array $scopes) {
+    public function getNewKey(array $scopes)
+    {
 
         $projectId = self::$project['$id'];
 

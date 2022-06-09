@@ -11,7 +11,7 @@ class Key extends Model
      * @var bool
      */
     protected $public = false;
-    
+
     public function __construct()
     {
         $this
@@ -48,7 +48,7 @@ class Key extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Key';
     }
@@ -58,7 +58,7 @@ class Key extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_KEY;
     }

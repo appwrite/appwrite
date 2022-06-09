@@ -77,7 +77,7 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
-        if($projectId === 'console') {
+        if ($projectId === 'console') {
             throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
         }
         $project = $dbForConsole->createDocument('projects', new Document([
@@ -106,7 +106,7 @@ App::post('/v1/projects')
             'search' => implode(' ', [$projectId, $name]),
         ]));
         /** @var array $collections */
-        $collections = Config::getParam('collections', []); 
+        $collections = Config::getParam('collections', []);
 
         $dbForProject->setNamespace("_{$project->getId()}");
         $dbForProject->create('appwrite');
@@ -118,7 +118,7 @@ App::post('/v1/projects')
         $adapter->setup();
 
         foreach ($collections as $key => $collection) {
-            if(($collection['$collection'] ?? '') !== Database::METADATA) {
+            if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
             $attributes = [];
@@ -281,7 +281,7 @@ App::get('/v1/projects/:projectId/usage')
 
             $stats = [];
 
-            Authorization::skip(function() use ($dbForProject, $periods, $range, $metrics, &$stats) {
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
@@ -303,7 +303,7 @@ App::get('/v1/projects/:projectId/usage')
                     $backfill = $limit - \count($requestDocs);
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match($period) { // convert period to seconds for unix timestamp math
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
                             '30m' => 1800,
                             '1d' => 86400,
                         };
@@ -374,8 +374,7 @@ App::patch('/v1/projects/:projectId')
                 ->setAttribute('legalCity', $legalCity)
                 ->setAttribute('legalAddress', $legalAddress)
                 ->setAttribute('legalTaxId', $legalTaxId)
-                ->setAttribute('search', implode(' ', [$projectId, $name]))
-        );
+                ->setAttribute('search', implode(' ', [$projectId, $name])));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -391,7 +390,7 @@ App::patch('/v1/projects/:projectId/service')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), function ($element) {return $element['optional'];})), true), 'Service name.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional'])), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')
@@ -470,8 +469,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
         $auths['limit'] = $limit;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('auths', $auths)
-        );
+            ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -584,6 +582,8 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
+
+
         $webhook = new Document([
             '$id' => $dbForConsole->getId(),
             '$read' => ['role:all'],
@@ -595,6 +595,7 @@ App::post('/v1/projects/:projectId/webhooks')
             'security' => $security,
             'httpUser' => $httpUser,
             'httpPass' => $httpPass,
+            'signatureKey' => \bin2hex(\random_bytes(64)),
         ]);
 
         $webhook = $dbForConsole->createDocument('webhooks', $webhook);
@@ -688,9 +689,10 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+    ->param('signatureKey', null, new Text(256), 'Webhook signature key. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, string $signatureKey, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -718,8 +720,11 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('httpPass', $httpPass)
         ;
 
-        $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
+        if (!empty($signatureKey)) {
+            $webhook->setAttribute('signatureKey', $signatureKey);
+        }
 
+        $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
@@ -751,7 +756,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if($webhook === false || $webhook->isEmpty()) {
+        if ($webhook === false || $webhook->isEmpty()) {
             throw new Exception('Webhook not found', 404, Exception::WEBHOOK_NOT_FOUND);
         }
 
@@ -941,7 +946,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
             new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
         ]);
 
-        if($key === false || $key->isEmpty()) {
+        if ($key === false || $key->isEmpty()) {
             throw new Exception('Key not found', 404, Exception::KEY_NOT_FOUND);
         }
 
