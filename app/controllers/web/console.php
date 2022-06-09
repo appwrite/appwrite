@@ -215,21 +215,56 @@ App::get('/console/keys')
             ->setParam('body', $page);
     });
 
-App::get('/console/database')
+App::get('/console/databases')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
     ->action(function (View $layout) {
 
-        $page = new View(__DIR__ . '/../../views/console/database/index.phtml');
+        $page = new View(__DIR__ . '/../../views/console/databases/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME . ' - Database')
             ->setParam('body', $page);
     });
 
-App::get('/console/database/collection')
+App::get('/console/databases/database')
+    ->groups(['web', 'console'])
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->param('id', '', new UID(), 'Database unique ID.')
+    ->inject('response')
+    ->inject('layout')
+    ->action(function (string $id, Response $response, View $layout) {
+
+        $logs = new View(__DIR__ . '/../../views/console/comps/logs.phtml');
+
+        $logs
+            ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
+            ->setParam('method', 'database.listLogs')
+            ->setParam('params', [
+                'database-id' => '{{router.params.id}}',
+            ])
+        ;
+
+        $page = new View(__DIR__ . '/../../views/console/databases/database.phtml');
+
+        $page->setParam('logs', $logs);
+
+        $layout
+            ->setParam('title', APP_NAME . ' - Database')
+            ->setParam('body', $page)
+        ;
+
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Expires', 0)
+            ->addHeader('Pragma', 'no-cache')
+        ;
+    });
+
+App::get('/console/databases/collection')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -248,7 +283,7 @@ App::get('/console/database/collection')
             ])
         ;
 
-        $page = new View(__DIR__ . '/../../views/console/database/collection.phtml');
+        $page = new View(__DIR__ . '/../../views/console/databases/collection.phtml');
 
         $page->setParam('logs', $logs);
 
@@ -264,7 +299,7 @@ App::get('/console/database/collection')
         ;
     });
 
-App::get('/console/database/document')
+App::get('/console/databases/document')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -283,7 +318,7 @@ App::get('/console/database/document')
             ])
         ;
 
-        $page = new View(__DIR__ . '/../../views/console/database/document.phtml');
+        $page = new View(__DIR__ . '/../../views/console/databases/document.phtml');
 
         $page
             ->setParam('new', false)
@@ -296,7 +331,7 @@ App::get('/console/database/document')
             ->setParam('body', $page);
     });
 
-App::get('/console/database/document/new')
+App::get('/console/databases/document/new')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -304,7 +339,7 @@ App::get('/console/database/document/new')
     ->inject('layout')
     ->action(function (string $collection, View $layout) {
 
-        $page = new View(__DIR__ . '/../../views/console/database/document.phtml');
+        $page = new View(__DIR__ . '/../../views/console/databases/document.phtml');
 
         $page
             ->setParam('new', true)

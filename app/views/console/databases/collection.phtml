@@ -4,20 +4,28 @@ $logs = $this->getParam('logs', null);
 
 ?>
 <div
-    data-service="database.getCollection"
+    data-service="databases.getCollection"
+    data-param-database-id="{{router.params.databaseId}}"
     data-param-collection-id="{{router.params.id}}"
     data-scope="sdk"
-    data-event="load,database.updateCollection,database.createAttribute,database.deleteAttribute,database.createIndex,database.deleteIndex"
+    data-event="load,databases.updateCollection,databases.createAttribute,databases.deleteAttribute,databases.createIndex,databases.deleteIndex"
     data-name="project-collection">
 
-    <div class="cover">
-        <h1 class="zone xl margin-bottom-large">
-            <a data-ls-attrs="href=/console/database?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Database</a>
+    <div
+        data-service="databases.get"
+        data-param-database-id="{{router.params.databaseId}}"
+        data-scope="sdk"
+        data-event="load,databases.update"
+        data-name="project-database">
+        <div class="cover">
+            <h1 class="zone xl margin-bottom-large">
+                <a data-ls-attrs="href=/console/databases/database?id={{router.params.databaseId}}&project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <span data-ls-bind="{{project-database.name}}">&nbsp;&nbsp;</span></a>
 
-            <br />
+                <br />
 
-            <span data-ls-bind="{{project-collection.name}}">&nbsp;&nbsp;</span>
-        </h1>
+                <span data-ls-bind="{{project-collection.name}}">&nbsp;&nbsp;</span>
+            </h1>
+        </div>
     </div>
 
     <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
@@ -39,8 +47,8 @@ $logs = $this->getParam('logs', null);
                 <h2>Documents</h2>
 
                 <div
-                    data-service="database.listDocuments"
-                    data-event="load,database.createDocument,database.updateDocument,database.deleteDocument"
+                    data-service="databases.listDocuments"
+                    data-event="load,databases.createDocument,databases.updateDocument,databases.deleteDocument"
                     data-param-collection-id="{{router.params.id}}"
                     data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                     data-param-order-types="DESC"
@@ -98,7 +106,7 @@ $logs = $this->getParam('logs', null);
 
                     <div class="pull-end text-align-center paging">
                         <form
-                            data-service="database.listDocuments"
+                            data-service="databases.listDocuments"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -114,7 +122,7 @@ $logs = $this->getParam('logs', null);
                         <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-documents.total|pageTotal}}"></span>
 
                         <form
-                            data-service="database.listDocuments"
+                            data-service="databases.listDocuments"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -266,13 +274,13 @@ $logs = $this->getParam('logs', null);
                                                 data-analytics-event="submit"
                                                 data-analytics-category="console"
                                                 data-analytics-label="Delete Collection Attribute"
-                                                data-service="database.deleteAttribute"
+                                                data-service="databases.deleteAttribute"
                                                 data-scope="sdk"
                                                 data-event="submit"
                                                 data-confirm="Are you sure you want to delete this attribute?"
                                                 data-success="alert,trigger"
                                                 data-success-param-alert-text="Deleted attribute successfully"
-                                                data-success-param-trigger-events="database.deleteAttribute"
+                                                data-success-param-trigger-events="databases.deleteAttribute"
                                                 data-failure="alert"
                                                 data-failure-param-alert-text="Failed to delete attribute"
                                                 data-failure-param-alert-classname="error">
@@ -382,13 +390,13 @@ $logs = $this->getParam('logs', null);
                                         data-analytics-event="submit"
                                         data-analytics-category="console"
                                         data-analytics-label="Delete Collection Index"
-                                        data-service="database.deleteIndex"
+                                        data-service="databases.deleteIndex"
                                         data-scope="sdk"
                                         data-event="submit"
                                         data-confirm="Are you sure you want to delete this index?"
                                         data-success="alert,trigger"
                                         data-success-param-alert-text="Deleted index successfully"
-                                        data-success-param-trigger-events="database.deleteIndex"
+                                        data-success-param-trigger-events="databases.deleteIndex"
                                         data-failure="alert"
                                         data-failure-param-alert-text="Failed to delete index"
                                         data-failure-param-alert-classname="error">
@@ -415,7 +423,7 @@ $logs = $this->getParam('logs', null);
             <li data-state="/console/database/collection/usage?id={{router.params.id}}&project={{router.params.project}}">
                 <form
                     class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
-                    data-service="database.getCollectionUsage"
+                    data-service="databases.getCollectionUsage"
                     data-event="submit"
                     data-name="usage"
                     data-param-collection-id="{{router.params.id}}"
@@ -427,7 +435,7 @@ $logs = $this->getParam('logs', null);
 
                 <form
                     class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
-                    data-service="database.getCollectionUsage"
+                    data-service="databases.getCollectionUsage"
                     data-event="submit"
                     data-name="usage"
                     data-param-collection-id="{{router.params.id}}">
@@ -438,7 +446,7 @@ $logs = $this->getParam('logs', null);
 
                 <form
                     class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
-                    data-service="database.getCollectionUsage"
+                    data-service="databases.getCollectionUsage"
                     data-event="submit"
                     data-name="usage"
                     data-param-collection-id="{{router.params.id}}"
@@ -450,7 +458,7 @@ $logs = $this->getParam('logs', null);
 
                 <h2>Usage</h2>
 
-                <div data-service="database.getCollectionUsage" data-event="load" data-name="usage" data-param-collection-id="{{router.params.id}}">
+                <div data-service="databases.getCollectionUsage" data-event="load" data-name="usage" data-param-collection-id="{{router.params.id}}">
                     <h3 class="margin-bottom-tiny">Documents</h3>
                     <p class="text-fade">Count of documents over time</p>
                     <div class="box margin-bottom-small">
@@ -500,13 +508,13 @@ $logs = $this->getParam('logs', null);
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Update Database Collection"
-                            data-service="database.updateCollection"
+                            data-service="databases.updateCollection"
                             data-scope="sdk"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
                             data-success="alert,trigger"
                             data-success-param-alert-text="Updated collection successfully"
-                            data-success-param-trigger-events="database.updateCollection"
+                            data-success-param-trigger-events="databases.updateCollection"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to update collection"
                             data-failure-param-alert-classname="error">
@@ -573,19 +581,19 @@ $logs = $this->getParam('logs', null);
                     </ul>
 
                         <form
-                            name="database.deleteCollection" class="margin-bottom"
+                            name="databases.deleteCollection" class="margin-bottom"
                             data-analytics
                             data-analytics-activity
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Delete Database Collection"
-                            data-service="database.deleteCollection"
+                            data-service="databases.deleteCollection"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
                             data-confirm="Are you sure you want to delete this collection?"
                             data-success="alert,trigger,redirect"
                             data-success-param-alert-text="Collection deleted successfully"
-                            data-success-param-trigger-events="database.deleteCollection"
+                            data-success-param-trigger-events="databases.deleteCollection"
                             data-success-param-redirect-url="/console/database?project={{router.params.project}}"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to delete collection"
@@ -611,12 +619,12 @@ $logs = $this->getParam('logs', null);
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Collection Attribute (string)"
-        data-service="database.createStringAttribute"
+        data-service="databases.createStringAttribute"
         data-scope="sdk"
         data-event="submit"
         data-success="alert,trigger,reset"
         data-success-param-alert-text="Created new attribute successfully"
-        data-success-param-trigger-events="database.createAttribute"
+        data-success-param-trigger-events="databases.createAttribute"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
@@ -667,12 +675,12 @@ $logs = $this->getParam('logs', null);
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Collection Attribute (integer)"
-        data-service="database.createIntegerAttribute"
+        data-service="databases.createIntegerAttribute"
         data-scope="sdk"
         data-event="submit"
         data-success="alert,trigger,reset"
         data-success-param-alert-text="Created new attribute successfully"
-        data-success-param-trigger-events="database.createAttribute"
+        data-success-param-trigger-events="databases.createAttribute"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
@@ -732,12 +740,12 @@ $logs = $this->getParam('logs', null);
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Collection Attribute (float)"
-        data-service="database.createFloatAttribute"
+        data-service="databases.createFloatAttribute"
         data-scope="sdk"
         data-event="submit"
         data-success="alert,trigger,reset"
         data-success-param-alert-text="Created new attribute successfully"
-        data-success-param-trigger-events="database.createAttribute"
+        data-success-param-trigger-events="databases.createAttribute"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
@@ -797,12 +805,12 @@ $logs = $this->getParam('logs', null);
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Collection Attribute (email)"
-        data-service="database.createEmailAttribute"
+        data-service="databases.createEmailAttribute"
         data-scope="sdk"
         data-event="submit"
         data-success="alert,trigger,reset"
         data-success-param-alert-text="Created new attribute successfully"
-        data-success-param-trigger-events="database.createAttribute"
+        data-success-param-trigger-events="databases.createAttribute"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
@@ -850,12 +858,12 @@ $logs = $this->getParam('logs', null);
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Collection Attribute (boolean)"
-        data-service="database.createBooleanAttribute"
+        data-service="databases.createBooleanAttribute"
         data-scope="sdk"
         data-event="submit"
         data-success="alert,trigger,reset"
         data-success-param-alert-text="Created new attribute successfully"
-        data-success-param-trigger-events="database.createAttribute"
+        data-success-param-trigger-events="databases.createAttribute"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
@@ -907,12 +915,12 @@ $logs = $this->getParam('logs', null);
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Collection Attribute (IP)"
-        data-service="database.createIpAttribute"
+        data-service="databases.createIpAttribute"
         data-scope="sdk"
         data-event="submit"
         data-success="alert,trigger,reset"
         data-success-param-alert-text="Created new attribute successfully"
-        data-success-param-trigger-events="database.createAttribute"
+        data-success-param-trigger-events="databases.createAttribute"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
@@ -960,12 +968,12 @@ $logs = $this->getParam('logs', null);
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Collection Attribute (url)"
-        data-service="database.createUrlAttribute"
+        data-service="databases.createUrlAttribute"
         data-scope="sdk"
         data-event="submit"
         data-success="alert,trigger,reset"
         data-success-param-alert-text="Created new attribute successfully"
-        data-success-param-trigger-events="database.createAttribute"
+        data-success-param-trigger-events="databases.createAttribute"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
@@ -1013,12 +1021,12 @@ $logs = $this->getParam('logs', null);
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Collection Attribute (enum)"
-        data-service="database.createEnumAttribute"
+        data-service="databases.createEnumAttribute"
         data-scope="sdk"
         data-event="submit"
         data-success="alert,trigger,reset"
         data-success-param-alert-text="Created new attribute successfully"
-        data-success-param-trigger-events="database.createAttribute"
+        data-success-param-trigger-events="databases.createAttribute"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create attribute"
         data-failure-param-alert-classname="error"
@@ -1093,12 +1101,12 @@ $logs = $this->getParam('logs', null);
         data-analytics-event="submit"
         data-analytics-category="console"
         data-analytics-label="Create Collection Index"
-        data-service="database.createIndex"
+        data-service="databases.createIndex"
         data-scope="sdk"
         data-event="submit"
         data-success="alert,trigger,reset"
         data-success-param-alert-text="Created new index successfully"
-        data-success-param-trigger-events="database.createIndex"
+        data-success-param-trigger-events="databases.createIndex"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create index"
         data-failure-param-alert-classname="error">
@@ -1148,7 +1156,7 @@ $logs = $this->getParam('logs', null);
     </form>
 </div>
 
-<div class="margin-top" data-service="database.listCollections" data-event="load,database.createCollection,database.updateCollection,database.deleteCollection" data-scope="sdk" data-param-limit="100" data-name="project-collections">
+<div class="margin-top" data-service="databases.listCollections" data-event="load,databases.createCollection,databases.updateCollection,databases.deleteCollection" data-scope="sdk" data-param-limit="100" data-name="project-collections">
 </div>
 
 <script type="text/html" id="template-attribute-title-first">
