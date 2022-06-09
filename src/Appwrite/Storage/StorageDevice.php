@@ -14,18 +14,6 @@ use Utopia\Storage\Device\S3;
 
 class StorageDevice
 {
-    /**
-     * @var string
-     */
-    protected $projectId;
-
-    /**
-     * Constructor
-     */
-    public function __construct($projectId)
-    {
-        $this->$projectId = $projectId;
-    }
 
     /**
      * Get Functions Storage Device
