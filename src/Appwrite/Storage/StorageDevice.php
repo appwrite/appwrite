@@ -14,6 +14,7 @@ use Utopia\Storage\Device\S3;
 
 class StorageDevice
 {
+    
     /**
      * Get Functions Storage Device
      * @param string $projectId of the project
