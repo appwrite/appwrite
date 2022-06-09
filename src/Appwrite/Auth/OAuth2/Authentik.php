@@ -140,7 +140,6 @@ class Authentik extends OAuth2
     /**
      * Check if the User email is verified
      * 
-     * 
      * @param string $accessToken
      * 
      * @return bool
@@ -197,7 +196,7 @@ class Authentik extends OAuth2
     {
         $secret = $this->getAppSecret();
 
-        return (isset($secret['clientSecret'])) ? $secret['clientSecret'] : ''; 
+        return $secret['clientSecret'] ?? ''; 
     }
 
      /**
@@ -208,7 +207,7 @@ class Authentik extends OAuth2
     protected function getAuthentikDomain(): string
     {
         $secret = $this->getAppSecret();
-        return (isset($secret['authentikDomain'])) ? $secret['authentikDomain'] : ''; 
+        return $secret['authentikDomain'] ?? ''; 
     }
 
     /**
