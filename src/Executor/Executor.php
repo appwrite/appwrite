@@ -4,6 +4,7 @@ namespace Executor;
 
 use Exception;
 use Utopia\App;
+use Utopia\CLI\Console;
 
 class Executor
 {
@@ -161,15 +162,13 @@ class Executor
             'timeout' => $timeout,
         ];
 
-
         /* Add 2 seconds as a buffer to the actual timeout value since there can be a slight variance*/
         $requestTimeout  = $timeout + 2;
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
+        $status = $response['headers']['status-code'];
 
         for ($attempts = 0; $attempts < 10; $attempts++) {
-            $status = $response['headers']['status-code'];
-
             try {
                 switch (true) {
                     case $status < 400:
@@ -185,18 +184,12 @@ class Executor
                             entrypoint: $entrypoint,
                             commands: []
                         );
-
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
                         $status = $response['headers']['status-code'];
-
                         break;
                     case $status === 406:
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
                         $status = $response['headers']['status-code'];
-
-                        if ($status < 400) {
-                            return $response['body'];
-                        }
                         break;
                     default:
                         throw new \Exception($response['body']['message'], $status);
