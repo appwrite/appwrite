@@ -1,3 +1,5 @@
+- Start using docker compose V2 (from `docker-compose` to `docker compose`)
+
 # Version 0.14.2
 
 ## Features

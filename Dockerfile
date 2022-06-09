@@ -130,6 +130,7 @@ LABEL maintainer="team@appwrite.io"
 ARG VERSION=dev
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
+ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
 
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
@@ -232,11 +233,15 @@ RUN \
   libmaxminddb-dev \
   certbot \
   docker-cli \
-  docker-compose \
   libgomp \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
+
+RUN \
+  mkdir -p $DOCKER_CONFIG/cli-plugins \
+  && curl -SL https://github.com/docker/compose/releases/download/v2.5.0/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose \
+  && chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
 RUN \
   if [ "$DEBUG" == "true" ]; then \
