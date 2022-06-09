@@ -582,6 +582,8 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
+
+
         $webhook = new Document([
             '$id' => $dbForConsole->getId(),
             '$read' => ['role:all'],
@@ -593,6 +595,7 @@ App::post('/v1/projects/:projectId/webhooks')
             'security' => $security,
             'httpUser' => $httpUser,
             'httpPass' => $httpPass,
+            'signatureKey' => \bin2hex(\random_bytes(64)),
         ]);
 
         $webhook = $dbForConsole->createDocument('webhooks', $webhook);
@@ -686,9 +689,10 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+    ->param('signatureKey', null, new Text(256), 'Webhook signature key. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, string $signatureKey, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -716,8 +720,11 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('httpPass', $httpPass)
         ;
 
-        $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
+        if (!empty($signatureKey)) {
+            $webhook->setAttribute('signatureKey', $signatureKey);
+        }
 
+        $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
