@@ -12,21 +12,21 @@ class Dailymotion extends OAuth2
     /**
      * @var string
      */
-    private $endpoint = 'https://api.dailymotion.com';
-    private $authEndpoint = 'https://www.dailymotion.com/oauth/authorize';
+    private string $endpoint = 'https://api.dailymotion.com';
+    private string $authEndpoint = 'https://www.dailymotion.com/oauth/authorize';
     
      /**
      * @var array
      */
-    protected $scopes = [
+    protected array $scopes = [
         'userinfo',
-        'email',
+        'email'
     ];
 
     /**
      * @var array
      */
-    protected $fields = [
+    protected array $fields = [
         'avatar_url',
         'email',
         'first_name',
@@ -40,12 +40,12 @@ class Dailymotion extends OAuth2
     /**
      * @var array
      */
-    protected $user = [];
+    protected array $user = [];
     
     /**
      * @var array
      */
-    protected $tokens = [];
+    protected array $tokens = [];
     
     /**
      * @return string
@@ -71,15 +71,6 @@ class Dailymotion extends OAuth2
 
         return $url;
     }
-
-    /**
-     * 
-     *
-     * @return array
-     */
-        protected function getFields(): array {
-        return $this->fields;
-        }
 
     /**
      * @param string $code
@@ -217,7 +208,7 @@ class Dailymotion extends OAuth2
                 $this->endpoint . '/user/me?',
                 ['Authorization: Bearer ' . \urlencode($accessToken)],
                 \http_build_query([
-                    'fields' => \implode(',', $this->getFields())])
+                    'fields' => \implode(',', $fields)])
             );
             $this->user = \json_decode($user, true);
         }
