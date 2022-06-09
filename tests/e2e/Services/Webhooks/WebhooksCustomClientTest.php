@@ -39,6 +39,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($account['body']);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -47,7 +51,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString('users.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
@@ -111,6 +115,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($account['headers']['status-code'], 200);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -119,7 +127,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString('users.*.update.status', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.update.status", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
@@ -161,6 +169,10 @@ class WebhooksCustomClientTest extends Scope
         $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -175,7 +187,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("users.{$id}.sessions.*.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.sessions.{$sessionId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.sessions.{$sessionId}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
@@ -246,6 +258,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($accountSession['headers']['status-code'], 204);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -260,7 +276,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("users.{$id}.sessions.*.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.sessions.{$sessionId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.sessions.{$sessionId}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
@@ -328,6 +344,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($accountSession['headers']['status-code'], 204);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -342,7 +362,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("users.{$id}.sessions.*.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.sessions.{$sessionId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.sessions.{$sessionId}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
@@ -414,6 +434,11 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsArray($account['body']);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -424,7 +449,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.update.name", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
@@ -463,6 +488,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsArray($account['body']);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -473,7 +502,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.update.password", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
@@ -514,6 +543,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsArray($account['body']);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -524,7 +557,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.update.email", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
@@ -566,6 +599,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsArray($account['body']);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -576,7 +613,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.update.prefs", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
@@ -617,6 +654,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsArray($recovery['body']);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -631,7 +672,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("users.{$id}.recovery.*.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.recovery.{$recoveryId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.recovery.{$recoveryId}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-User-Id'], $id);
@@ -673,6 +714,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsArray($recovery['body']);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -687,7 +732,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("users.{$id}.recovery.*.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.recovery.{$recoveryId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.recovery.{$recoveryId}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
@@ -725,6 +770,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsArray($verification['body']);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -739,7 +788,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("users.{$id}.verification.*.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.verification.{$verificationId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.verification.{$verificationId}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
@@ -779,6 +828,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsArray($verification['body']);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -793,7 +846,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("users.{$id}.verification.*.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.verification.{$verificationId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}.verification.{$verificationId}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
@@ -833,6 +886,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($team['body']['$id']);
 
         $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
@@ -851,7 +908,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertStringContainsString("teams.{$teamUid}.memberships.{$membershipUid}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("teams.{$teamUid}.memberships.{$membershipUid}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("teams.{$teamUid}.memberships.{$membershipUid}.update.status", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], 'not-yet-implemented');
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
