@@ -298,11 +298,11 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
 
     $service = $route->getLabel('sdk.namespace', '');
     if (!empty($service)) {
-        $roles = Authorization::getRoles();
+        $authRoles = Authorization::getRoles();
         if (
             array_key_exists($service, $project->getAttribute('services', []))
             && !$project->getAttribute('services', [])[$service]
-            && !(Auth::isPrivilegedUser($roles) || Auth::isAppUser($roles))
+            && !(Auth::isPrivilegedUser($authRoles) || Auth::isAppUser($authRoles))
         ) {
             throw new AppwriteException('Service is disabled', 503, AppwriteException::GENERAL_SERVICE_DISABLED);
         }
@@ -312,27 +312,6 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
         if ($project->isEmpty()) { // Check if permission is denied because project is missing
             throw new AppwriteException('Project not found', 404, AppwriteException::PROJECT_NOT_FOUND);
         }
-
-        // TODO: Is this broken?
-        /*
-        appwrite  | array(5) {
-        appwrite  |   [0]=>
-        appwrite  |   string(8) "role:all"
-        appwrite  |   [1]=>
-        appwrite  |   string(11) "role:member"
-        appwrite  |   [2]=>
-        appwrite  |   string(25) "user:62a0ceadbcd90be6ebaf"
-        appwrite  |   [3]=>
-        appwrite  |   string(25) "team:62a0ceb229130190e2bb"
-        appwrite  |   [4]=>
-        appwrite  |   string(31) "team:62a0ceb229130190e2bb/owner"
-        appwrite  | }
-        appwrite  | string(6) "member"
-
-        appwrite  | [Error] Message: matej@appwrite.io (role: ) missing scope (users.read)
-        */
-        \var_dump($roles);
-        \var_dump($role);
 
         throw new AppwriteException($user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')', 401, AppwriteException::GENERAL_UNAUTHORIZED_SCOPE);
     }

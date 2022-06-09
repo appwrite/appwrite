@@ -22,7 +22,6 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
             <h2>Users</h2>
 
             <!-- TODO: New queries syntax doesnt work. Needs to be fixed -->
-            <!-- TODO: Sorting not imlemented. Do we want to, or keep it for later refactor? -->
             <form class="box padding-small margin-bottom search"
                 data-service="users.list"
                 data-event="submit"
@@ -44,7 +43,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                 </div>
             </form>
 
-            <!-- TODO: Same search&sorting issue here -->
+            <!-- TODO: Same search issue here -->
             <div
                 data-service="users.list"
                 data-event="load,users.create,users.update,users.delete"

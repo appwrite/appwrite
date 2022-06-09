@@ -1059,7 +1059,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'sessions', // TODO: Subqueries seems to be impossible to index. We dont have '.includes()' yet
+                '$id' => 'sessions',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1090,20 +1090,9 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => ['subQueryMemberships'],
-            ],
-            [
-                '$id' => 'search', // TODO: We should probably rename this, as it will be users-facing. Maybe even remove it? But how would I search for user with mame "Matej" OR email "Matej"?
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
             ]
         ],
-        'indexes' => [ // TODO: We should keep all indexes we have for internal purposes, and add index for each rule in response model. How do we add compound indexes?
+        'indexes' => [
             [
                 '$id' => '_key_email',
                 'type' => Database::INDEX_UNIQUE,
@@ -1112,10 +1101,44 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_search',
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['search'],
+                '$id' => '_key_name',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['name'],
+                'lengths' => [256],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_registration',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['registration'],
                 'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_status',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['status'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_passwordUpdate',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['passwordUpdate'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_emailVerification',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['emailVerification'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_prefs',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['prefs'],
                 'orders' => [],
             ]
         ],

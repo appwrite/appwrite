@@ -106,8 +106,7 @@ App::post('/v1/account')
                 'prefs' => new \stdClass(),
                 'sessions' => null,
                 'tokens' => null,
-                'memberships' => null,
-                'search' => implode(' ', [$userId, $email, $name])
+                'memberships' => null
             ])));
         } catch (Duplicate $th) {
             throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
@@ -486,8 +485,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'prefs' => new \stdClass(),
                         'sessions' => null,
                         'tokens' => null,
-                        'memberships' => null,
-                        'search' => implode(' ', [$userId, $email, $name])
+                        'memberships' => null
                     ])));
                 } catch (Duplicate $th) {
                     throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
@@ -649,8 +647,7 @@ App::post('/v1/account/sessions/magic-url')
                 'prefs' => new \stdClass(),
                 'sessions' => null,
                 'tokens' => null,
-                'memberships' => null,
-                'search' => implode(' ', [$userId, $email])
+                'memberships' => null
             ])));
         }
 
@@ -887,8 +884,7 @@ App::post('/v1/account/sessions/anonymous')
             'prefs' => new \stdClass(),
             'sessions' => null,
             'tokens' => null,
-            'memberships' => null,
-            'search' => $userId
+            'memberships' => null
         ])));
 
         // Create session token
@@ -1204,7 +1200,7 @@ App::patch('/v1/account/name')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
             ->setAttribute('name', $name)
-            ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email')])));
+        );
 
         $audits
             ->setResource('user/' . $user->getId())
@@ -1306,7 +1302,7 @@ App::patch('/v1/account/email')
                 ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
                 ->setAttribute('email', $email)
                 ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-                ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')])));
+            );
         } catch (Duplicate $th) {
             throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
         }

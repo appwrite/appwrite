@@ -70,8 +70,7 @@ App::post('/v1/users')
                 'prefs' => new \stdClass(),
                 'sessions' => null,
                 'tokens' => null,
-                'memberships' => null,
-                'search' => implode(' ', [$userId, $email, $name])
+                'memberships' => null
             ]));
         } catch (Duplicate $th) {
             throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
@@ -461,7 +460,6 @@ App::patch('/v1/users/:userId/name')
 
         $user
             ->setAttribute('name', $name)
-            ->setAttribute('search', \implode(' ', [$user->getId(), $user->getAttribute('email'), $name]));
         ;
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -555,7 +553,6 @@ App::patch('/v1/users/:userId/email')
 
         $user
             ->setAttribute('email', $email)
-            ->setAttribute('search', \implode(' ', [$user->getId(), $email, $user->getAttribute('name')]))
         ;
 
         try {
