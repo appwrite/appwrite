@@ -173,10 +173,6 @@ App::post('/v1/databases')
         try {
             $dbForProject->createDocument('databases', new Document([
                 '$id' => $databaseId,
-                '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
-                '$write' => $write ?? [], // Collection permissions for collection documents (based on permission model)
-                'dateCreated' => time(),
-                'dateUpdated' => time(),
                 'name' => $name,
                 'search' => implode(' ', [$databaseId, $name]),
             ]));
@@ -410,7 +406,6 @@ App::put('/v1/databases/:databaseId')
         try {
             $database = $dbForProject->updateDocument('databases', $databaseId, $database
                 ->setAttribute('name', $name)
-                ->setAttribute('dateUpdated', time())
                 ->setAttribute('search', implode(' ', [$databaseId, $name])));
         } catch (AuthorizationException $exception) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
@@ -755,11 +750,6 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Appwrite\Event\Audit $audits */
-        /** @var Appwrite\Stats\Stats $usage */
-        /** @var Appwrite\Event\Event $events */
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
