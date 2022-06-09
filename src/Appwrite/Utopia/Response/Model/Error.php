@@ -22,6 +22,12 @@ class Error extends Model
                 'default' => '',
                 'example' => '404',
             ])
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Error type. You can learn more about all the error types at https://appwrite.io/docs/error-codes#errorTypes',
+                'default' => 'unknown',
+                'example' => 'not_found',
+            ])
             ->addRule('version', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Server version number.',
@@ -36,17 +42,17 @@ class Error extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Error';
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_ERROR;
     }

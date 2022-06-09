@@ -7,16 +7,16 @@ Once you add the dependencies, its extremely easy to get started with the SDK; A
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 void main() async {
-  Client client = Client();
+  Client client = Client()
     .setEndpoint('http://[HOSTNAME_OR_IP]/v1') // Make sure your endpoint is accessible
     .setProject('5ff3379a01d25') // Your project ID
     .setKey('cd868c7af8bdc893b4...93b7535db89')
-    .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
+    .setSelfSigned(); // Use only on dev mode with a self-signed SSL cert
 
   Users users = Users(client);
 
   try {
-    final response = await users.create(email: ‘email@example.com’,password: ‘password’, name: ‘name’);
+    final response = await users.create(userId: '[USER_ID]', email: ‘email@example.com’,password: ‘password’, name: ‘name’);
     print(response.data);
   } on AppwriteException catch(e) {
     print(e.message);
@@ -31,7 +31,7 @@ The Appwrite Dart SDK raises `AppwriteException` object with `message`, `code` a
 Users users = Users(client);
 
 try {
-  final response = await users.create(email: ‘email@example.com’,password: ‘password’, name: ‘name’);
+  final response = await users.create(userId: '[USER_ID]', email: ‘email@example.com’,password: ‘password’, name: ‘name’);
   print(response.data);
 } on AppwriteException catch(e) {
   //show message to user or do other operation based on error as required

@@ -2,6 +2,7 @@
 /vendor/
 /node_modules/
 /tests/resources/storage/
+/tests/resources/functions/**/code.tar.gz
 /app/sdks/*
 /.idea/
 .DS_Store

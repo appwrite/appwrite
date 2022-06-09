@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Appwrite\Database\Document;
+use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
 
@@ -29,7 +29,7 @@ class MessagingTest extends TestCase
 
         $event = [
             'project' => '1',
-            'roles' => ['*'],
+            'roles' => ['role:all'],
             'data' => [
                 'channels' => [
                     0 => 'account.123',
@@ -103,7 +103,7 @@ class MessagingTest extends TestCase
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['*'];
+        $event['roles'] = ['role:all'];
         $event['data']['channels'] = ['documents.123'];
 
         $receivers = $realtime->getSubscribers($event);
@@ -194,5 +194,99 @@ class MessagingTest extends TestCase
         $this->assertArrayHasKey('account.123', $channels);
         $this->assertArrayHasKey('account', $channels);
         $this->assertArrayNotHasKey('account.456', $channels);
+    }
+
+    public function testFromPayloadCollectionLevelPermissions(): void
+    {
+        /**
+         * Test Collection Level Permissions
+         */
+        $result = Realtime::fromPayload(
+            event: 'collections.collection_id.documents.document_id.create',
+            payload: new Document([
+                '$id' => 'test',
+                '$collection' => 'collection',
+                '$read' => ['role:admin'],
+                '$write' => ['role:admin']
+            ]),
+            collection: new Document([
+                '$id' => 'collection',
+                '$read' => ['role:all'],
+                '$write' => ['role:all'],
+                'permission' => 'collection'
+            ])
+        );
+
+        $this->assertContains('role:all', $result['roles']);
+        $this->assertNotContains('role:admin', $result['roles']);
+
+        /**
+         * Test Document Level Permissions
+         */
+        $result = Realtime::fromPayload(
+            event: 'collections.collection_id.documents.document_id.create',
+            payload: new Document([
+                '$id' => 'test',
+                '$collection' => 'collection',
+                '$read' => ['role:all'],
+                '$write' => ['role:all']
+            ]),
+            collection: new Document([
+                '$id' => 'collection',
+                '$read' => ['role:admin'],
+                '$write' => ['role:admin'],
+                'permission' => 'document'
+            ])
+        );
+
+        $this->assertContains('role:all', $result['roles']);
+        $this->assertNotContains('role:admin', $result['roles']);
+    }
+
+    public function testFromPayloadBucketLevelPermissions(): void
+    {
+        /**
+         * Test Collection Level Permissions
+         */
+        $result = Realtime::fromPayload(
+            event: 'buckets.bucket_id.files.file_id.create',
+            payload: new Document([
+                '$id' => 'test',
+                '$collection' => 'bucket',
+                '$read' => ['role:admin'],
+                '$write' => ['role:admin']
+            ]),
+            bucket: new Document([
+                '$id' => 'bucket',
+                '$read' => ['role:all'],
+                '$write' => ['role:all'],
+                'permission' => 'bucket'
+            ])
+        );
+
+        $this->assertContains('role:all', $result['roles']);
+        $this->assertNotContains('role:admin', $result['roles']);
+
+        /**
+         * Test Document Level Permissions
+         */
+        $result = Realtime::fromPayload(
+            event: 'buckets.bucket_id.files.file_id.create',
+            payload: new Document([
+                '$id' => 'test',
+                '$collection' => 'bucket',
+                '$read' => ['role:all'],
+                '$write' => ['role:all']
+            ]),
+            bucket: new Document([
+                '$id' => 'bucket',
+                '$read' => ['role:admin'],
+                '$write' => ['role:admin'],
+                'permission' => 'file'
+            ])
+        );
+
+        $this->assertContains('role:all', $result['roles']);
+        $this->assertNotContains('role:admin', $result['roles']);
     }
 }

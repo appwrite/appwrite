@@ -1,1 +1,0 @@
-Get a list of all the project's code tags. You can use the query params to filter your results.

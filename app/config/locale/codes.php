@@ -51,7 +51,7 @@ return [
     'or', // Oriya
     'tl', // Filipino
     'pl', // Polish
-    'pt-br', // Portuguese - Brazil	
+    'pt-br', // Portuguese - Brazil
     'pt-pt', // Portuguese - Portugal
     'pa', // Punjabi
     'ro', // Romanian
@@ -61,6 +61,7 @@ return [
     'si', // Sinhala
     'sk', // Slovakia
     'sl', // Slovenian
+    'sn', // Shona
     'sq', // Albanian
     'sv', // Swedish
     'ta', // Tamil

@@ -14,12 +14,12 @@ class Google extends OAuth2
     /**
      * @var string
      */
-    protected $version = 'v4';
+    protected string $version = 'v4';
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $scopes = [
         'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/userinfo.profile',
         'openid'
@@ -28,7 +28,12 @@ class Google extends OAuth2
     /**
      * @var array
      */
-    protected $user = [];
+    protected array $user = [];
+
+    /**
+     * @var array
+     */
+    protected array $tokens = [];
 
     /**
      * @return string
@@ -43,7 +48,7 @@ class Google extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://accounts.google.com/o/oauth2/v2/auth?'. \http_build_query([
+        return 'https://accounts.google.com/o/oauth2/v2/auth?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
@@ -55,29 +60,49 @@ class Google extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    protected function getTokens(string $code): array
     {
-        $accessToken = $this->request(
-            'POST',
-            'https://oauth2.googleapis.com/token?'.\http_build_query([
-                'code' => $code,
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'redirect_uri' => $this->callback,
-                'scope' => null,
-                'grant_type' => 'authorization_code'
-            ])
-        );
-
-        $accessToken = \json_decode($accessToken, true);
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
+        if (empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                'https://oauth2.googleapis.com/token?' . \http_build_query([
+                    'code' => $code,
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'redirect_uri' => $this->callback,
+                    'scope' => null,
+                    'grant_type' => 'authorization_code'
+                ])
+            ), true);
         }
 
-        return '';
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken): array
+    {
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            'https://oauth2.googleapis.com/token?' . \http_build_query([
+                'refresh_token' => $refreshToken,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'grant_type' => 'refresh_token'
+            ])
+        ), true);
+
+        if (empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
+        }
+
+        return $this->tokens;
     }
 
     /**
@@ -89,11 +114,7 @@ class Google extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['sub'] ?? '';
     }
 
     /**
@@ -105,11 +126,27 @@ class Google extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
+        return $user['email'] ?? '';
+    }
+
+    /**
+     * Check if the OAuth email is verified
+     *
+     * @link https://www.oauth.com/oauth2-servers/signing-in-with-google/verifying-the-user-info/
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['email_verified'] ?? false) {
+            return true;
         }
 
-        return '';
+        return false;
     }
 
     /**
@@ -121,11 +158,7 @@ class Google extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
-        }
-
-        return '';
+        return $user['name'] ?? '';
     }
 
     /**
@@ -136,7 +169,7 @@ class Google extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v2/userinfo?access_token='.\urlencode($accessToken));
+            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v3/userinfo?access_token=' . \urlencode($accessToken));
             $this->user = \json_decode($user, true);
         }
 

@@ -12,17 +12,22 @@ class Discord extends OAuth2
     /**
      * @var string
      */
-    private $endpoint = 'https://discordapp.com/api';
+    private string $endpoint = 'https://discordapp.com/api';
 
     /**
      * @var array
      */
-    protected $user = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [
             'identify',
             'email'
     ];
@@ -40,7 +45,7 @@ class Discord extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint . '/oauth2/authorize?'.
+        $url = $this->endpoint . '/oauth2/authorize?' .
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
@@ -55,31 +60,53 @@ class Discord extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code): string
+    protected function getTokens(string $code): array
     {
-        $accessToken = $this->request(
+        if (empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->endpoint . '/oauth2/token',
+                ['Content-Type: application/x-www-form-urlencoded'],
+                \http_build_query([
+                    'grant_type' => 'authorization_code',
+                    'code' => $code,
+                    'redirect_uri' => $this->callback,
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'scope' => \implode(' ', $this->getScopes())
+                ])
+            ), true);
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken): array
+    {
+        $this->tokens = \json_decode($this->request(
             'POST',
             $this->endpoint . '/oauth2/token',
             ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'redirect_uri' => $this->callback,
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
-                'scope' => \implode(' ', $this->getScopes())
             ])
-        );
+        ), true);
 
-        $accessToken = \json_decode($accessToken, true);
-
-        if (isset($accessToken['access_token'])) {
-            return $accessToken['access_token'];
+        if (empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        return '';
+        return $this->tokens;
     }
 
     /**
@@ -91,11 +118,7 @@ class Discord extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['id'] ?? '';
     }
 
     /**
@@ -107,11 +130,27 @@ class Discord extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
+        return $user['email'] ?? '';
+    }
+
+    /**
+     * Check if the OAuth email is verified
+     *
+     * @link https://discord.com/developers/docs/resources/user
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['verified'] ?? false) {
+            return true;
         }
 
-        return '';
+        return false;
     }
 
     /**
@@ -123,11 +162,7 @@ class Discord extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['username'])) {
-            return $user['username'];
-        }
-
-        return '';
+        return $user['username'] ?? '';
     }
 
     /**
@@ -141,7 +176,7 @@ class Discord extends OAuth2
             $user = $this->request(
                 'GET',
                 $this->endpoint . '/users/@me',
-                ['Authorization: Bearer '.\urlencode($accessToken)]
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
             );
             $this->user = \json_decode($user, true);
         }

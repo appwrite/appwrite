@@ -70,17 +70,17 @@ class Platform extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Platform';
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_PLATFORM;
     }

@@ -46,7 +46,7 @@ class IP extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return 'Value must be a valid IP address';
     }
@@ -59,14 +59,14 @@ class IP extends Validator
      * @param  mixed $value
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value): bool
     {
         switch ($this->type) {
             case self::ALL:
                 if (\filter_var($value, FILTER_VALIDATE_IP)) {
                     return true;
                 }
-            break;
+                break;
 
             case self::V4:
                 if (\filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {

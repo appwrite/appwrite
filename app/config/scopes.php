@@ -19,6 +19,18 @@ return [ // List of publicly visible scopes
     'collections.write' => [
         'description' => 'Access to create, update, and delete your project\'s database collections',
     ],
+    'attributes.read' => [
+        'description' => 'Access to read your project\'s database collection\'s attributes',
+    ],
+    'attributes.write' => [
+        'description' => 'Access to create, update, and delete your project\'s database collection\'s attributes',
+    ],
+    'indexes.read' => [
+        'description' => 'Access to read your project\'s database collection\'s indexes',
+    ],
+    'indexes.write' => [
+        'description' => 'Access to create, update, and delete your project\'s database collection\'s indexes',
+    ],
     'documents.read'  => [
         'description' => 'Access to read your project\'s database documents',
     ],
@@ -31,11 +43,17 @@ return [ // List of publicly visible scopes
     'files.write' => [
         'description' => 'Access to create, update, and delete your project\'s storage files',
     ],
+    'buckets.read' => [
+        'description' => 'Access to read your project\'s storage buckets',
+    ],
+    'buckets.write' => [
+        'description' => 'Access to create, update, and delete your project\'s storage buckets',
+    ],
     'functions.read' => [
-        'description' => 'Access to read your project\'s functions and code tags',
+        'description' => 'Access to read your project\'s functions and code deployments',
     ],
     'functions.write' => [
-        'description' => 'Access to create, update, and delete your project\'s functions and code tags',
+        'description' => 'Access to create, update, and delete your project\'s functions and code deployments',
     ],
     'execution.read' => [
         'description' => 'Access to read your project\'s execution logs',
@@ -52,4 +70,4 @@ return [ // List of publicly visible scopes
     'health.read' => [
         'description' => 'Access to read your project\'s health status',
     ],
-];;
+];

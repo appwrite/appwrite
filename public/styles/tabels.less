@@ -7,13 +7,30 @@ table {
   position: relative;
   table-layout: fixed;
 
-
   &.y-scroll {
     overflow-y: auto;
   }
 
+  &.multi-line {
+    thead th, tbody td {
+      line-height: inherit;
+      text-overflow:inherit;
+      white-space: inherit;
+    }
+  }
+
+  &.borders {
+    td, th {
+      .func-border-end(1px, var(--config-border-fade-super));
+
+      &:last-child{
+        border: none;
+      }
+    }
+  }
+
   thead {
-    box-shadow: 0 0 2px rgba(0,0,0,.25);
+    //box-shadow: 0 0 2px rgba(0,0,0,.25);
     border-bottom: solid 1px var(--config-color-fade-super);
     font-size: 14px;
 
@@ -58,11 +75,21 @@ table {
 
     &:last-child {
       border-bottom: none;
+      td:first-child{border-bottom-left-radius: 6px;}
+      td:last-child{border-bottom-right-radius: 6px;}
     }
   }
 
-  tr:nth-child(even) {
-    background: var(--config-color-background-fade-super);
+  tr:nth-child(even){
+    @media @phones, @tablets{
+      background: var(--config-color-background-fade-super);
+    }
+    @media @desktops{
+      td{
+        background: var(--config-color-background-fade-super);
+      }
+    }
+
   }
 
   tr.selected {
@@ -95,10 +122,6 @@ table {
     &:first-child {
       .func-padding-start(30px);
     }
-
-    &:last-child {
-      .func-padding-end(30px);
-    }
   }
 
   td, th {
@@ -124,6 +147,8 @@ table {
         display: block;
       }
 
+      tr{ position:relative; }
+
       tr, th {
         padding-top: 12px;
         padding-bottom: 12px;
@@ -140,6 +165,8 @@ table {
         height: 40px;
         line-height: 40px;
         width: ~"calc(100% - 40px)";
+
+        &.col-name{  width: ~"calc(100% - 110px)";}
 
         &:first-child, &:last-child {
           padding: 0 10px;
@@ -166,6 +193,24 @@ table {
       thead {
         display: none;
       }
+
+      .cell-options-more{
+        position:absolute; inset-block-start:0; inset-inline-end:0; width:auto;
+      }
     }
+  }
+
+  .trim-inner-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    @media @desktops{width:100%;}
+  }
+  .cell-options-more {
+    button {
+      padding:0 12px; background-color:transparent; color:var(--config-color-fade);
+      &:focus-visible{outline:solid 1px var(--config-color-focus);}
+    }
+    @media @phones, @tablets{}
   }
 }

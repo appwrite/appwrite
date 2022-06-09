@@ -9,33 +9,37 @@ use Appwrite\Auth\OAuth2;
 
 class Twitch extends OAuth2
 {
+    /**
+     * @var string
+     */
+    private string $endpoint = 'https://id.twitch.tv/oauth2/';
 
     /**
      * @var string
      */
-    private $endpoint = 'https://id.twitch.tv/oauth2/';
-
-    /**
-     * @var string
-     */
-    private $resourceEndpoint = 'https://api.twitch.tv/helix/users';
+    private string $resourceEndpoint = 'https://api.twitch.tv/helix/users';
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $scopes = [
         'user:read:email',
     ];
 
     /**
      * @var array
      */
-    protected $user = [];
+    protected array $user = [];
+
+    /**
+     * @var array
+     */
+    protected array $tokens = [];
 
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'twitch';
     }
@@ -43,9 +47,9 @@ class Twitch extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return $this->endpoint . 'authorize?'.
+        return $this->endpoint . 'authorize?' .
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
@@ -59,74 +63,102 @@ class Twitch extends OAuth2
     /**
      * @param string $code
      *
-     * @return string
+     * @return array
      */
-    public function getAccessToken(string $code):string
+    protected function getTokens(string $code): array
     {
-        $result = \json_decode($this->request(
+        if (empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->endpoint . 'token?' . \http_build_query([
+                    "client_id" => $this->appID,
+                    "client_secret" => $this->appSecret,
+                    "code" => $code,
+                    "grant_type" => "authorization_code",
+                    "redirect_uri" => $this->callback
+                ])
+            ), true);
+        }
+
+        return $this->tokens;
+    }
+
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken): array
+    {
+        $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . 'token?'. \http_build_query([
+            $this->endpoint . 'token?' . \http_build_query([
                 "client_id" => $this->appID,
                 "client_secret" => $this->appSecret,
-                "code" => $code,
-                "grant_type" => "authorization_code",
-                "redirect_uri" => $this->callback
+                "refresh_token" => $refreshToken,
+                "grant_type" => "refresh_token",
             ])
         ), true);
 
-        if (isset($result['access_token'])) {
-            return $result['access_token'];
+        if (empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
         }
 
-        return '';
+        return $this->tokens;
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['id'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
-        }
-
-        return '';
+        return $user['email'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * Check if the OAuth email is verified
+     *
+     * If present, the email is verified
+     *
+     * @link https://dev.twitch.tv/docs/api/reference#get-users
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $email = $this->getUserEmail($accessToken);
+
+        return !empty($email);
+    }
+
+    /**
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['display_name'])) {
-            return $user['display_name'];
-        }
-
-        return '';
+        return $user['display_name'] ?? '';
     }
 
     /**
@@ -141,8 +173,8 @@ class Twitch extends OAuth2
                 'GET',
                 $this->resourceEndpoint,
                 [
-                    'Authorization: Bearer '.\urlencode($accessToken),
-                    'Client-Id: '. \urlencode($this->appID)
+                    'Authorization: Bearer ' . \urlencode($accessToken),
+                    'Client-Id: ' . \urlencode($this->appID)
                 ]
             ), true);
 

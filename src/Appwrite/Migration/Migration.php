@@ -2,63 +2,74 @@
 
 namespace Appwrite\Migration;
 
-use Appwrite\Database\Document;
-use Appwrite\Database\Database;
-use PDO;
 use Swoole\Runtime;
+use Utopia\Database\Document;
+use Utopia\Database\Database;
 use Utopia\CLI\Console;
-use Utopia\Exception;
+use Utopia\Config\Config;
+use Exception;
+use Utopia\App;
+use Utopia\Database\Validator\Authorization;
 
 abstract class Migration
 {
     /**
-     * @var PDO
-     */
-    protected $db;
-
-    /**
      * @var int
      */
-    protected $limit = 50;
+    protected int $limit = 100;
 
     /**
      * @var Document
      */
-    protected $project;
+    protected Document $project;
 
     /**
      * @var Database
      */
-    protected $projectDB;
+    protected Database $projectDB;
+
+    /**
+     * @var Database
+     */
+    protected Database $consoleDB;
 
     /**
      * @var array
      */
     public static array $versions = [
-        '0.6.0' => 'V05',
-        '0.7.0' => 'V06',
-        '0.8.0' => 'V07',
-        '0.9.0' => 'V08',
-        '0.9.1' => 'V08',
-        '0.9.2' => 'V08',
-        '0.9.3' => 'V08',
-        '0.9.4' => 'V08',
-        '0.10.0' => 'V09',
-        '0.10.1' => 'V09',
-        '0.10.2' => 'V09',
-        '0.10.3' => 'V09',
-        '0.10.4' => 'V09',
-        '0.11.0' => 'V10',
+        '0.13.0' => 'V12',
+        '0.13.1' => 'V12',
+        '0.13.2' => 'V12',
+        '0.13.3' => 'V12',
+        '0.13.4' => 'V12',
+        '0.14.0' => 'V13',
+        '0.14.1' => 'V13',
+        '0.14.2' => 'V13',
     ];
 
     /**
-     * Migration constructor.
-     *
-     * @param PDO $pdo
+     * @var array
      */
-    public function __construct(PDO $db)
+    protected array $collections;
+
+    public function __construct()
     {
-        $this->db = $db;
+        Authorization::disable();
+        Authorization::setDefaultStatus(false);
+        $this->collections = array_merge([
+            '_metadata' => [
+                '$id' => '_metadata',
+                '$collection' => Database::METADATA
+            ],
+            'audit' => [
+                '$id' => 'audit',
+                '$collection' => Database::METADATA
+            ],
+            'abuse' => [
+                '$id' => 'abuse',
+                '$collection' => Database::METADATA
+            ]
+        ], Config::getParam('collections', []));
     }
 
     /**
@@ -66,14 +77,18 @@ abstract class Migration
      *
      * @param Document $project
      * @param Database $projectDB
+     * @param Database $oldConsoleDB
      *
-     * @return Migration
+     * @return self
      */
-    public function setProject(Document $project, Database $projectDB): Migration
+    public function setProject(Document $project, Database $projectDB, Database $consoleDB): self
     {
         $this->project = $project;
         $this->projectDB = $projectDB;
-        $this->projectDB->setNamespace('app_' . $project->getId());
+        $this->projectDB->setNamespace('_' . $this->project->getId());
+
+        $this->consoleDB = $consoleDB;
+
         return $this;
     }
 
@@ -84,79 +99,132 @@ abstract class Migration
      */
     public function forEachDocument(callable $callback): void
     {
-        $sum = $this->limit;
-        $offset = 0;
+        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-        while ($sum >= $this->limit) {
-            $all = $this->projectDB->getCollection([
-                'limit' => $this->limit,
-                'offset' => $offset,
-                'orderType' => 'DESC',
-            ]);
+        foreach ($this->collections as $collection) {
+            if ($collection['$collection'] !== Database::METADATA) {
+                return;
+            }
+            $sum = 0;
+            $nextDocument = null;
+            $collectionCount = $this->projectDB->count($collection['$id']);
+            Console::log('Migrating Collection ' . $collection['$id'] . ':');
 
-            $sum = \count($all);
-            Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+            do {
+                $documents = $this->projectDB->find($collection['$id'], limit: $this->limit, cursor: $nextDocument);
+                $count = count($documents);
+                $sum += $count;
 
-            Console::log('Migrating: ' . $offset . ' / ' . $this->projectDB->getSum());
-            \Co\run(function () use ($all, $callback) {
-                foreach ($all as $document) {
-                    go(function () use ($document, $callback) {
-                        if (empty($document->getId()) || empty($document->getCollection())) {
-                            if ($document->getCollection() !== 0) {
-                                Console::warning('Skipped Document due to missing ID or Collection.');
+                Console::log($sum . ' / ' . $collectionCount);
+
+                \Co\run(function (array $documents, callable $callback) {
+                    foreach ($documents as $document) {
+                        go(function (Document $document, callable $callback) {
+                            if (empty($document->getId()) || empty($document->getCollection())) {
+                                return;
                             }
-                            return;
-                        }
 
-                        $old = $document->getArrayCopy();
-                        $new = call_user_func($callback, $document);
+                            $old = $document->getArrayCopy();
+                            $new = call_user_func($callback, $document);
 
-                        if (!$this->check_diff_multi($new->getArrayCopy(), $old)) {
-                            return;
-                        }
-
-                        try {
-                            $new = $this->projectDB->overwriteDocument($document->getArrayCopy());
-                        } catch (\Throwable $th) {
-                            Console::error('Failed to update document: ' . $th->getMessage());
-                            return;
-
-                            if ($document && $new->getId() !== $document->getId()) {
-                                throw new Exception('Duplication Error');
+                            if (!self::hasDifference($new->getArrayCopy(), $old)) {
+                                return;
                             }
-                        }
-                    });
+
+                            try {
+                                $new = $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                            } catch (\Throwable $th) {
+                                Console::error('Failed to update document: ' . $th->getMessage());
+                                return;
+
+                                if ($document && $new->getId() !== $document->getId()) {
+                                    throw new Exception('Duplication Error');
+                                }
+                            }
+                        }, $document, $callback);
+                    }
+                }, $documents, $callback);
+
+                if ($count !== $this->limit) {
+                    $nextDocument = null;
+                } else {
+                    $nextDocument = end($documents);
                 }
-            });
-
-            $offset += $this->limit;
+            } while (!is_null($nextDocument));
         }
     }
 
-    public function check_diff_multi($array1, $array2)
+    /**
+     * Checks 2 arrays for differences.
+     *
+     * @param array $array1
+     * @param array $array2
+     * @return bool
+     */
+    public static function hasDifference(array $array1, array $array2): bool
     {
-        $result = array();
-
-        foreach ($array1 as $key => $val) {
-            if (is_array($val) && isset($array2[$key])) {
-                $tmp = $this->check_diff_multi($val, $array2[$key]);
-                if ($tmp) {
-                    $result[$key] = $tmp;
+        foreach ($array1 as $key => $value) {
+            if (is_array($value)) {
+                if (!isset($array2[$key]) || !is_array($array2[$key])) {
+                    return true;
+                } else {
+                    if (self::hasDifference($value, $array2[$key])) {
+                        return true;
+                    }
                 }
-            } elseif (!isset($array2[$key])) {
-                $result[$key] = null;
-            } elseif ($val !== $array2[$key]) {
-                $result[$key] = $array2[$key];
-            }
-
-            if (isset($array2[$key])) {
-                unset($array2[$key]);
+            } elseif (!array_key_exists($key, $array2) || $array2[$key] !== $value) {
+                return true;
             }
         }
 
-        $result = array_merge($result, $array2);
+        return false;
+    }
 
-        return $result;
+    /**
+     * Creates colletion from the config collection.
+     *
+     * @param string $id
+     * @param string|null $name
+     * @return void
+     * @throws \Throwable
+     */
+    protected function createCollection(string $id, string $name = null): void
+    {
+        $name ??= $id;
+
+        if (!$this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
+            $attributes = [];
+            $indexes = [];
+            $collection = $this->collections[$id];
+
+            foreach ($collection['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
+            }
+
+            foreach ($collection['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+
+            try {
+                $this->projectDB->createCollection($name, $attributes, $indexes);
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
     }
 
     /**

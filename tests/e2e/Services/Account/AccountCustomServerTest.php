@@ -12,9 +12,9 @@ class AccountCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testCreateAccount():array
+    public function testCreateAccount(): array
     {
-        $email = uniqid().'user@localhost.test';
+        $email = uniqid() . 'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -26,13 +26,14 @@ class AccountCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
+            'userId' => 'unique()',
             'email' => $email,
             'password' => $password,
             'name' => $name,
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        
+
         return [];
     }
 }

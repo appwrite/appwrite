@@ -11,7 +11,7 @@ class BaseList extends Model
      * @var string
      */
     protected $name = '';
-    
+
     /**
      * @var string
      */
@@ -32,16 +32,28 @@ class BaseList extends Model
         $this->public = $public;
 
         if ($paging) {
-            $this->addRule('sum', [
+            $namesWithCap = [
+                'documents', 'collections', 'users', 'files', 'buckets', 'functions',
+                'deployments', 'executions', 'projects', 'webhooks', 'keys',
+                'platforms', 'domains', 'memberships', 'teams'
+            ];
+
+            if (\in_array($name, $namesWithCap)) {
+                $description = 'Total number of ' . $key . ' documents that matched your query used as reference for offset pagination. When the `total` number of ' . $key . ' documents available is greater than 5000, total returned will be capped at 5000, and cursor pagination should be used. Read more about [pagination](https://appwrite.io/docs/pagination).';
+            } else {
+                $description = 'Total number of ' . $key . ' documents that matched your query.';
+            }
+
+            $this->addRule('total', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total number of items available on the server.',
+                'description' => $description,
                 'default' => 0,
                 'example' => 5,
             ]);
         }
         $this->addRule($key, [
             'type' => $model,
-            'description' => 'List of '.$key.'.',
+            'description' => 'List of ' . $key . '.',
             'default' => [],
             'array' => true,
         ]);
@@ -52,17 +64,17 @@ class BaseList extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return $this->type;
     }

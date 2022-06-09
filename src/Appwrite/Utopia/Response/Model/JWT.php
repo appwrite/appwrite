@@ -23,17 +23,17 @@ class JWT extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'JWT';
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_JWT;
     }

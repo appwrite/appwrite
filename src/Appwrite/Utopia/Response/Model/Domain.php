@@ -11,7 +11,7 @@ class Domain extends Model
      * @var bool
      */
     protected $public = false;
-    
+
     public function __construct()
     {
         $this
@@ -59,17 +59,17 @@ class Domain extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Domain';
     }
 
     /**
-     * Get Collection
+     * Get Type
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_DOMAIN;
     }

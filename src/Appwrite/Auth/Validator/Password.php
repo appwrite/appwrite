@@ -18,7 +18,7 @@ class Password extends Validator
      *
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return 'Password must be at least 8 characters';
     }
@@ -30,11 +30,11 @@ class Password extends Validator
      *
      * @return bool
      */
-    public function isValid($value)
+    public function isValid($value): bool
     {
         if (!\is_string($value)) {
             return false;
-        } 
+        }
 
         if (\strlen($value) < 8) {
             return false;

@@ -1,9 +1,12 @@
 <?php
 
-use Appwrite\Database\Document;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Request;
+use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Config\Config;
+use Utopia\Database\Document;
+use Utopia\Locale\Locale;
 
 App::get('/v1/locale')
     ->desc('Get User Locale')
@@ -20,12 +23,7 @@ App::get('/v1/locale')
     ->inject('response')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($request, $response, $locale, $geodb) {
-        /** @var Utopia\Swoole\Request $request */
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
-
+    ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
         $output = [];
@@ -40,8 +38,8 @@ App::get('/v1/locale')
 
         if ($record) {
             $output['countryCode'] = $record['country']['iso_code'];
-            $output['country'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            $output['continent'] = $locale->getText('continents.'.strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
+            $output['country'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            $output['continent'] = $locale->getText('continents.' . strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
             $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $locale->getText('locale.country.unknown');
             $output['continentCode'] = $record['continent']['code'];
             $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
@@ -63,8 +61,8 @@ App::get('/v1/locale')
         }
 
         $response
-            ->addHeader('Cache-Control', 'public, max-age='.$time)
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'public, max-age=' . $time)
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
         ;
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     });
@@ -82,16 +80,13 @@ App::get('/v1/locale/countries')
     ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-
+    ->action(function (Response $response, Locale $locale) {
         $list = Config::getParam('locale-countries'); /* @var $list array */
         $output = [];
 
         foreach ($list as $value) {
             $output[] = new Document([
-                'name' => $locale->getText('countries.'.strtolower($value)),
+                'name' => $locale->getText('countries.' . strtolower($value)),
                 'code' => $value,
             ]);
         }
@@ -100,7 +95,7 @@ App::get('/v1/locale/countries')
             return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
         });
 
-        $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
+        $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
 App::get('/v1/locale/countries/eu')
@@ -116,17 +111,14 @@ App::get('/v1/locale/countries/eu')
     ->label('sdk.response.model', Response::MODEL_COUNTRY_LIST)
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-
+    ->action(function (Response $response, Locale $locale) {
         $eu = Config::getParam('locale-eu');
         $output = [];
 
         foreach ($eu as $code) {
-            if ($locale->getText('countries.'.strtolower($code), false) !== false) {
+            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
                 $output[] = new Document([
-                    'name' => $locale->getText('countries.'.strtolower($code)),
+                    'name' => $locale->getText('countries.' . strtolower($code)),
                     'code' => $code,
                 ]);
             }
@@ -136,7 +128,7 @@ App::get('/v1/locale/countries/eu')
             return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
         });
 
-        $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
+        $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
 App::get('/v1/locale/countries/phones')
@@ -152,26 +144,23 @@ App::get('/v1/locale/countries/phones')
     ->label('sdk.response.model', Response::MODEL_PHONE_LIST)
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
-
+    ->action(function (Response $response, Locale $locale) {
         $list = Config::getParam('locale-phones'); /* @var $list array */
         $output = [];
 
         \asort($list);
 
         foreach ($list as $code => $name) {
-            if ($locale->getText('countries.'.strtolower($code), false) !== false) {
+            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
                 $output[] = new Document([
-                    'code' => '+'.$list[$code],
+                    'code' => '+' . $list[$code],
                     'countryCode' => $code,
-                    'countryName' => $locale->getText('countries.'.strtolower($code)),
+                    'countryName' => $locale->getText('countries.' . strtolower($code)),
                 ]);
             }
         }
 
-        $response->dynamic(new Document(['phones' => $output, 'sum' => \count($output)]), Response::MODEL_PHONE_LIST);
+        $response->dynamic(new Document(['phones' => $output, 'total' => \count($output)]), Response::MODEL_PHONE_LIST);
     });
 
 App::get('/v1/locale/continents')
@@ -187,15 +176,12 @@ App::get('/v1/locale/continents')
     ->label('sdk.response.model', Response::MODEL_CONTINENT_LIST)
     ->inject('response')
     ->inject('locale')
-    ->action(function ($response, $locale) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Locale\Locale $locale */
+    ->action(function (Response $response, Locale $locale) {
+        $list = Config::getParam('locale-continents');
 
-        $list = Config::getParam('locale-continents'); /* @var $list array */
-        
-        foreach ($list as $key => $value) {
+        foreach ($list as $value) {
             $output[] = new Document([
-                'name' => $locale->getText('continents.'.strtolower($value)),
+                'name' => $locale->getText('continents.' . strtolower($value)),
                 'code' => $value,
             ]);
         }
@@ -204,7 +190,7 @@ App::get('/v1/locale/continents')
             return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
         });
 
-        $response->dynamic(new Document(['continents' => $output, 'sum' => \count($output)]), Response::MODEL_CONTINENT_LIST);
+        $response->dynamic(new Document(['continents' => $output, 'total' => \count($output)]), Response::MODEL_CONTINENT_LIST);
     });
 
 App::get('/v1/locale/currencies')
@@ -219,16 +205,12 @@ App::get('/v1/locale/currencies')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_CURRENCY_LIST)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
-
+    ->action(function (Response $response) {
         $list = Config::getParam('locale-currencies');
 
-        $list = array_map(function($node) {
-            return new Document($node);
-        }, $list);
+        $list = array_map(fn ($node) => new Document($node), $list);
 
-        $response->dynamic(new Document(['currencies' => $list, 'sum' => \count($list)]), Response::MODEL_CURRENCY_LIST);
+        $response->dynamic(new Document(['currencies' => $list, 'total' => \count($list)]), Response::MODEL_CURRENCY_LIST);
     });
 
 
@@ -244,14 +226,10 @@ App::get('/v1/locale/languages')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LANGUAGE_LIST)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
-
+    ->action(function (Response $response) {
         $list = Config::getParam('locale-languages');
 
-        $list = array_map(function($node) {
-            return new Document($node);
-        }, $list);
+        $list = array_map(fn ($node) => new Document($node), $list);
 
-        $response->dynamic(new Document(['languages' => $list, 'sum' => \count($list)]), Response::MODEL_LANGUAGE_LIST);
+        $response->dynamic(new Document(['languages' => $list, 'total' => \count($list)]), Response::MODEL_LANGUAGE_LIST);
     });

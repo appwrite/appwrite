@@ -239,6 +239,20 @@ button,
   }
 }
 
+button.close {
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  padding: 0;
+  margin: 0;
+  background: var(--config-color-normal);
+  color: var(--config-color-background-fade);
+  border-radius: 50%;
+  .icon-cancel::before{line-height:1;}
+  &.is-margin-top-10{margin-top:10px;}
+}
+
+
 label {
   margin-bottom: 15px;
   display: block;
@@ -324,8 +338,6 @@ input[type=url] {
     text-align: left;
     direction: ltr;
   }
-
-  ;
 }
 
 select {
@@ -406,7 +418,7 @@ fieldset {
 
 .file-preview {
   background: var(--config-color-background-input) url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIElEQVQoU2NkYGAwZsAEZ9GFGIeIQix+wfQgyDODXSEAcUwGCrDSHgkAAAAASUVORK5CYII=) !important;
-  border: solid 1px #e2e2e2;
+  /*border: solid 1px #e2e2e2;*/
   box-shadow: inset 0 0 3px #a0a0a0;
   border-radius: 8px;
   width: ~"calc(100% - 2px)";
@@ -585,8 +597,8 @@ input[type=checkbox], input[type=radio] {
 
   &:checked:after {
     text-align: center;
-    font-family: "fontello";
-    content: '\e83d';
+    font-family: "icon";
+    content: '\ea14';
     font-size: 16px;
     line-height: 20px;
     color: var(--config-color-background-fade);
@@ -622,8 +634,25 @@ input[type=checkbox], input[type=radio] {
   }
 }
 
+input[type=checkbox] {
+  &:after {border-radius:4px;}
+}
+
 .input-copy {
   position: relative;
+
+  &::before {
+    content: '';
+    display: block;
+    position: absolute;
+    height: 50px;
+    background: var(--config-color-fade-light);
+    width: 50px;
+    right: 0;
+    border-radius: 8px;
+    z-index: 1;
+    margin: 1px;
+  }
 
   input,
   textarea {
@@ -634,22 +663,24 @@ input[type=checkbox], input[type=radio] {
 
   .copy {
     position: absolute;
+    z-index: 2;
     top: 0;
     .func-end(0);
-    .func-border-start(1px);
+    // border: solid 1px var(--config-color-fade-light);
+    .func-border-start(1px, var(--config-color-fade-light));
     height: ~"calc(100% - 2px)";
     width: 50px;
     line-height: 50px;
     text-align: center;
     background: var(--config-color-background-focus);
     margin: 1px;
-    border-radius: 0 10px 10px 0;
+    border-radius: 0 9px 9px 0;
   }
 }
 
 .paging {
   color: var(--config-color-fade);
-  padding: 5px 15px;
+  padding: 0;
   font-size: 12px;
 
   form {
@@ -1014,8 +1045,8 @@ hr {
       }
 
       &:before {
-        content: '\e807';
-        font-family: "fontello";
+        content: '\ea11';
+        font-family: 'icon';
         font-size: 12px;
         position: absolute;
         width: 20px;
@@ -1119,6 +1150,7 @@ ol {
 
   ul {
     .box;
+    border-radius: 4px;
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.10);
     display: none;
     position: absolute;
@@ -1144,6 +1176,7 @@ ol {
       .func-end(30px);
       .func-start(unset);
     }
+    &.no-arrow::before{display:none;}
 
     li {
       border-bottom: solid 1px var(--config-color-fade-super);
@@ -1153,11 +1186,11 @@ ol {
 
 
       &:first-child {
-        border-radius: 10px 10px 0 0;
+        border-radius: 4px 4px 0 0;
       }
 
       &:last-child {
-        border-radius: 0 0 10px 10px;
+        border-radius: 0 0 4px 4px;
       }
 
       &:hover {
@@ -1194,6 +1227,12 @@ ol {
         height: 30px;
         .func-margin-end(10px);
         .pull-start;
+      }
+
+      i.avatar {
+        text-align: center;
+        background: var(--config-color-dark);
+        color: var(--config-color-background-fade);
       }
 
       &:last-child {
@@ -1273,8 +1312,8 @@ ol {
 
       &::before {
         .pull-end;
-        content: '\e807';
-        font-family: fontello;
+        content: '\ea11';
+        font-family: 'icon';
         font-style: normal;
         display: inline-block;
         text-align: center;
@@ -1315,7 +1354,7 @@ ol {
     height: 18px;
     width: 18px;
     line-height: 18px;
-    font-size: 12px;
+    font-size: 10px;
     padding: 0;
     margin: 0;
     color: var(--config-color-fade);
