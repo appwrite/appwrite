@@ -343,6 +343,7 @@ App::post('/v1/runtimes')
             Console::success('Build Stage completed in ' . ($endTime - $startTime) . ' seconds');
         } catch (Throwable $th) {
             Console::error('Build failed: ' . $th->getMessage() . $stdout);
+
             throw new Exception($th->getMessage() . $stdout, 500);
         } finally {
             // Container cleanup
@@ -350,11 +351,13 @@ App::post('/v1/runtimes')
                 if (!empty($containerId)) {
                     // If container properly created
                     $orchestration->remove($containerId, true);
+                    $activeRuntimes->del($runtimeId);
                 } else {
                     // If whole creation failed, but container might have been initialized
                     try {
                         // Try to remove with contaier name instead of ID
                         $orchestration->remove($runtimeId, true);
+                        $activeRuntimes->del($runtimeId);
                     } catch (Throwable $th) {
                         // If fails, means initialization also failed.
                         // Contianer is not there, no need to remove
