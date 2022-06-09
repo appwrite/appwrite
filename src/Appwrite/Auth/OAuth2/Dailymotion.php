@@ -7,7 +7,7 @@ use Appwrite\Auth\OAuth2;
 // Reference Material
 // https://developers.dailymotion.com/api/#authentication
 
-class DailyMotion extends OAuth2
+class Dailymotion extends OAuth2
 {
     /**
      * @var string
@@ -52,7 +52,7 @@ class DailyMotion extends OAuth2
      */
     public function getName(): string
     {
-        return 'DailyMotion';
+        return 'dailymotion';
     }
 
     /**
@@ -77,7 +77,7 @@ class DailyMotion extends OAuth2
      *
      * @return array
      */
-        private function getFields(): array {
+        protected function getFields(): array {
         return $this->fields;
         }
 
@@ -172,7 +172,7 @@ class DailyMotion extends OAuth2
     /**
      * Check if the OAuth email is verified
      *
-     * @link https://discord.com/developers/docs/resources/user
+     * @link https://developers.dailymotion.com/api/#user-fields
      *
      * @param string $accessToken
      *
