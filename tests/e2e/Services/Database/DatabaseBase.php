@@ -118,6 +118,15 @@ trait DatabaseBase
             'required' => true,
         ]);
 
+        $duration = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'duration',
+            'required' => false,
+        ]);
+
         $actors = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -140,6 +149,11 @@ trait DatabaseBase
         $this->assertEquals($releaseYear['body']['type'], 'integer');
         $this->assertEquals($releaseYear['body']['required'], true);
 
+        $this->assertEquals($duration['headers']['status-code'], 201);
+        $this->assertEquals($duration['body']['key'], 'duration');
+        $this->assertEquals($duration['body']['type'], 'integer');
+        $this->assertEquals($duration['body']['required'], false);
+
         $this->assertEquals($actors['headers']['status-code'], 201);
         $this->assertEquals($actors['body']['key'], 'actors');
         $this->assertEquals($actors['body']['type'], 'string');
@@ -157,10 +171,11 @@ trait DatabaseBase
         ]), []);
 
         $this->assertIsArray($movies['body']['attributes']);
-        $this->assertCount(3, $movies['body']['attributes']);
+        $this->assertCount(4, $movies['body']['attributes']);
         $this->assertEquals($movies['body']['attributes'][0]['key'], $title['body']['key']);
         $this->assertEquals($movies['body']['attributes'][1]['key'], $releaseYear['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][2]['key'], $actors['body']['key']);
+        $this->assertEquals($movies['body']['attributes'][2]['key'], $duration['body']['key']);
+        $this->assertEquals($movies['body']['attributes'][3]['key'], $actors['body']['key']);
 
         return $data;
     }
@@ -748,6 +763,7 @@ trait DatabaseBase
             'data' => [
                 'title' => 'Spider-Man: Homecoming',
                 'releaseYear' => 2017,
+                'duration' => 0,
                 'actors' => [
                     'Tom Holland',
                     'Zendaya Maree Stoermer',
@@ -756,6 +772,7 @@ trait DatabaseBase
             'read' => ['user:' . $this->getUser()['$id']],
             'write' => ['user:' . $this->getUser()['$id']],
         ]);
+
 
         $document4 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -783,6 +800,7 @@ trait DatabaseBase
         $this->assertEquals($document2['headers']['status-code'], 201);
         $this->assertEquals($document2['body']['title'], 'Spider-Man: Far From Home');
         $this->assertEquals($document2['body']['releaseYear'], 2019);
+        $this->assertEquals($document2['body']['duration'], null);
         $this->assertIsArray($document2['body']['$read']);
         $this->assertIsArray($document2['body']['$write']);
         $this->assertCount(1, $document2['body']['$read']);
@@ -795,6 +813,7 @@ trait DatabaseBase
         $this->assertEquals($document3['headers']['status-code'], 201);
         $this->assertEquals($document3['body']['title'], 'Spider-Man: Homecoming');
         $this->assertEquals($document3['body']['releaseYear'], 2017);
+        $this->assertEquals($document3['body']['duration'], 0);
         $this->assertIsArray($document3['body']['$read']);
         $this->assertIsArray($document3['body']['$write']);
         $this->assertCount(1, $document3['body']['$read']);
