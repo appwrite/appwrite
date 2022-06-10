@@ -34,8 +34,7 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_SWOOLE_VERSION=v4.8.9 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
-    PHP_MAXMINDDB_VERSION=v1.11.0 \
-    DOCKER_COMPOSE_VERSION=v2.5.0
+    PHP_MAXMINDDB_VERSION=v1.11.0
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -131,7 +130,9 @@ LABEL maintainer="team@appwrite.io"
 ARG VERSION=dev
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
+
 ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+ENV DOCKER_COMPOSE_VERSION=v2.5.0
 
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
@@ -241,7 +242,8 @@ RUN \
 
 RUN \
   mkdir -p $DOCKER_CONFIG/cli-plugins \
-  && curl -SL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-linux-$(uname -m) -o $DOCKER_CONFIG/cli-plugins/docker-compose \
+  && ARCH=$(uname -m) && if [ $ARCH == "armv7l" ]; then $ARCH="armv7"; fi \
+  && curl -SL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-linux-$ARCH -o $DOCKER_CONFIG/cli-plugins/docker-compose \
   && chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
 RUN \
