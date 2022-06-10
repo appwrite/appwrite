@@ -34,7 +34,8 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_SWOOLE_VERSION=v4.8.9 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
-    PHP_MAXMINDDB_VERSION=v1.11.0
+    PHP_MAXMINDDB_VERSION=v1.11.0 \
+    DOCKER_COMPOSE_VERSION=v2.5.0
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -240,7 +241,7 @@ RUN \
 
 RUN \
   mkdir -p $DOCKER_CONFIG/cli-plugins \
-  && curl -SL https://github.com/docker/compose/releases/download/v2.5.0/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose \
+  && curl -SL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-linux-$(uname -m) -o $DOCKER_CONFIG/cli-plugins/docker-compose \
   && chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
 RUN \
