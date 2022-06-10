@@ -26,9 +26,9 @@
           "clientSecret": "oauth2Auth0ClientSecret",
           "auth0Domain": "oauth2Auth0Domain"
         },
-        "GitLab": {
-          "endpoint": "oauth2GitLabEndpoint",
-          "clientSecret": "oauth2GitLabClientSecret",
+        "Gitlab": {
+          "endpoint": "oauth2GitlabEndpoint",
+          "clientSecret": "oauth2GitlabClientSecret",
         },
       }
       let provider = element.getAttribute("data-forms-oauth-custom");

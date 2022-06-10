@@ -193,8 +193,9 @@ class Gitlab extends OAuth2
      */
     protected function getEndpoint(): string
     {
+        $defaultEndpoint = 'https://gitlab.com';
         $secret = $this->getAppSecret();
-
-        return $secret['endpoint'] ?? 'https://gitlab.com';
+        $endpoint = $secret['endpoint'] ?? $defaultEndpoint;
+        return empty($endpoint) ? $defaultEndpoint : $endpoint;
     }
 }
