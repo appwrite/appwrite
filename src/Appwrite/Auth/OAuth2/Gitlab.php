@@ -61,7 +61,7 @@ class Gitlab extends OAuth2
                 $this->getEndpoint() . '/oauth/token?' . \http_build_query([
                     'code' => $code,
                     'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
+                    'client_secret' => $this->getAppSecret()['clientSecret'],
                     'redirect_uri' => $this->callback,
                     'grant_type' => 'authorization_code'
                 ])
@@ -83,7 +83,7 @@ class Gitlab extends OAuth2
             $this->getEndpoint() . '/oauth/token?' . \http_build_query([
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'client_secret' => $this->getAppSecret()['clientSecret'],
                 'grant_type' => 'refresh_token'
             ])
         ), true);
