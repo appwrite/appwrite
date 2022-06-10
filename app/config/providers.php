@@ -107,7 +107,7 @@ return [ // Ordered by ABC.
         'icon' => 'icon-gitlab',
         'enabled' => true,
         'sandbox' => false,
-        'form' => false,
+        'form' => 'gitlab.phtml',
         'beta' => false,
         'mock' => false,
     ],
