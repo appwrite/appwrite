@@ -33,7 +33,8 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_MONGODB_VERSION=1.13.0 \
     PHP_SWOOLE_VERSION=v4.8.9 \
     PHP_IMAGICK_VERSION=3.7.0 \
-    PHP_SCRYPT_VERSION=v1.4.2 \
+    # For SCRYPT never go v1.4.2 or lower. That doesnt work on PHP 8 + Alpine3.15/16
+    PHP_SCRYPT_VERSION=master \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0
 
