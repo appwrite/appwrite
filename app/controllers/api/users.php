@@ -51,7 +51,7 @@ App::post('/v1/users')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $hash, mixed $hashOptions, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $userId, string $email, string $password, string $name, string $hash, mixed $hashOptions, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
 
