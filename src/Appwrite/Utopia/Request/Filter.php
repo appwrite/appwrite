@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Request;
 
 abstract class Filter
 {
-
     /**
      * Parse params to another format.
      *

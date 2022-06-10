@@ -74,7 +74,7 @@ class User extends Model
             ->addRule('prefs', [
                 'type' => Response::MODEL_PREFERENCES,
                 'description' => 'User preferences as a key-value object',
-                'default' => new \stdClass,
+                'default' => new \stdClass(),
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
             ])
         ;
@@ -82,18 +82,18 @@ class User extends Model
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function filter(Document $document): Document
     {
         $prefs = $document->getAttribute('prefs');
-        if($prefs instanceof Document) {
+        if ($prefs instanceof Document) {
             $prefs = $prefs->getArrayCopy();
         }
 
-        if(is_array($prefs) && empty($prefs)) {
-            $document->setAttribute('prefs', new \stdClass);
+        if (is_array($prefs) && empty($prefs)) {
+            $document->setAttribute('prefs', new \stdClass());
         }
         return $document;
     }
@@ -103,7 +103,7 @@ class User extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'User';
     }
@@ -113,7 +113,7 @@ class User extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_USER;
     }

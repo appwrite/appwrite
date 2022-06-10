@@ -5,6 +5,7 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Appwrite\Network\Validator\Host;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Validator\ArrayList;
@@ -27,7 +28,7 @@ App::get('/v1/mock/tests/foo')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -45,7 +46,7 @@ App::post('/v1/mock/tests/foo')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -63,7 +64,7 @@ App::patch('/v1/mock/tests/foo')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -81,7 +82,7 @@ App::put('/v1/mock/tests/foo')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -99,7 +100,7 @@ App::delete('/v1/mock/tests/foo')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -117,7 +118,7 @@ App::get('/v1/mock/tests/bar')
     ->label('sdk.mock', true)
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($required, $default, $z) {
     });
 
@@ -135,7 +136,7 @@ App::post('/v1/mock/tests/bar')
     ->label('sdk.mock', true)
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($required, $default, $z) {
     });
 
@@ -153,7 +154,7 @@ App::patch('/v1/mock/tests/bar')
     ->label('sdk.mock', true)
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($required, $default, $z) {
     });
 
@@ -171,7 +172,7 @@ App::put('/v1/mock/tests/bar')
     ->label('sdk.mock', true)
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($required, $default, $z) {
     });
 
@@ -189,7 +190,7 @@ App::delete('/v1/mock/tests/bar')
     ->label('sdk.mock', true)
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->action(function ($required, $default, $z) {
     });
 
@@ -206,13 +207,12 @@ App::get('/v1/mock/tests/general/download')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.mock', true)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Request $request */
-        
+    ->action(function (Response $response) {
+
         $response
             ->setContentType('text/plain')
             ->addHeader('Content-Disposition', 'attachment; filename="test.txt"')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->send("Download test passed.")
         ;
@@ -233,58 +233,56 @@ App::post('/v1/mock/tests/general/upload')
     ->label('sdk.mock', true)
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
-    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
     ->param('file', [], new File(), 'Sample file param', false)
     ->inject('request')
     ->inject('response')
-    ->action(function ($x, $y, $z, $file, $request, $response) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Utopia\Swoole\Response $response */
-        
+    ->action(function (string $x, int $y, array $z, array $file, Request $request, Response $response) {
+
         $file = $request->getFiles('file');
-        
+
         $contentRange = $request->getHeader('content-range');
 
-        $chunkSize = 5*1024*1024; // 5MB
+        $chunkSize = 5 * 1024 * 1024; // 5MB
 
-        if(!empty($contentRange)) {
+        if (!empty($contentRange)) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
             $size = $request->getContentRangeSize();
             $id = $request->getHeader('x-appwrite-id', '');
             $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
 
-            if(is_null($start) || is_null($end) || is_null($size)) {
+            if (is_null($start) || is_null($end) || is_null($size)) {
                 throw new Exception('Invalid content-range header', 400, Exception::GENERAL_MOCK);
             }
 
-            if($start > $end || $end > $size) {
+            if ($start > $end || $end > $size) {
                 throw new Exception('Invalid content-range header', 400, Exception::GENERAL_MOCK);
             }
 
-            if($start === 0 && !empty($id)) {
+            if ($start === 0 && !empty($id)) {
                 throw new Exception('First chunked request cannot have id header', 400, Exception::GENERAL_MOCK);
             }
 
-            if($start !== 0 && $id !== 'newfileid') {
+            if ($start !== 0 && $id !== 'newfileid') {
                 throw new Exception('All chunked request must have id header (except first)', 400, Exception::GENERAL_MOCK);
             }
 
-            if($end !== $size && $end-$start+1 !== $chunkSize) {
+            if ($end !== $size && $end - $start + 1 !== $chunkSize) {
                 throw new Exception('Chunk size must be 5MB (except last chunk)', 400, Exception::GENERAL_MOCK);
             }
 
             if ($end !== $size && $file['size'] !== $chunkSize) {
                 throw new Exception('Wrong chunk size', 400, Exception::GENERAL_MOCK);
             }
-            
-            if($file['size'] > $chunkSize) {
+
+            if ($file['size'] > $chunkSize) {
                 throw new Exception('Chunk size must be 5MB or less', 400, Exception::GENERAL_MOCK);
             }
 
-            if($end !== $size) {
+            if ($end !== $size) {
                 $response->json([
-                    '$id'=> 'newfileid',
+                    '$id' => 'newfileid',
                     'chunksTotal' => $file['size'] / $chunkSize,
                     'chunksUploaded' => $start / $chunkSize
                 ]);
@@ -293,11 +291,11 @@ App::post('/v1/mock/tests/general/upload')
             $file['tmp_name'] = (\is_array($file['tmp_name'])) ? $file['tmp_name'][0] : $file['tmp_name'];
             $file['name'] = (\is_array($file['name'])) ? $file['name'][0] : $file['name'];
             $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
-    
+
             if ($file['name'] !== 'file.png') {
                 throw new Exception('Wrong file name', 400, Exception::GENERAL_MOCK);
             }
-    
+
             if ($file['size'] !== 38756) {
                     throw new Exception('Wrong file size', 400, Exception::GENERAL_MOCK);
             }
@@ -321,8 +319,7 @@ App::get('/v1/mock/tests/general/redirect')
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->redirect('/v1/mock/tests/general/redirect/done');
     });
@@ -356,9 +353,7 @@ App::get('/v1/mock/tests/general/set-cookie')
     ->label('sdk.mock', true)
     ->inject('response')
     ->inject('request')
-    ->action(function ($response, $request) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Utopia\Request $request */
+    ->action(function (Response $response, Request $request) {
 
         $response->addCookie('cookieName', 'cookieValue', \time() + 31536000, '/', $request->getHostname(), true, true);
     });
@@ -376,8 +371,7 @@ App::get('/v1/mock/tests/general/get-cookie')
     ->label('sdk.response.model', Response::MODEL_MOCK)
     ->label('sdk.mock', true)
     ->inject('request')
-    ->action(function ($request) {
-        /** @var Appwrite\Utopia\Request $request */
+    ->action(function (Request $request) {
 
         if ($request->getCookie('cookieName', '') !== 'cookieValue') {
             throw new Exception('Missing cookie value', 400, Exception::GENERAL_MOCK);
@@ -396,8 +390,7 @@ App::get('/v1/mock/tests/general/empty')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('sdk.mock', true)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->noContent();
     });
@@ -447,8 +440,7 @@ App::get('/v1/mock/tests/general/502-error')
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('sdk.mock', true)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response
             ->setStatusCode(502)
@@ -467,10 +459,9 @@ App::get('/v1/mock/tests/general/oauth2')
     ->param('scope', '', new Text(100), 'OAuth2 scope list.')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
-    ->action(function ($client_id, $redirectURI, $scope, $state, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (string $client_id, string $redirectURI, string $scope, string $state, Response $response) {
 
-        $response->redirect($redirectURI.'?'.\http_build_query(['code' => 'abcdef', 'state' => $state]));
+        $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
 
 App::get('/v1/mock/tests/general/oauth2/token')
@@ -486,8 +477,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->param('code', '', new Text(100), 'OAuth2 state.', true)
     ->param('refresh_token', '', new Text(100), 'OAuth2 refresh token.', true)
     ->inject('response')
-    ->action(function ($client_id, $client_secret, $grantType, $redirectURI, $code, $refreshToken, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (string $client_id, string $client_secret, string $grantType, string $redirectURI, string $code, string $refreshToken, Response $response) {
 
         if ($client_id != '1') {
             throw new Exception('Invalid client ID', 400, Exception::GENERAL_MOCK);
@@ -503,13 +493,13 @@ App::get('/v1/mock/tests/general/oauth2/token')
             'expires_in' => 14400
         ];
 
-        if($grantType === 'authorization_code') {
+        if ($grantType === 'authorization_code') {
             if ($code !== 'abcdef') {
                 throw new Exception('Invalid token', 400, Exception::GENERAL_MOCK);
             }
 
             $response->json($responseJson);
-        } else if($grantType === 'refresh_token') {
+        } elseif ($grantType === 'refresh_token') {
             if ($refreshToken !== 'tuvwxyz') {
                 throw new Exception('Invalid refresh token', 400, Exception::GENERAL_MOCK);
             }
@@ -527,8 +517,7 @@ App::get('/v1/mock/tests/general/oauth2/user')
     ->label('docs', false)
     ->param('token', '', new Text(100), 'OAuth2 Access Token.')
     ->inject('response')
-    ->action(function ($token, $response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (string $token, Response $response) {
 
         if ($token != '123456') {
             throw new Exception('Invalid token', 400, Exception::GENERAL_MOCK);
@@ -547,8 +536,7 @@ App::get('/v1/mock/tests/general/oauth2/success')
     ->label('scope', 'public')
     ->label('docs', false)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->json([
             'result' => 'success',
@@ -561,8 +549,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
     ->label('scope', 'public')
     ->label('docs', false)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response
             ->setStatusCode(Response::STATUS_CODE_BAD_REQUEST)
@@ -571,16 +558,13 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::shutdown(function($utopia, $response, $request) {
-    /** @var Utopia\App $utopia */
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
+App::shutdown(function (App $utopia, Response $response, Request $request) {
 
     $result = [];
     $route  = $utopia->match($request);
-    $path   = APP_STORAGE_CACHE.'/tests.json';
+    $path   = APP_STORAGE_CACHE . '/tests.json';
     $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
-    
+
     if (!\is_array($tests)) {
         throw new Exception('Failed to read results', 500, Exception::GENERAL_MOCK);
     }

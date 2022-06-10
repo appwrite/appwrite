@@ -34,7 +34,7 @@
 
         alert: function(text, classname) {
           return function(alerts) {
-            alerts.add({ text: text, class: classname || "success" }, 3000);
+            alerts.add({ text: text, class: classname || "success" }, 6000);
           };
         },
 

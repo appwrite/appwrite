@@ -29,7 +29,6 @@
             <directory>./tests/e2e/Services/Storage</directory>
             <directory>./tests/e2e/Services/Teams</directory>
             <directory>./tests/e2e/Services/Users</directory>
-            <directory>./tests/e2e/Services/Workers</directory>
             <directory>./tests/e2e/Services/Webhooks</directory>
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>

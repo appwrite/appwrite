@@ -1,9 +1,33 @@
 <?php
 $fileLimit = $this->getParam('fileLimit', 0);
 $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
-$events = array_keys($this->getParam('events', []));
+$events = $this->getParam('events', []);
 $timeout = $this->getParam('timeout', 900);
 $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
+$patterns = [];
+
+foreach ($events as $name => $event) {
+    $patterns[] = $name;
+    foreach ($event as $key => $value) {
+        if (!\str_starts_with($key, '$')) {
+            if (!($value['$resource'] ?? false)) {
+                $patterns[] = "{$name}.{$key}";
+            } else {
+                $patterns[] = $key;
+                foreach ($value as $key2 => $value2) {
+                    if (!\str_starts_with($key2, '$')) {
+                        if (!($value2['$resource'] ?? false)) {
+                            $patterns[] = "{$key}.{$key2}";
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+sort($patterns);
+
 ?>
 <div
     data-service="functions.get"
@@ -396,12 +420,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 
                                                     <h1>STDOUT</h1>
 
-                                                    <div class="margin-bottom ide" data-ls-if="({{execution.stdout.length}})">
-                                                        <pre data-ls-bind="{{execution.stdout}}"></pre>
-                                                        <!-- <input type="hidden" data-ls-bind="{{execution.stdout}}" data-forms-code="bash" /> -->
+                                                    <div class="margin-bottom ide" data-ls-if="({{execution.response.length}})">
+                                                        <pre data-ls-bind="{{execution.response}}"></pre>
                                                     </div>
 
-                                                    <div class="margin-bottom" data-ls-if="(!{{execution.stdout.length}})">
+                                                    <div class="margin-bottom" data-ls-if="(!{{execution.response.length}})">
                                                         <p>No output was logged.</p>
                                                     </div>
                                                 </div>
@@ -469,7 +492,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                     </div>
                 </div>
             </li>
-            <li data-state="/console/functions/function/settings?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/functions/function/settings?id={{router.params.id}}&project={{router.params.project}}" x-data="events">
                 <h2>Settings</h2>
 
                 <div class="row responsive margin-top-negative">
@@ -507,32 +530,30 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                     <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Max value is <?php echo $this->escape(number_format($timeout)); ?> seconds (<?php echo $this->escape((int) ($timeout / 60)); ?> minutes)</div>
                                 </section>
 
-                                <section class="margin-bottom" data-forms-select-all>
-                                    <label for="events" class="margin-bottom">Events <span class="tooltip small" data-tooltip="Choose which events should trigger this function."><i class="icon-info-circled"></i></span></label>
-                                    <div class="row responsive thin margin-top-small">
-                                        <?php foreach ($events as $i => $event): ?>
-                                            <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small" title="<?php echo $event; ?>">
-                                                <input type="checkbox" name="events" data-ls-bind="{{project-function.events}}" id="<?php echo $event; ?>" value="<?php echo $event; ?>" data-by-key="true" />
-                                                &nbsp;
-                                                <label class="inline" for="<?php echo $event; ?>"><?php echo $event; ?></label>
+                                <section class="margin-bottom-small" data-ls-attrs="x-init=load({{project-function.events}})">
+                                    <label class="margin-bottom-small">Events <span class="tooltip small" data-tooltip="Set events that will trigger your function."><i class="icon-info-circled"></i></span></label>
+                                    <div>
+                                        <template x-for="event in Array.from(events)">
+                                            <div class="row events responsive thin margin-bottom-small">
+                                                <div class="col span-12 margin-bottom-small">
+                                                    <span class="text" x-text="event"></span>
+                                                    <span class="action" @click="removeEvent(event)">
+                                                        <i class="icon-trash"></i>
+                                                    </span>
+                                                </div>
+                                                <input name="events" data-cast-to="array" type="hidden" :value="event"></input>
                                             </div>
-                                            <?php if (($i + 1) % 2 === 0): ?>
-                                            </div>
-                                            <div class="row responsive thin">
-                                            <?php endif;?>
-
-                                        <?php endforeach;?>
+                                        </template>
                                     </div>
+                                    <button class="margin-end margin-bottom-small reverse" type="button" @click="showModal($refs.modal_function)">Add Event</button>
                                 </section>
 
                                 <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>
                                 <input type="text" id="function-schedule" class="full-width" name="schedule" autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />
                                 <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Leave blank for no schedule</div>
 
-                                <h3 class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function at runtime."><i class="icon-info-circled"></i></span></h3>
+                                <label class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function at runtime."><i class="icon-info-circled"></i></span></label>
                                 <div data-ls-if="(!{{project-function.vars.length}})">
-                                    <hr class="margin-bottom margin-top-no" />
-
                                     <fieldset name="vars" data-cast-to="object">
                                         <div data-ls-loop="project-function.vars" data-ls-as="var" id="project-vars" style="visibility: visible;">
                                             <div class="margin-bottom-small">
@@ -541,7 +562,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                                         <input type="hidden" data-forms-key-value data-ls-attrs="name={{$index}}" data-ls-bind="{{var}}" />
                                                     </div>
                                                     <div class="col span-2">
-                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-cancel"></i></button>
+                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-trash"></i></button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -554,14 +575,14 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                                                         <input type="hidden" data-ls-attrs="data-forms-key-value"/>
                                                     </div>
                                                     <div class="col span-2">
-                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-cancel"></i></button>
+                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-trash"></i></button>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </fieldset>
-                                    <hr class="margin-bottom margin-top-small" />
                                 </div>
+                                <hr class="margin-bottom margin-top-small" />
 
                                 <button>Update</button>
                             </div>
@@ -598,6 +619,41 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                             data-failure-param-alert-classname="error">
 
                             <button type="submit" class="danger fill">Delete Function</button>
+                        </form>
+                    </div>
+                </div>
+                <div x-ref="modal_function" data-ui-modal class="modal box close width-small height-small" data-button-hide="on">
+                    <div>
+                        <form @submit.prevent="addEvent($refs.modal_function)">
+                            <label for="event">
+                                Event
+                            </label>
+                            <select id="event" x-model="selected" @change="setEvent()">
+                                <option value="" selected>Select event</option>
+                                <?php foreach ($patterns as $event) : ?>
+                                    <option value="<?php echo $event; ?>"><?php echo $event; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div x-show="hasResource">
+                                <label x-text="resourceName + ' (optional)'" for="resource"></label>
+                                <input id="resource" type="text" :placeholder="resourceName" x-model="resource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
+                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
+                            </div>
+                            <div x-show="hasSubResource">
+                                <label x-text="subResourceName + ' (optional)'" for="subResource"></label>
+                                <input id="subResource" type="text" :placeholder="subResourceName" x-model="subResource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
+                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
+                            </div>
+                            <div x-show="hasAttribute">
+                                <label for="attribute">Add Attribute (optional)</label>
+                                <select id="attribute" x-model="attribute">
+                                    <option value="*">Select attribute</option>
+                                    <template x-for="attr in attributes">
+                                        <option :value="attr" x-text="attr"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <button x-show="selected" type="submit">Add Event</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                         </form>
                     </div>
                 </div>
@@ -647,7 +703,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
     --functionId={{project-function.$id}} \
     --activate=true \
     --entrypoint='scriptFile' \
-    --code='/myrepo/myfunction'" data-forms-code="bash" data-lang="bash" data-lang-label="Bash"></textarea>
+    --code='.'" data-forms-code="bash" data-lang="bash" data-lang-label="Bash"></textarea>
             </div>
 
             <p><b>PowerShell</b></p>
@@ -657,7 +713,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
     --functionId={{project-function.$id}} `
     --activate=true `
     --entrypoint='scriptFile' `
-    --code='/myrepo/myfunction'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
+    --code='.'" data-forms-code="powershell" data-lang="powershell" data-lang-label="PowerShell"></textarea>
             </div>
 
             <p>Learn more about <a href="https://appwrite.io/docs/server/functions#functionsCreateDeployment" target="_blank">creating deployments</a>, installing and using the <a href="https://appwrite.io/docs/command-line" target="_blank">Appwrite CLI</a>.</p>

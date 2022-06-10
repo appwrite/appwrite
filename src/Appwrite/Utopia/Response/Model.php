@@ -6,11 +6,11 @@ use Utopia\Database\Document;
 
 abstract class Model
 {
-    const TYPE_STRING = 'string';
-    const TYPE_INTEGER = 'integer';
-    const TYPE_FLOAT = 'double';
-    const TYPE_BOOLEAN = 'boolean';
-    const TYPE_JSON = 'json';
+    public const TYPE_STRING = 'string';
+    public const TYPE_INTEGER = 'integer';
+    public const TYPE_FLOAT = 'double';
+    public const TYPE_BOOLEAN = 'boolean';
+    public const TYPE_JSON = 'json';
 
     /**
      * @var bool
@@ -34,7 +34,7 @@ abstract class Model
 
     /**
      * Filter Document Structure
-     * 
+     *
      * @return Document
      */
     public function filter(Document $document): Document

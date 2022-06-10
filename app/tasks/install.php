@@ -18,7 +18,7 @@ $cli
     ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
     ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
     ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
-    ->param('interactive','Y', new Text(1), 'Run an interactive session', true)
+    ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
     ->action(function ($httpPort, $httpsPort, $organization, $image, $interactive) {
         /**
          * 1. Start - DONE
@@ -31,7 +31,7 @@ $cli
          *  2.4 Ask for all required vars not given as CLI args and if in interactive mode
          *      Otherwise, just use default vars. - DONE
          * 3. Ask user to backup important volumes, env vars, and SQL tables
-         *      In th future we can try and automate this for smaller/medium size setups 
+         *      In th future we can try and automate this for smaller/medium size setups
          * 4. Drop new docker-compose.yml setup (located inside the container, no network dependencies with appwrite.io) - DONE
          * 5. Run docker-compose up -d - DONE
          * 6. Run data migration
@@ -48,8 +48,8 @@ $cli
          */
         $analytics = new GoogleAnalytics('UA-26264668-9', uniqid('server.', true));
 
-        foreach($config as $category) {
-            foreach($category['variables'] ?? [] as $var) {
+        foreach ($config as $category) {
+            foreach ($category['variables'] ?? [] as $var) {
                 $vars[] = $var;
             }
         }
@@ -59,17 +59,17 @@ $cli
         // Create directory with write permissions
         if (null !== $path && !\file_exists(\dirname($path))) {
             if (!@\mkdir(\dirname($path), 0755, true)) {
-                Console::error('Can\'t create directory '.\dirname($path));
+                Console::error('Can\'t create directory ' . \dirname($path));
                 Console::exit(1);
             }
         }
 
-        $data = @file_get_contents($path.'/docker-compose.yml');
+        $data = @file_get_contents($path . '/docker-compose.yml');
 
-        if($data !== false) {
+        if ($data !== false) {
             $time = \time();
-            Console::info('Compose file found, creating backup: docker-compose.yml.'.$time.'.backup');
-            file_put_contents($path.'/docker-compose.yml.'.$time.'.backup',$data);
+            Console::info('Compose file found, creating backup: docker-compose.yml.' . $time . '.backup');
+            file_put_contents($path . '/docker-compose.yml.' . $time . '.backup', $data);
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
             $oldVersion = ($appwrite) ? $appwrite->getImageVersion() : null;
@@ -83,33 +83,39 @@ $cli
                 Console::warning('Traefik not found. Falling back to default ports.');
             }
 
-            if($oldVersion) {
-                foreach($compose->getServices() as $service) { // Fetch all env vars from previous compose file
-                    if(!$service) {
+            if ($oldVersion) {
+                foreach ($compose->getServices() as $service) { // Fetch all env vars from previous compose file
+                    if (!$service) {
                         continue;
                     }
 
                     $env = $service->getEnvironment()->list();
 
                     foreach ($env as $key => $value) {
-                        foreach($vars as &$var) {
-                            if($var['name'] === $key) {
+                        if (is_null($value)) {
+                            continue;
+                        }
+                        foreach ($vars as &$var) {
+                            if ($var['name'] === $key) {
                                 $var['default'] = $value;
                             }
                         }
                     }
                 }
 
-                $data = @file_get_contents($path.'/.env');
+                $data = @file_get_contents($path . '/.env');
 
-                if($data !== false) { // Fetch all env vars from previous .env file
-                    Console::info('Env file found, creating backup: .env.'.$time.'.backup');
-                    file_put_contents($path.'/.env.'.$time.'.backup',$data);
+                if ($data !== false) { // Fetch all env vars from previous .env file
+                    Console::info('Env file found, creating backup: .env.' . $time . '.backup');
+                    file_put_contents($path . '/.env.' . $time . '.backup', $data);
                     $env = new Env($data);
 
                     foreach ($env->list() as $key => $value) {
-                        foreach($vars as &$var) {
-                            if($var['name'] === $key) {
+                        if (is_null($value)) {
+                            continue;
+                        }
+                        foreach ($vars as &$var) {
+                            if ($var['name'] === $key) {
                                 $var['default'] = $value;
                             }
                         }
@@ -117,60 +123,60 @@ $cli
                 }
 
                 foreach ($ports as $key => $value) {
-                    if($value === $defaultHTTPPort) {
+                    if ($value === $defaultHTTPPort) {
                         $defaultHTTPPort = $key;
                     }
 
-                    if($value === $defaultHTTPSPort) {
+                    if ($value === $defaultHTTPSPort) {
                         $defaultHTTPSPort = $key;
                     }
                 }
             }
         }
 
-        if(empty($httpPort)) {
-            $httpPort = Console::confirm('Choose your server HTTP port: (default: '.$defaultHTTPPort.')');
+        if (empty($httpPort)) {
+            $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHTTPPort . ')');
             $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
         }
 
-        if(empty($httpsPort)) {
-            $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
+        if (empty($httpsPort)) {
+            $httpsPort = Console::confirm('Choose your server HTTPS port: (default: ' . $defaultHTTPSPort . ')');
             $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
         }
 
         $input = [];
 
-        foreach($vars as $key => $var) {
-            if(!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
-                if($data && $var['default'] !== null) {
+        foreach ($vars as $key => $var) {
+            if (!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
+                if ($data && $var['default'] !== null) {
                     $input[$var['name']] = $var['default'];
                     continue;
                 }
 
-                if($var['filter'] === 'token') {
+                if ($var['filter'] === 'token') {
                     $input[$var['name']] = Auth::tokenGenerator();
                     continue;
                 }
 
-                if($var['filter'] === 'password') {
+                if ($var['filter'] === 'password') {
                     $input[$var['name']] = Auth::passwordGenerator();
                     continue;
                 }
             }
-            if(!$var['required'] || !Console::isInteractive() || $interactive !== 'Y') {
+            if (!$var['required'] || !Console::isInteractive() || $interactive !== 'Y') {
                 $input[$var['name']] = $var['default'];
                 continue;
             }
 
-            $input[$var['name']] = Console::confirm($var['question'].' (default: \''.$var['default'].'\')');
+            $input[$var['name']] = Console::confirm($var['question'] . ' (default: \'' . $var['default'] . '\')');
 
-            if(empty($input[$var['name']])) {
+            if (empty($input[$var['name']])) {
                 $input[$var['name']] = $var['default'];
             }
         }
 
-        $templateForCompose = new View(__DIR__.'/../views/install/compose.phtml');
-        $templateForEnv = new View(__DIR__.'/../views/install/env.phtml');
+        $templateForCompose = new View(__DIR__ . '/../views/install/compose.phtml');
+        $templateForEnv = new View(__DIR__ . '/../views/install/env.phtml');
 
         $templateForCompose
             ->setParam('httpPort', $httpPort)
@@ -184,16 +190,16 @@ $cli
             ->setParam('vars', $input)
         ;
 
-        if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render(false))) {
+        if (!file_put_contents($path . '/docker-compose.yml', $templateForCompose->render(false))) {
             $message = 'Failed to save Docker Compose file';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
             Console::error($message);
             Console::exit(1);
         }
 
-        if(!file_put_contents($path.'/.env', $templateForEnv->render(false))) {
+        if (!file_put_contents($path . '/.env', $templateForEnv->render(false))) {
             $message = 'Failed to save environment variables file';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
             Console::error($message);
             Console::exit(1);
         }
@@ -203,8 +209,8 @@ $cli
         $stderr = '';
 
         foreach ($input as $key => $value) {
-            if($value) {
-                $env .= $key.'='.\escapeshellarg($value).' ';
+            if ($value) {
+                $env .= $key . '=' . \escapeshellarg($value) . ' ';
             }
         }
 
@@ -214,13 +220,13 @@ $cli
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
             Console::error($message);
             Console::error($stderr);
             Console::exit($exit);
         } else {
             $message = 'Appwrite installed successfully';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE.' - '.$message);
+            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
             Console::success($message);
         }
     });

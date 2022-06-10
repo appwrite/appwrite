@@ -8,6 +8,8 @@ use Utopia\Database\Database;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Exception;
+use Utopia\App;
+use Utopia\Database\Validator\Authorization;
 
 abstract class Migration
 {
@@ -40,6 +42,9 @@ abstract class Migration
         '0.13.2' => 'V12',
         '0.13.3' => 'V12',
         '0.13.4' => 'V12',
+        '0.14.0' => 'V13',
+        '0.14.1' => 'V13',
+        '0.14.2' => 'V13',
     ];
 
     /**
@@ -49,15 +54,20 @@ abstract class Migration
 
     public function __construct()
     {
+        Authorization::disable();
+        Authorization::setDefaultStatus(false);
         $this->collections = array_merge([
             '_metadata' => [
-                '$id' => '_metadata'
+                '$id' => '_metadata',
+                '$collection' => Database::METADATA
             ],
             'audit' => [
-                '$id' => 'audit'
+                '$id' => 'audit',
+                '$collection' => Database::METADATA
             ],
             'abuse' => [
-                '$id' => 'abuse'
+                '$id' => 'abuse',
+                '$collection' => Database::METADATA
             ]
         ], Config::getParam('collections', []));
     }
@@ -92,6 +102,9 @@ abstract class Migration
         Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
         foreach ($this->collections as $collection) {
+            if ($collection['$collection'] !== Database::METADATA) {
+                return;
+            }
             $sum = 0;
             $nextDocument = null;
             $collectionCount = $this->projectDB->count($collection['$id']);
@@ -114,21 +127,7 @@ abstract class Migration
                             $old = $document->getArrayCopy();
                             $new = call_user_func($callback, $document);
 
-                            foreach ($document as &$attr) {
-                                if ($attr instanceof Document) {
-                                    $attr = call_user_func($callback, $attr);
-                                }
-
-                                if (\is_array($attr)) {
-                                    foreach ($attr as &$child) {
-                                        if ($child instanceof Document) {
-                                            $child = call_user_func($callback, $child);
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (!$this->check_diff_multi($new->getArrayCopy(), $old)) {
+                            if (!self::hasDifference($new->getArrayCopy(), $old)) {
                                 return;
                             }
 
@@ -157,35 +156,75 @@ abstract class Migration
 
     /**
      * Checks 2 arrays for differences.
-     * 
-     * @param array $array1 
-     * @param array $array2 
-     * @return array 
+     *
+     * @param array $array1
+     * @param array $array2
+     * @return bool
      */
-    public function check_diff_multi(array $array1, array $array2): array
+    public static function hasDifference(array $array1, array $array2): bool
     {
-        $result = array();
-
-        foreach ($array1 as $key => $val) {
-            if (is_array($val) && isset($array2[$key])) {
-                $tmp = $this->check_diff_multi($val, $array2[$key]);
-                if ($tmp) {
-                    $result[$key] = $tmp;
+        foreach ($array1 as $key => $value) {
+            if (is_array($value)) {
+                if (!isset($array2[$key]) || !is_array($array2[$key])) {
+                    return true;
+                } else {
+                    if (self::hasDifference($value, $array2[$key])) {
+                        return true;
+                    }
                 }
-            } elseif (!isset($array2[$key])) {
-                $result[$key] = null;
-            } elseif ($val !== $array2[$key]) {
-                $result[$key] = $array2[$key];
-            }
-
-            if (isset($array2[$key])) {
-                unset($array2[$key]);
+            } elseif (!array_key_exists($key, $array2) || $array2[$key] !== $value) {
+                return true;
             }
         }
 
-        $result = array_merge($result, $array2);
+        return false;
+    }
 
-        return $result;
+    /**
+     * Creates colletion from the config collection.
+     *
+     * @param string $id
+     * @param string|null $name
+     * @return void
+     * @throws \Throwable
+     */
+    protected function createCollection(string $id, string $name = null): void
+    {
+        $name ??= $id;
+
+        if (!$this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
+            $attributes = [];
+            $indexes = [];
+            $collection = $this->collections[$id];
+
+            foreach ($collection['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                ]);
+            }
+
+            foreach ($collection['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+
+            try {
+                $this->projectDB->createCollection($name, $attributes, $indexes);
+            } catch (\Throwable $th) {
+                throw $th;
+            }
+        }
     }
 
     /**

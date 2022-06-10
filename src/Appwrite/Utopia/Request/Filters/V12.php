@@ -93,9 +93,15 @@ class V12 extends Filter
 
     protected function removeParentProperties(array $content): array
     {
-        if (isset($content['parentDocument'])) unset($content['parentDocument']);
-        if (isset($content['parentProperty'])) unset($content['parentProperty']);
-        if (isset($content['parentPropertyType'])) unset($content['parentPropertyType']);
+        if (isset($content['parentDocument'])) {
+            unset($content['parentDocument']);
+        }
+        if (isset($content['parentProperty'])) {
+            unset($content['parentProperty']);
+        }
+        if (isset($content['parentPropertyType'])) {
+            unset($content['parentPropertyType']);
+        }
         return $content;
     }
 
@@ -128,7 +134,7 @@ class V12 extends Filter
     {
         $queries = [];
 
-        if(!empty($content['filters'])) {
+        if (!empty($content['filters'])) {
             foreach ($content['filters'] as $filter) {
                 $operators = ['=' => 'equal', '!=' => 'notEqual', '>' => 'greater', '<' => 'lesser', '<=' => 'lesserEqual', '>=' => 'greaterEqual'];
                 foreach ($operators as $operator => $operatorVerbose) {
@@ -138,10 +144,10 @@ class V12 extends Filter
                     }
                 }
 
-                if(isset($usedOperator)) {
+                if (isset($usedOperator)) {
                     [ $attributeKey, $filterValue ] = \explode($usedOperator, $filter);
 
-                    if($filterValue === 'true' || $filterValue === 'false') {
+                    if ($filterValue === 'true' || $filterValue === 'false') {
                         // Let's keep it at true and false string, but without "" around
                         // No action needed
                     } else {

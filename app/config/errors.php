@@ -1,7 +1,7 @@
 <?php
 
 /**
- * List of server wide error codes and their respective messages. 
+ * List of server wide error codes and their respective messages.
  */
 
 use Appwrite\Extend\Exception;
@@ -11,17 +11,17 @@ return [
     Exception::GENERAL_UNKNOWN => [
         'name' => Exception::GENERAL_UNKNOWN,
         'description' => 'An unknown error has occured. Please check the logs for more information.',
-        'code' => 500, 
+        'code' => 500,
     ],
     Exception::GENERAL_MOCK => [
         'name' => Exception::GENERAL_MOCK,
         'description' => 'General errors thrown by the mock controller used for testing.',
-        'code' => 400, 
+        'code' => 400,
     ],
     Exception::GENERAL_ACCESS_FORBIDDEN => [
         'name' => Exception::GENERAL_ACCESS_FORBIDDEN,
         'description' => 'Access to this API is forbidden.',
-        'code' => 401, 
+        'code' => 401,
     ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
@@ -76,6 +76,11 @@ return [
     Exception::GENERAL_SERVER_ERROR => [
         'name' => Exception::GENERAL_SERVER_ERROR,
         'description' => 'An internal server error occurred.',
+        'code' => 500,
+    ],
+    Exception::GENERAL_PROTOCOL_UNSUPPORTED => [
+        'name' => Exception::GENERAL_PROTOCOL_UNSUPPORTED,
+        'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
     ],
 

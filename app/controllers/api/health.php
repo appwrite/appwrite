@@ -1,13 +1,15 @@
 <?php
 
-use Appwrite\Utopia\Response;
-use Utopia\App;
-use Appwrite\Extend\Exception;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Response;
+use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Registry\Registry;
+use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
 
 App::get('/v1/health')
     ->desc('Get HTTP')
@@ -21,8 +23,7 @@ App::get('/v1/health')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $output = [
             'status' => 'pass',
@@ -40,8 +41,7 @@ App::get('/v1/health/version')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_VERSION)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->dynamic(new Document([ 'version' => APP_VERSION_STABLE ]), Response::MODEL_HEALTH_VERSION);
     });
@@ -59,9 +59,7 @@ App::get('/v1/health/db')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('utopia')
-    ->action(function ($response, $utopia) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\App $utopia */
+    ->action(function (Response $response, App $utopia) {
 
         $checkStart = \microtime(true);
 
@@ -70,9 +68,9 @@ App::get('/v1/health/db')
 
             // Run a small test to check the connection
             $statement = $db->prepare("SELECT 1;");
-    
+
             $statement->closeCursor();
-    
+
             $statement->execute();
         } catch (Exception $_e) {
             throw new Exception('Database is not available', 500, Exception::GENERAL_SERVER_ERROR);
@@ -99,10 +97,7 @@ App::get('/v1/health/cache')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('utopia')
-    ->action(function ($response, $utopia) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\App $utopia */
-        /** @var Redis */
+    ->action(function (Response $response, App $utopia) {
 
         $checkStart = \microtime(true);
 
@@ -132,8 +127,7 @@ App::get('/v1/health/time')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_TIME)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         /*
          * Code from: @see https://www.beliefmedia.com.au/query-ntp-time-server
@@ -147,7 +141,7 @@ App::get('/v1/health/time')
         \socket_connect($sock, $host, 123);
 
         /* Send request */
-        $msg = "\010".\str_repeat("\0", 47);
+        $msg = "\010" . \str_repeat("\0", 47);
 
         \socket_send($sock, $msg, \strlen($msg), 0);
 
@@ -190,8 +184,7 @@ App::get('/v1/health/queue/webhooks')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->dynamic(new Document([ 'size' => Resque::size(Event::WEBHOOK_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
@@ -208,28 +201,9 @@ App::get('/v1/health/queue/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->dynamic(new Document([ 'size' => Resque::size(Event::AUDITS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
-    }, ['response']);
-
-App::get('/v1/health/queue/usage')
-    ->desc('Get Usage Queue')
-    ->groups(['api', 'health'])
-    ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueUsage')
-    ->label('sdk.description', '/docs/references/health/get-queue-usage.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
-
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::USAGE_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
@@ -244,8 +218,7 @@ App::get('/v1/health/queue/certificates')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->dynamic(new Document([ 'size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
@@ -262,8 +235,7 @@ App::get('/v1/health/queue/functions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $response->dynamic(new Document([ 'size' => Resque::size(Event::FUNCTIONS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
@@ -280,25 +252,26 @@ App::get('/v1/health/storage/local')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $checkStart = \microtime(true);
 
-        foreach ([
+        foreach (
+            [
             'Uploads' => APP_STORAGE_UPLOADS,
             'Cache' => APP_STORAGE_CACHE,
             'Config' => APP_STORAGE_CONFIG,
             'Certs' => APP_STORAGE_CERTIFICATES
-        ] as $key => $volume) {
+            ] as $key => $volume
+        ) {
             $device = new Local($volume);
 
             if (!\is_readable($device->getRoot())) {
-                throw new Exception('Device '.$key.' dir is not readable', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception('Device ' . $key . ' dir is not readable', 500, Exception::GENERAL_SERVER_ERROR);
             }
 
             if (!\is_writable($device->getRoot())) {
-                throw new Exception('Device '.$key.' dir is not writable', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception('Device ' . $key . ' dir is not writable', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
 
@@ -322,8 +295,7 @@ App::get('/v1/health/anti-virus')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_ANTIVIRUS)
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $output = [
             'status' => '',
@@ -334,13 +306,15 @@ App::get('/v1/health/anti-virus')
             $output['status'] = 'disabled';
             $output['version'] = '';
         } else {
-            $antivirus = new Network(App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310));
+            $antivirus = new Network(
+                App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
+            );
 
             try {
                 $output['version'] = @$antivirus->version();
                 $output['status'] = (@$antivirus->ping()) ? 'pass' : 'fail';
-            } catch( \Exception $e) {
+            } catch (\Exception $e) {
                 throw new Exception('Antivirus is not available', 500, Exception::GENERAL_SERVER_ERROR);
             }
         }
@@ -359,10 +333,7 @@ App::get('/v1/health/stats') // Currently only used internally
     ->inject('response')
     ->inject('register')
     ->inject('deviceFiles')
-    ->action(function ($response, $register, $deviceFiles) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Registry\Registry $register */
-        /** @var Utopia\Storage\Device $deviceFiles */
+    ->action(function (Response $response, Registry $register, Device $deviceFiles) {
 
         $cache = $register->get('cache');
 
@@ -371,7 +342,7 @@ App::get('/v1/health/stats') // Currently only used internally
         $response
             ->json([
                 'storage' => [
-                    'used' => Storage::human($deviceFiles->getDirectorySize($deviceFiles->getRoot().'/')),
+                    'used' => Storage::human($deviceFiles->getDirectorySize($deviceFiles->getRoot() . '/')),
                     'partitionTotal' => Storage::human($deviceFiles->getPartitionTotalSpace()),
                     'partitionFree' => Storage::human($deviceFiles->getPartitionFreeSpace()),
                 ],

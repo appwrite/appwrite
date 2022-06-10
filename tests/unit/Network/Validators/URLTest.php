@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Utopia PHP Framework
  *
@@ -19,12 +20,12 @@ class URLTest extends TestCase
 {
     protected ?URL $url;
 
-    public function setUp():void
+    public function setUp(): void
     {
         $this->url = new URL();
     }
 
-    public function tearDown():void
+    public function tearDown(): void
     {
         $this->url = null;
     }
@@ -36,7 +37,7 @@ class URLTest extends TestCase
         $this->assertEquals(true, $this->url->isValid('https://example.com'));
         $this->assertEquals(true, $this->url->isValid('htts://example.com')); // does not validate protocol
         $this->assertEquals(false, $this->url->isValid('example.com')); // though, requires some kind of protocol
-        $this->assertEquals(false, $this->url->isValid('http:/example.com')); 
+        $this->assertEquals(false, $this->url->isValid('http:/example.com'));
         $this->assertEquals(true, $this->url->isValid('http://exa-mple.com'));
         $this->assertEquals(false, $this->url->isValid('htt@s://example.com'));
         $this->assertEquals(true, $this->url->isValid('http://www.example.com/foo%2\u00c2\u00a9zbar'));

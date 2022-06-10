@@ -8,27 +8,27 @@ use Appwrite\Auth\OAuth2;
 // https://developer.okta.com/docs/guides/sign-into-web-app-redirect/php/main/
 
 class Okta extends OAuth2
-{  
-     /**
+{
+    /**
      * @var array
      */
-    protected $scopes = [
+    protected array $scopes = [
         'openid',
         'profile',
         'email',
         'offline_access'
     ];
-    
+
     /**
      * @var array
      */
-    protected $user = [];
-    
+    protected array $user = [];
+
     /**
      * @var array
      */
-    protected $tokens = [];
-    
+    protected array $tokens = [];
+
     /**
      * @return string
      */
@@ -42,11 +42,11 @@ class Okta extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://'.$this->getOktaDomain().'/oauth2/'.$this->getAuthorizationServerId().'/v1/authorize?'.\http_build_query([
+        return 'https://' . $this->getOktaDomain() . '/oauth2/' . $this->getAuthorizationServerId() . '/v1/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'state'=> \json_encode($this->state),
-            'scope'=> \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state),
+            'scope' => \implode(' ', $this->getScopes()),
             'response_type' => 'code'
         ]);
     }
@@ -58,11 +58,11 @@ class Okta extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
-                'https://'.$this->getOktaDomain().'/oauth2/'.$this->getAuthorizationServerId().'/v1/token',
+                'https://' . $this->getOktaDomain() . '/oauth2/' . $this->getAuthorizationServerId() . '/v1/token',
                 $headers,
                 \http_build_query([
                     'code' => $code,
@@ -77,8 +77,8 @@ class Okta extends OAuth2
 
         return $this->tokens;
     }
-    
-    
+
+
     /**
      * @param string $refreshToken
      *
@@ -89,7 +89,7 @@ class Okta extends OAuth2
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://'.$this->getOktaDomain().'/oauth2/'.$this->getAuthorizationServerId().'/v1/token',
+            'https://' . $this->getOktaDomain() . '/oauth2/' . $this->getAuthorizationServerId() . '/v1/token',
             $headers,
             \http_build_query([
                 'refresh_token' => $refreshToken,
@@ -99,7 +99,7 @@ class Okta extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -114,12 +114,8 @@ class Okta extends OAuth2
     public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
-        if (isset($user['sub'])) {
-            return $user['sub'];
-        }
-        
-        return '';
+
+        return $user['sub'] ?? '';
     }
 
     /**
@@ -130,12 +126,28 @@ class Okta extends OAuth2
     public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
-        if (isset($user['email'])) {
-            return $user['email'];
+
+        return $user['email'] ?? '';
+    }
+
+    /**
+     * Check if the OAuth email is verified
+     *
+     * @link https://developer.okta.com/docs/reference/api/oidc/#userinfo
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['email_verified'] ?? false) {
+            return true;
         }
-        
-        return '';
+
+        return false;
     }
 
     /**
@@ -146,15 +158,11 @@ class Okta extends OAuth2
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
-        if (isset($user['name'])) {
-            return $user['name'];
-        }
-        
-        return '';
+
+        return $user['name'] ?? '';
     }
-    
-     /**
+
+    /**
      * @param string $accessToken
      *
      * @return array
@@ -162,8 +170,8 @@ class Okta extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers = ['Authorization: Bearer '. \urlencode($accessToken)];
-            $user = $this->request('GET', 'https://'.$this->getOktaDomain().'/oauth2/'.$this->getAuthorizationServerId().'/v1/userinfo', $headers);
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
+            $user = $this->request('GET', 'https://' . $this->getOktaDomain() . '/oauth2/' . $this->getAuthorizationServerId() . '/v1/userinfo', $headers);
             $this->user = \json_decode($user, true);
         }
 
@@ -172,45 +180,47 @@ class Okta extends OAuth2
 
     /**
      * Extracts the Client Secret from the JSON stored in appSecret
-     * 
+     *
      * @return string
      */
     protected function getClientSecret(): string
     {
         $secret = $this->getAppSecret();
 
-        return (isset($secret['clientSecret'])) ? $secret['clientSecret'] : ''; 
+        return $secret['clientSecret'] ?? '';
     }
 
-     /**
+    /**
      * Extracts the Okta Domain from the JSON stored in appSecret
-     * 
+     *
      * @return string
      */
     protected function getOktaDomain(): string
     {
         $secret = $this->getAppSecret();
-        return (isset($secret['oktaDomain'])) ? $secret['oktaDomain'] : ''; 
+
+        return $secret['oktaDomain'] ?? '';
     }
 
     /**
      * Extracts the Okta Authorization Server ID from the JSON stored in appSecret
-     * 
+     *
      * @return string
      */
     protected function getAuthorizationServerId(): string
     {
         $secret = $this->getAppSecret();
-        return (isset($secret['authorizationServerId'])) ? $secret['authorizationServerId'] : 'default'; 
+
+        return $secret['authorizationServerId'] ?? 'default';
     }
 
     /**
      * Decode the JSON stored in appSecret
-     * 
+     *
      * @return array
      */
     protected function getAppSecret(): array
-    {    
+    {
         try {
             $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $th) {

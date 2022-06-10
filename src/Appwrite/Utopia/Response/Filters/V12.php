@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
-use Exception;
 
 class V12 extends Filter
 {
@@ -220,14 +219,16 @@ class V12 extends Filter
         return $content;
     }
 
-    protected function parseExecution($content) {
+    protected function parseExecution($content)
+    {
         $content['exitCode'] = $content['statusCode'];
         unset($content['statusCode']);
 
         return $content;
     }
 
-    protected function parseExecutionList($content) {
+    protected function parseExecutionList($content)
+    {
         $executions = $content['executions'];
         $parsedResponse = [];
         foreach ($executions as $document) {
@@ -239,13 +240,15 @@ class V12 extends Filter
         return $content;
     }
 
-    protected function parseTeam($content) {
+    protected function parseTeam($content)
+    {
         $content['sum'] = $content['total'];
         unset($content['total']);
         return $content;
     }
 
-    protected function parseTeamList($content) {
+    protected function parseTeamList($content)
+    {
         $teams = $content['teams'];
         $parsedResponse = [];
         foreach ($teams as $document) {
@@ -257,7 +260,8 @@ class V12 extends Filter
         return $content;
     }
 
-    protected function parseList($content) {
+    protected function parseList($content)
+    {
         $content['sum'] = $content['total'];
         unset($content['total']);
         return $content;

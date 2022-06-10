@@ -1,3 +1,10 @@
+## 5.0.0
+* Support for Appwrite 0.14
+* **BREAKING** `account.delete()` -> `account.updateStatus()`
+* **BREAKING** Execution model `stdout` renamed to `response`
+* **BREAKING** Membership model `name` renamed to `userName` and `email` renamed to `userEmail`
+* Added `teamName` to Membership model
+
 ## 4.0.2
 * Upgrade dependencies
 

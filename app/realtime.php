@@ -55,10 +55,10 @@ $adapter
 
 $server = new Server($adapter);
 
-$logError = function(Throwable $error, string $action) use ($register) {
+$logError = function (Throwable $error, string $action) use ($register) {
     $logger = $register->get('logger');
 
-    if($logger) {
+    if ($logger) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $log = new Log();
@@ -82,7 +82,7 @@ $logError = function(Throwable $error, string $action) use ($register) {
         $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
         $responseCode = $logger->addLog($log);
-        Console::info('Realtime log pushed with status code: '.$responseCode);
+        Console::info('Realtime log pushed with status code: ' . $responseCode);
     }
 
     Console::error('[Error] Type: ' . get_class($error));
@@ -113,10 +113,10 @@ function getDatabase(Registry &$register, string $namespace)
                 throw new Exception('Collection not ready');
             }
             break; // leave loop if successful
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
             if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                throw new \Exception('Failed to connect to database: '. $e->getMessage());
+                throw new \Exception('Failed to connect to database: ' . $e->getMessage());
             }
             sleep(DATABASE_RECONNECT_SLEEP);
         }
@@ -129,8 +129,7 @@ function getDatabase(Registry &$register, string $namespace)
             $register->get('redisPool')->put($redis);
         }
     ];
-
-};
+}
 
 $server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
     sleep(5); // wait for the initial database schema to be ready
@@ -151,7 +150,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                 'timestamp' => time(),
                 'value' => '{}'
             ]);
-            $statsDocument = Authorization::skip(fn() => $database->createDocument('realtime', $document));
+            $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
         } catch (\Throwable $th) {
             call_user_func($logError, $th, "createWorkerDocument");
         } finally {
@@ -163,28 +162,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      * Save current connections to the Database every 5 seconds.
      */
     Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
-        /** @var Document $statsDocument */
-        foreach ($stats as $projectId => $value) {
-            $connections = $stats->get($projectId, 'connections') ?? 0;
-            $messages = $stats->get($projectId, 'messages' ?? 0);
-
-            $usage = new Event('v1-usage', 'UsageV1');
-            $usage
-                ->setParam('projectId', $projectId)
-                ->setParam('realtimeConnections', $connections)
-                ->setParam('realtimeMessages', $messages)
-                ->setParam('networkRequestSize', 0)
-                ->setParam('networkResponseSize', 0);
-
-            $stats->set($projectId, [
-                'messages' => 0,
-                'connections' => 0
-            ]);
-
-            if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-                $usage->trigger();
-            }
-        }
         $payload = [];
         foreach ($stats as $projectId => $value) {
             $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
@@ -200,7 +177,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                 ->setAttribute('timestamp', time())
                 ->setAttribute('value', json_encode($payload));
 
-            Authorization::skip(fn() => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+            Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
         } catch (\Throwable $th) {
             call_user_func($logError, $th, "updateWorkerDocument");
         } finally {
@@ -210,7 +187,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 });
 
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
-    Console::success('Worker ' . $workerId . ' started succefully');
+    Console::success('Worker ' . $workerId . ' started successfully');
 
     $attempts = 0;
     $start = time();
@@ -220,14 +197,13 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
          * Sending current connections to project channels on the console project every 5 seconds.
          */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
-
             [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $payload = [];
 
-            $list = Authorization::skip(fn() => $database->find('realtime', [
-                    new Query('timestamp', Query::TYPE_GREATER, [(time() - 15)])
-                ]));
+            $list = Authorization::skip(fn () => $database->find('realtime', [
+                new Query('timestamp', Query::TYPE_GREATER, [(time() - 15)])
+            ]));
 
             /**
              * Aggregate stats across containers.
@@ -251,7 +227,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'project' => 'console',
                     'roles' => ['team:' . $stats->get($projectId, 'teamId')],
                     'data' => [
-                        'event' => 'stats.connections',
+                        'events' => ['stats.connections'],
                         'channels' => ['project'],
                         'timestamp' => time(),
                         'payload' => [
@@ -278,7 +254,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 'project' => 'console',
                 'roles' => ['role:guest'],
                 'data' => [
-                    'event' => 'test.event',
+                    'events' => ['test.event'],
                     'channels' => ['tests'],
                     'timestamp' => time(),
                     'payload' => $payload
@@ -321,19 +297,16 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                    } else {
-                        return;
+                        [$database, $returnDatabase] = getDatabase($register, "_{$projectId}");
+
+                        $user = $database->getDocument('users', $userId);
+
+                        $roles = Auth::getRoles($user);
+
+                        $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
+
+                        call_user_func($returnDatabase);
                     }
-
-                    [$database, $returnDatabase] = getDatabase($register, "_{$projectId}");
-
-                    $user = $database->getDocument('users', $userId);
-
-                    $roles = Auth::getRoles($user);
-
-                    $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
-
-                    call_user_func($returnDatabase);
                 }
 
                 $receivers = $realtime->getSubscribers($event);
@@ -362,10 +335,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             Console::error('Pub/sub error: ' . $th->getMessage());
             $register->get('redisPool')->put($redis);
             $attempts++;
+            sleep(DATABASE_RECONNECT_SLEEP);
             continue;
         }
-
-        $attempts++;
     }
 
     Console::error('Failed to restart pub/sub...');
@@ -383,10 +355,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
     Console::info("Connection open (user: {$connection})");
 
-    App::setResource('db', fn() => $db);
-    App::setResource('cache', fn() => $redis);
-    App::setResource('request', fn() => $request);
-    App::setResource('response', fn() => $response);
+    App::setResource('db', fn () => $db);
+    App::setResource('cache', fn () => $redis);
+    App::setResource('request', fn () => $request);
+    App::setResource('response', fn () => $response);
 
     try {
         /** @var \Utopia\Database\Document $user */
@@ -534,7 +506,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         }
 
         switch ($message['type']) {
-            /**
+                /**
              * This type is used to authenticate.
              */
             case 'authentication':
