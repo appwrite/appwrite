@@ -2520,6 +2520,9 @@
                         payload['activate'] = activate;
                     }
                     const uri = new URL(this.config.endpoint + path);
+                    if (!(code instanceof File)) {
+                        throw new AppwriteException('Parameter "code" has to be a File.');
+                    }
                     const size = code.size;
                     if (size <= Appwrite.CHUNK_SIZE) {
                         return yield this.call('post', uri, {
@@ -3954,10 +3957,11 @@
                  * @param {boolean} security
                  * @param {string} httpUser
                  * @param {string} httpPass
+                 * @param {string} signatureKey
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
+                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass, signatureKey) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
@@ -3995,6 +3999,9 @@
                     }
                     if (typeof httpPass !== 'undefined') {
                         payload['httpPass'] = httpPass;
+                    }
+                    if (typeof signatureKey !== 'undefined') {
+                        payload['signatureKey'] = signatureKey;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {
@@ -4336,6 +4343,9 @@
                         payload['write'] = write;
                     }
                     const uri = new URL(this.config.endpoint + path);
+                    if (!(file instanceof File)) {
+                        throw new AppwriteException('Parameter "file" has to be a File.');
+                    }
                     const size = file.size;
                     if (size <= Appwrite.CHUNK_SIZE) {
                         return yield this.call('post', uri, {

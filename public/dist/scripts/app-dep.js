@@ -12,33 +12,37 @@ const timeout=this.realtime.getTimeout();console.error(`Realtime got disconnecte
 break;case'event':let data=message.data;if(data===null||data===void 0?void 0:data.channels){const isSubscribed=data.channels.some(channel=>this.realtime.channels.has(channel));if(!isSubscribed)
 return;this.realtime.subscriptions.forEach(subscription=>{if(data.channels.some(channel=>subscription.channels.includes(channel))){setTimeout(()=>subscription.callback(data));}});}
 break;case'error':throw message.data;default:break;}}
-catch(e){console.error(e);}},cleanUp:channels=>{this.realtime.channels.forEach(channel=>{if(channels.includes(channel)){let found=Array.from(this.realtime.subscriptions).some(([_key,subscription])=>{return subscription.channels.includes(channel);});if(!found){this.realtime.channels.delete(channel);}}});}};this.account={get:()=>__awaiter(this,void 0,void 0,function*(){let path='/account';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(userId,email,password,name,hash,ximport)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+catch(e){console.error(e);}},cleanUp:channels=>{this.realtime.channels.forEach(channel=>{if(channels.includes(channel)){let found=Array.from(this.realtime.subscriptions).some(([_key,subscription])=>{return subscription.channels.includes(channel);});if(!found){this.realtime.channels.delete(channel);}}});}};this.account={get:()=>__awaiter(this,void 0,void 0,function*(){let path='/account';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(userId,email,password,name,hash,hashOptions)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
 if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
 if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
 let path='/account';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
 if(typeof email!=='undefined'){payload['email']=email;}
 if(typeof password!=='undefined'){payload['password']=password;}
 if(typeof name!=='undefined'){payload['name']=name;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),updateEmail:(email,password)=>__awaiter(this,void 0,void 0,function*(){if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof hash!=='undefined'){payload['hash']=hash;}
+if(typeof hashOptions!=='undefined'){payload['hashOptions']=hashOptions;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),updateEmail:(email,password,hash,hashOptions)=>__awaiter(this,void 0,void 0,function*(){if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
 if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
 let path='/account/email';let payload={};if(typeof email!=='undefined'){payload['email']=email;}
 if(typeof password!=='undefined'){payload['password']=password;}
 if(typeof hash!=='undefined'){payload['hash']=hash;}
+if(typeof hashOptions!=='undefined'){payload['hashOptions']=hashOptions;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),createJWT:()=>__awaiter(this,void 0,void 0,function*(){let path='/account/jwt';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getLogs:(limit,offset)=>__awaiter(this,void 0,void 0,function*(){let path='/account/logs';let payload={};if(typeof limit!=='undefined'){payload['limit']=limit;}
 if(typeof offset!=='undefined'){payload['offset']=offset;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateName:(name)=>__awaiter(this,void 0,void 0,function*(){if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
 let path='/account/name';let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),updatePassword:(password,oldPassword,hash)=>__awaiter(this,void 0,void 0,function*(){if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),updatePassword:(password,oldPassword,hash,hashOptions)=>__awaiter(this,void 0,void 0,function*(){if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
 let path='/account/password';let payload={};if(typeof password!=='undefined'){payload['password']=password;}
 if(typeof oldPassword!=='undefined'){payload['oldPassword']=oldPassword;}
 if(typeof hash!=='undefined'){payload['hash']=hash;}
+if(typeof hashOptions!=='undefined'){payload['hashOptions']=hashOptions;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),getPrefs:()=>__awaiter(this,void 0,void 0,function*(){let path='/account/prefs';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updatePrefs:(prefs)=>__awaiter(this,void 0,void 0,function*(){if(typeof prefs==='undefined'){throw new AppwriteException('Missing required parameter: "prefs"');}
 let path='/account/prefs';let payload={};if(typeof prefs!=='undefined'){payload['prefs']=prefs;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),createRecovery:(email,url)=>__awaiter(this,void 0,void 0,function*(){if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
 if(typeof url==='undefined'){throw new AppwriteException('Missing required parameter: "url"');}
 let path='/account/recovery';let payload={};if(typeof email!=='undefined'){payload['email']=email;}
 if(typeof url!=='undefined'){payload['url']=url;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),updateRecovery:(userId,secret,password,passwordAgain,hash)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),updateRecovery:(userId,secret,password,passwordAgain,hash,hashOptions)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
 if(typeof secret==='undefined'){throw new AppwriteException('Missing required parameter: "secret"');}
 if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
 if(typeof passwordAgain==='undefined'){throw new AppwriteException('Missing required parameter: "passwordAgain"');}
@@ -47,6 +51,7 @@ if(typeof secret!=='undefined'){payload['secret']=secret;}
 if(typeof password!=='undefined'){payload['password']=password;}
 if(typeof passwordAgain!=='undefined'){payload['passwordAgain']=passwordAgain;}
 if(typeof hash!=='undefined'){payload['hash']=hash;}
+if(typeof hashOptions!=='undefined'){payload['hashOptions']=hashOptions;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),getSessions:()=>__awaiter(this,void 0,void 0,function*(){let path='/account/sessions';let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),createSession:(email,password)=>__awaiter(this,void 0,void 0,function*(){if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
 if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
 let path='/account/sessions';let payload={};if(typeof email!=='undefined'){payload['email']=email;}
@@ -296,7 +301,8 @@ if(typeof activate==='undefined'){throw new AppwriteException('Missing required 
 let path='/functions/{functionId}/deployments'.replace('{functionId}',functionId);let payload={};if(typeof entrypoint!=='undefined'){payload['entrypoint']=entrypoint;}
 if(typeof code!=='undefined'){payload['code']=code;}
 if(typeof activate!=='undefined'){payload['activate']=activate;}
-const uri=new URL(this.config.endpoint+path);const size=code.size;if(size<=Appwrite.CHUNK_SIZE){return yield this.call('post',uri,{'content-type':'multipart/form-data',},payload);}
+const uri=new URL(this.config.endpoint+path);if(!(code instanceof File)){throw new AppwriteException('Parameter "code" has to be a File.');}
+const size=code.size;if(size<=Appwrite.CHUNK_SIZE){return yield this.call('post',uri,{'content-type':'multipart/form-data',},payload);}
 let id=undefined;let response=undefined;const headers={'content-type':'multipart/form-data',};let counter=0;const totalCounters=Math.ceil(size/Appwrite.CHUNK_SIZE);for(counter;counter<totalCounters;counter++){const start=(counter*Appwrite.CHUNK_SIZE);const end=Math.min((((counter*Appwrite.CHUNK_SIZE)+Appwrite.CHUNK_SIZE)-1),size);headers['content-range']='bytes '+start+'-'+end+'/'+size;if(id){headers['x-appwrite-id']=id;}
 const stream=code.slice(start,end+1);payload['code']=new File([stream],code.name);response=yield this.call('post',uri,headers,payload);if(!id){id=response['$id'];}
 if(onProgress){onProgress({$id:response.$id,progress:Math.min((counter+1)*Appwrite.CHUNK_SIZE-1,size)/size*100,sizeUploaded:end,chunksTotal:response.chunksTotal,chunksUploaded:response.chunksUploaded});}}
@@ -438,7 +444,7 @@ if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
 if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getWebhook:(projectId,webhookId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
-let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateWebhook:(projectId,webhookId,name,events,url,security,httpUser,httpPass)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
+let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateWebhook:(projectId,webhookId,name,events,url,security,httpUser,httpPass,signatureKey)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
 if(typeof events==='undefined'){throw new AppwriteException('Missing required parameter: "events"');}
@@ -450,6 +456,7 @@ if(typeof url!=='undefined'){payload['url']=url;}
 if(typeof security!=='undefined'){payload['security']=security;}
 if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
 if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
+if(typeof signatureKey!=='undefined'){payload['signatureKey']=signatureKey;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteWebhook:(projectId,webhookId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
 let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);})};this.storage={listBuckets:(search,limit,offset,cursor,cursorDirection,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/storage/buckets';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
@@ -499,7 +506,8 @@ let path='/storage/buckets/{bucketId}/files'.replace('{bucketId}',bucketId);let 
 if(typeof file!=='undefined'){payload['file']=file;}
 if(typeof read!=='undefined'){payload['read']=read;}
 if(typeof write!=='undefined'){payload['write']=write;}
-const uri=new URL(this.config.endpoint+path);const size=file.size;if(size<=Appwrite.CHUNK_SIZE){return yield this.call('post',uri,{'content-type':'multipart/form-data',},payload);}
+const uri=new URL(this.config.endpoint+path);if(!(file instanceof File)){throw new AppwriteException('Parameter "file" has to be a File.');}
+const size=file.size;if(size<=Appwrite.CHUNK_SIZE){return yield this.call('post',uri,{'content-type':'multipart/form-data',},payload);}
 let id=undefined;let response=undefined;const headers={'content-type':'multipart/form-data',};let counter=0;const totalCounters=Math.ceil(size/Appwrite.CHUNK_SIZE);if(fileId!='unique()'){try{response=yield this.call('GET',new URL(this.config.endpoint+path+'/'+fileId),headers);counter=response.chunksUploaded;}
 catch(e){}}
 for(counter;counter<totalCounters;counter++){const start=(counter*Appwrite.CHUNK_SIZE);const end=Math.min((((counter*Appwrite.CHUNK_SIZE)+Appwrite.CHUNK_SIZE)-1),size);headers['content-range']='bytes '+start+'-'+end+'/'+size;if(id){headers['x-appwrite-id']=id;}
@@ -590,7 +598,7 @@ if(typeof offset!=='undefined'){payload['offset']=offset;}
 if(typeof cursor!=='undefined'){payload['cursor']=cursor;}
 if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirection;}
 if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(userId,email,password,name,hash,ximport)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),create:(userId,email,password,name,hash,hashOptions)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
 if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
 if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
 let path='/users';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
@@ -598,7 +606,7 @@ if(typeof email!=='undefined'){payload['email']=email;}
 if(typeof password!=='undefined'){payload['password']=password;}
 if(typeof name!=='undefined'){payload['name']=name;}
 if(typeof hash!=='undefined'){payload['hash']=hash;}
-if(typeof ximport!=='undefined'){payload['import']=ximport;}
+if(typeof hashOptions!=='undefined'){payload['hashOptions']=hashOptions;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getUsage:(range,provider)=>__awaiter(this,void 0,void 0,function*(){let path='/users/usage';let payload={};if(typeof range!=='undefined'){payload['range']=range;}
 if(typeof provider!=='undefined'){payload['provider']=provider;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),get:(userId)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
@@ -613,10 +621,11 @@ const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'
 let path='/users/{userId}/memberships'.replace('{userId}',userId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateName:(userId,name)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
 let path='/users/{userId}/name'.replace('{userId}',userId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),updatePassword:(userId,password,hash)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),updatePassword:(userId,password,hash,hashOptions)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
 if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
 let path='/users/{userId}/password'.replace('{userId}',userId);let payload={};if(typeof password!=='undefined'){payload['password']=password;}
 if(typeof hash!=='undefined'){payload['hash']=hash;}
+if(typeof hashOptions!=='undefined'){payload['hashOptions']=hashOptions;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);}),getPrefs:(userId)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
 let path='/users/{userId}/prefs'.replace('{userId}',userId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updatePrefs:(userId,prefs)=>__awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
 if(typeof prefs==='undefined'){throw new AppwriteException('Missing required parameter: "prefs"');}
