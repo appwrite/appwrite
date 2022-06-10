@@ -14,8 +14,8 @@ class Dailymotion extends OAuth2
      */
     private string $endpoint = 'https://api.dailymotion.com';
     private string $authEndpoint = 'https://www.dailymotion.com/oauth/authorize';
-    
-     /**
+
+    /**
      * @var array
      */
     protected array $scopes = [
@@ -36,17 +36,17 @@ class Dailymotion extends OAuth2
         'username',
         'verified'
     ];
-    
+
     /**
      * @var array
      */
     protected array $user = [];
-    
+
     /**
      * @var array
      */
     protected array $tokens = [];
-    
+
     /**
      * @return string
      */
@@ -56,18 +56,26 @@ class Dailymotion extends OAuth2
     }
 
     /**
+     * @return array
+     */
+    public function getFields(): array
+    {
+        return $this->fields;
+    }
+
+    /**
      * @return string
      */
     public function getLoginURL(): string
     {
         $url = $this->authEndpoint . '?' .
-        \http_build_query([
-            'response_type' => 'code',
-            'client_id' => $this->appID,
-            'state' => \json_encode($this->state),
-            'redirect_uri' => $this->callback,
-            'scope' => \implode(' ', $this->getScopes())
-        ]);
+            \http_build_query([
+                'response_type' => 'code',
+                'client_id' => $this->appID,
+                'state' => \json_encode($this->state),
+                'redirect_uri' => $this->callback,
+                'scope' => \implode(' ', $this->getScopes())
+            ]);
 
         return $url;
     }
@@ -80,7 +88,7 @@ class Dailymotion extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
-            $response = $this->request(
+            $this->tokens = \json_decode($this->request(
                 'POST',
                 $this->endpoint . 'oauth/token',
                 ["Content-Type: application/x-www-form-urlencoded"],
@@ -89,27 +97,26 @@ class Dailymotion extends OAuth2
                     "client_id" => $this->appID,
                     "client_secret" => $this->appSecret,
                     "redirect_uri" => $this->callback,
+                    "code" => $code,
                     'scope' => \implode(' ', $this->getScopes())
                 ])
-            );
+            ),true);
 
-            $output = [];
-            \parse_str($response, $output);
-            $this->tokens = $output;
+         
         }
 
         return $this->tokens;
     }
-    
-    
+
+
     /**
      * @param string $refreshToken
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
-        // TODO: Fire request to oauth API to generate access_token using refresh token
+
         $this->tokens = \json_decode($this->request(
             'POST',
             $this->endpoint . '/oauth/token',
@@ -138,10 +145,10 @@ class Dailymotion extends OAuth2
     public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
-        // TODO: Pick user ID from $user response 
+
+       
         $userId = $user['id'] ?? '';
-        
+
         return $userId;
     }
 
@@ -153,10 +160,10 @@ class Dailymotion extends OAuth2
     public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
-        // TODO: Pick user email from $user response 
+
+      
         $userEmail = $user['email'] ?? '';
-        
+
         return $userEmail;
     }
 
@@ -188,14 +195,14 @@ class Dailymotion extends OAuth2
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
-        // TODO: Pick username from $user response 
+
+      
         $username = $user['username'] ?? '';
-        
+
         return $username;
     }
-    
-     /**
+
+    /**
      * @param string $accessToken
      *
      * @return array
@@ -208,9 +215,11 @@ class Dailymotion extends OAuth2
                 $this->endpoint . '/user/me?',
                 ['Authorization: Bearer ' . \urlencode($accessToken)],
                 \http_build_query([
-                    'fields' => \implode(',', $fields)])
+                    'fields' => \implode(',', $this->getFields())
+                ])
             );
             $this->user = \json_decode($user, true);
+            \var_dump($this->user);
         }
 
         return $this->user;
