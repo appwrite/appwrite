@@ -212,10 +212,10 @@ window.ls.filter
     let document = container.get('project-document');
 
     if (collection && document && !document.$id) {
-      return 'database.createDocument';
+      return 'databases.createDocument';
     }
 
-    return 'database.updateDocument';
+    return 'databases.updateDocument';
   })
   .add("documentSuccess", function (container) {
     let document = container.get('project-document');

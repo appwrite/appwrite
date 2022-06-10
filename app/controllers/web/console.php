@@ -277,9 +277,10 @@ App::get('/console/databases/collection')
 
         $logs
             ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
-            ->setParam('method', 'database.listCollectionLogs')
+            ->setParam('method', 'databases.listCollectionLogs')
             ->setParam('params', [
                 'collection-id' => '{{router.params.id}}',
+                'database-id' => '{{router.params.databaseId}}'
             ])
         ;
 
@@ -303,16 +304,18 @@ App::get('/console/databases/document')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->param('databaseId', '', new UID(), 'Database unique ID.')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->action(function (string $collection, View $layout) {
+    ->action(function (string $databaseId, string $collection, View $layout) {
 
         $logs = new View(__DIR__ . '/../../views/console/comps/logs.phtml');
 
         $logs
             ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
-            ->setParam('method', 'database.listDocumentLogs')
+            ->setParam('method', 'databases.listDocumentLogs')
             ->setParam('params', [
+                'database-id' => '{{router.params.databaseId}}',
                 'collection-id' => '{{router.params.collection}}',
                 'document-id' => '{{router.params.id}}',
             ])
@@ -322,6 +325,7 @@ App::get('/console/databases/document')
 
         $page
             ->setParam('new', false)
+            ->setParam('database', $databaseId)
             ->setParam('collection', $collection)
             ->setParam('logs', $logs)
         ;
@@ -335,14 +339,16 @@ App::get('/console/databases/document/new')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
+    ->param('databaseId', '', new UID(), 'Database unique ID.')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->action(function (string $collection, View $layout) {
+    ->action(function (string $databaseId, string $collection, View $layout) {
 
         $page = new View(__DIR__ . '/../../views/console/databases/document.phtml');
 
         $page
             ->setParam('new', true)
+            ->setParam('database', $databaseId)
             ->setParam('collection', $collection)
             ->setParam('logs', new View())
         ;

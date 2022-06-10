@@ -674,8 +674,8 @@ let units=["kB","MB","GB","TB","PB","EB","ZB","YB"];let u=-1;do{$value/=thresh;+
 $value=abbreviate($value,0,false,false);return $value??"N/A";}).add("statsGetLast",function($value){if(!$value||$value.length<1){return 0;}
 return $value[$value.length-1].value;}).add("statsGetTotal",function($value){if(!$value||$value.length<1){return 0;}
 return $value.reduce(function(value,object){return value+object.value},0);}).add("isEmpty",function($value){return(!!$value);}).add("isEmptyObject",function($value){return((Object.keys($value).length===0&&$value.constructor===Object)||$value.length===0)}).add("activeDomainsCount",function($value){let result=[];if(Array.isArray($value)){result=$value.filter(function(node){return(node.verification&&node.certificateId);});}
-return result.length;}).add("documentAction",function(container){let collection=container.get('project-collection');let document=container.get('project-document');if(collection&&document&&!document.$id){return'database.createDocument';}
-return'database.updateDocument';}).add("documentSuccess",function(container){let document=container.get('project-document');if(document&&!document.$id){return',redirect';}
+return result.length;}).add("documentAction",function(container){let collection=container.get('project-collection');let document=container.get('project-document');if(collection&&document&&!document.$id){return'databases.createDocument';}
+return'databases.updateDocument';}).add("documentSuccess",function(container){let document=container.get('project-document');if(document&&!document.$id){return',redirect';}
 return'';}).add("firstElement",function($value){if($value&&$value[0]){return $value[0];}
 return $value;}).add("platformsLimit",function($value){return $value;}).add("limit",function($value){let postfix=($value.length>=50)?'...':'';return $value.substring(0,50)+postfix;;}).add("arraySentence",function($value){if(!Array.isArray($value)){return'';}
 return $value.join(", ").replace(/,\s([^,]+)$/,' and $1');}).add("runtimeName",function($value,env){if(env&&env.RUNTIMES&&env.RUNTIMES[$value]){return env.RUNTIMES[$value].name;}
