@@ -1,3 +1,5 @@
+- Added support for selfhosted Gitlab (Oauth)
+
 # Version 0.14.2
 
 ## Features

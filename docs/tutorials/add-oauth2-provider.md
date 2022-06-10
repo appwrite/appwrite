@@ -233,7 +233,7 @@ First of all, commit the changes with the message `Added XXX OAuth2 Provider` an
 
 ## 🤕 Stuck ?
 
-If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord) and we'll be happy to help you out.
+If you need any help with the contribution, feel free to head over to [our Discord channel](https://appwrite.io/discord) and we'll be happy to help you out.
 
 ## 😉 Need more freedom
 

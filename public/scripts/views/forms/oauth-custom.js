@@ -25,9 +25,13 @@
         "Auth0": {
           "clientSecret": "oauth2Auth0ClientSecret",
           "auth0Domain": "oauth2Auth0Domain"
-        }
+        },
+        "GitLab": {
+          "endpoint": "oauth2GitLabEndpoint"
+        },
       }
       let provider = element.getAttribute("data-forms-oauth-custom");
+      alert(provider);
       if (!provider || !providers.hasOwnProperty(provider)) { console.error("Provider for custom form not set or unknown") }
       let config = providers[provider];
 
