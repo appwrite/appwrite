@@ -206,16 +206,13 @@ class Dailymotion extends OAuth2
      *
      * @return array
      */
-    protected function getUser(string $accessToken) : array
+    protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                $this->endpoint . '/user/me?',
+                $this->endpoint . '/user/me?fields=' . \implode(',', $this->getFields()),
                 ['Authorization: Bearer ' . \urlencode($accessToken)],
-                \http_build_query([
-                    'fields' => \implode(' ', $this->getFields())
-                ])
             );
             $this->user = \json_decode($user, true);
             \var_dump($this->user);
