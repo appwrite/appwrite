@@ -13,6 +13,10 @@ class Dailymotion extends OAuth2
      * @var string
      */
     private string $endpoint = 'https://api.dailymotion.com';
+
+    /**
+     * @var string
+     */
     private string $authEndpoint = 'https://www.dailymotion.com/oauth/authorize';
 
     /**
@@ -90,21 +94,18 @@ class Dailymotion extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint . 'oauth/token',
+                $this->endpoint . '/oauth/token',
                 ["Content-Type: application/x-www-form-urlencoded"],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
                     "client_id" => $this->appID,
                     "client_secret" => $this->appSecret,
                     "redirect_uri" => $this->callback,
-                    "code" => $code,
-                    'scope' => \implode(' ', $this->getScopes())
+                    'code' => $code,
+                    'scope' => \implode(' ', $this->getScopes()),
                 ])
-            ),true);
-
-         
+            ), true);
         }
-
         return $this->tokens;
     }
 
@@ -146,7 +147,6 @@ class Dailymotion extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-       
         $userId = $user['id'] ?? '';
 
         return $userId;
@@ -161,7 +161,7 @@ class Dailymotion extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-      
+
         $userEmail = $user['email'] ?? '';
 
         return $userEmail;
@@ -196,7 +196,7 @@ class Dailymotion extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-      
+
         $username = $user['username'] ?? '';
 
         return $username;
@@ -207,7 +207,7 @@ class Dailymotion extends OAuth2
      *
      * @return array
      */
-    protected function getUser(string $accessToken)
+    protected function getUser(string $accessToken) : array
     {
         if (empty($this->user)) {
             $user = $this->request(
