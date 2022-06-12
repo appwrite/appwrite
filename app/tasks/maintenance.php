@@ -118,6 +118,14 @@ $cli
             }
         }
 
+        function filesCacheKeyEviction()
+        {
+            /**
+              *  Delete cache keys who did not modify for the last 90 days.
+             */
+            shell_exec('find '.APP_STORAGE_CACHE.' -type f ! -mtime -90 -print0|xargs -0 rm -f');
+        }
+
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
@@ -125,17 +133,18 @@ $cli
         $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
-
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
+        $filesCacheEvictionRetention = 60 * 60 * 24;
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $filesCacheEvictionRetention) {
             $database = getConsoleDB();
 
             $time = date('d-m-Y H:i:s', time());
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
-            notifyDeleteExecutionLogs($executionLogsRetention);
-            notifyDeleteAbuseLogs($abuseLogsRetention);
-            notifyDeleteAuditLogs($auditLogRetention);
-            notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
-            notifyDeleteConnections();
-            renewCertificates($database);
+//            notifyDeleteExecutionLogs($executionLogsRetention);
+//            notifyDeleteAbuseLogs($abuseLogsRetention);
+//            notifyDeleteAuditLogs($auditLogRetention);
+//            notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
+//            notifyDeleteConnections();
+//            renewCertificates($database);
+              filesCacheKeyEviction($filesCacheEvictionRetention);
         }, $interval);
     });
