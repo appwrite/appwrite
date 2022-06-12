@@ -31,7 +31,6 @@ class Dailymotion extends OAuth2
      * @var array
      */
     protected array $fields = [
-        'avatar_url',
         'email',
         'first_name',
         'id',
@@ -215,7 +214,7 @@ class Dailymotion extends OAuth2
                 $this->endpoint . '/user/me?',
                 ['Authorization: Bearer ' . \urlencode($accessToken)],
                 \http_build_query([
-                    'fields' => \implode(',', $this->getFields())
+                    'fields' => \implode(' ', $this->getFields())
                 ])
             );
             $this->user = \json_decode($user, true);
