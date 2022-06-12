@@ -157,10 +157,10 @@ $collections = [
         'attributes' => [
             [
                 '$id' => 'databaseId',
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_INTEGER,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
+                'size' => 0,
+                'signed' => false,
                 'required' => true,
                 'default' => null,
                 'array' => false,
@@ -298,7 +298,7 @@ $collections = [
             [
                 '$id' => '_key_db_collection',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['collectionId', 'databaseId'],
+                'attributes' => ['databaseId', 'collectionId'],
                 'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
@@ -312,10 +312,10 @@ $collections = [
         'attributes' => [
             [
                 '$id' => 'databaseId',
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_INTEGER,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
+                'size' => 0,
+                'signed' => false,
                 'required' => true,
                 'default' => null,
                 'array' => false,
@@ -403,7 +403,7 @@ $collections = [
             [
                 '$id' => '_key_db_collection',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['collectionId', 'databaseId'],
+                'attributes' => ['databaseId', 'databaseId'],
                 'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
