@@ -1,18 +1,13 @@
 <?php
 
 use Appwrite\Auth\Phone;
-use Appwrite\Auth\Phone\{
-    Mock,
-    Telesign,
-    TextMagic,
-    Twilio
-};
+use Appwrite\Auth\Phone\Mock;
+use Appwrite\Auth\Phone\Telesign;
+use Appwrite\Auth\Phone\TextMagic;
+use Appwrite\Auth\Phone\Twilio;
 use Appwrite\Resque\Worker;
-use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\Document;
-use Utopia\Locale\Locale;
 
 require_once __DIR__ . '/../init.php';
 

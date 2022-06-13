@@ -617,7 +617,7 @@ App::patch('/v1/users/:userId/email')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/email')
+App::patch('/v1/users/:userId/phone')
     ->desc('Update Phone')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.phone')
