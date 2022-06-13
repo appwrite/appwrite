@@ -215,7 +215,6 @@ class Dailymotion extends OAuth2
                 ['Authorization: Bearer ' . \urlencode($accessToken)],
             );
             $this->user = \json_decode($user, true);
-            \var_dump($this->user);
         }
 
         return $this->user;
