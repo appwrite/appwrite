@@ -29,6 +29,49 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
 use MaxMind\Db\Reader;
 
+function createUser(string $hash, mixed $hashOptions, string $userId, string $email, string $password, string $name, Database $dbForProject, Stats $usage, Event $events): Document {
+    $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
+    $email = \strtolower($email);
+
+    try {
+        $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+        $user = $dbForProject->createDocument('users', new Document([
+            '$id' => $userId,
+            '$read' => ['role:all'],
+            '$write' => ['user:' . $userId],
+            'email' => $email,
+            'emailVerification' => false,
+            'status' => true,
+            'password' => $hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password,
+            'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
+            'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions,
+            'passwordUpdate' => \time(),
+            'registration' => \time(),
+            'reset' => false,
+            'name' => $name,
+            'prefs' => new \stdClass(),
+            'sessions' => null,
+            'tokens' => null,
+            'memberships' => null,
+            'search' => implode(' ', [$userId, $email, $name])
+        ]));
+
+        return $user;
+    } catch (Duplicate $th) {
+        throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
+    }
+
+    $usage
+        ->setParam('users.create', 1)
+    ;
+
+    $events
+        ->setParam('userId', $user->getId())
+    ;
+
+    return $user;
+}
+
 App::post('/v1/users')
     ->desc('Create User')
     ->groups(['api', 'users'])
@@ -43,57 +86,22 @@ App::post('/v1/users')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('password', '', new Password(), 'Plaintext user password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->param('hash', 'plaintext', new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default algorithm is \'' . Auth::DEFAULT_ALGO . '\'.', true)
-    ->param('hashOptions', '{}', new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
+    // ->param('hash', 'plaintext', new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default algorithm is \'' . Auth::DEFAULT_ALGO . '\'.', true)
+    // ->param('hashOptions', '{}', new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, string $hash, mixed $hashOptions, Response $response, Database $dbForProject, Stats $usage, Event $events) {
-
-        $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
-
-        $email = \strtolower($email);
-
-        try {
-            $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
-            $user = $dbForProject->createDocument('users', new Document([
-                '$id' => $userId,
-                '$read' => ['role:all'],
-                '$write' => ['user:' . $userId],
-                'email' => $email,
-                'emailVerification' => false,
-                'status' => true,
-                'password' => $hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password,
-                'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
-                'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions,
-                'passwordUpdate' => \time(),
-                'registration' => \time(),
-                'reset' => false,
-                'name' => $name,
-                'prefs' => new \stdClass(),
-                'sessions' => null,
-                'tokens' => null,
-                'memberships' => null,
-                'search' => implode(' ', [$userId, $email, $name])
-            ]));
-        } catch (Duplicate $th) {
-            throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
-        }
-
-        $usage
-            ->setParam('users.create', 1)
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('plaintext', '{}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
     });
+
+// TODO: More hashing endpoints
 
 App::get('/v1/users')
     ->desc('List Users')
