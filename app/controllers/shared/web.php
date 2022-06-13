@@ -2,8 +2,8 @@
 
 use Utopia\App;
 use Utopia\Config\Config;
-use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Request;
+use Utopia\Swoole\Request;
+use Utopia\Swoole\Response;
 use Appwrite\Utopia\View;
 
 App::init(function (App $utopia, Request $request, Response $response, View $layout) {
