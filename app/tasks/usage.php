@@ -14,7 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 
-function getDatabase(Registry&$register, string $namespace): Database
+function getDatabase(Registry &$register, string $namespace): Database
 {
     $attempts = 0;
 
@@ -46,7 +46,7 @@ function getDatabase(Registry&$register, string $namespace): Database
     return $database;
 }
 
-function getInfluxDB(Registry&$register): InfluxDatabase
+function getInfluxDB(Registry &$register): InfluxDatabase
 {
     /** @var InfluxDB\Client $client */
     $client = $register->get('influxdb');
@@ -72,7 +72,7 @@ function getInfluxDB(Registry&$register): InfluxDatabase
     return $database;
 }
 
-$logError = function($message, $stackTrace) {
+$logError = function ($message, $stackTrace) {
     Console::warning("Failed: {$message}");
     Console::warning($stackTrace);
 };

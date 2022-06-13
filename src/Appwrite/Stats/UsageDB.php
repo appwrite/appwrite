@@ -46,12 +46,12 @@ class UsageDB extends Usage
                         $document->getId(),
                         $document->setAttribute('value', $value)
                     );
-                } 
+                }
             } catch (\Exception$e) { // if projects are deleted this might fail
                 if (is_callable($this->errorHandler)) {
                     call_user_func($this->errorHandler, "Unable to save data for project {$projectId} and metric {$metric}: {$e->getMessage()}", $e->getTraceAsString());
                 } else {
-                    throw $e; 
+                    throw $e;
                 }
             }
         }
@@ -60,12 +60,12 @@ class UsageDB extends Usage
     /**
      * Foreach Document
      * Call provided callback for each document in the collection
-     * 
+     *
      * @param string $projectId
      * @param string $collection
      * @param array $queries
      * @param callable $callback
-     * 
+     *
      * @return void
      */
     private function foreachDocument(string $projectId, string $collection, array $queries, callable $callback): void
@@ -78,6 +78,9 @@ class UsageDB extends Usage
 
         while ($sum === $limit) {
             $results = $this->database->find($collection, $queries, $limit, cursor:$latestDocument);
+            if (empty($results)) {
+                return;
+            }
 
             $sum = count($results);
 
@@ -93,12 +96,12 @@ class UsageDB extends Usage
     /**
      * Sum
      * Calculate sum of a attribute of documents in collection
-     * 
+     *
      * @param string $projectId
      * @param string $collection
      * @param string $attribute
      * @param string $metric
-     * 
+     *
      * @return int
      */
     private function sum(string $projectId, string $collection, string $attribute, string $metric): int
@@ -112,11 +115,11 @@ class UsageDB extends Usage
     /**
      * Count
      * Count number of documents in collection
-     * 
+     *
      * @param string $projectId
      * @param string $collection
      * @param string $metric
-     * 
+     *
      * @return int
      */
     private function count(string $projectId, string $collection, string $metric): int
@@ -131,9 +134,9 @@ class UsageDB extends Usage
     /**
      * Deployments Total
      * Total sum of storage used by deployments
-     * 
+     *
      * @param string $projectId
-     * 
+     *
      * @return int
      */
     private function deploymentsTotal(string $projectId): int
@@ -158,9 +161,9 @@ class UsageDB extends Usage
      * Storage Stats
      * Metrics: storage.total, storage.files.total, storage.buckets.{bucketId}.files.total,
      * storage.buckets.count, storage.files.count, storage.buckets.{bucketId}.files.count
-     * 
+     *
      * @param string $projectId
-     * 
+     *
      * @return void
      */
     private function storageStats(string $projectId): void
@@ -173,7 +176,7 @@ class UsageDB extends Usage
         $metric = 'storage.buckets.count';
         $this->count($projectId, 'buckets', $metric);
 
-        $this->foreachDocument($projectId, 'buckets', [], function ($bucket) use (&$projectFilesCount, &$projectFilesTotal, $projectId, ) {
+        $this->foreachDocument($projectId, 'buckets', [], function ($bucket) use (&$projectFilesCount, &$projectFilesTotal, $projectId,) {
             $metric = "storage.buckets.{$bucket->getId()}.files.count";
 
             $count = $this->count($projectId, 'buckets_' . $bucket->getInternalId(), $metric);
@@ -195,9 +198,9 @@ class UsageDB extends Usage
      * Collect all database stats
      * Metrics: database.collections.count, database.collections.{collectionId}.documents.count,
      * database.documents.count
-     * 
+     *
      * @param string $projectId
-     * 
+     *
      * @return void
      */
     private function databaseStats(string $projectId): void
@@ -207,7 +210,7 @@ class UsageDB extends Usage
         $metric = 'database.collections.count';
         $this->count($projectId, 'collections', $metric);
 
-        $this->foreachDocument($projectId, 'collections', [], function ($collection) use (&$projectDocumentsCount, $projectId, ) {
+        $this->foreachDocument($projectId, 'collections', [], function ($collection) use (&$projectDocumentsCount, $projectId,) {
             $metric = "database.collections.{$collection->getId()}.documents.count";
 
             $count = $this->count($projectId, 'collection_' . $collection->getInternalId(), $metric);
@@ -220,7 +223,7 @@ class UsageDB extends Usage
     /**
      * Collect Stats
      * Collect all database related stats
-     * 
+     *
      * @return void
      */
     public function collect(): void
