@@ -186,10 +186,18 @@ class Executor
                         );
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
                         $status = $response['headers']['status-code'];
+
+                        if ($status < 400) {
+                            return $response['body'];
+                        }
                         break;
                     case $status === 406:
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
                         $status = $response['headers']['status-code'];
+
+                        if ($status < 400) {
+                            return $response['body'];
+                        }
                         break;
                     default:
                         throw new \Exception($response['body']['message'], $status);
