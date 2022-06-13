@@ -174,11 +174,7 @@ class Dailymotion extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if ($user['verified'] ?? false) {
-            return true;
-        }
-
-        return false;
+        return $user['verified'] ?? false;
     }
 
     /**
