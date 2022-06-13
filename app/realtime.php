@@ -129,7 +129,7 @@ function getDatabase(Registry &$register, string $namespace)
             $register->get('redisPool')->put($redis);
         }
     ];
-};
+}
 
 $server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
     sleep(5); // wait for the initial database schema to be ready
@@ -187,7 +187,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 });
 
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
-    Console::success('Worker ' . $workerId . ' started succefully');
+    Console::success('Worker ' . $workerId . ' started successfully');
 
     $attempts = 0;
     $start = time();
@@ -197,7 +197,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
          * Sending current connections to project channels on the console project every 5 seconds.
          */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
-
             [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $payload = [];

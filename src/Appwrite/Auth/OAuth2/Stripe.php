@@ -138,11 +138,11 @@ class Stripe extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * If present, the email is verified. This was verfied through a manual Stripe sign up process
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool

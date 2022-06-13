@@ -18,7 +18,7 @@ class Discord extends OAuth2
      * @var array
      */
     protected array $user = [];
-    
+
     /**
      * @var array
      */
@@ -45,7 +45,7 @@ class Discord extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint . '/oauth2/authorize?'.
+        $url = $this->endpoint . '/oauth2/authorize?' .
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
@@ -64,7 +64,7 @@ class Discord extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
                 $this->endpoint . '/oauth2/token',
@@ -88,7 +88,7 @@ class Discord extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
@@ -102,7 +102,7 @@ class Discord extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -135,11 +135,11 @@ class Discord extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @link https://discord.com/developers/docs/resources/user
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -176,7 +176,7 @@ class Discord extends OAuth2
             $user = $this->request(
                 'GET',
                 $this->endpoint . '/users/@me',
-                ['Authorization: Bearer '.\urlencode($accessToken)]
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
             );
             $this->user = \json_decode($user, true);
         }

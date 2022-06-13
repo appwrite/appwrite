@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Utopia PHP Framework
  *
@@ -22,12 +23,12 @@ class EmailTest extends TestCase
      */
     protected $email = null;
 
-    public function setUp():void
+    public function setUp(): void
     {
         $this->email = new Email();
     }
 
-    public function tearDown():void
+    public function tearDown(): void
     {
         $this->email = null;
     }

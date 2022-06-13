@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Utopia PHP Framework
  *
@@ -17,7 +18,7 @@ use PHPUnit\Framework\TestCase;
 
 class IPTest extends TestCase
 {
-    public function tearDown():void
+    public function tearDown(): void
     {
         $this->validator = null;
     }

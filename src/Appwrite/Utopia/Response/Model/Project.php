@@ -13,7 +13,7 @@ class Project extends Model
      * @var bool
      */
     protected $public = false;
-    
+
     public function __construct()
     {
         $this
@@ -99,28 +99,28 @@ class Project extends Model
                 'type' => Response::MODEL_PLATFORM,
                 'description' => 'List of Platforms.',
                 'default' => [],
-                'example' => new \stdClass,
+                'example' => new \stdClass(),
                 'array' => true,
             ])
             ->addRule('webhooks', [
                 'type' => Response::MODEL_WEBHOOK,
                 'description' => 'List of Webhooks.',
                 'default' => [],
-                'example' => new \stdClass,
+                'example' => new \stdClass(),
                 'array' => true,
             ])
             ->addRule('keys', [
                 'type' => Response::MODEL_KEY,
                 'description' => 'List of API Keys.',
                 'default' => [],
-                'example' => new \stdClass,
+                'example' => new \stdClass(),
                 'array' => true,
             ])
             ->addRule('domains', [
                 'type' => Response::MODEL_DOMAIN,
                 'description' => 'List of Domains.',
                 'default' => [],
-                'example' => new \stdClass,
+                'example' => new \stdClass(),
                 'array' => true,
             ])
         ;
@@ -137,15 +137,15 @@ class Project extends Model
             $name = (isset($provider['name'])) ? $provider['name'] : 'Unknown';
 
             $this
-                ->addRule('provider'.\ucfirst($index).'Appid', [
+                ->addRule('provider' . \ucfirst($index) . 'Appid', [
                     'type' => self::TYPE_STRING,
-                    'description' => $name.' OAuth app ID.',
+                    'description' => $name . ' OAuth app ID.',
                     'example' => '123247283472834787438',
                     'default' => '',
                 ])
-                ->addRule('provider'.\ucfirst($index).'Secret', [
+                ->addRule('provider' . \ucfirst($index) . 'Secret', [
                     'type' => self::TYPE_STRING,
-                    'description' => $name.' OAuth secret ID.',
+                    'description' => $name . ' OAuth secret ID.',
                     'example' => 'djsgudsdsewe43434343dd34...',
                     'default' => '',
                 ])
@@ -159,7 +159,7 @@ class Project extends Model
             $this
                 ->addRule('auth' . ucfirst($key), [
                     'type' => self::TYPE_BOOLEAN,
-                    'description' => $name.' auth method status',
+                    'description' => $name . ' auth method status',
                     'example' => true,
                     'default' => true,
                 ])
@@ -167,7 +167,7 @@ class Project extends Model
         }
 
         foreach ($services as $service) {
-            if(!$service['optional']) {
+            if (!$service['optional']) {
                 continue;
             }
 
@@ -175,9 +175,9 @@ class Project extends Model
             $key = $service['key'] ?? '';
 
             $this
-                ->addRule('serviceStatusFor'.ucfirst($key), [
+                ->addRule('serviceStatusFor' . ucfirst($key), [
                     'type' => self::TYPE_BOOLEAN,
-                    'description' => $name.' service status',
+                    'description' => $name . ' service status',
                     'example' => true,
                     'default' => true,
                 ])
@@ -190,7 +190,7 @@ class Project extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Project';
     }
@@ -200,14 +200,14 @@ class Project extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_PROJECT;
     }
 
     /**
      * Get Collection
-     * 
+     *
      * @return string
      */
     public function filter(Document $document): Document
@@ -215,16 +215,16 @@ class Project extends Model
         $values = $document->getAttribute('services', []);
         $services = Config::getParam('services', []);
 
-        foreach($services as $service) {
-            if(!$service['optional']) {
+        foreach ($services as $service) {
+            if (!$service['optional']) {
                 continue;
             }
             $key = $service['key'] ?? '';
             $value = $values[$key] ?? true;
-            $document->setAttribute('serviceStatusFor'.ucfirst($key), $value);
+            $document->setAttribute('serviceStatusFor' . ucfirst($key), $value);
         }
 
-        $authValues = $document->getAttribute('auths',[]);
+        $authValues = $document->getAttribute('auths', []);
         $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);

@@ -9,7 +9,6 @@ use Appwrite\Auth\OAuth2;
 
 class Bitly extends OAuth2
 {
-
     /**
      * @var string
      */
@@ -149,11 +148,11 @@ class Bitly extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @link https://dev.bitly.com/api-reference#getUser
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool

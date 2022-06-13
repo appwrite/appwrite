@@ -1,3 +1,18 @@
+# Version 0.14.2
+
+## Features
+
+- Support for Backblaze adapter in Storage
+- Support for Linode adapter in Storage
+- Support for Wasabi adapter in Storage
+- New Cloud Function Runtimes:
+  - Dart 2.17
+  - Deno 1.21
+  - Java 18
+  - Node 18
+- Improved overall Migration speed
+
+
 # Version 0.14.1
 
 ## Bugs

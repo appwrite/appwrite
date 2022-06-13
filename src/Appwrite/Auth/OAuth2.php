@@ -82,9 +82,9 @@ abstract class OAuth2
 
     /**
      * Check if the OAuth email is verified
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     abstract public function isEmailVerified(string $accessToken): bool;
@@ -189,7 +189,7 @@ abstract class OAuth2
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         }
 
-        $headers[] = 'Content-length: '.\strlen($payload);
+        $headers[] = 'Content-length: ' . \strlen($payload);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         // Send the request & save response to $response

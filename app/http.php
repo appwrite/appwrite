@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__.'/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use Appwrite\Utopia\Response;
 use Swoole\Process;
@@ -38,15 +38,15 @@ $http
     ])
 ;
 
-$http->on('WorkerStart', function($server, $workerId) {
-    Console::success('Worker '.++$workerId.' started successfully');
+$http->on('WorkerStart', function ($server, $workerId) {
+    Console::success('Worker ' . ++$workerId . ' started successfully');
 });
 
-$http->on('BeforeReload', function($server, $workerId) {
+$http->on('BeforeReload', function ($server, $workerId) {
     Console::success('Starting reload...');
 });
 
-$http->on('AfterReload', function($server, $workerId) {
+$http->on('AfterReload', function ($server, $workerId) {
     Console::success('Reload completed...');
 });
 
@@ -57,7 +57,7 @@ include __DIR__ . '/controllers/general.php';
 $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
-    go(function() use ($register, $app) {
+    go(function () use ($register, $app) {
         // wait for database to be ready
         $attempts = 0;
         $max = 10;
@@ -69,10 +69,10 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 $db = $register->get('dbPool')->get();
                 $redis = $register->get('redisPool')->get();
                 break; // leave the do-while if successful
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
                 if ($attempts >= $max) {
-                    throw new \Exception('Failed to connect to database: '. $e->getMessage());
+                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
                 }
                 sleep($sleep);
             }
@@ -86,7 +86,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         Console::success('[Setup] - Server database init started...');
         $collections = Config::getParam('collections', []); /** @var array $collections */
 
-        if(!$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
+        if (!$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
             $redis->flushAll();
 
             Console::success('[Setup] - Creating database: appwrite...');
@@ -101,7 +101,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }
 
-        if($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
+        if ($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
             $audit = new Audit($dbForConsole);
             $audit->setup();
         }
@@ -112,10 +112,10 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         }
 
         foreach ($collections as $key => $collection) {
-            if(($collection['$collection'] ?? '') !== Database::METADATA) {
+            if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
-            if(!$dbForConsole->getCollection($key)->isEmpty()) {
+            if (!$dbForConsole->getCollection($key)->isEmpty()) {
                 continue;
             }
             Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
@@ -150,7 +150,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
-        if($dbForConsole->getDocument('buckets', 'default')->isEmpty()) {
+        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty()) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForConsole->createDocument('buckets', new Document([
                 '$id' => 'default',
@@ -170,16 +170,16 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             ]));
 
             $bucket = $dbForConsole->getDocument('buckets', 'default');
-    
+
             Console::success('[Setup] - Creating files collection for default bucket...');
             $files = $collections['files'] ?? [];
-            if(empty($files)) {
+            if (empty($files)) {
                 throw new Exception('Files collection is not configured.');
             }
-    
+
             $attributes = [];
             $indexes = [];
-    
+
             foreach ($files['attributes'] as $attribute) {
                 $attributes[] = new Document([
                     '$id' => $attribute['$id'],
@@ -193,7 +193,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                     'format' => $attribute['format'] ?? ''
                 ]);
             }
-    
+
             foreach ($files['indexes'] as $index) {
                 $indexes[] = new Document([
                     '$id' => $index['$id'],
@@ -203,15 +203,14 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                     'orders' => $index['orders'],
                 ]);
             }
-    
+
             $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         }
 
         Console::success('[Setup] - Server database init completed...');
     });
 
-    Console::success('Server started successfully (max payload is '.number_format($payloadSize).' bytes)');
-
+    Console::success('Server started successfully (max payload is ' . number_format($payloadSize) . ' bytes)');
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 
     // listen ctrl + c
@@ -225,13 +224,13 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
-    if(Files::isFileLoaded($request->getURI())) {
+    if (Files::isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
 
         $response
             ->setContentType(Files::getFileMimeType($request->getURI()))
-            ->addHeader('Cache-Control', 'public, max-age='.$time)
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
+            ->addHeader('Cache-Control', 'public, max-age=' . $time)
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
             ->send(Files::getFileContents($request->getURI()))
         ;
 
@@ -255,11 +254,11 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $logger = $app->getResource("logger");
-        if($logger) {
+        if ($logger) {
             try {
                 /** @var Utopia\Database\Document $user */
                 $user = $app->getResource('user');
-            } catch(\Throwable $_th) {
+            } catch (\Throwable $_th) {
                 // All good, user is optional information for logger
             }
 
@@ -268,7 +267,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
             $log = new Utopia\Logger\Log();
 
-            if(isset($user) && !$user->isEmpty()) {
+            if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
             }
 
@@ -279,7 +278,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $log->setMessage($th->getMessage());
 
             $log->addTag('method', $route->getMethod());
-            $log->addTag('url',  $route->getPath());
+            $log->addTag('url', $route->getPath());
             $log->addTag('verboseType', get_class($th));
             $log->addTag('code', $th->getCode());
             // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
@@ -298,18 +297,18 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            foreach($loggerBreadcrumbs as $loggerBreadcrumb) {
+            foreach ($loggerBreadcrumbs as $loggerBreadcrumb) {
                 $log->addBreadcrumb($loggerBreadcrumb);
             }
 
             $responseCode = $logger->addLog($log);
-            Console::info('Log pushed with status code: '.$responseCode);
+            Console::info('Log pushed with status code: ' . $responseCode);
         }
 
-        Console::error('[Error] Type: '.get_class($th));
-        Console::error('[Error] Message: '.$th->getMessage());
-        Console::error('[Error] File: '.$th->getFile());
-        Console::error('[Error] Line: '.$th->getLine());
+        Console::error('[Error] Type: ' . get_class($th));
+        Console::error('[Error] Message: ' . $th->getMessage());
+        Console::error('[Error] File: ' . $th->getFile());
+        Console::error('[Error] Line: ' . $th->getLine());
 
         /**
          * Reset Database connection if PDOException was thrown.
@@ -321,7 +320,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $swooleResponse->setStatusCode(500);
 
         $output = ((App::isDevelopment())) ? [
-            'message' => 'Error: '. $th->getMessage(),
+            'message' => 'Error: ' . $th->getMessage(),
             'code' => 500,
             'file' => $th->getFile(),
             'line' => $th->getLine(),
