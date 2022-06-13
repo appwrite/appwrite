@@ -466,12 +466,10 @@ $register->set('dbPool', function () {
         ->withUsername($dbUser)
         ->withPassword($dbPass)
         ->withOptions([
-            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-            PDO::ATTR_TIMEOUT => 3, // Seconds
-            PDO::ATTR_PERSISTENT => true,
+            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT,// If in production mode, warnings are not displayed
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => true,
-            PDO::ATTR_STRINGIFY_FETCHES => true,
+            PDO::ATTR_STRINGIFY_FETCHES => true // In order to be consistent between mariadb and mysql
         ]),
         64
     );
