@@ -10,6 +10,8 @@ use DateTime;
 class Usage {
     protected InfluxDatabase $influxDB;
     protected Database $database;
+    protected $errorHandler;
+    private array $latestTime = [];
 
     // all the mertics that we are collecting
     protected array $metrics = [
@@ -144,28 +146,21 @@ class Usage {
     protected array $periods = [
         [
             'key' => '30m',
+            'multiplier' => 1800,
             'startTime' => '-24 hours',
         ],
         [
             'key' => '1d',
+            'multiplier' => 86400,
             'startTime' => '-90 days',
         ],
     ];
 
-    public function __construct(Database $database, InfluxDatabase $influxDB)
+    public function __construct(Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
     {
         $this->database = $database;
         $this->influxDB = $influxDB;
-    }
-
-    public function getMetrics(): array
-    {
-        return $this->metrics;
-    }
-
-    public function getPeriods(): array
-    {
-        return $this->periods;
+        $this->errorHandler = $errorHandler;
     }
 
     /**
@@ -181,7 +176,7 @@ class Usage {
      * 
      * @return void
      */
-    public function createOrUpdateMetric(string $projectId, int $time, string $period, string $metric, int $value, int $type): void
+    private function createOrUpdateMetric(string $projectId, int $time, string $period, string $metric, int $value, int $type): void
     {
         $id = \md5("{$time}_{$period}_{$metric}");
         $this->database->setNamespace('_' . $projectId);
@@ -203,9 +198,13 @@ class Usage {
                     $document->setAttribute('value', $value)
                 );
             }
-            $latestTime[$metric][$period['key']] = $time;
+            $this->latestTime[$metric][$period['key']] = $time;
         } catch (\Exception $e) { // if projects are deleted this might fail
-            throw new \Exception("Unable to save data for project {$projectId} and metric {$metric}: {$e->getMessage()}");
+            if(is_callable($this->errorHandler)) {
+                call_user_func($this->errorHandler, "Unable to save data for project {$projectId} and metric {$metric}: {$e->getMessage()}", $e->getTraceAsString());
+            } else {
+                throw $e;
+            }
         }
     }
 
@@ -216,15 +215,14 @@ class Usage {
      * @param string $metric
      * @param array $options
      * @param array $period
-     * @param array $latestTime
      * 
      * @return void
      */
-    public function syncFromInfluxDB(string $metric, array $options, array $period, array &$latestTime): void
+    private function syncFromInfluxDB(string $metric, array $options, array $period): void
     {
         $start = DateTime::createFromFormat('U', \strtotime($period['startTime']))->format(DateTime::RFC3339);
-        if (!empty($latestTime[$metric][$period['key']])) {
-            $start = DateTime::createFromFormat('U', $latestTime[$metric][$period['key']])->format(DateTime::RFC3339);
+        if (!empty($this->latestTime[$metric][$period['key']])) {
+            $start = DateTime::createFromFormat('U', $this->latestTime[$metric][$period['key']])->format(DateTime::RFC3339);
         }
         $end = DateTime::createFromFormat('U', \strtotime('now'))->format(DateTime::RFC3339);
 
@@ -267,6 +265,29 @@ class Usage {
                     $value,
                     0
                 );
+            }
+        }
+    }
+
+    /**
+     * Collect Stats
+     * Collect all the stats from Influd DB to Database
+     * 
+     * @return void
+     */
+    public function collect(): void
+    {
+        foreach ($this->metrics as $metric => $options) { //for each metrics
+            foreach ($this->periods as $period) { // aggregate data for each period
+                try {
+                    $this->syncFromInfluxDB($metric, $options, $period);
+                } catch (\Exception $e) {
+                    if(is_callable($this->errorHandler)) {
+                        call_user_func($this->errorHandler, $e->getMessage(), $e->getTraceAsString());
+                    } else {
+                        throw $e;
+                    }
+                }
             }
         }
     }
