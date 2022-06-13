@@ -32,11 +32,8 @@ class Dailymotion extends OAuth2
      */
     protected array $fields = [
         'email',
-        'first_name',
         'id',
-        'last_name',
-        'status',
-        'username',
+        'fullname',
         'verified'
     ];
 
@@ -196,7 +193,7 @@ class Dailymotion extends OAuth2
         $user = $this->getUser($accessToken);
 
 
-        $username = $user['username'] ?? '';
+        $username = $user['fullname'] ?? '';
 
         return $username;
     }
