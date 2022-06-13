@@ -51,7 +51,7 @@ class User extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'User phone number.',
                 'default' => '',
-                'example' => '+49 30 901820',
+                'example' => '+4930901820',
             ])
             ->addRule('emailVerification', [
                 'type' => self::TYPE_BOOLEAN,
