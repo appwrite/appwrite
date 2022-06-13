@@ -7,7 +7,8 @@ use Utopia\Database\Document;
 use InfluxDB\Database as InfluxDatabase;
 use DateTime;
 
-class Usage {
+class Usage
+{
     protected InfluxDatabase $influxDB;
     protected Database $database;
     protected $errorHandler;
@@ -166,14 +167,14 @@ class Usage {
     /**
      * Create or Update Mertic
      * Create or update each metric in the stats collection for the given project
-     * 
+     *
      * @param string $projectId
      * @param int $time
      * @param string $period
      * @param string $metric
      * @param int $value
      * @param int $type
-     * 
+     *
      * @return void
      */
     private function createOrUpdateMetric(string $projectId, int $time, string $period, string $metric, int $value, int $type): void
@@ -200,7 +201,7 @@ class Usage {
             }
             $this->latestTime[$metric][$period['key']] = $time;
         } catch (\Exception $e) { // if projects are deleted this might fail
-            if(is_callable($this->errorHandler)) {
+            if (is_callable($this->errorHandler)) {
                 call_user_func($this->errorHandler, "Unable to save data for project {$projectId} and metric {$metric}: {$e->getMessage()}", $e->getTraceAsString());
             } else {
                 throw $e;
@@ -211,11 +212,11 @@ class Usage {
     /**
      * Sync From InfluxDB
      * Sync stats from influxDB to stats collection in the Appwrite database
-     * 
+     *
      * @param string $metric
      * @param array $options
      * @param array $period
-     * 
+     *
      * @return void
      */
     private function syncFromInfluxDB(string $metric, array $options, array $period): void
@@ -272,7 +273,7 @@ class Usage {
     /**
      * Collect Stats
      * Collect all the stats from Influd DB to Database
-     * 
+     *
      * @return void
      */
     public function collect(): void
@@ -282,7 +283,7 @@ class Usage {
                 try {
                     $this->syncFromInfluxDB($metric, $options, $period);
                 } catch (\Exception $e) {
-                    if(is_callable($this->errorHandler)) {
+                    if (is_callable($this->errorHandler)) {
                         call_user_func($this->errorHandler, $e->getMessage(), $e->getTraceAsString());
                     } else {
                         throw $e;
