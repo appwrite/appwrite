@@ -8,7 +8,7 @@ use Appwrite\Auth\OAuth2;
 // https://goauthentik.io/docs/providers/oauth2/
 
 class Authentik extends OAuth2
-{  
+{
     /**
      * @var array
      */
@@ -18,17 +18,17 @@ class Authentik extends OAuth2
         'email',
         'offline_access'
     ];
-    
+
     /**
      * @var array
      */
     protected array $user = [];
-    
+
     /**
      * @var array
      */
     protected array $tokens = [];
-    
+
     /**
      * @return string
      */
@@ -42,11 +42,11 @@ class Authentik extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://'.$this->getAuthentikDomain().'/application/o/authorize?'.\http_build_query([
+        return 'https://' . $this->getAuthentikDomain() . '/application/o/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'state'=> \json_encode($this->state),
-            'scope'=> \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state),
+            'scope' => \implode(' ', $this->getScopes()),
             'response_type' => 'code'
         ]);
     }
@@ -58,11 +58,11 @@ class Authentik extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
-                'https://'.$this->getAuthentikDomain().'/application/o/token/',
+                'https://' . $this->getAuthentikDomain() . '/application/o/token/',
                 $headers,
                 \http_build_query([
                     'code' => $code,
@@ -76,8 +76,8 @@ class Authentik extends OAuth2
         }
         return $this->tokens;
     }
-    
-    
+
+
     /**
      * @param string $refreshToken
      *
@@ -88,7 +88,7 @@ class Authentik extends OAuth2
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://'.$this->getAuthentikDomain().'/application/o/token/',
+            'https://' . $this->getAuthentikDomain() . '/application/o/token/',
             $headers,
             \http_build_query([
                 'refresh_token' => $refreshToken,
@@ -98,7 +98,7 @@ class Authentik extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -113,11 +113,11 @@ class Authentik extends OAuth2
     public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
+
         if (isset($user['sub'])) {
             return $user['sub'];
         }
-        
+
         return '';
     }
 
@@ -129,19 +129,19 @@ class Authentik extends OAuth2
     public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
+
         if (isset($user['email'])) {
             return $user['email'];
         }
-        
+
         return '';
     }
 
     /**
      * Check if the User email is verified
-     * 
+     *
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -163,14 +163,14 @@ class Authentik extends OAuth2
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
+
         if (isset($user['name'])) {
             return $user['name'];
         }
-        
+
         return '';
     }
-    
+
      /**
      * @param string $accessToken
      *
@@ -179,8 +179,8 @@ class Authentik extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers = ['Authorization: Bearer '. \urlencode($accessToken)];
-            $user = $this->request('GET', 'https://'.$this->getAuthentikDomain().'/application/o/userinfo/', $headers);
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
+            $user = $this->request('GET', 'https://' . $this->getAuthentikDomain() . '/application/o/userinfo/', $headers);
             $this->user = \json_decode($user, true);
         }
 
@@ -189,34 +189,34 @@ class Authentik extends OAuth2
 
     /**
      * Extracts the Client Secret from the JSON stored in appSecret
-     * 
+     *
      * @return string
      */
     protected function getClientSecret(): string
     {
         $secret = $this->getAppSecret();
 
-        return $secret['clientSecret'] ?? ''; 
+        return $secret['clientSecret'] ?? '';
     }
 
      /**
      * Extracts the authentik Domain from the JSON stored in appSecret
-     * 
+     *
      * @return string
      */
     protected function getAuthentikDomain(): string
     {
         $secret = $this->getAppSecret();
-        return $secret['authentikDomain'] ?? ''; 
+        return $secret['authentikDomain'] ?? '';
     }
 
     /**
      * Decode the JSON stored in appSecret
-     * 
+     *
      * @return array
      */
     protected function getAppSecret(): array
-    {    
+    {
         try {
             $secret = \json_decode($this->appSecret, true, 512, JSON_THROW_ON_ERROR);
         } catch (\Throwable $th) {
