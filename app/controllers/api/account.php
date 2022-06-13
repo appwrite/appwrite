@@ -57,8 +57,6 @@ App::post('/v1/account')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->param('hash', 'plaintext', new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default algorithm is \'' . Auth::DEFAULT_ALGO . '\'.', true)
-    ->param('hashOptions', '{}', new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -66,10 +64,7 @@ App::post('/v1/account')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, string $hash, mixed $hashOptions, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
-
-        $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
-
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
@@ -103,9 +98,9 @@ App::post('/v1/account')
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
-                'password' => $hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password,
-                'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
-                'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions,
+                'password' => Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
+                'hash' => Auth::DEFAULT_ALGO,
+                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
@@ -1257,27 +1252,22 @@ App::patch('/v1/account/password')
     ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
-    ->param('hash', 'plaintext', new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default algorithm is \'' . Auth::DEFAULT_ALGO . '\'.', true)
-    ->param('hashOptions', '{}', new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $password, string $oldPassword, string $hash, mixed $hashOptions, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
-
-        $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
-
+    ->action(function (string $password, string $oldPassword, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
         // Check old password only if its an existing user.
         if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
-                ->setAttribute('password', $hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password)
-                ->setAttribute('hash', $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash)
-                ->setAttribute('hashOptions', $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions)
+                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+                ->setAttribute('hash', Auth::DEFAULT_ALGO)
+                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
                 ->setAttribute('passwordUpdate', \time())
         );
 
@@ -1306,18 +1296,13 @@ App::patch('/v1/account/email')
     ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
-    ->param('hash', 'plaintext', new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default algorithm is \'' . Auth::DEFAULT_ALGO . '\'.', true)
-    ->param('hashOptions', '{}', new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $email, string $password, string $hash, mixed $hashOptions, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
-
-        $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
-
+    ->action(function (string $email, string $password, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
         $isAnonymousUser = is_null($user->getAttribute('email')) && is_null($user->getAttribute('password')); // Check if request is from an anonymous account for converting
 
         if (
@@ -1336,9 +1321,9 @@ App::patch('/v1/account/email')
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user
-                ->setAttribute('password', $isAnonymousUser ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : $user->getAttribute('password', ''))
-                ->setAttribute('hash', $isAnonymousUser ? ($hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash) : $user->getAttribute('hash', ''))
-                ->setAttribute('hashOptions', $isAnonymousUser ? ($hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions) : $user->getAttribute('hashOptions', ''))
+                ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS) : $user->getAttribute('password', ''))
+                ->setAttribute('hash', $isAnonymousUser ? Auth::DEFAULT_ALGO : $user->getAttribute('hash', ''))
+                ->setAttribute('hashOptions', $isAnonymousUser ? Auth::DEFAULT_ALGO_OPTIONS : $user->getAttribute('hashOptions', ''))
                 ->setAttribute('email', $email)
                 ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
                 ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')])));
@@ -1781,17 +1766,12 @@ App::put('/v1/account/recovery')
     ->param('secret', '', new Text(256), 'Valid reset token.')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->param('passwordAgain', '', new Password(), 'Repeat new user password. Must be at least 8 chars.')
-    ->param('hash', 'plaintext', new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default algorithm is \'' . Auth::DEFAULT_ALGO . '\'.', true)
-    ->param('hashOptions', '{}', new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, string $hash, mixed $hashOptions, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
-
-        $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
-
+    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
         if ($password !== $passwordAgain) {
             throw new Exception('Passwords must match', 400, Exception::USER_PASSWORD_MISMATCH);
         }
@@ -1812,9 +1792,9 @@ App::put('/v1/account/recovery')
         Authorization::setRole('user:' . $profile->getId());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
-                ->setAttribute('password', $hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password)
-                ->setAttribute('hash', $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash)
-                ->setAttribute('hashOptions', $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions)
+                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+                ->setAttribute('hash', Auth::DEFAULT_ALGO)
+                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
                 ->setAttribute('passwordUpdate', \time())
                 ->setAttribute('emailVerification', true));
 

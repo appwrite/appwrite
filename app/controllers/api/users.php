@@ -503,16 +503,11 @@ App::patch('/v1/users/:userId/password')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
-    ->param('hash', 'plaintext', new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default algorithm is \'' . Auth::DEFAULT_ALGO . '\'.', true)
-    ->param('hashOptions', '{}', new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('events')
-    ->action(function (string $userId, string $password, string $hash, mixed $hashOptions, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
-
-        $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
-
+    ->action(function (string $userId, string $password, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -520,9 +515,9 @@ App::patch('/v1/users/:userId/password')
         }
 
         $user
-            ->setAttribute('password', $hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password)
-            ->setAttribute('hash', $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash)
-            ->setAttribute('hashOptions', $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions)
+            ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+            ->setAttribute('hash', Auth::DEFAULT_ALGO)
+            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
             ->setAttribute('passwordUpdate', \time());
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
