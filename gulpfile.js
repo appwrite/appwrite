@@ -113,6 +113,7 @@ const configDep = {
         'node_modules/prismjs/components/prism-markup.min.js',
         'node_modules/prismjs/components/prism-css.min.js',
         'node_modules/prismjs/components/prism-clike.min.js',
+        'node_modules/prismjs/components/prism-cpp.min.js',
         'node_modules/prismjs/components/prism-javascript.min.js',
         'node_modules/prismjs/components/prism-bash.min.js',
         'node_modules/prismjs/components/prism-csharp.min.js',
