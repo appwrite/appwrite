@@ -156,8 +156,6 @@ class Dailymotion extends OAuth2
     public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-
-
         $userEmail = $user['email'] ?? '';
 
         return $userEmail;
