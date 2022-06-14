@@ -100,7 +100,7 @@ trait ProjectCustom
         ], [
             'name' => 'Webhook Test',
             'events' => [
-                'collections.*',
+                'databases.*',
                 'functions.*',
                 'buckets.*',
                 'teams.*',

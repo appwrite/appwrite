@@ -34,9 +34,21 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['user']);
 
         /**
+         * Create database
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'databaseId' => 'unique()',
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+        /**
          * Test Attributes
          */
-        $actors = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -49,7 +61,7 @@ class RealtimeConsoleClientTest extends Scope
 
         $actorsId = $actors['body']['$id'];
 
-        $name = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actorsId . '/attributes/string', array_merge([
+        $name = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -112,7 +124,7 @@ class RealtimeConsoleClientTest extends Scope
 
         $client->close();
 
-        $data = ['actorsId' => $actorsId];
+        $data = ['actorsId' => $actorsId, 'databaseId' => $databaseId];
 
         return $data;
     }
@@ -124,6 +136,7 @@ class RealtimeConsoleClientTest extends Scope
     {
         $projectId = 'console';
         $actorsId = $data['actorsId'];
+        $databaseId = $data['databaseId'];
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -142,7 +155,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Indexes
          */
-        $index = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actorsId . '/indexes', array_merge([
+        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -212,6 +225,7 @@ class RealtimeConsoleClientTest extends Scope
     {
         $actorsId = $data['actorsId'];
         $projectId = 'console';
+        $databaseId = $data['databaseId'];
 
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
@@ -231,7 +245,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Delete Index
          */
-        $attribute = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $actorsId . '/indexes/key_name', array_merge([
+        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes/key_name', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -271,6 +285,7 @@ class RealtimeConsoleClientTest extends Scope
     {
         $actorsId = $data['actorsId'];
         $projectId = 'console';
+        $databaseId = $data['databaseId'];
 
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
@@ -290,7 +305,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Delete Attribute
          */
-        $attribute = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['actorsId'] . '/attributes/name', array_merge([
+        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['actorsId'] . '/attributes/name', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

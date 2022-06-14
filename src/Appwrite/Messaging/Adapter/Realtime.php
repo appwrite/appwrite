@@ -272,11 +272,11 @@ class Realtime extends Adapter
                 }
                 break;
             case 'databases':
-                if (in_array($parts[4], ['attributes', 'indexes'])) {
+                if (in_array($parts[4] ?? [], ['attributes', 'indexes'])) {
                     $channels[] = 'console';
                     $projectId = 'console';
                     $roles = ['team:' . $project->getAttribute('teamId')];
-                } elseif ($parts[4] === 'documents') {
+                } elseif ($parts[4] ?? '' === 'documents') {
                     if ($collection->isEmpty()) {
                         throw new \Exception('Collection needs to be passed to Realtime for Document events in the Database.');
                     }

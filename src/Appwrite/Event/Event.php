@@ -39,7 +39,7 @@ class Event
     protected array $payload = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
-    protected ?Document $context = null;
+    protected array $context = [];
 
     /**
      * @param string $queue
@@ -184,9 +184,9 @@ class Event
      *
      * @param string $key
      * 
-     * @return null|array
+     * @return null|Document
      */
-    public function getContext(string $key): ?array
+    public function getContext(string $key): ?Document
     {
         return $this->context[$key] ?? null;
     }
