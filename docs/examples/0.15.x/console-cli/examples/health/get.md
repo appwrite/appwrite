@@ -1,1 +1,0 @@
-appwrite health get
