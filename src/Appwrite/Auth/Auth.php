@@ -2,20 +2,27 @@
 
 namespace Appwrite\Auth;
 
+use Appwrite\Auth\Hash\Argon2;
+use Appwrite\Auth\Hash\Bcrypt;
+use Appwrite\Auth\Hash\Md5;
+use Appwrite\Auth\Hash\Phpass;
+use Appwrite\Auth\Hash\Scrypt;
+use Appwrite\Auth\Hash\Scryptmodified;
+use Appwrite\Auth\Hash\Sha;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
 class Auth
 {
     public const SUPPORTED_ALGOS = [
-        'argon2' => 'Argon2',
-        'bcrypt' => 'Bcrypt',
-        'md5' => 'Md5',
-        'sha' => 'Sha',
-        'phpass' => 'Phpass',
-        'scrypt' => 'Scrypt',
-        'scrypt_mod' => 'Scryptmodified',
-        'plaintext' => '' // This is alias for DX purposes. It is translated to default algo
+        'argon2',
+        'bcrypt',
+        'md5',
+        'sha',
+        'phpass',
+        'scrypt',
+        'scrypt_mod',
+        'plaintext'
     ];
 
     public const DEFAULT_ALGO = 'argon2';
@@ -158,16 +165,42 @@ class Auth
             $options = Auth::DEFAULT_ALGO_OPTIONS;
         }
 
-        if (!\array_key_exists($algo, Auth::SUPPORTED_ALGOS)) {
+        if (!\in_array($algo, Auth::SUPPORTED_ALGOS)) {
             throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
         }
 
-        $className = Auth::SUPPORTED_ALGOS[$algo];
-        $classPath = '\\Appwrite\\Auth\\Hash\\' . $className;
-        $hasher = new $classPath($options);
-        $hash = $hasher->hash($string);
-
-        return $hash;
+        switch ($algo) {
+            case 'argon2':
+                $hasher = new Argon2($options);
+                return $hasher->hash($string);
+                break;
+            case 'bcrypt':
+                $hasher = new Bcrypt($options);
+                return $hasher->hash($string);
+                break;
+            case 'md5':
+                $hasher = new Md5($options);
+                return $hasher->hash($string);
+                break;
+            case 'sha':
+                $hasher = new Sha($options);
+                return $hasher->hash($string);
+                break;
+            case 'phpass':
+                $hasher = new Phpass($options);
+                return $hasher->hash($string);
+                break;
+            case 'scrypt':
+                $hasher = new Scrypt($options);
+                return $hasher->hash($string);
+                break;
+            case 'scrypt_mod':
+                $hasher = new Scryptmodified($options);
+                return $hasher->hash($string);
+                break;
+            default:
+                throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+        }
     }
 
     /**
@@ -188,12 +221,42 @@ class Auth
             $options = Auth::DEFAULT_ALGO_OPTIONS;
         }
 
-        $className = Auth::SUPPORTED_ALGOS[$algo];
-        $classPath = '\\Appwrite\\Auth\\Hash\\' . $className;
-        $hasher = new $classPath($options);
-        $verify = $hasher->verify($plain, $hash);
+        if (!\in_array($algo, Auth::SUPPORTED_ALGOS)) {
+            throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+        }
 
-        return $verify;
+        switch ($algo) {
+            case 'argon2':
+                $hasher = new Argon2($options);
+                return $hasher->verify($plain, $hash);
+                break;
+            case 'bcrypt':
+                $hasher = new Bcrypt($options);
+                return $hasher->verify($plain, $hash);
+                break;
+            case 'md5':
+                $hasher = new Md5($options);
+                return $hasher->verify($plain, $hash);
+                break;
+            case 'sha':
+                $hasher = new Sha($options);
+                return $hasher->verify($plain, $hash);
+                break;
+            case 'phpass':
+                $hasher = new Phpass($options);
+                return $hasher->verify($plain, $hash);
+                break;
+            case 'scrypt':
+                $hasher = new Scrypt($options);
+                return $hasher->verify($plain, $hash);
+                break;
+            case 'scrypt_mod':
+                $hasher = new Scryptmodified($options);
+                return $hasher->verify($plain, $hash);
+                break;
+            default:
+                throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+        }
     }
 
     /**
