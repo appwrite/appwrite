@@ -237,7 +237,13 @@ class Usage
             $filters = '';
         }
 
-        $query = "SELECT sum(value) AS \"value\" FROM \"{$table}\" WHERE \"time\" > '{$start}' AND \"time\" < '{$end}' AND \"metric_type\"='counter' {$filters} GROUP BY time({$period['key']}), \"projectId\" {$groupBy} FILL(null)";
+        $query = "SELECT sum(value) AS \"value\" ";
+        $query .= "FROM \"{$table}\" ";
+        $query .= "WHERE \"time\" > '{$start}' ";
+        $query .= "AND \"time\" < '{$end}' ";
+        $query .= "AND \"metric_type\"='counter' {$filters} ";
+        $query .= "GROUP BY time({$period['key']}), \"projectId\" {$groupBy} ";
+        $query .= "FILL(null)";
         $result = $this->influxDB->query($query);
 
         $points = $result->getPoints();
