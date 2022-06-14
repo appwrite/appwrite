@@ -202,7 +202,7 @@ class Usage
             $this->latestTime[$metric][$period] = $time;
         } catch (\Exception $e) { // if projects are deleted this might fail
             if (is_callable($this->errorHandler)) {
-                call_user_func($this->errorHandler, "Unable to save data for project {$projectId} and metric {$metric}: {$e->getMessage()}", $e->getTraceAsString());
+                call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
             } else {
                 throw $e;
             }
@@ -290,7 +290,7 @@ class Usage
                     $this->syncFromInfluxDB($metric, $options, $period);
                 } catch (\Exception $e) {
                     if (is_callable($this->errorHandler)) {
-                        call_user_func($this->errorHandler, $e->getMessage(), $e->getTraceAsString());
+                        call_user_func($this->errorHandler, $e);
                     } else {
                         throw $e;
                     }

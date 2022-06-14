@@ -13,6 +13,7 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
+use Utopia\Logger\Log;
 
 function getDatabase(Registry &$register, string $namespace): Database
 {
@@ -72,9 +73,38 @@ function getInfluxDB(Registry &$register): InfluxDatabase
     return $database;
 }
 
-$logError = function ($message, $stackTrace) {
-    Console::warning("Failed: {$message}");
-    Console::warning($stackTrace);
+$logError = function (Throwable $error, string $action = 'syncUsageStats') use ($register) {
+    $logger = $register->get('logger');
+
+    if ($logger) {
+        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+        $log = new Log();
+        $log->setNamespace("realtime");
+        $log->setServer(\gethostname());
+        $log->setVersion($version);
+        $log->setType(Log::TYPE_ERROR);
+        $log->setMessage($error->getMessage());
+
+        $log->addTag('code', $error->getCode());
+        $log->addTag('verboseType', get_class($error));
+
+        $log->addExtra('file', $error->getFile());
+        $log->addExtra('line', $error->getLine());
+        $log->addExtra('trace', $error->getTraceAsString());
+        $log->addExtra('detailedTrace', $error->getTrace());
+
+        $log->setAction($action);
+
+        $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+        $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+        $responseCode = $logger->addLog($log);
+        Console::info('Usage stats log pushed with status code: ' . $responseCode);
+    }
+
+    Console::warning("Failed: {$error->getMessage()}");
+    Console::warning($error->getTraceAsString());
 };
 
 $cli
