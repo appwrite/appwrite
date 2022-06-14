@@ -23,7 +23,7 @@ document.addEventListener("account.create", function () {
   let form = container.get('serviceForm');
   let sdk = container.get('console');
 
-  let promise = sdk.account.createSession(form.email, form.password);
+  let promise = sdk.account.createEmailSession(form.email, form.password);
 
   container.set("serviceForm", {}, true, true); // Remove sensitive data when not needed
 
