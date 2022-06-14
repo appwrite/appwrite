@@ -5618,7 +5618,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateVerification: (userId, emailVerification) => __awaiter(this, void 0, void 0, function* () {
+                updateEmailVerification: (userId, emailVerification) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
