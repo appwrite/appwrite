@@ -192,16 +192,17 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
         if ($project->getId() !== 'console') {
             $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
             $payload = new Document($events->getPayload());
-            $context = $events->getContext() ?? false;
 
-            $collection = ($context && $context->getCollection() === 'collections') ? $context : null;
-            $bucket = ($context && $context->getCollection() === 'buckets') ? $context : null;
-
+            $database = $events->getContext('data base');
+            $collection = $events->getContext('collection');
+            $bucket = $events->getContext('bucket');
+            
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $payload,
                 project: $project,
+                database: $database,
                 collection: $collection,
                 bucket: $bucket,
             );

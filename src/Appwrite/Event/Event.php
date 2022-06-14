@@ -172,7 +172,7 @@ class Event
      * @param Document $context
      * @return self
      */
-    public function setContext(Document $context): self
+    public function setContext(array $context): self
     {
         $this->context = $context;
 
@@ -182,11 +182,13 @@ class Event
     /**
      * Get context for this event.
      *
-     * @return null|Document
+     * @param string $key
+     * 
+     * @return null|array
      */
-    public function getContext(): ?Document
+    public function getContext(string $key): ?array
     {
-        return $this->context;
+        return $this->context[$key] ?? null;
     }
 
     /**
