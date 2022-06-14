@@ -2,7 +2,8 @@
 
 namespace Appwrite\DSN;
 
-class DSN {
+class DSN 
+{
     /**
      * @var string
      */
@@ -21,7 +22,7 @@ class DSN {
     /**
      * @var string
      */
-    protected string $host; 
+    protected string $host;
 
     /**
      * @var ?string
@@ -42,7 +43,7 @@ class DSN {
      * Construct
      *
      * Construct a new DSN object
-     * 
+     *
      * @param string $dsn
      */
     public function __construct(string $dsn)
@@ -64,17 +65,17 @@ class DSN {
 
     /**
      * Return the scheme.
-     * 
+     *
      * @return string
      */
-    public function getScheme(): string 
+    public function getScheme(): string
     {
         return $this->scheme;
     }
 
     /**
      * Return the user.
-     * 
+     *
      * @return ?string
      */
     public function getUser(): ?string 
@@ -84,7 +85,7 @@ class DSN {
 
     /**
      * Return the password.
-     * 
+     *
      * @return ?string
      */
     public function getPassword(): ?string 
@@ -94,17 +95,17 @@ class DSN {
 
     /**
      * Return the host
-     * 
+     *
      * @return string
      */
-    public function getHost(): string 
+    public function getHost(): string
     {
         return $this->host;
     }
 
     /**
      * Return the port
-     * 
+     *
      * @return ?string
      */
     public function getPort(): ?string
@@ -114,21 +115,21 @@ class DSN {
 
     /**
      * Return the database
-     * 
+     *
      * @return ?string
      */
-    public function getDatabase(): ?string 
+    public function getDatabase(): ?string
     {
         return ltrim($this->database, '/');
     }
 
     /**
      * Return the query string
-     * 
+     *
      * @return ?string
      */
-    public function getQuery(): ?string 
+    public function getQuery(): ?string
     {
         return $this->query;
     }
-} 
+}
