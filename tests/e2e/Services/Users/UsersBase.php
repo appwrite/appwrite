@@ -62,7 +62,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => 'unique()',
+            'userId' => 'md5',
             'email' => 'md5@appwrite.io',
             'password' => '144fa7eaa4904e8ee120651997f70dcc', // appwrite
             'name' => 'MD5 User',
@@ -72,7 +72,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => 'unique()',
+            'userId' => 'bcrypt',
             'email' => 'bcrypt@appwrite.io',
             'password' => '$2a$15$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq', // appwrite (15 rounds)
             'name' => 'BCrypt User',
@@ -86,10 +86,10 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => 'unique()',
-            'email' => 'argon@appwrite.io',
+            'userId' => 'argon2',
+            'email' => 'argon2@appwrite.io',
             'password' => '$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI', // appwrite (salt appwrite, parallel 2, memory 20, iterations 3, length 32)
-            'name' => 'Argon User',
+            'name' => 'Argon2 User',
         ]);
 
         $this->assertEquals($res['headers']['status-code'], 201);
@@ -100,10 +100,10 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => 'unique()',
-            'email' => 'sha@appwrite.io',
+            'userId' => 'sha512',
+            'email' => 'sha512@appwrite.io',
             'password' => '4243da0a694e8a2f727c8060fe0507c8fa01ca68146c76d2c190805b638c20c6bf6ba04e21f11ae138785d0bff63c416e6f87badbffad37f6dee50094cc38c70', // appwrite (sha512)
-            'name' => 'SHA User',
+            'name' => 'SHA512 User',
             'passwordVersion' => 'sha512'
         ]);
 
@@ -116,7 +116,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => 'unique()',
+            'userId' => 'scrypt',
             'email' => 'scrypt@appwrite.io',
             'password' => '3fdef49701bc4cfaacd551fe017283513284b4731e6945c263246ef948d3cf63b5d269c31fd697246085111a428245e24a4ddc6b64c687bc60a8910dbafc1d5b', // appwrite (salt appwrite, cpu 16384, memory 13, parallel 2, length 64)
             'name' => 'SCrypt User',
@@ -140,7 +140,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => 'unique()',
+            'userId' => 'phpass',
             'email' => 'phpass@appwrite.io',
             'password' => '$P$Bpvzeu1kOS.qarp2kiOstvgOFbdIn4',
             'name' => 'PHPass User',
@@ -153,7 +153,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => 'unique()',
+            'userId' => 'scrypt-modified',
             'email' => 'scrypt-modified@appwrite.io',
             'password' => 'UlM7JiXRcQhzAGlaonpSqNSLIz475WMddOgLjej5De9vxTy48K6WtqlEzrRFeK4t0COfMhWCb8wuMHgxOFCHFQ==', // appwrite
             'name' => 'SCrypt Modified User',
@@ -170,6 +170,98 @@ trait UsersBase
         $this->assertEquals($res['body']['hashOptions']['salt_separator'], 'Bw==');
 
         return ['userId' => $body['$id']];
+    }
+
+    /**
+     * Tries to login into all accounts created with hashed password. Ensures hash veifying logic.
+     * 
+     * @depends testCreateUser
+     */
+    public function testCreateUserSessionHashed(array $data): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => 'md5@appwrite.io',
+            'password' => 'appwrite',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['body']['userId'], 'md5');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => 'bcrypt@appwrite.io',
+            'password' => 'appwrite',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['body']['userId'], 'bcrypt');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => 'argon2@appwrite.io',
+            'password' => 'appwrite',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['body']['userId'], 'argon2');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => 'sha512@appwrite.io',
+            'password' => 'appwrite',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['body']['userId'], 'sha512');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => 'scrypt@appwrite.io',
+            'password' => 'appwrite',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['body']['userId'], 'scrypt');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => 'phpass@appwrite.io',
+            'password' => 'appwrite',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['body']['userId'], 'phpass');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => 'scrypt-modified@appwrite.io',
+            'password' => 'appwrite',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['body']['userId'], 'scrypt-modified');
     }
 
     /**
