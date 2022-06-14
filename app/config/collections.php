@@ -1105,54 +1105,49 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_email',
+                '$id' => 'email',
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['email'],
                 'lengths' => [320],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_name',
+                '$id' => 'name',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['name'],
                 'lengths' => [256],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_registration',
+                '$id' => 'registration',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['registration'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_status',
+                '$id' => 'status',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['status'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_passwordUpdate',
+                '$id' => 'passwordUpdate',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['passwordUpdate'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_emailVerification',
+                '$id' => 'emailVerification',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['emailVerification'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_prefs',
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['prefs'],
-                'orders' => [],
             ]
         ],
+        'queries' => ['$id', 'emailVerification', 'email', 'passwordUpdate', 'status', 'registration', 'name']
     ],
 
     'tokens' => [

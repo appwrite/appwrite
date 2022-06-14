@@ -21,11 +21,10 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
 
             <h2>Users</h2>
 
-            <!-- TODO: New queries syntax doesnt work. Needs to be fixed -->
             <form class="box padding-small margin-bottom search"
                 data-service="users.list"
                 data-event="submit"
-                data-param-queries="search.search('{{router.params.search}}')"
+                data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                 data-param-offset=""
                 data-param-order-type="DESC"
@@ -43,11 +42,10 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                 </div>
             </form>
 
-            <!-- TODO: Same search issue here -->
             <div
                 data-service="users.list"
                 data-event="load,users.create,users.update,users.delete"
-                data-param-queries="search.search('{{router.params.search}}')"
+                data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                 data-param-offset="{{router.params.offset}}"
                 data-param-order-type="DESC"

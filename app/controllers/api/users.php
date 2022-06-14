@@ -9,6 +9,8 @@ use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries as QueriesValidator;
+use Appwrite\Utopia\Database\Validator\OrderAttributes;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Audit\Audit;
@@ -27,6 +29,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\Boolean;
 use MaxMind\Db\Reader;
+use Utopia\Database\Validator\QueryValidator;
 use Utopia\Validator\ArrayList;
 
 App::post('/v1/users')
@@ -110,6 +113,39 @@ App::get('/v1/users')
     ->inject('dbForProject')
     ->inject('usage')
     ->action(function (array $queries, int $limit, int $offset, string $cursor, string $cursorDirection, array $orderAttributes, array $orderTypes, Response $response, Database $dbForProject, Stats $usage) {
+        $collection = Config::getParam('collections', [])['users'];
+        $allowedQueryAttributes = $collection['queries'];
+
+        $collection['attributes'] = \array_filter($collection['attributes'], fn($attribute) => \in_array($attribute['$id'], $allowedQueryAttributes));
+        $collection['indexes'] = \array_filter($collection['indexes'], fn($index) => \in_array($index['$id'], $allowedQueryAttributes));
+
+        $collection['attributes'] = \array_map(fn($attribute) => new Document(\array_merge($attribute, ['status' => 'available', 'key' => $attribute['$id']])), $collection['attributes']);
+        $collection['indexes'] = \array_map(fn($index) => new Document(\array_merge($index, ['status' => 'available', 'key' => $index['$id']])), $collection['indexes']);
+
+        $queries = \array_map(function ($query) {
+            $query = Query::parse($query);
+
+            if (\count($query->getValues()) > 100) {
+                throw new Exception("You cannot use more than 100 query values on attribute '{$query->getAttribute()}'", 400, Exception::GENERAL_QUERY_LIMIT_EXCEEDED);
+            }
+
+            return $query;
+        }, $queries);
+
+        if (!empty($orderAttributes)) {
+            $validator = new OrderAttributes($collection['attributes'], $collection['indexes'], true);
+            if (!$validator->isValid($orderAttributes)) {
+                throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
+            }
+        }
+
+        if (!empty($queries)) {
+            $validator = new QueriesValidator(new QueryValidator($collection['attributes']), $collection['indexes'], true);
+            if (!$validator->isValid($queries)) {
+                throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
+            }
+        }
+
         if (!empty($cursor)) {
             $cursorUser = $dbForProject->getDocument('users', $cursor);
 
