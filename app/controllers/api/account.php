@@ -133,7 +133,7 @@ App::post('/v1/account')
     });
 
 App::post('/v1/account/sessions/email')
-    ->desc('Create Email Session')
+    ->desc('Create Account Session with Email')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
