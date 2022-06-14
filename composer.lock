@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1593c7304ba026d4073de336227858f3",
+    "content-hash": "2fb5e41dc214b996d95f49a49d64d00e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -300,16 +300,16 @@
         },
         {
             "name": "colinmollenhour/credis",
-            "version": "v1.13.1",
+            "version": "v1.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/colinmollenhour/credis.git",
-                "reference": "85df015088e00daf8ce395189de22c8eb45c8d49"
+                "reference": "afec8e58ec93d2291c127fa19709a048f28641e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/colinmollenhour/credis/zipball/85df015088e00daf8ce395189de22c8eb45c8d49",
-                "reference": "85df015088e00daf8ce395189de22c8eb45c8d49",
+                "url": "https://api.github.com/repos/colinmollenhour/credis/zipball/afec8e58ec93d2291c127fa19709a048f28641e5",
+                "reference": "afec8e58ec93d2291c127fa19709a048f28641e5",
                 "shasum": ""
             },
             "require": {
@@ -341,9 +341,9 @@
             "homepage": "https://github.com/colinmollenhour/credis",
             "support": {
                 "issues": "https://github.com/colinmollenhour/credis/issues",
-                "source": "https://github.com/colinmollenhour/credis/tree/v1.13.1"
+                "source": "https://github.com/colinmollenhour/credis/tree/v1.13.0"
             },
-            "time": "2022-06-20T22:56:59+00:00"
+            "time": "2022-04-07T14:57:22+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -496,7 +496,7 @@
             "require": {
                 "ext-json": "*",
                 "guzzlehttp/promises": "^1.5",
-                "guzzlehttp/psr7": "^1.9 || ^2.4",
+                "guzzlehttp/psr7": "^1.8.3 || ^2.1",
                 "php": "^7.2.5 || ^8.0",
                 "psr/http-client": "^1.0",
                 "symfony/deprecation-contracts": "^2.2 || ^3.0"
@@ -2107,16 +2107,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.18.2",
+            "version": "dev-bug-last-internal-id",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "781c31238b03ebc530a225973c4d1a921e00c2b9"
+                "reference": "ef5bd5a1e761e04352a64e39b5b1b37e7e7a36cc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/781c31238b03ebc530a225973c4d1a921e00c2b9",
-                "reference": "781c31238b03ebc530a225973c4d1a921e00c2b9",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ef5bd5a1e761e04352a64e39b5b1b37e7e7a36cc",
+                "reference": "ef5bd5a1e761e04352a64e39b5b1b37e7e7a36cc",
                 "shasum": ""
             },
             "require": {
@@ -2165,9 +2165,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.18.2"
+                "source": "https://github.com/utopia-php/database/tree/bug-last-internal-id"
             },
-            "time": "2022-06-19T09:32:07+00:00"
+            "time": "2022-06-14T12:42:10+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5346,9 +5346,18 @@
             "time": "2022-05-17T05:48:52+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-bug-last-internal-id",
+            "alias": "0.18.1",
+            "alias_normalized": "0.18.1.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5370,5 +5379,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
