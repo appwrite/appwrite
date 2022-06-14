@@ -104,6 +104,7 @@ App::post('/v1/projects')
             'domains' => null,
             'auths' => $auths,
             'search' => implode(' ', [$projectId, $name]),
+            'database'
         ]));
         /** @var array $collections */
         $collections = Config::getParam('collections', []);

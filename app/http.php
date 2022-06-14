@@ -66,7 +66,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         do {
             try {
                 $attempts++;
-                $db = $register->get('dbPool')->get();
+                $pool = $register->get('poolForConsole')->get();
                 $redis = $register->get('redisPool')->get();
                 break; // leave the do-while if successful
             } catch (\Exception $e) {

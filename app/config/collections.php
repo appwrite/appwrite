@@ -391,6 +391,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'database',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'logo',
                 'type' => Database::VAR_STRING,
                 'format' => '',

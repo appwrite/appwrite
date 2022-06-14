@@ -23,6 +23,8 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
+use Appwrite\Database\DatabasePool;
+use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
@@ -442,29 +444,98 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
-$register->set('dbPool', function () {
+
+$register->set('poolForConsole', function () {
+    $dbs = App::getEnv('_APP_CONSOLE_DB', '');
+    $dbs = explode(',', $dbs);
+
+    $pools = new DatabasePool();
+    foreach ($dbs as $db) {
+        $db = explode('=', $db);
+        $name = $db[0];
+        $dsn = new DSN($db[1]);
+
+        // var_dump($dsn->getHost(), $dsn->getPort(), $dsn->getDatabase(), $dsn->getUser(), $dsn->getPassword());
+
+        $pool = new PDOPool(
+            (new PDOConfig())
+            ->withHost($dsn->getHost())
+            ->withPort($dsn->getPort())
+            ->withDbName($dsn->getDatabase())
+            ->withCharset('utf8mb4')
+            ->withUsername($dsn->getUser())
+            ->withPassword($dsn->getPassword())
+            ->withOptions([
+                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+            ]),
+            64
+        );
+
+        $pools->add($name, $pool);
+    }
+
+    return $pools;
+});
+
+$register->set('poolForProject', function () {
  // Register DB connection
-    $dbHost = App::getEnv('_APP_DB_HOST', '');
-    $dbPort = App::getEnv('_APP_DB_PORT', '');
-    $dbUser = App::getEnv('_APP_DB_USER', '');
-    $dbPass = App::getEnv('_APP_DB_PASS', '');
-    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+    // $dbHost = App::getEnv('_APP_DB_HOST', '');
+    // $dbPort = App::getEnv('_APP_DB_PORT', '');
+    // $dbUser = App::getEnv('_APP_DB_USER', '');
+    // $dbPass = App::getEnv('_APP_DB_PASS', '');
+    // $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $pool = new PDOPool(
-        (new PDOConfig())
-        ->withHost($dbHost)
-        ->withPort($dbPort)
-        ->withDbName($dbScheme)
-        ->withCharset('utf8mb4')
-        ->withUsername($dbUser)
-        ->withPassword($dbPass)
-        ->withOptions([
-            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-        ]),
-        64
-    );
+    // var_dump($dbHost, $dbPort, $dbScheme, $dbUser, $dbPass);
+    // $pool = new PDOPool(
+    //     (new PDOConfig())
+    //     ->withHost($dbHost)
+    //     ->withPort($dbPort)
+    //     ->withDbName($dbScheme)
+    //     ->withCharset('utf8mb4')
+    //     ->withUsername($dbUser)
+    //     ->withPassword($dbPass)
+    //     ->withOptions([
+    //         PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+    //     ]),
+    //     64
+    // );
 
-    return $pool;
+    // return $pool;
+
+    // $dbForConsole = App::getEnv('_APP_CONSOLE_DB', '');
+    // $dbForConsole = explode('=', $dbForConsole);
+    // $name = $dbForConsole[0];
+    // $dsn = new DSN($dbForConsole[1]);
+
+    $dbs = App::getEnv('_APP_PROJECT_DB', '');
+    $dbs = explode(',', $dbs);
+
+    $pools = new DatabasePool();
+    foreach ($dbs as $db) {
+        $db = explode('=', $db);
+        $name = $db[0];
+        $dsn = new DSN($db[1]);
+
+        // var_dump($dsn->getHost(), $dsn->getPort(), $dsn->getDatabase(), $dsn->getUser(), $dsn->getPassword());
+
+        $pool = new PDOPool(
+            (new PDOConfig())
+            ->withHost($dsn->getHost())
+            ->withPort($dsn->getPort())
+            ->withDbName($dsn->getDatabase())
+            ->withCharset('utf8mb4')
+            ->withUsername($dsn->getUser())
+            ->withPassword($dsn->getPassword())
+            ->withOptions([
+                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+            ]),
+            64
+        );
+
+        $pools->add($name, $pool);
+    }
+
+    return $pools;
 });
 $register->set('redisPool', function () {
     $redisHost = App::getEnv('_APP_REDIS_HOST', '');
@@ -866,6 +937,10 @@ App::setResource('console', function () {
 
 App::setResource('dbForProject', function ($db, $cache, $project) {
     $cache = new Cache(new RedisCache($cache));
+
+    // Get name of database from the projects collection in the console DB
+
+    // $dbName = $project->getAttribute('database','');
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
