@@ -7,7 +7,6 @@ use PHPUnit\Framework\TestCase;
 
 class DSNTest extends TestCase
 {
-
     public function setUp(): void
     {
     }
@@ -87,4 +86,4 @@ class DSNTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $dsn = new DSN("mariadb://");
     }
-} 
+}

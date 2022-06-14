@@ -2,7 +2,7 @@
 
 namespace Appwrite\DSN;
 
-class DSN 
+class DSN
 {
     /**
      * @var string
@@ -78,7 +78,7 @@ class DSN
      *
      * @return ?string
      */
-    public function getUser(): ?string 
+    public function getUser(): ?string
     {
         return $this->user;
     }
@@ -88,7 +88,7 @@ class DSN
      *
      * @return ?string
      */
-    public function getPassword(): ?string 
+    public function getPassword(): ?string
     {
         return $this->password;
     }
