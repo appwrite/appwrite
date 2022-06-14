@@ -6,7 +6,7 @@ use Appwrite\Auth\Hash;
 
 /*
  * SHA accepted options:
- * string? type. Allowed:
+ * string? version. Allowed:
  *  - Version 1: sha1
  *  - Version 2: sha224, sha256, sha384, sha512/224, sha512/256, sha512
  *  - Version 3: sha3-224, sha3-256, sha3-384, sha3-512
@@ -21,7 +21,7 @@ class Sha extends Hash
      * @return string hash
      */
     public function hash(string $password): string {
-        $algo = $this->getOptions()['type'];
+        $algo = $this->getOptions()['version'];
 
         return \hash($algo, $password);
     }
@@ -42,6 +42,6 @@ class Sha extends Hash
      * @return mixed options named array
      */
     public function getDefaultOptions(): mixed {
-        return [ 'type' => 'sha3-512' ];
+        return [ 'version' => 'sha3-512' ];
     }
 }

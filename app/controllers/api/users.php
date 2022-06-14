@@ -26,8 +26,8 @@ use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\JSON;
 use MaxMind\Db\Reader;
+use Utopia\Validator\Integer;
 
 function createUser(string $hash, mixed $hashOptions, string $userId, string $email, string $password, string $name, Database $dbForProject, Stats $usage, Event $events): Document {
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
@@ -88,8 +88,6 @@ App::post('/v1/users')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'Plaintext user password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    // ->param('hash', 'plaintext', new WhiteList(\array_keys(Auth::SUPPORTED_ALGOS)), 'Hashing algorithm for password. Allowed values are: \'' . \implode('\', \'', \array_keys(Auth::SUPPORTED_ALGOS)) . '\'. The default algorithm is \'' . Auth::DEFAULT_ALGO . '\'.', true)
-    // ->param('hashOptions', '{}', new JSON(), 'Configuration of hashing algorithm. If left empty, default configuration is used.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
@@ -101,7 +99,231 @@ App::post('/v1/users')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-// TODO: More hashing endpoints
+App::post('/v1/users/import/bcrypt')
+    ->desc('Create User with BCrypt Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createBcryptUser')
+    ->label('sdk.description', '/docs/references/users/create-bcrypt-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using BCrypt.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('bcrypt', '{}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/import/md5')
+    ->desc('Create User with MD5 Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createMD5User')
+    ->label('sdk.description', '/docs/references/users/create-md5-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using MD5.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('md5', '{}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/import/argon2')
+    ->desc('Create User with Argon2 Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createArgon2User')
+    ->label('sdk.description', '/docs/references/users/create-argon2-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using Argon2.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('argon2', '{}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/import/sha')
+    ->desc('Create User with SHA Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createSHAUser')
+    ->label('sdk.description', '/docs/references/users/create-sha-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using SHA.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('version', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Version of SHA hahing algorithm. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $name, string $version, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $options = '{}';
+
+        if(!empty($version)) {
+            $options = '{"version":"' . $version . '"}';
+        }
+
+        $user = createUser('sha', $options, $userId, $email, $password, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/import/phpass')
+    ->desc('Create User with PHPass Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createPHPassUser')
+    ->label('sdk.description', '/docs/references/users/create-phpass-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using PHPass.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('phpass', '{}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/import/scrypt')
+    ->desc('Create User with SCrypt Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createSCryptUser')
+    ->label('sdk.description', '/docs/references/users/create-scrypt-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using SCrypt.')
+    ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.', true)
+    ->param('passwordCpu', '', new Integer(), 'Optional CPU cost used to hash password.', true)
+    ->param('passwordMemory', '', new Integer(), 'Optional memory cost used to hash password.', true)
+    ->param('passwordParallel', '', new Integer(), 'Optional parallelization cost used to hash password.', true)
+    ->param('passwordLength', '', new Integer(), 'Optional hash length used to hash password.', true)
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $options = [];
+
+        if(!empty($passwordSalt)) {
+            $options['salt'] = $passwordSalt;
+        }
+
+        if(!empty($passwordCpu)) {
+            $options['cost_cpu'] = $passwordCpu;
+        }
+
+        if(!empty($passwordMemory)) {
+            $options['cost_memory'] = $passwordMemory;
+        }
+
+        if(!empty($passwordParallel)) {
+            $options['cost_parallel'] = $passwordParallel;
+        }
+
+        if(!empty($passwordLength)) {
+            $options['length'] = $passwordLength;
+        }
+        
+        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/import/scrypt')
+    ->desc('Create User with SCryptModified Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createSCryptModifiedUser')
+    ->label('sdk.description', '/docs/references/users/create-scryptmodified-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using SCryptModified.')
+    ->param('passwordSalt', '', new Text(128), 'Salt used to hash password.')
+    ->param('passwordSaltSeparator', '', new Text(128), 'Salt separator used to hash password.')
+    ->param('passwordSignerKey', '', new Text(128), 'Signer key used to hash password.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('scrypt_mod', '{"signer_key":"' . $passwordSignerKey . '","salt_separator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
 
 App::get('/v1/users')
     ->desc('List Users')
