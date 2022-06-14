@@ -49,7 +49,7 @@ class User extends Model
             ])
             ->addRule('phone', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User phone number.',
+                'description' => 'User phone number in E.164 format.',
                 'default' => '',
                 'example' => '+4930901820',
             ])
