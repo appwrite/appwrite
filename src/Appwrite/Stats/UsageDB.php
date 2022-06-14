@@ -49,7 +49,7 @@ class UsageDB extends Usage
                 }
             } catch (\Exception$e) { // if projects are deleted this might fail
                 if (is_callable($this->errorHandler)) {
-                    call_user_func($this->errorHandler, "Unable to save data for project {$projectId} and metric {$metric}: {$e->getMessage()}", $e->getTraceAsString());
+                    call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
                 } else {
                     throw $e;
                 }
@@ -81,7 +81,7 @@ class UsageDB extends Usage
                 $results = $this->database->find($collection, $queries, $limit, cursor:$latestDocument);
             } catch (\Exception $e) {
                 if (is_callable($this->errorHandler)) {
-                    call_user_func($this->errorHandler, "Unable to fetch documents for project {$projectId} and collection {$collection}: {$e->getMessage()}", $e->getTraceAsString());
+                    call_user_func($this->errorHandler, $e, "fetch_documents_project_{$projectId}_collection_{$collection}");
                     return;
                 } else {
                     throw $e;
@@ -122,7 +122,7 @@ class UsageDB extends Usage
             return $sum;
         } catch (\Exception $e) {
             if (is_callable($this->errorHandler)) {
-                call_user_func($this->errorHandler, "Unable to fetch sum for project {$projectId} and metric {$metric}: {$e->getMessage()}", $e->getTraceAsString());
+                call_user_func($this->errorHandler, $e, "fetch_sum_project_{$projectId}_collection_{$collection}");
             } else {
                 throw $e;
             }
@@ -148,7 +148,7 @@ class UsageDB extends Usage
             return $count;
         } catch (\Exception $e) {
             if (is_callable($this->errorHandler)) {
-                call_user_func($this->errorHandler, "Unable to fetch count for project {$projectId} and metric {$metric}: {$e->getMessage()}", $e->getTraceAsString());
+                call_user_func($this->errorHandler, $e, "fetch_count_project_{$projectId}_collection_{$collection}");
             } else {
                 throw $e;
             }
