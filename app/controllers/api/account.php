@@ -196,7 +196,7 @@ App::post('/v1/account/sessions')
         Authorization::setRole('user:' . $profile->getId());
 
         // Re-hash if not using recommended algo
-        if($profile->getAttribute('hash') !== Auth::DEFAULT_ALGO) {
+        if ($profile->getAttribute('hash') !== Auth::DEFAULT_ALGO) {
             $profile
                 ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
@@ -1262,8 +1262,7 @@ App::patch('/v1/account/password')
                 ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-                ->setAttribute('passwordUpdate', \time())
-        );
+                ->setAttribute('passwordUpdate', \time()));
 
         $audits
             ->setResource('user/' . $user->getId())

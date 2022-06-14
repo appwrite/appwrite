@@ -96,7 +96,7 @@ abstract class Model
      */
     protected function removeRule(string $key): self
     {
-        if(isset($this->rules[$key])) {
+        if (isset($this->rules[$key])) {
             unset($this->rules[$key]);
         }
 

@@ -7,8 +7,7 @@ use Utopia\Database\Validator\Authorization;
 
 class Auth
 {
-
-    const SUPPORTED_ALGOS = [
+    public const SUPPORTED_ALGOS = [
         'argon2' => 'Argon2',
         'bcrypt' => 'Bcrypt',
         'md5' => 'Md5',
@@ -19,8 +18,8 @@ class Auth
         'plaintext' => '' // This is alias for DX purposes. It is translated to default algo
     ];
 
-    const DEFAULT_ALGO = 'argon2';
-    const DEFAULT_ALGO_OPTIONS = ['memory_cost' => 2048, 'time_cost' => 4, 'threads' => 3];
+    public const DEFAULT_ALGO = 'argon2';
+    public const DEFAULT_ALGO_OPTIONS = ['memory_cost' => 2048, 'time_cost' => 4, 'threads' => 3];
 
     /**
      * User Roles.
@@ -154,17 +153,17 @@ class Auth
     public static function passwordHash(string $string, string $algo, mixed $options = [])
     {
         // Plain text not supported, just an alias. Switch to recommended algo
-        if($algo === 'plaintext') {
+        if ($algo === 'plaintext') {
             $algo = Auth::DEFAULT_ALGO;
             $options = Auth::DEFAULT_ALGO_OPTIONS;
         }
 
-        if(!\array_key_exists($algo, Auth::SUPPORTED_ALGOS)) {
+        if (!\array_key_exists($algo, Auth::SUPPORTED_ALGOS)) {
             throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
         }
 
         $className = Auth::SUPPORTED_ALGOS[$algo];
-        $classPath = '\\Appwrite\\Auth\\Hash\\'.$className;
+        $classPath = '\\Appwrite\\Auth\\Hash\\' . $className;
         $hasher = new $classPath($options);
         $hash = $hasher->hash($string);
 
@@ -184,13 +183,13 @@ class Auth
     public static function passwordVerify(string $plain, string $hash, string $algo, mixed $options = [])
     {
         // Plain text not supported, just an alias. Switch to recommended algo
-        if($algo === 'plaintext') {
+        if ($algo === 'plaintext') {
             $algo = Auth::DEFAULT_ALGO;
             $options = Auth::DEFAULT_ALGO_OPTIONS;
         }
 
         $className = Auth::SUPPORTED_ALGOS[$algo];
-        $classPath = '\\Appwrite\\Auth\\Hash\\'.$className;
+        $classPath = '\\Appwrite\\Auth\\Hash\\' . $className;
         $hasher = new $classPath($options);
         $verify = $hasher->verify($plain, $hash);
 

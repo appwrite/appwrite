@@ -9,7 +9,7 @@ class Account extends User
     public function __construct()
     {
         parent::__construct();
-        
+
         $this
             ->removeRule('password')
             ->removeRule('hash')
@@ -21,7 +21,7 @@ class Account extends User
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Account';
     }
@@ -31,7 +31,7 @@ class Account extends User
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_ACCOUNT;
     }

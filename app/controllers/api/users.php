@@ -29,7 +29,8 @@ use Utopia\Validator\Boolean;
 use MaxMind\Db\Reader;
 use Utopia\Validator\Integer;
 
-function createUser(string $hash, mixed $hashOptions, string $userId, string $email, string $password, string $name, Database $dbForProject, Stats $usage, Event $events): Document {
+function createUser(string $hash, mixed $hashOptions, string $userId, string $email, string $password, string $name, Database $dbForProject, Stats $usage, Event $events): Document
+{
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
     $email = \strtolower($email);
 
@@ -204,7 +205,7 @@ App::post('/v1/users/import/sha')
     ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
         $options = '{}';
 
-        if(!empty($passwordVersion)) {
+        if (!empty($passwordVersion)) {
             $options = '{"version":"' . $passwordVersion . '"}';
         }
 
@@ -269,26 +270,26 @@ App::post('/v1/users/import/scrypt')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
         $options = [];
 
-        if(!empty($passwordSalt)) {
+        if (!empty($passwordSalt)) {
             $options['salt'] = $passwordSalt;
         }
 
-        if(!empty($passwordCpu)) {
+        if (!empty($passwordCpu)) {
             $options['cost_cpu'] = $passwordCpu;
         }
 
-        if(!empty($passwordMemory)) {
+        if (!empty($passwordMemory)) {
             $options['cost_memory'] = $passwordMemory;
         }
 
-        if(!empty($passwordParallel)) {
+        if (!empty($passwordParallel)) {
             $options['cost_parallel'] = $passwordParallel;
         }
 
-        if(!empty($passwordLength)) {
+        if (!empty($passwordLength)) {
             $options['length'] = $passwordLength;
         }
-        
+
         $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);

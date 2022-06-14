@@ -174,7 +174,7 @@ trait UsersBase
 
     /**
      * Tries to login into all accounts created with hashed password. Ensures hash veifying logic.
-     * 
+     *
      * @depends testCreateUser
      */
     public function testCreateUserSessionHashed(array $data): void

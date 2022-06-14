@@ -148,14 +148,15 @@ class AuthTest extends TestCase
         $salt = '56dFqW+kswqktw==';
         $saltSeparator = 'Bw==';
         $signerKey = 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==';
-        
+
         $options = [ 'salt' => $salt, 'salt_separator' => $saltSeparator, 'signer_key' => $signerKey ];
         $generatedHash = Auth::passwordHash($plain, 'scrypt_mod', $options);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt_mod', $options));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt_mod', $options));
     }
 
-    public function testUnknownAlgo() {
+    public function testUnknownAlgo()
+    {
         $this->expectExceptionMessage('Hashing algorithm \'md8\' is not supported.');
 
         // Bcrypt - Cost 5

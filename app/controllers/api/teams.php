@@ -335,10 +335,10 @@ App::post('/v1/teams/:teamId/memberships')
                     'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
                     'hash' => Auth::DEFAULT_ALGO,
                     'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
-                    /** 
-                     * Set the password update time to 0 for users created using 
-                     * team invite and OAuth to allow password updates without an 
-                     * old password 
+                    /**
+                     * Set the password update time to 0 for users created using
+                     * team invite and OAuth to allow password updates without an
+                     * old password
                      */
                     'passwordUpdate' => 0,
                     'registration' => \time(),
