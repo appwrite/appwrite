@@ -56,8 +56,6 @@ function createUser(string $hash, mixed $hashOptions, string $userId, string $em
             'memberships' => null,
             'search' => implode(' ', [$userId, $email, $name])
         ]));
-
-        return $user;
     } catch (Duplicate $th) {
         throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
     }
