@@ -34,7 +34,7 @@ class UsageDB extends Usage
                 if ($document->isEmpty()) {
                     $this->database->createDocument('stats', new Document([
                         '$id' => $id,
-                        'period' => $period['key'],
+                        'period' => $period,
                         'time' => $time,
                         'metric' => $metric,
                         'value' => $value,
@@ -179,7 +179,7 @@ class UsageDB extends Usage
         $this->foreachDocument($projectId, 'buckets', [], function ($bucket) use (&$projectFilesCount, &$projectFilesTotal, $projectId,) {
             $metric = "storage.buckets.{$bucket->getId()}.files.count";
 
-            $count = $this->count($projectId, 'buckets_' . $bucket->getInternalId(), $metric);
+            $count = $this->count($projectId, 'bucket_' . $bucket->getInternalId(), $metric);
             $projectFilesCount += $count;
 
             $metric = "storage.buckets.{$bucket->getId()}.files.total";

@@ -186,7 +186,7 @@ class Usage
             if ($document->isEmpty()) {
                 $this->database->createDocument('stats', new Document([
                     '$id' => $id,
-                    'period' => $period['key'],
+                    'period' => $period,
                     'time' => $time,
                     'metric' => $metric,
                     'value' => $value,
@@ -199,7 +199,7 @@ class Usage
                     $document->setAttribute('value', $value)
                 );
             }
-            $this->latestTime[$metric][$period['key']] = $time;
+            $this->latestTime[$metric][$period] = $time;
         } catch (\Exception $e) { // if projects are deleted this might fail
             if (is_callable($this->errorHandler)) {
                 call_user_func($this->errorHandler, "Unable to save data for project {$projectId} and metric {$metric}: {$e->getMessage()}", $e->getTraceAsString());
