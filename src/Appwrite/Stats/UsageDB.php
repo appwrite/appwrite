@@ -77,7 +77,16 @@ class UsageDB extends Usage
         $this->database->setNamespace('_' . $projectId);
 
         while ($sum === $limit) {
-            $results = $this->database->find($collection, $queries, $limit, cursor:$latestDocument);
+            try {
+                $results = $this->database->find($collection, $queries, $limit, cursor:$latestDocument);
+            } catch (\Exception $e) {
+                if (is_callable($this->errorHandler)) {
+                    call_user_func($this->errorHandler, "Unable to fetch documents for project {$projectId} and collection {$collection}: {$e->getMessage()}", $e->getTraceAsString());
+                    return;
+                } else {
+                    throw $e;
+                }
+            }
             if (empty($results)) {
                 return;
             }
@@ -107,9 +116,17 @@ class UsageDB extends Usage
     private function sum(string $projectId, string $collection, string $attribute, string $metric): int
     {
         $this->database->setNamespace('_' . $projectId);
-        $sum = (int) $this->database->sum($collection, $attribute);
-        $this->createOrUpdateMetric($projectId, $metric, $sum);
-        return $sum;
+        try {
+            $sum = (int) $this->database->sum($collection, $attribute);
+            $this->createOrUpdateMetric($projectId, $metric, $sum);
+            return $sum;
+        } catch (\Exception $e) {
+            if (is_callable($this->errorHandler)) {
+                call_user_func($this->errorHandler, "Unable to fetch sum for project {$projectId} and metric {$metric}: {$e->getMessage()}", $e->getTraceAsString());
+            } else {
+                throw $e;
+            }
+        }
     }
 
     /**
@@ -125,10 +142,17 @@ class UsageDB extends Usage
     private function count(string $projectId, string $collection, string $metric): int
     {
         $this->database->setNamespace("_{$projectId}");
-        $count = $this->database->count($collection);
-
-        $this->createOrUpdateMetric($projectId, $metric, $count);
-        return $count;
+        try {
+            $count = $this->database->count($collection);
+            $this->createOrUpdateMetric($projectId, $metric, $count);
+            return $count;
+        } catch (\Exception $e) {
+            if (is_callable($this->errorHandler)) {
+                call_user_func($this->errorHandler, "Unable to fetch count for project {$projectId} and metric {$metric}: {$e->getMessage()}", $e->getTraceAsString());
+            } else {
+                throw $e;
+            }
+        }
     }
 
     /**
