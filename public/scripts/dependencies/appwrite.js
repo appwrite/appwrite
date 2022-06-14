@@ -209,12 +209,10 @@
                  * @param {string} email
                  * @param {string} password
                  * @param {string} name
-                 * @param {string} hash
-                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (userId, email, password, name, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
+                create: (userId, email, password, name) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -238,12 +236,6 @@
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
                     }
-                    if (typeof hash !== 'undefined') {
-                        payload['hash'] = hash;
-                    }
-                    if (typeof hashOptions !== 'undefined') {
-                        payload['hashOptions'] = hashOptions;
-                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
                         'content-type': 'application/json',
@@ -263,12 +255,10 @@
                  *
                  * @param {string} email
                  * @param {string} password
-                 * @param {string} hash
-                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateEmail: (email, password, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
+                updateEmail: (email, password) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof email === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "email"');
                     }
@@ -282,12 +272,6 @@
                     }
                     if (typeof password !== 'undefined') {
                         payload['password'] = password;
-                    }
-                    if (typeof hash !== 'undefined') {
-                        payload['hash'] = hash;
-                    }
-                    if (typeof hashOptions !== 'undefined') {
-                        payload['hashOptions'] = hashOptions;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('patch', uri, {
@@ -371,12 +355,10 @@
                  *
                  * @param {string} password
                  * @param {string} oldPassword
-                 * @param {string} hash
-                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updatePassword: (password, oldPassword, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
+                updatePassword: (password, oldPassword) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof password === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "password"');
                     }
@@ -387,12 +369,6 @@
                     }
                     if (typeof oldPassword !== 'undefined') {
                         payload['oldPassword'] = oldPassword;
-                    }
-                    if (typeof hash !== 'undefined') {
-                        payload['hash'] = hash;
-                    }
-                    if (typeof hashOptions !== 'undefined') {
-                        payload['hashOptions'] = hashOptions;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('patch', uri, {
@@ -494,12 +470,10 @@
                  * @param {string} secret
                  * @param {string} password
                  * @param {string} passwordAgain
-                 * @param {string} hash
-                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateRecovery: (userId, secret, password, passwordAgain, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
+                updateRecovery: (userId, secret, password, passwordAgain) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -525,12 +499,6 @@
                     }
                     if (typeof passwordAgain !== 'undefined') {
                         payload['passwordAgain'] = passwordAgain;
-                    }
-                    if (typeof hash !== 'undefined') {
-                        payload['hash'] = hash;
-                    }
-                    if (typeof hashOptions !== 'undefined') {
-                        payload['hashOptions'] = hashOptions;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {
@@ -3497,10 +3465,11 @@
                  * @param {string} projectId
                  * @param {string} name
                  * @param {string[]} scopes
+                 * @param {number} expire
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createKey: (projectId, name, scopes) => __awaiter(this, void 0, void 0, function* () {
+                createKey: (projectId, name, scopes, expire) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
@@ -3517,6 +3486,9 @@
                     }
                     if (typeof scopes !== 'undefined') {
                         payload['scopes'] = scopes;
+                    }
+                    if (typeof expire !== 'undefined') {
+                        payload['expire'] = expire;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -3554,10 +3526,11 @@
                  * @param {string} keyId
                  * @param {string} name
                  * @param {string[]} scopes
+                 * @param {number} expire
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateKey: (projectId, keyId, name, scopes) => __awaiter(this, void 0, void 0, function* () {
+                updateKey: (projectId, keyId, name, scopes, expire) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
@@ -3577,6 +3550,9 @@
                     }
                     if (typeof scopes !== 'undefined') {
                         payload['scopes'] = scopes;
+                    }
+                    if (typeof expire !== 'undefined') {
+                        payload['expire'] = expire;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {
@@ -5110,12 +5086,10 @@
                  * @param {string} email
                  * @param {string} password
                  * @param {string} name
-                 * @param {string} hash
-                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (userId, email, password, name, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
+                create: (userId, email, password, name) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -5139,11 +5113,358 @@
                     if (typeof name !== 'undefined') {
                         payload['name'] = name;
                     }
-                    if (typeof hash !== 'undefined') {
-                        payload['hash'] = hash;
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create User with Argon2 Password
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {string} email
+                 * @param {string} password
+                 * @param {string} name
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createArgon2User: (userId, email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
                     }
-                    if (typeof hashOptions !== 'undefined') {
-                        payload['hashOptions'] = hashOptions;
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/users/import/argon2';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create User with BCrypt Password
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {string} email
+                 * @param {string} password
+                 * @param {string} name
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createBcryptUser: (userId, email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/users/import/bcrypt';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create User with MD5 Password
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {string} email
+                 * @param {string} password
+                 * @param {string} name
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createMD5User: (userId, email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/users/import/md5';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create User with PHPass Password
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {string} email
+                 * @param {string} password
+                 * @param {string} name
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createPHPassUser: (userId, email, password, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/users/import/phpass';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create User with SCrypt Password
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {string} email
+                 * @param {string} password
+                 * @param {string} passwordSalt
+                 * @param {number} passwordCpu
+                 * @param {number} passwordMemory
+                 * @param {number} passwordParallel
+                 * @param {number} passwordLength
+                 * @param {string} name
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createSCryptUser: (userId, email, password, passwordSalt, passwordCpu, passwordMemory, passwordParallel, passwordLength, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/users/import/scrypt';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    if (typeof passwordSalt !== 'undefined') {
+                        payload['passwordSalt'] = passwordSalt;
+                    }
+                    if (typeof passwordCpu !== 'undefined') {
+                        payload['passwordCpu'] = passwordCpu;
+                    }
+                    if (typeof passwordMemory !== 'undefined') {
+                        payload['passwordMemory'] = passwordMemory;
+                    }
+                    if (typeof passwordParallel !== 'undefined') {
+                        payload['passwordParallel'] = passwordParallel;
+                    }
+                    if (typeof passwordLength !== 'undefined') {
+                        payload['passwordLength'] = passwordLength;
+                    }
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create User with SCrypt Modified Password
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {string} email
+                 * @param {string} password
+                 * @param {string} passwordSalt
+                 * @param {string} passwordSaltSeparator
+                 * @param {number} passwordCpu
+                 * @param {number} passwordMemory
+                 * @param {number} passwordParallel
+                 * @param {number} passwordLength
+                 * @param {string} passwordSignerKey
+                 * @param {string} name
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createSCryptModifiedUser: (userId, email, password, passwordSalt, passwordSaltSeparator, passwordCpu, passwordMemory, passwordParallel, passwordLength, passwordSignerKey, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    if (typeof passwordSalt === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "passwordSalt"');
+                    }
+                    if (typeof passwordSaltSeparator === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "passwordSaltSeparator"');
+                    }
+                    if (typeof passwordCpu === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "passwordCpu"');
+                    }
+                    if (typeof passwordMemory === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "passwordMemory"');
+                    }
+                    if (typeof passwordParallel === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "passwordParallel"');
+                    }
+                    if (typeof passwordLength === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "passwordLength"');
+                    }
+                    if (typeof passwordSignerKey === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "passwordSignerKey"');
+                    }
+                    let path = '/users/import/scrypt-modified';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    if (typeof passwordSalt !== 'undefined') {
+                        payload['passwordSalt'] = passwordSalt;
+                    }
+                    if (typeof passwordSaltSeparator !== 'undefined') {
+                        payload['passwordSaltSeparator'] = passwordSaltSeparator;
+                    }
+                    if (typeof passwordCpu !== 'undefined') {
+                        payload['passwordCpu'] = passwordCpu;
+                    }
+                    if (typeof passwordMemory !== 'undefined') {
+                        payload['passwordMemory'] = passwordMemory;
+                    }
+                    if (typeof passwordParallel !== 'undefined') {
+                        payload['passwordParallel'] = passwordParallel;
+                    }
+                    if (typeof passwordLength !== 'undefined') {
+                        payload['passwordLength'] = passwordLength;
+                    }
+                    if (typeof passwordSignerKey !== 'undefined') {
+                        payload['passwordSignerKey'] = passwordSignerKey;
+                    }
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create User with SHA Password
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {string} email
+                 * @param {string} password
+                 * @param {string} passwordVersion
+                 * @param {string} name
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createSHAUser: (userId, email, password, passwordVersion, name) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/users/import/sha';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    if (typeof passwordVersion !== 'undefined') {
+                        payload['passwordVersion'] = passwordVersion;
+                    }
+                    if (typeof name !== 'undefined') {
+                        payload['name'] = name;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -5326,12 +5647,10 @@
                  *
                  * @param {string} userId
                  * @param {string} password
-                 * @param {string} hash
-                 * @param {object} hashOptions
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updatePassword: (userId, password, hash, hashOptions) => __awaiter(this, void 0, void 0, function* () {
+                updatePassword: (userId, password) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -5342,12 +5661,6 @@
                     let payload = {};
                     if (typeof password !== 'undefined') {
                         payload['password'] = password;
-                    }
-                    if (typeof hash !== 'undefined') {
-                        payload['hash'] = hash;
-                    }
-                    if (typeof hashOptions !== 'undefined') {
-                        payload['hashOptions'] = hashOptions;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('patch', uri, {

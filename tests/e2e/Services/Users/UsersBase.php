@@ -55,6 +55,120 @@ trait UsersBase
         $this->assertEquals(true, $res['body']['status']);
         $this->assertGreaterThan(0, $res['body']['registration']);
 
+         /**
+         * Test Create with hashed passwords
+         */
+        $res = $this->client->call(Client::METHOD_POST, '/users/import/md5', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'email' => 'md5@appwrite.io',
+            'password' => '144fa7eaa4904e8ee120651997f70dcc', // appwrite
+            'name' => 'MD5 User',
+        ]);
+
+        $res = $this->client->call(Client::METHOD_POST, '/users/import/bcrypt', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'email' => 'bcrypt@appwrite.io',
+            'password' => '$2a$15$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq', // appwrite (15 rounds)
+            'name' => 'BCrypt User',
+        ]);
+
+        $this->assertEquals($res['headers']['status-code'], 201);
+        $this->assertEquals($res['body']['password'], '$2a$15$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq');
+        $this->assertEquals($res['body']['hash'], 'bcrypt');
+
+        $res = $this->client->call(Client::METHOD_POST, '/users/import/argon2', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'email' => 'argon@appwrite.io',
+            'password' => '$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI', // appwrite (salt appwrite, parallel 2, memory 20, iterations 3, length 32)
+            'name' => 'Argon User',
+        ]);
+
+        $this->assertEquals($res['headers']['status-code'], 201);
+        $this->assertEquals($res['body']['password'], '$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI');
+        $this->assertEquals($res['body']['hash'], 'argon2');
+
+        $res = $this->client->call(Client::METHOD_POST, '/users/import/sha', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'email' => 'sha@appwrite.io',
+            'password' => '4243da0a694e8a2f727c8060fe0507c8fa01ca68146c76d2c190805b638c20c6bf6ba04e21f11ae138785d0bff63c416e6f87badbffad37f6dee50094cc38c70', // appwrite (sha512)
+            'name' => 'SHA User',
+            'passwordVersion' => 'sha512'
+        ]);
+
+        $this->assertEquals($res['headers']['status-code'], 201);
+        $this->assertEquals($res['body']['password'], '4243da0a694e8a2f727c8060fe0507c8fa01ca68146c76d2c190805b638c20c6bf6ba04e21f11ae138785d0bff63c416e6f87badbffad37f6dee50094cc38c70');
+        $this->assertEquals($res['body']['hash'], 'sha');
+        $this->assertEquals($res['body']['hashOptions']['version'], 'sha512');
+
+        $res = $this->client->call(Client::METHOD_POST, '/users/import/scrypt', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'email' => 'scrypt@appwrite.io',
+            'password' => '3fdef49701bc4cfaacd551fe017283513284b4731e6945c263246ef948d3cf63b5d269c31fd697246085111a428245e24a4ddc6b64c687bc60a8910dbafc1d5b', // appwrite (salt appwrite, cpu 16384, memory 13, parallel 2, length 64)
+            'name' => 'SCrypt User',
+            'passwordSalt' => 'appwrite',
+            'passwordCpu' => 16384,
+            'passwordMemory' => 13,
+            'passwordParallel' => 2,
+            'passwordLength' => 64
+        ]);
+
+        $this->assertEquals($res['headers']['status-code'], 201);
+        $this->assertEquals($res['body']['password'], '3fdef49701bc4cfaacd551fe017283513284b4731e6945c263246ef948d3cf63b5d269c31fd697246085111a428245e24a4ddc6b64c687bc60a8910dbafc1d5b');
+        $this->assertEquals($res['body']['hash'], 'scrypt');
+        $this->assertEquals($res['body']['hashOptions']['salt'], 'appwrite');
+        $this->assertEquals($res['body']['hashOptions']['cost_cpu'], 16384);
+        $this->assertEquals($res['body']['hashOptions']['cost_memory'], 13);
+        $this->assertEquals($res['body']['hashOptions']['cost_parallel'], 2);
+        $this->assertEquals($res['body']['hashOptions']['length'], 64);
+
+        $res = $this->client->call(Client::METHOD_POST, '/users/import/phpass', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'email' => 'phpass@appwrite.io',
+            'password' => '$P$Bpvzeu1kOS.qarp2kiOstvgOFbdIn4',
+            'name' => 'PHPass User',
+        ]);
+
+        $this->assertEquals($res['headers']['status-code'], 201);
+        $this->assertEquals($res['body']['password'], '$P$Bpvzeu1kOS.qarp2kiOstvgOFbdIn4');
+
+        $res = $this->client->call(Client::METHOD_POST, '/users/import/scrypt-modified', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'email' => 'scrypt-modified@appwrite.io',
+            'password' => 'UlM7JiXRcQhzAGlaonpSqNSLIz475WMddOgLjej5De9vxTy48K6WtqlEzrRFeK4t0COfMhWCb8wuMHgxOFCHFQ==', // appwrite
+            'name' => 'SCrypt Modified User',
+            'passwordSalt' => 'UxLMreBr6tYyjQ==',
+            'passwordSaltSeparator' => 'Bw==',
+            'passwordSignerKey' => 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==',
+        ]);
+
+        $this->assertEquals($res['headers']['status-code'], 201);
+        $this->assertEquals($res['body']['password'], 'UlM7JiXRcQhzAGlaonpSqNSLIz475WMddOgLjej5De9vxTy48K6WtqlEzrRFeK4t0COfMhWCb8wuMHgxOFCHFQ==');
+        $this->assertEquals($res['body']['hash'], 'scrypt_mod');
+        $this->assertEquals($res['body']['hashOptions']['salt'], 'UxLMreBr6tYyjQ==');
+        $this->assertEquals($res['body']['hashOptions']['signer_key'], 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==');
+        $this->assertEquals($res['body']['hashOptions']['salt_separator'], 'Bw==');
+
         return ['userId' => $body['$id']];
     }
 
@@ -74,7 +188,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
-        $this->assertCount(2, $response['body']['users']);
+        $this->assertCount(9, $response['body']['users']);
 
         $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
         $this->assertEquals($response['body']['users'][1]['$id'], 'user1');
@@ -89,7 +203,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
-        $this->assertCount(1, $response['body']['users']);
+        $this->assertCount(8, $response['body']['users']);
         $this->assertEquals($response['body']['users'][0]['$id'], 'user1');
 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([

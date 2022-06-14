@@ -165,12 +165,6 @@ App::post('/v1/account/sessions')
             new Query('email', Query::TYPE_EQUAL, [$email])]);
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
-            $audits
-                //->setParam('userId', $profile->getId())
-                ->setParam('event', 'account.sessions.failed')
-                ->setParam('resource', 'user/'.($profile ? $profile->getId() : ''))
-            ;
-
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS); // Wrong password or username
         }
 

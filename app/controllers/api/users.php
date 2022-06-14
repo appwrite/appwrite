@@ -195,17 +195,17 @@ App::post('/v1/users/import/sha')
     ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using SHA.')
+    ->param('passwordVersion', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Optional SHA version used to hash password. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->param('version', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Version of SHA hahing algorithm. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, string $version, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
         $options = '{}';
 
-        if(!empty($version)) {
-            $options = '{"version":"' . $version . '"}';
+        if(!empty($passwordVersion)) {
+            $options = '{"version":"' . $passwordVersion . '"}';
         }
 
         $user = createUser('sha', $options, $userId, $email, $password, $name, $dbForProject, $usage, $events);
@@ -295,21 +295,21 @@ App::post('/v1/users/import/scrypt')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/import/scrypt')
-    ->desc('Create User with SCryptModified Password')
+App::post('/v1/users/import/scrypt-modified')
+    ->desc('Create User with SCrypt Modified Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'createSCryptModifiedUser')
-    ->label('sdk.description', '/docs/references/users/create-scryptmodified-user.md')
+    ->label('sdk.description', '/docs/references/users/create-scrypt-modified-user.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Password(), 'User password hashed using SCryptModified.')
+    ->param('password', '', new Password(), 'User password hashed using SCrypt Modified.')
     ->param('passwordSalt', '', new Text(128), 'Salt used to hash password.')
     ->param('passwordSaltSeparator', '', new Text(128), 'Salt separator used to hash password.')
     ->param('passwordSignerKey', '', new Text(128), 'Signer key used to hash password.')
