@@ -292,6 +292,7 @@ class Event
         $type = $parts[0] ?? false;
         $resource = $parts[1] ?? false;
         $hasSubResource = $count > 3 && \str_starts_with($parts[3], '[');
+        $hasSubSubResource = $count > 6 && \str_starts_with($parts[5], '[') && $hasSubResource;
 
         if ($hasSubResource) {
             $subType = $parts[2];
@@ -304,21 +305,33 @@ class Event
                 $attribute = $parts[3];
             }
         }
+        
+        if($hasSubSubResource) {
+            $subSubType = $parts[4];
+            $subSubResource = $parts[5];
+        }
 
         $subType ??= false;
         $subResource ??= false;
+        $subSubType ??= false;
+        $subSubResource ??= false;
         $attribute ??= false;
         $action = match (true) {
             !$hasSubResource && $count > 2 => $parts[2],
+            $hasSubResource && $hasSubSubResource => $parts[6],
             $hasSubResource && $count > 4 => $parts[4],
             default => false
         };
+
+
 
         return [
             'type' => $type,
             'resource' => $resource,
             'subType' => $subType,
             'subResource' => $subResource,
+            'subSubType' => $subSubType,
+            'subSubResource' => $subSubResource,
             'action' => $action,
             'attribute' => $attribute,
         ];
@@ -345,6 +358,8 @@ class Event
         $resource = $parsed['resource'];
         $subType = $parsed['subType'];
         $subResource = $parsed['subResource'];
+        $subSubType = $parsed['subSubType'];
+        $subSubResource = $parsed['subSubResource'];
         $action = $parsed['action'];
         $attribute = $parsed['attribute'];
 
@@ -356,11 +371,18 @@ class Event
             throw new InvalidArgumentException("{$subResource} is missing from the params.");
         }
 
+        if ($subSubResource && !\in_array(\trim($subSubResource, "\[\]"), $paramKeys)) {
+            throw new InvalidArgumentException("{$subSubResource} is missing from the params.");
+        }
+
         /**
          * Create all possible patterns including placeholders.
          */
         if ($action) {
-            if ($subResource) {
+            if($subSubResource) {
+                $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource, $action]);
+                $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource]);
+            } else if ($subResource) {
                 if ($attribute) {
                     $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $action, $attribute]);
                 }
@@ -372,6 +394,9 @@ class Event
             if ($attribute) {
                 $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
             }
+        }
+        if($subSubResource) {
+            $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource]);
         }
         if ($subResource) {
             $patterns[] = \implode('.', [$type, $resource, $subType, $subResource]);
@@ -392,12 +417,26 @@ class Event
             $events[] = \str_replace($paramKeys, '*', $eventPattern);
             foreach ($paramKeys as $key) {
                 foreach ($paramKeys as $current) {
-                    if ($current === $key) {
-                        continue;
+                    if($subSubResource) {
+                        foreach ($paramKeys as $subCurrent) {
+                            if ($subCurrent === $current || $subCurrent === $key) {
+                                continue;
+                            }
+                            // var_dump($filtered, $subCurrent, $current, $key);
+                            $filtered1 = \array_filter($paramKeys, fn(string $k) => $k === $subCurrent);
+                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
+                            $filtered2 = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
+                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
+                        }
+                    } else {
+                        if ($current === $key) {
+                            continue;
+                        }
+                        $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                        $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                     }
-
-                    $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
-                    $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
+                    
                 }
             }
         }
