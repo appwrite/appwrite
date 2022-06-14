@@ -1595,7 +1595,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'teamId',
+                '$id' => 'userId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1606,7 +1606,18 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'userId',
+                '$id' => 'teamInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'teamId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1687,7 +1698,7 @@ $collections = [
             [
                 '$id' => '_key_unique',
                 'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['teamId', 'userId'],
+                'attributes' => ['teamInternalId', 'userInternalId'],
                 'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
@@ -1701,7 +1712,7 @@ $collections = [
             [
                 '$id' => '_key_team',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['teamId'],
+                'attributes' => ['teamInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
