@@ -303,15 +303,18 @@ class Event
             if ($count === 6) {
                 $attribute = $parts[5];
             }
-        } else {
-            if ($count === 4) {
-                $attribute = $parts[3];
-            }
         }
 
         if ($hasSubSubResource) {
             $subSubType = $parts[4];
             $subSubResource = $parts[5];
+            if($count == 8) {
+                $attribute = $parts[7];
+            }
+        } else {
+            if ($count === 4) {
+                $attribute = $parts[3];
+            }
         }
 
         $subType ??= false;
@@ -383,6 +386,9 @@ class Event
          */
         if ($action) {
             if ($subSubResource) {
+                if ($attribute) {
+                    $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource, $action, $attribute]);
+                }
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource, $action]);
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource]);
             } elseif ($subResource) {

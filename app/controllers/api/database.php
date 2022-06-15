@@ -537,6 +537,7 @@ App::post('/v1/databases/:databaseId/collections')
         ;
 
         $events
+            ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId());
 
@@ -792,6 +793,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
             ->setParam('database.collections.update', 1);
 
         $events
+            ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId());
 
@@ -843,6 +845,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
         ;
 
         $events
+            ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setPayload($response->output($collection, Response::MODEL_COLLECTION))
