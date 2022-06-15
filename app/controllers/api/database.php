@@ -48,6 +48,7 @@ use MaxMind\Db\Reader;
  *
  *
  * @return Document Newly created attribute document
+ * @throws Exception
  */
 function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage): Document
 {
@@ -94,7 +95,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         $attribute = new Document([
             '$id' => $db->getInternalId() . '_' . $collectionId . '_' . $key,
             'key' => $key,
-            'databaseId' => $db->getInternalId(),
+            'collectionInternalId' => $collection->getInternalId(),
             'collectionId' => $collectionId,
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
@@ -1485,9 +1486,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         $count = $dbForProject->count('indexes', [
-            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId]),
-            new Query('databaseId', Query::TYPE_EQUAL, [$db->getInternalId()])
-        ], 61);
+            new Query('collectionInternalId', Query::TYPE_EQUAL, [$collection->getInternalId()])
+        ]);
 
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
 
@@ -1527,6 +1527,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 '$id' => $db->getInternalId() . '_' . $collectionId . '_' . $key,
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
+                'collectionInternalId' => $collection->getInternalId(),
                 'collectionId' => $collectionId,
                 'databaseId' => $db->getInternalId(),
                 'type' => $type,
