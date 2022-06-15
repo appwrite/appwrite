@@ -308,7 +308,7 @@ class Event
         if ($hasSubSubResource) {
             $subSubType = $parts[4];
             $subSubResource = $parts[5];
-            if($count == 8) {
+            if ($count == 8) {
                 $attribute = $parts[7];
             }
         } else {
