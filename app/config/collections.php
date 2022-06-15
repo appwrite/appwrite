@@ -120,6 +120,17 @@ $collections = [
         'name' => 'Attributes',
         'attributes' => [
             [
+                '$id' => 'collectionInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'collectionId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -249,6 +260,13 @@ $collections = [
         ],
         'indexes' => [
             [
+                '$id' => '_key_collection_internal_id',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['collectionInternalId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
                 '$id' => '_key_collection',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['collectionId'],
@@ -263,6 +281,17 @@ $collections = [
         '$id' => 'indexes',
         'name' => 'Indexes',
         'attributes' => [
+            [
+                '$id' => 'collectionInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'collectionId',
                 'type' => Database::VAR_STRING,
@@ -346,6 +375,13 @@ $collections = [
                 '$id' => '_key_collection',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['collectionId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_collection_internal_id',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['collectionInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],

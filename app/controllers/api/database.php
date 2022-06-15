@@ -47,6 +47,7 @@ use MaxMind\Db\Reader;
  *
  *
  * @return Document Newly created attribute document
+ * @throws Exception
  */
 function createAttribute(string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage): Document
 {
@@ -86,6 +87,7 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
         $attribute = new Document([
             '$id' => $collectionId . '_' . $key,
             'key' => $key,
+            'collectionInternalId' => $collection->getInternalId(),
             'collectionId' => $collectionId,
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
@@ -1263,8 +1265,8 @@ App::post('/v1/database/collections/:collectionId/indexes')
         }
 
         $count = $dbForProject->count('indexes', [
-            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
-        ], 61);
+            new Query('collectionInternalId', Query::TYPE_EQUAL, [$collection->getInternalId()])
+        ]);
 
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
 
@@ -1304,6 +1306,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
                 '$id' => $collectionId . '_' . $key,
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
+                'collectionInternalId' => $collection->getInternalId(),
                 'collectionId' => $collectionId,
                 'type' => $type,
                 'attributes' => $attributes,
