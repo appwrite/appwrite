@@ -120,6 +120,7 @@ trait ProjectCustom
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
+            'signatureKey' => $webhook['body']['signatureKey'],
         ];
 
         return self::$project;

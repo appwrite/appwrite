@@ -1000,6 +1000,17 @@ $collections = [
                 'array' => true,
                 'filters' => [],
             ],
+            [
+                '$id' => 'signatureKey',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 2048,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
