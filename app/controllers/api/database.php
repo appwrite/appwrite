@@ -515,8 +515,6 @@ App::post('/v1/databases/:databaseId/collections')
                 '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
                 '$write' => $write ?? [], // Collection permissions for collection documents (based on permission model)
                 'permission' => $permission, // Permissions model type (document vs collection)
-                'dateCreated' => time(),
-                'dateUpdated' => time(),
                 'enabled' => true,
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
@@ -772,7 +770,6 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
                 ->setAttribute('$read', $read)
                 ->setAttribute('name', $name)
                 ->setAttribute('permission', $permission)
-                ->setAttribute('dateUpdated', time())
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', implode(' ', [$collectionId, $name])));
         } catch (AuthorizationException $exception) {
