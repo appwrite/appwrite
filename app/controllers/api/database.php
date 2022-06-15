@@ -131,7 +131,8 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     ;
 
     $events
-        ->setContext(['collection' => $collection, 'database' => $db])
+        ->setContext('collection', $collection)
+        ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
         ->setParam('attributeId', $attribute->getId())
@@ -1438,7 +1439,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('attributeId', $attribute->getId())
-            ->setContext(['database' => $db, 'collection' => $collection])
+           ->setContext('collection', $collection)
+        ->setContext('database', $db)
             ->setPayload($response->output($attribute, $model))
         ;
 
@@ -1556,7 +1558,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('indexId', $index->getId())
-            ->setContext(['database' => $db, 'collection' => $collection])
+           ->setContext('collection', $collection)
+        ->setContext('database', $db)
         ;
 
         $audits
@@ -1714,7 +1717,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('indexId', $index->getId())
-            ->setContext(['database' => $db, 'collection' => $collection])
+           ->setContext('collection', $collection)
+        ->setContext('database', $db)
             ->setPayload($response->output($index, Response::MODEL_INDEX))
         ;
 
@@ -1829,7 +1833,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
-            ->setContext(['database' => $database, 'collection' => $collection])
+            ->setContext('collection', $collection)
+            ->setContext('database', $database)
         ;
 
         $usage
@@ -2240,7 +2245,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
-            ->setContext(['database' => $database, 'collection' => $collection])
+            ->setContext('collection', $collection)
+            ->setContext('database', $database)
         ;
 
         $usage
@@ -2343,7 +2349,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
-            ->setContext(['database' => $database, 'collection' => $collection])
+            ->setContext('collection', $collection)
+            ->setContext('database', $database)
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
         ;
 

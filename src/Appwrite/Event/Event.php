@@ -37,9 +37,9 @@ class Event
     protected string $event = '';
     protected array $params = [];
     protected array $payload = [];
+    protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
-    protected array $context = [];
 
     /**
      * @param string $queue
@@ -169,12 +169,13 @@ class Event
     /**
      * Set context for this event.
      *
+     * @param string $key
      * @param Document $context
      * @return self
      */
-    public function setContext(array $context): self
+    public function setContext(string $key, Document $context): self
     {
-        $this->context = $context;
+        $this->context[$key] = $context;
 
         return $this;
     }
@@ -320,7 +321,7 @@ class Event
         $attribute ??= false;
         $action = match (true) {
             !$hasSubResource && $count > 2 => $parts[2],
-            $hasSubResource && $hasSubSubResource => $parts[6],
+            $hasSubSubResource => $parts[6],
             $hasSubResource && $count > 4 => $parts[4],
             default => false
         };
