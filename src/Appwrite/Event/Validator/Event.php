@@ -48,7 +48,7 @@ class Event extends Validator
             return false;
         }
 
-        if($hasSubSubResource) {
+        if ($hasSubSubResource) {
             $subSubType = $parts[4];
             $subSubResource = $parts[5];
         }

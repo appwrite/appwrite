@@ -184,7 +184,7 @@ class Event
      * Get context for this event.
      *
      * @param string $key
-     * 
+     *
      * @return null|Document
      */
     public function getContext(string $key): ?Document
@@ -308,8 +308,8 @@ class Event
                 $attribute = $parts[3];
             }
         }
-        
-        if($hasSubSubResource) {
+
+        if ($hasSubSubResource) {
             $subSubType = $parts[4];
             $subSubResource = $parts[5];
         }
@@ -382,10 +382,10 @@ class Event
          * Create all possible patterns including placeholders.
          */
         if ($action) {
-            if($subSubResource) {
+            if ($subSubResource) {
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource, $action]);
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource]);
-            } else if ($subResource) {
+            } elseif ($subResource) {
                 if ($attribute) {
                     $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $action, $attribute]);
                 }
@@ -398,7 +398,7 @@ class Event
                 $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
             }
         }
-        if($subSubResource) {
+        if ($subSubResource) {
             $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource]);
         }
         if ($subResource) {
@@ -420,7 +420,7 @@ class Event
             $events[] = \str_replace($paramKeys, '*', $eventPattern);
             foreach ($paramKeys as $key) {
                 foreach ($paramKeys as $current) {
-                    if($subSubResource) {
+                    if ($subSubResource) {
                         foreach ($paramKeys as $subCurrent) {
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
@@ -439,7 +439,6 @@ class Event
                         $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
                         $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                     }
-                    
                 }
             }
         }

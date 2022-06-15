@@ -153,7 +153,7 @@ class EventTest extends TestCase
         $this->assertContains('databases.*.collections.chapters.documents.*.create', $event);
         $this->assertContains('databases.chaptersDB.collections.*.documents.*', $event);
         $this->assertContains('databases.chaptersDB.collections.*.documents.*.create', $event);
-        
+
 
         try {
             $event = Event::generateEvents('collections.[collectionId].documents.[documentId].create', [

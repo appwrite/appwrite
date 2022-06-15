@@ -197,7 +197,7 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
             $db = $events->getContext('database');
             $collection = $events->getContext('collection');
             $bucket = $events->getContext('bucket');
-            
+
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
                 event: $allEvents[0],

@@ -685,7 +685,7 @@ class RealtimeCustomClientTest extends Scope
         ]);
 
         $response = json_decode($client->receive(), true);
-        
+
         $documentId = $document['body']['$id'];
 
         $this->assertArrayHasKey('type', $response);
