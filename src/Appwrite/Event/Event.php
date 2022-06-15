@@ -295,14 +295,11 @@ class Event
         $type = $parts[0] ?? false;
         $resource = $parts[1] ?? false;
         $hasSubResource = $count > 3 && \str_starts_with($parts[3], '[');
-        $hasSubSubResource = $count > 6 && \str_starts_with($parts[5], '[') && $hasSubResource;
+        $hasSubSubResource = $count > 5 && \str_starts_with($parts[5], '[') && $hasSubResource;
 
         if ($hasSubResource) {
             $subType = $parts[2];
             $subResource = $parts[3];
-            if ($count === 6) {
-                $attribute = $parts[5];
-            }
         }
 
         if ($hasSubSubResource) {
@@ -311,7 +308,15 @@ class Event
             if ($count == 8) {
                 $attribute = $parts[7];
             }
-        } else {
+        }
+
+        if($hasSubResource && !$hasSubSubResource) {
+            if ($count === 6) {
+                $attribute = $parts[5];
+            }
+        }
+
+        if(!$hasSubResource) {
             if ($count === 4) {
                 $attribute = $parts[3];
             }
@@ -324,7 +329,7 @@ class Event
         $attribute ??= false;
         $action = match (true) {
             !$hasSubResource && $count > 2 => $parts[2],
-            $hasSubSubResource => $parts[6],
+            $hasSubSubResource => $parts[6] ?? false,
             $hasSubResource && $count > 4 => $parts[4],
             default => false
         };

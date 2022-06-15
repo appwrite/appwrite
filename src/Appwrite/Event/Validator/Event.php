@@ -42,24 +42,32 @@ class Event extends Validator
         $type = $parts[0] ?? false;
         $resource = $parts[1] ?? false;
         $hasSubResource = $count > 3 && ($events[$type]['$resource'] ?? false) && ($events[$type][$parts[2]]['$resource'] ?? false);
-        $hasSubSubResource = $count > 6 && \str_starts_with($parts[5], '[') && $hasSubResource;
+        $hasSubSubResource = $count > 5 && $hasSubResource && ($events[$type][$parts[2]][$parts[4]]['$resource'] ?? false);
 
         if (!$type || !$resource) {
             return false;
         }
 
-        if ($hasSubSubResource) {
-            $subSubType = $parts[4];
-            $subSubResource = $parts[5];
-        }
-
         if ($hasSubResource) {
             $subType = $parts[2];
             $subResource = $parts[3];
+        }
+
+        if ($hasSubSubResource) {
+            $subSubType = $parts[4];
+            $subSubResource = $parts[5];
+            if ($count === 8) {
+                $attribute = $parts[7];
+            }
+        }
+
+        if($hasSubResource && !$hasSubSubResource) {
             if ($count === 6) {
                 $attribute = $parts[5];
             }
-        } else {
+        }
+
+        if(!$hasSubResource) {
             if ($count === 4) {
                 $attribute = $parts[3];
             }
@@ -73,7 +81,7 @@ class Event extends Validator
 
         $action = match (true) {
             !$hasSubResource && $count > 2 => $parts[2],
-            $hasSubSubResource => $parts[6],
+            $hasSubSubResource => $parts[6] ?? false,
             $hasSubResource && $count > 4 => $parts[4],
             default => false
         };
