@@ -78,6 +78,7 @@ const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
+const APP_LIMIT_ARRAY_ELEMENT_SIZE = 2048; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_CACHE_BUSTER = 305;
 const APP_VERSION_STABLE = '0.14.2';
