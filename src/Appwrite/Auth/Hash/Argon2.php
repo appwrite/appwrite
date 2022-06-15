@@ -42,6 +42,6 @@ class Argon2 extends Hash
      */
     public function getDefaultOptions(): mixed
     {
-        return ['memory_cost' => 2048, 'time_cost' => 4, 'threads' => 3];
+        return ['memory_cost' => 65536, 'time_cost' => 4, 'threads' => 3];
     }
 }

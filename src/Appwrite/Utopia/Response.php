@@ -9,6 +9,13 @@ use Utopia\Database\Document;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Account;
+use Appwrite\Utopia\Response\Model\AlgoArgon2;
+use Appwrite\Utopia\Response\Model\AlgoBcrypt;
+use Appwrite\Utopia\Response\Model\AlgoMd5;
+use Appwrite\Utopia\Response\Model\AlgoPhpass;
+use Appwrite\Utopia\Response\Model\AlgoScrypt;
+use Appwrite\Utopia\Response\Model\AlgoScryptModified;
+use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\Attribute;
@@ -123,6 +130,15 @@ class Response extends SwooleResponse
     public const MODEL_TOKEN = 'token';
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
+
+    // Users password algos
+    public const MODEL_ALGO_MD5 = 'algoMd5';
+    public const MODEL_ALGO_SHA = 'algoSha';
+    public const MODEL_ALGO_SCRYPT = 'algoScrypt';
+    public const MODEL_ALGO_SCRYPT_MODIFIED = 'algoScryptModified';
+    public const MODEL_ALGO_BCRYPT = 'algoBcrypt';
+    public const MODEL_ALGO_ARGON2 = 'algoArgon2';
+    public const MODEL_ALGO_PHPASS = 'algoPhpass';
 
     // Storage
     public const MODEL_FILE = 'file';
@@ -255,6 +271,13 @@ class Response extends SwooleResponse
             ->setModel(new ModelDocument())
             ->setModel(new Log())
             ->setModel(new User())
+            ->setModel(new AlgoMd5())
+            ->setModel(new AlgoSha())
+            ->setModel(new AlgoPhpass())
+            ->setModel(new AlgoBcrypt())
+            ->setModel(new AlgoScrypt())
+            ->setModel(new AlgoScryptModified())
+            ->setModel(new AlgoArgon2())
             ->setModel(new Account())
             ->setModel(new Preferences())
             ->setModel(new Session())

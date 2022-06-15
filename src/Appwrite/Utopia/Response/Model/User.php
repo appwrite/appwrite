@@ -36,10 +36,19 @@ class User extends Model
                 'example' => 'argon2',
             ])
             ->addRule('hashOptions', [
-                'type' => self::TYPE_STRING,
+                'type' => [
+                    Response::MODEL_ALGO_ARGON2,
+                    Response::MODEL_ALGO_SCRYPT,
+                    Response::MODEL_ALGO_SCRYPT_MODIFIED,
+                    Response::MODEL_ALGO_BCRYPT,
+                    Response::MODEL_ALGO_PHPASS,
+                    Response::MODEL_ALGO_SHA,
+                    Response::MODEL_ALGO_MD5, // keep least secure at the bottom. this order will be used in docs
+                ],
                 'description' => 'Password hashing algorithm configuration.',
-                'default' => '',
-                'example' => '{}',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => false,
             ])
             ->addRule('registration', [
                 'type' => self::TYPE_INTEGER,
