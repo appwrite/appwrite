@@ -327,6 +327,16 @@ return [ // Ordered by ABC.
     //     'beta' => false,
     //     'mock' => false,
     // ],
+    'zoom' => [
+        'name' => 'Zoom',
+        'developers' => 'https://marketplace.zoom.us/docs/guides/auth/oauth/',
+        'icon' => 'icon-zoom',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     // Keep Last
     'mock' => [
         'name' => 'Mock',
