@@ -211,7 +211,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     });
 
     Console::success('Server started successfully (max payload is ' . number_format($payloadSize) . ' bytes)');
-
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 
     // listen ctrl + c

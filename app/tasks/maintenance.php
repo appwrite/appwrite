@@ -3,6 +3,7 @@
 global $cli;
 global $register;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
@@ -93,6 +94,14 @@ $cli
                 ->trigger();
         }
 
+        function notifyDeleteExpiredSessions()
+        {
+            (new Delete())
+                ->setType(DELETE_TYPE_SESSIONS)
+                ->setTimestamp(time() - Auth::TOKEN_EXPIRATION_LOGIN_LONG)
+                ->trigger();
+        }
+
         function renewCertificates($dbForConsole)
         {
             $time = date('d-m-Y H:i:s', time());
@@ -136,6 +145,7 @@ $cli
             notifyDeleteAuditLogs($auditLogRetention);
             notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
             notifyDeleteConnections();
+            notifyDeleteExpiredSessions();
             renewCertificates($database);
         }, $interval);
     });
