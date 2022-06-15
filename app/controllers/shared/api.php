@@ -194,7 +194,7 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
             $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
             $payload = new Document($events->getPayload());
 
-            $database = $events->getContext('data base');
+            $db = $events->getContext('database');
             $collection = $events->getContext('collection');
             $bucket = $events->getContext('bucket');
             
@@ -203,7 +203,7 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
                 event: $allEvents[0],
                 payload: $payload,
                 project: $project,
-                database: $database,
+                database: $db,
                 collection: $collection,
                 bucket: $bucket,
             );
