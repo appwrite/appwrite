@@ -61,13 +61,13 @@ class Event extends Validator
             }
         }
 
-        if($hasSubResource && !$hasSubSubResource) {
+        if ($hasSubResource && !$hasSubSubResource) {
             if ($count === 6) {
                 $attribute = $parts[5];
             }
         }
 
-        if(!$hasSubResource) {
+        if (!$hasSubResource) {
             if ($count === 4) {
                 $attribute = $parts[3];
             }
