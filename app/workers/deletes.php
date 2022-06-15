@@ -249,7 +249,7 @@ class DeletesV1 extends Worker
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Executions
             $this->deleteByGroup('executions', [
-                new Query('dateCreated', Query::TYPE_LESSER, [$timestamp])
+                new Query('$createdAt', Query::TYPE_LESSER, [$timestamp])
             ], $dbForProject);
         });
     }

@@ -998,9 +998,7 @@ App::post('/v1/projects/:projectId/platforms')
             'name' => $name,
             'key' => $key,
             'store' => $store,
-            'hostname' => $hostname,
-            'dateCreated' => \time(),
-            'dateUpdated' => \time(),
+            'hostname' => $hostname
         ]);
 
         $platform = $dbForConsole->createDocument('platforms', $platform);
@@ -1112,7 +1110,6 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
 
         $platform
             ->setAttribute('name', $name)
-            ->setAttribute('dateUpdated', \time())
             ->setAttribute('key', $key)
             ->setAttribute('store', $store)
             ->setAttribute('hostname', $hostname)

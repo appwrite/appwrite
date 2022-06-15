@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9450d0e08c0f21141af8d99232d37df9",
+    "content-hash": "90fda9828f3d88a82b199b3c16f015dd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2107,16 +2107,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.17.1",
+            "version": "dev-bug-last-internal-id",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "a4d001452b78b85335ffbd34176cd45d2b13c1ca"
+                "reference": "fbc6e6e3ea57856564755f3826f1bff0e43c5f1a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/a4d001452b78b85335ffbd34176cd45d2b13c1ca",
-                "reference": "a4d001452b78b85335ffbd34176cd45d2b13c1ca",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/fbc6e6e3ea57856564755f3826f1bff0e43c5f1a",
+                "reference": "fbc6e6e3ea57856564755f3826f1bff0e43c5f1a",
                 "shasum": ""
             },
             "require": {
@@ -2131,6 +2131,7 @@
             "require-dev": {
                 "fakerphp/faker": "^1.14",
                 "phpunit/phpunit": "^9.4",
+                "swoole/ide-helper": "4.8.0",
                 "utopia-php/cli": "^0.11.0",
                 "vimeo/psalm": "4.0.1"
             },
@@ -2164,9 +2165,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.17.1"
+                "source": "https://github.com/utopia-php/database/tree/bug-last-internal-id"
             },
-            "time": "2022-05-16T09:11:44+00:00"
+            "time": "2022-06-15T07:42:27+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5345,9 +5346,18 @@
             "time": "2022-05-17T05:48:52+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-bug-last-internal-id",
+            "alias": "0.18.0",
+            "alias_normalized": "0.18.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

@@ -461,6 +461,11 @@ $register->set('dbPool', function () {
         ->withPassword($dbPass)
         ->withOptions([
             PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+            PDO::ATTR_TIMEOUT => 3, // Seconds
+            PDO::ATTR_PERSISTENT => true,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => true,
+            PDO::ATTR_STRINGIFY_FETCHES => true,
         ]),
         64
     );
@@ -553,11 +558,12 @@ $register->set('db', function () {
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
     $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
         PDO::ATTR_TIMEOUT => 3, // Seconds
         PDO::ATTR_PERSISTENT => true,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_EMULATE_PREPARES => true,
+        PDO::ATTR_STRINGIFY_FETCHES => true,
     ));
 
     return $pdo;
