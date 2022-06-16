@@ -373,7 +373,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_{$project->getId()}");
+        $database->setNamespace("_{$project->getInternalId()}");
 
         /*
          *  Project Check

@@ -282,7 +282,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('platforms', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -295,7 +295,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('domains', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -308,7 +308,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -321,7 +321,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('webhooks', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -868,12 +868,12 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function ($db, $cache, $project) {
+App::setResource('dbForProject', function ($db, $cache, Document $project) {
     $cache = new Cache(new RedisCache($cache));
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace("_{$project->getId()}");
+    $database->setNamespace("_{$project->getInternalId()}");
 
     return $database;
 }, ['db', 'cache', 'project']);
