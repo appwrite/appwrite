@@ -256,7 +256,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('attributes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], $database->getAttributeLimit());
     }
 );
@@ -269,7 +269,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('indexes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], 64);
     }
 );
