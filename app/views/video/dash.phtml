@@ -1,0 +1,55 @@
+<?php
+$params = $this->getParam('params', []);
+?>
+<?php echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+     profiles="urn:mpeg:dash:profile:isoff-live:2011" type="static" mediaPresentationDuration="PT13.2S" maxSegmentDuration="PT6.0S" minBufferTime="PT16.6S">
+    <ProgramInformation></ProgramInformation>
+    <ServiceDescription id="0"></ServiceDescription>
+    <Period id="0" start="PT0.0S">
+    <?php foreach ($this->getParam('params', []) as $param): ?>
+    <AdaptationSet
+        <?php if (isset($param['id'])):?> id="<?php echo $param['id']; ?>"  <?php endif;?>
+        <?php if (isset($param['contentType'])): ?> contentType="<?php echo $param['contentType']; ?>"  <?php endif;?>
+        <?php if (isset($param['startWithSAP'])): ?> startWithSAP="<?php echo $param['startWithSAP']; ?>"  <?php endif;?>
+        <?php if (isset($param['segmentAlignment'])): ?> segmentAlignment="<?php echo $param['segmentAlignment']; ?>"  <?php endif;?>
+        <?php if (isset($param['bitstreamSwitching'])): ?> bitstreamSwitching="<?php echo $param['bitstreamSwitching']; ?>"  <?php endif;?>
+        <?php if (isset($param['frameRate'])): ?> frameRate="<?php echo $param['frameRate']; ?>"  <?php endif;?>
+        <?php if (isset($param['maxWidth'])): ?> maxWidth="<?php echo $param['maxWidth']; ?>"  <?php endif;?>
+        <?php if (isset($param['par'])): ?> par="<?php echo $param['par']; ?>"  <?php endif;?>
+        <?php if (isset($param['lang'])): ?> lang="<?php echo $param['lang']; ?>"  <?php endif;?>
+    >
+        <BaseURL><?php if (isset($param['baseUrl'])): echo $param['baseUrl'];  endif;?></BaseURL>
+        <Representation
+            <?php if (isset($param['representation']['id'])):?> id="<?php echo $param['representation']['id']; ?>"  <?php endif;?>
+            <?php if (isset($param['representation']['mimeType'])):?> mimeType="<?php echo $param['representation']['mimeType']; ?>"  <?php endif;?>
+            <?php if (isset($param['representation']['codecs'])):?> codecs="<?php echo $param['representation']['codecs']; ?>"  <?php endif;?>
+            <?php if (isset($param['representation']['width'])):?> width="<?php echo $param['representation']['width']; ?>"  <?php endif;?>
+            <?php if (isset($param['representation']['height'])):?> height="<?php echo $param['representation']['height']; ?>"  <?php endif;?>
+            <?php if (isset($param['representation']['sar'])):?> sar="<?php echo $param['representation']['sar']; ?>"  <?php endif;?>
+            <?php if (isset($param['representation']['audioSamplingRate'])):?> audioSamplingRate="<?php echo $param['representation']['audioSamplingRate']; ?>" <?php endif;?>
+      >
+            <?php if ($param['contentType'] === 'audio'):?>
+               <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
+             <?php endif;?>
+            <SegmentTemplate
+                <?php if (isset($param['representation']['segmentTemplate']['timescale'] )):?> timescale="<?php echo ['representation']['segmentTemplate']['timescale'] ; ?>"  <?php endif;?>
+                <?php if (isset($param['representation']['segmentTemplate']['initialization'] )):?> initialization="<?php echo ['representation']['segmentTemplate']['initialization'] ; ?>"  <?php endif;?>
+                <?php if (isset($param['representation']['segmentTemplate']['media'] )):?> media="<?php echo ['representation']['segmentTemplate']['media'] ; ?>"  <?php endif;?>
+                <?php if (isset($param['representation']['segmentTemplate']['startNumber'] )):?> startNumber="<?php echo ['representation']['segmentTemplate']['startNumber'] ; ?>"  <?php endif;?>
+            >
+                <SegmentTimeline>
+                    <?php foreach ($param['representation']['segmentTemplate']['segmentTimeline']['S'] as $s): ?>
+                        <S
+                            <?php if (isset($s['@attributes']['t'])):?> t="<?php echo $s['@attributes']['t']; ?> "  <?php endif;?>
+                            <?php if (isset($s['@attributes']['d'])):?> d="<?php echo $s['@attributes']['d']; ?>"  <?php endif;?>
+                        />
+                    <?php endforeach; ?>
+                </SegmentTimeline>
+            </SegmentTemplate>
+        </Representation>
+    </AdaptationSet>
+    <?php endforeach; ?>
+    </Period>
+</MPD>

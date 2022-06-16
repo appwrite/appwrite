@@ -1,0 +1,7 @@
+#EXTM3U
+#EXT-X-VERSION:3
+<?php foreach ($this->getParam('params', []) as $param): ?>
+    #EXT-X-STREAM-INF:BANDWIDTH="<?php echo $param['bandwidth']; ?>" ,RESOLUTION="<?php echo $param['resolution']; ?>" ,NAME="<?php echo $param['name']; ?>"<?php echo PHP_EOL?>
+    <?php echo $param['path'] ?>
+    <?php endforeach; ?>
+}

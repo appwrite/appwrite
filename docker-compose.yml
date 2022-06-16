@@ -7,38 +7,14 @@ x-logging: &x-logging
   logging:
     driver: 'json-file'
     options:
-      max-file: '5'
-      max-size: '10m'
-
-x-env-storage: &x-env-storage |-
-  _APP_STORAGE_DEVICE
-  _APP_STORAGE_S3_ACCESS_KEY
-  _APP_STORAGE_S3_SECRET
-  _APP_STORAGE_S3_REGION
-  _APP_STORAGE_S3_BUCKET
-  _APP_STORAGE_DO_SPACES_ACCESS_KEY
-  _APP_STORAGE_DO_SPACES_SECRET
-  _APP_STORAGE_DO_SPACES_REGION
-  _APP_STORAGE_DO_SPACES_BUCKET
-  _APP_STORAGE_BACKBLAZE_ACCESS_KEY
-  _APP_STORAGE_BACKBLAZE_SECRET
-  _APP_STORAGE_BACKBLAZE_REGION
-  _APP_STORAGE_BACKBLAZE_BUCKET
-  _APP_STORAGE_DO_SPACES_BUCKET
-  _APP_STORAGE_LINODE_ACCESS_KEY
-  _APP_STORAGE_LINODE_SECRET
-  _APP_STORAGE_LINODE_REGION
-  _APP_STORAGE_LINODE_BUCKET
-  _APP_STORAGE_WASABI_ACCESS_KEY
-  _APP_STORAGE_WASABI_SECRET
-  _APP_STORAGE_WASABI_REGION
-  _APP_STORAGE_WASABI_BUCKET
+      max-file: "5"
+      max-size: 10m
 
 version: '3'
 
 services:
   traefik:
-    image: traefik:2.7
+    image: traefik:2.5
     <<: *x-logging
     container_name: appwrite-traefik
     command:
@@ -96,6 +72,7 @@ services:
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
       - appwrite-uploads:/storage/uploads:rw
+      - appwrite-video:/storage/video:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -103,7 +80,7 @@ services:
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor:/usr/src/code/vendor
+      - ./vendor:/usr/src/code/vendor #TODO remove when done!!
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
@@ -152,11 +129,18 @@ services:
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_STORAGE_LIMIT
-      - _APP_STORAGE_PREVIEW_LIMIT
       - _APP_STORAGE_ANTIVIRUS
       - _APP_STORAGE_ANTIVIRUS_HOST
       - _APP_STORAGE_ANTIVIRUS_PORT
-      - *x-env-storage
+      - _APP_STORAGE_DEVICE
+      - _APP_STORAGE_S3_ACCESS_KEY
+      - _APP_STORAGE_S3_SECRET
+      - _APP_STORAGE_S3_REGION
+      - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
       - _APP_FUNCTIONS_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_BUILD_TIMEOUT
@@ -166,7 +150,6 @@ services:
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
       - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_STATSD_HOST
@@ -222,6 +205,40 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_USAGE_STATS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
+
+  appwrite-worker-transcoding:
+    entrypoint: worker-transcoding
+    <<: *x-logging
+    container_name: appwrite-worker-transcoding
+    build:
+      context: .
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - appwrite-uploads:/storage/uploads:rw
+      - appwrite-video:/storage/video:rw
+      - ./tests:/usr/src/code/tests #TODO remove when done!!
+      - ./vendor:/usr/src/code/vendor #TODO remove when done!!
+
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -293,6 +310,7 @@ services:
       - mariadb
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
+      - appwrite-video:/storage/video:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
       - appwrite-builds:/storage/builds:rw
@@ -311,11 +329,18 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - *x-env-storage
+      - _APP_STORAGE_DEVICE
+      - _APP_STORAGE_S3_ACCESS_KEY
+      - _APP_STORAGE_S3_SECRET
+      - _APP_STORAGE_S3_REGION
+      - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
 
   appwrite-worker-database:
     entrypoint: worker-database
@@ -365,7 +390,6 @@ services:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -397,7 +421,6 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -441,7 +464,6 @@ services:
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
       - _APP_USAGE_STATS
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
@@ -488,7 +510,15 @@ services:
       - OPEN_RUNTIMES_NETWORK
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - *x-env-storage
+      - _APP_STORAGE_DEVICE
+      - _APP_STORAGE_S3_ACCESS_KEY
+      - _APP_STORAGE_S3_SECRET
+      - _APP_STORAGE_S3_REGION
+      - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
 
@@ -539,18 +569,11 @@ services:
       - redis
     environment:
       - _APP_ENV
-      - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_ABUSE
@@ -779,6 +802,7 @@ volumes:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
+  appwrite-video:
   appwrite-certificates:
   appwrite-functions:
   appwrite-builds:
