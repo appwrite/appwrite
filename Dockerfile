@@ -50,7 +50,8 @@ RUN \
   yaml-dev \
   imagemagick \
   imagemagick-dev \
-  libmaxminddb-dev
+  libmaxminddb-dev \
+  ffmpeg
 
 RUN docker-php-ext-install sockets
 
@@ -234,6 +235,7 @@ RUN \
   docker-cli \
   docker-compose \
   libgomp \
+  ffmpeg \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
@@ -264,12 +266,14 @@ COPY ./src /usr/src/code/src
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
+    mkdir -p /storage/video && \
     mkdir -p /storage/cache && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
     mkdir -p /storage/debug && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
+    chown -Rf www-data.www-data /storage/video && chmod -Rf 0755 /storage/video && \
     chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
     chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
     chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
@@ -297,6 +301,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-mails && \
+    chmod +x /usr/local/bin/worker-transcoding && \
     chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions
