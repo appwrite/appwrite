@@ -33,7 +33,7 @@ $cli
          * 3. Ask user to backup important volumes, env vars, and SQL tables
          *      In th future we can try and automate this for smaller/medium size setups
          * 4. Drop new docker-compose.yml setup (located inside the container, no network dependencies with appwrite.io) - DONE
-         * 5. Run docker-compose up -d - DONE
+         * 5. Run docker compose up -d - DONE
          * 6. Run data migration
          */
         $config = Config::getParam('variables');
