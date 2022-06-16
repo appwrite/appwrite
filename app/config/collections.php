@@ -408,6 +408,17 @@ $collections = [
         'name' => 'Projects',
         'attributes' => [
             [
+                '$id' => 'teamInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'teamId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -645,6 +656,17 @@ $collections = [
         'name' => 'platforms',
         'attributes' => [
             [
+                '$id' => 'projectInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'projectId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -713,6 +735,13 @@ $collections = [
         ],
         'indexes' => [
             [
+                '$id' => '_key_project_internal_id',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectInternalId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
                 '$id' => '_key_project',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectId'],
@@ -727,6 +756,17 @@ $collections = [
         '$id' => 'domains',
         'name' => 'domains',
         'attributes' => [
+            [
+                '$id' => 'projectInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'projectId',
                 'type' => Database::VAR_STRING,
@@ -807,6 +847,13 @@ $collections = [
         ],
         'indexes' => [
             [
+                '$id' => '_key_project_internal_id',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectInternalId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
                 '$id' => '_key_project',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectId'],
@@ -821,6 +868,17 @@ $collections = [
         '$id' => 'keys',
         'name' => 'keys',
         'attributes' => [
+            [
+                '$id' => 'projectInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'projectId',
                 'type' => Database::VAR_STRING,
@@ -879,6 +937,13 @@ $collections = [
         ],
         'indexes' => [
             [
+                '$id' => '_key_project_internal_id',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['projectInternalId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
                 '$id' => '_key_project',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectId'],
@@ -893,6 +958,17 @@ $collections = [
         '$id' => 'webhooks',
         'name' => 'webhooks',
         'attributes' => [
+            [
+                '$id' => 'projectInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'projectId',
                 'type' => Database::VAR_STRING,
