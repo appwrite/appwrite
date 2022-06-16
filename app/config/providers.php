@@ -251,6 +251,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'vimeo' => [
+        'name' => 'Vimeo',
+        'developers' => 'https://developer.vimeo.com/api/authentication',
+        'icon' => 'icon-vimeo',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'wordpress' => [
         'name' => 'WordPress',
         'developers' => 'https://developer.wordpress.com/docs/oauth2/',
