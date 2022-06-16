@@ -260,9 +260,8 @@ Database::addFilter(
         $databaseId = str_replace('database_', '', $document->getAttribute('$collection'));
         return $database
             ->find('attributes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()]),
-                new Query('databaseId', Query::TYPE_EQUAL, [$databaseId])
-            ], $database->getAttributeLimit(), 0, []);
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
+            ], $database->getAttributeLimit());
     }
 );
 
@@ -275,9 +274,8 @@ Database::addFilter(
         $databaseId = str_replace('database_', '', $document->getAttribute('$collection'));
         return $database
             ->find('indexes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()]),
-                new Query('databaseId', Query::TYPE_EQUAL, [$databaseId])
-            ], 64, 0, []);
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
+            ], 64);
     }
 );
 
