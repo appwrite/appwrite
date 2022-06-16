@@ -21,12 +21,12 @@ class Auth
         'sha',
         'phpass',
         'scrypt',
-        'scrypt_mod',
+        'scryptMod',
         'plaintext'
     ];
 
     public const DEFAULT_ALGO = 'argon2';
-    public const DEFAULT_ALGO_OPTIONS = ['memory_cost' => 2048, 'time_cost' => 4, 'threads' => 3];
+    public const DEFAULT_ALGO_OPTIONS = ['memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3];
 
     /**
      * User Roles.
@@ -194,7 +194,7 @@ class Auth
                 $hasher = new Scrypt($options);
                 return $hasher->hash($string);
                 break;
-            case 'scrypt_mod':
+            case 'scryptMod':
                 $hasher = new Scryptmodified($options);
                 return $hasher->hash($string);
                 break;
@@ -250,7 +250,7 @@ class Auth
                 $hasher = new Scrypt($options);
                 return $hasher->verify($plain, $hash);
                 break;
-            case 'scrypt_mod':
+            case 'scryptMod':
                 $hasher = new Scryptmodified($options);
                 return $hasher->verify($plain, $hash);
                 break;

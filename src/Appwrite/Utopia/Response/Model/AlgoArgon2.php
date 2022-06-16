@@ -11,13 +11,13 @@ class AlgoArgon2 extends Model
     {
         // No options if imported. If hashed by Appwrite, followign configuration is available:
         $this
-            ->addRule('memory_cost', [
+            ->addRule('memoryCost', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Memory that may be used to compute hash.',
                 'default' => '',
                 'example' => 65536,
             ])
-            ->addRule('time_cost', [
+            ->addRule('timeCost', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Amount of time it may take to compute hash.',
                 'default' => '',

@@ -10,19 +10,19 @@ class AlgoScrypt extends Model
     public function __construct()
     {
         $this
-            ->addRule('cost_cpu', [
+            ->addRule('costCpu', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'CPU complexity of computed hash.',
                 'default' => '',
                 'example' => 8,
             ])
-            ->addRule('cost_memory', [
+            ->addRule('costMemory', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Memory complexity of computed hash.',
                 'default' => '',
                 'example' => 14,
             ])
-            ->addRule('cost_parallel', [
+            ->addRule('costParallel', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Parallelization of computed hash.',
                 'default' => '',

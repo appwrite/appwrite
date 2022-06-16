@@ -120,7 +120,7 @@ class AuthTest extends TestCase
         $hash = '2bc477f4160e7dc0e6bc6849ffa38a7062fec3800d937ce251cdf552609b94919c623cd07cc36ad600bc8caea8399e6f815a6d7ed96995d495ed70890d359d6d';
         $generatedHash = Auth::passwordHash($plain, 'scrypt');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt'));
-        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', ['length' => 64, 'cost_cpu' => 16384, 'cost_memory' => 12, 'cost_parallel' => 2]));
+        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', ['length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
 
         // SCryptModified tested are in provider-specific tests below
 
@@ -149,10 +149,10 @@ class AuthTest extends TestCase
         $saltSeparator = 'Bw==';
         $signerKey = 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==';
 
-        $options = [ 'salt' => $salt, 'salt_separator' => $saltSeparator, 'signer_key' => $signerKey ];
-        $generatedHash = Auth::passwordHash($plain, 'scrypt_mod', $options);
-        $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt_mod', $options));
-        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt_mod', $options));
+        $options = [ 'salt' => $salt, 'saltSeparator' => $saltSeparator, 'signerKey' => $signerKey ];
+        $generatedHash = Auth::passwordHash($plain, 'scryptMod', $options);
+        $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scryptMod', $options));
+        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scryptMod', $options));
     }
 
     public function testUnknownAlgo()

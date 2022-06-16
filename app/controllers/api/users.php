@@ -273,15 +273,15 @@ App::post('/v1/users/import/scrypt')
         }
 
         if (!empty($passwordCpu)) {
-            $options['cost_cpu'] = $passwordCpu;
+            $options['costCpu'] = $passwordCpu;
         }
 
         if (!empty($passwordMemory)) {
-            $options['cost_memory'] = $passwordMemory;
+            $options['costMemory'] = $passwordMemory;
         }
 
         if (!empty($passwordParallel)) {
-            $options['cost_parallel'] = $passwordParallel;
+            $options['costParallel'] = $passwordParallel;
         }
 
         if (!empty($passwordLength)) {
@@ -318,7 +318,7 @@ App::post('/v1/users/import/scrypt-modified')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
-        $user = createUser('scrypt_mod', '{"signer_key":"' . $passwordSignerKey . '","salt_separator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);

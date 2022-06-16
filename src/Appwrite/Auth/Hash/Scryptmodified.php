@@ -8,8 +8,8 @@ use Appwrite\Auth\Hash;
  * This is SCrypt hash with some additional steps added by Google.
  *
  * string salt
- * string salt_separator
- * strin signer_key
+ * string saltSeparator
+ * strin signerKey
  *
  * Refference: https://github.com/DomBlack/php-scrypt/blob/master/scrypt.php#L112-L116
 */
@@ -25,7 +25,7 @@ class Scryptmodified extends Hash
         $options = $this->getOptions();
 
         $derivedKeyBytes = $this->generateDerivedKey($password);
-        $signerKeyBytes = \base64_decode($options['signer_key']);
+        $signerKeyBytes = \base64_decode($options['signerKey']);
 
         $hashedPassword = $this->hashKeys($signerKeyBytes, $derivedKeyBytes);
 
@@ -58,7 +58,7 @@ class Scryptmodified extends Hash
         $options = $this->getOptions();
 
         $saltBytes = \base64_decode($options['salt']);
-        $saltSeparatorBytes = \base64_decode($options['salt_separator']);
+        $saltSeparatorBytes = \base64_decode($options['saltSeparator']);
 
         $derivedKey = \scrypt(\utf8_encode($password), $saltBytes . $saltSeparatorBytes, 16384, 8, 1, 64, true);
 

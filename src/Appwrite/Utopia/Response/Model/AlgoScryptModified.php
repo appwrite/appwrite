@@ -16,13 +16,13 @@ class AlgoScryptModified extends Model
                 'default' => '',
                 'example' => 'UxLMreBr6tYyjQ==',
             ])
-            ->addRule('salt_separator', [
+            ->addRule('saltSeparator', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Separator used to compute hash.',
                 'default' => '',
                 'example' => 'Bw==',
             ])
-            ->addRule('signer_key', [
+            ->addRule('signerKey', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Key used to compute hash.',
                 'default' => '',

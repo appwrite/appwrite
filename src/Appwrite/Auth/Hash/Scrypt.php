@@ -7,9 +7,9 @@ use Appwrite\Auth\Hash;
 /*
  * SCrypt accepted options:
  * string? salt; auto-generated if empty
- * int cost_cpu
- * int cost_memory
- * int cost_parallel
+ * int costCpu
+ * int costMemory
+ * int costParallel
  * int length
  *
  * Refference: https://github.com/DomBlack/php-scrypt/blob/master/scrypt.php#L112-L116
@@ -25,7 +25,7 @@ class Scrypt extends Hash
     {
         $options = $this->getOptions();
 
-        return \scrypt($password, $options['salt'] ?? null, $options['cost_cpu'], $options['cost_memory'], $options['cost_parallel'], $options['length']);
+        return \scrypt($password, $options['salt'] ?? null, $options['costCpu'], $options['costMemory'], $options['costParallel'], $options['length']);
     }
 
     /**
@@ -46,6 +46,6 @@ class Scrypt extends Hash
      */
     public function getDefaultOptions(): mixed
     {
-        return [ 'cost_cpu' => 8, 'cost_memory' => 14, 'cost_parallel' => 1, 'length' => 64 ];
+        return [ 'costCpu' => 8, 'costMemory' => 14, 'costParallel' => 1, 'length' => 64 ];
     }
 }

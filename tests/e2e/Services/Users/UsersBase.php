@@ -131,9 +131,9 @@ trait UsersBase
         $this->assertEquals($res['body']['password'], '3fdef49701bc4cfaacd551fe017283513284b4731e6945c263246ef948d3cf63b5d269c31fd697246085111a428245e24a4ddc6b64c687bc60a8910dbafc1d5b');
         $this->assertEquals($res['body']['hash'], 'scrypt');
         $this->assertEquals($res['body']['hashOptions']['salt'], 'appwrite');
-        $this->assertEquals($res['body']['hashOptions']['cost_cpu'], 16384);
-        $this->assertEquals($res['body']['hashOptions']['cost_memory'], 13);
-        $this->assertEquals($res['body']['hashOptions']['cost_parallel'], 2);
+        $this->assertEquals($res['body']['hashOptions']['costCpu'], 16384);
+        $this->assertEquals($res['body']['hashOptions']['costMemory'], 13);
+        $this->assertEquals($res['body']['hashOptions']['costParallel'], 2);
         $this->assertEquals($res['body']['hashOptions']['length'], 64);
 
         $res = $this->client->call(Client::METHOD_POST, '/users/import/phpass', array_merge([
@@ -164,10 +164,10 @@ trait UsersBase
 
         $this->assertEquals($res['headers']['status-code'], 201);
         $this->assertEquals($res['body']['password'], 'UlM7JiXRcQhzAGlaonpSqNSLIz475WMddOgLjej5De9vxTy48K6WtqlEzrRFeK4t0COfMhWCb8wuMHgxOFCHFQ==');
-        $this->assertEquals($res['body']['hash'], 'scrypt_mod');
+        $this->assertEquals($res['body']['hash'], 'scryptMod');
         $this->assertEquals($res['body']['hashOptions']['salt'], 'UxLMreBr6tYyjQ==');
-        $this->assertEquals($res['body']['hashOptions']['signer_key'], 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==');
-        $this->assertEquals($res['body']['hashOptions']['salt_separator'], 'Bw==');
+        $this->assertEquals($res['body']['hashOptions']['signerKey'], 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==');
+        $this->assertEquals($res['body']['hashOptions']['saltSeparator'], 'Bw==');
 
         return ['userId' => $body['$id']];
     }
