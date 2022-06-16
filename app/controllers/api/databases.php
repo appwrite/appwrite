@@ -159,7 +159,7 @@ App::post('/v1/databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'create')
-    ->label('sdk.description', '/docs/references/databases/create-database.md') // create this file later
+    ->label('sdk.description', '/docs/references/databases/create.md') // create this file later
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DATABASE) // Model for database needs to be created
