@@ -5,7 +5,7 @@ namespace Appwrite\Auth\Hash;
 use Appwrite\Auth\Hash;
 
 /*
- * This is SCrypt hash with some additional steps added by Google.
+ * This is Scrypt hash with some additional steps added by Google.
  *
  * string salt
  * string saltSeparator

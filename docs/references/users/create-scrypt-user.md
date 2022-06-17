@@ -1,0 +1,1 @@
+Create a new user. Password entered must be hashed with [Scrypt](https://github.com/Tarsnap/scrypt) algorithm. Use the [POST /users](/docs/server/users#usersCreate) endpoint if you want to import plain text password.

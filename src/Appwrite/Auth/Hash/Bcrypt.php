@@ -5,7 +5,7 @@ namespace Appwrite\Auth\Hash;
 use Appwrite\Auth\Hash;
 
 /*
- * BCrypt accepted options:
+ * Bcrypt accepted options:
  * int cost
  * string? salt; auto-generated if empty
  *

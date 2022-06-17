@@ -9,7 +9,7 @@ class AlgoArgon2 extends Model
 {
     public function __construct()
     {
-        // No options if imported. If hashed by Appwrite, followign configuration is available:
+        // No options if imported. If hashed by Appwrite, following configuration is available:
         $this
             ->addRule('memoryCost', [
                 'type' => self::TYPE_INTEGER,

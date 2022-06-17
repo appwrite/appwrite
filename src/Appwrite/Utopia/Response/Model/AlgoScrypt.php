@@ -44,7 +44,7 @@ class AlgoScrypt extends Model
      */
     public function getName(): string
     {
-        return 'AlgoSCrypt';
+        return 'AlgoScrypt';
     }
 
     /**

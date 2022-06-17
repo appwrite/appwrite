@@ -115,14 +115,14 @@ class AuthTest extends TestCase
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'argon2'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'argon2'));
 
-        // SCrypt
+        // Scrypt
         $plain = 'some-scrypt-password';
         $hash = '2bc477f4160e7dc0e6bc6849ffa38a7062fec3800d937ce251cdf552609b94919c623cd07cc36ad600bc8caea8399e6f815a6d7ed96995d495ed70890d359d6d';
         $generatedHash = Auth::passwordHash($plain, 'scrypt');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', ['length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
 
-        // SCryptModified tested are in provider-specific tests below
+        // ScryptModified tested are in provider-specific tests below
 
         /*
         Provider-specific tests, ensuring functionality of specific use-cases

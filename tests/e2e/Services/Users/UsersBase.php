@@ -75,7 +75,7 @@ trait UsersBase
             'userId' => 'bcrypt',
             'email' => 'bcrypt@appwrite.io',
             'password' => '$2a$15$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq', // appwrite (15 rounds)
-            'name' => 'BCrypt User',
+            'name' => 'Bcrypt User',
         ]);
 
         $this->assertEquals($res['headers']['status-code'], 201);
@@ -119,7 +119,7 @@ trait UsersBase
             'userId' => 'scrypt',
             'email' => 'scrypt@appwrite.io',
             'password' => '3fdef49701bc4cfaacd551fe017283513284b4731e6945c263246ef948d3cf63b5d269c31fd697246085111a428245e24a4ddc6b64c687bc60a8910dbafc1d5b', // appwrite (salt appwrite, cpu 16384, memory 13, parallel 2, length 64)
-            'name' => 'SCrypt User',
+            'name' => 'Scrypt User',
             'passwordSalt' => 'appwrite',
             'passwordCpu' => 16384,
             'passwordMemory' => 13,
@@ -156,7 +156,7 @@ trait UsersBase
             'userId' => 'scrypt-modified',
             'email' => 'scrypt-modified@appwrite.io',
             'password' => 'UlM7JiXRcQhzAGlaonpSqNSLIz475WMddOgLjej5De9vxTy48K6WtqlEzrRFeK4t0COfMhWCb8wuMHgxOFCHFQ==', // appwrite
-            'name' => 'SCrypt Modified User',
+            'name' => 'Scrypt Modified User',
             'passwordSalt' => 'UxLMreBr6tYyjQ==',
             'passwordSaltSeparator' => 'Bw==',
             'passwordSignerKey' => 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==',

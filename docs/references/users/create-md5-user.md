@@ -1,0 +1,1 @@
+Create a new user. Password entered must be hashed with [MD5](https://en.wikipedia.org/wiki/MD5) algorithm. Use the [POST /users](/docs/server/users#usersCreate) endpoint if you want to import plain text password.

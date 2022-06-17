@@ -5121,6 +5121,11 @@
                 /**
                  * Create User with Argon2 Password
                  *
+                 * Create a new user. Password entered must be hashed with
+                 * [Argon2](https://en.wikipedia.org/wiki/Argon2) algorithm. Use the [POST
+                 * /users](/docs/server/users#usersCreate) endpoint if you want to import
+                 * plain text password.
+                 *
                  *
                  * @param {string} userId
                  * @param {string} email
@@ -5159,7 +5164,12 @@
                     }, payload);
                 }),
                 /**
-                 * Create User with BCrypt Password
+                 * Create User with Bcrypt Password
+                 *
+                 * Create a new user. Password entered must be hashed with
+                 * [Bcrypt](https://en.wikipedia.org/wiki/Bcrypt) algorithm. Use the [POST
+                 * /users](/docs/server/users#usersCreate) endpoint if you want to import
+                 * plain text password.
                  *
                  *
                  * @param {string} userId
@@ -5201,6 +5211,11 @@
                 /**
                  * Create User with MD5 Password
                  *
+                 * Create a new user. Password entered must be hashed with
+                 * [MD5](https://en.wikipedia.org/wiki/MD5) algorithm. Use the [POST
+                 * /users](/docs/server/users#usersCreate) endpoint if you want to import
+                 * plain text password.
+                 *
                  *
                  * @param {string} userId
                  * @param {string} email
@@ -5241,6 +5256,11 @@
                 /**
                  * Create User with PHPass Password
                  *
+                 * Create a new user. Password entered must be hashed with
+                 * [PHPass](https://www.openwall.com/phpass/) algorithm. Use the [POST
+                 * /users](/docs/server/users#usersCreate) endpoint if you want to import
+                 * plain text password.
+                 *
                  *
                  * @param {string} userId
                  * @param {string} email
@@ -5279,7 +5299,12 @@
                     }, payload);
                 }),
                 /**
-                 * Create User with SCrypt Password
+                 * Create User with Scrypt Password
+                 *
+                 * Create a new user. Password entered must be hashed with
+                 * [Scrypt](https://github.com/Tarsnap/scrypt) algorithm. Use the [POST
+                 * /users](/docs/server/users#usersCreate) endpoint if you want to import
+                 * plain text password.
                  *
                  *
                  * @param {string} userId
@@ -5294,7 +5319,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createSCryptUser: (userId, email, password, passwordSalt, passwordCpu, passwordMemory, passwordParallel, passwordLength, name) => __awaiter(this, void 0, void 0, function* () {
+                createScryptUser: (userId, email, password, passwordSalt, passwordCpu, passwordMemory, passwordParallel, passwordLength, name) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -5339,7 +5364,12 @@
                     }, payload);
                 }),
                 /**
-                 * Create User with SCrypt Modified Password
+                 * Create User with Scrypt Modified Password
+                 *
+                 * Create a new user. Password entered must be hashed with [Scrypt
+                 * Modified](https://gist.github.com/Meldiron/eecf84a0225eccb5a378d45bb27462cc)
+                 * algorithm. Use the [POST /users](/docs/server/users#usersCreate) endpoint
+                 * if you want to import plain text password.
                  *
                  *
                  * @param {string} userId
@@ -5352,7 +5382,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createSCryptModifiedUser: (userId, email, password, passwordSalt, passwordSaltSeparator, passwordSignerKey, name) => __awaiter(this, void 0, void 0, function* () {
+                createScryptModifiedUser: (userId, email, password, passwordSalt, passwordSaltSeparator, passwordSignerKey, name) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -5401,6 +5431,11 @@
                 }),
                 /**
                  * Create User with SHA Password
+                 *
+                 * Create a new user. Password entered must be hashed with
+                 * [SHA](https://en.wikipedia.org/wiki/Secure_Hash_Algorithm) algorithm. Use
+                 * the [POST /users](/docs/server/users#usersCreate) endpoint if you want to
+                 * import plain text password.
                  *
                  *
                  * @param {string} userId
