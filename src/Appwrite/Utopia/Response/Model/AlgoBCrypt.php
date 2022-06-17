@@ -19,7 +19,7 @@ class AlgoBcrypt extends Model
      */
     public function getName(): string
     {
-        return 'AlgoBCrypt';
+        return 'AlgoBcrypt';
     }
 
     /**
