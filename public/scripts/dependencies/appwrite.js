@@ -5347,16 +5347,12 @@
                  * @param {string} password
                  * @param {string} passwordSalt
                  * @param {string} passwordSaltSeparator
-                 * @param {number} passwordCpu
-                 * @param {number} passwordMemory
-                 * @param {number} passwordParallel
-                 * @param {number} passwordLength
                  * @param {string} passwordSignerKey
                  * @param {string} name
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createSCryptModifiedUser: (userId, email, password, passwordSalt, passwordSaltSeparator, passwordCpu, passwordMemory, passwordParallel, passwordLength, passwordSignerKey, name) => __awaiter(this, void 0, void 0, function* () {
+                createSCryptModifiedUser: (userId, email, password, passwordSalt, passwordSaltSeparator, passwordSignerKey, name) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -5371,18 +5367,6 @@
                     }
                     if (typeof passwordSaltSeparator === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "passwordSaltSeparator"');
-                    }
-                    if (typeof passwordCpu === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "passwordCpu"');
-                    }
-                    if (typeof passwordMemory === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "passwordMemory"');
-                    }
-                    if (typeof passwordParallel === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "passwordParallel"');
-                    }
-                    if (typeof passwordLength === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "passwordLength"');
                     }
                     if (typeof passwordSignerKey === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "passwordSignerKey"');
@@ -5403,18 +5387,6 @@
                     }
                     if (typeof passwordSaltSeparator !== 'undefined') {
                         payload['passwordSaltSeparator'] = passwordSaltSeparator;
-                    }
-                    if (typeof passwordCpu !== 'undefined') {
-                        payload['passwordCpu'] = passwordCpu;
-                    }
-                    if (typeof passwordMemory !== 'undefined') {
-                        payload['passwordMemory'] = passwordMemory;
-                    }
-                    if (typeof passwordParallel !== 'undefined') {
-                        payload['passwordParallel'] = passwordParallel;
-                    }
-                    if (typeof passwordLength !== 'undefined') {
-                        payload['passwordLength'] = passwordLength;
                     }
                     if (typeof passwordSignerKey !== 'undefined') {
                         payload['passwordSignerKey'] = passwordSignerKey;
