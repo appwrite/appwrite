@@ -18,7 +18,6 @@ class Vimeo extends OAuth2
      * @var array
      */
     protected $scopes = [
-        "public",
         "private"
     ];
     
@@ -81,7 +80,29 @@ class Vimeo extends OAuth2
         return '';
     }
     
+    /**
+     * @param string $refreshToken
+     *
+     * @return array
+     */
+    public function refreshTokens(string $refreshToken): array
+    {
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            $this->endpoint . 'token?' . \http_build_query([
+                "client_id" => $this->appID,
+                "client_secret" => $this->appSecret,
+                "refresh_token" => $refreshToken,
+                "grant_type" => "refresh_token",
+            ])
+        ), true);
 
+        if (empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
+        }
+
+        return $this->tokens;
+    }
     /**
      * @param string $accessToken
      *
