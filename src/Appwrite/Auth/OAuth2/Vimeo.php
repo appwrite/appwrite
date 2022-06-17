@@ -12,24 +12,25 @@ class Vimeo extends OAuth2
     /**
      * @var string
      */
-    private $endpoint = [];
+    private string $endpoint = 'https://api.vimeo.com';
     
      /**
      * @var array
      */
-    protected $scopes = [
-        "private"
+    protected array $scopes = [
+        'public',
+        'private'
     ];
     
     /**
      * @var array
      */
-    protected $user = [];
+    protected array $user = [];
     
     /**
      * @var array
      */
-    protected $tokens = [];
+    protected array $tokens = [];
     
     /**
      * @return string
@@ -44,7 +45,7 @@ class Vimeo extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://api.vimeo.com/oauth/authorize?'.\http_build_query([
+        return $this->endpoint . '/oauth/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'response_type' => 'code',
             'redirect_uri' => $this->callback,
@@ -63,15 +64,18 @@ class Vimeo extends OAuth2
         // https://developer.vimeo.com/api/authentication#using-the-client-credentials-grant-step-2
         $accessToken = $this->request(
             'POST',
-            'https://api.vimeo.com/oauth/access_token'.\http_build_query([
-                'client_id' => $this->appID,
+            $this->endpoint . '/oauth/access_token', [
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/vnd.vimeo.*+json;version=3.4',
+            ], \http_build_query([
+                'grant_type' => 'authorization_code',
                 'code' => $code,
                 'redirect_uri' => $this->callback,
-                'grant_type' => 'authorization_code'
-            ])
-        );
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+            ]));
 
-        $accessToken = \json_decode($accessToken, true); //
+        $accessToken = \json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
@@ -112,8 +116,8 @@ class Vimeo extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
+        if (isset($user['uri'])) {
+            return $user['uri'];
         }
 
         return '';
@@ -143,8 +147,8 @@ class Vimeo extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['display_name'])) {
-            return $user['display_name'];
+        if (isset($user['name'])) {
+            return $user['name'];
         }
 
         return '';
@@ -160,11 +164,60 @@ class Vimeo extends OAuth2
         if (empty($this->user)) {
             $this->user = \json_decode($this->request(
                 'GET',
-                $this->resourceEndpoint . "me",
+                $this->endpoint . "/me",
                 ['Authorization: Bearer '.\urlencode($accessToken)]
             ), true);
         }
 
+        \var_dump(\json_encode($this->user));
+
         return $this->user;
+    }
+
+        /**
+     * Check if the OAuth email is verified
+     *
+     * @link https://discord.com/developers/docs/resources/user
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['verified'] ?? false) {
+            return true;
+        }
+
+        return false;
+    }
+
+        /**
+     * @param string $code
+     *
+     * @return array
+     */
+    protected function getTokens(string $code): array
+    {
+        // TODO: Endpoint could be different, or have different response
+        if (empty($this->tokens)) {
+            $this->tokens = \json_decode($this->request(
+                'POST',
+                $this->endpoint . '/oauth2/token',
+                ['Content-Type: application/x-www-form-urlencoded'],
+                \http_build_query([
+                    'grant_type' => 'authorization_code',
+                    'code' => $code,
+                    'redirect_uri' => $this->callback,
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'scope' => \implode(' ', $this->getScopes())
+                ])
+            ), true);
+        }
+
+        return $this->tokens;
     }
 }
