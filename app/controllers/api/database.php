@@ -2392,7 +2392,7 @@ App::get('/v1/databases/:databaseId/collections/usage')
 ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
 ->label('sdk.response.model', Response::MODEL_USAGE_DATABASE)
 ->param('databaseId', '', new UID(), 'Database ID.')
-->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), '`Date range.', true)
 ->inject('response')
 ->inject('dbForProject')
 ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject) {
