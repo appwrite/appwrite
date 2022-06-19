@@ -436,7 +436,6 @@ class Event
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
                             }
-                            // var_dump($filtered, $subCurrent, $current, $key);
                             $filtered1 = \array_filter($paramKeys, fn(string $k) => $k === $subCurrent);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
                             $filtered2 = \array_filter($paramKeys, fn(string $k) => $k === $current);
