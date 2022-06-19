@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Appwrite\Utopia;
 
 use Appwrite\Utopia\Request\Filter;
@@ -44,7 +43,7 @@ class Request extends UtopiaRequest
     {
         $requestParameters = [];
 
-        switch($this->getMethod()) {
+        switch ($this->getMethod()) {
             case self::METHOD_GET:
                 $requestParameters = (!empty($this->swoole->get)) ? $this->swoole->get : [];
                 break;

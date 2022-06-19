@@ -12,27 +12,27 @@ class Box extends OAuth2
     /**
      * @var string
      */
-    private $endpoint = 'https://account.box.com/api/oauth2/';
+    private string $endpoint = 'https://account.box.com/api/oauth2/';
 
     /**
      * @var string
      */
-    private $resourceEndpoint = 'https://api.box.com/2.0/';
+    private string $resourceEndpoint = 'https://api.box.com/2.0/';
 
     /**
      * @var array
      */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [
         'manage_app_users',
     ];
 
@@ -49,7 +49,7 @@ class Box extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint . 'authorize?'.
+        $url = $this->endpoint . 'authorize?' .
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
@@ -68,7 +68,7 @@ class Box extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
@@ -93,7 +93,7 @@ class Box extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
@@ -108,7 +108,7 @@ class Box extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -124,11 +124,7 @@ class Box extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['id'] ?? '';
     }
 
     /**
@@ -140,11 +136,23 @@ class Box extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['login'])) {
-            return $user['login'];
-        }
+        return $user['login'] ?? '';
+    }
 
-        return '';
+    /**
+     * Check if the OAuth email is verified
+     *
+     * If present, the email is verified. This was verfied through a manual Box sign up process
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $email = $this->getUserEmail($accessToken);
+
+        return !empty($email);
     }
 
     /**
@@ -156,11 +164,7 @@ class Box extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
-        }
-
-        return '';
+        return $user['name'] ?? '';
     }
 
     /**
@@ -171,7 +175,7 @@ class Box extends OAuth2
     protected function getUser(string $accessToken): array
     {
         $header = [
-            'Authorization: Bearer '.\urlencode($accessToken),
+            'Authorization: Bearer ' . \urlencode($accessToken),
         ];
         if (empty($this->user)) {
             $user = $this->request(

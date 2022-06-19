@@ -39,6 +39,9 @@ App::get('/v1/graphql')
     ->inject('gqlSchema')
     ->action(Closure::fromCallable('graphqlRequest'));
 
+use Appwrite\Extend\Exception;
+use Utopia\App;
+
 App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
     ->groups(['api', 'grapgql'])

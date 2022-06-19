@@ -10,8 +10,9 @@ trait FunctionsBase
     protected string $stdout = '';
     protected string $stderr = '';
 
-    protected function packageCode($folder) {
-        Console::execute('cd '.realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+    protected function packageCode($folder)
+    {
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
     }
 
     // /**
@@ -72,7 +73,7 @@ trait FunctionsBase
     //     $this->assertGreaterThan(0, $response['body']['total']);
     //     $this->assertIsInt($response['body']['total']);
     //     $this->assertCount(2, $response['body']['teams']);
-        
+
     //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
     //         'content-type' => 'application/json',
     //         'x-appwrite-project' => $this->getProject()['$id'],
@@ -84,7 +85,7 @@ trait FunctionsBase
     //     $this->assertGreaterThan(0, $response['body']['total']);
     //     $this->assertIsInt($response['body']['total']);
     //     $this->assertCount(2, $response['body']['teams']);
-        
+
     //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
     //         'content-type' => 'application/json',
     //         'x-appwrite-project' => $this->getProject()['$id'],
@@ -97,7 +98,7 @@ trait FunctionsBase
     //     $this->assertIsInt($response['body']['total']);
     //     $this->assertCount(1, $response['body']['teams']);
     //     $this->assertEquals('Manchester United', $response['body']['teams'][0]['name']);
-        
+
     //     $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
     //         'content-type' => 'application/json',
     //         'x-appwrite-project' => $this->getProject()['$id'],

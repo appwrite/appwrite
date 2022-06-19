@@ -55,17 +55,26 @@ $logs = $this->getParam('logs', null);
                                 data-analytics-activity
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
-                                data-analytics-label="Update Database Document"
                                 data-service="{{|documentAction}}"
                                 data-name="project-document"
                                 data-scope="sdk"
                                 data-event="submit"
-                                data-success="trigger,redirect"
-                                data-success-param-trigger-events="database.updateDocument"
-                                data-success-param-redirect-url="/console/database/document?id={{serviceData.$id}}&collection={{project-collection.$id}}&project={{router.params.project}}"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to update document"
-                                data-failure-param-alert-classname="error">
+                                data-failure-param-alert-classname="error"
+                                <?php if($new): ?>
+                                    data-analytics-label="Create Database Document"
+                                    data-success="trigger,redirect"
+                                    data-success-param-trigger-events="database.createDocument"
+                                    data-success-param-redirect-url="/console/database/collection?id={{project-collection.$id}}&project={{router.params.project}}"
+                                    data-failure-param-alert-text="Failed to create document"
+                                <?php else: ?>
+                                    data-analytics-label="Update Database Document"
+                                    data-success="trigger,alert"
+                                    data-success-param-trigger-events="database.updateDocument"
+                                    data-success-param-alert-text="Your document was updated"
+                                    data-failure-param-alert-text="Failed to update document"
+                                <?php endif; ?>
+                                >
 
                                 <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
                                 <?php if(!$new): ?><input type="hidden" name="documentId" data-ls-bind="{{project-document.$id}}" /><?php endif; ?>
@@ -104,6 +113,8 @@ $logs = $this->getParam('logs', null);
                                                                     :placeholder="attr.default"
                                                                     :name="attr.key"
                                                                     :required="attr.required"
+                                                                    :min="attr.min"
+                                                                    :max="attr.max"
                                                                     x-model="doc[attr.key]"
                                                                     data-cast-to="integer" />
                                                             </template>
@@ -114,6 +125,8 @@ $logs = $this->getParam('logs', null);
                                                                     :placeholder="attr.default"
                                                                     :name="attr.key"
                                                                     :required="attr.required"
+                                                                    :min="attr.min"
+                                                                    :max="attr.max"
                                                                     x-model="doc[attr.key]"
                                                                     data-cast-to="float" />
                                                             </template>
@@ -131,6 +144,7 @@ $logs = $this->getParam('logs', null);
                                                                     :placeholder="attr.default"
                                                                     :name="attr.key"
                                                                     :required="attr.required"
+                                                                    :maxlength="attr.size"
                                                                     x-model="doc[attr.key]"
                                                                     data-cast-to="string"></textarea>
                                                             </template>
@@ -197,6 +211,8 @@ $logs = $this->getParam('logs', null);
                                                                                 :placeholder="attr.default"
                                                                                 :name="attr.key"
                                                                                 :required="attr.required"
+                                                                                :min="attr.min"
+                                                                                :max="attr.max"
                                                                                 x-model="doc[attr.key][index]"
                                                                                 data-cast-to="integer" />
                                                                         </template>
@@ -207,6 +223,8 @@ $logs = $this->getParam('logs', null);
                                                                                 :placeholder="attr.default"
                                                                                 :name="attr.key"
                                                                                 :required="attr.required"
+                                                                                :min="attr.min"
+                                                                                :max="attr.max"
                                                                                 x-model="doc[attr.key][index]"
                                                                                 data-cast-to="float" />
                                                                         </template>
@@ -226,6 +244,7 @@ $logs = $this->getParam('logs', null);
                                                                                 :placeholder="attr.default"
                                                                                 :name="attr.key"
                                                                                 :required="attr.required"
+                                                                                :maxlength="attr.size"
                                                                                 x-model="doc[attr.key][index]"
                                                                                 data-cast-to="string"></textarea>
                                                                         </template>

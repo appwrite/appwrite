@@ -56,20 +56,20 @@ class AttributeInteger extends Attribute
     ];
 
     /**
-     * Get Name * 
+     * Get Name *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'AttributeInteger';
     }
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_ATTRIBUTE_INTEGER;
     }

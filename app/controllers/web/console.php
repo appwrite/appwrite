@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -8,8 +9,7 @@ use Utopia\Domains\Domain;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 
-App::init(function ($layout) {
-    /** @var Appwrite\Utopia\View $layout */
+App::init(function (View $layout) {
 
     $layout
         ->setParam('description', 'Appwrite Console allows you to easily manage, monitor, and control your entire backend API and tools.')
@@ -17,12 +17,10 @@ App::init(function ($layout) {
     ;
 }, ['layout'], 'console');
 
-App::shutdown(function ($response, $layout) {
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Utopia\View $layout */
+App::shutdown(function (Response $response, View $layout) {
 
-    $header = new View(__DIR__.'/../../views/console/comps/header.phtml');
-    $footer = new View(__DIR__.'/../../views/console/comps/footer.phtml');
+    $header = new View(__DIR__ . '/../../views/console/comps/header.phtml');
+    $footer = new View(__DIR__ . '/../../views/console/comps/footer.phtml');
 
     $footer
         ->setParam('home', App::getEnv('_APP_HOME', ''))
@@ -43,17 +41,16 @@ App::get('/error/:code')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->inject('layout')
-    ->action(function ($code, $layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (int $code, View $layout) {
 
-        $page = new View(__DIR__.'/../../views/error.phtml');
+        $page = new View(__DIR__ . '/../../views/error.phtml');
 
         $page
             ->setParam('code', $code)
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Error')
+            ->setParam('title', APP_NAME . ' - Error')
             ->setParam('body', $page);
     });
 
@@ -62,17 +59,16 @@ App::get('/console')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/console/index.phtml');
+        $page = new View(__DIR__ . '/../../views/console/index.phtml');
 
         $page
             ->setParam('home', App::getEnv('_APP_HOME', ''))
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Console')
+            ->setParam('title', APP_NAME . ' - Console')
             ->setParam('body', $page);
     });
 
@@ -81,19 +77,18 @@ App::get('/console/account')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/console/account/index.phtml');
+        $page = new View(__DIR__ . '/../../views/console/account/index.phtml');
 
-        $cc = new View(__DIR__.'/../../views/console/forms/credit-card.phtml');
+        $cc = new View(__DIR__ . '/../../views/console/forms/credit-card.phtml');
 
         $page
             ->setParam('cc', $cc)
         ;
 
         $layout
-            ->setParam('title', 'Account - '.APP_NAME)
+            ->setParam('title', 'Account - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -102,13 +97,12 @@ App::get('/console/notifications')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/v1/console/notifications/index.phtml');
+        $page = new View(__DIR__ . '/../../views/v1/console/notifications/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - Notifications')
+            ->setParam('title', APP_NAME . ' - Notifications')
             ->setParam('body', $page);
     });
 
@@ -117,14 +111,13 @@ App::get('/console/home')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/console/home/index.phtml');
+        $page = new View(__DIR__ . '/../../views/console/home/index.phtml');
         $page
-            ->setParam('usageStatsEnabled',App::getEnv('_APP_USAGE_STATS','enabled') == 'enabled');
+            ->setParam('usageStatsEnabled', App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled');
         $layout
-            ->setParam('title', APP_NAME.' - Console')
+            ->setParam('title', APP_NAME . ' - Console')
             ->setParam('body', $page);
     });
 
@@ -133,22 +126,20 @@ App::get('/console/settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
-        $page = new View(__DIR__.'/../../views/console/settings/index.phtml');
+        $page = new View(__DIR__ . '/../../views/console/settings/index.phtml');
 
-        $page
-            ->setParam('services', array_filter(Config::getParam('services'), function($element) {return $element['optional'];}))
+        $page->setParam('services', array_filter(Config::getParam('services'), fn($element) => $element['optional']))
             ->setParam('customDomainsEnabled', ($target->isKnown() && !$target->isTest()))
             ->setParam('customDomainsTarget', $target->get())
             ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Settings')
+            ->setParam('title', APP_NAME . ' - Settings')
             ->setParam('body', $page);
     });
 
@@ -157,17 +148,53 @@ App::get('/console/webhooks')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/console/webhooks/index.phtml');
+        $page = new View(__DIR__ . '/../../views/console/webhooks/index.phtml');
+
+        $page->setParam('events', Config::getParam('events', []));
+
+        $layout
+            ->setParam('title', APP_NAME . ' - Webhooks')
+            ->setParam('body', $page);
+    });
+
+App::get('/console/webhooks/webhook')
+    ->groups(['web', 'console'])
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->param('id', '', new UID(), 'Webhook unique ID.')
+    ->inject('layout')
+    ->action(function (string $id, View $layout) {
+
+        $page = new View(__DIR__ . '/../../views/console/webhooks/webhook.phtml');
 
         $page
             ->setParam('events', Config::getParam('events', []))
+            ->setParam('new', false)
         ;
-        
+
         $layout
-            ->setParam('title', APP_NAME.' - Webhooks')
+            ->setParam('title', APP_NAME . ' - Webhooks')
+            ->setParam('body', $page);
+    });
+
+App::get('/console/webhooks/webhook/new')
+    ->groups(['web', 'console'])
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->inject('layout')
+    ->action(function (View $layout) {
+
+        $page = new View(__DIR__ . '/../../views/console/webhooks/webhook.phtml');
+
+        $page
+            ->setParam('events', Config::getParam('events', []))
+            ->setParam('new', true)
+        ;
+
+        $layout
+            ->setParam('title', APP_NAME . ' - Webhooks')
             ->setParam('body', $page);
     });
 
@@ -176,16 +203,15 @@ App::get('/console/keys')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
         $scopes = array_keys(Config::getParam('scopes'));
-        $page = new View(__DIR__.'/../../views/console/keys/index.phtml');
+        $page = new View(__DIR__ . '/../../views/console/keys/index.phtml');
 
         $page->setParam('scopes', $scopes);
 
         $layout
-            ->setParam('title', APP_NAME.' - API Keys')
+            ->setParam('title', APP_NAME . ' - API Keys')
             ->setParam('body', $page);
     });
 
@@ -194,13 +220,12 @@ App::get('/console/database')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/console/database/index.phtml');
+        $page = new View(__DIR__ . '/../../views/console/database/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - Database')
+            ->setParam('title', APP_NAME . ' - Database')
             ->setParam('body', $page);
     });
 
@@ -211,11 +236,9 @@ App::get('/console/database/collection')
     ->param('id', '', new UID(), 'Collection unique ID.')
     ->inject('response')
     ->inject('layout')
-    ->action(function ($id, $response, $layout) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (string $id, Response $response, View $layout) {
 
-        $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
+        $logs = new View(__DIR__ . '/../../views/console/comps/logs.phtml');
 
         $logs
             ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
@@ -225,12 +248,12 @@ App::get('/console/database/collection')
             ])
         ;
 
-        $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
-        
+        $page = new View(__DIR__ . '/../../views/console/database/collection.phtml');
+
         $page->setParam('logs', $logs);
-        
+
         $layout
-            ->setParam('title', APP_NAME.' - Database Collection')
+            ->setParam('title', APP_NAME . ' - Database Collection')
             ->setParam('body', $page)
         ;
 
@@ -247,10 +270,9 @@ App::get('/console/database/document')
     ->label('scope', 'console')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->action(function ($collection, $layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (string $collection, View $layout) {
 
-        $logs = new View(__DIR__.'/../../views/console/comps/logs.phtml');
+        $logs = new View(__DIR__ . '/../../views/console/comps/logs.phtml');
 
         $logs
             ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
@@ -261,7 +283,7 @@ App::get('/console/database/document')
             ])
         ;
 
-        $page = new View(__DIR__.'/../../views/console/database/document.phtml');
+        $page = new View(__DIR__ . '/../../views/console/database/document.phtml');
 
         $page
             ->setParam('new', false)
@@ -270,7 +292,7 @@ App::get('/console/database/document')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Database Document')
+            ->setParam('title', APP_NAME . ' - Database Document')
             ->setParam('body', $page);
     });
 
@@ -280,10 +302,9 @@ App::get('/console/database/document/new')
     ->label('scope', 'console')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->action(function ($collection, $layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (string $collection, View $layout) {
 
-        $page = new View(__DIR__.'/../../views/console/database/document.phtml');
+        $page = new View(__DIR__ . '/../../views/console/database/document.phtml');
 
         $page
             ->setParam('new', true)
@@ -292,7 +313,7 @@ App::get('/console/database/document/new')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Database Document')
+            ->setParam('title', APP_NAME . ' - Database Document')
             ->setParam('body', $page);
     });
 
@@ -301,10 +322,10 @@ App::get('/console/storage')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
-        $page = new View(__DIR__.'/../../views/console/storage/index.phtml');
-        
+    ->action(function (View $layout) {
+
+        $page = new View(__DIR__ . '/../../views/console/storage/index.phtml');
+
         $page
             ->setParam('home', App::getEnv('_APP_HOME', 0))
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
@@ -312,7 +333,7 @@ App::get('/console/storage')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Storage')
+            ->setParam('title', APP_NAME . ' - Storage')
             ->setParam('body', $page);
     });
 
@@ -323,19 +344,17 @@ App::get('/console/storage/bucket')
     ->param('id', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
     ->inject('layout')
-    ->action(function ($id, $response, $layout) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\View $layout */
+    ->action(function (string $id, Response $response, View $layout) {
 
-        $page = new View(__DIR__.'/../../views/console/storage/bucket.phtml');
+        $page = new View(__DIR__ . '/../../views/console/storage/bucket.phtml');
         $page
             ->setParam('home', App::getEnv('_APP_HOME', 0))
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
             ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
         ;
-        
+
         $layout
-            ->setParam('title', APP_NAME.' - Storage Buckets')
+            ->setParam('title', APP_NAME . ' - Storage Buckets')
             ->setParam('body', $page)
         ;
 
@@ -351,10 +370,9 @@ App::get('/console/users')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/console/users/index.phtml');
+        $page = new View(__DIR__ . '/../../views/console/users/index.phtml');
 
         $page
             ->setParam('auth', Config::getParam('auth'))
@@ -363,7 +381,7 @@ App::get('/console/users')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Users')
+            ->setParam('title', APP_NAME . ' - Users')
             ->setParam('body', $page);
     });
 
@@ -372,13 +390,12 @@ App::get('/console/users/user')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/console/users/user.phtml');
+        $page = new View(__DIR__ . '/../../views/console/users/user.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - User')
+            ->setParam('title', APP_NAME . ' - User')
             ->setParam('body', $page);
     });
 
@@ -387,13 +404,12 @@ App::get('/console/users/teams/team')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/console/users/team.phtml');
+        $page = new View(__DIR__ . '/../../views/console/users/team.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - Team')
+            ->setParam('title', APP_NAME . ' - Team')
             ->setParam('body', $page);
     });
 
@@ -403,15 +419,15 @@ App::get('/console/functions')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        $page = new View(__DIR__.'/../../views/console/functions/index.phtml');
+    ->action(function (View $layout) {
+        $page = new View(__DIR__ . '/../../views/console/functions/index.phtml');
 
         $page
             ->setParam('runtimes', Config::getParam('runtimes'))
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Functions')
+            ->setParam('title', APP_NAME . ' - Functions')
             ->setParam('body', $page);
     });
 
@@ -421,19 +437,19 @@ App::get('/console/functions/function')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->inject('layout')
-    ->action(function ($layout) {
-        $page = new View(__DIR__.'/../../views/console/functions/function.phtml');
+    ->action(function (View $layout) {
+        $page = new View(__DIR__ . '/../../views/console/functions/function.phtml');
 
         $page
             ->setParam('events', Config::getParam('events', []))
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
             ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
             ->setParam('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
-            ->setParam('usageStatsEnabled',App::getEnv('_APP_USAGE_STATS','enabled') == 'enabled');
+            ->setParam('usageStatsEnabled', App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled');
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Function')
+            ->setParam('title', APP_NAME . ' - Function')
             ->setParam('body', $page);
     });
 
@@ -445,8 +461,8 @@ App::get('/console/version')
     ->inject('response')
     ->action(function ($response) {
         try {
-            $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
-            
+            $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost') . '/v1/health/version'), true);
+
             if ($version && isset($version['version'])) {
                 return $response->json(['version' => $version['version']]);
             } else {

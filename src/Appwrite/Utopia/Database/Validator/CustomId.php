@@ -1,9 +1,11 @@
 <?php
+
 namespace Appwrite\Utopia\Database\Validator;
 
 use Utopia\Database\Validator\Key;
 
-class CustomId extends Key {
+class CustomId extends Key
+{
     /**
      * Is valid.
      *

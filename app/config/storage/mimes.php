@@ -10,6 +10,7 @@ return [
     // Video Files
     'video/mp4',
     'video/x-flv',
+    'video/webm',
     'application/x-mpegURL',
     'video/MP2T',
     'video/3gpp',
@@ -30,7 +31,7 @@ return [
     'audio/ogg', // Ogg Vorbis RFC 5334
     'audio/vorbis', // Vorbis RFC 5215
     'audio/vnd.wav', // wav RFC 2361
-    
+
     // Microsoft Word
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

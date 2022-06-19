@@ -14,17 +14,17 @@ class Yandex extends OAuth2
     /**
      * @var array
      */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [];
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [];
 
     /**
      * @return string
@@ -35,7 +35,7 @@ class Yandex extends OAuth2
     }
 
     /**
-     * @param $state
+     * @param string $state
      *
      * @return array
      */
@@ -50,12 +50,12 @@ class Yandex extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://oauth.yandex.com/authorize?'.\http_build_query([
-                'response_type' => 'code',
-                'client_id' => $this->appID,
-                'scope'=> \implode(' ', $this->getScopes()),
-                'state' => \json_encode($this->state)
-            ]);
+        return 'https://oauth.yandex.com/authorize?' . \http_build_query([
+            'response_type' => 'code',
+            'client_id' => $this->appID,
+            'scope' => \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state)
+        ]);
     }
 
     /**
@@ -65,7 +65,7 @@ class Yandex extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $headers = [
                 'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
                 'Content-Type: application/x-www-form-urlencoded',
@@ -89,7 +89,7 @@ class Yandex extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = [
             'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
@@ -105,7 +105,7 @@ class Yandex extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -121,11 +121,7 @@ class Yandex extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['id'] ?? '';
     }
 
     /**
@@ -137,11 +133,19 @@ class Yandex extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['default_email'])) {
-            return $user['default_email'];
-        }
+        return $user['default_email'] ?? '';
+    }
 
-        return '';
+    /**
+     * Check if the OAuth email is verified
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        return false;
     }
 
     /**
@@ -153,11 +157,7 @@ class Yandex extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['display_name'])) {
-            return $user['display_name'];
-        }
-
-        return '';
+        return $user['display_name'] ?? '';
     }
 
     /**
@@ -168,7 +168,7 @@ class Yandex extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://login.yandex.ru/info?'.\http_build_query([
+            $user = $this->request('GET', 'https://login.yandex.ru/info?' . \http_build_query([
                 'format' => 'json',
                 'oauth_token' => $accessToken
             ]));

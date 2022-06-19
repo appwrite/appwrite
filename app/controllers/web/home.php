@@ -1,14 +1,16 @@
 <?php
 
 use Appwrite\Utopia\View;
+use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 
-App::init(function ($layout) {
-    /** @var Appwrite\Utopia\View $layout */
+App::init(function (View $layout) {
 
-    $header = new View(__DIR__.'/../../views/home/comps/header.phtml');
-    $footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
+    $header = new View(__DIR__ . '/../../views/home/comps/header.phtml');
+    $footer = new View(__DIR__ . '/../../views/home/comps/footer.phtml');
 
     $footer
         ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
@@ -24,9 +26,7 @@ App::init(function ($layout) {
     ;
 }, ['layout'], 'home');
 
-App::shutdown(function ($response, $layout) {
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Appwrite\Utopia\View $layout */
+App::shutdown(function (Response $response, View $layout) {
 
     $response->html($layout->render());
 }, ['response', 'layout'], 'home');
@@ -38,10 +38,7 @@ App::get('/')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('project')
-    ->action(function ($response, $dbForConsole, $project) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Database $dbForConsole */
-        /** @var Utopia\Database\Document $project */
+    ->action(function (Response $response, Database $dbForConsole, Document $project) {
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -52,10 +49,10 @@ App::get('/')
         if ('console' === $project->getId() || $project->isEmpty()) {
             $whitelistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
 
-            if($whitelistRoot !== 'disabled') {
+            if ($whitelistRoot !== 'disabled') {
                 $count = $dbForConsole->count('users', [], 1);
 
-                if($count !== 0) {
+                if ($count !== 0) {
                     return $response->redirect('/auth/signin');
                 }
             }
@@ -69,17 +66,16 @@ App::get('/auth/signin')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/signin.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/signin.phtml');
 
         $page
             ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
         ;
 
         $layout
-            ->setParam('title', 'Sign In - '.APP_NAME)
+            ->setParam('title', 'Sign In - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -88,16 +84,16 @@ App::get('/auth/signup')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
-        $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
+    ->action(function (View $layout) {
+
+        $page = new View(__DIR__ . '/../../views/home/auth/signup.phtml');
 
         $page
             ->setParam('root', App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled'))
         ;
 
         $layout
-            ->setParam('title', 'Sign Up - '.APP_NAME)
+            ->setParam('title', 'Sign Up - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -106,17 +102,16 @@ App::get('/auth/recovery')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/recovery.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/recovery.phtml');
 
         $page
             ->setParam('smtpEnabled', (!empty(App::getEnv('_APP_SMTP_HOST'))))
         ;
 
         $layout
-            ->setParam('title', 'Password Recovery - '.APP_NAME)
+            ->setParam('title', 'Password Recovery - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -125,13 +120,12 @@ App::get('/auth/confirm')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/confirm.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/confirm.phtml');
 
         $layout
-            ->setParam('title', 'Account Confirmation - '.APP_NAME)
+            ->setParam('title', 'Account Confirmation - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -140,13 +134,12 @@ App::get('/auth/join')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/join.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/join.phtml');
 
         $layout
-            ->setParam('title', 'Invitation - '.APP_NAME)
+            ->setParam('title', 'Invitation - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -155,13 +148,12 @@ App::get('/auth/recovery/reset')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/recovery/reset.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/recovery/reset.phtml');
 
         $layout
-            ->setParam('title', 'Password Reset - '.APP_NAME)
+            ->setParam('title', 'Password Reset - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -170,10 +162,9 @@ App::get('/auth/oauth2/success')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/oauth2.phtml');
 
         $layout
             ->setParam('title', APP_NAME)
@@ -188,10 +179,9 @@ App::get('/auth/magic-url')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/magicURL.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/magicURL.phtml');
 
         $layout
             ->setParam('title', APP_NAME)
@@ -206,10 +196,9 @@ App::get('/auth/oauth2/failure')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->inject('layout')
-    ->action(function ($layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (View $layout) {
 
-        $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
+        $page = new View(__DIR__ . '/../../views/home/auth/oauth2.phtml');
 
         $layout
             ->setParam('title', APP_NAME)
@@ -225,17 +214,16 @@ App::get('/error/:code')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->inject('layout')
-    ->action(function ($code, $layout) {
-        /** @var Appwrite\Utopia\View $layout */
+    ->action(function (int $code, View $layout) {
 
-        $page = new View(__DIR__.'/../../views/error.phtml');
+        $page = new View(__DIR__ . '/../../views/error.phtml');
 
         $page
             ->setParam('code', $code)
         ;
 
         $layout
-            ->setParam('title', 'Error'.' - '.APP_NAME)
+            ->setParam('title', 'Error' . ' - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -244,8 +232,7 @@ App::get('/versions')
     ->groups(['web', 'home'])
     ->label('scope', 'public')
     ->inject('response')
-    ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+    ->action(function (Response $response) {
 
         $platforms = Config::getParam('platforms');
 
@@ -253,15 +240,15 @@ App::get('/versions')
             'server' => APP_VERSION_STABLE,
         ];
 
-        foreach($platforms as $platform) {
+        foreach ($platforms as $platform) {
             $languages = $platform['languages'] ?? [];
 
             foreach ($languages as $key => $language) {
-                if(isset($language['dev']) && $language['dev']) {
+                if (isset($language['dev']) && $language['dev']) {
                     continue;
                 }
 
-                if(isset($language['enabled']) && !$language['enabled']) {
+                if (isset($language['enabled']) && !$language['enabled']) {
                     continue;
                 }
 

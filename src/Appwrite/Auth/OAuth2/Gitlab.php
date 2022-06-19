@@ -12,17 +12,17 @@ class Gitlab extends OAuth2
     /**
      * @var array
      */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [
         'read_user'
     ];
 
@@ -39,7 +39,7 @@ class Gitlab extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://gitlab.com/oauth/authorize?'.\http_build_query([
+        return 'https://gitlab.com/oauth/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
@@ -55,7 +55,7 @@ class Gitlab extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
                 'https://gitlab.com/oauth/token?' . \http_build_query([
@@ -76,7 +76,7 @@ class Gitlab extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
@@ -88,7 +88,7 @@ class Gitlab extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -120,11 +120,27 @@ class Gitlab extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
+        return $user['email'] ?? '';
+    }
+
+    /**
+     * Check if the OAuth email is verified
+     *
+     * @link https://docs.gitlab.com/ee/api/users.html#list-current-user-for-normal-users
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['confirmed_at'] ?? false) {
+            return true;
         }
 
-        return '';
+        return false;
     }
 
     /**
@@ -136,11 +152,7 @@ class Gitlab extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
-        }
-
-        return '';
+        return $user['name'] ?? '';
     }
 
     /**
@@ -151,7 +163,7 @@ class Gitlab extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://gitlab.com/api/v4/user?access_token='.\urlencode($accessToken));
+            $user = $this->request('GET', 'https://gitlab.com/api/v4/user?access_token=' . \urlencode($accessToken));
             $this->user = \json_decode($user, true);
         }
 

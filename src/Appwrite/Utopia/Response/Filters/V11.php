@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
-use Exception;
 
 class V11 extends Filter
 {
@@ -28,21 +27,21 @@ class V11 extends Filter
             case Response::MODEL_FILE_LIST:
                 $parsedResponse = $this->parseFileList($content);
                 break;
-            
+
             case Response::MODEL_EXECUTION:
                 $parsedResponse = $this->parseExecutionPermissions($content);
                 break;
             case Response::MODEL_EXECUTION_LIST:
                 $parsedResponse = $this->parseExecutionsList($content);
                 break;
-            
+
             case Response::MODEL_FUNCTION:
                 $parsedResponse = $this->parseFunctionPermissions($content);
                 break;
             case Response::MODEL_FUNCTION_LIST:
                 $parsedResponse = $this->parseFunctionsList($content);
                 break;
-            
+
             // Convert status from boolean to int
             case Response::MODEL_USER:
                 $parsedResponse = $this->parseStatus($content);
@@ -50,7 +49,7 @@ class V11 extends Filter
             case Response::MODEL_USER_LIST:
                 $parsedResponse = $this->parseUserList($content);
                 break;
-            
+
             // Convert all Health responses back to original
             case Response::MODEL_HEALTH_STATUS:
                 $parsedResponse = $this->parseHealthStatus($content);
@@ -94,7 +93,7 @@ class V11 extends Filter
         return $parsedResponse;
     }
 
-    protected function parseDocumentList(array $content) 
+    protected function parseDocumentList(array $content)
     {
         $documents = $content['documents'];
         $parsedResponse = [];
@@ -105,7 +104,7 @@ class V11 extends Filter
         return $content;
     }
 
-    protected function parseFileList(array $content) 
+    protected function parseFileList(array $content)
     {
         $files = $content['files'];
         $parsedResponse = [];
@@ -116,7 +115,7 @@ class V11 extends Filter
         return $content;
     }
 
-    protected function parseExecutionsList(array $content) 
+    protected function parseExecutionsList(array $content)
     {
         $executions = $content['executions'];
         $parsedResponse = [];
@@ -127,7 +126,7 @@ class V11 extends Filter
         return $content;
     }
 
-    protected function parseFunctionsList(array $content) 
+    protected function parseFunctionsList(array $content)
     {
         $functions = $content['functions'];
         $parsedResponse = [];
@@ -138,7 +137,7 @@ class V11 extends Filter
         return $content;
     }
 
-    protected function parseUserList(array $content) 
+    protected function parseUserList(array $content)
     {
         $users = $content['users'];
         $parsedResponse = [];
@@ -149,7 +148,7 @@ class V11 extends Filter
         return $content;
     }
 
-    protected function parseCollection(array $content) 
+    protected function parseCollection(array $content)
     {
         $parsedResponse = [];
         $parsedResponse = $this->parsePermissions($content);
@@ -163,7 +162,7 @@ class V11 extends Filter
         return $parsedResponse;
     }
 
-    protected function parseCollectionList(array $content) 
+    protected function parseCollectionList(array $content)
     {
         $collections = $content['collections'];
         $parsedResponse = [];
@@ -174,7 +173,7 @@ class V11 extends Filter
         return $content;
     }
 
-    protected function parseLog(array $content) 
+    protected function parseLog(array $content)
     {
         $parsedResponse = [];
         $parsedResponse = $this->removeRule($content, 'userId');
@@ -185,7 +184,7 @@ class V11 extends Filter
         return $parsedResponse;
     }
 
-    protected function parseLogList(array $content) 
+    protected function parseLogList(array $content)
     {
         $logs = $content['logs'];
         $parsedResponse = [];
@@ -207,7 +206,7 @@ class V11 extends Filter
         return $parsedResponse;
     }
 
-    protected function parseProjectList(array $content) 
+    protected function parseProjectList(array $content)
     {
         $projects = $content['projects'];
         $parsedResponse = [];
@@ -220,11 +219,11 @@ class V11 extends Filter
 
     protected function parseHealthAntivirus(array $content)
     {
-        if($content['status'] === 'pass') {
+        if ($content['status'] === 'pass') {
             $content['status'] = 'online';
         }
 
-        if($content['status'] === 'fail') {
+        if ($content['status'] === 'fail') {
             $content['status'] = 'offline';
         }
 
@@ -276,7 +275,7 @@ class V11 extends Filter
 
     protected function parseAttributes(array $content)
     {
-        $content['rules'] = \array_map(function($attribute) use($content) {
+        $content['rules'] = \array_map(function ($attribute) use ($content) {
             return [
                 '$id' => $attribute['key'],
                 '$collection' => $content['$id'],
@@ -308,7 +307,7 @@ class V11 extends Filter
 
         foreach ($content as $key => $value) {
             \preg_match_all($regexPattern, $key, $regexGroups);
-            if(\count($regexGroups[1]) > 0 && \count($regexGroups[2]) > 0) {
+            if (\count($regexGroups[1]) > 0 && \count($regexGroups[2]) > 0) {
                 $providerName = $regexGroups[1][0];
                 $valueKey = $regexGroups[2][0];
                 $content['usersOauth2' . $providerName . $valueKey] = $value;
@@ -325,7 +324,7 @@ class V11 extends Filter
 
         foreach ($content as $key => $value) {
             \preg_match_all($regexPattern, $key, $regexGroups);
-            if(\count($regexGroups[1]) > 0) {
+            if (\count($regexGroups[1]) > 0) {
                 $providerName = $regexGroups[1][0];
 
                 $content[$providerName] = $value;
@@ -341,7 +340,7 @@ class V11 extends Filter
         // Such a key is part of new response, but is not part of old one. We simply remove it, older version never
         // expected it anyway.
         foreach ($content as $key => $value) {
-            if(\str_starts_with($key, 'serviceStatusFor')) {
+            if (\str_starts_with($key, 'serviceStatusFor')) {
                 unset($content[$key]);
             }
         }

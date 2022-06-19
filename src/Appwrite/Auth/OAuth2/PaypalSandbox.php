@@ -6,7 +6,7 @@ use Appwrite\Auth\OAuth2\Paypal;
 
 class PaypalSandbox extends Paypal
 {
-    protected $environment = 'sandbox';
+    protected string $environment = 'sandbox';
 
     /**
      * @return string

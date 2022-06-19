@@ -9,34 +9,34 @@ class Zoom extends OAuth2
     /**
      * @var string
      */
-    private $endpoint = 'https://zoom.us';
+    private string $endpoint = 'https://zoom.us';
 
     /**
      * @var string
      */
-    private $version = '2022-03-26';
+    private string $version = '2022-03-26';
 
     /**
      * @var array
      */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [
-        'user_profile'
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [
+        'user_info:read'
     ];
 
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'zoom';
     }
@@ -44,9 +44,9 @@ class Zoom extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return $this->endpoint . '/oauth/authorize?'. \http_build_query([
+        return $this->endpoint . '/oauth/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
@@ -62,7 +62,7 @@ class Zoom extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret), 'Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
@@ -84,7 +84,7 @@ class Zoom extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret), 'Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
@@ -97,7 +97,7 @@ class Zoom extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -105,35 +105,58 @@ class Zoom extends OAuth2
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $response = $this->getUser($accessToken);
+
         return $response['id'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $response = $this->getUser($accessToken);
+
         return $response['email'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * Check if the OAuth email is verified
+     *
+     * @link https://marketplace.zoom.us/docs/api-reference/zoom-api/methods/#operation/user
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if (($user['verified'] ?? false) === 1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $response = $this->getUser($accessToken);
+
         return ($response['first_name'] ?? '') . ' ' . ($response['last_name'] ?? '');
     }
 
@@ -145,7 +168,7 @@ class Zoom extends OAuth2
     protected function getUser(string $accessToken)
     {
         $headers = [
-            'Authorization: Bearer '.\urlencode($accessToken)
+            'Authorization: Bearer ' . \urlencode($accessToken)
         ];
 
         if (empty($this->user)) {

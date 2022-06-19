@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM node:16.13.2-alpine3.15 as node
+FROM node:16.14.2-alpine3.15 as node
 
 WORKDIR /usr/local/src/
 
@@ -30,8 +30,8 @@ ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
 ENV PHP_REDIS_VERSION=5.3.7 \
-    PHP_MONGODB_VERSION=1.9.1 \
-    PHP_SWOOLE_VERSION=v4.8.7 \
+    PHP_MONGODB_VERSION=1.13.0 \
+    PHP_SWOOLE_VERSION=v4.8.9 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0
@@ -162,6 +162,18 @@ ENV _APP_SERVER=swoole \
     _APP_STORAGE_DO_SPACES_SECRET= \
     _APP_STORAGE_DO_SPACES_REGION= \
     _APP_STORAGE_DO_SPACES_BUCKET= \
+    _APP_STORAGE_BACKBLAZE_ACCESS_KEY= \
+    _APP_STORAGE_BACKBLAZE_SECRET= \
+    _APP_STORAGE_BACKBLAZE_REGION= \
+    _APP_STORAGE_BACKBLAZE_BUCKET= \
+    _APP_STORAGE_LINODE_ACCESS_KEY= \
+    _APP_STORAGE_LINODE_SECRET= \
+    _APP_STORAGE_LINODE_REGION= \
+    _APP_STORAGE_LINODE_BUCKET= \
+    _APP_STORAGE_WASABI_ACCESS_KEY= \
+    _APP_STORAGE_WASABI_SECRET= \
+    _APP_STORAGE_WASABI_REGION= \
+    _APP_STORAGE_WASABI_BUCKET= \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \

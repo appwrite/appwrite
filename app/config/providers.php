@@ -211,6 +211,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'stripe' => [
+        'name' => 'Stripe',
+        'developers' => 'https://stripe.com/docs/api',
+        'icon' => 'icon-stripe',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false
+    ],
     'tradeshift' => [
         'name' => 'Tradeshift',
         'developers' => 'https://developers.tradeshift.com/docs/api',
@@ -241,25 +251,15 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
-    'vk' => [
-        'name' => 'VK',
-        'developers' => 'https://vk.com/dev',
-        'icon' => 'icon-vk',
+    'wordpress' => [
+        'name' => 'WordPress',
+        'developers' => 'https://developer.wordpress.com/docs/oauth2/',
+        'icon' => 'icon-wordpress',
         'enabled' => true,
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false,
-    ],
-    'zoom' => [
-        'name' => 'Zoom',
-        'developers' => 'https://marketplace.zoom.us/docs/guides/auth/oauth/',
-        'icon' => 'icon-zoom',
-        'enabled' => true,
-        'sandbox' => false,
-        'form' => false,
-        'beta' => false,
-        'mock' => false,
+        'mock' => false
     ],
     'yahoo' => [
         'name' => 'Yahoo',
@@ -307,25 +307,15 @@ return [ // Ordered by ABC.
     //     'beta' => false,
     //     'mock' => false,
     // ],
-    'wordpress' => [
-        'name' => 'WordPress',
-        'developers' => 'https://developer.wordpress.com/docs/oauth2/',
-        'icon' => 'icon-wordpress',
+    'zoom' => [
+        'name' => 'Zoom',
+        'developers' => 'https://marketplace.zoom.us/docs/guides/auth/oauth/',
+        'icon' => 'icon-zoom',
         'enabled' => true,
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
-    ],
-    'stripe' => [
-        'name' => 'Stripe',
-        'developers' => 'https://stripe.com/docs/api',
-        'icon' => 'icon-stripe',
-        'enabled' => true,
-        'sandbox' => false,
-        'form' => false,
-        'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     // Keep Last
     'mock' => [
