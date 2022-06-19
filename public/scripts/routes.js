@@ -129,6 +129,13 @@ window.ls.router
     scope: "console",
     project: true
   })
+  .add("/console/databases/collection/:tab", {
+    template: function(window) {
+      return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
+    },
+    scope: "console",
+    project: true
+  })
   .add("/console/databases/usage", {
     template: function(window) {
       return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;

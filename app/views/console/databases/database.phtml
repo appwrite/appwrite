@@ -130,9 +130,9 @@
                     </div>
 
                 </li><!-- Usage needs rework -->
-                <li data-state="/console/databases/usage?project={{router.params.project}}">
+                <li data-state="/console/databases/database/usage?project={{router.params.project}}&id={{router.params.id}}">
                     <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
-                        data-service="databases.getUsage"
+                        data-service="databases.getDatabaseUsage"
                         data-event="submit"
                         data-name="usage"
                         data-param-database-id="{{router.params.id}}"
@@ -143,7 +143,7 @@
                     <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
 
                     <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
-                        data-service="databases.getUsage"
+                        data-service="databases.getDatabaseUsage"
                         data-param-database-id="{{router.params.id}}"
                         data-event="submit"
                         data-name="usage">
@@ -153,7 +153,7 @@
                     <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
 
                     <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
-                        data-service="databases.getUsage"
+                        data-service="databases.getDatabaseUsage"
                         data-event="submit"
                         data-name="usage"
                         data-param-database-id="{{router.params.id}}"
@@ -166,7 +166,7 @@
                     <h2>Usage</h2>
 
                     <div
-                        data-service="databases.getUsage"
+                        data-service="databases.getDatabaseUsage"
                         data-event="load"
                         data-name="usage">
                         <h3 class="margin-bottom-tiny">Objects</h3>
