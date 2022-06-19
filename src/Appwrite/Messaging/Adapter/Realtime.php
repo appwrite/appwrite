@@ -242,7 +242,7 @@ class Realtime extends Adapter
      * @param Document|null $project
      * @return array
      */
-    public static function fromPayload(string $event, Document $payload, Document $project = null, Document $collection = null, Document $bucket = null): array
+    public static function fromPayload(string $event, Document $payload, Document $project = null, Document $database = null, Document $collection = null, Document $bucket = null): array
     {
         $channels = [];
         $roles = [];
@@ -271,19 +271,22 @@ class Realtime extends Adapter
                     $roles = ['team:' . $parts[1]];
                 }
                 break;
-            case 'collections':
-                if (in_array($parts[2], ['attributes', 'indexes'])) {
+            case 'databases':
+                if (in_array($parts[4] ?? [], ['attributes', 'indexes'])) {
                     $channels[] = 'console';
                     $projectId = 'console';
                     $roles = ['team:' . $project->getAttribute('teamId')];
-                } elseif ($parts[2] === 'documents') {
+                } elseif (($parts[4] ?? '') === 'documents') {
+                    if ($database->isEmpty()) {
+                        throw new \Exception('Database needs to be passed to Realtime for Document events in the Database.');
+                    }
                     if ($collection->isEmpty()) {
                         throw new \Exception('Collection needs to be passed to Realtime for Document events in the Database.');
                     }
 
                     $channels[] = 'documents';
-                    $channels[] = 'collections.' . $payload->getCollection() . '.documents';
-                    $channels[] = 'collections.' . $payload->getCollection() . '.documents.' . $payload->getId();
+                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getCollection() . '.documents';
+                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getCollection() . '.documents.' . $payload->getId();
 
                     $roles = ($collection->getAttribute('permission') === 'collection') ? $collection->getRead() : $payload->getRead();
                 }

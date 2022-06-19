@@ -73,7 +73,8 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $events = Event::generateEvents('collections.[collectionId].attributes.[attributeId].update', [
+        $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].update', [
+            'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
             'attributeId' => $attribute->getId()
         ]);
@@ -108,7 +109,7 @@ class DatabaseV1 extends Worker
                 // Pass first, most verbose event pattern
                 event: $events[0],
                 payload: $attribute,
-                project: $project
+                project: $project,
             );
 
             Realtime::send(
@@ -119,6 +120,7 @@ class DatabaseV1 extends Worker
                 roles: $target['roles'],
                 options: [
                     'projectId' => $projectId,
+                    'databaseId' => $database->getId(),
                     'collectionId' => $collection->getId()
                 ]
             );
@@ -138,7 +140,8 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $events = Event::generateEvents('collections.[collectionId].attributes.[attributeId].delete', [
+        $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete', [
+            'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
             'attributeId' => $attribute->getId()
         ]);
@@ -177,6 +180,7 @@ class DatabaseV1 extends Worker
                 roles: $target['roles'],
                 options: [
                     'projectId' => $projectId,
+                    'databaseId' => $database->getId(),
                     'collectionId' => $collection->getId()
                 ]
             );
@@ -249,7 +253,8 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $events = Event::generateEvents('collections.[collectionId].indexes.[indexId].update', [
+        $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].update', [
+            'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
             'indexId' => $index->getId()
         ]);
@@ -285,6 +290,7 @@ class DatabaseV1 extends Worker
                 roles: $target['roles'],
                 options: [
                     'projectId' => $projectId,
+                    'databaseId' => $database->getId(),
                     'collectionId' => $collection->getId()
                 ]
             );
@@ -304,7 +310,8 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $events = Event::generateEvents('collections.[collectionId].indexes.[indexId].delete', [
+        $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].delete', [
+            'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
             'indexId' => $index->getId()
         ]);
@@ -336,6 +343,7 @@ class DatabaseV1 extends Worker
                 roles: $target['roles'],
                 options: [
                     'projectId' => $projectId,
+                    'databaseId' => $database->getId(),
                     'collectionId' => $collection->getId()
                 ]
             );
