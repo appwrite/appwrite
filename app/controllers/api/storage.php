@@ -124,6 +124,36 @@ App::post('/v1/storage/buckets')
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
             $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+
+            $attributes = [];
+            $indexes = [];
+
+            $videos = Config::getParam('collections', [])['videos'] ?? [];
+
+            foreach ($videos['attributes'] as $attribute) {
+                $attributes[] = new Document([
+                    '$id' => $attribute['$id'],
+                    'type' => $attribute['type'],
+                    'size' => $attribute['size'],
+                    'required' => $attribute['required'],
+                    'signed' => $attribute['signed'],
+                    'array' => $attribute['array'],
+                    'filters' => $attribute['filters'],
+                    'default' => $attribute['default'] ?? null,
+                    'format' => $attribute['format'] ?? ''
+                ]);
+            }
+
+            foreach ($videos['indexes'] as $index) {
+                $indexes[] = new Document([
+                    '$id' => $index['$id'],
+                    'type' => $index['type'],
+                    'attributes' => $index['attributes'],
+                    'lengths' => $index['lengths'],
+                    'orders' => $index['orders'],
+                ]);
+            }
+            $dbForProject->createCollection('bucket_' . $bucket->getInternalId() . '_video_renditions', $attributes, $indexes);
         } catch (Duplicate $th) {
             throw new Exception('Bucket already exists', 409, Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }

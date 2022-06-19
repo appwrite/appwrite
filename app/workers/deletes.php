@@ -572,8 +572,13 @@ class DeletesV1 extends Worker
     protected function deleteBucket(Document $document, string $projectId)
     {
         $dbForProject = $this->getProjectDB($projectId);
-        $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
 
+        $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
+        $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+        $device->deletePath($document->getId());
+
+        $dbForProject->deleteCollection('bucket_' . $document->getInternalId() . '_video_renditions');
+        $device = $this->getDevice(APP_STORAGE_VIDEO . '/app-' . $projectId);
         $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
 
         $device->deletePath($document->getId());
