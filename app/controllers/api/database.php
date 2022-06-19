@@ -543,7 +543,7 @@ App::post('/v1/databases/:databaseId/collections')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('database.collections.create', 1);
+            ->setParam('databases.collections.create', 1);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($collection, Response::MODEL_COLLECTION);
@@ -594,7 +594,7 @@ App::get('/v1/databases/:databaseId/collections')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('database.collections.read', 1);
+            ->setParam('databases.collections.read', 1);
 
         $response->dynamic(new Document([
             'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
@@ -633,7 +633,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('database.collections.read', 1);
+            ->setParam('databases.collections.read', 1);
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
@@ -790,7 +790,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('database.collections.update', 1);
+            ->setParam('databases.collections.update', 1);
 
         $events
             ->setContext('database', $database)
@@ -858,7 +858,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('database.collections.delete', 1);
+            ->setParam('databases.collections.delete', 1);
 
         $response->noContent();
     });
@@ -1288,7 +1288,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
         $attributes = $collection->getAttribute('attributes');
 
-        $usage->setParam('database.collections.read', 1);
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('databases.collections.read', 1);
 
         $response->dynamic(new Document([
             'total' => \count($attributes),
@@ -1359,7 +1361,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             default => Response::MODEL_ATTRIBUTE,
         };
 
-        $usage->setParam('database.collections.read', 1);
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('databases.collections.read', 1);
 
         $response->dynamic($attribute, $model);
     });
@@ -1418,7 +1422,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setDocument($attribute)
         ;
 
-        $usage->setParam('database.collections.update', 1);
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('databases.collections.update', 1);
 
         // Select response model based on type and format
         $type = $attribute->getAttribute('type');
@@ -1555,7 +1561,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->setDocument($index)
         ;
 
-        $usage->setParam('database.collections.update', 1);
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('databases.collections.update', 1);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -1605,7 +1613,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $indexes = $collection->getAttribute('indexes');
 
-        $usage->setParam('database.collections.read', 1);
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('databases.collections.read', 1);
 
         $response->dynamic(new Document([
             'total' => \count($indexes),
@@ -1656,7 +1666,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             'collectionId' => $database->getInternalId() . '_' . $collectionId,
         ])]);
 
-        $usage->setParam('database.collections.read', 1);
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('databases.collections.read', 1);
 
         $response->dynamic($index, Response::MODEL_INDEX);
     });
@@ -1714,7 +1726,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             ->setDocument($index)
         ;
 
-        $usage->setParam('database.collections.update', 1);
+        $usage
+            ->setParam('databaseId', $databaseId)
+            ->setParam('databases.collections.update', 1);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -1841,7 +1855,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         ;
 
         $usage
-            ->setParam('database.documents.create', 1)
+            ->setParam('databases.documents.create', 1)
+            ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
 
@@ -1956,7 +1971,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $documents = array_map(fn(Document $document) => $document->setAttribute('$collection', $collectionId), $documents);
 
         $usage
-            ->setParam('database.documents.read', 1)
+            ->setParam('databases.documents.read', 1)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
@@ -2028,7 +2043,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         $usage
-            ->setParam('database.documents.read', 1)
+            ->setParam('databases.documents.read', 1)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
@@ -2253,7 +2268,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         ;
 
         $usage
-            ->setParam('database.documents.update', 1)
+            ->setParam('databases.documents.update', 1)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
@@ -2343,7 +2358,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         ;
 
         $usage
-            ->setParam('database.documents.delete', 1)
+            ->setParam('databases.documents.delete', 1)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
