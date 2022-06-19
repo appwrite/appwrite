@@ -1,1 +1,1 @@
-Create a new user. Password entered must be hashed with [Argon2](https://en.wikipedia.org/wiki/Argon2) algorithm. Use the [POST /users](/docs/server/users#usersCreate) endpoint if you want to import plain text password.
+Create a new user. Password entered must be hashed with the the [Argon2](https://en.wikipedia.org/wiki/Argon2) algorithm. Use the [POST /users](/docs/server/users#usersCreate) endpoint to import plain text password.

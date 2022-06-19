@@ -1,1 +1,1 @@
-Create a new user. Password entered must be hashed with [SHA](https://en.wikipedia.org/wiki/Secure_Hash_Algorithm) algorithm. Use the [POST /users](/docs/server/users#usersCreate) endpoint if you want to import plain text password.
+Create a new user. Password entered must be hashed with the [SHA](https://en.wikipedia.org/wiki/Secure_Hash_Algorithm) algorithm. Use the [POST /users](/docs/server/users#usersCreate) endpoint import plain text password.
