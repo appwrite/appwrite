@@ -273,7 +273,6 @@ class Realtime extends Adapter
                 break;
             case 'databases':
                 if (in_array($parts[4] ?? [], ['attributes', 'indexes'])) {
-                    var_dump($event);
                     $channels[] = 'console';
                     $projectId = 'console';
                     $roles = ['team:' . $project->getAttribute('teamId')];
