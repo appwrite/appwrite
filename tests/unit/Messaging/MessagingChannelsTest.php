@@ -66,6 +66,7 @@ class MessagingChannelsTest extends TestCase
 
                 $this->realtime->subscribe(
                     '1',
+                    '1',
                     $this->connectionsCount,
                     $roles,
                     $parsedChannels
@@ -89,6 +90,7 @@ class MessagingChannelsTest extends TestCase
                 $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
 
                 $this->realtime->subscribe(
+                    '1',
                     '1',
                     $this->connectionsCount,
                     $roles,
@@ -152,7 +154,7 @@ class MessagingChannelsTest extends TestCase
     {
         foreach ($this->allChannels as $index => $channel) {
             $event = [
-                'project' => '1',
+                'projectId' => '1',
                 'roles' => ['role:all'],
                 'data' => [
                     'channels' => [
@@ -185,7 +187,7 @@ class MessagingChannelsTest extends TestCase
                 $permissions = [$role];
 
                 $event = [
-                    'project' => '1',
+                    'projectId' => '1',
                     'roles' => $permissions,
                     'data' => [
                         'channels' => [
@@ -219,7 +221,7 @@ class MessagingChannelsTest extends TestCase
                 $permissions[] = 'user:user' . (!empty($i) ? $i : '') . $index;
             }
             $event = [
-                'project' => '1',
+                'projectId' => '1',
                 'roles' => $permissions,
                 'data' => [
                     'channels' => [
@@ -253,7 +255,7 @@ class MessagingChannelsTest extends TestCase
                 $permissions[] = 'team:team' . $i;
             }
             $event = [
-                'project' => '1',
+                'projectId' => '1',
                 'roles' => $permissions,
                 'data' => [
                     'channels' => [
@@ -279,7 +281,7 @@ class MessagingChannelsTest extends TestCase
             $permissions = ['team:team' . $index . '/' . (empty($index % 2) ? 'admin' : 'member')];
 
             $event = [
-                'project' => '1',
+                'projectId' => '1',
                 'roles' => $permissions,
                 'data' => [
                     'channels' => [
