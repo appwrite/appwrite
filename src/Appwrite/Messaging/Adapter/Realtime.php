@@ -42,7 +42,7 @@ class Realtime extends Adapter
      * @param array $channels
      * @return void
      */
-    public function subscribe(string $projectId, mixed $identifier, array $roles, array $channels): void
+    public function subscribe(string $projectId, string $projectInternalId, mixed $identifier, array $roles, array $channels): void
     {
         if (!isset($this->subscriptions[$projectId])) { // Init Project
             $this->subscriptions[$projectId] = [];
@@ -60,6 +60,7 @@ class Realtime extends Adapter
 
         $this->connections[$identifier] = [
             'projectId' => $projectId,
+            'projectInternalId' => $projectInternalId,
             'roles' => $roles,
             'channels' => $channels
         ];
@@ -120,6 +121,7 @@ class Realtime extends Adapter
     /**
      * Sends an event to the Realtime Server
      * @param string $projectId
+     * @param string $projectInternalId
      * @param array $payload
      * @param string $event
      * @param array $channels
@@ -127,7 +129,7 @@ class Realtime extends Adapter
      * @param array $options
      * @return void
      */
-    public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
+    public static function send(string $projectId, string $projectInternalId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
         if (empty($channels) || empty($roles) || empty($projectId)) {
             return;
@@ -139,10 +141,11 @@ class Realtime extends Adapter
         $redis = new \Redis(); //TODO: make this part of the constructor
         $redis->connect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
         $redis->publish('realtime', json_encode([
-            'project' => $projectId,
+            'projectId' => $projectId,
+            'projectInternalId' => $projectInternalId,
+            'userId' => $userId,
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
-            'userId' => $userId,
             'data' => [
                 'events' => $events,
                 'channels' => $channels,
@@ -172,11 +175,11 @@ class Realtime extends Adapter
         /**
          * Check if project has subscriber.
          */
-        if (isset($this->subscriptions[$event['project']])) {
+        if (isset($this->subscriptions[$event['projectId']])) {
             /**
              * Iterate through each role.
              */
-            foreach ($this->subscriptions[$event['project']] as $role => $subscription) {
+            foreach ($this->subscriptions[$event['projectId']] as $role => $subscription) {
                 /**
                  * Iterate through each channel.
                  */
@@ -185,13 +188,13 @@ class Realtime extends Adapter
                      * Check if channel has subscriber. Also taking care of the role in the event and the wildcard role.
                      */
                     if (
-                        \array_key_exists($channel, $this->subscriptions[$event['project']][$role])
+                        \array_key_exists($channel, $this->subscriptions[$event['projectId']][$role])
                         && (\in_array($role, $event['roles']) || \in_array('role:all', $event['roles']))
                     ) {
                         /**
                          * Saving all connections that are allowed to receive this event.
                          */
-                        foreach (array_keys($this->subscriptions[$event['project']][$role][$channel]) as $id) {
+                        foreach (array_keys($this->subscriptions[$event['projectId']][$role][$channel]) as $id) {
                             /**
                              * To prevent duplicates, we save the connections as array keys.
                              */
@@ -248,6 +251,7 @@ class Realtime extends Adapter
         $roles = [];
         $permissionsChanged = false;
         $projectId = null;
+        $projectInternalId = null;
         // TODO: add method here to remove all the magic index accesses
         $parts = explode('.', $event);
 
@@ -275,6 +279,7 @@ class Realtime extends Adapter
                 if (in_array($parts[2], ['attributes', 'indexes'])) {
                     $channels[] = 'console';
                     $projectId = 'console';
+                    $projectInternalId = 'console';
                     $roles = ['team:' . $project->getAttribute('teamId')];
                 } elseif ($parts[2] === 'documents') {
                     if ($collection->isEmpty()) {
@@ -322,7 +327,8 @@ class Realtime extends Adapter
             'channels' => $channels,
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
-            'projectId' => $projectId
+            'projectId' => $projectId,
+            'projectInternalId' => $projectInternalId
         ];
     }
 }
