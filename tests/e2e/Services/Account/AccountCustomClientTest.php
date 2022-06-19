@@ -270,6 +270,7 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['headers']['x-ratelimit-remaining'], 99);
         $this->assertNotEmpty($response['body']['jwt']);
         $this->assertIsString($response['body']['jwt']);
 

@@ -26,6 +26,7 @@ use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -582,6 +583,8 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
+
+
         $webhook = new Document([
             '$id' => $dbForConsole->getId(),
             '$read' => ['role:all'],
@@ -593,6 +596,7 @@ App::post('/v1/projects/:projectId/webhooks')
             'security' => $security,
             'httpUser' => $httpUser,
             'httpPass' => $httpPass,
+            'signatureKey' => \bin2hex(\random_bytes(64)),
         ]);
 
         $webhook = $dbForConsole->createDocument('webhooks', $webhook);
@@ -686,9 +690,10 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+    ->param('signatureKey', null, new Text(256), 'Webhook signature key. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, string $signatureKey, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -716,8 +721,11 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('httpPass', $httpPass)
         ;
 
-        $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
+        if (!empty($signatureKey)) {
+            $webhook->setAttribute('signatureKey', $signatureKey);
+        }
 
+        $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
@@ -775,9 +783,10 @@ App::post('/v1/projects/:projectId/keys')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
+    ->param('expire', 0, new Integer(), 'Key expiration time in Unix timestamp. Use 0 for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, array $scopes, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $name, array $scopes, int $expire, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -792,6 +801,7 @@ App::post('/v1/projects/:projectId/keys')
             'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
+            'expire' => $expire,
             'secret' => \bin2hex(\random_bytes(128)),
         ]);
 
@@ -882,9 +892,10 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('expire', 0, new Integer(), 'Key expiration time in Unix timestamp. Use 0 for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $keyId, string $name, array $scopes, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $keyId, string $name, array $scopes, int $expire, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -904,6 +915,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $key
             ->setAttribute('name', $name)
             ->setAttribute('scopes', $scopes)
+            ->setAttribute('expire', $expire)
         ;
 
         $dbForConsole->updateDocument('keys', $key->getId(), $key);

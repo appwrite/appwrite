@@ -1,11 +1,8 @@
-image:
-  file: .gitpod.Dockerfile
-
 tasks:
   - name: Run Appwrite Docker Stack
     init: |
-      docker-compose pull
-      docker-compose build
+      docker compose pull
+      docker compose build
     command: |
       docker run --rm --interactive --tty \
       --volume $PWD:/app \

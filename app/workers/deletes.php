@@ -100,6 +100,10 @@ class DeletesV1 extends Worker
                 $this->deleteRealtimeUsage($this->args['timestamp']);
                 break;
 
+            case DELETE_TYPE_SESSIONS:
+                $this->deleteExpiredSessions($this->args['timestamp']);
+                break;
+
             case DELETE_TYPE_CERTIFICATES:
                 $document = new Document($this->args['document']);
                 $this->deleteCertificates($document);
@@ -246,6 +250,20 @@ class DeletesV1 extends Worker
             // Delete Executions
             $this->deleteByGroup('executions', [
                 new Query('dateCreated', Query::TYPE_LESSER, [$timestamp])
+            ], $dbForProject);
+        });
+    }
+
+    /**
+     * @param int $timestamp
+     */
+    protected function deleteExpiredSessions(int $timestamp): void
+    {
+        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+            $dbForProject = $this->getProjectDB($projectId);
+            // Delete Sessions
+            $this->deleteByGroup('sessions', [
+                new Query('expire', Query::TYPE_LESSER, [$timestamp])
             ], $dbForProject);
         });
     }
