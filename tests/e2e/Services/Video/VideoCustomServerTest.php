@@ -72,11 +72,11 @@ class VideoCustomServerTest extends Scope
 //          var_dump($fid);
 //          var_dump($bid);
 
-
-        $pid = '62aaf3408decb0f5a0b3';
-        $key = '6e8bf2fd07e5206a9b90efbc3dfbf0794a8e35810838e6b906f0c651a510924b8cf0c535b3a4e84b0330344153a4d8d5e413a0d9314f6955a4b2693633ab120d4f674dd668820d4c195d3006bd814003de18dc2161d7ce639a03cd37fd6fa14151445eddb5c9a294ddf16276ec97d56ecb7275eddab3517254bc7201688d8f47';
-        $fid = '62aaf3423b91f5660b04';
-        $bid = '62aaf340e9c06064668d';
+//
+        $pid = '62aedd7c27c6f34ca44d';
+        $key = '1cd0589616c0b0b98dbc42764399799e3dcf0fbcfa0d1f1db2a258573783802267551853ffa77d2895e57597835055afb645237e84d07cffd33f946af6598f40cdfdc11b9eb6bee09fdd0a325a4b5e3ef34fdf4ba745a87dc4de16f9935803c9ff6349f424774b2a4d3c8ce8a40a835b16486dec9e8c1f8fc16bc37e357f9daf';
+        $fid = '62aedd7dcdcc014783ff';
+        $bid = '62aedd7c90a8570ebf31';
 
         $transcoding = $this->client->call(Client::METHOD_POST, '/video/buckets/' . $bid . '/files/' .  $fid, [
             'content-type' => 'application/json',
@@ -99,10 +99,10 @@ class VideoCustomServerTest extends Scope
     public function testRenditions(): void
     {
 
-        $pid = '62aaf3408decb0f5a0b3';
-        $key = '6e8bf2fd07e5206a9b90efbc3dfbf0794a8e35810838e6b906f0c651a510924b8cf0c535b3a4e84b0330344153a4d8d5e413a0d9314f6955a4b2693633ab120d4f674dd668820d4c195d3006bd814003de18dc2161d7ce639a03cd37fd6fa14151445eddb5c9a294ddf16276ec97d56ecb7275eddab3517254bc7201688d8f47';
-        $fid = '62aaf3423b91f5660b04';
-        $bid = '62aaf340e9c06064668d';
+        $pid = '62aedd7c27c6f34ca44d';
+        $key = '1cd0589616c0b0b98dbc42764399799e3dcf0fbcfa0d1f1db2a258573783802267551853ffa77d2895e57597835055afb645237e84d07cffd33f946af6598f40cdfdc11b9eb6bee09fdd0a325a4b5e3ef34fdf4ba745a87dc4de16f9935803c9ff6349f424774b2a4d3c8ce8a40a835b16486dec9e8c1f8fc16bc37e357f9daf';
+        $fid = '62aedd7dcdcc014783ff';
+        $bid = '62aedd7c90a8570ebf31';
 
 
         $renditions = $this->client->call(Client::METHOD_GET, '/video/buckets/' . $bid . '/files/' .  $fid . '/renditions', [
@@ -117,10 +117,10 @@ class VideoCustomServerTest extends Scope
     public function testPlaylist(): void
     {
 
-        $pid = '62aaf3408decb0f5a0b3';
-        $key = '6e8bf2fd07e5206a9b90efbc3dfbf0794a8e35810838e6b906f0c651a510924b8cf0c535b3a4e84b0330344153a4d8d5e413a0d9314f6955a4b2693633ab120d4f674dd668820d4c195d3006bd814003de18dc2161d7ce639a03cd37fd6fa14151445eddb5c9a294ddf16276ec97d56ecb7275eddab3517254bc7201688d8f47';
-        $fid = '62aaf3423b91f5660b04';
-        $bid = '62aaf340e9c06064668d';
+        $pid = '62aedd7c27c6f34ca44d';
+        $key = '1cd0589616c0b0b98dbc42764399799e3dcf0fbcfa0d1f1db2a258573783802267551853ffa77d2895e57597835055afb645237e84d07cffd33f946af6598f40cdfdc11b9eb6bee09fdd0a325a4b5e3ef34fdf4ba745a87dc4de16f9935803c9ff6349f424774b2a4d3c8ce8a40a835b16486dec9e8c1f8fc16bc37e357f9daf';
+        $fid = '62aedd7dcdcc014783ff';
+        $bid = '62aedd7c90a8570ebf31';
         $stream = 'dash';
 
         $renditions = $this->client->call(Client::METHOD_GET, '/video/buckets/' . $bid . '/files/' . $stream . '/' .  $fid, [

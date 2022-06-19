@@ -32,6 +32,9 @@ class Event
     public const BUILDS_QUEUE_NAME = 'v1-builds';
     public const BUILDS_CLASS_NAME = 'BuildsV1';
 
+    const TRANSCODING_QUEUE_NAME = 'v1-transcoding';
+    const TRANSCODING_CLASS_NAME = 'TranscodingV1';
+
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
