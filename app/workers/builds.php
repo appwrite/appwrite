@@ -58,7 +58,7 @@ class BuildsV1 extends Worker
 
     protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
-        $dbForProject = $this->getProjectDB($project->getId());
+        $dbForProject = $this->getProjectDB($project->getInternalId());
 
         $function = $dbForProject->getDocument('functions', $function->getId());
         if ($function->isEmpty()) {
@@ -139,6 +139,7 @@ class BuildsV1 extends Worker
 
         Realtime::send(
             projectId: 'console',
+            projectInternalId: 'console',
             payload: $build->getArrayCopy(),
             events: $allEvents,
             channels: $target['channels'],
@@ -211,6 +212,7 @@ class BuildsV1 extends Worker
             );
             Realtime::send(
                 projectId: 'console',
+                projectInternalId: 'console',
                 payload: $build->getArrayCopy(),
                 events: $allEvents,
                 channels: $target['channels'],
