@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Audit;
+use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
@@ -164,7 +165,7 @@ App::init(function (App $utopia, Request $request, Document $project) {
     }
 }, ['utopia', 'request', 'project'], 'auth');
 
-App::shutdown(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, Event $database, string $mode, Database $dbForProject) {
+App::shutdown(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) {
 
     if (!empty($events->getEvent())) {
         if (empty($events->getPayload())) {
