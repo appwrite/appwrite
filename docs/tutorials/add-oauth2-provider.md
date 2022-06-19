@@ -74,128 +74,86 @@ use Appwrite\Auth\OAuth2;
 // Reference Material
 // [DOCS FROM OAUTH PROVIDER]
 
-class [PROVIDER NAME] extends OAuth2
+class Discord extends OAuth2
 {
-    /**
-     * @var string
-     */
-    private $endpoint = '[ENDPOINT API URL]';
-    
-     /**
-     * @var array
-     */
-    protected $scopes = [
+    private string $endpoint = '[ENDPOINT API URL]';
+    protected array $user = [];
+    protected array $tokens = [];
+    protected array $scopes = [
         // [ARRAY_OF_REQUIRED_SCOPES]
     ];
-    
-    /**
-     * @var array
-     */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
-    
-    /**
-     * @return string
-     */
+
     public function getName(): string
     {
         return '[PROVIDER NAME]';
     }
 
-    /**
-     * @return string
-     */
     public function getLoginURL(): string
     {
         $url = $this->endpoint . '[LOGIN_URL_STUFF]';
         return $url;
     }
 
-    /**
-     * @param string $code
-     *
-     * @return array
-     */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             // TODO: Fire request to oauth API to generate access_token
             // Make sure to use '$this->getScopes()' to include all scopes properly
-            $this->tokens = "[FETCH TOKEN RESPONSE]";
+            $this->tokens = ["[FETCH TOKEN RESPONSE]"];
         }
 
         return $this->tokens;
     }
-    
-    
-    /**
-     * @param string $refreshToken
-     *
-     * @return array
-     */
-    public function refreshTokens(string $refreshToken):array
+
+    public function refreshTokens(string $refreshToken): array
     {
         // TODO: Fire request to oauth API to generate access_token using refresh token
-        $this->tokens = "[FETCH TOKEN RESPONSE]";
+        $this->tokens = ["[FETCH TOKEN RESPONSE]"];
 
         return $this->tokens;
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return string
-     */
     public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
-        // TODO: Pick user ID from $user response 
+
+        // TODO: Pick user ID from $user response
         $userId = "[USER ID]";
-        
+
         return $userId;
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return string
-     */
     public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
-        // TODO: Pick user email from $user response 
+
+        // TODO: Pick user email from $user response
         $userEmail = "[USER EMAIL]";
-        
+
         return $userEmail;
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return string
-     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        // TODO: Pick user verification status from $user response
+        $isVerified = "[USER VERIFICATION STATUS]";
+
+        return $isVerified;
+    }
+
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
-        // TODO: Pick username from $user response 
+
+        // TODO: Pick username from $user response
         $username = "[USERNAME]";
-        
+
         return $username;
     }
-    
-     /**
-     * @param string $accessToken
-     *
-     * @return array
-     */
-    protected function getUser(string $accessToken)
+
+    protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
             // TODO: Fire request to oauth API to get information about users
@@ -205,6 +163,7 @@ class [PROVIDER NAME] extends OAuth2
         return $this->user;
     }
 }
+
 ```
 
 > If you copy this template, make sure to replace all placeholders wrapped like `[THIS]` and to implement everything marked as `TODO:`.
