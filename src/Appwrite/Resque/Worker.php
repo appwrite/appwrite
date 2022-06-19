@@ -8,6 +8,7 @@ use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
@@ -176,6 +177,7 @@ abstract class Worker
      * @param string $type One of (internal, external, console)
      * @param string $projectId of internal or external DB
      * @return Database
+     * @throws Exception
      */
     private function getDB($type, $projectId = ''): Database
     {
@@ -189,7 +191,12 @@ abstract class Worker
                 if (!$projectId) {
                     throw new \Exception('ProjectID not provided - cannot get database');
                 }
-                $namespace = "_{$projectId}";
+
+                // todo: does this suppost to be in reconnec block?
+                $consoleDB = $this->getConsoleDB();
+                $project = Authorization::skip(fn() => $consoleDB->getDocument('projects', $projectId));
+                $namespace = "_{$project->getInternalId()}";
+
                 break;
             case self::DATABASE_CONSOLE:
                 $namespace = "_console";
