@@ -158,7 +158,7 @@
                                 <input 
                                 type="hidden" 
                                 data-ls-bind="{{usage}}" 
-                                data-forms-chart="Collections=collectionsCount,Documents=documentsCount" 
+                                data-forms-chart="Databases=databasesCount,Collections=collectionsCount,Documents=documentsCount" 
                                 data-show-y-axis="true"
                                 data-height="140" />
                             </div>
@@ -166,10 +166,33 @@
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
+                        <li>Total Databases <span data-ls-bind="({{usage.databasesCount|statsGetLast|statsTotal}})"></span></li>
                         <li>Total Collections <span data-ls-bind="({{usage.collectionsCount|statsGetLast|statsTotal}})"></span></li>
                         <li>Total Documents <span data-ls-bind="({{usage.documentsCount|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
+                    <h3 class="margin-bottom-tiny">Databases</h3>
+                    <p class="text-fade">Count of databases create, read, update and delete operations over time</p>
+                    <div class="box margin-bottom-small">
+                        <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                            <div class="chart background-image-no border-no margin-bottom-no">
+                                <input 
+                                    type="hidden"
+                                    data-ls-bind="{{usage}}"
+                                    data-forms-chart="Created=databasesCreate,Read=databasesRead,Updated=databasesUpdate,Deleted=databasesDelete"
+                                    data-show-y-axis="true"
+                                    data-colors="create,read,update,delete"
+                                    data-height="140" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="chart-notes margin-bottom-large crud">
+                        <li>Created</li>
+                        <li>Read</li>
+                        <li>Updated</li>
+                        <li>Deleted</li>
+                    </ul>
 
                     <h3 class="margin-bottom-tiny">Collections</h3>
                     <p class="text-fade">Count of collections create, read, update and delete operations over time</p>
