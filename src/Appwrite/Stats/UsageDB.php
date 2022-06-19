@@ -243,7 +243,7 @@ class UsageDB extends Usage
             $this->foreachDocument($projectId, 'database_' . $database->getInternalId(), [], function ($collection) use (&$projectDocumentsCount, &$databaseDocumentsCount, $projectId, $database) {
                 $metric = "databases.{$database->getId()}.collections.{$collection->getId()}.documents.count";
     
-                $count = $this->count($projectId, 'collection_' . $collection->getInternalId(), $metric);
+                $count = $this->count($projectId, 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $metric);
                 $projectDocumentsCount += $count;
                 $databaseDocumentsCount += $count;
             });
