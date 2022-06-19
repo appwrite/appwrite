@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "90fda9828f3d88a82b199b3c16f015dd",
+    "content-hash": "1593c7304ba026d4073de336227858f3",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1583,16 +1583,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.7.0",
+            "version": "3.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/squizlabs/PHP_CodeSniffer.git",
-                "reference": "a2cd51b45bcaef9c1f2a4bda48f2dd2fa2b95563"
+                "reference": "1359e176e9307e906dc3d890bcc9603ff6d90619"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/a2cd51b45bcaef9c1f2a4bda48f2dd2fa2b95563",
-                "reference": "a2cd51b45bcaef9c1f2a4bda48f2dd2fa2b95563",
+                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/1359e176e9307e906dc3d890bcc9603ff6d90619",
+                "reference": "1359e176e9307e906dc3d890bcc9603ff6d90619",
                 "shasum": ""
             },
             "require": {
@@ -1635,7 +1635,7 @@
                 "source": "https://github.com/squizlabs/PHP_CodeSniffer",
                 "wiki": "https://github.com/squizlabs/PHP_CodeSniffer/wiki"
             },
-            "time": "2022-06-13T06:31:38+00:00"
+            "time": "2022-06-18T07:21:10+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -2107,16 +2107,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-bug-last-internal-id",
+            "version": "0.18.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "fbc6e6e3ea57856564755f3826f1bff0e43c5f1a"
+                "reference": "781c31238b03ebc530a225973c4d1a921e00c2b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/fbc6e6e3ea57856564755f3826f1bff0e43c5f1a",
-                "reference": "fbc6e6e3ea57856564755f3826f1bff0e43c5f1a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/781c31238b03ebc530a225973c4d1a921e00c2b9",
+                "reference": "781c31238b03ebc530a225973c4d1a921e00c2b9",
                 "shasum": ""
             },
             "require": {
@@ -2165,9 +2165,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/bug-last-internal-id"
+                "source": "https://github.com/utopia-php/database/tree/0.18.2"
             },
-            "time": "2022-06-15T07:42:27+00:00"
+            "time": "2022-06-19T09:32:07+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5346,18 +5346,9 @@
             "time": "2022-05-17T05:48:52+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-bug-last-internal-id",
-            "alias": "0.18.0",
-            "alias_normalized": "0.18.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
