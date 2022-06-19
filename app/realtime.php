@@ -150,6 +150,10 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                 'timestamp' => time(),
                 'value' => '{}'
             ]);
+            var_dump("***");
+            var_dump($document);
+            var_dump("***");
+
             $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
         } catch (\Throwable $th) {
             call_user_func($logError, $th, "createWorkerDocument");
@@ -373,6 +377,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+
+        var_dump("***getInternalId = ", $project->getInternalId());
         $database->setNamespace("_{$project->getInternalId()}");
 
         /*
