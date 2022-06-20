@@ -2165,6 +2165,44 @@ trait DatabaseBase
 
     public function testUpdatePermissionsWithEmptyPayload(array $data): array
     {
+        // Create collection
+        $movies = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'unique()',
+            'name' => 'Movies',
+            'read' => [],
+            'write' => [],
+            'permission' => 'document',
+        ]);
+
+        $this->assertEquals($movies['headers']['status-code'], 201);
+        $this->assertEquals($movies['body']['name'], 'Movies');
+
+        // create attribute
+
+        $title = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals($title['headers']['status-code'], 201);
+        $this->assertEquals($title['body']['key'], 'title');
+        $this->assertEquals($title['body']['type'], 'string');
+        $this->assertEquals($title['body']['size'], 256);
+        $this->assertEquals($title['body']['required'], true);
+
+        // wait for database worker to create attributes
+        sleep(2);
+
+        // add document
         $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2172,8 +2210,6 @@ trait DatabaseBase
             'documentId' => 'unique()',
             'data' => [
                 'title' => 'Captain America',
-                'releaseYear' => 1944,
-                'actors' => [],
             ],
         ]);
 
@@ -2181,7 +2217,6 @@ trait DatabaseBase
 
         $this->assertEquals($document['headers']['status-code'], 201);
         $this->assertEquals($document['body']['title'], 'Captain America');
-        $this->assertEquals($document['body']['releaseYear'], 1944);
         $this->assertIsArray($document['body']['$read']);
         $this->assertIsArray($document['body']['$write']);
 
