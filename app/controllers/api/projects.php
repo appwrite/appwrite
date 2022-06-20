@@ -121,6 +121,8 @@ App::post('/v1/projects')
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
+
+
             $attributes = [];
             $indexes = [];
 
@@ -147,7 +149,7 @@ App::post('/v1/projects')
                     'orders' => $index['orders'],
                 ]);
             }
-
+            var_dump($key);
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
