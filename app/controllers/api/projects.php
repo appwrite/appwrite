@@ -586,8 +586,6 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
-
-
         $webhook = new Document([
             '$id' => $dbForConsole->getId(),
             '$read' => ['role:all'],
@@ -694,10 +692,9 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
-    ->param('signatureKey', null, new Text(256), 'Webhook signature key. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, string $signatureKey, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -725,9 +722,44 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('httpPass', $httpPass)
         ;
 
-        if (!empty($signatureKey)) {
-            $webhook->setAttribute('signatureKey', $signatureKey);
+        $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
+    });
+
+App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
+    ->desc('Update Webhook Signature Key')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateWebhookSignature')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_WEBHOOK)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('webhookId', null, new UID(), 'Webhook unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
+
+        $webhook = $dbForConsole->findOne('webhooks', [
+            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+        ]);
+
+        if ($webhook === false || $webhook->isEmpty()) {
+            throw new Exception('Webhook not found', 404, Exception::WEBHOOK_NOT_FOUND);
+        }
+
+        $webhook->setAttribute('signatureKey', \bin2hex(\random_bytes(64)));
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
