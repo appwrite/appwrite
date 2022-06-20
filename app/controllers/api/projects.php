@@ -78,14 +78,17 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
+
         if ($projectId === 'console') {
             throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
         }
+
         $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
+            '$id' => $projectId,
             '$read' => ['team:' . $teamId],
             '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
             'name' => $name,
+            'teamInternalId' => $team->getInternalId(),
             'teamId' => $team->getId(),
             'description' => $description,
             'logo' => $logo,
@@ -109,7 +112,7 @@ App::post('/v1/projects')
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
 
-        $dbForProject->setNamespace("_{$project->getId()}");
+        $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create('appwrite');
 
         $audit = new Audit($dbForProject);
@@ -268,7 +271,7 @@ App::get('/v1/projects/:projectId/usage')
                 ],
             ];
 
-            $dbForProject->setNamespace("_{$projectId}");
+            $dbForProject->setNamespace("_{$project->getInternalId()}");
 
             $metrics = [
                 'requests',
@@ -589,6 +592,7 @@ App::post('/v1/projects/:projectId/webhooks')
             '$id' => $dbForConsole->getId(),
             '$read' => ['role:all'],
             '$write' => ['role:all'],
+            'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'name' => $name,
             'events' => $events,
@@ -629,7 +633,7 @@ App::get('/v1/projects/:projectId/webhooks')
         }
 
         $webhooks = $dbForConsole->find('webhooks', [
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ], 5000);
 
         $response->dynamic(new Document([
@@ -662,7 +666,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
 
         $webhook = $dbForConsole->findOne('webhooks', [
             new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
@@ -705,7 +709,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
 
         $webhook = $dbForConsole->findOne('webhooks', [
             new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
@@ -754,7 +758,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
         $webhook = $dbForConsole->findOne('webhooks', [
             new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
@@ -798,6 +802,7 @@ App::post('/v1/projects/:projectId/keys')
             '$id' => $dbForConsole->getId(),
             '$read' => ['role:all'],
             '$write' => ['role:all'],
+            'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
@@ -835,7 +840,7 @@ App::get('/v1/projects/:projectId/keys')
         }
 
         $keys = $dbForConsole->find('keys', [
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()]),
         ], 5000);
 
         $response->dynamic(new Document([
@@ -868,7 +873,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForConsole->findOne('keys', [
             new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($key === false || $key->isEmpty()) {
@@ -905,7 +910,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForConsole->findOne('keys', [
             new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($key === false || $key->isEmpty()) {
@@ -948,7 +953,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForConsole->findOne('keys', [
             new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($key === false || $key->isEmpty()) {
@@ -993,6 +998,7 @@ App::post('/v1/projects/:projectId/platforms')
             '$id' => $dbForConsole->getId(),
             '$read' => ['role:all'],
             '$write' => ['role:all'],
+            'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'type' => $type,
             'name' => $name,
@@ -1066,7 +1072,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
 
         $platform = $dbForConsole->findOne('platforms', [
             new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
@@ -1103,7 +1109,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
 
         $platform = $dbForConsole->findOne('platforms', [
             new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
@@ -1148,7 +1154,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
         $platform = $dbForConsole->findOne('platforms', [
             new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
@@ -1188,7 +1194,7 @@ App::post('/v1/projects/:projectId/domains')
 
         $document = $dbForConsole->findOne('domains', [
             new Query('domain', Query::TYPE_EQUAL, [$domain]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()]),
         ]);
 
         if ($document && !$document->isEmpty()) {
@@ -1207,6 +1213,7 @@ App::post('/v1/projects/:projectId/domains')
             '$id' => $dbForConsole->getId(),
             '$read' => ['role:all'],
             '$write' => ['role:all'],
+            'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'updated' => \time(),
             'domain' => $domain->get(),
@@ -1246,7 +1253,7 @@ App::get('/v1/projects/:projectId/domains')
         }
 
         $domains = $dbForConsole->find('domains', [
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ], 5000);
 
         $response->dynamic(new Document([
@@ -1279,7 +1286,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
 
         $domain = $dbForConsole->findOne('domains', [
             new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
@@ -1313,7 +1320,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
 
         $domain = $dbForConsole->findOne('domains', [
             new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
@@ -1373,7 +1380,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
 
         $domain = $dbForConsole->findOne('domains', [
             new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
+            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
