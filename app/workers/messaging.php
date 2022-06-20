@@ -5,6 +5,7 @@ use Appwrite\Auth\Phone\Mock;
 use Appwrite\Auth\Phone\Telesign;
 use Appwrite\Auth\Phone\TextMagic;
 use Appwrite\Auth\Phone\Twilio;
+use Appwrite\DSN\DSN;
 use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -26,12 +27,11 @@ class MessagingV1 extends Worker
 
     public function init(): void
     {
-        $provider = App::getEnv('_APP_PHONE_PROVIDER');
-        $user = App::getEnv('_APP_PHONE_USER');
-        $secret = App::getEnv('_APP_PHONE_SECRET');
+        $dsn = new DSN(App::getEnv('_APP_PHONE_PROVIDER'));
+        $user = $dsn->getUser();
+        $secret = $dsn->getPassword();
 
-        $this->from = App::getEnv('_APP_PHONE_FROM');
-        $this->phone = match ($provider) {
+        $this->phone = match ($dsn->getHost()) {
             'mock' => new Mock('', ''), // used for tests
             'twilio' => new Twilio($user, $secret),
             'text-magic' => new TextMagic($user, $secret),
