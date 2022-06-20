@@ -95,13 +95,9 @@ class WebhooksCustomServerTest extends Scope
         $this->assertStringContainsString('collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('collections.*.indexes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('collections.*.indexes.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.*.indexes.{$actorsId}_{$indexKey}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.*.indexes.{$actorsId}_{$indexKey}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}.indexes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}.indexes.*.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.{$actorsId}.indexes.{$actorsId}_{$indexKey}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.{$actorsId}.indexes.{$actorsId}_{$indexKey}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
@@ -124,13 +120,9 @@ class WebhooksCustomServerTest extends Scope
         $this->assertStringContainsString('collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('collections.*.indexes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('collections.*.indexes.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.*.indexes.{$actorsId}_{$indexKey}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.*.indexes.{$actorsId}_{$indexKey}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}.indexes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}.indexes.*.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.{$actorsId}.indexes.{$actorsId}_{$indexKey}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.{$actorsId}.indexes.{$actorsId}_{$indexKey}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);

@@ -15,9 +15,6 @@ use Utopia\Audit\Audit;
 
 require_once __DIR__ . '/../init.php';
 
-Authorization::disable();
-Authorization::setDefaultStatus(false);
-
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
 

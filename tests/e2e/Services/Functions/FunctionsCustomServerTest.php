@@ -587,6 +587,7 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
+
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

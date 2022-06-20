@@ -98,6 +98,17 @@ $collections = [
         'name' => 'Attributes',
         'attributes' => [
             [
+                '$id' => 'collectionInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'collectionId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -229,7 +240,7 @@ $collections = [
             [
                 '$id' => '_key_collection',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['collectionId'],
+                'attributes' => ['collectionInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -241,6 +252,17 @@ $collections = [
         '$id' => 'indexes',
         'name' => 'Indexes',
         'attributes' => [
+            [
+                '$id' => 'collectionInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'collectionId',
                 'type' => Database::VAR_STRING,
@@ -323,10 +345,10 @@ $collections = [
             [
                 '$id' => '_key_collection',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['collectionId'],
+                'attributes' => ['collectionInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ],
+            ]
         ],
     ],
 
@@ -335,6 +357,17 @@ $collections = [
         '$id' => 'projects',
         'name' => 'Projects',
         'attributes' => [
+            [
+                '$id' => 'teamInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'teamId',
                 'type' => Database::VAR_STRING,
@@ -573,6 +606,17 @@ $collections = [
         'name' => 'platforms',
         'attributes' => [
             [
+                '$id' => 'projectInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'projectId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -643,7 +687,7 @@ $collections = [
             [
                 '$id' => '_key_project',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['projectId'],
+                'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -655,6 +699,17 @@ $collections = [
         '$id' => 'domains',
         'name' => 'domains',
         'attributes' => [
+            [
+                '$id' => 'projectInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'projectId',
                 'type' => Database::VAR_STRING,
@@ -737,7 +792,7 @@ $collections = [
             [
                 '$id' => '_key_project',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['projectId'],
+                'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -749,6 +804,17 @@ $collections = [
         '$id' => 'keys',
         'name' => 'keys',
         'attributes' => [
+            [
+                '$id' => 'projectInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'projectId',
                 'type' => Database::VAR_STRING,
@@ -809,7 +875,7 @@ $collections = [
             [
                 '$id' => '_key_project',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['projectId'],
+                'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -821,6 +887,17 @@ $collections = [
         '$id' => 'webhooks',
         'name' => 'webhooks',
         'attributes' => [
+            [
+                '$id' => 'projectInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'projectId',
                 'type' => Database::VAR_STRING,
@@ -914,10 +991,10 @@ $collections = [
             [
                 '$id' => '_key_project',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['projectId'],
+                'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ],
+            ]
         ],
     ],
 
@@ -1094,6 +1171,17 @@ $collections = [
         'name' => 'Tokens',
         'attributes' => [
             [
+                '$id' => 'userInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'userId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1164,7 +1252,7 @@ $collections = [
             [
                 '$id' => '_key_user',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['userId'],
+                'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -1176,6 +1264,17 @@ $collections = [
         '$id' => 'sessions',
         'name' => 'Sessions',
         'attributes' => [
+            [
+                '$id' => 'userInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => 'userId',
                 'type' => Database::VAR_STRING,
@@ -1441,7 +1540,7 @@ $collections = [
             [
                 '$id' => '_key_user',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['userId'],
+                'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -1504,7 +1603,7 @@ $collections = [
         'name' => 'Memberships',
         'attributes' => [
             [
-                '$id' => 'teamId',
+                '$id' => 'userInternalId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1516,6 +1615,28 @@ $collections = [
             ],
             [
                 '$id' => 'userId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'teamInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'teamId',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1596,21 +1717,21 @@ $collections = [
             [
                 '$id' => '_key_unique',
                 'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['teamId', 'userId'],
+                'attributes' => ['teamInternalId', 'userInternalId'],
                 'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_team',
+                '$id' => '_key_internal',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['teamId'],
+                'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_user',
+                '$id' => '_key_team',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['userId'],
+                'attributes' => ['teamInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -1660,7 +1781,6 @@ $collections = [
                 'signed' => true,
                 'required' => false,
                 'default' => null,
-                'array' => false,
                 'filters' => [],
             ],
             [
@@ -1821,7 +1941,6 @@ $collections = [
                 'signed' => true,
                 'required' => false,
                 'default' => null,
-                'array' => false,
                 'filters' => [],
             ],
             [
@@ -2101,7 +2220,6 @@ $collections = [
                 'signed' => true,
                 'required' => false,
                 'default' => null,
-                'array' => false,
                 'filters' => [],
             ],
             [
@@ -2529,7 +2647,6 @@ $collections = [
                 'signed' => true,
                 'required' => false,
                 'default' => null,
-                'array' => false,
                 'filters' => [],
             ],
             [

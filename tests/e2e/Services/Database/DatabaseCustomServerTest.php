@@ -789,7 +789,7 @@ class DatabaseCustomServerTest extends Scope
             $this->assertEquals('available', $attribute['status'], 'attribute: ' . $attribute['key']);
         }
 
-        // testing for indexLimit = 64
+        // Test indexLimit = 64
         // MariaDB, MySQL, and MongoDB create 5 indexes per new collection
         // Add up to the limit, then check if the next index throws IndexLimitException
         for ($i = 0; $i < 59; $i++) {

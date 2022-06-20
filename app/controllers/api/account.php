@@ -178,6 +178,7 @@ App::post('/v1/account/sessions')
             [
                 '$id' => $dbForProject->getId(),
                 'userId' => $profile->getId(),
+                'userInternalId' => $profile->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
@@ -507,6 +508,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $session = new Document(array_merge([
             '$id' => $dbForProject->getId(),
             'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
             'provider' => $provider,
             'providerUid' => $oauth2ID,
             'providerAccessToken' => $accessToken,
@@ -661,6 +663,7 @@ App::post('/v1/account/sessions/magic-url')
         $token = new Document([
             '$id' => $dbForProject->getId(),
             'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_MAGIC_URL,
             'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -738,6 +741,8 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('events')
     ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audits, Event $events) {
 
+        /** @var Utopia\Database\Document $user */
+
         $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($user->isEmpty()) {
@@ -758,6 +763,7 @@ App::put('/v1/account/sessions/magic-url')
             [
                 '$id' => $dbForProject->getId(),
                 'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_MAGIC_URL,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expiry,
@@ -901,6 +907,7 @@ App::post('/v1/account/sessions/anonymous')
             [
                 '$id' => $dbForProject->getId(),
                 'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expiry,
@@ -1679,6 +1686,7 @@ App::post('/v1/account/recovery')
         $recovery = new Document([
             '$id' => $dbForProject->getId(),
             'userId' => $profile->getId(),
+            'userInternalId' => $profile->getInternalId(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
@@ -1839,6 +1847,7 @@ App::post('/v1/account/verification')
         $verification = new Document([
             '$id' => $dbForProject->getId(),
             'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,

@@ -257,7 +257,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('attributes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], $database->getAttributeLimit());
     }
 );
@@ -270,7 +270,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('indexes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], 64);
     }
 );
@@ -283,7 +283,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('platforms', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -296,7 +296,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('domains', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -309,7 +309,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -322,7 +322,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('webhooks', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -334,7 +334,7 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database->find('sessions', [
-            new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+            new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
         ], APP_LIMIT_SUBQUERY));
     }
 );
@@ -347,7 +347,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn() => $database
             ->find('tokens', [
-                new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY));
     }
 );
@@ -360,7 +360,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn() => $database
             ->find('memberships', [
-                new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY));
     }
 );
@@ -842,6 +842,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 App::setResource('console', function () {
     return new Document([
         '$id' => 'console',
+        '$internalId' => 'console',
         'name' => 'Appwrite',
         '$collection' => 'projects',
         'description' => 'Appwrite core engine',
@@ -871,12 +872,12 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function ($db, $cache, $project) {
+App::setResource('dbForProject', function ($db, $cache, Document $project) {
     $cache = new Cache(new RedisCache($cache));
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace("_{$project->getId()}");
+    $database->setNamespace("_{$project->getInternalId()}");
 
     return $database;
 }, ['db', 'cache', 'project']);
