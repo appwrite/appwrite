@@ -2187,7 +2187,7 @@ trait DatabaseBase
 
         $id = $document['body']['$id'];
 
-        $document2 = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['moviesId'] . '/documents/'.$id, array_merge([
+        $document2 = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2206,7 +2206,7 @@ trait DatabaseBase
         $this->assertEquals($document1['body']['actors'][0], 'Chris Evans');
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
 
-         if ($this->getSide() == 'client') {
+        if ($this->getSide() == 'client') {
             $this->assertEquals($document2['headers']['status-code'], 401);
         }
 
