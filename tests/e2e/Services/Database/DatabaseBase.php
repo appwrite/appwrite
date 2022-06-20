@@ -2185,7 +2185,7 @@ trait DatabaseBase
             'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
-        $id = $document['body']['$id'];
+        $id = $document1['body']['$id'];
 
         $document2 = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
