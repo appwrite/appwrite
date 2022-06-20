@@ -10,6 +10,7 @@ return [
     // Video Files
     'video/mp4',
     'video/x-flv',
+    'video/webm',
     'application/x-mpegURL',
     'video/MP2T',
     'video/3gpp',
