@@ -2168,7 +2168,7 @@ trait DatabaseBase
      */
     public function testUpdatePermissionsWithEmptyPayload(array $data): array
     {
-        $document1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2176,18 +2176,35 @@ trait DatabaseBase
             'data' => [
                 'title' => 'Captain America',
                 'releaseYear' => 1944,
-                'actors' => [
-                    'Chris Evans',
-                    'Samuel Jackson',
-                ]
+                'actors' => [],
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
-        $id = $document1['body']['$id'];
+        $id = $document['body']['$id'];
 
-        $document2 = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
+        $this->assertEquals($document['headers']['status-code'], 201);
+        $this->assertEquals($document['body']['title'], 'Captain America');
+        $this->assertEquals($document['body']['releaseYear'], 1944);
+        $this->assertIsArray($document['body']['$read']);
+        $this->assertIsArray($document['body']['$write']);
+
+        if ($this->getSide() == 'client') {
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(1, $document['body']['$write']);
+            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$read']);
+            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
+        }
+
+        if ($this->getSide() == 'server') {
+            $this->assertCount(0, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals([], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);
+        }
+
+        // Reset Permissions
+
+        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2195,29 +2212,16 @@ trait DatabaseBase
             'write' => [],
         ]);
 
-        $this->assertEquals($document1['headers']['status-code'], 201);
-        $this->assertEquals($document1['body']['title'], 'Captain America');
-        $this->assertEquals($document1['body']['releaseYear'], 1944);
-        $this->assertIsArray($document1['body']['$read']);
-        $this->assertIsArray($document1['body']['$write']);
-        $this->assertCount(1, $document1['body']['$read']);
-        $this->assertCount(1, $document1['body']['$write']);
-        $this->assertCount(2, $document1['body']['actors']);
-        $this->assertEquals($document1['body']['actors'][0], 'Chris Evans');
-        $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
-
         if ($this->getSide() == 'client') {
-            $this->assertEquals($document2['headers']['status-code'], 401);
+            $this->assertEquals($document['headers']['status-code'], 401);
         }
 
         if ($this->getSide() == 'server') {
-            $this->assertEquals($document2['headers']['status-code'], 200);
-            $this->assertEquals($document2['body']['title'], 'Captain America');
-            $this->assertEquals($document2['body']['releaseYear'], 1944);
-            $this->assertCount(0, $document2['body']['$read']);
-            $this->assertCount(0, $document2['body']['$write']);
-            $this->assertEquals([], $document2['body']['$read']);
-            $this->assertEquals([], $document2['body']['$write']);
+            $this->assertEquals($document['headers']['status-code'], 200);
+            $this->assertCount(0, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals([], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);
         }
 
         return $data;
