@@ -395,8 +395,8 @@ return [
         'variables' => [
             [
                 'name' => '_APP_PHONE_PROVIDER',
-                'description' => '',
-                'introduction' => '',
+                'description' => 'Provider used for delivering SMS for Phone authentication. Use the following format: \'phone://[USER]:[SECRET]@[PROVIDER]\'. \n\nAvailable providers are twilio, text-magic and telesign.',
+                'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -404,8 +404,8 @@ return [
             ],
             [
                 'name' => '_APP_PHONE_FROM',
-                'description' => '',
-                'introduction' => '',
+                'description' => 'Phone number used for sending out messages. Must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789).',
+                'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
