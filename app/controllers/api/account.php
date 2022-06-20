@@ -909,6 +909,7 @@ App::post('/v1/account/sessions/phone')
         $token = new Document([
             '$id' => $dbForProject->getId(),
             'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_PHONE,
             'secret' => $secret,
             'expire' => $expire,
@@ -995,6 +996,7 @@ App::put('/v1/account/sessions/phone')
             [
                 '$id' => $dbForProject->getId(),
                 'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_PHONE,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => $expiry,
@@ -2281,6 +2283,7 @@ App::post('/v1/account/verification/phone')
         $verification = new Document([
             '$id' => $dbForProject->getId(),
             'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_PHONE,
             'secret' => $secret,
             'expire' => $expire,
