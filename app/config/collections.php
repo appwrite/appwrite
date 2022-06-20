@@ -274,18 +274,11 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_collection_internal_id',
+                '$id' => '_key_collection',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['collectionInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_collection',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['databaseId', 'collectionId'],
-                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
         ],
     ],
@@ -388,17 +381,10 @@ $collections = [
             [
                 '$id' => '_key_db_collection',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['databaseId', 'collectionId'],
-                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_collection_internal_id',
-                'type' => Database::INDEX_KEY,
                 'attributes' => ['collectionInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ],
+            ]
         ],
     ],
 
@@ -735,16 +721,9 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_project_internal_id',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['projectInternalId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => '_key_project',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['projectId'],
+                'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -847,16 +826,9 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_project_internal_id',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['projectInternalId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => '_key_project',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['projectId'],
+                'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -937,16 +909,9 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_project_internal_id',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['projectInternalId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => '_key_project',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['projectId'],
+                'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -1062,10 +1027,10 @@ $collections = [
             [
                 '$id' => '_key_project',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['projectId'],
+                'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ],
+            ]
         ],
     ],
 
