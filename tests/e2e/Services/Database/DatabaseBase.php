@@ -1294,6 +1294,70 @@ trait DatabaseBase
         return [];
     }
 
+     /**
+     * @depends testCreateDocument
+     */
+    public function testUpdatePermissionsWithEmptyPayload(array $data): array
+    {
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'title' => 'Captain America',
+                'releaseYear' => 1944,
+                'actors' => [],
+            ],
+        ]);
+
+        $id = $document['body']['$id'];
+
+        $this->assertEquals($document['headers']['status-code'], 201);
+        $this->assertEquals($document['body']['title'], 'Captain America');
+        $this->assertEquals($document['body']['releaseYear'], 1944);
+        $this->assertIsArray($document['body']['$read']);
+        $this->assertIsArray($document['body']['$write']);
+
+        if ($this->getSide() == 'client') {
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(1, $document['body']['$write']);
+            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$read']);
+            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
+        }
+
+        if ($this->getSide() == 'server') {
+            $this->assertCount(0, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals([], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);
+        }
+
+        // Reset Permissions
+
+        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'read' => [],
+            'write' => [],
+        ]);
+
+        if ($this->getSide() == 'client') {
+            $this->assertEquals($document['headers']['status-code'], 401);
+        }
+
+        if ($this->getSide() == 'server') {
+            $this->assertEquals($document['headers']['status-code'], 200);
+            $this->assertCount(0, $document['body']['$read']);
+            $this->assertCount(0, $document['body']['$write']);
+            $this->assertEquals([], $document['body']['$read']);
+            $this->assertEquals([], $document['body']['$write']);
+        }
+
+        return $data;
+    }
+
     /**
      * @depends testCreateDocument
      */
@@ -2159,70 +2223,6 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
-
-        return $data;
-    }
-
-     /**
-     * @depends testCreateIndexes
-     */
-    public function testUpdatePermissionsWithEmptyPayload(array $data): array
-    {
-        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => 'unique()',
-            'data' => [
-                'title' => 'Captain America',
-                'releaseYear' => 1944,
-                'actors' => [],
-            ],
-        ]);
-
-        $id = $document['body']['$id'];
-
-        $this->assertEquals($document['headers']['status-code'], 201);
-        $this->assertEquals($document['body']['title'], 'Captain America');
-        $this->assertEquals($document['body']['releaseYear'], 1944);
-        $this->assertIsArray($document['body']['$read']);
-        $this->assertIsArray($document['body']['$write']);
-
-        if ($this->getSide() == 'client') {
-            $this->assertCount(1, $document['body']['$read']);
-            $this->assertCount(1, $document['body']['$write']);
-            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$read']);
-            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
-        }
-
-        if ($this->getSide() == 'server') {
-            $this->assertCount(0, $document['body']['$read']);
-            $this->assertCount(0, $document['body']['$write']);
-            $this->assertEquals([], $document['body']['$read']);
-            $this->assertEquals([], $document['body']['$write']);
-        }
-
-        // Reset Permissions
-
-        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'read' => [],
-            'write' => [],
-        ]);
-
-        if ($this->getSide() == 'client') {
-            $this->assertEquals($document['headers']['status-code'], 401);
-        }
-
-        if ($this->getSide() == 'server') {
-            $this->assertEquals($document['headers']['status-code'], 200);
-            $this->assertCount(0, $document['body']['$read']);
-            $this->assertCount(0, $document['body']['$write']);
-            $this->assertEquals([], $document['body']['$read']);
-            $this->assertEquals([], $document['body']['$write']);
-        }
 
         return $data;
     }
