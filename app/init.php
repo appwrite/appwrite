@@ -27,6 +27,7 @@ use Appwrite\Auth\Phone\Mock;
 use Appwrite\Auth\Phone\Telesign;
 use Appwrite\Auth\Phone\TextMagic;
 use Appwrite\Auth\Phone\Twilio;
+use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
@@ -969,11 +970,11 @@ App::setResource('geodb', function ($register) {
 }, ['register']);
 
 App::setResource('phone', function () {
-    $provider = App::getEnv('_APP_PHONE_PROVIDER');
-    $user = App::getEnv('_APP_PHONE_USER');
-    $secret = App::getEnv('_APP_PHONE_SECRET');
+    $dsn = new DSN(App::getEnv('_APP_PHONE_PROVIDER'));
+    $user = $dsn->getUser();
+    $secret = $dsn->getPassword();
 
-    return match ($provider) {
+    return match ($dsn->getHost()) {
         'mock' => new Mock('', ''), // used for tests
         'twilio' => new Twilio($user, $secret),
         'text-magic' => new TextMagic($user, $secret),

@@ -403,24 +403,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_PHONE_USER',
-                'description' => '',
-                'introduction' => '',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_PHONE_SECRET',
-                'description' => '',
-                'introduction' => '',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_PHONE_FROM',
                 'description' => '',
                 'introduction' => '',
