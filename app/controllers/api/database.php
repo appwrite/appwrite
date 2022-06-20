@@ -85,7 +85,7 @@ function createAttribute(string $collectionId, Document $attribute, Response $re
 
     try {
         $attribute = new Document([
-            '$id' => $collectionId . '_' . $key,
+            '$id' => $collection->getInternalId() . '_' . $key,
             'key' => $key,
             'collectionInternalId' => $collection->getInternalId(),
             'collectionId' => $collectionId,
@@ -1122,7 +1122,7 @@ App::get('/v1/database/collections/:collectionId/attributes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $collectionId . '_' . $key);
+        $attribute = $dbForProject->getDocument('attributes', $collection->getInternalId() . '_' . $key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1178,7 +1178,7 @@ App::delete('/v1/database/collections/:collectionId/attributes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $collectionId . '_' . $key);
+        $attribute = $dbForProject->getDocument('attributes', $collection->getInternalId() . '_' . $key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1303,7 +1303,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         try {
             $index = $dbForProject->createDocument('indexes', new Document([
-                '$id' => $collectionId . '_' . $key,
+                '$id' => $collection->getInternalId() . '_' . $key,
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
                 'collectionInternalId' => $collection->getInternalId(),
@@ -1444,7 +1444,7 @@ App::delete('/v1/database/collections/:collectionId/indexes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $index = $dbForProject->getDocument('indexes', $collectionId . '_' . $key);
+        $index = $dbForProject->getDocument('indexes', $collection->getInternalId() . '_' . $key);
 
         if (empty($index->getId())) {
             throw new Exception('Index not found', 404, Exception::INDEX_NOT_FOUND);

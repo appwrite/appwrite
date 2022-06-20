@@ -5,7 +5,6 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__ . '/../init.php';
 

@@ -180,7 +180,10 @@ class Usage
     private function createOrUpdateMetric(string $projectId, int $time, string $period, string $metric, int $value, int $type): void
     {
         $id = \md5("{$time}_{$period}_{$metric}");
-        $this->database->setNamespace('_' . $projectId);
+        $this->database->setNamespace('_console');
+        $project = $this->database->getDocument('projects', $projectId);
+        $this->database->setNamespace('_' . $project->getInternalId());
+
         try {
             $document = $this->database->getDocument('stats', $id);
             if ($document->isEmpty()) {

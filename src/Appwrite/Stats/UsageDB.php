@@ -28,7 +28,10 @@ class UsageDB extends Usage
             $period = $options['key'];
             $time = (int) (floor(time() / $options['multiplier']) * $options['multiplier']);
             $id = \md5("{$time}_{$period}_{$metric}");
-            $this->database->setNamespace('_' . $projectId);
+            $this->database->setNamespace('_console');
+            $project = $this->database->getDocument('projects', $projectId);
+            $this->database->setNamespace('_' . $project->getInternalId());
+
             try {
                 $document = $this->database->getDocument('stats', $id);
                 if ($document->isEmpty()) {
@@ -70,15 +73,21 @@ class UsageDB extends Usage
      */
     private function foreachDocument(string $projectId, string $collection, array $queries, callable $callback): void
     {
+        if ($projectId === 'console') {
+            return;
+        }
+
         $limit = 50;
         $results = [];
         $sum = $limit;
         $latestDocument = null;
-        $this->database->setNamespace('_' . $projectId);
+        $this->database->setNamespace('_console');
+        $project = $this->database->getDocument('projects', $projectId);
+        $this->database->setNamespace('_' . $project->getInternalId());
 
         while ($sum === $limit) {
             try {
-                $results = $this->database->find($collection, $queries, $limit, cursor:$latestDocument);
+                $results = $this->database->find($collection, $queries, $limit, cursor: $latestDocument);
             } catch (\Exception $e) {
                 if (is_callable($this->errorHandler)) {
                     call_user_func($this->errorHandler, $e, "fetch_documents_project_{$projectId}_collection_{$collection}");
@@ -115,7 +124,10 @@ class UsageDB extends Usage
      */
     private function sum(string $projectId, string $collection, string $attribute, string $metric): int
     {
-        $this->database->setNamespace('_' . $projectId);
+        $this->database->setNamespace('_console');
+        $project = $this->database->getDocument('projects', $projectId);
+        $this->database->setNamespace('_' . $project->getInternalId());
+
         try {
             $sum = (int) $this->database->sum($collection, $attribute);
             $this->createOrUpdateMetric($projectId, $metric, $sum);
@@ -141,7 +153,10 @@ class UsageDB extends Usage
      */
     private function count(string $projectId, string $collection, string $metric): int
     {
-        $this->database->setNamespace("_{$projectId}");
+        $this->database->setNamespace('_console');
+        $project = $this->database->getDocument('projects', $projectId);
+        $this->database->setNamespace('_' . $project->getInternalId());
+
         try {
             $count = $this->database->count($collection);
             $this->createOrUpdateMetric($projectId, $metric, $count);
@@ -252,11 +267,12 @@ class UsageDB extends Usage
      */
     public function collect(): void
     {
-        $this->foreachDocument('console', 'projects', [], function ($project) {
-                $projectId = $project->getId();
-                $this->usersStats($projectId);
-                $this->databaseStats($projectId);
-                $this->storageStats($projectId);
+        $this->foreachDocument('console', 'projects', [], function (Document $project) {
+            $projectId = $project->getId();
+
+            $this->usersStats($projectId);
+            $this->databaseStats($projectId);
+            $this->storageStats($projectId);
         });
     }
 }
