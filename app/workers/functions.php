@@ -44,7 +44,7 @@ class FunctionsV1 extends Worker
         $user = new Document($this->args['user'] ?? []);
         $payload = json_encode($this->args['payload'] ?? []);
 
-        $database = $this->getProjectDB($project->getInternalId());
+        $database = $this->getProjectDB($project->getId());
 
         /**
          * Handle Event execution.
@@ -342,7 +342,6 @@ class FunctionsV1 extends Worker
         );
         Realtime::send(
             projectId: 'console',
-            projectInternalId: 'console',
             payload: $execution->getArrayCopy(),
             events: $allEvents,
             channels: $target['channels'],
@@ -350,7 +349,6 @@ class FunctionsV1 extends Worker
         );
         Realtime::send(
             projectId: $project->getId(),
-            projectInternalId: $project->getInternalId(),
             payload: $execution->getArrayCopy(),
             events: $allEvents,
             channels: $target['channels'],

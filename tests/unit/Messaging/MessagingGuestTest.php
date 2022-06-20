@@ -13,14 +13,13 @@ class MessagingGuestTest extends TestCase
 
         $realtime->subscribe(
             '1',
-            '1',
             1,
             ['role:guest'],
             ['files' => 0, 'documents' => 0, 'documents.789' => 0, 'account.123' => 0]
         );
 
         $event = [
-            'projectId' => '1',
+            'project' => '1',
             'roles' => ['role:all'],
             'data' => [
                 'channels' => [
@@ -110,7 +109,7 @@ class MessagingGuestTest extends TestCase
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['projectId'] = '2';
+        $event['project'] = '2';
 
         $receivers = $realtime->getSubscribers($event);
 
