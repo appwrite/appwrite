@@ -3,6 +3,7 @@ tasks:
     init: |
       docker compose pull
       docker compose build
+      docker pull composer
     command: |
       docker run --rm --interactive --tty \
       --volume $PWD:/app \
