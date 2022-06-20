@@ -2163,7 +2163,7 @@ trait DatabaseBase
         return $data;
     }
 
-    public function testUpdatePermissionsWithEmptyPayload(array $data): array
+    public function testUpdatePermissionsWithEmptyPayload(): array
     {
         // Create collection
         $movies = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
