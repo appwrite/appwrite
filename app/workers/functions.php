@@ -227,7 +227,10 @@ class FunctionsV1 extends Worker
 
         $runtime = $runtimes[$function->getAttribute('runtime')];
 
-        /** Create execution or update execution status */
+        /**
+         * Create execution or update execution status
+         * @var Document $execution
+         */
         $execution = Authorization::skip(function () use ($dbForProject, &$executionId, $functionId, $deploymentId, $trigger, $user) {
             $execution = $dbForProject->getDocument('executions', $executionId ?? '');
             if ($execution->isEmpty()) {
@@ -236,7 +239,6 @@ class FunctionsV1 extends Worker
                     '$id' => $executionId,
                     '$read' => $user->isEmpty() ? [] : ['user:' . $user->getId()],
                     '$write' => [],
-                    'dateCreated' => time(),
                     'functionId' => $functionId,
                     'deploymentId' => $deploymentId,
                     'trigger' => $trigger,
@@ -298,7 +300,7 @@ class FunctionsV1 extends Worker
                 ->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
             $endtime = \microtime(true);
-            $time = $endtime - $execution->getAttribute('dateCreated');
+            $time = $endtime - $execution->getCreatedAt();
             $execution
                 ->setAttribute('time', $time)
                 ->setAttribute('status', 'failed')
