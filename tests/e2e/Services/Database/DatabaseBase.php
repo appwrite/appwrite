@@ -1339,6 +1339,7 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'data' => [],
             'read' => [],
             'write' => [],
         ]);
