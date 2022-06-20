@@ -640,7 +640,9 @@ services:
   #     - SMARTHOST_PORT=587
   
   redis:
-    image: redis:6.2-alpine
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     <<: *x-logging
     container_name: appwrite-redis
     ports:
