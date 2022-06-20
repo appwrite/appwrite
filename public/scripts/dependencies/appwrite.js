@@ -4064,10 +4064,11 @@
                  * @param {boolean} security
                  * @param {string} httpUser
                  * @param {string} httpPass
+                 * @param {string} signatureKey
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
+                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass, signatureKey) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
@@ -4105,6 +4106,9 @@
                     }
                     if (typeof httpPass !== 'undefined') {
                         payload['httpPass'] = httpPass;
+                    }
+                    if (typeof signatureKey !== 'undefined') {
+                        payload['signatureKey'] = signatureKey;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {
