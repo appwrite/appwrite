@@ -2183,7 +2183,9 @@ trait DatabaseBase
 
         // create attribute
 
-        $title = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
+        $moviesId = $movies['body']['$id'];
+
+        $title = $this->client->call(Client::METHOD_POST, '/database/collections/' . $moviesId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2203,7 +2205,7 @@ trait DatabaseBase
         sleep(2);
 
         // add document
-        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $moviesId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2236,7 +2238,7 @@ trait DatabaseBase
 
         // Reset Permissions
 
-        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $moviesId . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
