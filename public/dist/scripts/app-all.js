@@ -454,7 +454,7 @@ if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
 if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getWebhook:(projectId,webhookId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
-let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateWebhook:(projectId,webhookId,name,events,url,security,httpUser,httpPass,signatureKey)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
+let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateWebhook:(projectId,webhookId,name,events,url,security,httpUser,httpPass)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
 if(typeof events==='undefined'){throw new AppwriteException('Missing required parameter: "events"');}
@@ -466,10 +466,11 @@ if(typeof url!=='undefined'){payload['url']=url;}
 if(typeof security!=='undefined'){payload['security']=security;}
 if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
 if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
-if(typeof signatureKey!=='undefined'){payload['signatureKey']=signatureKey;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteWebhook:(projectId,webhookId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
-let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);})};this.storage={listBuckets:(search,limit,offset,cursor,cursorDirection,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/storage/buckets';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
+let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);}),updateWebhookSignature:(projectId,webhookId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
+if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
+let path='/projects/{projectId}/webhooks/{webhookId}/signature'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('patch',uri,{'content-type':'application/json',},payload);})};this.storage={listBuckets:(search,limit,offset,cursor,cursorDirection,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/storage/buckets';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
 if(typeof limit!=='undefined'){payload['limit']=limit;}
 if(typeof offset!=='undefined'){payload['offset']=offset;}
 if(typeof cursor!=='undefined'){payload['cursor']=cursor;}
