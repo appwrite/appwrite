@@ -913,7 +913,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(true, $response['body']['security']);
         $this->assertEquals('username', $response['body']['httpUser']);
 
-        $data = array_merge($data, ['webhookId' => $response['body']['$id']]);
+        $data = array_merge($data, ['webhookId' => $response['body']['$id'], 'signatureKey' => $response['body']['signatureKey']]);
 
         /**
          * Test for FAILURE
@@ -1021,8 +1021,7 @@ class ProjectsConsoleClientTest extends Scope
             'url' => 'https://appwrite.io/new',
             'security' => false,
             'httpUser' => '',
-            'httpPass' => '',
-            'signatureKey' => 'My own uniq key',
+            'httpPass' => ''
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1038,7 +1037,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(false, $response['body']['security']);
         $this->assertEquals('', $response['body']['httpUser']);
         $this->assertEquals('', $response['body']['httpPass']);
-        $this->assertEquals('My own uniq key', $response['body']['signatureKey']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
@@ -1102,6 +1100,25 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
+    }
+
+    /**
+     * @depends testCreateProjectWebhook
+     */
+    public function testUpdateProjectWebhookSignature($data): void
+    {
+        $id = $data['projectId'] ?? '';
+        $webhookId = $data['webhookId'] ?? '';
+        $signatureKey = $data['signatureKey'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/webhooks/' . $webhookId . '/signature', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['signatureKey']);
+        $this->assertNotEquals($signatureKey, $response['body']['signatureKey']);
     }
 
     /**
