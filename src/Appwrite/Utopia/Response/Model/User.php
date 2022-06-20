@@ -59,9 +59,21 @@ class User extends Model
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
+            ->addRule('phone', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User phone number in E.164 format.',
+                'default' => '',
+                'example' => '+4930901820',
+            ])
             ->addRule('emailVerification', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Email verification status.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('phoneVerification', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Phone verification status.',
                 'default' => false,
                 'example' => true,
             ])

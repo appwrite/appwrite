@@ -193,6 +193,10 @@ ENV _APP_SERVER=swoole \
     _APP_SMTP_SECURE= \
     _APP_SMTP_USERNAME= \
     _APP_SMTP_PASSWORD= \
+    _APP_PHONE_PROVIDER= \
+    _APP_PHONE_USER= \
+    _APP_PHONE_KEY= \
+    _APP_PHONE_FROM= \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CONTAINERS=10 \
@@ -305,6 +309,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-mails && \
+    chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions

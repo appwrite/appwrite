@@ -91,7 +91,7 @@ class WebhooksCustomClientTest extends Scope
             'name' => $name,
         ]);
 
-        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -154,7 +154,7 @@ class WebhooksCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -234,7 +234,7 @@ class WebhooksCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -320,7 +320,7 @@ class WebhooksCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -391,7 +391,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsString($webhook['data']['countryName']);
         $this->assertEquals($webhook['data']['current'], true);
 
-        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

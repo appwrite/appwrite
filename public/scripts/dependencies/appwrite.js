@@ -376,6 +376,35 @@
                     }, payload);
                 }),
                 /**
+                 * Update Account Phone
+                 *
+                 *
+                 * @param {string} number
+                 * @param {string} password
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePhone: (number, password) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof number === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "number"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/account/phone';
+                    let payload = {};
+                    if (typeof number !== 'undefined') {
+                        payload['number'] = number;
+                    }
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get Account Preferences
                  *
                  * Get currently logged in user preferences as a key-value object.
@@ -523,37 +552,6 @@
                     }, payload);
                 }),
                 /**
-                 * Create Account Session
-                 *
-                 * Allow the user to login into their account by providing a valid email and
-                 * password combination. This route will create a new session for the user.
-                 *
-                 * @param {string} email
-                 * @param {string} password
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                createSession: (email, password) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof email === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "email"');
-                    }
-                    if (typeof password === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "password"');
-                    }
-                    let path = '/account/sessions';
-                    let payload = {};
-                    if (typeof email !== 'undefined') {
-                        payload['email'] = email;
-                    }
-                    if (typeof password !== 'undefined') {
-                        payload['password'] = password;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
                  * Delete All Account Sessions
                  *
                  * Delete all sessions from the user account and remove any sessions cookies
@@ -586,6 +584,37 @@
                 createAnonymousSession: () => __awaiter(this, void 0, void 0, function* () {
                     let path = '/account/sessions/anonymous';
                     let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Account Session with Email
+                 *
+                 * Allow the user to login into their account by providing a valid email and
+                 * password combination. This route will create a new session for the user.
+                 *
+                 * @param {string} email
+                 * @param {string} password
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createEmailSession: (email, password) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/account/sessions/email';
+                    let payload = {};
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
                         'content-type': 'application/json',
@@ -724,6 +753,64 @@
                         return uri;
                     }
                 },
+                /**
+                 * Create Phone session
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {string} number
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createPhoneSession: (userId, number) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof number === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "number"');
+                    }
+                    let path = '/account/sessions/phone';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof number !== 'undefined') {
+                        payload['number'] = number;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Phone session (confirmation)
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {string} secret
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePhoneSession: (userId, secret) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof secret === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "secret"');
+                    }
+                    let path = '/account/sessions/phone';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof secret !== 'undefined') {
+                        payload['secret'] = secret;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('put', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
                 /**
                  * Get Session By ID
                  *
@@ -866,6 +953,50 @@
                         throw new AppwriteException('Missing required parameter: "secret"');
                     }
                     let path = '/account/verification';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof secret !== 'undefined') {
+                        payload['secret'] = secret;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('put', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Phone Verification
+                 *
+                 *
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createPhoneVerification: () => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/account/verification/phone';
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Phone Verification (confirmation)
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {string} secret
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePhoneVerification: (userId, secret) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof secret === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "secret"');
+                    }
+                    let path = '/account/verification/phone';
                     let payload = {};
                     if (typeof userId !== 'undefined') {
                         payload['userId'] = userId;
@@ -5315,6 +5446,32 @@
                     }, payload);
                 }),
                 /**
+                 * Update Phone
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {string} number
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePhone: (userId, number) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof number === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "number"');
+                    }
+                    let path = '/users/{userId}/phone'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof number !== 'undefined') {
+                        payload['number'] = number;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get User Preferences
                  *
                  * Get the user preferences by its unique ID.
@@ -5465,7 +5622,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateVerification: (userId, emailVerification) => __awaiter(this, void 0, void 0, function* () {
+                updateEmailVerification: (userId, emailVerification) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -5476,6 +5633,32 @@
                     let payload = {};
                     if (typeof emailVerification !== 'undefined') {
                         payload['emailVerification'] = emailVerification;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Phone Verification
+                 *
+                 *
+                 * @param {string} userId
+                 * @param {boolean} phoneVerification
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePhoneVerification: (userId, phoneVerification) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof phoneVerification === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "phoneVerification"');
+                    }
+                    let path = '/users/{userId}/verification/phone'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof phoneVerification !== 'undefined') {
+                        payload['phoneVerification'] = phoneVerification;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('patch', uri, {

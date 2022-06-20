@@ -23,11 +23,17 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Phone\Mock;
+use Appwrite\Auth\Phone\Telesign;
+use Appwrite\Auth\Phone\TextMagic;
+use Appwrite\Auth\Phone\Twilio;
+use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Phone;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
@@ -692,6 +698,7 @@ App::setResource('audits', fn() => new Audit());
 App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
+App::setResource('messaging', fn() => new Phone());
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
@@ -968,3 +975,17 @@ App::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
 }, ['register']);
+
+App::setResource('phone', function () {
+    $dsn = new DSN(App::getEnv('_APP_PHONE_PROVIDER'));
+    $user = $dsn->getUser();
+    $secret = $dsn->getPassword();
+
+    return match ($dsn->getHost()) {
+        'mock' => new Mock('', ''), // used for tests
+        'twilio' => new Twilio($user, $secret),
+        'text-magic' => new TextMagic($user, $secret),
+        'telesign' => new Telesign($user, $secret),
+        default => null
+    };
+});

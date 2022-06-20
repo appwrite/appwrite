@@ -1026,6 +1026,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'phone',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16, // leading '+' and 15 digitts maximum by E.164 format
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'status',
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
@@ -1082,6 +1093,17 @@ $collections = [
             ],
             [
                 '$id' => 'emailVerification',
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'phoneVerification',
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
