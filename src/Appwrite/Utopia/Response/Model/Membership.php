@@ -16,6 +16,18 @@ class Membership extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Membership creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Membership update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User ID.',

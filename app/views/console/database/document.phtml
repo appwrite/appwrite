@@ -347,6 +347,8 @@ $logs = $this->getParam('logs', null);
 
                             <ul class="margin-bottom-large text-fade text-size-small" data-ls-if="({{project-document.$id}})">
                                 <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
+                                <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-document.$updatedAt|dateText}}"></span></li>
+                                <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-document.$createdAt|dateText}}"></span></li>
                             </ul>
 
                             <div data-ls-if="({{project-document.$id}})">

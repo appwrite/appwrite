@@ -239,7 +239,6 @@ class FunctionsV1 extends Worker
                 '$id' => $executionId,
                 '$read' => $user->isEmpty() ? [] : ['user:' . $user->getId()],
                 '$write' => [],
-                'dateCreated' => time(),
                 'functionId' => $functionId,
                 'deploymentId' => $deploymentId,
                 'trigger' => $trigger,
@@ -298,7 +297,7 @@ class FunctionsV1 extends Worker
                 ->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
             $endtime = \microtime(true);
-            $time = $endtime - $execution->getAttribute('dateCreated');
+            $time = $endtime - $execution->getCreatedAt();
             $execution
                 ->setAttribute('time', $time)
                 ->setAttribute('status', 'failed')

@@ -63,7 +63,6 @@ App::post('/v1/teams')
             '$write' => ['team:' . $teamId . '/owner'],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
-            'dateCreated' => \time(),
             'search' => implode(' ', [$teamId, $name]),
         ])));
 

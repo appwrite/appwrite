@@ -22,6 +22,18 @@ class File extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'File creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'File update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('$read', [
                 'type' => self::TYPE_STRING,
                 'description' => 'File read permissions.',
@@ -41,12 +53,6 @@ class File extends Model
                 'description' => 'File name.',
                 'default' => '',
                 'example' => 'Pink.png',
-            ])
-            ->addRule('dateCreated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'File creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
             ])
             ->addRule('signature', [
                 'type' => self::TYPE_STRING,

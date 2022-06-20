@@ -93,7 +93,7 @@ git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
 
 cd appwrite
 
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Code Autocompletion
@@ -108,7 +108,7 @@ docker run --rm --interactive --tty \
 
 ### User Interface
 
-Appwrite uses an internal micro-framework called Litespeed.js to build simple UI components in vanilla JS and [less](http://lesscss.org/) for compiling CSS code. To apply any of your changes to the UI, use the `gulp build` or `gulp less` commands, and restart the Appwrite main container to load the new static files to memory using `docker-compose restart appwrite`.
+Appwrite uses an internal micro-framework called Litespeed.js to build simple UI components in vanilla JS and [less](http://lesscss.org/) for compiling CSS code. To apply any of your changes to the UI, use the `gulp build` or `gulp less` commands, and restart the Appwrite main container to load the new static files to memory using `docker compose restart appwrite`.
 
 ### Get Started
 
@@ -222,7 +222,7 @@ Currently, all of the Appwrite microservices are intended to communicate using t
 
 ## Ports
 
-Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker-compose up -d` command.
+Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker compose up -d` command.
 
 ## Technology Stack
 
@@ -363,25 +363,25 @@ In settings, go to **Languages & Frameworks** > **PHP** > **Debug**, there under
 To run all tests manually, use the Appwrite Docker CLI from your terminal:
 
 ```bash
-docker-compose exec appwrite test
+docker compose exec appwrite test
 ```
 
 To run unit tests use:
 
 ```bash
-docker-compose exec appwrite test /usr/src/code/tests/unit
+docker compose exec appwrite test /usr/src/code/tests/unit
 ```
 
 To run end-2-end tests use:
 
 ```bash
-docker-compose exec appwrite test /usr/src/code/tests/e2e
+docker compose exec appwrite test /usr/src/code/tests/e2e
 ```
 
 To run end-2-end tests for a spcific service use:
 
 ```bash
-docker-compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
+docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
 ```
 
 ## Benchmarking

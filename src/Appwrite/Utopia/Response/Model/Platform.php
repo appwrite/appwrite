@@ -21,6 +21,18 @@ class Platform extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Project creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Project update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Platform name.',
