@@ -208,7 +208,6 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
 
             Realtime::send(
                 projectId: $target['projectId'] ?? $project->getId(),
-                projectInternalId: $project->getInternalId(),
                 payload: $events->getPayload(),
                 events: $allEvents,
                 channels: $target['channels'],

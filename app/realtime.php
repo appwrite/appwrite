@@ -225,8 +225,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 }
 
                 $event = [
-                    'projectId' => 'console',
-                    'projectInternalId' => 'console',
+                    'project' => 'console',
                     'roles' => ['team:' . $stats->get($projectId, 'teamId')],
                     'data' => [
                         'events' => ['stats.connections'],
@@ -253,8 +252,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             $payload = ['response' => 'WS:/v1/realtime:passed'];
 
             $event = [
-                'projectId' => 'console',
-                'projectInternalId' => 'console',
+                'project' => 'console',
                 'roles' => ['role:guest'],
                 'data' => [
                     'events' => ['test.event'],
@@ -295,8 +293,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 $event = json_decode($payload, true);
 
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
-                    $projectId = $event['projectId'];
-                    $projectInternalId = $event['projectInternalId'];
+                    $projectId = $event['project'];
                     $userId = $event['userId'];
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
@@ -307,7 +304,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         $roles = Auth::getRoles($user);
 
-                        $realtime->subscribe($projectId, $projectInternalId, $connection, $roles, $realtime->connections[$connection]['channels']);
+                        $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
 
                         call_user_func($returnDatabase);
                     }
@@ -330,7 +327,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 );
 
                 if (($num = count($receivers)) > 0) {
-                    $stats->incr($event['projectId'], 'messages', $num);
+                    $stats->incr($event['project'], 'messages', $num);
                 }
             });
         } catch (\Throwable $th) {
@@ -425,7 +422,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception('Missing channels', 1008);
         }
 
-        $realtime->subscribe($project->getId(), $project->getInternalId(), $connection, $roles, $channels);
+        $realtime->subscribe($project->getId(), $connection, $roles, $channels);
 
         $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_USER);
 
@@ -484,8 +481,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_{$realtime->connections[$connection]['projectInternalId']}");
-        var_dump($realtime->connections[$connection]['projectInternalId']);
+        $database->setNamespace("_{$realtime->connections[$connection]['projectId']}");
+
         /*
          * Abuse Check
          *
@@ -534,7 +531,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
                 $roles = Auth::getRoles($user);
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
-                $realtime->subscribe($realtime->connections[$connection]['projectId'], $realtime->connections[$connection]['projectInternalId'], $connection, $roles, $channels);
+                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 
                 $user = $response->output($user, Response::MODEL_USER);
                 $server->send([$connection], json_encode([

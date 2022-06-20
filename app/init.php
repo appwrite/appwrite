@@ -839,7 +839,6 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 App::setResource('console', function () {
     return new Document([
         '$id' => 'console',
-        '$internalId' => 'console',
         'name' => 'Appwrite',
         '$collection' => 'projects',
         'description' => 'Appwrite core engine',

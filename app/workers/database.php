@@ -69,8 +69,7 @@ class DatabaseV1 extends Worker
     protected function createAttribute(Document $collection, Document $attribute, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
-        $project = $dbForConsole->getDocument('projects', $projectId);
-        $dbForProject = $this->getProjectDB($project->getInternalId());
+        $dbForProject = $this->getProjectDB($projectId);
 
         $events = Event::generateEvents('collections.[collectionId].attributes.[attributeId].update', [
             'collectionId' => $collection->getId(),
@@ -92,6 +91,7 @@ class DatabaseV1 extends Worker
         $format = $attribute->getAttribute('format', '');
         $formatOptions = $attribute->getAttribute('formatOptions', []);
         $filters = $attribute->getAttribute('filters', []);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
             if (!$dbForProject->createAttribute('collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
@@ -111,7 +111,6 @@ class DatabaseV1 extends Worker
 
             Realtime::send(
                 projectId: 'console',
-                projectInternalId: 'console',
                 payload: $attribute->getArrayCopy(),
                 events: $events,
                 channels: $target['channels'],
@@ -134,8 +133,7 @@ class DatabaseV1 extends Worker
     protected function deleteAttribute(Document $collection, Document $attribute, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
-        $project = $dbForConsole->getDocument('projects', $projectId);
-        $dbForProject = $this->getProjectDB($project->getInternalId());
+        $dbForProject = $this->getProjectDB($projectId);
 
         $events = Event::generateEvents('collections.[collectionId].attributes.[attributeId].delete', [
             'collectionId' => $collection->getId(),
@@ -144,6 +142,7 @@ class DatabaseV1 extends Worker
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $status = $attribute->getAttribute('status', '');
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         // possible states at this point:
         // - available: should not land in queue; controller flips these to 'deleting'
@@ -169,7 +168,6 @@ class DatabaseV1 extends Worker
 
             Realtime::send(
                 projectId: 'console',
-                projectInternalId: 'console',
                 payload: $attribute->getArrayCopy(),
                 events: $events,
                 channels: $target['channels'],
@@ -245,8 +243,7 @@ class DatabaseV1 extends Worker
     protected function createIndex(Document $collection, Document $index, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
-        $project = $dbForConsole->getDocument('projects', $projectId);
-        $dbForProject = $this->getProjectDB($project->getInternalId());
+        $dbForProject = $this->getProjectDB($projectId);
 
         $events = Event::generateEvents('collections.[collectionId].indexes.[indexId].update', [
             'collectionId' => $collection->getId(),
@@ -258,6 +255,7 @@ class DatabaseV1 extends Worker
         $attributes = $index->getAttribute('attributes', []);
         $lengths = $index->getAttribute('lengths', []);
         $orders = $index->getAttribute('orders', []);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
             if (!$dbForProject->createIndex('collection_' . $collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
@@ -277,7 +275,6 @@ class DatabaseV1 extends Worker
 
             Realtime::send(
                 projectId: 'console',
-                projectInternalId: 'console',
                 payload: $index->getArrayCopy(),
                 events: $events,
                 channels: $target['channels'],
@@ -300,8 +297,7 @@ class DatabaseV1 extends Worker
     protected function deleteIndex(Document $collection, Document $index, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
-        $project = $dbForConsole->getDocument('projects', $projectId);
-        $dbForProject = $this->getProjectDB($project->getInternalId());
+        $dbForProject = $this->getProjectDB($projectId);
 
         $events = Event::generateEvents('collections.[collectionId].indexes.[indexId].delete', [
             'collectionId' => $collection->getId(),
@@ -309,6 +305,7 @@ class DatabaseV1 extends Worker
         ]);
         $key = $index->getAttribute('key');
         $status = $index->getAttribute('status', '');
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
             if ($status !== 'failed' && !$dbForProject->deleteIndex('collection_' . $collection->getInternalId(), $key)) {
@@ -328,7 +325,6 @@ class DatabaseV1 extends Worker
 
             Realtime::send(
                 projectId: 'console',
-                projectInternalId: 'console',
                 payload: $index->getArrayCopy(),
                 events: $events,
                 channels: $target['channels'],

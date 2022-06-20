@@ -48,25 +48,25 @@ class DeletesV1 extends Worker
 
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_COLLECTIONS:
-                        $this->deleteCollection($document, $project->getInternalId());
+                        $this->deleteCollection($document, $project->getId());
                         break;
                     case DELETE_TYPE_PROJECTS:
                         $this->deleteProject($document);
                         break;
                     case DELETE_TYPE_FUNCTIONS:
-                        $this->deleteFunction($document, $project->getInternalId());
+                        $this->deleteFunction($document, $project->getId());
                         break;
                     case DELETE_TYPE_DEPLOYMENTS:
-                        $this->deleteDeployment($document, $project->getInternalId());
+                        $this->deleteDeployment($document, $project->getId());
                         break;
                     case DELETE_TYPE_USERS:
-                        $this->deleteUser($document, $project->getInternalId());
+                        $this->deleteUser($document, $project->getId());
                         break;
                     case DELETE_TYPE_TEAMS:
-                        $this->deleteMemberships($document, $project->getInternalId());
+                        $this->deleteMemberships($document, $project->getId());
                         break;
                     case DELETE_TYPE_BUCKETS:
-                        $this->deleteBucket($document, $project->getInternalId());
+                        $this->deleteBucket($document, $project->getId());
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -471,7 +471,7 @@ class DeletesV1 extends Worker
             $chunk++;
 
             /** @var string[] $projectIds */
-            $projectIds = array_map(fn (Document $project) => $project->getInternalId(), $projects);
+            $projectIds = array_map(fn (Document $project) => $project->getId(), $projects);
 
             $sum = count($projects);
 
