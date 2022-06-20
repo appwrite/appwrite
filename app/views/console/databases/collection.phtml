@@ -42,7 +42,7 @@ $logs = $this->getParam('logs', null);
 
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
-            <li data-state="/console/databases/collection?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/databases/collection?id={{router.params.id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}">
 
                 <h2>Documents</h2>
 
@@ -109,6 +109,7 @@ $logs = $this->getParam('logs', null);
                         <form
                             data-service="databases.listDocuments"
                             data-event="submit"
+                            data-param-database-id="{{router.params.databaseId}}"
                             data-param-collection-id="{{router.params.id}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-order-types="DESC"
@@ -125,6 +126,7 @@ $logs = $this->getParam('logs', null);
                         <form
                             data-service="databases.listDocuments"
                             data-event="submit"
+                            data-param-database-id="{{router.params.databaseId}}"
                             data-param-collection-id="{{router.params.id}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-order-types="DESC"
@@ -145,7 +147,7 @@ $logs = $this->getParam('logs', null);
                     </a>
                 </div>
             </li>
-            <li data-state="/console/databases/collection/attributes?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/databases/collection/attributes?id={{router.params.id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}">
                 <h2>Attributes</h2>
 
                 <div class="clear box margin-bottom">
@@ -329,7 +331,7 @@ $logs = $this->getParam('logs', null);
                     </ul>
                 </div>
             </li>
-            <li data-state="/console/databases/collection/indexes?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/databases/collection/indexes?id={{router.params.id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}">
                 <h2>Indexes</h2>
 
                 <div class="clear box margin-bottom">
@@ -416,12 +418,12 @@ $logs = $this->getParam('logs', null);
 
                 <button class="new-index">Add Index</button>
             </li>
-            <li data-state="/console/databases/collection/activity?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/databases/collection/activity?id={{router.params.id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}">
                 <h2>Activity</h2>
 
                 <?php echo $logs->render(); ?>
             </li>
-            <li data-state="/console/databases/collection/usage?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/databases/collection/usage?id={{router.params.id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}">
                 <form
                     class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
                     data-service="databases.getCollectionUsage"
@@ -501,7 +503,7 @@ $logs = $this->getParam('logs', null);
                     </ul>
                 </div>
             </li>
-            <li data-state="/console/databases/collection/settings?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/databases/collection/settings?id={{router.params.id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}">
                 <h2>Settings</h2>
 
                 <div class="row responsive margin-top-negative">
@@ -516,6 +518,7 @@ $logs = $this->getParam('logs', null);
                             data-scope="sdk"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
+                            data-param-database-id="{{router.params.databaseId}}"
                             data-success="alert,trigger"
                             data-success-param-alert-text="Updated collection successfully"
                             data-success-param-trigger-events="databases.updateCollection"
@@ -594,6 +597,7 @@ $logs = $this->getParam('logs', null);
                             data-service="databases.deleteCollection"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
+                            data-param-database-id="{{router.params.databaseId}}"
                             data-confirm="Are you sure you want to delete this collection?"
                             data-success="alert,trigger,redirect"
                             data-success-param-alert-text="Collection deleted successfully"
