@@ -298,7 +298,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        [$database, $returnDatabase] = getDatabase($register, "_{$projectInternalId}");
+                        [$database, $returnDatabase] = getDatabase($register, "_{$projectId}");
 
                         $user = $database->getDocument('users', $userId);
 
