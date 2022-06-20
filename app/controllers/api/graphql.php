@@ -2,8 +2,6 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
-use GraphQL\Error\DebugFlag;
-use GraphQL\Executor\ExecutionResult;
 use GraphQL\GraphQL;
 use GraphQL\Type;
 use GraphQL\Validator\Rules\DisableIntrospection;
@@ -38,9 +36,6 @@ App::get('/v1/graphql')
     ->inject('promiseAdapter')
     ->inject('gqlSchema')
     ->action(Closure::fromCallable('graphqlRequest'));
-
-use Appwrite\Extend\Exception;
-use Utopia\App;
 
 App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
