@@ -2846,7 +2846,7 @@ $collections = [
         ]
     ],
     'videos' => [
-        '$collection' => 'video_renditions',
+        '$collection' => Database::METADATA,
         '$id' => 'video_renditions',
         '$name' => 'Video_renditions',
         'attributes' => [

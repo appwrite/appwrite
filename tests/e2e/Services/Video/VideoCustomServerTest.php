@@ -17,6 +17,7 @@ class VideoCustomServerTest extends Scope
     {
 
 
+
 //        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
 //            'content-type' => 'application/json',
 //            'x-appwrite-project' => $this->getProject()['$id'],
@@ -121,7 +122,7 @@ class VideoCustomServerTest extends Scope
         $key = '1cd0589616c0b0b98dbc42764399799e3dcf0fbcfa0d1f1db2a258573783802267551853ffa77d2895e57597835055afb645237e84d07cffd33f946af6598f40cdfdc11b9eb6bee09fdd0a325a4b5e3ef34fdf4ba745a87dc4de16f9935803c9ff6349f424774b2a4d3c8ce8a40a835b16486dec9e8c1f8fc16bc37e357f9daf';
         $fid = '62aedd7dcdcc014783ff';
         $bid = '62aedd7c90a8570ebf31';
-        $stream = 'dash';
+        $stream = 'hls';
 
         $renditions = $this->client->call(Client::METHOD_GET, '/video/buckets/' . $bid . '/files/' . $stream . '/' .  $fid, [
             'content-type' => 'application/json',
