@@ -48,6 +48,7 @@ use MaxMind\Db\Reader;
  *
  *
  * @return Document Newly created attribute document
+ * @throws Exception
  */
 function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage): Document
 {
@@ -92,9 +93,11 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     try {
         $attribute = new Document([
-            '$id' => $db->getInternalId() . '_' . $collectionId . '_' . $key,
+            '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
             'key' => $key,
+            'databaseInternalId' => $db->getInternalId(),
             'databaseId' => $db->getInternalId(),
+            'collectionInternalId' => $collection->getInternalId(),
             'collectionId' => $collectionId,
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
@@ -513,11 +516,11 @@ App::post('/v1/databases/:databaseId/collections')
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
                 '$id' => $collectionId,
+                'databaseInternalId' => $database->getInternalId(),
+                'databaseId' => $databaseId,
                 '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
                 '$write' => $write ?? [], // Collection permissions for collection documents (based on permission model)
                 'permission' => $permission, // Permissions model type (document vs collection)
-                'dateCreated' => time(),
-                'dateUpdated' => time(),
                 'enabled' => true,
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
@@ -774,7 +777,6 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
                 ->setAttribute('$read', $read)
                 ->setAttribute('name', $name)
                 ->setAttribute('permission', $permission)
-                ->setAttribute('dateUpdated', time())
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', implode(' ', [$collectionId, $name])));
         } catch (AuthorizationException $exception) {
@@ -1337,7 +1339,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $collectionId . '_' . $key);
+        $attribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1401,7 +1403,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collectionId . '_' . $key);
+        $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
 
         if ($attribute->isEmpty()) {
             throw new Exception('Attribute not found', 404, Exception::ATTRIBUTE_NOT_FOUND);
@@ -1448,8 +1450,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('attributeId', $attribute->getId())
-           ->setContext('collection', $collection)
-        ->setContext('database', $db)
+            ->setContext('collection', $collection)
+            ->setContext('database', $db)
             ->setPayload($response->output($attribute, $model))
         ;
 
@@ -1499,8 +1501,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         $count = $dbForProject->count('indexes', [
-            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId]),
-            new Query('databaseId', Query::TYPE_EQUAL, [$db->getInternalId()])
+            new Query('collectionInternalId', Query::TYPE_EQUAL, [$collection->getInternalId()]),
+            new Query('databaseInternalId', Query::TYPE_EQUAL, [$db->getInternalId()])
         ], 61);
 
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
@@ -1538,11 +1540,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         try {
             $index = $dbForProject->createDocument('indexes', new Document([
-                '$id' => $db->getInternalId() . '_' . $collectionId . '_' . $key,
+                '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
+                'databaseInternalId' => $db->getInternalId(),
+                'databaseId' => $databaseId,
+                'collectionInternalId' => $collection->getInternalId(),
                 'collectionId' => $collectionId,
-                'databaseId' => $db->getInternalId(),
                 'type' => $type,
                 'attributes' => $attributes,
                 'lengths' => $lengths,
@@ -1706,7 +1710,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collectionId . '_' . $key);
+        $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
 
         if (empty($index->getId())) {
             throw new Exception('Index not found', 404, Exception::INDEX_NOT_FOUND);

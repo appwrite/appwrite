@@ -7,7 +7,7 @@ return [
         'name' => 'Email/Password',
         'key' => 'emailPassword',
         'icon' => '/images/users/email.png',
-        'docs' => 'https://appwrite.io/docs/client/account?sdk=web-default#accountCreateSession',
+        'docs' => 'https://appwrite.io/docs/client/account?sdk=web-default#accountCreateEmailSession',
         'enabled' => true,
     ],
     'magic-url' => [
@@ -42,7 +42,7 @@ return [
         'name' => 'Phone',
         'key' => 'phone',
         'icon' => '/images/users/phone.png',
-        'docs' => '',
-        'enabled' => false,
+        'docs' => 'https://appwrite.io/docs/client/account?sdk=web-default#accountCreatePhoneSession',
+        'enabled' => true,
     ],
 ];
