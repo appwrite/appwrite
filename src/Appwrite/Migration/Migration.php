@@ -292,7 +292,7 @@ abstract class Migration
 
         $indexKey = array_search($indexId, array_column($indexes, '$id'));
 
-        if (!$indexKey) {
+        if ($indexKey === false) {
             throw new Exception("Attribute {$indexId} not found");
         }
 

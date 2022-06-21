@@ -25,6 +25,42 @@ class V14 extends Migration
         $this->forEachDocument([$this, 'fixDocument']);
     }
 
+    protected function createNewMetaData(string $id): void
+    {
+        if (in_array($id, ['files'])) return;
+
+        try {
+            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}` RENAME TO `_{$this->project->getInternalId()}_{$id}`")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
+        try {
+            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}_perms` RENAME TO `_{$this->project->getInternalId()}_{$id}_perms`")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
+        try {
+            $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_createdAt` int unsigned DEFAULT NULL")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
+        try {
+            $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_updatedAt` int unsigned DEFAULT NULL")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
+        try {
+            $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_created_at` ON `_{$this->project->getInternalId()}_{$id}` (`_createdAt`)")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
+        try {
+            $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_updated_at` ON `_{$this->project->getInternalId()}_{$id}` (`_updatedAt`)")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
+    }
+
     /**
      * Migrate all Collections.
      *
@@ -37,36 +73,7 @@ class V14 extends Migration
 
             Console::log("- {$id}");
 
-            try {
-                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}` RENAME TO `_{$this->project->getInternalId()}_{$id}`")->execute();
-            } catch (\Throwable $th) {
-                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-            }
-            try {
-                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}_perms` RENAME TO `_{$this->project->getInternalId()}_{$id}_perms`")->execute();
-            } catch (\Throwable $th) {
-                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-            }
-            try {
-                $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_createdAt` int unsigned DEFAULT NULL")->execute();
-            } catch (\Throwable $th) {
-                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-            }
-            try {
-                $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_updatedAt` int unsigned DEFAULT NULL")->execute();
-            } catch (\Throwable $th) {
-                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-            }
-            try {
-                $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_created_at` ON `_{$this->project->getInternalId()}_{$id}` (`_createdAt`)")->execute();
-            } catch (\Throwable $th) {
-                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-            }
-            try {
-                $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_updatedAt` ON `_{$this->project->getInternalId()}_{$id}` (`_updatedAt`)")->execute();
-            } catch (\Throwable $th) {
-                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-            }
+            $this->createNewMetaData($id);
 
             usleep(100000);
 
@@ -102,7 +109,7 @@ class V14 extends Migration
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'teamInternalId');
                     } catch (\Throwable $th) {
-                        Console::warning("'collectionInternalId' from {$id}: {$th->getMessage()}");
+                        Console::warning("'teamInternalId' from {$id}: {$th->getMessage()}");
                     }
 
                     break;
@@ -113,7 +120,7 @@ class V14 extends Migration
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'projectInternalId');
                     } catch (\Throwable $th) {
-                        Console::warning("'collectionInternalId' from {$id}: {$th->getMessage()}");
+                        Console::warning("'projectInternalId' from {$id}: {$th->getMessage()}");
                     }
                     try {
                         /**
@@ -225,7 +232,7 @@ class V14 extends Migration
                          */
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_phone');
                     } catch (\Throwable $th) {
-                        Console::warning("'_key_project' from {$id}: {$th->getMessage()}");
+                        Console::warning("'_key_phone' from {$id}: {$th->getMessage()}");
                     }
 
                     break;
@@ -276,7 +283,7 @@ class V14 extends Migration
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'teamInternalId');
                     } catch (\Throwable $th) {
-                        Console::warning("'userInternalId' from {$id}: {$th->getMessage()}");
+                        Console::warning("'teamInternalId' from {$id}: {$th->getMessage()}");
                     }
                     try {
                         /**
@@ -388,7 +395,7 @@ class V14 extends Migration
                 break;
             case 'attributes':
             case 'indexes':
-                    if (!empty($document->getAttribute('collectionId')) && is_null($document->getAttribute('collectionInternalId'))) {
+                if (!empty($document->getAttribute('collectionId')) && is_null($document->getAttribute('collectionInternalId'))) {
                     $internalId = $this->projectDB->getDocument('collections', $document->getAttribute('collectionId'))->getInternalId();
                     $document->setAttribute('collectionInternalId', $internalId);
                 }
@@ -401,6 +408,9 @@ class V14 extends Migration
                 if (is_null($document->getUpdateAt())) {
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
+
+                $internalId = $this->projectDB->getDocument('collections', $document->getId())->getInternalId();
+                $this->createNewMetaData("collection_{$internalId}");
 
                 break;
             case 'platforms':
@@ -424,11 +434,8 @@ class V14 extends Migration
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
 
-                break;
-            case 'files':
-                if (is_null($document->getCreatedAt())) {
-                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
-                }
+                $internalId = $this->projectDB->getDocument('buckets', $document->getId())->getInternalId();
+                $this->createNewMetaData("bucket_{$internalId}");
 
                 break;
             case 'users':

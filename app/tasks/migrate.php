@@ -29,7 +29,7 @@ $cli
 
         $db = $register->get('db', true);
         $cache = $register->get('cache', true);
-
+        $cache->flushAll();
         $cache = new Cache(new RedisCache($cache));
 
         $projectDB = new Database(new MariaDB($db), $cache);
