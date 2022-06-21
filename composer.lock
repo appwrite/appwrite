@@ -2111,12 +2111,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "49392d349700d65f78a6e107b953931da58fdb9d"
+                "reference": "cca4b1862e93002de3d5543d6cb39161c4ade60c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/49392d349700d65f78a6e107b953931da58fdb9d",
-                "reference": "49392d349700d65f78a6e107b953931da58fdb9d",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/cca4b1862e93002de3d5543d6cb39161c4ade60c",
+                "reference": "cca4b1862e93002de3d5543d6cb39161c4ade60c",
                 "shasum": ""
             },
             "require": {
@@ -2167,7 +2167,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/fix-lost-transaction"
             },
-            "time": "2022-06-21T14:29:29+00:00"
+            "time": "2022-06-21T14:56:06+00:00"
         },
         {
             "name": "utopia-php/domains",
