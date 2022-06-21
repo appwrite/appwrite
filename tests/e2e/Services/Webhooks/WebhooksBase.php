@@ -134,13 +134,9 @@ trait WebhooksBase
         $this->assertStringContainsString('databases.' . $databaseId . '.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.attributes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.attributes.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString("databases.{$databaseId}.collections.*.attributes.{$actorsId}_{$attributeId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString("databases.{$databaseId}.collections.*.attributes.{$actorsId}_{$attributeId}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.attributes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.attributes.*.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.attributes.{$actorsId}_{$attributeId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.attributes.{$actorsId}_{$attributeId}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
@@ -164,13 +160,9 @@ trait WebhooksBase
         $this->assertStringContainsString('databases.' . $databaseId . '.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.attributes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.attributes.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString("databases.{$databaseId}.collections.*.attributes.{$actorsId}_{$attributeId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString("databases.{$databaseId}.collections.*.attributes.{$actorsId}_{$attributeId}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.attributes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.attributes.*.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.attributes.{$actorsId}_{$attributeId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.attributes.{$actorsId}_{$attributeId}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
