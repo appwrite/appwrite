@@ -45,7 +45,7 @@ abstract class Migration
         '0.14.0' => 'V13',
         '0.14.1' => 'V13',
         '0.14.2' => 'V13',
-        '0.15.0' => 'V13'
+        '0.15.0' => 'V14'
     ];
 
     /**
@@ -226,6 +226,87 @@ abstract class Migration
                 throw $th;
             }
         }
+    }
+
+    /**
+     * Creates attribute from collections.php
+     *
+     * @param \Utopia\Database\Database $database
+     * @param string $collectionId
+     * @param string $attributeId
+     * @return void
+     * @throws \Exception
+     * @throws \Utopia\Database\Exception\Duplicate
+     * @throws \Utopia\Database\Exception\Limit
+     */
+    public function createAttributeFromCollection(Database $database, string $collectionId, string $attributeId): void
+    {
+        $collection = Config::getParam('collections', [])[$collectionId] ?? null;
+
+        if (is_null($collection)) {
+            throw new Exception("Collection {$collectionId} not found");
+        }
+        $attributes = $collection['attributes'];
+
+        $attributeKey = array_search($attributeId, array_column($attributes, '$id'));
+
+        if (!$attributeKey) {
+            throw new Exception("Attribute {$attributeId} not found");
+        }
+
+        $attribute = $attributes[$attributeKey];
+
+        $database->createAttribute(
+            collection: $collectionId,
+            id: $attributeId,
+            type: $attribute['type'],
+            size: $attribute['size'],
+            required: $attribute['required'] ?? false,
+            default: $attribute['default'] ?? null,
+            signed: $attribute['signed'] ?? false,
+            array: $attribute['array'] ?? false,
+            format: $attribute['format'] ?? '',
+            formatOptions: $attribute['formatOptions'] ?? [],
+            filters: $attribute['filters'] ?? [],
+        );
+    }
+
+    /**
+     * Creates index from collections.php
+     *
+     * @param \Utopia\Database\Database $database
+     * @param string $collectionId
+     * @param string $indexId
+     * @return void
+     * @throws \Exception
+     * @throws \Utopia\Database\Exception\Duplicate
+     * @throws \Utopia\Database\Exception\Limit
+     */
+    public function createIndexFromCollection(Database $database, string $collectionId, string $indexId): void
+    {
+        $collection = Config::getParam('collections', [])[$collectionId] ?? null;
+
+        if (is_null($collection)) {
+            throw new Exception("Collection {$collectionId} not found");
+        }
+        $indexes = $collection['indexes'];
+
+        $indexKey = array_search($indexId, array_column($indexes, '$id'));
+
+        if (!$indexKey) {
+            throw new Exception("Attribute {$indexId} not found");
+        }
+
+        $index = $indexes[$indexKey];
+
+        $database->createIndex(
+            collection: $collectionId,
+            id: $indexId,
+            type: $index['type'],
+            attributes: $index['attributes'],
+            lengths: $index['lengths'] ?? [],
+            orders: $index['orders'] ?? []
+        );
     }
 
     /**
