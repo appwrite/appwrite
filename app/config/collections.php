@@ -58,6 +58,28 @@ $collections = [
         'name' => 'Collections',
         'attributes' => [
             [
+                '$id' => 'databaseInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'databaseId',
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => Database::LENGTH_KEY,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'default' => null,
+                'array' => false,
+            ],
+            [
                 '$id' => 'name',
                 'type' => Database::VAR_STRING,
                 'size' => 256,
