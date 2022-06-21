@@ -153,11 +153,11 @@ class Auth
      *
      * @param string $string
      * @param string $algo hashing algorithm to use
-     * @param string $options algo-specific options
+     * @param array $options algo-specific options
      *
      * @return bool|string|null
      */
-    public static function passwordHash(string $string, string $algo, mixed $options = [])
+    public static function passwordHash(string $string, string $algo, array $options = [])
     {
         // Plain text not supported, just an alias. Switch to recommended algo
         if ($algo === 'plaintext') {
@@ -209,11 +209,11 @@ class Auth
      * @param string $plain
      * @param string $hash
      * @param string $algo hashing algorithm used to hash
-     * @param string $options algo-specific options
+     * @param array $options algo-specific options
      *
      * @return bool
      */
-    public static function passwordVerify(string $plain, string $hash, string $algo, mixed $options = [])
+    public static function passwordVerify(string $plain, string $hash, string $algo, array $options = [])
     {
         // Plain text not supported, just an alias. Switch to recommended algo
         if ($algo === 'plaintext') {

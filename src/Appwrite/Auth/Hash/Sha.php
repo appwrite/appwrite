@@ -11,7 +11,7 @@ use Appwrite\Auth\Hash;
  *  - Version 2: sha224, sha256, sha384, sha512/224, sha512/256, sha512
  *  - Version 3: sha3-224, sha3-256, sha3-384, sha3-512
  *
- * Refference: https://www.php.net/manual/en/function.hash-algos.php
+ * Reference: https://www.php.net/manual/en/function.hash-algos.php
 */
 class Sha extends Hash
 {
@@ -41,9 +41,9 @@ class Sha extends Hash
     /**
      * Get default options for specific hashing algo
      *
-     * @return mixed options named array
+     * @return array options named array
      */
-    public function getDefaultOptions(): mixed
+    public function getDefaultOptions(): array
     {
         return [ 'version' => 'sha3-512' ];
     }

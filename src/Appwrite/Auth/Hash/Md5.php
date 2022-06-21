@@ -7,7 +7,7 @@ use Appwrite\Auth\Hash;
 /*
  * MD5 does not accept any options.
  *
- * Refference: https://www.php.net/manual/en/function.md5.php
+ * Reference: https://www.php.net/manual/en/function.md5.php
 */
 class Md5 extends Hash
 {
@@ -35,9 +35,9 @@ class Md5 extends Hash
     /**
      * Get default options for specific hashing algo
      *
-     * @return mixed options named array
+     * @return array options named array
      */
-    public function getDefaultOptions(): mixed
+    public function getDefaultOptions(): array
     {
         return [];
     }

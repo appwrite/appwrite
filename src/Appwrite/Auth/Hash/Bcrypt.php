@@ -9,7 +9,7 @@ use Appwrite\Auth\Hash;
  * int cost
  * string? salt; auto-generated if empty
  *
- * Refference: https://www.php.net/manual/en/password.constants.php
+ * Reference: https://www.php.net/manual/en/password.constants.php
 */
 class Bcrypt extends Hash
 {
@@ -37,9 +37,9 @@ class Bcrypt extends Hash
     /**
      * Get default options for specific hashing algo
      *
-     * @return mixed options named array
+     * @return array options named array
      */
-    public function getDefaultOptions(): mixed
+    public function getDefaultOptions(): array
     {
         return [ 'cost' => 8 ];
     }

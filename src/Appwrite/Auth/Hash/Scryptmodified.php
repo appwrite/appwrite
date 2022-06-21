@@ -11,7 +11,7 @@ use Appwrite\Auth\Hash;
  * string saltSeparator
  * strin signerKey
  *
- * Refference: https://github.com/DomBlack/php-scrypt/blob/master/scrypt.php#L112-L116
+ * Reference: https://github.com/DomBlack/php-scrypt/blob/master/scrypt.php#L112-L116
 */
 class Scryptmodified extends Hash
 {
@@ -46,9 +46,9 @@ class Scryptmodified extends Hash
     /**
      * Get default options for specific hashing algo
      *
-     * @return mixed options named array
+     * @return array options named array
      */
-    public function getDefaultOptions(): mixed
+    public function getDefaultOptions(): array
     {
         return [ ];
     }

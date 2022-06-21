@@ -33,7 +33,6 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
-use Utopia\Validator\JSON;
 use Utopia\Validator\WhiteList;
 
 $oauthDefaultSuccess = '/v1/auth/oauth2/success';

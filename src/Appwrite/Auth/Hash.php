@@ -5,14 +5,14 @@ namespace Appwrite\Auth;
 abstract class Hash
 {
     /**
-     * @var mixed $options Hashing-algo specific options
+     * @var array $options Hashing-algo specific options
     */
-    protected mixed $options = [];
+    protected array $options = [];
 
     /**
-     * @param mixed $options Hashing-algo specific options
+     * @param array $options Hashing-algo specific options
     */
-    public function __construct(mixed $options = [])
+    public function __construct(array $options = [])
     {
         $this->setOptions($options);
     }
@@ -20,9 +20,9 @@ abstract class Hash
     /**
      * Set hashing algo options
      *
-     * @param mixed $options Hashing-algo specific options
+     * @param array $options Hashing-algo specific options
     */
-    public function setOptions(mixed $options): self
+    public function setOptions(array $options): self
     {
         $this->options = \array_merge([], $this->getDefaultOptions(), $options);
         return $this;
@@ -31,9 +31,9 @@ abstract class Hash
     /**
      * Get hashing algo options
      *
-     * @return mixed $options Hashing-algo specific options
+     * @return array $options Hashing-algo specific options
     */
-    public function getOptions(): mixed
+    public function getOptions(): array
     {
         return $this->options;
     }
@@ -56,7 +56,7 @@ abstract class Hash
     /**
      * Get default options for specific hashing algo
      *
-     * @return mixed options named array
+     * @return array options named array
      */
-    abstract public function getDefaultOptions(): mixed;
+    abstract public function getDefaultOptions(): array;
 }

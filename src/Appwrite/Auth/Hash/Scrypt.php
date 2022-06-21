@@ -12,7 +12,7 @@ use Appwrite\Auth\Hash;
  * int costParallel
  * int length
  *
- * Refference: https://github.com/DomBlack/php-scrypt/blob/master/scrypt.php#L112-L116
+ * Reference: https://github.com/DomBlack/php-scrypt/blob/master/scrypt.php#L112-L116
 */
 class Scrypt extends Hash
 {
@@ -42,9 +42,9 @@ class Scrypt extends Hash
     /**
      * Get default options for specific hashing algo
      *
-     * @return mixed options named array
+     * @return array options named array
      */
-    public function getDefaultOptions(): mixed
+    public function getDefaultOptions(): array
     {
         return [ 'costCpu' => 8, 'costMemory' => 14, 'costParallel' => 1, 'length' => 64 ];
     }

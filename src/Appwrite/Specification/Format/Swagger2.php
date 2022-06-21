@@ -407,12 +407,12 @@ class Swagger2 extends Format
 
                 if (\is_array($rule['type'])) {
                     foreach ($rule['type'] as $ruleType) {
-                        if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float']) ) {
+                        if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float'])) {
                             $usedModels[] = $ruleType;
                         }
                     }
                 } else {
-                    if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float']) ) {
+                    if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
                         $usedModels[] = $rule['type'];
                     }
                 }

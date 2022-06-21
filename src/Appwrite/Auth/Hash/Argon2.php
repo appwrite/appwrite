@@ -10,7 +10,7 @@ use Appwrite\Auth\Hash;
  * int time_cost
  * int memory_cost
  *
- * Refference: https://www.php.net/manual/en/function.password-hash.php#example-983
+ * Reference: https://www.php.net/manual/en/function.password-hash.php#example-983
 */
 class Argon2 extends Hash
 {
@@ -38,9 +38,9 @@ class Argon2 extends Hash
     /**
      * Get default options for specific hashing algo
      *
-     * @return mixed options named array
+     * @return array options named array
      */
-    public function getDefaultOptions(): mixed
+    public function getDefaultOptions(): array
     {
         return ['memory_cost' => 65536, 'time_cost' => 4, 'threads' => 3];
     }

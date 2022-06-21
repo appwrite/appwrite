@@ -31,7 +31,7 @@ use Appwrite\Auth\Hash;
  * string portable_hashes
  * string random_state; The cached random state
  *
- * Refference: https://github.com/photodude/phpass
+ * Reference: https://github.com/photodude/phpass
 */
 class Phpass extends Hash
 {
@@ -41,14 +41,14 @@ class Phpass extends Hash
      * @var    string
      * @since  0.1.0
      */
-    protected $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    protected string $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
     /**
      * Get default options for specific hashing algo
      *
-     * @return mixed options named array
+     * @return array options named array
      */
-    public function getDefaultOptions(): mixed
+    public function getDefaultOptions(): array
     {
         $randomState = \microtime();
         if (\function_exists('getmypid')) {
@@ -99,9 +99,9 @@ class Phpass extends Hash
      */
     public function verify(string $password, string $hash): bool
     {
-        $hash = $this->cryptPrivate($password, $hash);
-        if ($hash[0] === '*') {
-            $hash = crypt($password, $hash);
+        $verificationHash = $this->cryptPrivate($password, $hash);
+        if ($verificationHash[0] === '*') {
+            $verificationHash = crypt($password, $hash);
         }
 
         /**
@@ -110,7 +110,7 @@ class Phpass extends Hash
          * unpredictable, which they are at least in the non-fallback
          * cases (that is, when we use /dev/urandom and bcrypt).
          */
-        return $hash === $hash;
+        return $hash === $verificationHash;
     }
 
     /**
@@ -120,7 +120,7 @@ class Phpass extends Hash
      * @since 0.1.0
      * @throws Exception Thows an Exception if the $count parameter is not a positive integer.
      */
-    protected function getRandomBytes($count, $options)
+    protected function getRandomBytes(int $count, array $options): string
     {
         if (!is_int($count) || $count < 1) {
             throw new \Exception('Argument count must be a positive integer');

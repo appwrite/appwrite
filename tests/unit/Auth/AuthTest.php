@@ -58,6 +58,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'bcrypt');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'bcrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'bcrypt'));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'bcrypt'));
 
         // Bcrypt - Version A
         $plain = 'test123';
@@ -65,6 +66,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'bcrypt');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'bcrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'bcrypt'));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'bcrypt'));
 
         // Bcrypt - Cost 5
         $plain = 'hello-world';
@@ -72,6 +74,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'bcrypt');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'bcrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'bcrypt'));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'bcrypt'));
 
         // Bcrypt - Cost 15
         $plain = 'super-secret-password';
@@ -79,6 +82,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'bcrypt');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'bcrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'bcrypt'));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'bcrypt'));
 
         // MD5 - Short
         $plain = 'appwrite';
@@ -86,6 +90,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'md5');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'md5'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'md5'));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'md5'));
 
         // MD5 - Long
         $plain = 'AppwriteIsAwesomeBackendAsAServiceThatIsAlsoOpenSourced';
@@ -93,6 +98,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'md5');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'md5'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'md5'));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'md5'));
 
         // PHPass
         $plain = 'pass123';
@@ -100,6 +106,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'phpass');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'phpass'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'phpass'));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'phpass'));
 
         // SHA
         $plain = 'developersAreAwesome!';
@@ -107,6 +114,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'sha');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'sha'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'sha'));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'sha'));
 
         // Argon2
         $plain = 'safe-argon-password';
@@ -114,6 +122,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'argon2');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'argon2'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'argon2'));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'argon2'));
 
         // Scrypt
         $plain = 'some-scrypt-password';
@@ -121,6 +130,8 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'scrypt');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', ['length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
+        $this->assertEquals(false, Auth::passwordVerify($plain, $hash, 'scrypt', ['length' => 64, 'costCpu' => 16384, 'costMemory' => 10, 'costParallel' => 2]));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'scrypt', ['length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
 
         // ScryptModified tested are in provider-specific tests below
 
@@ -134,6 +145,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'bcrypt');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'bcrypt'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'bcrypt'));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'bcrypt'));
 
         // Provider #2 (Blog)
         $plain = 'your-password';
@@ -141,6 +153,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'phpass');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'phpass'));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'phpass'));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'phpass'));
 
         // Provider #2 (Google)
         $plain = 'users-password';
@@ -153,6 +166,7 @@ class AuthTest extends TestCase
         $generatedHash = Auth::passwordHash($plain, 'scryptMod', $options);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scryptMod', $options));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scryptMod', $options));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'scryptMod', $options));
     }
 
     public function testUnknownAlgo()
