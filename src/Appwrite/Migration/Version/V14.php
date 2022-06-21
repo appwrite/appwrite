@@ -4,12 +4,21 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 
 class V14 extends Migration
 {
+    /**
+     * @var \PDO $pdo
+     */
+    private $pdo;
+
     public function execute(): void
     {
+        global $register;
+        $this->pdo = $register->get('db');
+
         Console::log('Migrating project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         Console::info('Migrating Collections');
         $this->migrateCollections();
@@ -28,6 +37,18 @@ class V14 extends Migration
             $id = $collection['$id'];
 
             Console::log("- {$id}");
+
+            try {
+                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}` RENAME TO `_{$this->project->getInternalId()}_{$id}`")->execute();
+                $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD `_createdAt` int unsigned DEFAULT NULL")->execute();
+                $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD `_updatedAt` int unsigned DEFAULT NULL")->execute();
+                $this->pdo->prepare("CREATE INDEX `_created_at` ON `_{$this->project->getInternalId()}_{$id}` (`_createdAt`)")->execute();
+                $this->pdo->prepare("CREATE INDEX `_updatedAt` ON `_{$this->project->getInternalId()}_{$id}` (`_updatedAt`)")->execute();
+            } catch (\Throwable $th) {
+                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+            }
+            usleep(100000);
+
             switch ($id) {
                 case 'attributes':
                 case 'indexes':
@@ -281,6 +302,9 @@ class V14 extends Migration
                  * Bump Project version number.
                  */
                 $document->setAttribute('version', '0.15.0');
+
+                break;
+            case '':
 
                 break;
         }
