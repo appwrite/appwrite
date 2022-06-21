@@ -1238,6 +1238,25 @@
                     }, payload);
                 }),
                 /**
+                 * Get usage stats for the database
+                 *
+                 *
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getUsage: (range) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/databases/usage';
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get Database
                  *
                  *
@@ -1400,29 +1419,6 @@
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
-                 * Get usage stats for the database
-                 *
-                 *
-                 * @param {string} databaseId
-                 * @param {string} range
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                getUsage: (databaseId, range) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof databaseId === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "databaseId"');
-                    }
-                    let path = '/databases/{databaseId}/collections/usage'.replace('{databaseId}', databaseId);
-                    let payload = {};
-                    if (typeof range !== 'undefined') {
-                        payload['range'] = range;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('get', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 }),
@@ -2456,6 +2452,29 @@
                     }
                     if (typeof offset !== 'undefined') {
                         payload['offset'] = offset;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get usage stats for the database
+                 *
+                 *
+                 * @param {string} databaseId
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getDatabaseUsage: (databaseId, range) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof databaseId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "databaseId"');
+                    }
+                    let path = '/databases/{databaseId}/usage'.replace('{databaseId}', databaseId);
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('get', uri, {
@@ -4209,10 +4228,11 @@
                  * @param {boolean} security
                  * @param {string} httpUser
                  * @param {string} httpPass
+                 * @param {string} signatureKey
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
+                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass, signatureKey) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
@@ -4250,6 +4270,9 @@
                     }
                     if (typeof httpPass !== 'undefined') {
                         payload['httpPass'] = httpPass;
+                    }
+                    if (typeof signatureKey !== 'undefined') {
+                        payload['signatureKey'] = signatureKey;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {

@@ -117,7 +117,8 @@ const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
 let path='/databases';let payload={};if(typeof databaseId!=='undefined'){payload['databaseId']=databaseId;}
 if(typeof name!=='undefined'){payload['name']=name;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),get:(databaseId)=>__awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getUsage:(range)=>__awaiter(this,void 0,void 0,function*(){let path='/databases/usage';let payload={};if(typeof range!=='undefined'){payload['range']=range;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),get:(databaseId)=>__awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 let path='/databases/{databaseId}'.replace('{databaseId}',databaseId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),update:(databaseId,name)=>__awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
 let path='/databases/{databaseId}'.replace('{databaseId}',databaseId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
@@ -140,9 +141,7 @@ if(typeof name!=='undefined'){payload['name']=name;}
 if(typeof permission!=='undefined'){payload['permission']=permission;}
 if(typeof read!=='undefined'){payload['read']=read;}
 if(typeof write!=='undefined'){payload['write']=write;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getUsage:(databaseId,range)=>__awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
-let path='/databases/{databaseId}/collections/usage'.replace('{databaseId}',databaseId);let payload={};if(typeof range!=='undefined'){payload['range']=range;}
-const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getCollection:(databaseId,collectionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getCollection:(databaseId,collectionId)=>__awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 let path='/databases/{databaseId}/collections/{collectionId}'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateCollection:(databaseId,collectionId,name,permission,read,write,enabled)=>__awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
@@ -297,6 +296,8 @@ let path='/databases/{databaseId}/collections/{collectionId}/usage'.replace('{da
 const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),listLogs:(databaseId,limit,offset)=>__awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 let path='/databases/{databaseId}/logs'.replace('{databaseId}',databaseId);let payload={};if(typeof limit!=='undefined'){payload['limit']=limit;}
 if(typeof offset!=='undefined'){payload['offset']=offset;}
+const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),getDatabaseUsage:(databaseId,range)=>__awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+let path='/databases/{databaseId}/usage'.replace('{databaseId}',databaseId);let payload={};if(typeof range!=='undefined'){payload['range']=range;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);})};this.functions={list:(search,limit,offset,cursor,cursorDirection,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/functions';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
 if(typeof limit!=='undefined'){payload['limit']=limit;}
 if(typeof offset!=='undefined'){payload['offset']=offset;}
@@ -485,7 +486,7 @@ if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
 if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('post',uri,{'content-type':'application/json',},payload);}),getWebhook:(projectId,webhookId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
-let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateWebhook:(projectId,webhookId,name,events,url,security,httpUser,httpPass)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
+let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('get',uri,{'content-type':'application/json',},payload);}),updateWebhook:(projectId,webhookId,name,events,url,security,httpUser,httpPass,signatureKey)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
 if(typeof events==='undefined'){throw new AppwriteException('Missing required parameter: "events"');}
@@ -497,6 +498,7 @@ if(typeof url!=='undefined'){payload['url']=url;}
 if(typeof security!=='undefined'){payload['security']=security;}
 if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
 if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
+if(typeof signatureKey!=='undefined'){payload['signatureKey']=signatureKey;}
 const uri=new URL(this.config.endpoint+path);return yield this.call('put',uri,{'content-type':'application/json',},payload);}),deleteWebhook:(projectId,webhookId)=>__awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
 let path='/projects/{projectId}/webhooks/{webhookId}'.replace('{projectId}',projectId).replace('{webhookId}',webhookId);let payload={};const uri=new URL(this.config.endpoint+path);return yield this.call('delete',uri,{'content-type':'application/json',},payload);})};this.storage={listBuckets:(search,limit,offset,cursor,cursorDirection,orderType)=>__awaiter(this,void 0,void 0,function*(){let path='/storage/buckets';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
