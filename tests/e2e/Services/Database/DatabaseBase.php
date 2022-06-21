@@ -2223,20 +2223,10 @@ trait DatabaseBase
         $this->assertEquals($document['body']['title'], 'Captain America');
         $this->assertIsArray($document['body']['$read']);
         $this->assertIsArray($document['body']['$write']);
-
-        if ($this->getSide() == 'client') {
-            $this->assertCount(1, $document['body']['$read']);
-            $this->assertCount(1, $document['body']['$write']);
-            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$read']);
-            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
-        }
-
-        if ($this->getSide() == 'server') {
-            $this->assertCount(0, $document['body']['$read']);
-            $this->assertCount(0, $document['body']['$write']);
-            $this->assertEquals([], $document['body']['$read']);
-            $this->assertEquals([], $document['body']['$write']);
-        }
+        $this->assertCount(1, $document['body']['$read']);
+        $this->assertCount(1, $document['body']['$write']);
+        $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$read']);
+        $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
 
         // Reset Permissions
 
