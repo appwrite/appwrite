@@ -40,14 +40,38 @@ class V14 extends Migration
 
             try {
                 $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}` RENAME TO `_{$this->project->getInternalId()}_{$id}`")->execute();
-                $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD `_createdAt` int unsigned DEFAULT NULL")->execute();
-                $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD `_updatedAt` int unsigned DEFAULT NULL")->execute();
-                $this->pdo->prepare("CREATE INDEX `_created_at` ON `_{$this->project->getInternalId()}_{$id}` (`_createdAt`)")->execute();
-                $this->pdo->prepare("CREATE INDEX `_updatedAt` ON `_{$this->project->getInternalId()}_{$id}` (`_updatedAt`)")->execute();
             } catch (\Throwable $th) {
                 Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
             }
+            try {
+                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}_perms` RENAME TO `_{$this->project->getInternalId()}_{$id}_perms`")->execute();
+            } catch (\Throwable $th) {
+                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+            }
+            try {
+                $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_createdAt` int unsigned DEFAULT NULL")->execute();
+            } catch (\Throwable $th) {
+                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+            }
+            try {
+                $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_updatedAt` int unsigned DEFAULT NULL")->execute();
+            } catch (\Throwable $th) {
+                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+            }
+            try {
+                $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_created_at` ON `_{$this->project->getInternalId()}_{$id}` (`_createdAt`)")->execute();
+            } catch (\Throwable $th) {
+                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+            }
+            try {
+                $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_updatedAt` ON `_{$this->project->getInternalId()}_{$id}` (`_updatedAt`)")->execute();
+            } catch (\Throwable $th) {
+                Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+            }
+
             usleep(100000);
+
+            $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
             switch ($id) {
                 case 'attributes':
@@ -302,9 +326,6 @@ class V14 extends Migration
                  * Bump Project version number.
                  */
                 $document->setAttribute('version', '0.15.0');
-
-                break;
-            case '':
 
                 break;
         }

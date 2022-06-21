@@ -242,7 +242,6 @@ abstract class Migration
     public function createAttributeFromCollection(Database $database, string $collectionId, string $attributeId): void
     {
         $collection = Config::getParam('collections', [])[$collectionId] ?? null;
-
         if (is_null($collection)) {
             throw new Exception("Collection {$collectionId} not found");
         }
@@ -250,7 +249,7 @@ abstract class Migration
 
         $attributeKey = array_search($attributeId, array_column($attributes, '$id'));
 
-        if (!$attributeKey) {
+        if ($attributeKey === false) {
             throw new Exception("Attribute {$attributeId} not found");
         }
 
