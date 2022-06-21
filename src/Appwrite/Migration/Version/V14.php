@@ -4,7 +4,6 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 
 class V14 extends Migration
@@ -352,8 +351,17 @@ class V14 extends Migration
 
                 break;
             case 'webhooks':
+                if (empty($document->getAttribute('signatureKey'))) {
+                    $document->setAttribute('signatureKey', \bin2hex(\random_bytes(64)));
+                }
+                if (!empty($document->getAttribute('projectId')) && is_null($document->getAttribute('projectInternalId'))) {
+                    $internalId = $this->projectDB->getDocument('projects', $document->getAttribute('projectId'))->getInternalId();
+                    $document->setAttribute('projectInternalId', $internalId);
+                }
+
+                break;
             case 'domains':
-                    if (!empty($document->getAttribute('projectId')) && is_null($document->getAttribute('projectInternalId'))) {
+                if (!empty($document->getAttribute('projectId')) && is_null($document->getAttribute('projectInternalId'))) {
                     $internalId = $this->projectDB->getDocument('projects', $document->getAttribute('projectId'))->getInternalId();
                     $document->setAttribute('projectInternalId', $internalId);
                 }
@@ -420,6 +428,12 @@ class V14 extends Migration
             case 'files':
                 if (is_null($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
+                }
+
+                break;
+            case 'users':
+                if (is_null($document->getAttribute('phoneVerification'))) {
+                    $document->setAttribute('phoneVerification', false);
                 }
 
                 break;
