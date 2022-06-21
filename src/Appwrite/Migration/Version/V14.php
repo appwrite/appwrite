@@ -523,7 +523,9 @@ class V14 extends Migration
         /**
          * Skip files collection.
          */
-        if (in_array($id, ['files'])) return;
+        if (in_array($id, ['files'])) {
+            return;
+        }
 
         try {
             /**
