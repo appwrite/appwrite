@@ -27,34 +27,55 @@ class V14 extends Migration
 
     protected function createNewMetaData(string $id): void
     {
+        /**
+         * Skip files collection.
+         */
         if (in_array($id, ['files'])) return;
 
         try {
+            /**
+             * Replace project UID with Internal ID.
+             */
             $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}` RENAME TO `_{$this->project->getInternalId()}_{$id}`")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
         }
         try {
+            /**
+             * Replace project UID with Internal ID on permissions table.
+             */
             $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}_perms` RENAME TO `_{$this->project->getInternalId()}_{$id}_perms`")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
         }
         try {
+            /**
+             * Add _createdAt attribute.
+             */
             $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_createdAt` int unsigned DEFAULT NULL")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
         }
         try {
+            /**
+             * Add _updatedAt attribute.
+             */
             $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_updatedAt` int unsigned DEFAULT NULL")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
         }
         try {
+            /**
+             * Create index for _createdAt.
+             */
             $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_created_at` ON `_{$this->project->getInternalId()}_{$id}` (`_createdAt`)")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
         }
         try {
+            /**
+             * Create index for _updatedAt.
+             */
             $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_updated_at` ON `_{$this->project->getInternalId()}_{$id}` (`_updatedAt`)")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
@@ -348,9 +369,15 @@ class V14 extends Migration
 
                 break;
             case 'keys':
+                /**
+                 * Add new 'expire' attribute and default to never (0).
+                 */
                 if (is_null($document->getAttribute('expire'))) {
                     $document->setAttribute('expire', 0);
                 }
+                /**
+                 * Add Internal ID 'projectId' for Subqueries.
+                 */
                 if (!empty($document->getAttribute('projectId')) && is_null($document->getAttribute('projectInternalId'))) {
                     $internalId = $this->projectDB->getDocument('projects', $document->getAttribute('projectId'))->getInternalId();
                     $document->setAttribute('projectInternalId', $internalId);
@@ -358,9 +385,15 @@ class V14 extends Migration
 
                 break;
             case 'webhooks':
+                /**
+                 * Add new 'signatureKey' attribute and generate a random value.
+                 */
                 if (empty($document->getAttribute('signatureKey'))) {
                     $document->setAttribute('signatureKey', \bin2hex(\random_bytes(64)));
                 }
+                /**
+                 * Add Internal ID 'projectId' for Subqueries.
+                 */
                 if (!empty($document->getAttribute('projectId')) && is_null($document->getAttribute('projectInternalId'))) {
                     $internalId = $this->projectDB->getDocument('projects', $document->getAttribute('projectId'))->getInternalId();
                     $document->setAttribute('projectInternalId', $internalId);
@@ -368,6 +401,9 @@ class V14 extends Migration
 
                 break;
             case 'domains':
+                /**
+                 * Add Internal ID 'projectId' for Subqueries.
+                 */
                 if (!empty($document->getAttribute('projectId')) && is_null($document->getAttribute('projectInternalId'))) {
                     $internalId = $this->projectDB->getDocument('projects', $document->getAttribute('projectId'))->getInternalId();
                     $document->setAttribute('projectInternalId', $internalId);
@@ -376,6 +412,9 @@ class V14 extends Migration
                 break;
             case 'tokens':
             case 'sessions':
+                /**
+                 * Add Internal ID 'userId' for Subqueries.
+                 */
                 if (!empty($document->getAttribute('userId')) && is_null($document->getAttribute('userInternalId'))) {
                     $internalId = $this->projectDB->getDocument('users', $document->getAttribute('userId'))->getInternalId();
                     $document->setAttribute('userInternalId', $internalId);
@@ -383,10 +422,16 @@ class V14 extends Migration
 
                 break;
             case 'memberships':
+                /**
+                 * Add Internal ID 'userId' for Subqueries.
+                 */
                 if (!empty($document->getAttribute('userId')) && is_null($document->getAttribute('userInternalId'))) {
                     $internalId = $this->projectDB->getDocument('users', $document->getAttribute('userId'))->getInternalId();
                     $document->setAttribute('userInternalId', $internalId);
                 }
+                /**
+                 * Add Internal ID 'teamId' for Subqueries.
+                 */
                 if (!empty($document->getAttribute('teamId')) && is_null($document->getAttribute('teamInternalId'))) {
                     $internalId = $this->projectDB->getDocument('teams', $document->getAttribute('teamId'))->getInternalId();
                     $document->setAttribute('teamInternalId', $internalId);
@@ -395,6 +440,9 @@ class V14 extends Migration
                 break;
             case 'attributes':
             case 'indexes':
+                /**
+                 * Add Internal ID 'collectionId' for Subqueries.
+                 */
                 if (!empty($document->getAttribute('collectionId')) && is_null($document->getAttribute('collectionInternalId'))) {
                     $internalId = $this->projectDB->getDocument('collections', $document->getAttribute('collectionId'))->getInternalId();
                     $document->setAttribute('collectionInternalId', $internalId);
@@ -402,24 +450,42 @@ class V14 extends Migration
 
                 break;
             case 'collections':
+                /**
+                 * Migrate dateCreated to $createdAt.
+                 */
                 if (is_null($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
                 }
+                /**
+                 * Migrate dateUpdated to $updatedAt.
+                 */
                 if (is_null($document->getUpdateAt())) {
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
 
+                /**
+                 * Migrate all Database Collections to use Internal ID.
+                 */
                 $internalId = $this->projectDB->getDocument('collections', $document->getId())->getInternalId();
                 $this->createNewMetaData("collection_{$internalId}");
 
                 break;
             case 'platforms':
+                /**
+                 * Migrate dateCreated to $createdAt.
+                 */
                 if (is_null($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
                 }
+                /**
+                 * Migrate dateUpdated to $updatedAt.
+                 */
                 if (is_null($document->getUpdateAt())) {
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
+                /**
+                 * Add Internal ID 'projectId' for Subqueries.
+                 */
                 if (!empty($document->getAttribute('projectId')) && is_null($document->getAttribute('projectInternalId'))) {
                     $internalId = $this->projectDB->getDocument('projects', $document->getAttribute('projectId'))->getInternalId();
                     $document->setAttribute('projectInternalId', $internalId);
@@ -427,45 +493,72 @@ class V14 extends Migration
 
                 break;
             case 'buckets':
+                /**
+                 * Migrate dateCreated to $createdAt.
+                 */
                 if (is_null($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
                 }
+                /**
+                 * Migrate dateUpdated to $updatedAt.
+                 */
                 if (is_null($document->getUpdateAt())) {
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
 
+                /**
+                 * Migrate all Storage Buckets to use Internal ID.
+                 */
                 $internalId = $this->projectDB->getDocument('buckets', $document->getId())->getInternalId();
                 $this->createNewMetaData("bucket_{$internalId}");
 
                 break;
             case 'users':
+                /**
+                 * Set 'phoneVerification' to false if not set.
+                 */
                 if (is_null($document->getAttribute('phoneVerification'))) {
                     $document->setAttribute('phoneVerification', false);
                 }
 
                 break;
             case 'functions':
+                /**
+                 * Migrate dateCreated to $createdAt.
+                 */
                 if (is_null($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
                 }
+                /**
+                 * Migrate dateUpdated to $updatedAt.
+                 */
                 if (is_null($document->getUpdateAt())) {
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
 
                 break;
             case 'deployments':
+                /**
+                 * Migrate dateCreated to $createdAt.
+                 */
                 if (is_null($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
                 }
 
                 break;
             case 'executions':
+                /**
+                 * Migrate dateCreated to $createdAt.
+                 */
                 if (is_null($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
                 }
 
                 break;
             case 'teams':
+                /**
+                 * Migrate dateCreated to $createdAt.
+                 */
                 if (is_null($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
                 }
