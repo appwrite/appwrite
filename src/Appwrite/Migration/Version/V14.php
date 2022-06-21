@@ -25,63 +25,6 @@ class V14 extends Migration
         $this->forEachDocument([$this, 'fixDocument']);
     }
 
-    protected function createNewMetaData(string $id): void
-    {
-        /**
-         * Skip files collection.
-         */
-        if (in_array($id, ['files'])) return;
-
-        try {
-            /**
-             * Replace project UID with Internal ID.
-             */
-            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}` RENAME TO `_{$this->project->getInternalId()}_{$id}`")->execute();
-        } catch (\Throwable $th) {
-            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-        }
-        try {
-            /**
-             * Replace project UID with Internal ID on permissions table.
-             */
-            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}_perms` RENAME TO `_{$this->project->getInternalId()}_{$id}_perms`")->execute();
-        } catch (\Throwable $th) {
-            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-        }
-        try {
-            /**
-             * Add _createdAt attribute.
-             */
-            $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_createdAt` int unsigned DEFAULT NULL")->execute();
-        } catch (\Throwable $th) {
-            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-        }
-        try {
-            /**
-             * Add _updatedAt attribute.
-             */
-            $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_updatedAt` int unsigned DEFAULT NULL")->execute();
-        } catch (\Throwable $th) {
-            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-        }
-        try {
-            /**
-             * Create index for _createdAt.
-             */
-            $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_created_at` ON `_{$this->project->getInternalId()}_{$id}` (`_createdAt`)")->execute();
-        } catch (\Throwable $th) {
-            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-        }
-        try {
-            /**
-             * Create index for _updatedAt.
-             */
-            $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_updated_at` ON `_{$this->project->getInternalId()}_{$id}` (`_updatedAt`)")->execute();
-        } catch (\Throwable $th) {
-            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
-        }
-    }
-
     /**
      * Migrate all Collections.
      *
@@ -567,5 +510,68 @@ class V14 extends Migration
         }
 
         return $document;
+    }
+
+    /**
+     * Creates new metadata taht was introduced foir a collection and enforces the Internal ID.
+     *
+     * @param string $id
+     * @return void
+     */
+    protected function createNewMetaData(string $id): void
+    {
+        /**
+         * Skip files collection.
+         */
+        if (in_array($id, ['files'])) return;
+
+        try {
+            /**
+             * Replace project UID with Internal ID.
+             */
+            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}` RENAME TO `_{$this->project->getInternalId()}_{$id}`")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
+        try {
+            /**
+             * Replace project UID with Internal ID on permissions table.
+             */
+            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}_perms` RENAME TO `_{$this->project->getInternalId()}_{$id}_perms`")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
+        try {
+            /**
+             * Add _createdAt attribute.
+             */
+            $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_createdAt` int unsigned DEFAULT NULL")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
+        try {
+            /**
+             * Add _updatedAt attribute.
+             */
+            $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_updatedAt` int unsigned DEFAULT NULL")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
+        try {
+            /**
+             * Create index for _createdAt.
+             */
+            $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_created_at` ON `_{$this->project->getInternalId()}_{$id}` (`_createdAt`)")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
+        try {
+            /**
+             * Create index for _updatedAt.
+             */
+            $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_updated_at` ON `_{$this->project->getInternalId()}_{$id}` (`_updatedAt`)")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
+        }
     }
 }
