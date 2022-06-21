@@ -49,7 +49,7 @@
             };
             this.headers = {
                 'x-sdk-version': 'appwrite:web:5.0.0',
-                'X-Appwrite-Response-Format': '0.14.0',
+                'X-Appwrite-Response-Format': '0.15.0',
             };
             this.realtime = {
                 socket: undefined,
@@ -4095,11 +4095,10 @@
                  * @param {boolean} security
                  * @param {string} httpUser
                  * @param {string} httpPass
-                 * @param {string} signatureKey
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass, signatureKey) => __awaiter(this, void 0, void 0, function* () {
+                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
@@ -4137,9 +4136,6 @@
                     }
                     if (typeof httpPass !== 'undefined') {
                         payload['httpPass'] = httpPass;
-                    }
-                    if (typeof signatureKey !== 'undefined') {
-                        payload['signatureKey'] = signatureKey;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {
@@ -5306,11 +5302,10 @@
                 /**
                  * Create User with Argon2 Password
                  *
-                 * Create a new user. Password entered must be hashed with
+                 * Create a new user. Password entered must be hashed with the the
                  * [Argon2](https://en.wikipedia.org/wiki/Argon2) algorithm. Use the [POST
-                 * /users](/docs/server/users#usersCreate) endpoint if you want to import
-                 * plain text password.
-                 *
+                 * /users](/docs/server/users#usersCreate) endpoint to import plain text
+                 * password.
                  *
                  * @param {string} userId
                  * @param {string} email
@@ -5351,10 +5346,10 @@
                 /**
                  * Create User with Bcrypt Password
                  *
-                 * Create a new user. Password entered must be hashed with
+                 * Create a new user. Password entered must be hashed with the
                  * [Bcrypt](https://en.wikipedia.org/wiki/Bcrypt) algorithm. Use the [POST
-                 * /users](/docs/server/users#usersCreate) endpoint if you want to import
-                 * plain text password.
+                 * /users](/docs/server/users#usersCreate) endpoint to import plain text
+                 * password.
                  *
                  *
                  * @param {string} userId
@@ -5396,10 +5391,10 @@
                 /**
                  * Create User with MD5 Password
                  *
-                 * Create a new user. Password entered must be hashed with
+                 * Create a new user. Password entered must be hashed with the
                  * [MD5](https://en.wikipedia.org/wiki/MD5) algorithm. Use the [POST
-                 * /users](/docs/server/users#usersCreate) endpoint if you want to import
-                 * plain text password.
+                 * /users](/docs/server/users#usersCreate) endpoint to import plain text
+                 * password.
                  *
                  *
                  * @param {string} userId
@@ -5441,10 +5436,10 @@
                 /**
                  * Create User with PHPass Password
                  *
-                 * Create a new user. Password entered must be hashed with
+                 * Create a new user. Password entered must be hashed with the
                  * [PHPass](https://www.openwall.com/phpass/) algorithm. Use the [POST
-                 * /users](/docs/server/users#usersCreate) endpoint if you want to import
-                 * plain text password.
+                 * /users](/docs/server/users#usersCreate) endpoint to import plain text
+                 * password.
                  *
                  *
                  * @param {string} userId
@@ -5486,10 +5481,10 @@
                 /**
                  * Create User with Scrypt Password
                  *
-                 * Create a new user. Password entered must be hashed with
+                 * Create a new user. Password entered must be hashed with the
                  * [Scrypt](https://github.com/Tarsnap/scrypt) algorithm. Use the [POST
-                 * /users](/docs/server/users#usersCreate) endpoint if you want to import
-                 * plain text password.
+                 * /users](/docs/server/users#usersCreate) endpoint to import plain text
+                 * password.
                  *
                  *
                  * @param {string} userId
@@ -5551,10 +5546,10 @@
                 /**
                  * Create User with Scrypt Modified Password
                  *
-                 * Create a new user. Password entered must be hashed with [Scrypt
+                 * Create a new user. Password entered must be hashed with the [Scrypt
                  * Modified](https://gist.github.com/Meldiron/eecf84a0225eccb5a378d45bb27462cc)
                  * algorithm. Use the [POST /users](/docs/server/users#usersCreate) endpoint
-                 * if you want to import plain text password.
+                 * to import plain text password.
                  *
                  *
                  * @param {string} userId
@@ -5617,10 +5612,10 @@
                 /**
                  * Create User with SHA Password
                  *
-                 * Create a new user. Password entered must be hashed with
+                 * Create a new user. Password entered must be hashed with the
                  * [SHA](https://en.wikipedia.org/wiki/Secure_Hash_Algorithm) algorithm. Use
-                 * the [POST /users](/docs/server/users#usersCreate) endpoint if you want to
-                 * import plain text password.
+                 * the [POST /users](/docs/server/users#usersCreate) endpoint import plain
+                 * text password.
                  *
                  *
                  * @param {string} userId
