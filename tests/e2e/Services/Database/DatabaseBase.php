@@ -2213,6 +2213,8 @@ trait DatabaseBase
             'data' => [
                 'title' => 'Captain America',
             ],
+            'read' => ['user:' . $this->getUser()['$id']],
+            'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
         $id = $document['body']['$id'];
