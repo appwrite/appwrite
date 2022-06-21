@@ -178,6 +178,14 @@ class V14 extends Migration
                 case 'webhooks':
                     try {
                         /**
+                         * Create 'signatureKey' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'signatureKey');
+                    } catch (\Throwable $th) {
+                        Console::warning("'signatureKey' from {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        /**
                          * Create 'projectInternalId' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'projectInternalId');
@@ -326,6 +334,120 @@ class V14 extends Migration
                  * Bump Project version number.
                  */
                 $document->setAttribute('version', '0.15.0');
+
+                if (!empty($document->getAttribute('teamId')) && is_null($document->getAttribute('teamInternalId'))) {
+                    $internalId = $this->projectDB->getDocument('teams', $document->getAttribute('teamId'))->getInternalId();
+                    $document->setAttribute('teamInternalId', $internalId);
+                }
+
+                break;
+            case 'keys':
+                if (is_null($document->getAttribute('expire'))) {
+                    $document->setAttribute('expire', 0);
+                }
+                if (!empty($document->getAttribute('projectId')) && is_null($document->getAttribute('projectInternalId'))) {
+                    $internalId = $this->projectDB->getDocument('projects', $document->getAttribute('projectId'))->getInternalId();
+                    $document->setAttribute('projectInternalId', $internalId);
+                }
+
+                break;
+            case 'webhooks':
+            case 'domains':
+                    if (!empty($document->getAttribute('projectId')) && is_null($document->getAttribute('projectInternalId'))) {
+                    $internalId = $this->projectDB->getDocument('projects', $document->getAttribute('projectId'))->getInternalId();
+                    $document->setAttribute('projectInternalId', $internalId);
+                }
+
+                break;
+            case 'tokens':
+            case 'sessions':
+                if (!empty($document->getAttribute('userId')) && is_null($document->getAttribute('userInternalId'))) {
+                    $internalId = $this->projectDB->getDocument('users', $document->getAttribute('userId'))->getInternalId();
+                    $document->setAttribute('userInternalId', $internalId);
+                }
+
+                break;
+            case 'memberships':
+                if (!empty($document->getAttribute('userId')) && is_null($document->getAttribute('userInternalId'))) {
+                    $internalId = $this->projectDB->getDocument('users', $document->getAttribute('userId'))->getInternalId();
+                    $document->setAttribute('userInternalId', $internalId);
+                }
+                if (!empty($document->getAttribute('teamId')) && is_null($document->getAttribute('teamInternalId'))) {
+                    $internalId = $this->projectDB->getDocument('teams', $document->getAttribute('teamId'))->getInternalId();
+                    $document->setAttribute('teamInternalId', $internalId);
+                }
+
+                break;
+            case 'attributes':
+            case 'indexes':
+                    if (!empty($document->getAttribute('collectionId')) && is_null($document->getAttribute('collectionInternalId'))) {
+                    $internalId = $this->projectDB->getDocument('collections', $document->getAttribute('collectionId'))->getInternalId();
+                    $document->setAttribute('collectionInternalId', $internalId);
+                }
+
+                break;
+            case 'collections':
+                if (is_null($document->getCreatedAt())) {
+                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
+                }
+                if (is_null($document->getUpdateAt())) {
+                    $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
+                }
+
+                break;
+            case 'platforms':
+                if (is_null($document->getCreatedAt())) {
+                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
+                }
+                if (is_null($document->getUpdateAt())) {
+                    $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
+                }
+                if (!empty($document->getAttribute('projectId')) && is_null($document->getAttribute('projectInternalId'))) {
+                    $internalId = $this->projectDB->getDocument('projects', $document->getAttribute('projectId'))->getInternalId();
+                    $document->setAttribute('projectInternalId', $internalId);
+                }
+
+                break;
+            case 'buckets':
+                if (is_null($document->getCreatedAt())) {
+                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
+                }
+                if (is_null($document->getUpdateAt())) {
+                    $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
+                }
+
+                break;
+            case 'files':
+                if (is_null($document->getCreatedAt())) {
+                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
+                }
+
+                break;
+            case 'functions':
+                if (is_null($document->getCreatedAt())) {
+                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
+                }
+                if (is_null($document->getUpdateAt())) {
+                    $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
+                }
+
+                break;
+            case 'deployments':
+                if (is_null($document->getCreatedAt())) {
+                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
+                }
+
+                break;
+            case 'executions':
+                if (is_null($document->getCreatedAt())) {
+                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
+                }
+
+                break;
+            case 'teams':
+                if (is_null($document->getCreatedAt())) {
+                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
+                }
 
                 break;
         }
