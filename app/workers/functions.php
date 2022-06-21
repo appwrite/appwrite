@@ -44,6 +44,10 @@ class FunctionsV1 extends Worker
         $user = new Document($this->args['user'] ?? []);
         $payload = json_encode($this->args['payload'] ?? []);
 
+        if ($project->getId() === 'console') {
+            return;
+        }
+
         $database = $this->getProjectDB($project->getId());
 
         /**
@@ -57,7 +61,7 @@ class FunctionsV1 extends Worker
             /** @var Document[] $functions */
 
             while ($sum >= $limit) {
-                $functions = Authorization::skip(fn () => $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]));
+                $functions = $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]);
                 $sum = \count($functions);
                 $offset = $offset + $limit;
 
@@ -101,7 +105,7 @@ class FunctionsV1 extends Worker
                 $jwt = $this->args['jwt'] ?? '';
                 $data = $this->args['data'] ?? '';
 
-                $function = Authorization::skip(fn () => $database->getDocument('functions', $execution->getAttribute('functionId')));
+                $function = $database->getDocument('functions', $execution->getAttribute('functionId'));
 
                 $this->execute(
                     project: $project,
@@ -132,7 +136,7 @@ class FunctionsV1 extends Worker
                  */
 
                 // Reschedule
-                $function = Authorization::skip(fn () => $database->getDocument('functions', $function->getId()));
+                $function = $database->getDocument('functions', $function->getId());
 
                 if (empty($function->getId())) {
                     throw new Exception('Function not found (' . $function->getId() . ')');
@@ -149,11 +153,11 @@ class FunctionsV1 extends Worker
                     ->setAttribute('scheduleNext', $next)
                     ->setAttribute('schedulePrevious', \time());
 
-                $function = Authorization::skip(fn () => $database->updateDocument(
+                $function = $database->updateDocument(
                     'functions',
                     $function->getId(),
                     $function->setAttribute('scheduleNext', (int) $next)
-                ));
+                );
 
                 if ($function === false) {
                     throw new Exception('Function update failed.');
@@ -198,7 +202,7 @@ class FunctionsV1 extends Worker
         $deploymentId = $function->getAttribute('deployment', '');
 
         /** Check if deployment exists */
-        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             throw new Exception('Deployment not found. Create deployment before trying to execute a function', 404);
@@ -209,7 +213,7 @@ class FunctionsV1 extends Worker
         }
 
         /** Check if build has exists */
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
         if ($build->isEmpty()) {
             throw new Exception('Build not found', 404);
         }
@@ -228,35 +232,30 @@ class FunctionsV1 extends Worker
         $runtime = $runtimes[$function->getAttribute('runtime')];
 
         /** Create execution or update execution status */
-        $execution = Authorization::skip(function () use ($dbForProject, &$executionId, $functionId, $deploymentId, $trigger, $user) {
-            $execution = $dbForProject->getDocument('executions', $executionId ?? '');
+        $execution = $dbForProject->getDocument('executions', $executionId ?? '');
+        if ($execution->isEmpty()) {
+            $executionId = $dbForProject->getId();
+            $execution = $dbForProject->createDocument('executions', new Document([
+                '$id' => $executionId,
+                '$read' => $user->isEmpty() ? [] : ['user:' . $user->getId()],
+                '$write' => [],
+                'functionId' => $functionId,
+                'deploymentId' => $deploymentId,
+                'trigger' => $trigger,
+                'status' => 'waiting',
+                'statusCode' => 0,
+                'response' => '',
+                'stderr' => '',
+                'time' => 0.0,
+                'search' => implode(' ', [$functionId, $executionId]),
+            ]));
+
             if ($execution->isEmpty()) {
-                $executionId = $dbForProject->getId();
-                $execution = $dbForProject->createDocument('executions', new Document([
-                    '$id' => $executionId,
-                    '$read' => $user->isEmpty() ? [] : ['user:' . $user->getId()],
-                    '$write' => [],
-                    'dateCreated' => time(),
-                    'functionId' => $functionId,
-                    'deploymentId' => $deploymentId,
-                    'trigger' => $trigger,
-                    'status' => 'waiting',
-                    'statusCode' => 0,
-                    'response' => '',
-                    'stderr' => '',
-                    'time' => 0.0,
-                    'search' => implode(' ', [$functionId, $executionId]),
-                ]));
-
-                if ($execution->isEmpty()) {
-                    throw new Exception('Failed to create or read execution');
-                }
+                throw new Exception('Failed to create or read execution');
             }
-            $execution->setAttribute('status', 'processing');
-            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-
-            return $execution;
-        });
+        }
+        $execution->setAttribute('status', 'processing');
+        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
         /** Collect environment variables */
         $vars = [
@@ -298,7 +297,7 @@ class FunctionsV1 extends Worker
                 ->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
             $endtime = \microtime(true);
-            $time = $endtime - $execution->getAttribute('dateCreated');
+            $time = $endtime - $execution->getCreatedAt();
             $execution
                 ->setAttribute('time', $time)
                 ->setAttribute('status', 'failed')
@@ -307,8 +306,7 @@ class FunctionsV1 extends Worker
             Console::error($th->getMessage());
         }
 
-        $execution = Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
-        /** @var Document $execution */
+        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
         /** Trigger Webhook */
         $executionModel = new Execution();

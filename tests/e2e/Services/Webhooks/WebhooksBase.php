@@ -119,13 +119,9 @@ trait WebhooksBase
         $this->assertStringContainsString('collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('collections.*.attributes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('collections.*.attributes.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.*.attributes.{$actorsId}_{$attributeId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.*.attributes.{$actorsId}_{$attributeId}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}.attributes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}.attributes.*.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.{$actorsId}.attributes.{$actorsId}_{$attributeId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.{$actorsId}.attributes.{$actorsId}_{$attributeId}.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
@@ -149,13 +145,9 @@ trait WebhooksBase
         $this->assertStringContainsString('collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('collections.*.attributes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('collections.*.attributes.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.*.attributes.{$actorsId}_{$attributeId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.*.attributes.{$actorsId}_{$attributeId}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}.attributes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("collections.{$actorsId}.attributes.*.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.{$actorsId}.attributes.{$actorsId}_{$attributeId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("collections.{$actorsId}.attributes.{$actorsId}_{$attributeId}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
@@ -505,7 +497,7 @@ trait WebhooksBase
         $this->assertIsArray($webhook['data']['$read']);
         $this->assertIsArray($webhook['data']['$write']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['dateCreated'], 'logo.png');
+        $this->assertIsInt($webhook['data']['$createdAt']);
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -561,7 +553,7 @@ trait WebhooksBase
         $this->assertIsArray($webhook['data']['$read']);
         $this->assertIsArray($webhook['data']['$write']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['dateCreated'], 'logo.png');
+        $this->assertIsInt($webhook['data']['$createdAt']);
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -612,7 +604,7 @@ trait WebhooksBase
         $this->assertIsArray($webhook['data']['$read']);
         $this->assertIsArray($webhook['data']['$write']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['dateCreated'], 'logo.png');
+        $this->assertIsInt($webhook['data']['$createdAt']);
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -695,7 +687,7 @@ trait WebhooksBase
         $this->assertEquals('Arsenal', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $this->assertIsInt($webhook['data']['dateCreated']);
+        $this->assertIsInt($webhook['data']['$createdAt']);
 
         /**
          * Test for FAILURE
@@ -740,7 +732,7 @@ trait WebhooksBase
         $this->assertEquals('Demo New', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $this->assertIsInt($webhook['data']['dateCreated']);
+        $this->assertIsInt($webhook['data']['$createdAt']);
 
         /**
          * Test for FAILURE
@@ -789,7 +781,7 @@ trait WebhooksBase
         $this->assertEquals('Chelsea', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $this->assertIsInt($webhook['data']['dateCreated']);
+        $this->assertIsInt($webhook['data']['$createdAt']);
 
         /**
          * Test for FAILURE

@@ -610,7 +610,7 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertNotEmpty($user['body']['$id']);
 
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions', [
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [

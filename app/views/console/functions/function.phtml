@@ -170,7 +170,7 @@ sort($patterns);
                                                 <span data-ls-if="{{deployment.status}} == 'failed'" style="color: var(--config-color-danger)" class="pull-start" data-ls-bind="{{deployment.status}}"></span>
                                                 <span data-ls-if="{{deployment.status}} == 'ready'" style="color: var(--config-color-success)" class="pull-start" data-ls-bind="{{deployment.status}}"></span>
                                                 <span data-ls-if="{{deployment.status}} == 'processing' || {{deployment.status}} == 'building'" style="color: var(--config-color-info)" class="pull-start" data-ls-bind="{{deployment.status}}"></span>
-                                                <span class="pull-start" data-ls-bind="&nbsp; | &nbsp; Created {{deployment.dateCreated|timeSince}} &nbsp; | &nbsp; {{deployment.size|humanFileSize}}{{deployment.size|humanFileUnit}}"></span>
+                                                <span class="pull-start" data-ls-bind="&nbsp; | &nbsp; Created {{deployment.$createdAt|timeSince}} &nbsp; | &nbsp; {{deployment.size|humanFileSize}}{{deployment.size|humanFileUnit}}"></span>
 
                                                 <span data-ls-if="{{deployment.status}} == 'failed'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stderr-{{deployment.$id}}">Logs</button></span>
                                                 <span data-ls-if="{{deployment.status}} == 'ready'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-stdout-{{deployment.$id}}">Logs</button></span>
@@ -246,8 +246,8 @@ sort($patterns);
 
                         <ul class="margin-bottom-large text-fade text-size-small">
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.dateUpdated|dateText}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.dateCreated|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.$updatedAt|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.$createdAt|dateText}}"></span></li>
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"
@@ -393,7 +393,7 @@ sort($patterns);
                                             <i class="dot success" data-ls-if="{{execution.status}} === 'completed'"></i>
                                         </td>
                                         <td data-title="Date: ">
-                                            <span data-ls-bind="{{execution.dateCreated|dateTime}}"></span>
+                                            <span data-ls-bind="{{execution.$createdAt|dateTime}}"></span>
                                         </td>
                                         <td data-title="Status: ">
                                             <span data-ls-bind="{{execution.status}}"></span>
@@ -596,8 +596,8 @@ sort($patterns);
 
                         <ul class="margin-bottom-large text-fade text-size-small">
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.dateUpdated|dateText}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.dateCreated|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.$updatedAt|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.$createdAt|dateText}}"></span></li>
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"

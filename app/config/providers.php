@@ -283,7 +283,7 @@ return [ // Ordered by ABC.
     ],
     'yammer' => [
         'name' => 'Yammer',
-        'developers' => 'https://developer.yammer.com/docs/oauth-2',
+        'developers' => 'https://docs.microsoft.com/en-us/rest/api/yammer/oauth-2/',
         'icon' => 'icon-yammer',
         'enabled' => true,
         'sandbox' => false,
@@ -327,6 +327,7 @@ return [ // Ordered by ABC.
     //     'beta' => false,
     //     'mock' => false,
     // ],
+
     // Keep Last
     'mock' => [
         'name' => 'Mock',
