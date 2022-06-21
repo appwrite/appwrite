@@ -1,0 +1,1 @@
+Update currently logged in user account phone number. After changing phone number, the user confirmation status will get reset. A new confirmation SMS is not sent automatically however you can use the phone confirmation endpoint again to send the confirmation SMS.

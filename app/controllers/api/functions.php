@@ -66,8 +66,6 @@ App::post('/v1/functions')
         $function = $dbForProject->createDocument('functions', new Document([
             '$id' => $functionId,
             'execute' => $execute,
-            'dateCreated' => time(),
-            'dateUpdated' => time(),
             'status' => 'disabled',
             'name' => $name,
             'runtime' => $runtime,
@@ -315,7 +313,6 @@ App::put('/v1/functions/:functionId')
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
-            'dateUpdated' => time(),
             'name' => $name,
             'vars' => $vars,
             'events' => $events,
@@ -575,7 +572,6 @@ App::post('/v1/functions/:functionId/deployments')
                     '$write' => ['role:all'],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
-                    'dateCreated' => time(),
                     'entrypoint' => $entrypoint,
                     'path' => $path,
                     'size' => $fileSize,
@@ -605,7 +601,6 @@ App::post('/v1/functions/:functionId/deployments')
                     '$write' => ['role:all'],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
-                    'dateCreated' => time(),
                     'entrypoint' => $entrypoint,
                     'path' => $path,
                     'size' => $fileSize,
@@ -854,11 +849,11 @@ App::post('/v1/functions/:functionId/executions')
 
         $executionId = $dbForProject->getId();
 
+        /** @var Document $execution */
         $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
             '$write' => [],
-            'dateCreated' => time(),
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
@@ -952,7 +947,7 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
             $endtime = \microtime(true);
-            $time = $endtime - $execution->getAttribute('dateCreated');
+            $time = $endtime - $execution->getCreatedAt();
             $execution->setAttribute('time', $time);
             $execution->setAttribute('status', 'failed');
             $execution->setAttribute('statusCode', $th->getCode());

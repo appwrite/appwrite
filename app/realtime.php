@@ -150,6 +150,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                 'timestamp' => time(),
                 'value' => '{}'
             ]);
+
             $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
         } catch (\Throwable $th) {
             call_user_func($logError, $th, "createWorkerDocument");
@@ -297,7 +298,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        [$database, $returnDatabase] = getDatabase($register, "_{$projectId}");
+                        [$consoleDatabase, $returnConsoleDatabase] = getDatabase($register, '_console');
+                        $project = Authorization::skip(fn() => $consoleDatabase->getDocument('projects', $projectId));
+                        [$database, $returnDatabase] = getDatabase($register, "_{$project->getInternalId()}");
 
                         $user = $database->getDocument('users', $userId);
 
@@ -306,6 +309,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
 
                         call_user_func($returnDatabase);
+                        call_user_func($returnConsoleDatabase);
                     }
                 }
 
@@ -373,7 +377,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_{$project->getId()}");
+        $database->setNamespace("_{$project->getInternalId()}");
 
         /*
          *  Project Check
@@ -480,7 +484,9 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_{$realtime->connections[$connection]['projectId']}");
+        $database->setNamespace("_console");
+        $project = Authorization::skip(fn() => $database->getDocument('projects', $realtime->connections[$connection]['projectId']));
+        $database->setNamespace("_{$project->getInternalId()}");
 
         /*
          * Abuse Check

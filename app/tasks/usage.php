@@ -15,6 +15,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
 
+Authorization::disable();
+Authorization::setDefaultStatus(false);
+
 function getDatabase(Registry &$register, string $namespace): Database
 {
     $attempts = 0;
@@ -120,10 +123,7 @@ $cli
         $influxDB = getInfluxDB($register);
 
         $usage = new Usage($database, $influxDB, $logError);
-
         $usageDB = new UsageDB($database, $logError);
-
-        Authorization::disable();
 
         $iterations = 0;
         Console::loop(function () use ($interval, $usage, $usageDB, &$iterations) {

@@ -248,7 +248,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                         <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.name}}" data-ls-attrs="title={{team.name}}"></a>
                                     </td>
                                     <td data-title="Members: "><span data-ls-bind="{{team.total}} members"></span></td>
-                                    <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|dateText}}"></small></td>
+                                    <td data-title="Date Created: "><small data-ls-bind="{{team.$createdAt|dateText}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>

@@ -17,6 +17,18 @@ class User extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'User creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'User update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User name.',
@@ -47,9 +59,21 @@ class User extends Model
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
+            ->addRule('phone', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User phone number in E.164 format.',
+                'default' => '',
+                'example' => '+4930901820',
+            ])
             ->addRule('emailVerification', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Email verification status.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('phoneVerification', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Phone verification status.',
                 'default' => false,
                 'example' => true,
             ])

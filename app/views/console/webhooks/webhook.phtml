@@ -91,6 +91,9 @@ sort($patterns);
                         <label data-ls-attrs="for=url-{{webhook.$id}}">POST URL</label>
                         <input type="url" class="full-width" data-ls-attrs="id=url-{{project-webhook.$id}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{project-webhook.url}}" />
 
+                        <label data-ls-attrs="for=signatureKey-{{webhook.$id}}">Signature Key</label>
+                        <input type="text" class="full-width" data-ls-attrs="id=signatureKey-{{project-webhook.$id}}" name="signatureKey" required autocomplete="off" placeholder="ad3d581ca230e2b7059c545e5a" data-ls-bind="{{project-webhook.signatureKey}}" />
+
                         <section class="margin-bottom-small" data-ls-attrs="x-init=load({{project-webhook.events}})">
                             <label class="margin-bottom-small">Events <span class="tooltip small" data-tooltip="Set events that will trigger your webhook."><i class="icon-info-circled"></i></span></label>
                             <div>
