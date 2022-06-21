@@ -378,6 +378,10 @@
                 /**
                  * Update Account Phone
                  *
+                 * Update currently logged in user account phone number. After changing phone
+                 * number, the user confirmation status will get reset. A new confirmation SMS
+                 * is not sent automatically however you can use the phone confirmation
+                 * endpoint again to send the confirmation SMS.
                  *
                  * @param {string} number
                  * @param {string} password
@@ -756,6 +760,11 @@
                 /**
                  * Create Phone session
                  *
+                 * Sends the user a SMS with a secret key for creating a session. Use the
+                 * returned user ID and the secret to submit a request to the [PUT
+                 * /account/sessions/phone](/docs/client/account#accountUpdatePhoneSession)
+                 * endpoint to complete the login process. The secret sent to the user's phone
+                 * is valid for 15 minutes.
                  *
                  * @param {string} userId
                  * @param {string} number
@@ -785,6 +794,17 @@
                 /**
                  * Create Phone session (confirmation)
                  *
+                 * Use this endpoint to complete creating the session with the Magic URL. Both
+                 * the **userId** and **secret** arguments will be passed as query parameters
+                 * to the redirect URL you have provided when sending your request to the
+                 * [POST
+                 * /account/sessions/magic-url](/docs/client/account#accountCreateMagicURLSession)
+                 * endpoint.
+                 *
+                 * Please note that in order to avoid a [Redirect
+                 * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+                 * the only valid redirect URLs are the ones from domains you have set when
+                 * adding your platforms in the console interface.
                  *
                  * @param {string} userId
                  * @param {string} secret
@@ -905,8 +925,8 @@
                  * should redirect the user back to your app and allow you to complete the
                  * verification process by verifying both the **userId** and **secret**
                  * parameters. Learn more about how to [complete the verification
-                 * process](/docs/client/account#accountUpdateVerification). The verification
-                 * link sent to the user's email address is valid for 7 days.
+                 * process](/docs/client/account#accountUpdateEmailVerification). The
+                 * verification link sent to the user's email address is valid for 7 days.
                  *
                  * Please note that in order to avoid a [Redirect
                  * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md),
@@ -968,6 +988,13 @@
                 /**
                  * Create Phone Verification
                  *
+                 * Use this endpoint to send a verification message to your user's phone
+                 * number to confirm they are the valid owners of that address. The provided
+                 * secret should allow you to complete the verification process by verifying
+                 * both the **userId** and **secret** parameters. Learn more about how to
+                 * [complete the verification
+                 * process](/docs/client/account#accountUpdatePhoneVerification). The
+                 * verification link sent to the user's phone number is valid for 15 minutes.
                  *
                  * @throws {AppwriteException}
                  * @returns {Promise}
@@ -983,6 +1010,10 @@
                 /**
                  * Create Phone Verification (confirmation)
                  *
+                 * Use this endpoint to complete the user phone verification process. Use the
+                 * **userId** and **secret** that were sent to your user's phone number to
+                 * verify the user email ownership. If confirmed this route will return a 200
+                 * status code.
                  *
                  * @param {string} userId
                  * @param {string} secret
@@ -4064,11 +4095,10 @@
                  * @param {boolean} security
                  * @param {string} httpUser
                  * @param {string} httpPass
-                 * @param {string} signatureKey
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass, signatureKey) => __awaiter(this, void 0, void 0, function* () {
+                updateWebhook: (projectId, webhookId, name, events, url, security, httpUser, httpPass) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
@@ -4107,9 +4137,6 @@
                     if (typeof httpPass !== 'undefined') {
                         payload['httpPass'] = httpPass;
                     }
-                    if (typeof signatureKey !== 'undefined') {
-                        payload['signatureKey'] = signatureKey;
-                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {
                         'content-type': 'application/json',
@@ -4135,6 +4162,29 @@
                     let payload = {};
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('delete', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Webhook Signature Key
+                 *
+                 *
+                 * @param {string} projectId
+                 * @param {string} webhookId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateWebhookSignature: (projectId, webhookId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "projectId"');
+                    }
+                    if (typeof webhookId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "webhookId"');
+                    }
+                    let path = '/projects/{projectId}/webhooks/{webhookId}/signature'.replace('{projectId}', projectId).replace('{webhookId}', webhookId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
                         'content-type': 'application/json',
                     }, payload);
                 })
@@ -5448,6 +5498,7 @@
                 /**
                  * Update Phone
                  *
+                 * Update the user phone by its unique ID.
                  *
                  * @param {string} userId
                  * @param {string} number
@@ -5642,6 +5693,7 @@
                 /**
                  * Update Phone Verification
                  *
+                 * Update the user phone verification status by its unique ID.
                  *
                  * @param {string} userId
                  * @param {boolean} phoneVerification
