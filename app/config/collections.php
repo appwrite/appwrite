@@ -1178,6 +1178,13 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
+                '$id' => '_key_phone',
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['phone'],
+                'lengths' => [16],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
                 '$id' => '_key_search',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
@@ -1744,7 +1751,7 @@ $collections = [
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_internal',
+                '$id' => '_key_user',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
