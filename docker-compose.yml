@@ -643,6 +643,11 @@ services:
     image: redis:6.2-alpine
     <<: *x-logging
     container_name: appwrite-redis
+    command: >
+      redis-server
+      --maxmemory            512mb
+      --maxmemory-policy     allkeys-lru
+      --maxmemory-samples    5
     ports:
       - "6379:6379"
     networks:
