@@ -176,31 +176,24 @@ class Auth
             case 'argon2':
                 $hasher = new Argon2($options);
                 return $hasher->hash($string);
-                break;
             case 'bcrypt':
                 $hasher = new Bcrypt($options);
                 return $hasher->hash($string);
-                break;
             case 'md5':
                 $hasher = new Md5($options);
                 return $hasher->hash($string);
-                break;
             case 'sha':
                 $hasher = new Sha($options);
                 return $hasher->hash($string);
-                break;
             case 'phpass':
                 $hasher = new Phpass($options);
                 return $hasher->hash($string);
-                break;
             case 'scrypt':
                 $hasher = new Scrypt($options);
                 return $hasher->hash($string);
-                break;
             case 'scryptMod':
                 $hasher = new Scryptmodified($options);
                 return $hasher->hash($string);
-                break;
             default:
                 throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
         }
@@ -232,31 +225,24 @@ class Auth
             case 'argon2':
                 $hasher = new Argon2($options);
                 return $hasher->verify($plain, $hash);
-                break;
             case 'bcrypt':
                 $hasher = new Bcrypt($options);
                 return $hasher->verify($plain, $hash);
-                break;
             case 'md5':
                 $hasher = new Md5($options);
                 return $hasher->verify($plain, $hash);
-                break;
             case 'sha':
                 $hasher = new Sha($options);
                 return $hasher->verify($plain, $hash);
-                break;
             case 'phpass':
                 $hasher = new Phpass($options);
                 return $hasher->verify($plain, $hash);
-                break;
             case 'scrypt':
                 $hasher = new Scrypt($options);
                 return $hasher->verify($plain, $hash);
-                break;
             case 'scryptMod':
                 $hasher = new Scryptmodified($options);
                 return $hasher->verify($plain, $hash);
-                break;
             default:
                 throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
         }
