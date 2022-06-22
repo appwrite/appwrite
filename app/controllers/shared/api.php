@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Audit;
+use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
@@ -18,7 +19,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 
-App::init(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, Event $database, Database $dbForProject, string $mode) {
+App::init(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) {
 
     $route = $utopia->match($request);
 
@@ -164,7 +165,7 @@ App::init(function (App $utopia, Request $request, Document $project) {
     }
 }, ['utopia', 'request', 'project'], 'auth');
 
-App::shutdown(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, Event $database, string $mode, Database $dbForProject) {
+App::shutdown(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) {
 
     if (!empty($events->getEvent())) {
         if (empty($events->getPayload())) {
@@ -192,16 +193,17 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
         if ($project->getId() !== 'console') {
             $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
             $payload = new Document($events->getPayload());
-            $context = $events->getContext() ?? false;
 
-            $collection = ($context && $context->getCollection() === 'collections') ? $context : null;
-            $bucket = ($context && $context->getCollection() === 'buckets') ? $context : null;
+            $db = $events->getContext('database');
+            $collection = $events->getContext('collection');
+            $bucket = $events->getContext('bucket');
 
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $payload,
                 project: $project,
+                database: $db,
                 collection: $collection,
                 bucket: $bucket,
             );

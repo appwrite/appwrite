@@ -245,18 +245,29 @@ class UsageDB extends Usage
     private function databaseStats(string $projectId): void
     {
         $projectDocumentsCount = 0;
+        $projectCollectionsCount = 0;
 
-        $metric = 'database.collections.count';
-        $this->count($projectId, 'collections', $metric);
+        $this->count($projectId, 'databases', 'databases.count');
 
-        $this->foreachDocument($projectId, 'collections', [], function ($collection) use (&$projectDocumentsCount, $projectId,) {
-            $metric = "database.collections.{$collection->getId()}.documents.count";
+        $this->foreachDocument($projectId, 'databases', [], function ($database) use (&$projectDocumentsCount, &$projectCollectionsCount, $projectId) {
+            $metric = "databases.{$database->getId()}.collections.count";
+            $count = $this->count($projectId, 'database_' . $database->getInternalId(), $metric);
+            $projectCollectionsCount += $count;
+            $databaseDocumentsCount = 0;
 
-            $count = $this->count($projectId, 'collection_' . $collection->getInternalId(), $metric);
-            $projectDocumentsCount += $count;
+            $this->foreachDocument($projectId, 'database_' . $database->getInternalId(), [], function ($collection) use (&$projectDocumentsCount, &$databaseDocumentsCount, $projectId, $database) {
+                $metric = "databases.{$database->getId()}.collections.{$collection->getId()}.documents.count";
+
+                $count = $this->count($projectId, 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $metric);
+                $projectDocumentsCount += $count;
+                $databaseDocumentsCount += $count;
+            });
+
+            $this->createOrUpdateMetric($projectId, "databases.{$database->getId()}.documents.count", $databaseDocumentsCount);
         });
 
-        $this->createOrUpdateMetric($projectId, 'database.documents.count', $projectDocumentsCount);
+        $this->createOrUpdateMetric($projectId, 'databases.collections.count', $projectCollectionsCount);
+        $this->createOrUpdateMetric($projectId, 'databases.documents.count', $projectDocumentsCount);
     }
 
     /**

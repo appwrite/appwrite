@@ -254,4 +254,4 @@ First of all, commit the changes with the message `Added XXX Runtime` and push i
 
 ## ![face_with_head_bandage](https://github.githubassets.com/images/icons/emoji/unicode/1f915.png) Stuck ?
 
-If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord) and we'll be happy to help you out.
+If you need any help with the contribution, feel free to head over to [our Discord channel](https://appwrite.io/discord) and we'll be happy to help you out.

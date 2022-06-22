@@ -5,15 +5,17 @@ $logs = $this->getParam('logs', null);
 
 ?>
 <div
-    data-service="database.getCollection"
+    data-service="databases.getCollection"
     data-param-collection-id="{{router.params.collection}}"
+    data-param-database-id="{{router.params.databaseId}}"
     data-scope="sdk"
-    data-event="load,database.updateDocument"
+    data-event="load,databases.updateDocument"
     data-name="project-collection">
 
     <div
-        data-service="database.getDocument"
+        data-service="databases.getDocument"
         data-param-collection-id="{{router.params.collection}}"
+        data-param-database-id="{{router.params.databaseId}}"
         data-param-document-id="{{router.params.id}}"
         data-scope="sdk"
         data-event="load"
@@ -22,7 +24,7 @@ $logs = $this->getParam('logs', null);
 
         <div class="cover">
             <h1 class="zone xl margin-bottom-large">
-                <a data-ls-attrs="href=/console/database/collection?id={{router.params.collection}}&project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <span data-ls-bind="{{project-collection.name}}"></span></a>
+                <a data-ls-attrs="href=/console/databases/collection?id={{router.params.collection}}&project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <span data-ls-bind="{{project-collection.name}}"></span></a>
 
                 <br />
 
@@ -45,7 +47,7 @@ $logs = $this->getParam('logs', null);
 
         <div class="zone xl margin-bottom-no">
             <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
-                <li data-state="/console/database/document?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
+                <li data-state="/console/databases/document?id={{router.params.id}}&collection={{router.params.collection}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}">
                     <h2 class="margin-bottom">Overview</h2>
 
                     <div class="row responsive">
@@ -64,19 +66,20 @@ $logs = $this->getParam('logs', null);
                                 <?php if($new): ?>
                                     data-analytics-label="Create Database Document"
                                     data-success="trigger,redirect"
-                                    data-success-param-trigger-events="database.createDocument"
-                                    data-success-param-redirect-url="/console/database/collection?id={{project-collection.$id}}&project={{router.params.project}}"
+                                    data-success-param-trigger-events="databases.createDocument"
+                                    data-success-param-redirect-url="/console/databases/collection?id={{project-collection.$id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}"
                                     data-failure-param-alert-text="Failed to create document"
                                 <?php else: ?>
                                     data-analytics-label="Update Database Document"
                                     data-success="trigger,alert"
-                                    data-success-param-trigger-events="database.updateDocument"
+                                    data-success-param-trigger-events="databases.updateDocument"
                                     data-success-param-alert-text="Your document was updated"
                                     data-failure-param-alert-text="Failed to update document"
                                 <?php endif; ?>
                                 >
 
                                 <input type="hidden" name="collectionId" data-ls-bind="{{project-collection.$id}}" />
+                                <input type="hidden" name="databaseId" data-ls-bind="{{router.params.databaseId}}" />
                                 <?php if(!$new): ?><input type="hidden" name="documentId" data-ls-bind="{{project-document.$id}}" /><?php endif; ?>
 
                                 <div class="box">
@@ -86,7 +89,7 @@ $logs = $this->getParam('logs', null);
                                             type="hidden"
                                             data-custom-id
                                             data-id-type="auto"
-                                            data-validator="database.getDocument"
+                                            data-validator="databases.getDocument"
                                             required
                                             maxlength="36"
                                             name="documentId"
@@ -352,21 +355,21 @@ $logs = $this->getParam('logs', null);
                             </ul>
 
                             <div data-ls-if="({{project-document.$id}})">
-                                <form name="database.deleteDocument" class="margin-bottom"
+                                <form name="databases.deleteDocument" class="margin-bottom"
                                     data-analytics
                                     data-analytics-activity
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
                                     data-analytics-label="Delete Collection Document"
-                                    data-service="database.deleteDocument"
+                                    data-service="databases.deleteDocument"
                                     data-event="submit"
                                     data-param-collection-id="{{router.params.collection}}"
                                     data-param-document-id="{{project-document.$id}}"
                                     data-confirm="Are you sure you want to delete this document?"
                                     data-success="alert,trigger,redirect"
                                     data-success-param-alert-text="Document deleted successfully"
-                                    data-success-param-trigger-events="database.deleteDocument"
-                                    data-success-param-redirect-url="/console/database/collection?id={{router.params.collection}}&project={{router.params.project}}"
+                                    data-success-param-trigger-events="databases.deleteDocument"
+                                    data-success-param-redirect-url="/console/databases/collection?id={{router.params.collection}}&project={{router.params.project}}"
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to delete collection"
                                     data-failure-param-alert-classname="error">
@@ -378,7 +381,7 @@ $logs = $this->getParam('logs', null);
                     </div>
                 </li>
                 <?php if(!$new): ?>
-                    <li data-state="/console/database/document/activity?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
+                    <li data-state="/console/databases/document/activity?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
                         <h2>Activity</h2>
 
                         <?php echo $logs->render(); ?>

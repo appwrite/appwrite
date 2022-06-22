@@ -22,11 +22,11 @@ use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
+use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
-use Appwrite\Utopia\Response\Model\DocumentList;
 use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
@@ -65,6 +65,7 @@ use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
+use Appwrite\Utopia\Response\Model\UsageDatabases;
 use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
@@ -85,6 +86,7 @@ class Response extends SwooleResponse
     public const MODEL_METRIC_LIST = 'metricList';
     public const MODEL_ERROR_DEV = 'errorDev';
     public const MODEL_BASE_LIST = 'baseList';
+    public const MODEL_USAGE_DATABASES = 'usageDatabases';
     public const MODEL_USAGE_DATABASE = 'usageDatabase';
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
     public const MODEL_USAGE_USERS = 'usageUsers';
@@ -94,6 +96,8 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_PROJECT = 'usageProject';
 
     // Database
+    public const MODEL_DATABASE = 'database';
+    public const MODEL_DATABASE_LIST = 'databaseList';
     public const MODEL_COLLECTION = 'collection';
     public const MODEL_COLLECTION_LIST = 'collectionList';
     public const MODEL_INDEX = 'index';
@@ -213,6 +217,7 @@ class Response extends SwooleResponse
             // Lists
             ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
+            ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
             ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
@@ -238,6 +243,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             // Entities
+            ->setModel(new Database())
             ->setModel(new Collection())
             ->setModel(new Attribute())
             ->setModel(new AttributeList())
@@ -283,6 +289,7 @@ class Response extends SwooleResponse
             ->setModel(new HealthTime())
             ->setModel(new HealthVersion())
             ->setModel(new Metric())
+            ->setModel(new UsageDatabases())
             ->setModel(new UsageDatabase())
             ->setModel(new UsageCollection())
             ->setModel(new UsageUsers())
