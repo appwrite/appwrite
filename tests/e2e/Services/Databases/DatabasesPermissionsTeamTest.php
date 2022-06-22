@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Database;
+namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
@@ -11,7 +11,7 @@ class DatabasePermissionsTeamTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
-    use DatabasePermissionsScope;
+    use DatabasesPermissionsScope;
 
     public array $collections = [];
     public string $databaseId = 'testpermissiondb';

@@ -1,10 +1,10 @@
 <?php
 
-namespace Tests\E2E\Services\Database;
+namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 
-trait DatabasePermissionsScope
+trait DatabasesPermissionsScope
 {
     public array $users = [];
     public array $teams = [];
