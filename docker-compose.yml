@@ -176,8 +176,6 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_PHONE_PROVIDER
-      - _APP_PHONE_FROM
-      - _APP_PHONE_USER
       - _APP_PHONE_SECRET
 
   appwrite-realtime:
@@ -548,8 +546,6 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_PHONE_PROVIDER
-      - _APP_PHONE_USER
-      - _APP_PHONE_SECRET
       - _APP_PHONE_FROM
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG

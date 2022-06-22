@@ -113,7 +113,7 @@ function getDatabase(Registry &$register, string $namespace)
                 throw new Exception('Collection not ready');
             }
             break; // leave loop if successful
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
             if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
                 throw new \Exception('Failed to connect to database: ' . $e->getMessage());
@@ -138,25 +138,30 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($register, $containerId, &$statsDocument, $logError) {
-        try {
-            [$database, $returnDatabase] = getDatabase($register, '_console');
-            $document = new Document([
-                '$id' => $database->getId(),
-                '$collection' => 'realtime',
-                '$read' => [],
-                '$write' => [],
-                'container' => $containerId,
-                'timestamp' => time(),
-                'value' => '{}'
-            ]);
+    go(function () use ($register, $containerId, &$statsDocument) {
+        $attempts = 0;
+        [$database, $returnDatabase] = getDatabase($register, '_console');
+        do {
+            try {
+                $attempts++;
+                $document = new Document([
+                    '$id' => $database->getId(),
+                    '$collection' => 'realtime',
+                    '$read' => [],
+                    '$write' => [],
+                    'container' => $containerId,
+                    'timestamp' => time(),
+                    'value' => '{}'
+                ]);
 
-            $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
-        } catch (\Throwable $th) {
-            call_user_func($logError, $th, "createWorkerDocument");
-        } finally {
-            call_user_func($returnDatabase);
-        }
+                $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
+                break;
+            } catch (\Throwable $th) {
+                Console::warning("Collection not ready. Retrying connection ({$attempts})...");
+                sleep(DATABASE_RECONNECT_SLEEP);
+            }
+        } while (true);
+        call_user_func($returnDatabase);
     });
 
     /**
