@@ -42,6 +42,12 @@ class Collection extends Model
                 'example' => 'user:608f9da25e7e1',
                 'array' => true
             ])
+            ->addRule('databaseId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Database ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection name.',

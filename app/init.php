@@ -125,6 +125,7 @@ const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
 // Deletion Types
+const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
 const DELETE_TYPE_PROJECTS = 'projects';
@@ -264,8 +265,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('attributes', [
-                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], $database->getAttributeLimit());
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
+                new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
+            ], $database->getAttributeLimit(), 0, []);
     }
 );
 
@@ -277,7 +279,8 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('indexes', [
-                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
+                new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
             ], 64);
     }
 );

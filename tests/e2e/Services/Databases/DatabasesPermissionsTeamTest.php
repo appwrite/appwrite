@@ -1,19 +1,20 @@
 <?php
 
-namespace Tests\E2E\Services\Database;
+namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 
-class DatabasePermissionsTeamTest extends Scope
+class DatabasesPermissionsTeamTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
-    use DatabasePermissionsScope;
+    use DatabasesPermissionsScope;
 
     public array $collections = [];
+    public string $databaseId = 'testpermissiondb';
 
     public function createTeams(): array
     {
@@ -34,7 +35,13 @@ class DatabasePermissionsTeamTest extends Scope
 
     public function createCollections($teams)
     {
-        $collection1 = $this->client->call(Client::METHOD_POST, '/database/collections', $this->getServerHeader(), [
+        $db = $this->client->call(Client::METHOD_POST, '/databases', $this->getServerHeader(), [
+            'databaseId' => $this->databaseId,
+            'name' => 'Test Database',
+        ]);
+        $this->assertEquals(201, $db['headers']['status-code']);
+
+        $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => 'collection1',
             'name' => 'Collection 1',
             'read' => ['team:' . $teams['team1']['$id']],
@@ -44,13 +51,13 @@ class DatabasePermissionsTeamTest extends Scope
 
         $this->collections['collection1'] = $collection1['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['collection1'] . '/attributes/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection1'] . '/attributes/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
 
-        $collection2 = $this->client->call(Client::METHOD_POST, '/database/collections', $this->getServerHeader(), [
+        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => 'collection2',
             'name' => 'Collection 2',
             'read' => ['team:' . $teams['team2']['$id']],
@@ -60,7 +67,7 @@ class DatabasePermissionsTeamTest extends Scope
 
         $this->collections['collection2'] = $collection2['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['collection2'] . '/attributes/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection2'] . '/attributes/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -124,7 +131,7 @@ class DatabasePermissionsTeamTest extends Scope
 
         $this->createCollections($this->teams);
 
-        $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['collection1'] . '/documents', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection1'] . '/documents', $this->getServerHeader(), [
             'documentId' => 'unique()',
             'data' => [
                 'title' => 'Lorem',
@@ -132,7 +139,7 @@ class DatabasePermissionsTeamTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['collection2'] . '/documents', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection2'] . '/documents', $this->getServerHeader(), [
             'documentId' => 'unique()',
             'data' => [
                 'title' => 'Ipsum',
@@ -150,7 +157,7 @@ class DatabasePermissionsTeamTest extends Scope
      */
     public function testReadDocuments($user, $collection, $success, $users)
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collection  . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $this->databaseId . '/collections/' . $collection  . '/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -170,7 +177,7 @@ class DatabasePermissionsTeamTest extends Scope
      */
     public function testWriteDocuments($user, $collection, $success, $users)
     {
-        $documents = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collection  . '/documents', [
+        $documents = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $collection  . '/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

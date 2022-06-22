@@ -297,11 +297,11 @@ services:
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
 
-  appwrite-worker-database:
+  appwrite-worker-databases:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: worker-database
+    entrypoint: worker-databases
     <<: *x-logging
-    container_name: appwrite-worker-database
+    container_name: appwrite-worker-databases
     restart: unless-stopped
     networks:
       - appwrite

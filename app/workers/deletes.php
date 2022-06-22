@@ -44,6 +44,9 @@ class DeletesV1 extends Worker
                 $document = new Document($this->args['document'] ?? []);
 
                 switch ($document->getCollection()) {
+                    case DELETE_TYPE_DATABASES:
+                        $this->deleteDatabase($document, $project->getId());
+                        break;
                     case DELETE_TYPE_COLLECTIONS:
                         $this->deleteCollection($document, $project->getId());
                         break;
@@ -120,16 +123,36 @@ class DeletesV1 extends Worker
     }
 
     /**
+     * @param Document $document database document
+     * @param string $projectId
+     */
+    protected function deleteDatabase(Document $document, string $projectId): void
+    {
+        $databaseId = $document->getId();
+
+        $dbForProject = $this->getProjectDB($projectId);
+
+        $this->deleteByGroup('database_' . $document->getInternalId(), [], $dbForProject, function ($document) use ($projectId) {
+            $this->deleteCollection($document, $projectId);
+        });
+
+        $dbForProject->deleteCollection('database_' . $document->getInternalId());
+
+        $this->deleteAuditLogsByResource('database/' . $databaseId, $projectId);
+    }
+
+    /**
      * @param Document $document teams document
      * @param string $projectId
      */
     protected function deleteCollection(Document $document, string $projectId): void
     {
         $collectionId = $document->getId();
+        $databaseId = str_replace('database_', '', $document->getCollection());
 
         $dbForProject = $this->getProjectDB($projectId);
 
-        $dbForProject->deleteCollection('collection_' . $document->getInternalId());
+        $dbForProject->deleteCollection('database_' . $databaseId . '_collection_' . $document->getInternalId());
 
         $this->deleteByGroup('attributes', [
             new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])

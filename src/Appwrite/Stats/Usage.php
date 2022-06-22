@@ -25,45 +25,89 @@ class Usage
         'executions' => [
             'table' => 'appwrite_usage_executions_all',
         ],
-        'database.collections.create' => [
-            'table' => 'appwrite_usage_database_collections_create',
+        'databases.create' => [
+            'table' => 'appwrite_usage_databases_create',
         ],
-        'database.collections.read' => [
-            'table' => 'appwrite_usage_database_collections_read',
+        'databases.read' => [
+            'table' => 'appwrite_usage_databases_read',
         ],
-        'database.collections.update' => [
-            'table' => 'appwrite_usage_database_collections_update',
+        'databases.update' => [
+            'table' => 'appwrite_usage_databases_update',
         ],
-        'database.collections.delete' => [
-            'table' => 'appwrite_usage_database_collections_delete',
+        'databases.delete' => [
+            'table' => 'appwrite_usage_databases_delete',
         ],
-        'database.documents.create' => [
-            'table' => 'appwrite_usage_database_documents_create',
+        'databases.collections.create' => [
+            'table' => 'appwrite_usage_databases_collections_create',
         ],
-        'database.documents.read' => [
-            'table' => 'appwrite_usage_database_documents_read',
+        'databases.collections.read' => [
+            'table' => 'appwrite_usage_databases_collections_read',
         ],
-        'database.documents.update' => [
-            'table' => 'appwrite_usage_database_documents_update',
+        'databases.collections.update' => [
+            'table' => 'appwrite_usage_databases_collections_update',
         ],
-        'database.documents.delete' => [
-            'table' => 'appwrite_usage_database_documents_delete',
+        'databases.collections.delete' => [
+            'table' => 'appwrite_usage_databases_collections_delete',
         ],
-        'database.collections.collectionId.documents.create' => [
-            'table' => 'appwrite_usage_database_documents_create',
-            'groupBy' => 'collectionId',
+        'databases.documents.create' => [
+            'table' => 'appwrite_usage_databases_documents_create',
         ],
-        'database.collections.collectionId.documents.read' => [
-            'table' => 'appwrite_usage_database_documents_read',
-            'groupBy' => 'collectionId',
+        'databases.documents.read' => [
+            'table' => 'appwrite_usage_databases_documents_read',
         ],
-        'database.collections.collectionId.documents.update' => [
-            'table' => 'appwrite_usage_database_documents_update',
-            'groupBy' => 'collectionId',
+        'databases.documents.update' => [
+            'table' => 'appwrite_usage_databases_documents_update',
         ],
-        'database.collections.collectionId.documents.delete' => [
-            'table' => 'appwrite_usage_database_documents_delete',
-            'groupBy' => 'collectionId',
+        'databases.documents.delete' => [
+            'table' => 'appwrite_usage_databases_documents_delete',
+        ],
+        'databases.databaseId.collections.create' => [
+            'table' => 'appwrite_usage_databases_collections_create',
+            'groupBy' => ['databaseId'],
+        ],
+        'databases.databaseId.collections.read' => [
+            'table' => 'appwrite_usage_databases_collections_read',
+            'groupBy' => ['databaseId'],
+        ],
+        'databases.databaseId.collections.update' => [
+            'table' => 'appwrite_usage_databases_collections_update',
+            'groupBy' => ['databaseId'],
+        ],
+        'databases.databaseId.collections.delete' => [
+            'table' => 'appwrite_usage_databases_collections_delete',
+            'groupBy' => ['databaseId'],
+        ],
+        'databases.databaseId.documents.create' => [
+            'table' => 'appwrite_usage_databases_documents_create',
+            'groupBy' => ['databaseId'],
+        ],
+        'databases.databaseId.documents.read' => [
+            'table' => 'appwrite_usage_databases_documents_read',
+            'groupBy' => ['databaseId'],
+        ],
+        'database.databaseId.documents.update' => [
+            'table' => 'appwrite_usage_databases_documents_update',
+            'groupBy' => ['databaseId'],
+        ],
+        'databases.databaseId.documents.delete' => [
+            'table' => 'appwrite_usage_databases_documents_delete',
+            'groupBy' => ['databaseId'],
+        ],
+        'databases.databaseId.collections.collectionId.documents.create' => [
+            'table' => 'appwrite_usage_databases_documents_create',
+            'groupBy' => ['collectionId'],
+        ],
+        'databases.databaseId.collections.collectionId.documents.read' => [
+            'table' => 'appwrite_usage_databases_documents_read',
+            'groupBy' => ['databaseId', 'collectionId'],
+        ],
+        'databases.databaseId.collections.collectionId.documents.update' => [
+            'table' => 'appwrite_usage_databases_documents_update',
+            'groupBy' => ['databaseId', 'collectionId'],
+        ],
+        'databases.databaseId.collections.collectionId.documents.delete' => [
+            'table' => 'appwrite_usage_databases_documents_delete',
+            'groupBy' => ['databaseId', 'collectionId'],
         ],
         'storage.buckets.create' => [
             'table' => 'appwrite_usage_storage_buckets_create',
@@ -91,19 +135,19 @@ class Usage
         ],
         'storage.buckets.bucketId.files.create' => [
             'table' => 'appwrite_usage_storage_files_create',
-            'groupBy' => 'bucketId',
+            'groupBy' => ['bucketId'],
         ],
         'storage.buckets.bucketId.files.read' => [
             'table' => 'appwrite_usage_storage_files_read',
-            'groupBy' => 'bucketId',
+            'groupBy' => ['bucketId'],
         ],
         'storage.buckets.bucketId.files.update' => [
             'table' => 'appwrite_usage_storage_files_update',
-            'groupBy' => 'bucketId',
+            'groupBy' => ['bucketId'],
         ],
         'storage.buckets.bucketId.files.delete' => [
             'table' => 'appwrite_usage_storage_files_delete',
-            'groupBy' => 'bucketId',
+            'groupBy' => ['bucketId'],
         ],
         'users.create' => [
             'table' => 'appwrite_usage_users_create',
@@ -122,22 +166,22 @@ class Usage
         ],
         'users.sessions.provider.create' => [
             'table' => 'appwrite_usage_users_sessions_create',
-            'groupBy' => 'provider',
+            'groupBy' => ['provider'],
         ],
         'users.sessions.delete' => [
             'table' => 'appwrite_usage_users_sessions_delete',
         ],
         'functions.functionId.executions' => [
             'table' => 'appwrite_usage_executions_all',
-            'groupBy' => 'functionId',
+            'groupBy' => ['functionId'],
         ],
         'functions.functionId.compute' => [
             'table' => 'appwrite_usage_executions_time',
-            'groupBy' => 'functionId',
+            'groupBy' => ['functionId'],
         ],
         'functions.functionId.failures' => [
             'table' => 'appwrite_usage_executions_all',
-            'groupBy' => 'functionId',
+            'groupBy' => ['functionId'],
             'filters' => [
                 'functionStatus' => 'failed',
             ],
@@ -231,7 +275,7 @@ class Usage
         $end = DateTime::createFromFormat('U', \strtotime('now'))->format(DateTime::RFC3339);
 
         $table = $options['table']; //Which influxdb table to query for this metric
-        $groupBy = empty($options['groupBy']) ? '' : ', "' . $options['groupBy'] . '"'; //Some sub level metrics may be grouped by other tags like collectionId, bucketId, etc
+        $groupBy = empty($options['groupBy']) ? '' : ', ' . implode(', ', array_map(fn($groupBy) => '"' . $groupBy . '" ', $options['groupBy'])); //Some sub level metrics may be grouped by other tags like collectionId, bucketId, etc
 
         $filters = $options['filters'] ?? []; // Some metrics might have additional filters, like function's status
         if (!empty($filters)) {
@@ -247,6 +291,7 @@ class Usage
         $query .= "AND \"metric_type\"='counter' {$filters} ";
         $query .= "GROUP BY time({$period['key']}), \"projectId\" {$groupBy} ";
         $query .= "FILL(null)";
+
         $result = $this->influxDB->query($query);
 
         $points = $result->getPoints();
@@ -257,11 +302,13 @@ class Usage
                 $metricUpdated = $metric;
 
                 if (!empty($groupBy)) {
-                    $groupedBy = $point[$options['groupBy']] ?? '';
-                    if (empty($groupedBy)) {
-                        continue;
+                    foreach ($options['groupBy'] as $groupBy) {
+                        $groupedBy = $point[$groupBy] ?? '';
+                        if (empty($groupedBy)) {
+                            continue;
+                        }
+                        $metricUpdated = str_replace($groupBy, $groupedBy, $metric);
                     }
-                    $metricUpdated = str_replace($options['groupBy'], $groupedBy, $metric);
                 }
 
                 $time = \strtotime($point['time']);
