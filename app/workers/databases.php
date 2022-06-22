@@ -121,7 +121,7 @@ class DatabaseV1 extends Worker
             );
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
     /**
@@ -233,8 +233,8 @@ class DatabaseV1 extends Worker
             }
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collectionId);
-        $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
     }
 
     /**
@@ -291,7 +291,7 @@ class DatabaseV1 extends Worker
             );
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
     /**
@@ -344,6 +344,6 @@ class DatabaseV1 extends Worker
             );
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collection->getId());
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collection->getId());
     }
 }
