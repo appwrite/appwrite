@@ -69,14 +69,22 @@ class V14 extends Migration
         /**
          * Update metadata table.
          */
-        $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}__metadata`
-            SET
-                _uid = 'database_1',
-                name = 'database_1'
-            WHERE _uid = 'collections';
-        ")->execute();
+        try {
+            $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}__metadata`
+                SET
+                    _uid = 'database_1',
+                    name = 'database_1'
+                WHERE _uid = 'collections';
+            ")->execute();
+        } catch (\Throwable $th) {
+            Console::warning($th->getMessage());
+        }
 
-        $this->createAttributeFromCollection($this->projectDB, 'database_1', 'databaseInternalId', 'collections');
+        try {
+            $this->createAttributeFromCollection($this->projectDB, 'database_1', 'databaseInternalId', 'collections');
+        } catch (\Throwable $th) {
+            Console::warning($th->getMessage());
+        }
 
         $nextCollection = null;
 
@@ -146,8 +154,6 @@ class V14 extends Migration
 
             $this->createNewMetaData($id);
 
-            usleep(100000);
-
             $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
             switch ($id) {
@@ -194,25 +200,6 @@ class V14 extends Migration
 
                     break;
                 case 'platforms':
-                    try {
-                        /**
-                         * Create 'projectInternalId' attribute
-                         */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'projectInternalId');
-                    } catch (\Throwable $th) {
-                        Console::warning("'projectInternalId' from {$id}: {$th->getMessage()}");
-                    }
-                    try {
-                        /**
-                         * Re-Create '_key_project' index
-                         */
-                        @$this->projectDB->deleteIndex($id, '_key_project');
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_project');
-                    } catch (\Throwable $th) {
-                        Console::warning("'_key_project' from {$id}: {$th->getMessage()}");
-                    }
-
-                    break;
                 case 'domains':
                     try {
                         /**
@@ -317,25 +304,6 @@ class V14 extends Migration
 
                     break;
                 case 'tokens':
-                    try {
-                        /**
-                         * Create 'userInternalId' attribute
-                         */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'userInternalId');
-                    } catch (\Throwable $th) {
-                        Console::warning("'userInternalId' from {$id}: {$th->getMessage()}");
-                    }
-                    try {
-                        /**
-                         * Re-Create '_key_user' index
-                         */
-                        @$this->projectDB->deleteIndex($id, '_key_user');
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_user');
-                    } catch (\Throwable $th) {
-                        Console::warning("'_key_user' from {$id}: {$th->getMessage()}");
-                    }
-
-                    break;
                 case 'sessions':
                     try {
                         /**
@@ -402,7 +370,7 @@ class V14 extends Migration
                     }
                     break;
             }
-            usleep(100000);
+            usleep(50000);
         }
     }
 
@@ -440,6 +408,33 @@ class V14 extends Migration
                 if (!empty($document->getAttribute('projectId')) && is_null($document->getAttribute('projectInternalId'))) {
                     $internalId = $this->projectDB->getDocument('projects', $document->getAttribute('projectId'))->getInternalId();
                     $document->setAttribute('projectInternalId', $internalId);
+                }
+
+                break;
+            case 'audit':
+                /**
+                 * Add Database Layer to collection resource.
+                 */
+                if (str_starts_with($document->getAttribute('resource'), 'collection/')) {
+                    $document
+                        ->setAttribute('resource', "database/default/{$document->getAttribute('resource')}")
+                        ->setAttribute('event', "databases.default.{$document->getAttribute('event')}");
+                }
+
+                if (str_starts_with($document->getAttribute('resource'), 'document/')) {
+                    $collectionId = explode('.', $document->getAttribute('event'))[1];
+                    $document
+                        ->setAttribute('resource', "database/default/collections/{$collectionId}/{$document->getAttribute('resource')}")
+                        ->setAttribute('event', "databases.default.collections.{$collectionId}.{$document->getAttribute('event')}");
+                }
+
+                break;
+            case 'stats':
+                /**
+                 * Add Database Layer to stats metric.
+                 */
+                if (str_starts_with($document->getAttribute('metric'), 'collections.')) {
+                    $document->setAttribute('metric', "databases.default.{$document->getAttribute('metric')}");
                 }
 
                 break;
@@ -514,10 +509,13 @@ class V14 extends Migration
                 }
 
                 try {
+                    /**
+                     * Re-create Collection Document
+                     */
                     $this->projectDB->deleteDocument($document->getCollection(), $document->getId());
                     $this->projectDB->createDocument($document->getCollection(), $document->setAttribute('$id', "1_{$document->getInternalId()}_{$document->getAttribute('key')}"));
                 } catch (\Throwable $th) {
-                    var_dump($th->getMessage());
+                    Console::warning("Create Collection Document - {$th->getMessage()}");
                 }
                 $document = null;
                 break;
@@ -589,23 +587,7 @@ class V14 extends Migration
 
                 break;
             case 'deployments':
-                /**
-                 * Migrate dateCreated to $createdAt.
-                 */
-                if (is_null($document->getCreatedAt())) {
-                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
-                }
-
-                break;
             case 'executions':
-                /**
-                 * Migrate dateCreated to $createdAt.
-                 */
-                if (is_null($document->getCreatedAt())) {
-                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
-                }
-
-                break;
             case 'teams':
                 /**
                  * Migrate dateCreated to $createdAt.
