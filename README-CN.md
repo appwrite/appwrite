@@ -109,7 +109,7 @@ docker run -it --rm ,
 * [**帐户**](https://appwrite.io/docs/client/account) -管理当前用户的帐户和登录方式。跟踪和管理用户 Session，登录设备，登录方法和查看相关记录。
 * [**用户**](https://appwrite.io/docs/server/users) - 在以管理员模式登录时管理和列出所有用户。
 * [**团队**](https://appwrite.io/docs/client/teams) - 管理用户分组。邀请成员，管理团队中的用户权限和用户角色。
-* [**数据库**](https://appwrite.io/docs/client/database) - 管理数据库文档和文档集。用检索界面来对文档和文档集进行读取，创建，更新，和删除。
+* [**数据库**](https://appwrite.io/docs/client/databases) - 管理数据库文档和文档集。用检索界面来对文档和文档集进行读取，创建，更新，和删除。
 * [**贮存**](https://appwrite.io/docs/client/storage) - 管理文件的阅读、创建、删除和预览。设置文件的预览来满足程序的个性化需求。所有文件都由 ClamAV 扫描并安全存储和加密。
 * [**云函数**](https://appwrite.io/docs/server/functions) - 在安全，隔离的环境中运行自定义代码。这些代码可以被事件，CRON，或者手动操作触发。
 * [**语言适配**](https://appwrite.io/docs/client/locale) - 根据用户所在的的国家和地区做出合适的语言适配。
