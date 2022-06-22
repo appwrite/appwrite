@@ -106,13 +106,43 @@ App::post('/v1/video/buckets/:bucketId/files/:fileId')
             }
         }
 
-        $transcoder = new Transcoding();
-        $transcoder
+        $queries = [
+            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
+        ];
+
+        $profiles = Authorization::skip(fn () => $dbForProject->find('video_profiles', $queries, 12, 0, [], ['ASC']));
+
+        if(empty($profiles)) {
+            foreach (Config::getParam('profiles', []) as $profile) {
+                Authorization::skip(function () use ($project, $profile, $dbForProject) {
+                    return $dbForProject->createDocument('video_profiles', new Document([
+                        'projectId' => $project->getId(),
+                        'name' => $profile['name'],
+                        'videoBitrate' => $profile['videoBitrate'],
+                        'audioBitrate' => $profile['audioBitrate'],
+                        'width'  => $profile['width'],
+                        'height' => $profile['height']
+                    ]));
+                });
+            }
+        }
+
+        $queries = [
+            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
+        ];
+
+        $profiles = Authorization::skip(fn () => $dbForProject->find('video_profiles', $queries, 12, 0, [], ['ASC']));
+
+         $transcoder = new Transcoding();
+        foreach ($profiles as $profile) {
+             $transcoder
             ->setUser($user)
             ->setProject($project)
             ->setBucketId($bucketId)
             ->setFileId($fileId)
+            ->setProfileId($profile->getId())
             ->trigger();
+        }
 
         $response->json(['result' => 'ok']);
     });

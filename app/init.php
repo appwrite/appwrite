@@ -154,7 +154,7 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 /*
  * ENV vars
  */
-Config::load('renditions', __DIR__ . '/config/renditions.php');
+Config::load('profiles', __DIR__ . '/config/profiles.php');
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
 Config::load('errors', __DIR__ . '/config/errors.php');

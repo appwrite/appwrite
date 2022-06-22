@@ -45,7 +45,7 @@ class TranscodingV1 extends Worker
     public function init(): void
     {
 
-        $this->basePath .=  $this->args['fileId'];
+        $this->basePath .=   $this->args['fileId'] . '/' . $this->args['profileId'];
         $this->inDir  =  $this->basePath . '/in/';
         $this->outDir =  $this->basePath . '/out/';
         @mkdir($this->inDir, 0755, true);
@@ -56,10 +56,16 @@ class TranscodingV1 extends Worker
     public function run(): void
     {
         $project = new Document($this->args['project']);
-        $user = new Document($this->args['user'] ?? []);
         $this->database = $this->getProjectDB($project->getId());
+        $profile = Authorization::skip(fn() => $this->database->findOne('video_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$this->args['profileId']])]));
 
+        if($profile->isEmpty()){
+            throw new Exception('No profile found');
+         }
+
+        $user = new Document($this->args['user'] ?? []);
         $bucket = Authorization::skip(fn() => $this->database->getDocument('buckets', $this->args['bucketId']));
+
 
         if ($bucket->getAttribute('permission') === 'bucket') {
             $file = Authorization::skip(fn() => $this->database->getDocument('bucket_' . $bucket->getInternalId(), $this->args['fileId']));
@@ -70,7 +76,7 @@ class TranscodingV1 extends Worker
         $data = $this->getFilesDevice($project->getId())->read($file->getAttribute('path'));
         $fileName = basename($file->getAttribute('path'));
         $inPath = $this->inDir . $fileName;
-        $collection = 'bucket_' . $bucket->getInternalId() . '_video_renditions';
+        $collection = 'video_renditions';
 
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
             $data = OpenSSL::decrypt(
@@ -117,26 +123,24 @@ class TranscodingV1 extends Worker
 
         $sourceInfo = $this->getVideoInfo($ffprobe->streams($inPath));
         $video = $ffmpeg->open($inPath);
-
-        foreach (Config::getParam('renditions', []) as $rendition) {
             foreach (['hls', 'dash'] as $stream) {
-                $query = Authorization::skip(function () use ($collection, $rendition, $stream) {
+                $query = Authorization::skip(function () use ($collection, $profile, $stream) {
                     return $this->database->createDocument($collection, new Document([
-                        'bucketId' => $this->args['bucketId'],
-                        'fileId' => $this->args['fileId'],
-                        'renditionId' => $rendition['id'],
-                        'renditionName' => $rendition['name'],
+                        'bucketId'  => $this->args['bucketId'],
+                        'fileId'    => $this->args['fileId'],
+                        'profileId' => $profile->getId(),
+                        'name'      => $profile->getAttribute('name'),
                         'startedAt' => time(),
-                        'status' => 'started',
-                        'stream' => $stream,
+                        'status'    => 'started',
+                        'stream'    => $stream,
                     ]));
                 });
 
                 try {
                     $representation = (new Representation())->
-                    setKiloBitrate($rendition['videoBitrate'])->
-                    setAudioKiloBitrate($rendition['audioBitrate'])->
-                    setResize($rendition['width'], $rendition['height']);
+                    setKiloBitrate($profile->getAttribute('videoBitrate'))->
+                    setAudioKiloBitrate($profile->getAttribute('audioBitrate'))->
+                    setResize( $profile->getAttribute('width'), $profile->getAttribute('height'));
 
                     $format = new Streaming\Format\X264();
                     $format->on('progress', function ($video, $format, $percentage) use ($query, $collection) {
@@ -150,8 +154,8 @@ class TranscodingV1 extends Worker
                         }
                     });
 
-                    $metadata = $this->transcode($stream, $video, $format, $representation);
 
+                    list($general, $metadata) = $this->transcode($stream, $video, $format, $representation);
                     if (!empty($metadata)) {
                         $query->setAttribute('metadata', json_encode($metadata));
                     }
@@ -181,7 +185,7 @@ class TranscodingV1 extends Worker
                         $devicePath = $deviceFiles->getPath($this->args['fileId']);
                         $devicePath = str_ireplace($deviceFiles->getRoot(), $deviceFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $devicePath);
                         $data = $this->getFilesDevice($project->getId())->read($this->outDir . $fileName);
-                        $this->getVideoDevice($project->getId())->write($devicePath . DIRECTORY_SEPARATOR . $rendition['name'] . DIRECTORY_SEPARATOR .  $fileName, $data, \mime_content_type($this->outDir . $fileName));
+                        $this->getVideoDevice($project->getId())->write($devicePath . DIRECTORY_SEPARATOR . $profile->getAttribute('name') . DIRECTORY_SEPARATOR .  $fileName, $data, \mime_content_type($this->outDir . $fileName));
 
                         if ($start === 0) {
                             $query->setAttribute('status', 'uploading');
@@ -225,7 +229,6 @@ class TranscodingV1 extends Worker
                 }
             }
         }
-    }
 
     /**
      * @param $metadata array
@@ -237,20 +240,22 @@ class TranscodingV1 extends Worker
 
         if (!empty($metadata['stream']['resolutions'][0])) {
             $general = $metadata['stream']['resolutions'][0];
-            $info['resolution']    = $general['dimension'];
+            $parts = explode("x", $general);
+            $info['width']   = $parts['0'];
+            $info['height']  = $parts['1'];
         }
 
         if (!empty($metadata['video']['streams'])) {
             foreach ($metadata['video']['streams'] as $streams) {
                 if ($streams['codec_type'] === 'video') {
-                    $info['duration']  = $streams['duration'];
-                    $info['video']['codec'] = $streams['codec_name'] . ',' . $streams['codec_tag_string'];
-                    $info['video']['bitRate'] = $streams['bit_rate'];
-                    $info['video']['frameRate'] = $streams['avg_frame_rate'];
+                    $info['duration']       = $streams['duration'];
+                    $info['videoCodec']     = $streams['codec_name'] . ',' . $streams['codec_tag_string'];
+                    $info['videoBitRate']   = $streams['bit_rate'];
+                    $info['videoFrameRate'] = $streams['avg_frame_rate'];
                 } elseif ($streams['codec_type'] === 'audio') {
-                    $info['audio']['codec'] = $streams['codec_name'] . ',' . $streams['codec_tag_string'];
-                    $info['audio']['bitRate'] = $streams['sample_rate'];
-                    $info['audio']['samplRate'] = $streams['bit_rate'];
+                    $info['audioCodec']     = $streams['codec_name'] . ',' . $streams['codec_tag_string'];
+                    $info['audioBitRate']   = $streams['sample_rate'];
+                    $info['audioSamplRate'] = $streams['bit_rate'];
                 }
             }
         }
@@ -288,9 +293,9 @@ class TranscodingV1 extends Worker
                     );
 
                 return [
-                        'general' => $this->getMetadataExport($dash->metadata()->export()),
-                        'dash'   => !empty($xml) ? json_decode(json_encode((array)$xml), true) : [],
-                        ];
+                        $this->getMetadataExport($dash->metadata()->export()),
+                        ['dash'   => !empty($xml) ? json_decode(json_encode((array)$xml), true) : []],
+                      ];
         }
 
 
@@ -302,7 +307,9 @@ class TranscodingV1 extends Worker
             ->setHlsBaseUrl(self::HLS_BASE_URL)
             ->save($this->outPath);
 
-        return ['general' => $this->getMetadataExport($hls->metadata()->export())];
+        return [
+            $this->getMetadataExport($hls->metadata()->export()), []
+        ];
     }
 
 
@@ -324,7 +331,9 @@ class TranscodingV1 extends Worker
 
     private function cleanup(): bool
     {
-        return \exec("rm -rf {$this->basePath}");
+        var_dump("rm -rf {$this->basePath}");
+        //return \exec("rm -rf {$this->basePath}");
+        return true;
     }
 
     public function shutdown(): void

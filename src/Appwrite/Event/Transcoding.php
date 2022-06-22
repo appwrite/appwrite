@@ -9,7 +9,7 @@ class Transcoding extends Event
 {
     protected string $bucketId = '';
     protected string $fileId = '';
-
+    protected string $profileId = '';
 
     public function __construct()
     {
@@ -62,6 +62,29 @@ class Transcoding extends Event
         return $this->fileId;
     }
 
+    /**
+     * Sets profileId event.
+     *
+     * @param $profileId string
+     * @return self
+     */
+    public function setProfileId(string $profileId): self
+    {
+        $this->profileId = $profileId;
+
+        return $this;
+    }
+
+    /**
+     * Returns profileId.
+     *
+     * @return null|Document
+     */
+    public function getProfileId(): ?string
+    {
+        return $this->profileId;
+    }
+
 
     /**
      * Executes the function event and sends it to the functions worker.
@@ -76,6 +99,7 @@ class Transcoding extends Event
             'user' => $this->user,
             'bucketId' => $this->bucketId,
             'fileId' => $this->fileId,
+            'profileId' => $this->profileId,
         ]);
     }
 }
