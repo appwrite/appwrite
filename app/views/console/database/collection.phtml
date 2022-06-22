@@ -568,8 +568,8 @@ $logs = $this->getParam('logs', null);
 
                     <ul class="margin-bottom-large text-fade text-size-small">
                         <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
-                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-collection.dateUpdated|dateText}}"></span></li>
-                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-collection.dateCreated|dateText}}"></span></li>
+                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-collection.$updatedAt|dateText}}"></span></li>
+                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-collection.$createdAt|dateText}}"></span></li>
                     </ul>
 
                         <form

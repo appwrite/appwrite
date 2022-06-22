@@ -27,6 +27,7 @@ class Auth
     public const TOKEN_TYPE_RECOVERY = 3;
     public const TOKEN_TYPE_INVITE = 4;
     public const TOKEN_TYPE_MAGIC_URL = 5;
+    public const TOKEN_TYPE_PHONE = 6;
 
     /**
      * Session Providers.
@@ -34,6 +35,7 @@ class Auth
     public const SESSION_PROVIDER_EMAIL = 'email';
     public const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
     public const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
+    public const SESSION_PROVIDER_PHONE = 'phone';
 
     /**
      * Token Expiration times.
@@ -42,6 +44,7 @@ class Auth
     public const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
     public const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
     public const TOKEN_EXPIRATION_CONFIRM = 3600 * 24 * 7;    /* 7 days */
+    public const TOKEN_EXPIRATION_PHONE = 60 * 15;            /* 15 minutes */
 
     /**
      * @var string
@@ -195,7 +198,8 @@ class Auth
      */
     public static function tokenVerify(array $tokens, int $type, string $secret)
     {
-        foreach ($tokens as $token) { /** @var Document $token */
+        foreach ($tokens as $token) {
+            /** @var Document $token */
             if (
                 $token->isSet('type') &&
                 $token->isSet('secret') &&
@@ -205,6 +209,25 @@ class Auth
                 $token->getAttribute('expire') >= \time()
             ) {
                 return (string)$token->getId();
+            }
+        }
+
+        return false;
+    }
+
+    public static function phoneTokenVerify(array $tokens, string $secret)
+    {
+        foreach ($tokens as $token) {
+            /** @var Document $token */
+            if (
+                $token->isSet('type') &&
+                $token->isSet('secret') &&
+                $token->isSet('expire') &&
+                $token->getAttribute('type') == Auth::TOKEN_TYPE_PHONE &&
+                $token->getAttribute('secret') === $secret &&
+                $token->getAttribute('expire') >= \time()
+            ) {
+                return (string) $token->getId();
             }
         }
 
@@ -221,7 +244,8 @@ class Auth
      */
     public static function sessionVerify(array $sessions, string $secret)
     {
-        foreach ($sessions as $session) { /** @var Document $session */
+        foreach ($sessions as $session) {
+            /** @var Document $session */
             if (
                 $session->isSet('secret') &&
                 $session->isSet('expire') &&
@@ -302,5 +326,12 @@ class Auth
         }
 
         return $roles;
+    }
+
+    public static function isAnonymousUser(Document $user): bool
+    {
+        return (is_null($user->getAttribute('email'))
+            || is_null($user->getAttribute('phone'))
+        ) && is_null($user->getAttribute('password'));
     }
 }

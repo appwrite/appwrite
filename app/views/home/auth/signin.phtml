@@ -19,17 +19,17 @@ $root = ($this->getParam('root') !== 'disabled');
 
         <p>Login using email and password</p>
 
-        <form name="account.createSession"
+        <form name="account.createEmailSession"
             data-analytics
             data-analytics-activity
             data-analytics-event="submit"
             data-analytics-category="home"
             data-analytics-label="Create Account Session"
-            data-service="account.createSession"
+            data-service="account.createEmailSession"
             data-scope="console"
             data-event="submit"
             data-success="trigger,hide,redirect"
-            data-success-param-trigger-events="account.createSession"
+            data-success-param-trigger-events="account.createEmailSession"
             data-success-param-redirect-url="/console"
             data-failure="alert"
             data-failure-param-alert-text="Login failed. Please check your credentials."

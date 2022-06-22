@@ -5,7 +5,6 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__ . '/../init.php';
 
@@ -20,8 +19,6 @@ class DatabaseV1 extends Worker
 
     public function run(): void
     {
-        Authorization::disable();
-
         $type = $this->args['type'];
         $project = new Document($this->args['project']);
         $collection = new Document($this->args['collection'] ?? []);
@@ -53,8 +50,6 @@ class DatabaseV1 extends Worker
                 Console::error('No database operation for type: ' . $type);
                 break;
         }
-
-            Authorization::reset();
     }
 
     public function shutdown(): void

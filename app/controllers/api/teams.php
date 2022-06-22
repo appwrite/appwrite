@@ -63,7 +63,6 @@ App::post('/v1/teams')
             '$write' => ['team:' . $teamId . '/owner'],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
-            'dateCreated' => \time(),
             'search' => implode(' ', [$teamId, $name]),
         ])));
 
@@ -74,7 +73,9 @@ App::post('/v1/teams')
                 '$read' => ['user:' . $user->getId(), 'team:' . $team->getId()],
                 '$write' => ['user:' . $user->getId(), 'team:' . $team->getId() . '/owner'],
                 'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
                 'teamId' => $team->getId(),
+                'teamInternalId' => $team->getInternalId(),
                 'roles' => $roles,
                 'invited' => \time(),
                 'joined' => \time(),
@@ -367,7 +368,9 @@ App::post('/v1/teams/:teamId/memberships')
             '$read' => ['role:all'],
             '$write' => ['user:' . $invitee->getId(), 'team:' . $team->getId() . '/owner'],
             'userId' => $invitee->getId(),
+            'userInternalId' => $invitee->getInternalId(),
             'teamId' => $team->getId(),
+            'teamInternalId' => $team->getInternalId(),
             'roles' => $roles,
             'invited' => \time(),
             'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
@@ -702,6 +705,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $session = new Document(array_merge([
             '$id' => $dbForProject->getId(),
             'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
             'provider' => Auth::SESSION_PROVIDER_EMAIL,
             'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak

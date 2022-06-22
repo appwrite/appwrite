@@ -16,6 +16,18 @@ class Deployment extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Deployment creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Deployment update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Resource ID.',
@@ -27,12 +39,6 @@ class Deployment extends Model
                 'description' => 'Resource type.',
                 'default' => '',
                 'example' => 'functions',
-            ])
-            ->addRule('dateCreated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'The deployment creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
             ])
             ->addRule('entrypoint', [
                 'type' => self::TYPE_STRING,
