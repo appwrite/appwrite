@@ -1,7 +1,9 @@
 <?php
 
 use Appwrite\Extend\Exception;
+use Appwrite\GraphQL\CoroutinePromiseAdapter;
 use Appwrite\Utopia\Response;
+use GraphQL\Error\DebugFlag;
 use GraphQL\GraphQL;
 use GraphQL\Type;
 use GraphQL\Validator\Rules\DisableIntrospection;
@@ -64,22 +66,15 @@ App::post('/v1/graphql')
  * @throws \Exception
  */
 function graphqlRequest(
-    $query,
-    $operationName,
-    $variables,
-    $request,
-    $response,
-    $promiseAdapter,
-    $gqlSchema
-)
+    string $query,
+    ?string $operationName,
+    ?array $variables,
+    Appwrite\Utopia\Request $request,
+    Appwrite\Utopia\Response $response,
+    CoroutinePromiseAdapter $promiseAdapter,
+    Type\Schema $gqlSchema
+): void
 {
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Type\Schema $schema */
-    /** @var Utopia\App $utopia */
-    /** @var Utopia\Registry\Registry $register */
-    /** @var \Utopia\Database\Database $dbForProject */
-
     if ($request->getHeader('content-type') === 'application/graphql') {
         // TODO: Add getRawContent() method to Request
         $query = $request->getSwoole()->rawContent();
@@ -94,7 +89,13 @@ function graphqlRequest(
     $validations = GraphQL::getStandardValidationRules();
     $validations[] = new QueryComplexity($maxComplexity);
     $validations[] = new QueryDepth($maxDepth);
-    $validations[] = new DisableIntrospection();
+
+    if (App::isProduction()) {
+        $validations[] = new DisableIntrospection();
+        $debugFlags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
+    } else {
+        $debugFlags = DebugFlag::NONE;
+    }
 
     $promise = GraphQL::promiseToExecute(
         $promiseAdapter,
@@ -109,8 +110,8 @@ function graphqlRequest(
     $wg = new WaitGroup();
     $wg->add();
     $promise->then(
-        function ($result) use ($response, &$output, $wg) {
-            $output = $result->toArray();
+        function ($result) use ($response, &$output, $wg, $debugFlags) {
+            $output = $result->toArray($debugFlags);
             $wg->done();
         },
         function ($error) use ($response, &$output, $wg) {

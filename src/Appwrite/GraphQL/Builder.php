@@ -19,7 +19,7 @@ use Utopia\Registry\Registry;
 use Utopia\Route;
 use Utopia\Validator;
 
-use function \Co\go;
+use function Co\go;
 
 class Builder
 {
@@ -170,12 +170,11 @@ class Builder
      * @throws \Exception
      */
     private static function getParameterArgType(
-        App                $utopia,
+        App $utopia,
         Validator|callable $validator,
-        bool               $required,
-        array              $injections
-    ): Type
-    {
+        bool $required,
+        array $injections
+    ): Type {
         $validator = \is_callable($validator)
             ? \call_user_func_array($validator, $utopia->getResources($injections))
             : $validator;
@@ -211,8 +210,8 @@ class Builder
                     $utopia,
                     $validator->getValidator(),
                     $required,
-                    $injections)
-                );
+                    $injections
+                ));
                 break;
             case 'Utopia\Validator\Numeric':
             case 'Utopia\Validator\Integer':
@@ -272,13 +271,12 @@ class Builder
      * @throws \Exception
      */
     public static function buildSchema(
-        App      $utopia,
-        Request  $request,
+        App $utopia,
+        Request $request,
         Response $response,
         Database $dbForProject,
         Document $user,
-    ): Schema
-    {
+    ): Schema {
         $apiSchema = self::buildAPISchema($utopia, $request, $response);
         $db = self::buildCollectionsSchema($utopia, $request, $response, $dbForProject, $user);
 
@@ -329,6 +327,10 @@ class Builder
                 $methodName = $namespace . \ucfirst($route->getLabel('sdk.method', ''));
                 $responseModelNames = $route->getLabel('sdk.response.model', "none");
 
+                if ($responseModelNames === "none") {
+                    continue;
+                }
+
                 $responseModels = \is_array($responseModelNames)
                     ? \array_map(static fn($m) => $response->getModel($m), $responseModelNames)
                     : [$response->getModel($responseModelNames)];
@@ -363,7 +365,7 @@ class Builder
 
                     if ($method == 'GET') {
                         $queryFields[$methodName] = $field;
-                    } else if ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
+                    } elseif ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
                         $mutationFields[$methodName] = $field;
                     }
                 }
@@ -386,12 +388,11 @@ class Builder
      * @return callable
      */
     private static function resolveAPIRequest(
-        App      $utopia,
-        Request  $request,
+        App $utopia,
+        Request $request,
         Response $response,
-        mixed    $route,
-    ): callable
-    {
+        mixed $route,
+    ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $request, $response, $route, $args, $context, $info) {
                 // Mutate the original request object to match route
@@ -419,13 +420,12 @@ class Builder
      * @throws \Exception
      */
     public static function buildCollectionsSchema(
-        App       $utopia,
-        Request   $request,
-        Response  $response,
-        Database  $dbForProject,
+        App $utopia,
+        Request $request,
+        Response $response,
+        Database $dbForProject,
         ?Document $user = null,
-    ): array
-    {
+    ): array {
         $start = microtime(true);
 
         $userId = $user?->getId();
@@ -438,11 +438,13 @@ class Builder
 
         $wg = new WaitGroup();
 
-        while (!empty($attrs = Authorization::skip(fn() => $dbForProject->find(
-            'attributes',
-            limit: $limit,
-            offset: $offset
-        )))) {
+        while (
+            !empty($attrs = Authorization::skip(fn() => $dbForProject->find(
+                'attributes',
+                limit: $limit,
+                offset: $offset
+            )))
+        ) {
             $wg->add();
             $count += count($attrs);
             go(function () use ($utopia, $request, $response, $dbForProject, &$collections, &$queryFields, &$mutationFields, $limit, &$offset, $attrs, $userId, $wg) {
@@ -515,13 +517,12 @@ class Builder
     }
 
     private static function resolveDocumentGet(
-        App      $utopia,
-        Request  $request,
+        App $utopia,
+        Request $request,
         Response $response,
         Database $dbForProject,
-        string   $collectionId
-    ): callable
-    {
+        string $collectionId
+    ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
                 try {
@@ -544,13 +545,12 @@ class Builder
     }
 
     private static function resolveDocumentList(
-        App      $utopia,
-        Request  $request,
+        App $utopia,
+        Request $request,
         Response $response,
         Database $dbForProject,
-        string   $collectionId
-    ): callable
-    {
+        string $collectionId
+    ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
                 $swoole = $request->getSwoole();
@@ -573,14 +573,13 @@ class Builder
     }
 
     private static function resolveDocumentMutate(
-        App      $utopia,
-        Request  $request,
+        App $utopia,
+        Request $request,
         Response $response,
         Database $dbForProject,
-        string   $collectionId,
-        string   $method,
-    ): callable
-    {
+        string $collectionId,
+        string $method,
+    ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $method, $type, $args) {
                 $swoole = $request->getSwoole();
@@ -611,13 +610,12 @@ class Builder
     }
 
     private static function resolveDocumentDelete(
-        App      $utopia,
-        Request  $request,
+        App $utopia,
+        Request $request,
         Response $response,
         Database $dbForProject,
-        string   $collectionId
-    ): callable
-    {
+        string $collectionId
+    ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
                 $swoole = $request->getSwoole();
@@ -644,16 +642,17 @@ class Builder
      * @throws \Utopia\Exception
      */
     private static function resolve(
-        App                  $utopia,
+        App $utopia,
         \Swoole\Http\Request $swoole,
-        Response             $response,
-        callable             $resolve,
-        callable             $reject,
-    ): void
-    {
+        Response $response,
+        callable $resolve,
+        callable $reject,
+    ): void {
         // Drop json content type so post args are used directly
-        if (\array_key_exists('content-type', $swoole->header)
-            && $swoole->header['content-type'] === 'application/json') {
+        if (
+            \array_key_exists('content-type', $swoole->header)
+            && $swoole->header['content-type'] === 'application/json'
+        ) {
             unset($swoole->header['content-type']);
         }
 
@@ -673,6 +672,7 @@ class Builder
 
             $utopia->execute($route, $request);
         } catch (\Throwable $e) {
+            \var_dump($e->getMessage());
             $reject($e);
             return;
         }
