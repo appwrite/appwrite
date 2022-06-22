@@ -1273,6 +1273,7 @@ App::post('/v1/database/collections/:collectionId/indexes')
 
         // Convert Document[] to array of attribute metadata
         $oldAttributes = \array_map(fn ($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
+
         $oldAttributes[] = [
             'key' => '$id',
             'type' => 'string',
@@ -1282,7 +1283,28 @@ App::post('/v1/database/collections/:collectionId/indexes')
             'default' => null,
             'size' => 36
         ];
-        // TODO: Allow $createdAt, $updatedAt
+
+        $oldAttributes[] = [
+            'key' => '$createdAt',
+            'type' => 'integer',
+            'status' => 'available',
+            'signed' => false,
+            'required' => false,
+            'array' => false,
+            'default' => null,
+            'size' => 0
+        ];
+
+        $oldAttributes[] = [
+            'key' => '$updatedAt',
+            'type' => 'integer',
+            'status' => 'available',
+            'signed' => false,
+            'required' => false,
+            'array' => false,
+            'default' => null,
+            'size' => 0
+        ];
 
         // lengths hidden by default
         $lengths = [];

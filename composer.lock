@@ -5346,18 +5346,9 @@
             "time": "2022-05-17T05:48:52+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-internal-indexes",
-            "alias": "0.17.1",
-            "alias_normalized": "0.17.1.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

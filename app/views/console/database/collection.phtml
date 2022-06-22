@@ -1127,7 +1127,8 @@ $logs = $this->getParam('logs', null);
                     <div class="col span-7 margin-bottom-small">
                         <select data-duplications data-ls-attrs="name=attributes" class="margin-bottom-no">
                             <option value="$id">$id</option>
-                            <!-- TODO: Allow createdAt,updatedAt -->
+                            <option value="$createdAt">$createdAt</option>
+                            <option value="$updatedAt">$updatedAt</option>
                             <option data-ls-loop="project-collection.attributes" data-ls-as="option" data-cast-to="array" data-ls-attrs="value={{option.key}}" data-ls-bind="{{option.key}}"></option>
                         </select>
                     </div>
