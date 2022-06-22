@@ -1836,8 +1836,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        \var_dump(new Document($data));
-
         try {
             if ($collection->getAttribute('permission') === 'collection') {
                 /** @var Document $document */

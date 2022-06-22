@@ -58,7 +58,6 @@ window.addEventListener("load", async () => {
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   let current = {};
   window.ls.container.get('console').subscribe(['project', 'console'], response => {
-    console.log(response);
     if (response.events.includes('stats.connections')) {
       for (let project in response.payload) {
         current[project] = response.payload[project] ?? 0;
