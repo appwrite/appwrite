@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\E2E\Services\Database;
+namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -10,7 +10,7 @@ use Utopia\Database\Database;
 
 class DatabaseCustomServerTest extends Scope
 {
-    use DatabaseBase;
+    use DatabasesBase;
     use ProjectCustom;
     use SideServer;
 

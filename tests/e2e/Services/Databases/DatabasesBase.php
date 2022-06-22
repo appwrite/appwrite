@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\E2E\Services\Database;
+namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 
-trait DatabaseBase
+trait DatabasesBase
 {
     public function testCreateDatabase(): array
     {
