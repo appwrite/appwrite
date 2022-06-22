@@ -162,6 +162,9 @@ class Exception extends \Exception
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
 
+    /** Video */
+    public const PROFILES_NOT_FOUND                  = 'profiles_not_found';
+
 
     private $type = '';
 

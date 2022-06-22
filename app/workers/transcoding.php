@@ -186,7 +186,7 @@ class TranscodingV1 extends Worker
                         $devicePath = str_ireplace($deviceFiles->getRoot(), $deviceFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $devicePath);
                         $data = $this->getFilesDevice($project->getId())->read($this->outDir . $fileName);
                         $this->getVideoDevice($project->getId())->write($devicePath . DIRECTORY_SEPARATOR . $profile->getAttribute('name') . DIRECTORY_SEPARATOR .  $fileName, $data, \mime_content_type($this->outDir . $fileName));
-
+                        var_dump($devicePath . DIRECTORY_SEPARATOR . $profile->getAttribute('name') . DIRECTORY_SEPARATOR .  $fileName);
                         if ($start === 0) {
                             $query->setAttribute('status', 'uploading');
                             Authorization::skip(fn() => $this->database->updateDocument(
@@ -240,6 +240,7 @@ class TranscodingV1 extends Worker
 
         if (!empty($metadata['stream']['resolutions'][0])) {
             $general = $metadata['stream']['resolutions'][0];
+            var_dump($general);
             $parts = explode("x", $general);
             $info['width']   = $parts['0'];
             $info['height']  = $parts['1'];
@@ -278,7 +279,7 @@ class TranscodingV1 extends Worker
             '-vf', 'scale=iw:-2:force_original_aspect_ratio=increase,setsar=1:1'
         ];
 
-        $segementSize = 6;
+        $segementSize = 10;
 
         if ($stream === 'dash') {
                 $dash = $video->dash()
@@ -287,7 +288,7 @@ class TranscodingV1 extends Worker
                 ->addRepresentation($representation)
                 ->setAdditionalParams($additionalParams)
                 ->save($this->outPath);
-
+                var_dump($this->outPath);
                     $xml = simplexml_load_string(
                         file_get_contents($this->outDir . $this->args['fileId'] . '.mpd')
                     );

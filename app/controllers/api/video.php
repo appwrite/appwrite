@@ -106,40 +106,33 @@ App::post('/v1/video/buckets/:bucketId/files/:fileId')
             }
         }
 
-        $queries = [
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
-        ];
+        $profiles = Authorization::skip(fn () => $dbForProject->find('video_profiles', [], 12, 0, [], ['ASC']));
 
-        $profiles = Authorization::skip(fn () => $dbForProject->find('video_profiles', $queries, 12, 0, [], ['ASC']));
-
-        if(empty($profiles)) {
-            foreach (Config::getParam('profiles', []) as $profile) {
-                Authorization::skip(function () use ($project, $profile, $dbForProject) {
-                    return $dbForProject->createDocument('video_profiles', new Document([
-                        'projectId' => $project->getId(),
-                        'name' => $profile['name'],
-                        'videoBitrate' => $profile['videoBitrate'],
-                        'audioBitrate' => $profile['audioBitrate'],
-                        'width'  => $profile['width'],
-                        'height' => $profile['height']
-                    ]));
-                });
-            }
+        if ($profiles->empty()) {
+            throw new Exception('No video profiles found', 400, Exception::PROFILES_NOT_FOUND);
         }
 
         $queries = [
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()]),
+            new Query('bucketId', Query::TYPE_EQUAL, [$bucketId]),
+            new Query('fileId', Query::TYPE_EQUAL, [$fileId]),
         ];
 
-        $profiles = Authorization::skip(fn () => $dbForProject->find('video_profiles', $queries, 12, 0, [], ['ASC']));
+        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [$queries]));
+        if($video->empty()) {
+            $video = Authorization::skip(function () use ($dbForProject) {
+                return $this->database->createDocument('videos', new Document([
+                    'bucketId'  => $this->args['bucketId'],
+                    'fileId'    => $this->args['fileId'],
+                ]));
+            });
+        }
 
-         $transcoder = new Transcoding();
+        $transcoder = new Transcoding();
         foreach ($profiles as $profile) {
              $transcoder
             ->setUser($user)
             ->setProject($project)
-            ->setBucketId($bucketId)
-            ->setFileId($fileId)
+            ->setVideoId($video->getId())
             ->setProfileId($profile->getId())
             ->trigger();
         }

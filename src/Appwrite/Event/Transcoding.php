@@ -7,8 +7,8 @@ use Utopia\Database\Document;
 
 class Transcoding extends Event
 {
-    protected string $bucketId = '';
-    protected string $fileId = '';
+
+    protected string $videoId = '';
     protected string $profileId = '';
 
     public function __construct()
@@ -17,14 +17,14 @@ class Transcoding extends Event
     }
 
     /**
-     * Sets bucketId event.
+     * Sets videoId event.
      *
-     * @param $bucketId string
+     * @param $videoId string
      * @return self
      */
-    public function setBucketId(string $bucketId): self
+    public function setVideoId(string $videoId): self
     {
-        $this->bucketId = $bucketId;
+        $this->videoId = $videoId;
 
         return $this;
     }
@@ -34,32 +34,9 @@ class Transcoding extends Event
      *
      * @return null|Document
      */
-    public function getBucketId(): ?string
+    public function getVideoId(): ?string
     {
-        return $this->bucketId;
-    }
-
-    /**
-     * Sets fileId.
-     *
-     *  @param $fileId string
-     * @return self
-     */
-    public function setFileId(string $fileId): self
-    {
-        $this->fileId = $fileId;
-
-        return $this;
-    }
-
-    /**
-     * Returns fileId.
-     *
-     * @return null|Document
-     */
-    public function getFileId(): ?string
-    {
-        return $this->fileId;
+        return $this->videoId;
     }
 
     /**
