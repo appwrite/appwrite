@@ -1,4 +1,5 @@
 - Start using docker compose V2 (from `docker-compose` to `docker compose`)
+- Added support for selfhosted Gitlab (Oauth)
 
 # Version 0.14.2
 

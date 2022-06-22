@@ -1,17 +1,17 @@
 <?php
 
-namespace Tests\E2E\Services\Database;
+namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 
-class DatabasePermissionsMemberTest extends Scope
+class DatabasesPermissionsMemberTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
-    use DatabasePermissionsScope;
+    use DatabasesPermissionsScope;
 
     public array $collections = [];
 
@@ -53,7 +53,15 @@ class DatabasePermissionsMemberTest extends Scope
     {
         $this->createUsers();
 
-        $public = $this->client->call(Client::METHOD_POST, '/database/collections', $this->getServerHeader(), [
+        $db = $this->client->call(Client::METHOD_POST, '/databases', $this->getServerHeader(), [
+            'databaseId' => 'unique()',
+            'name' => 'Test Database',
+        ]);
+        $this->assertEquals(201, $db['headers']['status-code']);
+
+        $databaseId = $db['body']['$id'];
+
+        $public = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => 'unique()',
             'name' => 'Movies',
             'read' => ['role:all'],
@@ -64,14 +72,14 @@ class DatabasePermissionsMemberTest extends Scope
 
         $this->collections = ['public' => $public['body']['$id']];
 
-        $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['public'] . '/attributes/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $this->collections['public'] . '/attributes/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $private = $this->client->call(Client::METHOD_POST, '/database/collections', $this->getServerHeader(), [
+        $private = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => 'unique()',
             'name' => 'Private Movies',
             'read' => ['role:member'],
@@ -82,7 +90,7 @@ class DatabasePermissionsMemberTest extends Scope
 
         $this->collections['private'] = $private['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/database/collections/' . $this->collections['private'] . '/attributes/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $this->collections['private'] . '/attributes/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -93,7 +101,8 @@ class DatabasePermissionsMemberTest extends Scope
 
         return [
             'users' => $this->users,
-            'collections' => $this->collections
+            'collections' => $this->collections,
+            'databaseId' => $databaseId
         ];
     }
 
@@ -106,8 +115,9 @@ class DatabasePermissionsMemberTest extends Scope
     {
         $users = $data['users'];
         $collections = $data['collections'];
+        $databaseId = $data['databaseId'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collections['public'] . '/documents', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['public'] . '/documents', $this->getServerHeader(), [
             'documentId' => 'unique()',
             'data' => [
                 'title' => 'Lorem',
@@ -117,7 +127,7 @@ class DatabasePermissionsMemberTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collections['private'] . '/documents', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['private'] . '/documents', $this->getServerHeader(), [
             'documentId' => 'unique()',
             'data' => [
                 'title' => 'Lorem',
@@ -130,7 +140,7 @@ class DatabasePermissionsMemberTest extends Scope
         /**
          * Check role:all collection
          */
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collections['public']  . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['public']  . '/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -147,7 +157,7 @@ class DatabasePermissionsMemberTest extends Scope
         /**
          * Check role:member collection
          */
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collections['private']  . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['private']  . '/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

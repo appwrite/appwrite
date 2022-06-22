@@ -1,21 +1,33 @@
 <?php
 
-namespace Tests\E2E\Services\Database;
+namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 
-class DatabasePermissionsGuestTest extends Scope
+class DatabasesPermissionsGuestTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
-    use DatabasePermissionsScope;
+    use DatabasesPermissionsScope;
 
     public function createCollection(): array
     {
-        $movies = $this->client->call(Client::METHOD_POST, '/database/collections', $this->getServerHeader(), [
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => 'unique()',
+            'name' => 'InvalidDocumentDatabase',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('InvalidDocumentDatabase', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => 'unique()',
             'name' => 'Movies',
             'read' => ['role:all'],
@@ -25,7 +37,7 @@ class DatabasePermissionsGuestTest extends Scope
 
         $collection = ['id' => $movies['body']['$id']];
 
-        $this->client->call(Client::METHOD_POST, '/database/collections/' . $collection['id'] . '/attributes/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection['id'] . '/attributes/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -33,7 +45,7 @@ class DatabasePermissionsGuestTest extends Scope
 
         sleep(2);
 
-        return $collection;
+        return ['collectionId' => $collection['id'], 'databaseId' => $databaseId];
     }
 
     /**
@@ -56,9 +68,10 @@ class DatabasePermissionsGuestTest extends Scope
      */
     public function testReadDocuments($read, $write)
     {
-        $collection = $this->createCollection();
-
-        $response = $this->client->call(Client::METHOD_POST, '/database/collections/' . $collection['id'] . '/documents', $this->getServerHeader(), [
+        $data = $this->createCollection();
+        $collectionId = $data['collectionId'];
+        $databaseId = $data['databaseId'];
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $this->getServerHeader(), [
             'documentId' => 'unique()',
             'data' => [
                 'title' => 'Lorem',
@@ -68,7 +81,7 @@ class DatabasePermissionsGuestTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collection['id']  . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId  . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
