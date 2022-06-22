@@ -142,12 +142,12 @@ trait UsersBase
         ], $this->getHeaders()), [
             'userId' => 'phpass',
             'email' => 'phpass@appwrite.io',
-            'password' => '$P$Bpvzeu1kOS.qarp2kiOstvgOFbdIn4',
+            'password' => '$P$Br387rwferoKN7uwHZqNMu98q3U8RO.',
             'name' => 'PHPass User',
         ]);
 
         $this->assertEquals($res['headers']['status-code'], 201);
-        $this->assertEquals($res['body']['password'], '$P$Bpvzeu1kOS.qarp2kiOstvgOFbdIn4');
+        $this->assertEquals($res['body']['password'], '$P$Br387rwferoKN7uwHZqNMu98q3U8RO.');
 
         $res = $this->client->call(Client::METHOD_POST, '/users/import/scrypt-modified', array_merge([
             'content-type' => 'application/json',
@@ -179,7 +179,7 @@ trait UsersBase
      */
     public function testCreateUserSessionHashed(array $data): void
     {
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -191,7 +191,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertEquals($response['body']['userId'], 'md5');
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -203,7 +203,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertEquals($response['body']['userId'], 'bcrypt');
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -215,7 +215,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertEquals($response['body']['userId'], 'argon2');
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -227,7 +227,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertEquals($response['body']['userId'], 'sha512');
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -239,7 +239,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertEquals($response['body']['userId'], 'scrypt');
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -251,7 +251,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertEquals($response['body']['userId'], 'phpass');
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
