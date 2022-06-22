@@ -2180,11 +2180,10 @@ trait DatabaseBase
 
         $this->assertEquals($movies['headers']['status-code'], 201);
         $this->assertEquals($movies['body']['name'], 'Movies');
-
-        // create attribute
-
+        
         $moviesId = $movies['body']['$id'];
-
+        
+        // create attribute
         $title = $this->client->call(Client::METHOD_POST, '/database/collections/' . $moviesId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2196,10 +2195,6 @@ trait DatabaseBase
         ]);
 
         $this->assertEquals($title['headers']['status-code'], 201);
-        $this->assertEquals($title['body']['key'], 'title');
-        $this->assertEquals($title['body']['type'], 'string');
-        $this->assertEquals($title['body']['size'], 256);
-        $this->assertEquals($title['body']['required'], true);
 
         // wait for database worker to create attributes
         sleep(2);
@@ -2213,44 +2208,60 @@ trait DatabaseBase
             'data' => [
                 'title' => 'Captain America',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'read' => ['role:all'],
+            'write' => ['role:all'],
         ]);
 
         $id = $document['body']['$id'];
 
         $this->assertEquals($document['headers']['status-code'], 201);
-        $this->assertEquals($document['body']['title'], 'Captain America');
-        $this->assertIsArray($document['body']['$read']);
-        $this->assertIsArray($document['body']['$write']);
         $this->assertCount(1, $document['body']['$read']);
         $this->assertCount(1, $document['body']['$write']);
-        $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$read']);
-        $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
+        $this->assertEquals(['role:all'], $document['body']['$read']);
+        $this->assertEquals(['role:all'], $document['body']['$write']);
 
-        // Reset Permissions
-
+        // Send only read permission
         $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $moviesId . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => [],
-            'read' => [],
-            'write' => [],
+         ], $this->getHeaders()), [
+            'read' => ['user:' . $this->getUser()['$id']],
         ]);
 
         if ($this->getSide() == 'client') {
-            $this->assertEquals($document['headers']['status-code'], 401);
+            $this->assertEquals($document['headers']['status-code'], 200);
         }
 
         if ($this->getSide() == 'server') {
             $this->assertEquals($document['headers']['status-code'], 200);
-            $this->assertCount(0, $document['body']['$read']);
-            $this->assertCount(0, $document['body']['$write']);
-            $this->assertEquals([], $document['body']['$read']);
-            $this->assertEquals([], $document['body']['$write']);
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(1, $document['body']['$write']);
+            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$read']);
+            $this->assertEquals(['role:all'], $document['body']['$write']);
         }
 
-        return $data;
+        // send only write permission
+        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $moviesId . '/documents/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'write' => ['user:' . $this->getUser()['$id']],
+        ]);
+
+        if ($this->getSide() == 'server') {
+            $this->assertEquals($document['headers']['status-code'], 200);
+            $this->assertCount(1, $document['body']['$read']);
+            $this->assertCount(1, $document['body']['$write']);
+            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$read']);
+            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
+        }
+
+        // remove collection
+        $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $moviesId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        return [];
     }
 }
