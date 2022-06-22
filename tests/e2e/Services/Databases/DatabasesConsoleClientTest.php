@@ -7,7 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SideConsole;
 
-class DatabaseConsoleClientTest extends Scope
+class DatabasesConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;

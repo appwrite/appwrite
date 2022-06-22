@@ -7,7 +7,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 
-class DatabasePermissionsTeamTest extends Scope
+class DatabasesPermissionsTeamTest extends Scope
 {
     use ProjectCustom;
     use SideClient;

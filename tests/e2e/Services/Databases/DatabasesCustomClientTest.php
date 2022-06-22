@@ -7,7 +7,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 
-class DatabaseCustomClientTest extends Scope
+class DatabasesCustomClientTest extends Scope
 {
     use DatabasesBase;
     use ProjectCustom;

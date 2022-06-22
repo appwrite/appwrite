@@ -8,7 +8,7 @@ use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 
-class DatabaseCustomServerTest extends Scope
+class DatabasesCustomServerTest extends Scope
 {
     use DatabasesBase;
     use ProjectCustom;
