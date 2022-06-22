@@ -61,6 +61,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false
     ],
+    'dailymotion' => [
+        'name' => 'Dailymotion',
+        'developers' => 'https://developers.dailymotion.com/api/',
+        'icon' => 'icon-dailymotion',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false
+    ],
     'discord' => [
         'name' => 'Discord',
         'developers' => 'https://discordapp.com/developers/docs/topics/oauth2',
@@ -211,6 +221,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'stripe' => [
+        'name' => 'Stripe',
+        'developers' => 'https://stripe.com/docs/api',
+        'icon' => 'icon-stripe',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false
+    ],
     'tradeshift' => [
         'name' => 'Tradeshift',
         'developers' => 'https://developers.tradeshift.com/docs/api',
@@ -241,15 +261,15 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
-    'zoom' => [
-        'name' => 'Zoom',
-        'developers' => 'https://marketplace.zoom.us/docs/guides/auth/oauth/',
-        'icon' => 'icon-zoom',
+    'wordpress' => [
+        'name' => 'WordPress',
+        'developers' => 'https://developer.wordpress.com/docs/oauth2/',
+        'icon' => 'icon-wordpress',
         'enabled' => true,
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false,
+        'mock' => false
     ],
     'yahoo' => [
         'name' => 'Yahoo',
@@ -263,7 +283,7 @@ return [ // Ordered by ABC.
     ],
     'yammer' => [
         'name' => 'Yammer',
-        'developers' => 'https://developer.yammer.com/docs/oauth-2',
+        'developers' => 'https://docs.microsoft.com/en-us/rest/api/yammer/oauth-2/',
         'icon' => 'icon-yammer',
         'enabled' => true,
         'sandbox' => false,
@@ -275,6 +295,16 @@ return [ // Ordered by ABC.
         'name' => 'Yandex',
         'developers' => 'https://tech.yandex.com/oauth/',
         'icon' => 'icon-yandex',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
+    'zoom' => [
+        'name' => 'Zoom',
+        'developers' => 'https://marketplace.zoom.us/docs/guides/auth/oauth/',
+        'icon' => 'icon-zoom',
         'enabled' => true,
         'sandbox' => false,
         'form' => false,
@@ -297,26 +327,7 @@ return [ // Ordered by ABC.
     //     'beta' => false,
     //     'mock' => false,
     // ],
-    'wordpress' => [
-        'name' => 'WordPress',
-        'developers' => 'https://developer.wordpress.com/docs/oauth2/',
-        'icon' => 'icon-wordpress',
-        'enabled' => true,
-        'sandbox' => false,
-        'form' => false,
-        'beta' => false,
-        'mock' => false
-    ],
-    'stripe' => [
-        'name' => 'Stripe',
-        'developers' => 'https://stripe.com/docs/api',
-        'icon' => 'icon-stripe',
-        'enabled' => true,
-        'sandbox' => false,
-        'form' => false,
-        'beta' => false,
-        'mock' => false
-    ],
+
     // Keep Last
     'mock' => [
         'name' => 'Mock',

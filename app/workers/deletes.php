@@ -15,9 +15,6 @@ use Utopia\Audit\Audit;
 
 require_once __DIR__ . '/../init.php';
 
-Authorization::disable();
-Authorization::setDefaultStatus(false);
-
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
 
@@ -98,6 +95,10 @@ class DeletesV1 extends Worker
 
             case DELETE_TYPE_REALTIME:
                 $this->deleteRealtimeUsage($this->args['timestamp']);
+                break;
+
+            case DELETE_TYPE_SESSIONS:
+                $this->deleteExpiredSessions($this->args['timestamp']);
                 break;
 
             case DELETE_TYPE_CERTIFICATES:
@@ -245,7 +246,21 @@ class DeletesV1 extends Worker
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Executions
             $this->deleteByGroup('executions', [
-                new Query('dateCreated', Query::TYPE_LESSER, [$timestamp])
+                new Query('$createdAt', Query::TYPE_LESSER, [$timestamp])
+            ], $dbForProject);
+        });
+    }
+
+    /**
+     * @param int $timestamp
+     */
+    protected function deleteExpiredSessions(int $timestamp): void
+    {
+        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+            $dbForProject = $this->getProjectDB($projectId);
+            // Delete Sessions
+            $this->deleteByGroup('sessions', [
+                new Query('expire', Query::TYPE_LESSER, [$timestamp])
             ], $dbForProject);
         });
     }

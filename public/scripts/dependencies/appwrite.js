@@ -376,6 +376,39 @@
                     }, payload);
                 }),
                 /**
+                 * Update Account Phone
+                 *
+                 * Update currently logged in user account phone number. After changing phone
+                 * number, the user confirmation status will get reset. A new confirmation SMS
+                 * is not sent automatically however you can use the phone confirmation
+                 * endpoint again to send the confirmation SMS.
+                 *
+                 * @param {string} number
+                 * @param {string} password
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePhone: (number, password) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof number === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "number"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/account/phone';
+                    let payload = {};
+                    if (typeof number !== 'undefined') {
+                        payload['number'] = number;
+                    }
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get Account Preferences
                  *
                  * Get currently logged in user preferences as a key-value object.
@@ -523,37 +556,6 @@
                     }, payload);
                 }),
                 /**
-                 * Create Account Session
-                 *
-                 * Allow the user to login into their account by providing a valid email and
-                 * password combination. This route will create a new session for the user.
-                 *
-                 * @param {string} email
-                 * @param {string} password
-                 * @throws {AppwriteException}
-                 * @returns {Promise}
-                 */
-                createSession: (email, password) => __awaiter(this, void 0, void 0, function* () {
-                    if (typeof email === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "email"');
-                    }
-                    if (typeof password === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "password"');
-                    }
-                    let path = '/account/sessions';
-                    let payload = {};
-                    if (typeof email !== 'undefined') {
-                        payload['email'] = email;
-                    }
-                    if (typeof password !== 'undefined') {
-                        payload['password'] = password;
-                    }
-                    const uri = new URL(this.config.endpoint + path);
-                    return yield this.call('post', uri, {
-                        'content-type': 'application/json',
-                    }, payload);
-                }),
-                /**
                  * Delete All Account Sessions
                  *
                  * Delete all sessions from the user account and remove any sessions cookies
@@ -586,6 +588,37 @@
                 createAnonymousSession: () => __awaiter(this, void 0, void 0, function* () {
                     let path = '/account/sessions/anonymous';
                     let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Account Session with Email
+                 *
+                 * Allow the user to login into their account by providing a valid email and
+                 * password combination. This route will create a new session for the user.
+                 *
+                 * @param {string} email
+                 * @param {string} password
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createEmailSession: (email, password) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof email === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "email"');
+                    }
+                    if (typeof password === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "password"');
+                    }
+                    let path = '/account/sessions/email';
+                    let payload = {};
+                    if (typeof email !== 'undefined') {
+                        payload['email'] = email;
+                    }
+                    if (typeof password !== 'undefined') {
+                        payload['password'] = password;
+                    }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
                         'content-type': 'application/json',
@@ -725,6 +758,80 @@
                     }
                 },
                 /**
+                 * Create Phone session
+                 *
+                 * Sends the user a SMS with a secret key for creating a session. Use the
+                 * returned user ID and the secret to submit a request to the [PUT
+                 * /account/sessions/phone](/docs/client/account#accountUpdatePhoneSession)
+                 * endpoint to complete the login process. The secret sent to the user's phone
+                 * is valid for 15 minutes.
+                 *
+                 * @param {string} userId
+                 * @param {string} number
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createPhoneSession: (userId, number) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof number === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "number"');
+                    }
+                    let path = '/account/sessions/phone';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof number !== 'undefined') {
+                        payload['number'] = number;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Phone session (confirmation)
+                 *
+                 * Use this endpoint to complete creating the session with the Magic URL. Both
+                 * the **userId** and **secret** arguments will be passed as query parameters
+                 * to the redirect URL you have provided when sending your request to the
+                 * [POST
+                 * /account/sessions/magic-url](/docs/client/account#accountCreateMagicURLSession)
+                 * endpoint.
+                 *
+                 * Please note that in order to avoid a [Redirect
+                 * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+                 * the only valid redirect URLs are the ones from domains you have set when
+                 * adding your platforms in the console interface.
+                 *
+                 * @param {string} userId
+                 * @param {string} secret
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePhoneSession: (userId, secret) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof secret === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "secret"');
+                    }
+                    let path = '/account/sessions/phone';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof secret !== 'undefined') {
+                        payload['secret'] = secret;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('put', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get Session By ID
                  *
                  * Use this endpoint to get a logged in user's session using a Session ID.
@@ -818,8 +925,8 @@
                  * should redirect the user back to your app and allow you to complete the
                  * verification process by verifying both the **userId** and **secret**
                  * parameters. Learn more about how to [complete the verification
-                 * process](/docs/client/account#accountUpdateVerification). The verification
-                 * link sent to the user's email address is valid for 7 days.
+                 * process](/docs/client/account#accountUpdateEmailVerification). The
+                 * verification link sent to the user's email address is valid for 7 days.
                  *
                  * Please note that in order to avoid a [Redirect
                  * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md),
@@ -866,6 +973,61 @@
                         throw new AppwriteException('Missing required parameter: "secret"');
                     }
                     let path = '/account/verification';
+                    let payload = {};
+                    if (typeof userId !== 'undefined') {
+                        payload['userId'] = userId;
+                    }
+                    if (typeof secret !== 'undefined') {
+                        payload['secret'] = secret;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('put', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Phone Verification
+                 *
+                 * Use this endpoint to send a verification message to your user's phone
+                 * number to confirm they are the valid owners of that address. The provided
+                 * secret should allow you to complete the verification process by verifying
+                 * both the **userId** and **secret** parameters. Learn more about how to
+                 * [complete the verification
+                 * process](/docs/client/account#accountUpdatePhoneVerification). The
+                 * verification link sent to the user's phone number is valid for 15 minutes.
+                 *
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createPhoneVerification: () => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/account/verification/phone';
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Phone Verification (confirmation)
+                 *
+                 * Use this endpoint to complete the user phone verification process. Use the
+                 * **userId** and **secret** that were sent to your user's phone number to
+                 * verify the user email ownership. If confirmed this route will return a 200
+                 * status code.
+                 *
+                 * @param {string} userId
+                 * @param {string} secret
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePhoneVerification: (userId, secret) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof secret === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "secret"');
+                    }
+                    let path = '/account/verification/phone';
                     let payload = {};
                     if (typeof userId !== 'undefined') {
                         payload['userId'] = userId;
@@ -2488,6 +2650,9 @@
                         payload['activate'] = activate;
                     }
                     const uri = new URL(this.config.endpoint + path);
+                    if (!(code instanceof File)) {
+                        throw new AppwriteException('Parameter "code" has to be a File.');
+                    }
                     const size = code.size;
                     if (size <= Appwrite.CHUNK_SIZE) {
                         return yield this.call('post', uri, {
@@ -3462,10 +3627,11 @@
                  * @param {string} projectId
                  * @param {string} name
                  * @param {string[]} scopes
+                 * @param {number} expire
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                createKey: (projectId, name, scopes) => __awaiter(this, void 0, void 0, function* () {
+                createKey: (projectId, name, scopes, expire) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
@@ -3482,6 +3648,9 @@
                     }
                     if (typeof scopes !== 'undefined') {
                         payload['scopes'] = scopes;
+                    }
+                    if (typeof expire !== 'undefined') {
+                        payload['expire'] = expire;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('post', uri, {
@@ -3519,10 +3688,11 @@
                  * @param {string} keyId
                  * @param {string} name
                  * @param {string[]} scopes
+                 * @param {number} expire
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateKey: (projectId, keyId, name, scopes) => __awaiter(this, void 0, void 0, function* () {
+                updateKey: (projectId, keyId, name, scopes, expire) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof projectId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "projectId"');
                     }
@@ -3542,6 +3712,9 @@
                     }
                     if (typeof scopes !== 'undefined') {
                         payload['scopes'] = scopes;
+                    }
+                    if (typeof expire !== 'undefined') {
+                        payload['expire'] = expire;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('put', uri, {
@@ -3991,6 +4164,29 @@
                     return yield this.call('delete', uri, {
                         'content-type': 'application/json',
                     }, payload);
+                }),
+                /**
+                 * Update Webhook Signature Key
+                 *
+                 *
+                 * @param {string} projectId
+                 * @param {string} webhookId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateWebhookSignature: (projectId, webhookId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof projectId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "projectId"');
+                    }
+                    if (typeof webhookId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "webhookId"');
+                    }
+                    let path = '/projects/{projectId}/webhooks/{webhookId}/signature'.replace('{projectId}', projectId).replace('{webhookId}', webhookId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
                 })
             };
             this.storage = {
@@ -4304,6 +4500,9 @@
                         payload['write'] = write;
                     }
                     const uri = new URL(this.config.endpoint + path);
+                    if (!(file instanceof File)) {
+                        throw new AppwriteException('Parameter "file" has to be a File.');
+                    }
                     const size = file.size;
                     if (size <= Appwrite.CHUNK_SIZE) {
                         return yield this.call('post', uri, {
@@ -5297,6 +5496,33 @@
                     }, payload);
                 }),
                 /**
+                 * Update Phone
+                 *
+                 * Update the user phone by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {string} number
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePhone: (userId, number) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof number === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "number"');
+                    }
+                    let path = '/users/{userId}/phone'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof number !== 'undefined') {
+                        payload['number'] = number;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get User Preferences
                  *
                  * Get the user preferences by its unique ID.
@@ -5447,7 +5673,7 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                updateVerification: (userId, emailVerification) => __awaiter(this, void 0, void 0, function* () {
+                updateEmailVerification: (userId, emailVerification) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof userId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "userId"');
                     }
@@ -5458,6 +5684,33 @@
                     let payload = {};
                     if (typeof emailVerification !== 'undefined') {
                         payload['emailVerification'] = emailVerification;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('patch', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Phone Verification
+                 *
+                 * Update the user phone verification status by its unique ID.
+                 *
+                 * @param {string} userId
+                 * @param {boolean} phoneVerification
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updatePhoneVerification: (userId, phoneVerification) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof userId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "userId"');
+                    }
+                    if (typeof phoneVerification === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "phoneVerification"');
+                    }
+                    let path = '/users/{userId}/verification/phone'.replace('{userId}', userId);
+                    let payload = {};
+                    if (typeof phoneVerification !== 'undefined') {
+                        payload['phoneVerification'] = phoneVerification;
                     }
                     const uri = new URL(this.config.endpoint + path);
                     return yield this.call('patch', uri, {

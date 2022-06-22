@@ -131,6 +131,9 @@ ARG VERSION=dev
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
+ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+ENV DOCKER_COMPOSE_VERSION=v2.5.0
+
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
     _APP_LOCALE=en \
@@ -190,6 +193,8 @@ ENV _APP_SERVER=swoole \
     _APP_SMTP_SECURE= \
     _APP_SMTP_USERNAME= \
     _APP_SMTP_PASSWORD= \
+    _APP_PHONE_PROVIDER= \
+    _APP_PHONE_FROM= \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CONTAINERS=10 \
@@ -232,11 +237,16 @@ RUN \
   libmaxminddb-dev \
   certbot \
   docker-cli \
-  docker-compose \
   libgomp \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
+
+RUN \
+  mkdir -p $DOCKER_CONFIG/cli-plugins \
+  && ARCH=$(uname -m) && if [ $ARCH == "armv7l" ]; then $ARCH="armv7"; fi \
+  && curl -SL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-linux-$ARCH -o $DOCKER_CONFIG/cli-plugins/docker-compose \
+  && chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
 RUN \
   if [ "$DEBUG" == "true" ]; then \
@@ -297,6 +307,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-mails && \
+    chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions

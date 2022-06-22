@@ -30,7 +30,7 @@ sort($patterns);
     data-service="projects.getWebhook"
     data-name="project-webhook"
     data-scope="console"
-    data-event="load,projects.createWebhook, projects.deleteWebhook, projects.updateWebhook"
+    data-event="load,projects.createWebhook,projects.deleteWebhook,projects.updateWebhook,projects.updateWebhookSignature"
     data-param-project-id="{{router.params.project}}"
     data-param-webhook-id="{{router.params.id}}"
     data-success="trigger"
@@ -156,7 +156,53 @@ sort($patterns);
                         <input id="uid" type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-webhook.$id}}" disabled data-forms-copy>
                     </div>
 
-                    <form class="margin-bottom" data-analytics data-analytics-activity data-analytics-event="submit" data-analytics-category="console" data-analytics-label="Delete Project Webhook" data-service="projects.deleteWebhook" data-scope="console" data-event="submit" data-confirm="Are you sure you want to delete this webhook?" data-success="alert,redirect" data-success-param-redirect-url="/console/webhooks?project={{router.params.project}}" data-success-param-alert-text="Deleted webhook successfully" data-success-param-trigger-events="projects.deleteWebhook" data-failure="alert" data-failure-param-alert-text="Failed to delete webhook" data-failure-param-alert-classname="error">
+                    <label>Signature Key <span class="tooltip small" data-tooltip="Can be used to validate your Webhooks."><i class="icon-info-circled"></i></span></label>
+                    <div class="input-copy margin-bottom">
+                        <input id="signatureKey" type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-webhook.signatureKey}}" disabled data-forms-copy>
+                    </div>
+
+                    <form
+                        class="margin-bottom"
+                        data-analytics
+                        data-analytics-activity
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Update Project Webhook Signature"
+                        data-service="projects.updateWebhookSignature"
+                        data-scope="console"
+                        data-event="submit"
+                        data-confirm="Are you sure you want to generate a new Signature Key?"
+                        data-success="trigger"
+                        data-success-param-alert-text="Updated webhook signature key successfully"
+                        data-success-param-trigger-events="projects.updateWebhookSignature"
+                        data-failure="alert"
+                        data-failure-param-alert-text="Failed to update webhook signature key"
+                        data-failure-param-alert-classname="error">
+
+                        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                        <input type="hidden" name="webhookId" data-ls-bind="{{project-webhook.$id}}" />
+
+                        <button class="fill">Update Signature Key</button>
+                    </form>
+
+                    <form
+                        class="margin-bottom"
+                        data-analytics
+                        data-analytics-activity
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Delete Project Webhook"
+                        data-service="projects.deleteWebhook"
+                        data-scope="console"
+                        data-event="submit"
+                        data-confirm="Are you sure you want to delete this webhook?"
+                        data-success="alert,redirect"
+                        data-success-param-redirect-url="/console/webhooks?project={{router.params.project}}"
+                        data-success-param-alert-text="Deleted webhook successfully"
+                        data-success-param-trigger-events="projects.deleteWebhook"
+                        data-failure="alert"
+                        data-failure-param-alert-text="Failed to delete webhook"
+                        data-failure-param-alert-classname="error">
 
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                         <input type="hidden" name="webhookId" data-ls-bind="{{project-webhook.$id}}" />

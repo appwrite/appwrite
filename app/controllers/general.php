@@ -279,6 +279,12 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
             $role = Auth::USER_ROLE_APP;
             $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
+            $expire = $key->getAttribute('expire', 0);
+
+            if (!empty($expire) && $expire < \time()) {
+                throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
+            }
+
             Authorization::setRole('role:' . Auth::USER_ROLE_APP);
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
         }
@@ -292,11 +298,10 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
 
     $service = $route->getLabel('sdk.namespace', '');
     if (!empty($service)) {
-        $roles = Authorization::getRoles();
         if (
             array_key_exists($service, $project->getAttribute('services', []))
             && !$project->getAttribute('services', [])[$service]
-            && !(Auth::isPrivilegedUser($roles) || Auth::isAppUser($roles))
+            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
         ) {
             throw new AppwriteException('Service is disabled', 503, AppwriteException::GENERAL_SERVICE_DISABLED);
         }
