@@ -1,1 +1,1 @@
-Get a list of all the user's databases. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project's databases. [Learn more about different API modes](/docs/admin).
+Get a list of all databases from the current Appwrite project. You can use the search parameter to filter your results.
