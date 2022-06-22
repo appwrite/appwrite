@@ -117,7 +117,7 @@ return [ // Ordered by ABC.
         'icon' => 'icon-gitlab',
         'enabled' => true,
         'sandbox' => false,
-        'form' => false,
+        'form' => 'gitlab.phtml',
         'beta' => false,
         'mock' => false,
     ],
@@ -293,7 +293,7 @@ return [ // Ordered by ABC.
     ],
     'yammer' => [
         'name' => 'Yammer',
-        'developers' => 'https://developer.yammer.com/docs/oauth-2',
+        'developers' => 'https://docs.microsoft.com/en-us/rest/api/yammer/oauth-2/',
         'icon' => 'icon-yammer',
         'enabled' => true,
         'sandbox' => false,
