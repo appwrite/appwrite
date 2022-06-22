@@ -117,40 +117,54 @@ window.ls.router
     scope: "console",
     project: true
   })
-  .add("/console/database", {
-    template: "/console/database?version=" + APP_ENV.CACHEBUSTER,
+  .add("/console/databases", {
+    template: "/console/databases?version=" + APP_ENV.CACHEBUSTER,
     scope: "console",
     project: true
   })
-  .add("/console/database/usage", {
+  .add("/console/databases/database", {
     template: function(window) {
       return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
     },
     scope: "console",
     project: true
   })
-  .add("/console/database/collection", {
+  .add("/console/databases/database/:tab", {
     template: function(window) {
       return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
     },
     scope: "console",
     project: true
   })
-  .add("/console/database/collection/:tab", {
+  .add("/console/databases/usage", {
     template: function(window) {
       return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
     },
     scope: "console",
     project: true
   })
-  .add("/console/database/document", {
+  .add("/console/databases/collection", {
     template: function(window) {
       return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
     },
     scope: "console",
     project: true
   })
-  .add("/console/database/document/:tab", {
+  .add("/console/databases/collection/:tab", {
+    template: function(window) {
+      return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
+    },
+    scope: "console",
+    project: true
+  })
+  .add("/console/databases/document", {
+    template: function(window) {
+      return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
+    },
+    scope: "console",
+    project: true
+  })
+  .add("/console/databases/document/:tab", {
     template: function(window) {
       return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
     },

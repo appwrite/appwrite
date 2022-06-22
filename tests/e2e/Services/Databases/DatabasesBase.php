@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\E2E\Services\Database;
+namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 
-trait DatabaseBase
+trait DatabasesBase
 {
     public function testCreateDatabase(): array
     {
@@ -1293,7 +1293,7 @@ trait DatabaseBase
             $conditions[] = "[" . $i . "] Too long title to cross 2k chars query limit";
         }
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [

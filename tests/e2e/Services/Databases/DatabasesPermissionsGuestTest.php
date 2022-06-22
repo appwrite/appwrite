@@ -1,17 +1,17 @@
 <?php
 
-namespace Tests\E2E\Services\Database;
+namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 
-class DatabasePermissionsGuestTest extends Scope
+class DatabasesPermissionsGuestTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
-    use DatabasePermissionsScope;
+    use DatabasesPermissionsScope;
 
     public function createCollection(): array
     {
