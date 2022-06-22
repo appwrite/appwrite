@@ -9,7 +9,7 @@ use Tests\E2E\Scopes\SideClient;
 
 class DatabaseCustomClientTest extends Scope
 {
-    use DatabaseBase;
+    use DatabasesBase;
     use ProjectCustom;
     use SideClient;
 

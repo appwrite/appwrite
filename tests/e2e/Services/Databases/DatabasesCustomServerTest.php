@@ -10,7 +10,7 @@ use Utopia\Database\Database;
 
 class DatabaseCustomServerTest extends Scope
 {
-    use DatabaseBase;
+    use DatabasesBase;
     use ProjectCustom;
     use SideServer;
 
