@@ -281,6 +281,7 @@ $logs = $this->getParam('logs', null);
                                                 data-scope="sdk"
                                                 data-event="submit"
                                                 data-confirm="Are you sure you want to delete this attribute?"
+                                                data-param-database-id="{{router.params.databaseId}}"
                                                 data-success="alert,trigger"
                                                 data-success-param-alert-text="Deleted attribute successfully"
                                                 data-success-param-trigger-events="databases.deleteAttribute"

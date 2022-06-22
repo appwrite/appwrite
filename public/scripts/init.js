@@ -58,6 +58,7 @@ window.addEventListener("load", async () => {
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   let current = {};
   window.ls.container.get('console').subscribe(['project', 'console'], response => {
+    console.log(response);
     if (response.events.includes('stats.connections')) {
       for (let project in response.payload) {
         current[project] = response.payload[project] ?? 0;
@@ -66,14 +67,14 @@ window.addEventListener("load", async () => {
       return;
     }
 
-    if (response.events.includes('collections.*.attributes.*')) {
-      document.dispatchEvent(new CustomEvent('database.createAttribute'));
+    if (response.events.includes('databases.*.collections.*.attributes.*')) {
+      document.dispatchEvent(new CustomEvent('databases.createAttribute'));
 
       return;
     }
 
-    if (response.events.includes('collections.*.indexes.*')) {
-      document.dispatchEvent(new CustomEvent('database.createIndex'));
+    if (response.events.includes('databases.*.collections.*.indexes.*')) {
+      document.dispatchEvent(new CustomEvent('databases.createIndex'));
 
       return;
     }
