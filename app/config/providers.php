@@ -32,7 +32,7 @@ return [ // Ordered by ABC.
         'mock' => false,
     ],
     'autodesk' => [
-        'name' => 'autodesk',
+        'name' => 'Autodesk',
         'developers' => 'https://forge.autodesk.com/en/docs/oauth/v2/developers_guide/overview/',
         'icon' => 'icon-autodesk',
         'enabled' => true,
