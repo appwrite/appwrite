@@ -3,6 +3,7 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 
@@ -21,8 +22,114 @@ class V14 extends Migration
         Console::log('Migrating project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         Console::info('Migrating Collections');
         $this->migrateCollections();
+        Console::info('Create Default Database Layer');
+        $this->createDatabaseLayer();
+        if ($this->project->getId() !== 'console') {
+            Console::info('Migrating Database Collections');
+            $this->migrateCustomCollections();
+        }
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
+    }
+
+    public function createDatabaseLayer(): void
+    {
+        if (!$this->projectDB->exists('databases')) {
+            $this->createCollection('databases');
+        }
+
+        if ($this->project->getId() === 'console') {
+            return;
+        }
+
+        try {
+            $this->projectDB->createDocument('databases', new Document([
+                '$id' => 'default',
+                'name' => 'Default',
+                'search' => 'default Default'
+            ]));
+        } catch (\Throwable $th) {
+            Console::warning($th->getMessage());
+        }
+    }
+
+    protected function migrateCustomCollections(): void
+    {
+        try {
+            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_collections` RENAME TO `_{$this->project->getInternalId()}_database_1`")->execute();
+        } catch (\Throwable $th) {
+            Console::warning($th->getMessage());
+        }
+        try {
+            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_collections_perms` RENAME TO `_{$this->project->getInternalId()}_database_1_perms`")->execute();
+        } catch (\Throwable $th) {
+            Console::warning($th->getMessage());
+        }
+
+        /**
+         * Update metadata table.
+         */
+        $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}__metadata`
+            SET
+                _uid = 'database_1',
+                name = 'database_1'
+            WHERE _uid = 'collections';
+        ")->execute();
+
+        $this->createAttributeFromCollection($this->projectDB, 'database_1', 'databaseInternalId', 'collections');
+
+        $nextCollection = null;
+
+        do {
+            $documents = $this->projectDB->find('database_1', limit: $this->limit, cursor: $nextCollection);
+            $count = count($documents);
+
+            \Co\run(function (array $documents) {
+                foreach ($documents as $document) {
+                    go(function (Document $collection) {
+                        $id = $collection->getId();
+                        $internalId = $collection->getInternalId();
+
+                        if ($this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), "database_1_collection_{$internalId}")) {
+                            return;
+                        }
+                        Console::log("- {$id} ({$collection->getAttribute('name')})");
+
+                        try {
+                            /**
+                             * Rename user's colletion table schema
+                             */
+                            $this->createNewMetaData("collection_{$internalId}", "database_1_collection_{$internalId}");
+                        } catch (\Throwable $th) {
+                            Console::warning($th->getMessage());
+                        }
+
+                        try {
+                            /**
+                             * Update metadata table.
+                             */
+                            $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$internalId}__metadata`
+                            SET
+                                _uid = 'database_1_collection_{$internalId}',
+                                name = 'database_1_collection_{$internalId}'
+                            WHERE _uid = 'collection_{$internalId}';
+                        ")->execute();
+
+                            $collection->setAttribute('databaseInternalId', '1');
+                            $this->projectDB->updateDocument('database_1', $collection->getId(), $collection);
+                        } catch (\Throwable $th) {
+                            Console::warning($th->getMessage());
+                        }
+                    }, $document);
+                }
+            }, $documents);
+
+            if ($count !== $this->limit) {
+                $nextCollection = null;
+            } else {
+                $nextCollection = end($documents);
+            }
+        } while (!is_null($nextCollection));
     }
 
     /**
@@ -48,6 +155,15 @@ class V14 extends Migration
                 case 'indexes':
                     try {
                         /**
+                         * Create 'databaseInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'databaseInternalId');
+                    } catch (\Throwable $th) {
+                        Console::warning("'databaseInternalId' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
                          * Create 'collectionInternalId' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'collectionInternalId');
@@ -59,8 +175,8 @@ class V14 extends Migration
                         /**
                          * Re-Create '_key_collection' index
                          */
-                        $this->projectDB->deleteIndex($id, '_key_collection');
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_collection');
+                        @$this->projectDB->deleteIndex($id, '_key_collection');
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_db_collection');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_collection' from {$id}: {$th->getMessage()}");
                     }
@@ -90,7 +206,7 @@ class V14 extends Migration
                         /**
                          * Re-Create '_key_project' index
                          */
-                        $this->projectDB->deleteIndex($id, '_key_project');
+                        @$this->projectDB->deleteIndex($id, '_key_project');
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_project');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_project' from {$id}: {$th->getMessage()}");
@@ -110,7 +226,7 @@ class V14 extends Migration
                         /**
                          * Re-Create '_key_project' index
                          */
-                        $this->projectDB->deleteIndex($id, '_key_project');
+                        @$this->projectDB->deleteIndex($id, '_key_project');
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_project');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_project' from {$id}: {$th->getMessage()}");
@@ -138,7 +254,7 @@ class V14 extends Migration
                         /**
                          * Re-Create '_key_project' index
                          */
-                        $this->projectDB->deleteIndex($id, '_key_project');
+                        @$this->projectDB->deleteIndex($id, '_key_project');
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_project');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_project' from {$id}: {$th->getMessage()}");
@@ -166,7 +282,7 @@ class V14 extends Migration
                         /**
                          * Re-Create '_key_project' index
                          */
-                        $this->projectDB->deleteIndex($id, '_key_project');
+                        @$this->projectDB->deleteIndex($id, '_key_project');
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_project');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_project' from {$id}: {$th->getMessage()}");
@@ -213,7 +329,7 @@ class V14 extends Migration
                         /**
                          * Re-Create '_key_user' index
                          */
-                        $this->projectDB->deleteIndex($id, '_key_user');
+                        @$this->projectDB->deleteIndex($id, '_key_user');
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_user');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_user' from {$id}: {$th->getMessage()}");
@@ -233,7 +349,7 @@ class V14 extends Migration
                         /**
                          * Re-Create '_key_user' index
                          */
-                        $this->projectDB->deleteIndex($id, '_key_user');
+                        @$this->projectDB->deleteIndex($id, '_key_user');
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_user');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_user' from {$id}: {$th->getMessage()}");
@@ -261,7 +377,7 @@ class V14 extends Migration
                         /**
                          * Re-Create '_key_unique' index
                          */
-                        $this->projectDB->deleteIndex($id, '_key_unique');
+                        @$this->projectDB->deleteIndex($id, '_key_unique');
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_unique');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_unique' from {$id}: {$th->getMessage()}");
@@ -270,7 +386,7 @@ class V14 extends Migration
                         /**
                          * Re-Create '_key_team' index
                          */
-                        $this->projectDB->deleteIndex($id, '_key_team');
+                        @$this->projectDB->deleteIndex($id, '_key_team');
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_team');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_team' from {$id}: {$th->getMessage()}");
@@ -279,7 +395,7 @@ class V14 extends Migration
                         /**
                          * Re-Create '_key_user' index
                          */
-                        $this->projectDB->deleteIndex($id, '_key_user');
+                        @$this->projectDB->deleteIndex($id, '_key_user');
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_user');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_user' from {$id}: {$th->getMessage()}");
@@ -387,31 +503,23 @@ class V14 extends Migration
                  * Add Internal ID 'collectionId' for Subqueries.
                  */
                 if (!empty($document->getAttribute('collectionId')) && is_null($document->getAttribute('collectionInternalId'))) {
-                    $internalId = $this->projectDB->getDocument('collections', $document->getAttribute('collectionId'))->getInternalId();
+                    $internalId = $this->projectDB->getDocument('database_1', $document->getAttribute('collectionId'))->getInternalId();
                     $document->setAttribute('collectionInternalId', $internalId);
                 }
-
-                break;
-            case 'collections':
                 /**
-                 * Migrate dateCreated to $createdAt.
+                 * Add Internal ID 'collectionId' for Subqueries.
                  */
-                if (is_null($document->getCreatedAt())) {
-                    $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
-                }
-                /**
-                 * Migrate dateUpdated to $updatedAt.
-                 */
-                if (is_null($document->getUpdateAt())) {
-                    $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
+                if (is_null($document->getAttribute('databaseInternalId'))) {
+                    $document->setAttribute('databaseInternalId', '1');
                 }
 
-                /**
-                 * Migrate all Database Collections to use Internal ID.
-                 */
-                $internalId = $this->projectDB->getDocument('collections', $document->getId())->getInternalId();
-                $this->createNewMetaData("collection_{$internalId}");
-
+                try {
+                    $this->projectDB->deleteDocument($document->getCollection(), $document->getId());
+                    $this->projectDB->createDocument($document->getCollection(), $document->setAttribute('$id', "1_{$document->getInternalId()}_{$document->getAttribute('key')}"));
+                } catch (\Throwable $th) {
+                    var_dump($th->getMessage());
+                }
+                $document = null;
                 break;
             case 'platforms':
                 /**
@@ -423,7 +531,7 @@ class V14 extends Migration
                 /**
                  * Migrate dateUpdated to $updatedAt.
                  */
-                if (is_null($document->getUpdateAt())) {
+                if (is_null($document->getUpdatedAt())) {
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
                 /**
@@ -445,7 +553,7 @@ class V14 extends Migration
                 /**
                  * Migrate dateUpdated to $updatedAt.
                  */
-                if (is_null($document->getUpdateAt())) {
+                if (is_null($document->getUpdatedAt())) {
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
 
@@ -475,7 +583,7 @@ class V14 extends Migration
                 /**
                  * Migrate dateUpdated to $updatedAt.
                  */
-                if (is_null($document->getUpdateAt())) {
+                if (is_null($document->getUpdatedAt())) {
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
 
@@ -518,12 +626,13 @@ class V14 extends Migration
      * @param string $id
      * @return void
      */
-    protected function createNewMetaData(string $id): void
+    protected function createNewMetaData(string $id, string $to = null): void
     {
+        $to ??= $id;
         /**
          * Skip files collection.
          */
-        if (in_array($id, ['files'])) {
+        if (in_array($id, ['files', 'databases'])) {
             return;
         }
 
@@ -531,7 +640,7 @@ class V14 extends Migration
             /**
              * Replace project UID with Internal ID.
              */
-            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}` RENAME TO `_{$this->project->getInternalId()}_{$id}`")->execute();
+            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}` RENAME TO `_{$this->project->getInternalId()}_{$to}`")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
         }
@@ -539,7 +648,7 @@ class V14 extends Migration
             /**
              * Replace project UID with Internal ID on permissions table.
              */
-            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}_perms` RENAME TO `_{$this->project->getInternalId()}_{$id}_perms`")->execute();
+            $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getId()}_{$id}_perms` RENAME TO `_{$this->project->getInternalId()}_{$to}_perms`")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
         }
@@ -547,7 +656,7 @@ class V14 extends Migration
             /**
              * Add _createdAt attribute.
              */
-            $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_createdAt` int unsigned DEFAULT NULL")->execute();
+            $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$to}` ADD COLUMN IF NOT EXISTS `_createdAt` int unsigned DEFAULT NULL")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
         }
@@ -555,7 +664,7 @@ class V14 extends Migration
             /**
              * Add _updatedAt attribute.
              */
-            $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$id}` ADD COLUMN IF NOT EXISTS `_updatedAt` int unsigned DEFAULT NULL")->execute();
+            $this->pdo->prepare("ALTER TABLE `_{$this->project->getInternalId()}_{$to}` ADD COLUMN IF NOT EXISTS `_updatedAt` int unsigned DEFAULT NULL")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
         }
@@ -563,7 +672,7 @@ class V14 extends Migration
             /**
              * Create index for _createdAt.
              */
-            $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_created_at` ON `_{$this->project->getInternalId()}_{$id}` (`_createdAt`)")->execute();
+            $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_created_at` ON `_{$this->project->getInternalId()}_{$to}` (`_createdAt`)")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
         }
@@ -571,7 +680,7 @@ class V14 extends Migration
             /**
              * Create index for _updatedAt.
              */
-            $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_updated_at` ON `_{$this->project->getInternalId()}_{$id}` (`_updatedAt`)")->execute();
+            $this->pdo->prepare("CREATE INDEX IF NOT EXISTS `_updated_at` ON `_{$this->project->getInternalId()}_{$to}` (`_updatedAt`)")->execute();
         } catch (\Throwable $th) {
             Console::warning("Migrating {$id} Collection: {$th->getMessage()}");
         }

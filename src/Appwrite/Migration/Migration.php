@@ -104,7 +104,7 @@ abstract class Migration
 
         foreach ($this->collections as $collection) {
             if ($collection['$collection'] !== Database::METADATA) {
-                return;
+                continue;
             }
             $sum = 0;
             $nextDocument = null;
@@ -128,7 +128,7 @@ abstract class Migration
                             $old = $document->getArrayCopy();
                             $new = call_user_func($callback, $document);
 
-                            if (!self::hasDifference($new->getArrayCopy(), $old)) {
+                            if (is_null($new) || !self::hasDifference($new->getArrayCopy(), $old)) {
                                 return;
                             }
 
@@ -239,9 +239,10 @@ abstract class Migration
      * @throws \Utopia\Database\Exception\Duplicate
      * @throws \Utopia\Database\Exception\Limit
      */
-    public function createAttributeFromCollection(Database $database, string $collectionId, string $attributeId): void
+    public function createAttributeFromCollection(Database $database, string $collectionId, string $attributeId, string $from = null): void
     {
-        $collection = Config::getParam('collections', [])[$collectionId] ?? null;
+        $from ??= $collectionId;
+        $collection = Config::getParam('collections', [])[$from] ?? null;
         if (is_null($collection)) {
             throw new Exception("Collection {$collectionId} not found");
         }

@@ -74,7 +74,7 @@ class MigrationV14Test extends MigrationTest
         ]));
 
         $this->assertEquals($document->getCreatedAt(), 123456789);
-        $this->assertEquals($document->getUpdateAt(), 987654321);
+        $this->assertEquals($document->getUpdatedAt(), 987654321);
     }
 
     public function testMigrateFunctions()
@@ -89,7 +89,7 @@ class MigrationV14Test extends MigrationTest
         ]));
 
         $this->assertEquals($document->getCreatedAt(), 123456789);
-        $this->assertEquals($document->getUpdateAt(), 987654321);
+        $this->assertEquals($document->getUpdatedAt(), 987654321);
     }
 
     public function testMigrateDeployments()
