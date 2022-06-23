@@ -2180,9 +2180,9 @@ trait DatabaseBase
 
         $this->assertEquals($movies['headers']['status-code'], 201);
         $this->assertEquals($movies['body']['name'], 'Movies');
-        
+
         $moviesId = $movies['body']['$id'];
-        
+
         // create attribute
         $title = $this->client->call(Client::METHOD_POST, '/database/collections/' . $moviesId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
