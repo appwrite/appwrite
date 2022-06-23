@@ -66,14 +66,14 @@ window.addEventListener("load", async () => {
       return;
     }
 
-    if (response.events.includes('collections.*.attributes.*')) {
-      document.dispatchEvent(new CustomEvent('database.createAttribute'));
+    if (response.events.includes('databases.*.collections.*.attributes.*')) {
+      document.dispatchEvent(new CustomEvent('databases.createAttribute'));
 
       return;
     }
 
-    if (response.events.includes('collections.*.indexes.*')) {
-      document.dispatchEvent(new CustomEvent('database.createIndex'));
+    if (response.events.includes('databases.*.collections.*.indexes.*')) {
+      document.dispatchEvent(new CustomEvent('databases.createIndex'));
 
       return;
     }

@@ -462,6 +462,9 @@ class Event
         $events = \array_map(fn (string $event) => \str_replace(['[', ']'], '', $event), $events);
         $events = \array_unique($events);
 
-        return $events;
+        /**
+         * Force a non-assoc array.
+         */
+        return \array_values($events);
     }
 }
