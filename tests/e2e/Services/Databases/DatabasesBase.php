@@ -1320,6 +1320,7 @@ trait DatabasesBase
                 'title' => 'Thor: Ragnaroc',
                 'releaseYear' => 2017,
                 'actors' => [],
+                '$createdAt' => 5 // Should be ignored
             ],
             'read' => ['user:' . $this->getUser()['$id']],
             'write' => ['user:' . $this->getUser()['$id']],
@@ -1330,6 +1331,7 @@ trait DatabasesBase
         $this->assertEquals($document['headers']['status-code'], 201);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
+        $this->assertNotEquals($document['body']['$createdAt'], 5);
         $this->assertEquals('user:' . $this->getUser()['$id'], $document['body']['$read'][0]);
         $this->assertEquals('user:' . $this->getUser()['$id'], $document['body']['$write'][0]);
 
