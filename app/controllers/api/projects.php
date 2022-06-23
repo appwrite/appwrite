@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Database\DatabasePool;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Validator\Event;
@@ -10,6 +11,8 @@ use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Utopia\Cache\Cache;
+use Utopia\Cache\Adapter\Redis as RedisCache;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
@@ -23,6 +26,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
+use Utopia\Database\Adapter\MariaDB;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -61,8 +65,9 @@ App::post('/v1/projects')
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('dbForProject')
-    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
+    ->inject('cache')
+    ->inject('dbPool')
+    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Redis $cache, DatabasePool $dbPool) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -80,6 +85,9 @@ App::post('/v1/projects')
         if ($projectId === 'console') {
             throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
         }
+
+        ['name' => $dbName, 'db' => $db] = $dbPool->getAny();
+        
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
             '$read' => ['team:' . $teamId],
@@ -104,12 +112,13 @@ App::post('/v1/projects')
             'domains' => null,
             'auths' => $auths,
             'search' => implode(' ', [$projectId, $name]),
-            'database'
+            'database' => $dbName
         ]));
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
 
-        $dbForProject->setNamespace("_{$project->getId()}");
+        $cache = new Cache(new RedisCache($cache));
+        $dbForProject = new Database(new MariaDB($db), $cache);
+        $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForProject->setNamespace("_{$projectId}");
         $dbForProject->create('appwrite');
 
         $audit = new Audit($dbForProject);
@@ -117,6 +126,9 @@ App::post('/v1/projects')
 
         $adapter = new TimeLimit('', 0, 1, $dbForProject);
         $adapter->setup();
+
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
 
         foreach ($collections as $key => $collection) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
@@ -151,6 +163,8 @@ App::post('/v1/projects')
 
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
+
+        $dbPool->put($db, $dbName);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($project, Response::MODEL_PROJECT);

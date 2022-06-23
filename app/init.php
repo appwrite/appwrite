@@ -445,80 +445,43 @@ $register->set('logger', function () {
     return new Logger($adapter);
 });
 
-$register->set('poolForConsole', function () {
-    $dbs = App::getEnv('_APP_CONSOLE_DB', '');
-    $dbs = explode(',', $dbs);
+$register->set('dbPool', function () {
+    /** Parse the console databases */
+    $consoleDb = App::getEnv('_APP_CONSOLE_DB', '');
+    $consoleDb = explode(',', $consoleDb)[0];
+    $consoleDb = explode('=', $consoleDb);
+    $name = $consoleDb[0];
+    $dsn = new DSN($consoleDb[1]);
 
-    $pools = new DatabasePool();
-    foreach ($dbs as $db) {
-        $db = explode('=', $db);
-        $name = $db[0];
-        $dsn = new DSN($db[1]);
+    /** Create a new Database Pool */
+    $pool = new DatabasePool();
 
-        // var_dump($dsn->getHost(), $dsn->getPort(), $dsn->getDatabase(), $dsn->getUser(), $dsn->getPassword());
+    $consolePool = new PDOPool(
+        (new PDOConfig())
+        ->withHost($dsn->getHost())
+        ->withPort($dsn->getPort())
+        ->withDbName($dsn->getDatabase())
+        ->withCharset('utf8mb4')
+        ->withUsername($dsn->getUser())
+        ->withPassword($dsn->getPassword())
+        ->withOptions([
+            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+        ]),
+        64
+    );
 
-        $pool = new PDOPool(
-            (new PDOConfig())
-            ->withHost($dsn->getHost())
-            ->withPort($dsn->getPort())
-            ->withDbName($dsn->getDatabase())
-            ->withCharset('utf8mb4')
-            ->withUsername($dsn->getUser())
-            ->withPassword($dsn->getPassword())
-            ->withOptions([
-                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-            ]),
-            64
-        );
+    $pool->add($name, $consolePool);
+    $pool->setConsoleDB($name);
 
-        $pools->add($name, $pool);
-    }
-
-    return $pools;
-});
-
-$register->set('poolForProject', function () {
- // Register DB connection
-    // $dbHost = App::getEnv('_APP_DB_HOST', '');
-    // $dbPort = App::getEnv('_APP_DB_PORT', '');
-    // $dbUser = App::getEnv('_APP_DB_USER', '');
-    // $dbPass = App::getEnv('_APP_DB_PASS', '');
-    // $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
-
-    // var_dump($dbHost, $dbPort, $dbScheme, $dbUser, $dbPass);
-    // $pool = new PDOPool(
-    //     (new PDOConfig())
-    //     ->withHost($dbHost)
-    //     ->withPort($dbPort)
-    //     ->withDbName($dbScheme)
-    //     ->withCharset('utf8mb4')
-    //     ->withUsername($dbUser)
-    //     ->withPassword($dbPass)
-    //     ->withOptions([
-    //         PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-    //     ]),
-    //     64
-    // );
-
-    // return $pool;
-
-    // $dbForConsole = App::getEnv('_APP_CONSOLE_DB', '');
-    // $dbForConsole = explode('=', $dbForConsole);
-    // $name = $dbForConsole[0];
-    // $dsn = new DSN($dbForConsole[1]);
-
+    /** Parse the project databases */
     $dbs = App::getEnv('_APP_PROJECT_DB', '');
     $dbs = explode(',', $dbs);
-
-    $pools = new DatabasePool();
     foreach ($dbs as $db) {
         $db = explode('=', $db);
         $name = $db[0];
         $dsn = new DSN($db[1]);
-
         // var_dump($dsn->getHost(), $dsn->getPort(), $dsn->getDatabase(), $dsn->getUser(), $dsn->getPassword());
-
-        $pool = new PDOPool(
+        $projectPool = new PDOPool(
             (new PDOConfig())
             ->withHost($dsn->getHost())
             ->withPort($dsn->getPort())
@@ -532,11 +495,12 @@ $register->set('poolForProject', function () {
             64
         );
 
-        $pools->add($name, $pool);
+        $pool->add($name, $projectPool);
     }
 
-    return $pools;
+    return $pool;
 });
+
 $register->set('redisPool', function () {
     $redisHost = App::getEnv('_APP_REDIS_HOST', '');
     $redisPort = App::getEnv('_APP_REDIS_PORT', '');

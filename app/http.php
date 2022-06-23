@@ -17,6 +17,9 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
+use Utopia\Cache\Cache;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Database\Adapter\MariaDB;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 
@@ -66,7 +69,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         do {
             try {
                 $attempts++;
-                $pool = $register->get('poolForConsole')->get();
+                $db = $register->get('dbPool')->getConsoleDB();
                 $redis = $register->get('redisPool')->get();
                 break; // leave the do-while if successful
             } catch (\Exception $e) {
@@ -239,11 +242,32 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     $app = new App('UTC');
 
-    $db = $register->get('dbPool')->get();
+    $dbPool = $register->get('dbPool');
+    $db = $dbPool->getConsoleDB();
     $redis = $register->get('redisPool')->get();
 
     App::setResource('db', fn() => $db);
+    App::setResource('dbPool', fn() => $dbPool);
     App::setResource('cache', fn() => $redis);
+
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+    $projectDB = $db;
+    if ($projectId !== 'console') {
+        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+        $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
+        $dbName = $project->getAttribute('database', '');
+        if (!empty($dbName)) {
+            $projectDB = $register->get('dbPool')->get($dbName);
+        }
+    }
+
+    App::setResource('dbForProject', function ($cache) use ($projectDB, $projectId) {
+        $cache = new Cache(new RedisCache($cache));
+        $database = new Database(new MariaDB($projectDB), $cache);
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setNamespace("_{$projectId}");
+        return $database;
+    }, ['cache']);
 
     try {
         Authorization::cleanRoles();
@@ -334,9 +358,12 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $swooleResponse->end(\json_encode($output));
     } finally {
-        /** @var PDOPool $dbPool */
-        $dbPool = $register->get('dbPool');
-        $dbPool->put($db);
+        /** @var PDOPool $consolePool */
+        $dbPool->putConsoleDb($db);
+
+        if (!empty($dbName) && !empty($projectDB)) {
+            $dbPool->put($projectDB, $dbName);
+        }
 
         /** @var RedisPool $redisPool */
         $redisPool = $register->get('redisPool');
