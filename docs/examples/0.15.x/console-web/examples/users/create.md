@@ -1,11 +1,15 @@
-const sdk = new Appwrite();
+import { Client, Users } from "appwrite";
 
-sdk
+const client = new Client();
+
+const users = new Users(client);
+
+client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.users.create('[USER_ID]', 'email@example.com', 'password');
+const promise = users.create('[USER_ID]', 'email@example.com', 'password');
 
 promise.then(function (response) {
     console.log(response); // Success

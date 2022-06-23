@@ -2,9 +2,9 @@ const sdk = require('node-appwrite');
 const fs = require('fs');
 
 // Init SDK
-let client = new sdk.Client();
+const client = new sdk.Client();
 
-let functions = new sdk.Functions(client);
+const functions = new sdk.Functions(client);
 
 client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
@@ -12,7 +12,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = functions.createDeployment('[FUNCTION_ID]', '[ENTRYPOINT]', 'file.png', false);
+const promise = functions.createDeployment('[FUNCTION_ID]', '[ENTRYPOINT]', 'file.png', false);
 
 promise.then(function (response) {
     console.log(response);

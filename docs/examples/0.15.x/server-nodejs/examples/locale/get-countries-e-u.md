@@ -1,9 +1,9 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new sdk.Client();
+const client = new sdk.Client();
 
-let locale = new sdk.Locale(client);
+const locale = new sdk.Locale(client);
 
 client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
@@ -11,7 +11,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = locale.getCountriesEU();
+const promise = locale.getCountriesEU();
 
 promise.then(function (response) {
     console.log(response);
