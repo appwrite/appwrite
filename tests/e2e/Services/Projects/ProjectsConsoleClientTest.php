@@ -1022,6 +1022,7 @@ class ProjectsConsoleClientTest extends Scope
             'security' => false,
             'httpUser' => '',
             'httpPass' => '',
+            'signatureKey' => 'My own uniq key',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1037,6 +1038,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(false, $response['body']['security']);
         $this->assertEquals('', $response['body']['httpUser']);
         $this->assertEquals('', $response['body']['httpPass']);
+        $this->assertEquals('My own uniq key', $response['body']['signatureKey']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/webhooks/' . $webhookId, array_merge([
             'content-type' => 'application/json',
