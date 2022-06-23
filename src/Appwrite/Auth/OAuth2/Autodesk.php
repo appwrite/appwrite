@@ -38,6 +38,8 @@ class Autodesk extends OAuth2
     {
         return 'https://developer.api.autodesk.com/authentication/v1/authorize?' . \http_build_query([
             'client_id' => $this->appID,
+            'scope' => \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state),
             'redirect_uri' => $this->callback,
             'response_type' => 'code'
         ]);
@@ -51,10 +53,11 @@ class Autodesk extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
+            $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $response = $this->request(
                 'POST',
                 'https://developer.api.autodesk.com/authentication/v1/gettoken',
-                [],
+                $headers,
                 \http_build_query([
                     'client_id' => $this->appID,
                     'redirect_uri' => $this->callback,
@@ -64,9 +67,7 @@ class Autodesk extends OAuth2
                 ])
             );
 
-            $output = [];
-            \parse_str($response, $output);
-            $this->tokens = $output;
+            $this->tokens = \json_decode($response, true);
         }
 
         return $this->tokens;
