@@ -16,7 +16,7 @@ class MigrationV14Test extends MigrationTest
         $this->method->setAccessible(true);
     }
 
-    public function testMigrateProject()
+    public function testMigrateProjects()
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -28,7 +28,7 @@ class MigrationV14Test extends MigrationTest
         $this->assertEquals($document->getAttribute('version'), '0.15.0');
     }
 
-    public function testMigrateKey()
+    public function testMigrateKeys()
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -126,5 +126,47 @@ class MigrationV14Test extends MigrationTest
         ]));
 
         $this->assertEquals($document->getCreatedAt(), 123456789);
+    }
+
+    public function testMigrateAudits()
+    {
+        $document = $this->fixDocument(new Document([
+            '$id' => 'appwrite',
+            '$collection' => 'audit',
+            'resource' => 'collection/movies',
+            'event' => 'collections.movies.create'
+        ]));
+
+        $this->assertEquals($document->getAttribute('resource'), 'database/default/collection/movies');
+        $this->assertEquals($document->getAttribute('event'), 'databases.default.collections.movies.create');
+
+        $document = $this->fixDocument(new Document([
+            '$id' => 'appwrite',
+            '$collection' => 'audit',
+            'resource' => 'document/avatar',
+            'event' => 'collections.movies.documents.avatar.create'
+        ]));
+
+        $this->assertEquals($document->getAttribute('resource'), 'database/default/collection/movies/document/avatar');
+        $this->assertEquals($document->getAttribute('event'), 'databases.default.collections.movies.documents.avatar.create');
+    }
+
+    public function testMigrateStats()
+    {
+        $document = $this->fixDocument(new Document([
+            '$id' => 'appwrite',
+            '$collection' => 'stats',
+            'metric' => 'database.collections.62b2039844d4277495d0.documents.create'
+        ]));
+
+        $this->assertEquals($document->getAttribute('metric'), 'databases.default.collections.62b2039844d4277495d0.documents.create');
+
+        $document = $this->fixDocument(new Document([
+            '$id' => 'appwrite',
+            '$collection' => 'stats',
+            'metric' => 'users.create'
+        ]));
+
+        $this->assertEquals($document->getAttribute('metric'), 'users.create');
     }
 }

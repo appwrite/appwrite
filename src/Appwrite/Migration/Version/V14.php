@@ -424,8 +424,8 @@ class V14 extends Migration
                 if (str_starts_with($document->getAttribute('resource'), 'document/')) {
                     $collectionId = explode('.', $document->getAttribute('event'))[1];
                     $document
-                        ->setAttribute('resource', "database/default/collections/{$collectionId}/{$document->getAttribute('resource')}")
-                        ->setAttribute('event', "databases.default.collections.{$collectionId}.{$document->getAttribute('event')}");
+                        ->setAttribute('resource', "database/default/collection/{$collectionId}/{$document->getAttribute('resource')}")
+                        ->setAttribute('event', "databases.default.{$document->getAttribute('event')}");
                 }
 
                 break;
@@ -433,8 +433,9 @@ class V14 extends Migration
                 /**
                  * Add Database Layer to stats metric.
                  */
-                if (str_starts_with($document->getAttribute('metric'), 'collections.')) {
-                    $document->setAttribute('metric', "databases.default.{$document->getAttribute('metric')}");
+                if (str_starts_with($document->getAttribute('metric'), 'database.')) {
+                    $metric = ltrim($document->getAttribute('metric'), 'database.');
+                    $document->setAttribute('metric', "databases.default.{$metric}");
                 }
 
                 break;
