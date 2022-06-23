@@ -32,6 +32,12 @@ class V14 extends Migration
         $this->forEachDocument([$this, 'fixDocument']);
     }
 
+    /**
+     * Creates the default Database for existing Projects.
+     *
+     * @return void
+     * @throws \Throwable
+     */
     public function createDatabaseLayer(): void
     {
         if (!$this->projectDB->exists('databases')) {
@@ -53,6 +59,11 @@ class V14 extends Migration
         }
     }
 
+    /**
+     * Migrates all Database Collections.
+     * @return void
+     * @throws \Exception
+     */
     protected function migrateCustomCollections(): void
     {
         try {
@@ -81,6 +92,9 @@ class V14 extends Migration
         }
 
         try {
+            /**
+             * Add Database Internal ID for Collections.
+             */
             $this->createAttributeFromCollection($this->projectDB, 'database_1', 'databaseInternalId', 'collections');
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
@@ -117,11 +131,11 @@ class V14 extends Migration
                              * Update metadata table.
                              */
                             $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$internalId}__metadata`
-                            SET
-                                _uid = 'database_1_collection_{$internalId}',
-                                name = 'database_1_collection_{$internalId}'
-                            WHERE _uid = 'collection_{$internalId}';
-                        ")->execute();
+                                SET
+                                    _uid = 'database_1_collection_{$internalId}',
+                                    name = 'database_1_collection_{$internalId}'
+                                WHERE _uid = 'collection_{$internalId}';
+                            ")->execute();
 
                             $collection->setAttribute('databaseInternalId', '1');
                             $this->projectDB->updateDocument('database_1', $collection->getId(), $collection);
@@ -604,7 +618,7 @@ class V14 extends Migration
     }
 
     /**
-     * Creates new metadata taht was introduced foir a collection and enforces the Internal ID.
+     * Creates new metadata that was introduced for a collection and enforces the Internal ID.
      *
      * @param string $id
      * @return void
