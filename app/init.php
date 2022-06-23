@@ -899,20 +899,6 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function ($db, $cache, $project) {
-    $cache = new Cache(new RedisCache($cache));
-
-    // Get name of database from the projects collection in the console DB
-
-    // $dbName = $project->getAttribute('database','');
-
-    $database = new Database(new MariaDB($db), $cache);
-    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace("_{$project->getId()}");
-
-    return $database;
-}, ['db', 'cache', 'project']);
-
 App::setResource('dbForConsole', function ($db, $cache) {
     $cache = new Cache(new RedisCache($cache));
 
