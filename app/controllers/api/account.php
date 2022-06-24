@@ -859,7 +859,7 @@ App::post('/v1/account/sessions/phone')
     ->inject('phone')
     ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging, Phone $phone) {
         if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
-            throw new Exception('Phone Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
+            throw new Exception('Phone provider not configured', 503, Exception::GENERAL_PHONE_DISABLED);
         }
 
         $roles = Authorization::getRoles();
@@ -1596,7 +1596,7 @@ App::patch('/v1/account/phone')
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         } catch (Duplicate $th) {
-            throw new Exception('Phone number already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception('Phone number already exists', 409, Exception::USER_PHONE_ALREADY_EXISTS);
         }
 
         $audits
@@ -2263,12 +2263,12 @@ App::post('/v1/account/verification/phone')
     ->inject('messaging')
     ->action(function (Request $request, Response $response, Phone $phone, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
+        if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
+            throw new Exception('Phone provider not configured', 503, Exception::GENERAL_PHONE_DISABLED);
         }
 
         if (empty($user->getAttribute('phone'))) {
-            throw new Exception('User has no phone number.', 400);
+            throw new Exception('User has no phone number.', 400, Exception::USER_PHONE_NOT_FOUND);
         }
 
         $roles = Authorization::getRoles();
