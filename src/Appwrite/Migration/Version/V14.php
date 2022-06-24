@@ -60,6 +60,43 @@ class V14 extends Migration
     }
 
     /**
+     * Migrates all Files.
+     * @param \Utopia\Database\Document $bucket 
+     * @return void 
+     * @throws \Exception 
+     */
+    protected function migrateBucketFiles(Document $bucket): void
+    {
+        $nextFile = null;
+        do {
+            $documents = $this->projectDB->find("bucket_{$bucket->getInternalId()}", limit: $this->limit, cursor: $nextFile);
+            $count = count($documents);
+
+            foreach ($documents as $document) {
+                go(function (Document $bucket, Document $document) {
+                    try {
+                        /**
+                         * Migrate $createdAt.
+                         */
+                        if (empty($document->getCreatedAt())) {
+                            $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
+                            $this->projectDB->updateDocument("bucket_{$bucket->getInternalId()}", $document->getId(), $document);
+                        }
+                    } catch (\Throwable $th) {
+                        Console::warning($th->getMessage());
+                    }
+                }, $bucket, $document);
+            }
+
+            if ($count !== $this->limit) {
+                $nextCollection = null;
+            } else {
+                $nextCollection = end($documents);
+            }
+        } while (!is_null($nextCollection));
+    }
+
+    /**
      * Migrates all Database Collections.
      * @return void
      * @throws \Exception
@@ -538,13 +575,13 @@ class V14 extends Migration
                 /**
                  * Migrate dateCreated to $createdAt.
                  */
-                if (is_null($document->getCreatedAt())) {
+                if (empty($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
                 }
                 /**
                  * Migrate dateUpdated to $updatedAt.
                  */
-                if (is_null($document->getUpdatedAt())) {
+                if (empty($document->getUpdatedAt())) {
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
                 /**
@@ -560,13 +597,14 @@ class V14 extends Migration
                 /**
                  * Migrate dateCreated to $createdAt.
                  */
-                if (is_null($document->getCreatedAt())) {
+                if (empty($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
+
                 }
                 /**
                  * Migrate dateUpdated to $updatedAt.
                  */
-                if (is_null($document->getUpdatedAt())) {
+                if (empty($document->getUpdatedAt())) {
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
 
@@ -575,6 +613,11 @@ class V14 extends Migration
                  */
                 $internalId = $this->projectDB->getDocument('buckets', $document->getId())->getInternalId();
                 $this->createNewMetaData("bucket_{$internalId}");
+
+                /**
+                 * Migrate all Storage Bucket Files.
+                 */
+                $this->migrateBucketFiles($document);
 
                 break;
             case 'users':
@@ -590,13 +633,13 @@ class V14 extends Migration
                 /**
                  * Migrate dateCreated to $createdAt.
                  */
-                if (is_null($document->getCreatedAt())) {
+                if (empty($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
                 }
                 /**
                  * Migrate dateUpdated to $updatedAt.
                  */
-                if (is_null($document->getUpdatedAt())) {
+                if (empty($document->getUpdatedAt())) {
                     $document->setAttribute('$updatedAt', $document->getAttribute('dateUpdated'));
                 }
 
@@ -607,7 +650,7 @@ class V14 extends Migration
                 /**
                  * Migrate dateCreated to $createdAt.
                  */
-                if (is_null($document->getCreatedAt())) {
+                if (empty($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
                 }
 
