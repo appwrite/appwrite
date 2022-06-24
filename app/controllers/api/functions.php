@@ -470,7 +470,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, string $entrypoint, array $file, bool $activate, Request $request, Response $response, Database $dbForProject, Stats $usage, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Stats $usage, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
