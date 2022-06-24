@@ -600,7 +600,6 @@ class V14 extends Migration
                  */
                 if (empty($document->getCreatedAt())) {
                     $document->setAttribute('$createdAt', $document->getAttribute('dateCreated'));
-
                 }
                 /**
                  * Migrate dateUpdated to $updatedAt.
