@@ -2266,8 +2266,21 @@ trait DatabasesBase
 
     public function testUpdatePermissionsWithEmptyPayload(): array
     {
+        // Create Database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => 'unique()',
+            'name' => 'Empty Permissions',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+
+        $databaseId = $database['body']['$id'];
+
         // Create collection
-        $movies = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2285,7 +2298,7 @@ trait DatabasesBase
         $moviesId = $movies['body']['$id'];
 
         // create attribute
-        $title = $this->client->call(Client::METHOD_POST, '/database/collections/' . $moviesId . '/attributes/string', array_merge([
+        $title = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -2301,7 +2314,7 @@ trait DatabasesBase
         sleep(2);
 
         // add document
-        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $moviesId . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2322,7 +2335,7 @@ trait DatabasesBase
         $this->assertEquals(['role:all'], $document['body']['$write']);
 
         // Send only read permission
-        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $moviesId . '/documents/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
          ], $this->getHeaders()), [
@@ -2342,7 +2355,7 @@ trait DatabasesBase
         }
 
         // send only write permission
-        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $moviesId . '/documents/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2358,7 +2371,7 @@ trait DatabasesBase
         }
 
         // remove collection
-        $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $moviesId, array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $moviesId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
