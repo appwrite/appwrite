@@ -131,6 +131,11 @@ class V14 extends Migration
 
         try {
             /**
+             * Add Database ID for Collections.
+             */
+            $this->createAttributeFromCollection($this->projectDB, 'database_1', 'databaseId', 'collections');
+
+            /**
              * Add Database Internal ID for Collections.
              */
             $this->createAttributeFromCollection($this->projectDB, 'database_1', 'databaseInternalId', 'collections');
@@ -175,7 +180,9 @@ class V14 extends Migration
                                 WHERE _uid = 'collection_{$internalId}';
                             ")->execute();
 
-                            $collection->setAttribute('databaseInternalId', '1');
+                            $collection
+                                ->setAttribute('databaseId', 'default')
+                                ->setAttribute('databaseInternalId', '1');
                             $this->projectDB->updateDocument('database_1', $collection->getId(), $collection);
                         } catch (\Throwable $th) {
                             Console::warning($th->getMessage());
@@ -211,6 +218,14 @@ class V14 extends Migration
             switch ($id) {
                 case 'attributes':
                 case 'indexes':
+                    try {
+                        /**
+                         * Create 'databaseInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'databaseId');
+                    } catch (\Throwable $th) {
+                        Console::warning("'databaseInternalId' from {$id}: {$th->getMessage()}");
+                    }
                     try {
                         /**
                          * Create 'databaseInternalId' attribute
@@ -555,10 +570,16 @@ class V14 extends Migration
                     $document->setAttribute('collectionInternalId', $internalId);
                 }
                 /**
-                 * Add Internal ID 'collectionId' for Subqueries.
+                 * Add Internal ID 'databaseInternalId' for Subqueries.
                  */
                 if (is_null($document->getAttribute('databaseInternalId'))) {
                     $document->setAttribute('databaseInternalId', '1');
+                }
+                /**
+                 * Add Internal ID 'databaseInternalId' for Subqueries.
+                 */
+                if (is_null($document->getAttribute('databaseId'))) {
+                    $document->setAttribute('databaseId', 'default');
                 }
 
                 try {
