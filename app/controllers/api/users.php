@@ -256,38 +256,24 @@ App::post('/v1/users/import/scrypt')
     ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Scrypt.')
-    ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.', true)
-    ->param('passwordCpu', '', new Integer(), 'Optional CPU cost used to hash password.', true)
-    ->param('passwordMemory', '', new Integer(), 'Optional memory cost used to hash password.', true)
-    ->param('passwordParallel', '', new Integer(), 'Optional parallelization cost used to hash password.', true)
-    ->param('passwordLength', '', new Integer(), 'Optional hash length used to hash password.', true)
+    ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.')
+    ->param('passwordCpu', '', new Integer(), 'Optional CPU cost used to hash password.')
+    ->param('passwordMemory', '', new Integer(), 'Optional memory cost used to hash password.')
+    ->param('passwordParallel', '', new Integer(), 'Optional parallelization cost used to hash password.')
+    ->param('passwordLength', '', new Integer(), 'Optional hash length used to hash password.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
-        $options = [];
-
-        if (!empty($passwordSalt)) {
-            $options['salt'] = $passwordSalt;
-        }
-
-        if (!empty($passwordCpu)) {
-            $options['costCpu'] = $passwordCpu;
-        }
-
-        if (!empty($passwordMemory)) {
-            $options['costMemory'] = $passwordMemory;
-        }
-
-        if (!empty($passwordParallel)) {
-            $options['costParallel'] = $passwordParallel;
-        }
-
-        if (!empty($passwordLength)) {
-            $options['length'] = $passwordLength;
-        }
+        $options = [
+            'salt' => $passwordSalt,
+            'costCpu' => $passwordCpu,
+            'costMemory' => $passwordMemory,
+            'costParallel' => $passwordParallel,
+            'length' => $passwordLength
+        ];
 
         $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, $name, $dbForProject, $usage, $events);
 

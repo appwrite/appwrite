@@ -129,8 +129,9 @@ class AuthTest extends TestCase
         $hash = '2bc477f4160e7dc0e6bc6849ffa38a7062fec3800d937ce251cdf552609b94919c623cd07cc36ad600bc8caea8399e6f815a6d7ed96995d495ed70890d359d6d';
         $generatedHash = Auth::passwordHash($plain, 'scrypt');
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt'));
-        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', ['length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
-        $this->assertEquals(false, Auth::passwordVerify($plain, $hash, 'scrypt', ['length' => 64, 'costCpu' => 16384, 'costMemory' => 10, 'costParallel' => 2]));
+        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
+        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', [ 'salt' => 'some-wrong-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
+        $this->assertEquals(false, Auth::passwordVerify($plain, $hash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 10, 'costParallel' => 2]));
         $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'scrypt', ['length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
 
         // ScryptModified tested are in provider-specific tests below
