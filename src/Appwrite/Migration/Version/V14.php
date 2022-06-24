@@ -61,9 +61,10 @@ class V14 extends Migration
 
     /**
      * Migrates all Files.
-     * @param \Utopia\Database\Document $bucket 
-     * @return void 
-     * @throws \Exception 
+     *
+     * @param \Utopia\Database\Document $bucket
+     * @return void
+     * @throws \Exception
      */
     protected function migrateBucketFiles(Document $bucket): void
     {
