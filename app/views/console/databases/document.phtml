@@ -24,7 +24,7 @@ $logs = $this->getParam('logs', null);
 
         <div class="cover">
             <h1 class="zone xl margin-bottom-large">
-                <a data-ls-attrs="href=/console/databases/collection?id={{router.params.collection}}&project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <span data-ls-bind="{{project-collection.name}}"></span></a>
+                <a data-ls-attrs="href=/console/databases/collection?id={{router.params.collection}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <span data-ls-bind="{{project-collection.name}}"></span></a>
 
                 <br />
 
@@ -349,7 +349,16 @@ $logs = $this->getParam('logs', null);
                             </div>
 
                             <ul class="margin-bottom-large text-fade text-size-small" data-ls-if="({{project-document.$id}})">
-                                <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
+                                <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> 
+                                    <button data-ls-ui-trigger="open-json"
+                                        class="link text-size-small"
+                                        data-analytics
+                                        data-analytics-event="click"
+                                        data-analytics-category="console"
+                                        data-analytics-label="View as JSON (Document)">
+                                        View as JSON
+                                    </button>
+                                </li>
                                 <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-document.$updatedAt|dateText}}"></span></li>
                                 <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-document.$createdAt|dateText}}"></span></li>
                             </ul>

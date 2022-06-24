@@ -1,9 +1,9 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new sdk.Client();
+const client = new sdk.Client();
 
-let teams = new sdk.Teams(client);
+const teams = new sdk.Teams(client);
 
 client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
@@ -11,7 +11,7 @@ client
     .setJWT('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...') // Your secret JSON Web Token
 ;
 
-let promise = teams.updateMembershipStatus('[TEAM_ID]', '[MEMBERSHIP_ID]', '[USER_ID]', '[SECRET]');
+const promise = teams.updateMembershipStatus('[TEAM_ID]', '[MEMBERSHIP_ID]', '[USER_ID]', '[SECRET]');
 
 promise.then(function (response) {
     console.log(response);

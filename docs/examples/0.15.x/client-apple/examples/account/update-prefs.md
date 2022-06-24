@@ -6,7 +6,7 @@ func main() async throws {
       .setProject("5df5acd0d48c2") // Your project ID
     let account = Account(client)
     let user = try await account.updatePrefs(
-        prefs: 
+        prefs: [:]
     )
 
     print(String(describing: user)

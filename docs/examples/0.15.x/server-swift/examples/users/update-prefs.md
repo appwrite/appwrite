@@ -8,7 +8,7 @@ func main() async throws {
     let users = Users(client)
     let preferences = try await users.updatePrefs(
         userId: "[USER_ID]",
-        prefs: 
+        prefs: [:]
     )
 
     print(String(describing: preferences)
