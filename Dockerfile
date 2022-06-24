@@ -135,7 +135,7 @@ RUN rustup target add $(uname -m)-unknown-linux-musl
 
 # Install ZigBuild for easier cross-compilation
 RUN curl https://ziglang.org/builds/zig-linux-$(uname -m)-0.10.0-dev.2674+d980c6a38.tar.xz --output /tmp/zig.tar.xz
-RUN tar -xf /tmp/zig.tar.xz -C /tmp/ && cp -r /tmp/zig-linux-x86_64-0.10.0-dev.2674+d980c6a38 /tmp/zig/
+RUN tar -xf /tmp/zig.tar.xz -C /tmp/ && cp -r /tmp/zig-linux-$(uname -m)-0.10.0-dev.2674+d980c6a38 /tmp/zig/
 ENV PATH=/tmp/zig:$PATH
 RUN cargo install cargo-zigbuild
 ENV RUSTFLAGS="-C target-feature=-crt-static"
