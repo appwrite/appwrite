@@ -25,7 +25,7 @@ class Scrypt extends Hash
     {
         $options = $this->getOptions();
 
-        return \scrypt($password, $options['salt'] ?? null, $options['costCpu'], $options['costMemory'], $options['costParallel'], $options['length']);
+        return \scrypt($password, $options['salt'], $options['costCpu'], $options['costMemory'], $options['costParallel'], $options['length']);
     }
 
     /**

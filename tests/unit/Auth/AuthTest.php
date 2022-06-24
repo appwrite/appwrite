@@ -126,13 +126,14 @@ class AuthTest extends TestCase
 
         // Scrypt
         $plain = 'some-scrypt-password';
-        $hash = '2bc477f4160e7dc0e6bc6849ffa38a7062fec3800d937ce251cdf552609b94919c623cd07cc36ad600bc8caea8399e6f815a6d7ed96995d495ed70890d359d6d';
-        $generatedHash = Auth::passwordHash($plain, 'scrypt');
-        $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt'));
+        $hash = 'b448ad7ba88b653b5b56b8053a06806724932d0751988bc9cd0ef7ff059e8ba8a020e1913b7069a650d3f99a1559aba0221f2c277826919513a054e76e339028';
+        $generatedHash = Auth::passwordHash($plain, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]);
+        
+        $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
-        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', [ 'salt' => 'some-wrong-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
+        $this->assertEquals(false, Auth::passwordVerify($plain, $hash, 'scrypt', [ 'salt' => 'some-wrong-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
         $this->assertEquals(false, Auth::passwordVerify($plain, $hash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 10, 'costParallel' => 2]));
-        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'scrypt', ['length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
 
         // ScryptModified tested are in provider-specific tests below
 
