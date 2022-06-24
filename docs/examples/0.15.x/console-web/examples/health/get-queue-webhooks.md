@@ -1,11 +1,15 @@
-const sdk = new Appwrite();
+import { Client, Health } from "appwrite";
 
-sdk
+const client = new Client();
+
+const health = new Health(client);
+
+client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.health.getQueueWebhooks();
+const promise = health.getQueueWebhooks();
 
 promise.then(function (response) {
     console.log(response); // Success

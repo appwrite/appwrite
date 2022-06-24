@@ -278,8 +278,8 @@ App::get('/v1/projects/:projectId/usage')
                 'network',
                 'executions',
                 'users.count',
-                'database.documents.count',
-                'database.collections.count',
+                'databases.documents.count',
+                'databases.collections.count',
                 'storage.total'
             ];
 
@@ -326,8 +326,8 @@ App::get('/v1/projects/:projectId/usage')
                 'requests' => $stats['requests'],
                 'network' => $stats['network'],
                 'functions' => $stats['executions'],
-                'documents' => $stats['database.documents.count'],
-                'collections' => $stats['database.collections.count'],
+                'documents' => $stats['databases.documents.count'],
+                'collections' => $stats['databases.collections.count'],
                 'users' => $stats['users.count'],
                 'storage' => $stats['storage.total']
             ]);

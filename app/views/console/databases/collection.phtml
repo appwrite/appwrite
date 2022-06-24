@@ -281,6 +281,7 @@ $logs = $this->getParam('logs', null);
                                                 data-scope="sdk"
                                                 data-event="submit"
                                                 data-confirm="Are you sure you want to delete this attribute?"
+                                                data-param-database-id="{{router.params.databaseId}}"
                                                 data-success="alert,trigger"
                                                 data-success-param-alert-text="Deleted attribute successfully"
                                                 data-success-param-trigger-events="databases.deleteAttribute"
@@ -397,6 +398,7 @@ $logs = $this->getParam('logs', null);
                                         data-scope="sdk"
                                         data-event="submit"
                                         data-confirm="Are you sure you want to delete this index?"
+                                        data-param-database-id="{{router.params.databaseId}}"
                                         data-success="alert,trigger"
                                         data-success-param-alert-text="Deleted index successfully"
                                         data-success-param-trigger-events="databases.deleteIndex"
@@ -582,7 +584,16 @@ $logs = $this->getParam('logs', null);
                     </div>
 
                     <ul class="margin-bottom-large text-fade text-size-small">
-                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
+                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> 
+                            <button data-ls-ui-trigger="open-json" 
+                                class="link text-size-small" 
+                                data-analytics
+                                data-analytics-event="click"
+                                data-analytics-category="console"
+                                data-analytics-label="View as JSON (Collection)">
+                                View as JSON
+                            </button>
+                        </li>
                         <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-collection.$updatedAt|dateText}}"></span></li>
                         <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-collection.$createdAt|dateText}}"></span></li>
                     </ul>

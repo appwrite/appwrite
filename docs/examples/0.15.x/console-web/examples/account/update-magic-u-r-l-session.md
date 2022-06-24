@@ -1,11 +1,15 @@
-const sdk = new Appwrite();
+import { Client, Account } from "appwrite";
 
-sdk
+const client = new Client();
+
+const account = new Account(client);
+
+client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.account.updateMagicURLSession('[USER_ID]', '[SECRET]');
+const promise = account.updateMagicURLSession('[USER_ID]', '[SECRET]');
 
 promise.then(function (response) {
     console.log(response); // Success

@@ -1,9 +1,9 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new sdk.Client();
+const client = new sdk.Client();
 
-let avatars = new sdk.Avatars(client);
+const avatars = new sdk.Avatars(client);
 
 client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
@@ -11,7 +11,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = avatars.getCreditCard('amex');
+const promise = avatars.getCreditCard('amex');
 
 promise.then(function (response) {
     console.log(response);
