@@ -426,7 +426,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
  * Registry
  */
 $register->set('logger', function () {
- // Register error logger
+    // Register error logger
     $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 
