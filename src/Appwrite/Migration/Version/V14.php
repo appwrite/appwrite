@@ -172,9 +172,6 @@ class V14 extends Migration
                         $id = $collection->getId();
                         $internalId = $collection->getInternalId();
 
-                        if ($this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), "database_1_collection_{$internalId}")) {
-                            return;
-                        }
                         Console::log("- {$id} ({$collection->getAttribute('name')})");
 
                         try {
@@ -196,7 +193,11 @@ class V14 extends Migration
                                     name = 'database_1_collection_{$internalId}'
                                 WHERE _uid = 'collection_{$internalId}';
                             ")->execute();
+                        } catch (\Throwable $th) {
+                            Console::warning($th->getMessage());
+                        }
 
+                        try {
                             $collection
                                 ->setAttribute('databaseId', 'default')
                                 ->setAttribute('databaseInternalId', '1');

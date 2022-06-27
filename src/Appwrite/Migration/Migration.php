@@ -106,9 +106,7 @@ abstract class Migration
             if ($collection['$collection'] !== Database::METADATA) {
                 continue;
             }
-            if ($collection['$id'] === 'databases') {
-                continue;
-            }
+
             $sum = 0;
             $nextDocument = null;
             $collectionCount = $this->projectDB->count($collection['$id']);
