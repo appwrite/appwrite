@@ -396,6 +396,10 @@ class OpenAPI3 extends Format
                     if (\array_key_exists('items', $node['schema'])) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
                     }
+
+                    if ($node['x-global'] ?? false) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-global'] = true;
+                    }
                 }
 
                 $url = \str_replace(':' . $name, '{' . $name . '}', $url);

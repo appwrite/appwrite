@@ -384,6 +384,10 @@ class Swagger2 extends Format
                         'x-example' => $node['x-example'] ?? null,
                     ];
 
+                    if ($node['x-global'] ?? false) {
+                        $body['schema']['properties'][$name]['x-global'] = true;
+                    }
+
                     if (\array_key_exists('items', $node)) {
                         $body['schema']['properties'][$name]['items'] = $node['items'];
                     }
