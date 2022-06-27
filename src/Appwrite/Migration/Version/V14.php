@@ -187,7 +187,7 @@ class V14 extends Migration
                             /**
                              * Update metadata table.
                              */
-                            $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$internalId}__metadata`
+                            $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}__metadata`
                                 SET
                                     _uid = 'database_1_collection_{$internalId}',
                                     name = 'database_1_collection_{$internalId}'
