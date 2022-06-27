@@ -263,6 +263,12 @@ class OpenAPI3 extends Format
                     'required' => !$param['optional'],
                 ];
 
+                foreach ($this->services as $service) {
+                    if ($route->getLabel('sdk.namespace', 'default') === $service['name'] && in_array($name, $service['x-globalAttributes'] ?? [])) {
+                        $node['x-global'] = true;
+                    }
+                }
+
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
                         $node['schema']['type'] = $validator->getType();
