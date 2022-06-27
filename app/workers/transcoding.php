@@ -133,19 +133,19 @@ class TranscodingV1 extends Worker
         }
 
         $stream = !empty($rendition['stream']) ? $rendition['stream'] : 'hls';
-        $general = $this->getMetadataExport($ffprobe->streams($inPath));
-        var_dump($general);
-        if(!empty($general)) {
-            foreach ($general as $key => $value) {
-                $sourceVideo->setAttribute($key, $value);
-            }
-
-            Authorization::skip(fn() => $this->database->updateDocument(
-                'videos',
-                $sourceVideo->getId(),
-                $sourceVideo
-            ));
-        }
+        //$general = $this->getMetadataExport($ffprobe->streams($inPath));
+        //var_dump($general);
+//        if(!empty($general)) {
+//            foreach ($general as $key => $value) {
+//                $sourceVideo->setAttribute($key, $value);
+//            }
+//
+//            Authorization::skip(fn() => $this->database->updateDocument(
+//                'videos',
+//                $sourceVideo->getId(),
+//                $sourceVideo
+//            ));
+//        }
 
 
         $video = $ffmpeg->open($inPath);
