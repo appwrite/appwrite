@@ -112,6 +112,7 @@ function getDatabase(Registry &$register, string $namespace)
             if (!$database->exists($database->getDefaultDatabase(), 'realtime')) {
                 throw new Exception('Collection not ready');
             }
+
             break; // leave loop if successful
         } catch (\Throwable $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");

@@ -244,7 +244,7 @@ RUN \
 
 RUN \
   mkdir -p $DOCKER_CONFIG/cli-plugins \
-  && ARCH=$(uname -m) && if [ $ARCH == "armv7l" ]; then $ARCH="armv7"; fi \
+  && ARCH=$(uname -m) && if [ $ARCH == "armv7l" ]; then ARCH="armv7"; fi \
   && curl -SL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-linux-$ARCH -o $DOCKER_CONFIG/cli-plugins/docker-compose \
   && chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
