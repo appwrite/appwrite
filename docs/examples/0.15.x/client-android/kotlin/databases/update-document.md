@@ -21,7 +21,6 @@ class MainActivity : AppCompatActivity() {
                 databaseId = "[DATABASE_ID]",
                 collectionId = "[COLLECTION_ID]",
                 documentId = "[DOCUMENT_ID]",
-                data = mapOf( "a" to "b" ),
             )
             val json = response.body?.string()        
         }

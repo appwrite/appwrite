@@ -22,7 +22,6 @@ public class MainActivity extends AppCompatActivity {
             "[DATABASE_ID]", 
             "[COLLECTION_ID]", 
             "[DOCUMENT_ID]", 
-            mapOf( "a" to "b" ), 
             new Continuation<Object>() {
                 @NotNull
                 @Override

@@ -12,7 +12,6 @@ public void main() {
         databaseId = "[DATABASE_ID]",
         collectionId = "[COLLECTION_ID]",
         documentId = "[DOCUMENT_ID]",
-        data = mapOf( "a" to "b" ),
         new Continuation<Response>() {
             @NotNull
             @Override
