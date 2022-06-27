@@ -70,6 +70,8 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\FileRendition;
+use Appwrite\Utopia\Response\Model\Video;
+use Appwrite\Utopia\Response\Model\VideoProfile;
 
 /**
  * @method Response setStatusCode(int $code = 200)
@@ -128,6 +130,11 @@ class Response extends SwooleResponse
     public const MODEL_FILE_LIST = 'fileList';
     public const MODEL_BUCKET = 'bucket';
     public const MODEL_BUCKET_LIST = 'bucketList';
+
+    //video
+    public const MODEL_VIDEO = 'video';
+    public const MODEL_VIDEO_PROFILE = 'videoProfile';
+    public const MODEL_VIDEO_PROFILE_LIST = 'videoProfileList';
     public const MODEL_FILE_RENDITION = 'fileRendition';
     public const MODEL_FILE_RENDITIONS_LIST = 'fileRenditionsList';
 
@@ -221,7 +228,6 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
             ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
             ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
-            ->setModel(new BaseList('File Renditions List', self::MODEL_FILE_RENDITIONS_LIST, 'renditions', self::MODEL_FILE_RENDITION))
             ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
@@ -241,6 +247,9 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
+            ->setModel(new BaseList('File Renditions List', self::MODEL_FILE_RENDITIONS_LIST, 'renditions', self::MODEL_FILE_RENDITION))
+            ->setModel(new BaseList('video profile List', self::MODEL_VIDEO_PROFILE_LIST, 'profiles', self::MODEL_VIDEO_PROFILE))
+
             // Entities
             ->setModel(new Collection())
             ->setModel(new Attribute())
@@ -295,6 +304,8 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunctions())
             ->setModel(new UsageProject())
             ->setModel(new FileRendition())
+            ->setModel(new Video())
+            ->setModel(new VideoProfile())
 
             // Verification
             // Recovery

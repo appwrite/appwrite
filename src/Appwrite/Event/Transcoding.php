@@ -74,8 +74,7 @@ class Transcoding extends Event
         return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
-            'bucketId' => $this->bucketId,
-            'fileId' => $this->fileId,
+            'videoId' => $this->videoId,
             'profileId' => $this->profileId,
         ]);
     }

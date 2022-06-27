@@ -160,8 +160,9 @@ App::post('/v1/projects')
                         'name' => $profile['name'],
                         'videoBitrate' => $profile['videoBitrate'],
                         'audioBitrate' => $profile['audioBitrate'],
-                        'width' => $profile['width'],
-                        'height' => $profile['height']
+                        'width'  => $profile['width'],
+                        'height' => $profile['height'],
+                        'stream' => 'hls'
                     ]));
                 });
             }

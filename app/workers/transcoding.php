@@ -23,6 +23,15 @@ Console::success(APP_NAME . ' transcoding worker v1 has started');
 
 class TranscodingV1 extends Worker
 {
+    /**
+     * Rendition Status
+     */
+    const STATUS_TRANSCODE_START     = 'started';
+    const STATUS_TRANSCODE_END       = 'ended';
+    const STATUS_UPLOADING           = 'uploading';
+    const STATUS_PACKAGE_END         = 'ready';
+    const STATUS_ERROR               = 'error';
+
     const HLS_BASE_URL = '';
 
     protected string $basePath = '/tmp/';
@@ -45,32 +54,36 @@ class TranscodingV1 extends Worker
     public function init(): void
     {
 
-        $this->basePath .=   $this->args['fileId'] . '/' . $this->args['profileId'];
+        $this->basePath .=   $this->args['videoId'] . '/' . $this->args['profileId'];
         $this->inDir  =  $this->basePath . '/in/';
         $this->outDir =  $this->basePath . '/out/';
         @mkdir($this->inDir, 0755, true);
         @mkdir($this->outDir, 0755, true);
-        $this->outPath = $this->outDir . $this->args['fileId']; /** TODO figure a way to write dir tree without this **/
+        $this->outPath = $this->outDir . $this->args['videoId']; /** TODO figure a way to write dir tree without this **/
     }
 
     public function run(): void
     {
         $project = new Document($this->args['project']);
         $this->database = $this->getProjectDB($project->getId());
-        $profile = Authorization::skip(fn() => $this->database->findOne('video_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$this->args['profileId']])]));
 
-        if($profile->isEmpty()){
-            throw new Exception('No profile found');
+        $sourceVideo = Authorization::skip(fn() => $this->database->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$this->args['videoId']])]));
+        if(empty($sourceVideo)){
+            throw new Exception('Video not found');
+        }
+
+        $profile = Authorization::skip(fn() => $this->database->findOne('video_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$this->args['profileId']])]));
+        if(empty($profile)){
+            throw new Exception('profile not found');
          }
 
         $user = new Document($this->args['user'] ?? []);
-        $bucket = Authorization::skip(fn() => $this->database->getDocument('buckets', $this->args['bucketId']));
-
+        $bucket = Authorization::skip(fn() => $this->database->getDocument('buckets',  $sourceVideo['bucketId']));
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(fn() => $this->database->getDocument('bucket_' . $bucket->getInternalId(), $this->args['fileId']));
+            $file = Authorization::skip(fn() => $this->database->getDocument('bucket_' . $bucket->getInternalId(),  $video['fileId']));
         } else {
-            $file = $this->database->getDocument('bucket_' . $bucket->getInternalId(), $this->args['fileId']);
+            $file = $this->database->getDocument('bucket_' . $bucket->getInternalId(), $sourceVideo['fileId']);
         }
 
         $data = $this->getFilesDevice($project->getId())->read($file->getAttribute('path'));
@@ -103,35 +116,47 @@ class TranscodingV1 extends Worker
             throw new Exception('Not an valid FFMpeg file "' . $inPath . '"');
         }
 
-        //TODO Can you retranscode?
+        //Delete prev rendition
         $queries = [
-            new Query('bucketId', Query::TYPE_EQUAL, [$this->args['bucketId']]),
-            new Query('fileId', Query::TYPE_EQUAL, [$this->args['fileId']])
+            new Query('videoId', Query::TYPE_EQUAL, [$sourceVideo->getId()]),
+            new Query('profileId', Query::TYPE_EQUAL, [$profile->getId()])
         ];
 
-        $renditions = Authorization::skip(fn() => $this->database->find($collection, $queries, 12, 0, [], ['ASC']));
-        if (!empty($renditions)) {
-            foreach ($renditions as $rendition) {
-                Authorization::skip(fn() => $this->database->deleteDocument($collection, $rendition->getId()));
-            }
+        $rendition = Authorization::skip(fn() => $this->database->findOne($collection, $queries));
 
+        if (!empty($rendition)) {
+            Authorization::skip(fn() => $this->database->deleteDocument($collection, $rendition->getId()));
             $deviceFiles = $this->getVideoDevice($project->getId());
-            $devicePath = $deviceFiles->getPath($this->args['fileId']);
-            $devicePath = str_ireplace($deviceFiles->getRoot(), $deviceFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $devicePath);
-            $deviceFiles->deletePath($devicePath);
+            if(!empty($rendition['path'])) {
+                $deviceFiles->deletePath($rendition['path']);
+            }
         }
 
-        $sourceInfo = $this->getVideoInfo($ffprobe->streams($inPath));
+        $stream = !empty($rendition['stream']) ? $rendition['stream'] : 'hls';
+        $general = $this->getMetadataExport($ffprobe->streams($inPath));
+        var_dump($general);
+        if(!empty($general)) {
+            foreach ($general as $key => $value) {
+                $sourceVideo->setAttribute($key, $value);
+            }
+
+            Authorization::skip(fn() => $this->database->updateDocument(
+                'videos',
+                $sourceVideo->getId(),
+                $sourceVideo
+            ));
+        }
+
+
         $video = $ffmpeg->open($inPath);
-            foreach (['hls', 'dash'] as $stream) {
-                $query = Authorization::skip(function () use ($collection, $profile, $stream) {
+
+        $query = Authorization::skip(function () use ($collection, $profile, $stream) {
                     return $this->database->createDocument($collection, new Document([
-                        'bucketId'  => $this->args['bucketId'],
-                        'fileId'    => $this->args['fileId'],
+                        'videoId'  => $this->args['videoId'],
                         'profileId' => $profile->getId(),
                         'name'      => $profile->getAttribute('name'),
                         'startedAt' => time(),
-                        'status'    => 'started',
+                        'status'    => self::STATUS_TRANSCODE_START,
                         'stream'    => $stream,
                     ]));
                 });
@@ -156,11 +181,18 @@ class TranscodingV1 extends Worker
 
 
                     list($general, $metadata) = $this->transcode($stream, $video, $format, $representation);
+
                     if (!empty($metadata)) {
                         $query->setAttribute('metadata', json_encode($metadata));
                     }
 
-                    $query->setAttribute('status', 'ended');
+                    if(!empty($general)) {
+                        foreach ($general as $key => $value) {
+                            $query->setAttribute($key, $value);
+                        }
+                    }
+
+                    $query->setAttribute('status', self::STATUS_TRANSCODE_END);
                     $query->setAttribute('endedAt', time());
                     Authorization::skip(fn() => $this->database->updateDocument(
                         $collection,
@@ -182,13 +214,16 @@ class TranscodingV1 extends Worker
                         }
 
                         $deviceFiles = $this->getVideoDevice($project->getId());
-                        $devicePath = $deviceFiles->getPath($this->args['fileId']);
+                        $devicePath = $deviceFiles->getPath($this->args['videoId']);
                         $devicePath = str_ireplace($deviceFiles->getRoot(), $deviceFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $devicePath);
                         $data = $this->getFilesDevice($project->getId())->read($this->outDir . $fileName);
-                        $this->getVideoDevice($project->getId())->write($devicePath . DIRECTORY_SEPARATOR . $profile->getAttribute('name') . DIRECTORY_SEPARATOR .  $fileName, $data, \mime_content_type($this->outDir . $fileName));
-                        var_dump($devicePath . DIRECTORY_SEPARATOR . $profile->getAttribute('name') . DIRECTORY_SEPARATOR .  $fileName);
+                        $renditionDir = $profile->getAttribute('width') . 'X' . $profile->getAttribute('height') . '@' .$profile->getAttribute('videoBitrate');
+                        $renditionPath = $devicePath . DIRECTORY_SEPARATOR . $renditionDir;
+                        $this->getVideoDevice($project->getId())->write($renditionPath . DIRECTORY_SEPARATOR .  $fileName, $data, \mime_content_type($this->outDir . $fileName));
+
                         if ($start === 0) {
-                            $query->setAttribute('status', 'uploading');
+                            $query->setAttribute('status', self::STATUS_UPLOADING);
+                            $query->setAttribute('path', $renditionPath);
                             Authorization::skip(fn() => $this->database->updateDocument(
                                 $collection,
                                 $query->getId(),
@@ -208,7 +243,7 @@ class TranscodingV1 extends Worker
                         @unlink($this->outDir . $fileName);
                     }
 
-                    $query->setAttribute('status', 'ready');
+                    $query->setAttribute('status', self::STATUS_PACKAGE_END);
                     Authorization::skip(fn() => $this->database->updateDocument(
                         $collection,
                         $query->getId(),
@@ -220,14 +255,13 @@ class TranscodingV1 extends Worker
                     'message' => $th->getMessage(),
                     ]));
 
-                    $query->setAttribute('status', 'error');
+                    $query->setAttribute('status', self::STATUS_ERROR);
                     Authorization::skip(fn() => $this->database->updateDocument(
                         $collection,
                         $query->getId(),
                         $query
                     ));
                 }
-            }
         }
 
     /**
@@ -240,8 +274,7 @@ class TranscodingV1 extends Worker
 
         if (!empty($metadata['stream']['resolutions'][0])) {
             $general = $metadata['stream']['resolutions'][0];
-            var_dump($general);
-            $parts = explode("x", $general);
+            $parts = explode("X", $general['dimension']);
             $info['width']   = $parts['0'];
             $info['height']  = $parts['1'];
         }
@@ -251,12 +284,12 @@ class TranscodingV1 extends Worker
                 if ($streams['codec_type'] === 'video') {
                     $info['duration']       = $streams['duration'];
                     $info['videoCodec']     = $streams['codec_name'] . ',' . $streams['codec_tag_string'];
-                    $info['videoBitRate']   = $streams['bit_rate'];
-                    $info['videoFrameRate'] = $streams['avg_frame_rate'];
+                    $info['videoBitrate']   = $streams['bit_rate'];
+                    $info['videoFramerate'] = $streams['avg_frame_rate'];
                 } elseif ($streams['codec_type'] === 'audio') {
                     $info['audioCodec']     = $streams['codec_name'] . ',' . $streams['codec_tag_string'];
-                    $info['audioBitRate']   = $streams['sample_rate'];
-                    $info['audioSamplRate'] = $streams['bit_rate'];
+                    $info['audioBitrate']   = $streams['sample_rate'];
+                    $info['audioSamplerate'] = $streams['bit_rate'];
                 }
             }
         }
@@ -295,7 +328,7 @@ class TranscodingV1 extends Worker
 
                 return [
                         $this->getMetadataExport($dash->metadata()->export()),
-                        ['dash'   => !empty($xml) ? json_decode(json_encode((array)$xml), true) : []],
+                        ['mpeg-dash'   => !empty($xml) ? json_decode(json_encode((array)$xml), true) : []],
                       ];
         }
 
@@ -307,7 +340,7 @@ class TranscodingV1 extends Worker
             ->setAdditionalParams($additionalParams)
             ->setHlsBaseUrl(self::HLS_BASE_URL)
             ->save($this->outPath);
-
+             var_dump($this->outPath);
         return [
             $this->getMetadataExport($hls->metadata()->export()), []
         ];

@@ -13,9 +13,8 @@ class VideoCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testTranscoding(): array
+    public function testCreateBucketFile(): array
     {
-
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -61,40 +60,80 @@ class VideoCustomServerTest extends Scope
         }
         @fclose($handle);
 
-          $pid = $this->getProject()['$id'];
-          $key = $this->getProject()['apiKey'];
-          $fid = $id;
-          $bid = $bucket['body']['$id'];
+        return [
+            'bucketId' => $bucket['body']['$id'],
+            'fileId'  => $id,
+            ];
+    }
 
-          var_dump($pid);
-          var_dump($key);
-          var_dump($fid);
-          var_dump($bid);
+    /**
+     * @depends testCreateBucketFile
+     */
+    public function testTranscodingRendition($data): array
+    {
 
-//
-//        $pid = '62b1956c92e0e39ef577';
-//        $key = 'f9b8dd3800b93a3dd513cf7cbcbd436cd61850b2c101662210e8ee2f052f796b3d4c7a08149634ce90da6037f6164d7faa36b32b91b568524e6720014e149b83f7a970c28de1a14a97a69010be325d142d51ca51f0f1b29783a7c1f4689d1b90a42cf19a7b55ec9ea6dc51974a1740b67e71de9f80009c2d91c6f3c686aa616c';
-//        $fid = '62b1956e4f03f57a0f74';
-//        $bid = '62b1956d0c600d70c8f7';
-//
-          $transcoding = $this->client->call(Client::METHOD_POST, '/video/buckets/' . $bid . '/files/' .  $fid, [
+        $response = $this->client->call(Client::METHOD_POST, '/video/buckets/' . $data['bucketId'] . '/files/' .  $data['fileId'], [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $pid,
-            'x-appwrite-key' => $key,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'read' => ['role:all'],
+            'write' => ['role:all']
+       ]);
+
+        $videoId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/video/profiles', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' =>  $this->getProject()['apiKey'],
+        ]);
+
+
+        $profileId = $response['body']['profiles'][0]['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/video/' . $videoId . '/rendition/' .  $profileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'read' => ['role:all'],
             'write' => ['role:all']
         ]);
 
+        var_dump($response['body']);
+
+//          var_dump($pid);
+//          var_dump($key);
+//          var_dump($fid);
+//          var_dump($bid);
+//
+////
+////        $pid = '62b1956c92e0e39ef577';
+////        $key = 'f9b8dd3800b93a3dd513cf7cbcbd436cd61850b2c101662210e8ee2f052f796b3d4c7a08149634ce90da6037f6164d7faa36b32b91b568524e6720014e149b83f7a970c28de1a14a97a69010be325d142d51ca51f0f1b29783a7c1f4689d1b90a42cf19a7b55ec9ea6dc51974a1740b67e71de9f80009c2d91c6f3c686aa616c';
+////        $fid = '62b1956e4f03f57a0f74';
+////        $bid = '62b1956d0c600d70c8f7';
+////
+//          $video = $this->client->call(Client::METHOD_POST, '/video/buckets/' . $bid . '/files/' .  $fid, [
+//            'content-type' => 'application/json',
+//            'x-appwrite-project' => $pid,
+//            'x-appwrite-key' => $key,
+//        ], [
+//            'read' => ['role:all'],
+//            'write' => ['role:all']
+//        ]);
+//        var_dump($video);
+
+
         return [
-            'projectId' => $pid,
-            'apiKey' => $key,
-            'bucketId' => $bid,
-            'fileId' => $fid,
+            'videoId' => $videoId,
+            'profileId' => $profileId,
         ];
     }
 
-
+    /**
+     * @depends testCreateBucketFile
+     */
     public function testRenditions(): void
     {
 

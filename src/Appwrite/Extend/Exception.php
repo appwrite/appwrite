@@ -164,6 +164,7 @@ class Exception extends \Exception
 
     /** Video */
     public const PROFILES_NOT_FOUND                  = 'profiles_not_found';
+    public const VIDEO_NOT_FOUND                     = 'video_not_found';
 
 
     private $type = '';
