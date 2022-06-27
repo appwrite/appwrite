@@ -1260,6 +1260,24 @@ trait DatabasesBase
         $this->assertEquals('Spider-Man: Far From Home', $documents['body']['documents'][0]['title']);
         $this->assertEquals('Spider-Man: Homecoming', $documents['body']['documents'][1]['title']);
 
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['$createdAt.greater(132)'],
+        ]);
+
+        $this->assertCount(3, $documents['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['$createdAt.lesser(132)'],
+        ]);
+
+        $this->assertCount(0, $documents['body']['documents']);
+
         /**
          * Test for Failure
          */
