@@ -20,6 +20,10 @@ class V14 extends Migration
         global $register;
         $this->pdo = $register->get('db');
 
+        if ($this->project->getId() === 'console' && $this->project->getInternalId() !== 'console') {
+            return;
+        }
+
         /**
          * Disable SubQueries for Speed.
          */
@@ -56,8 +60,7 @@ class V14 extends Migration
             Console::warning($th->getMessage());
         }
 
-
-        if ($this->project->getId() === 'console') {
+        if ($this->project->getInternalId() === 'console') {
             return;
         }
 
