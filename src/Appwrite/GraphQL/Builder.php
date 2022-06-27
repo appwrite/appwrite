@@ -672,12 +672,14 @@ class Builder
 
             $utopia->execute($route, $request);
         } catch (\Throwable $e) {
-            \var_dump($e->getMessage());
+            $gqlResponse->setStatusCode($apiResponse->getStatusCode());
             $reject($e);
             return;
         }
 
         $result = $apiResponse->getPayload();
+
+        $gqlResponse->setStatusCode($apiResponse->getStatusCode());
 
         if ($apiResponse->getStatusCode() < 200 || $apiResponse->getStatusCode() >= 400) {
             $reject(new GQLException($result['message'], $apiResponse->getStatusCode()));
@@ -693,7 +695,6 @@ class Builder
             $gqlResponse->addCookie($name, $cookie['value'], $cookie['expire'], $cookie['path'], $cookie['domain'], $cookie['secure'], $cookie['httponly']);
         }
 
-        $gqlResponse->setStatusCode($apiResponse->getStatusCode());
 
         $resolve($result);
     }
