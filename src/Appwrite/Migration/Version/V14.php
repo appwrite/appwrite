@@ -5,6 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 
 class V14 extends Migration
@@ -18,6 +19,13 @@ class V14 extends Migration
     {
         global $register;
         $this->pdo = $register->get('db');
+
+        /**
+         * Disable SubQueries for Speed.
+         */
+        foreach (['subQueryAttributes', 'subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships'] as $name) {
+            Database::addFilter($name, fn () => null, fn () => []);
+        }
 
         Console::log('Migrating project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         Console::info('Migrating Collections');
@@ -40,9 +48,14 @@ class V14 extends Migration
      */
     public function createDatabaseLayer(): void
     {
-        if (!$this->projectDB->exists('databases')) {
-            $this->createCollection('databases');
+        try {
+            if (!$this->projectDB->exists('databases')) {
+                $this->createCollection('databases');
+            }
+        } catch (\Throwable $th) {
+            Console::warning($th->getMessage());
         }
+
 
         if ($this->project->getId() === 'console') {
             return;
@@ -649,7 +662,7 @@ class V14 extends Migration
                 if (is_null($document->getAttribute('phoneVerification'))) {
                     $document->setAttribute('phoneVerification', false);
                 }
-
+                var_dump($document->getArrayCopy());
                 break;
             case 'functions':
                 /**
