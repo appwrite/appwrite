@@ -252,6 +252,12 @@ class Swagger2 extends Format
                     'required' => !$param['optional'],
                 ];
 
+                foreach ($this->services as $service) {
+                    if ($route->getLabel('sdk.namespace', 'default') === $service['name'] && in_array($name, $service['x-globalAttributes'] ?? [])) {
+                        $node['x-global'] = true;
+                    }
+                }
+
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
                         $node['type'] = $validator->getType();
@@ -377,6 +383,10 @@ class Swagger2 extends Format
                         'default' => $node['default'] ?? null,
                         'x-example' => $node['x-example'] ?? null,
                     ];
+
+                    if ($node['x-global'] ?? false) {
+                        $body['schema']['properties'][$name]['x-global'] = true;
+                    }
 
                     if (\array_key_exists('items', $node)) {
                         $body['schema']['properties'][$name]['items'] = $node['items'];
