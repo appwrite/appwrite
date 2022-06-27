@@ -4,7 +4,10 @@ use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Swoole\Timer;
 use Utopia\App;
+use Utopia\Cache\Adapter\Redis;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
+
 
 // Redis setup
 $redisHost = App::getEnv('_APP_REDIS_HOST', '');
@@ -19,31 +22,51 @@ if ($redisUser && $redisPass) {
 
 $redisPool = new RedisPool(
     (new RedisConfig())
-    ->withHost($redisHost)
-    ->withPort($redisPort)
-    ->withAuth($redisAuth)
-    ->withDbIndex(0),
+        ->withHost($redisHost)
+        ->withPort($redisPort)
+        ->withAuth($redisAuth)
+        ->withDbIndex(0),
     64
 );
 
-// Fetch info about executors
-function fetchExecutorsState(?int $timerId, array $params) {
-    /** @var RedisPool $redisPool */
-    $redisPool = $params[0];
+function markDown(Cache $cache, string $executorId, string $error) {
+    $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
 
+    $cache->save('executors-' . $executorId, [ 'state' => 'down' ]);
+
+    if(!$data || $data['state'] === 'up') {
+        Console::warning('Executor "' . $executorId . '" went down! Message:');
+        Console::warning($error);
+    }
+}
+
+function markUp(cache $cache, string $executorId) {
+    $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
+
+    $cache->save('executors-' . $executorId, [ 'state' => 'up' ]);
+
+    if(!$data || $data['state'] === 'down') {
+        Console::success('Executor "' . $executorId . '" went online.');
+    }
+}
+
+// Fetch info about executors
+function fetchExecutorsState(RedisPool $redisPool)
+{
     $executors = \explode(',', App::getEnv('_APP_EXECUTORS', ''));
 
     foreach ($executors as $executor) {
         go(function () use ($redisPool, $executor) {
             $redis = $redisPool->get();
+            $cache = new Cache(new Redis($redis));
 
             try {
-                [ $id, $hostname ] = \explode('=', $executor);
+                [$id, $hostname] = \explode('=', $executor);
 
                 $endpoint = $hostname . '/health';
-        
+
                 $ch = \curl_init();
-        
+
                 \curl_setopt($ch, CURLOPT_URL, $endpoint);
                 \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 \curl_setopt($ch, CURLOPT_TIMEOUT, 10);
@@ -52,23 +75,19 @@ function fetchExecutorsState(?int $timerId, array $params) {
                     'Content-Type: application/json',
                     'x-appwrite-executor-key: ' . App::getEnv('_APP_EXECUTOR_SECRET', '')
                 ]);
-        
-                $executorResponse = \curl_exec($ch);
+
+                $executorResponse = \curl_exec($ch); // TODO: Use to save usage stats
                 $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $error = \curl_error($ch);
-        
+
                 \curl_close($ch);
-        
-                if($statusCode === 200) {
-                    // TODO: Upsert, log if it was down
-                    Console::success('Executor "' . $id . '" went online.');
+
+                if ($statusCode === 200) {
+                    markUp($cache, $id);
                 } else {
-                    \var_dump($redis);
-                    // TODO: Mark asdown, log if it was up
-                    Console::warning('Executor "' . $id . '" went down! Message:');
-                    Console::warning($error);
+                    markDown($cache, $id, $error);
                 }
-            } catch(\Exception $err) {
+            } catch (\Exception $err) {
                 throw $err;
             } finally {
                 $redisPool->put($redis);
@@ -77,7 +96,7 @@ function fetchExecutorsState(?int $timerId, array $params) {
     }
 };
 
-Timer::tick(5000, "fetchExecutorsState", [ $redisPool ]);
-fetchExecutorsState(null, [ $redisPool ]);
+Timer::tick(30000, fn (int $timerId, array $params) => fetchExecutorsState($params[0]), [$redisPool]);
+fetchExecutorsState($redisPool);
 
 Console::success("Functions proxy is ready.");
