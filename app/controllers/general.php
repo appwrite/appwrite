@@ -292,11 +292,11 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
 
     $service = $route->getLabel('sdk.namespace', '');
     if (!empty($service)) {
-        $roles = Authorization::getRoles();
+        $serviceRoles = Authorization::getRoles();
         if (
             array_key_exists($service, $project->getAttribute('services', []))
             && !$project->getAttribute('services', [])[$service]
-            && !(Auth::isPrivilegedUser($roles) || Auth::isAppUser($roles))
+            && !(Auth::isPrivilegedUser($serviceRoles) || Auth::isAppUser($serviceRoles))
         ) {
             throw new AppwriteException('Service is disabled', 503, AppwriteException::GENERAL_SERVICE_DISABLED);
         }
