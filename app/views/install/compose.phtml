@@ -591,6 +591,11 @@ services:
     container_name: appwrite-redis
     <<: *x-logging
     restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory            512mb
+      --maxmemory-policy     allkeys-lru
+      --maxmemory-samples    5
     networks:
       - appwrite
     volumes:

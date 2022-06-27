@@ -206,7 +206,16 @@
                         </div>
 
                         <ul class="margin-bottom-large text-fade text-size-small">
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i>
+                                <button data-ls-ui-trigger="open-json" 
+                                    class="link text-size-small"
+                                    data-analytics
+                                    data-analytics-event="click"
+                                    data-analytics-category="console"
+                                    data-analytics-label="View as JSON (Team)">
+                                    View as JSON
+                                    </button>
+                                </li>
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{team.dateCreated|dateText}}"></span></li>
                         </ul>
 

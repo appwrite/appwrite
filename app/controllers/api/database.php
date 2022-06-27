@@ -1859,7 +1859,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('collectionId', null, new UID(), 'Collection ID.')
     ->param('documentId', null, new UID(), 'Document ID.')
-    ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.')
+    ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
@@ -1900,8 +1900,8 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
-        if (empty($data)) {
-            throw new Exception('Missing payload', 400, Exception::DOCUMENT_MISSING_PAYLOAD);
+        if (empty($data) && empty($read) && empty($write)) {
+            throw new Exception('Missing payload or read/write permissions', 400, Exception::DOCUMENT_MISSING_PAYLOAD);
         }
 
         if (!\is_array($data)) {
