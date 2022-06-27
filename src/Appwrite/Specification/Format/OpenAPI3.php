@@ -263,6 +263,12 @@ class OpenAPI3 extends Format
                     'required' => !$param['optional'],
                 ];
 
+                foreach ($this->services as $service) {
+                    if ($route->getLabel('sdk.namespace', 'default') === $service['name'] && in_array($name, $service['x-globalAttributes'] ?? [])) {
+                        $node['x-global'] = true;
+                    }
+                }
+
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
                         $node['schema']['type'] = $validator->getType();
@@ -389,6 +395,10 @@ class OpenAPI3 extends Format
 
                     if (\array_key_exists('items', $node['schema'])) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['items'] = $node['schema']['items'];
+                    }
+
+                    if ($node['x-global'] ?? false) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-global'] = true;
                     }
                 }
 
