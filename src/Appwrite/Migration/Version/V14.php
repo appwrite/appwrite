@@ -198,6 +198,9 @@ class V14 extends Migration
                         }
 
                         try {
+                            /**
+                             * Update internal ID's.
+                             */
                             $collection
                                 ->setAttribute('databaseId', 'default')
                                 ->setAttribute('databaseInternalId', '1');
