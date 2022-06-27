@@ -662,7 +662,7 @@ class V14 extends Migration
                 if (is_null($document->getAttribute('phoneVerification'))) {
                     $document->setAttribute('phoneVerification', false);
                 }
-                var_dump($document->getArrayCopy());
+
                 break;
             case 'functions':
                 /**
