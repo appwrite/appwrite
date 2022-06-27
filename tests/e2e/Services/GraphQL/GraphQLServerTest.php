@@ -16,6 +16,9 @@ class GraphQLServerTest extends Scope
 
     /**
      * @depends testCreateCollection
+     * @depends testCreateStringAttribute
+     * @depends testCreateIntegerAttribute
+     * @depends testCreateBooleanAttribute
      */
     public function testDocumentCreate(array $data)
     {
@@ -24,10 +27,11 @@ class GraphQLServerTest extends Scope
         $query = $this->getQuery(self::$CREATE_DOCUMENT_REST);
 
         $variables = [
+            'documentId' => 'unique()',
             'collectionId' => $data['collectionId'],
             'data' => [
                 'name' => 'Robert',
-                'ago' => 100,
+                'age' => 100,
                 'alive' => true,
             ],
             'read' => ['role:all'],
@@ -58,17 +62,16 @@ class GraphQLServerTest extends Scope
             'x-appwrite-key' => $key
         ]), $graphQLPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databaseCreateDocument']);
 
         $doc = $document['body']['data']['databaseCreateDocument'];
-        $this->assertArrayHasKey('$id', $doc);
-        $this->assertEquals($data['collectionId'], $doc['$collection']);
-        $this->assertEquals($variables['data']['name'], $doc['name']);
-        $this->assertEquals($variables['data']['age'], $doc['age']);
-        $this->assertEquals($variables['read'], $doc['read']);
-        $this->assertEquals($variables['write'], $doc['write']);
+
+        $this->assertArrayHasKey('_id', $doc);
+        $this->assertEquals($data['collectionId'], $doc['_collection']);
+        $this->assertEquals($variables['read'], $doc['_read']);
+        $this->assertEquals($variables['write'], $doc['_write']);
     }
 
     /**
@@ -80,7 +83,6 @@ class GraphQLServerTest extends Scope
          * Try to create a user without the required scope
          */
         $projectId = $this->getProject()['$id'];
-        $key = '';
         $query = $this->getQuery(self::$CREATE_USER);
 
         $variables = [
@@ -98,7 +100,6 @@ class GraphQLServerTest extends Scope
         $user = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $key
         ], $graphQLPayload);
 
         $errorMessage = 'User (role: guest) missing scope (users.write)';
@@ -239,13 +240,11 @@ class GraphQLServerTest extends Scope
             'x-appwrite-key' => $key
         ], $graphQLPayload);
 
-        //\var_dump($countries);
-
-        $errorMessage = 'app.${projectId}@service.localhost (role: application) missing scope (locale.read)';
-        $this->assertEquals( 401, $countries['headers']['status-code']);
+        $errorMessage = 'app.' . $projectId . '@service.localhost (role: application) missing scope (locale.read)';
+        $this->assertEquals(401, $countries['headers']['status-code']);
         $this->assertEquals($countries['body']['errors'][0]['message'], $errorMessage);
         $this->assertIsArray($countries['body']['data']);
-        $this->assertNull($countries['body']['data']['locale_getCountries']);
+        $this->assertNull($countries['body']['data']['localeGetCountries']);
     }
 
 }

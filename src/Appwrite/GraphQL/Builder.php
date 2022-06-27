@@ -323,10 +323,12 @@ class Builder
                 if (str_starts_with($route->getPath(), '/v1/mock/')) {
                     continue;
                 }
+
                 $namespace = $route->getLabel('sdk.namespace', '');
                 $methodName = $namespace . \ucfirst($route->getLabel('sdk.method', ''));
                 $responseModelNames = $route->getLabel('sdk.response.model', "none");
 
+                // TODO: Handle "none" responses
                 if ($responseModelNames === "none") {
                     continue;
                 }
@@ -363,10 +365,18 @@ class Builder
                         'resolve' => $resolve
                     ];
 
-                    if ($method == 'GET') {
-                        $queryFields[$methodName] = $field;
-                    } elseif ($method == 'POST' || $method == 'PUT' || $method == 'PATCH' || $method == 'DELETE') {
-                        $mutationFields[$methodName] = $field;
+                    switch ($method) {
+                        case 'GET':
+                            $queryFields[$methodName] = $field;
+                            break;
+                        case 'POST':
+                        case 'PUT':
+                        case 'PATCH':
+                        case 'DELETE':
+                            $mutationFields[$methodName] = $field;
+                            break;
+                        default:
+                            throw new \Exception("Unsupported method: $method");
                     }
                 }
             }
@@ -508,7 +518,7 @@ class Builder
         $wg->wait();
 
         $time_elapsed_secs = (microtime(true) - $start) * 1000;
-        Console::info('[INFO] Built GraphQL Project Collection Schema (approx. ' . $count . ' attributes) in ' . $time_elapsed_secs . 'ms');
+        Console::info('[INFO] Built GraphQL Project Collection Schema (' . $count . ' attributes) in ' . $time_elapsed_secs . 'ms');
 
         return [
             'query' => $queryFields,

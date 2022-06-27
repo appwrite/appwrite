@@ -16,7 +16,7 @@ trait GraphQLBase
     static string $CREATE_STRING_ATTRIBUTE = 'create_string_attribute';
     static string $CREATE_INTEGER_ATTRIBUTE = 'create_integer_attribute';
     static string $CREATE_FLOAT_ATTRIBUTE = 'create_float_attribute';
-    static string $CREATE_BOOLEAN_ATTRIBUTE = 'create_float_attribute';
+    static string $CREATE_BOOLEAN_ATTRIBUTE = 'create_boolean_attribute';
     static string $CREATE_URL_ATTRIBUTE = 'create_string_attribute';
     static string $CREATE_EMAIL_ATTRIBUTE = 'create_string_attribute';
     static string $CREATE_IP_ATTRIBUTE = 'create_string_attribute';
@@ -122,10 +122,10 @@ trait GraphQLBase
                 return 'mutation updateCollection($collectionId: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!, $enabled: Boolean){
                     databaseUpdateCollection (collectionId: $collectionId, name: $name, permission: $permission, read: $read, write: $write, enabled: $enabled) {
                         _id
+                        _read
+                        _write
                         name
                         permission
-                        read
-                        write
                     }
                 }';
             case self::$DELETE_COLLECTION:
@@ -135,7 +135,6 @@ trait GraphQLBase
             case self::$CREATE_STRING_ATTRIBUTE:
                 return 'mutation createStringAttribute($collectionId: String!, $key: String!, $size: Int!, $required: Boolean!, $default: String, $array: Boolean){
                     databaseCreateStringAttribute (collectionId: $collectionId, key: $key, size: $size, required: $required, default: $default, array: $array) {
-                        _id
                         key
                         required
                         default
@@ -145,7 +144,6 @@ trait GraphQLBase
             case self::$CREATE_INTEGER_ATTRIBUTE:
                 return 'mutation createIntegerAttribute($collectionId: String!, $key: String!, $required: Boolean!, $min: Int, $max: Int, $default: Int, $array: Boolean){
                     databaseCreateIntegerAttribute (collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
-                        _id
                         key
                         required
                         min
@@ -157,7 +155,6 @@ trait GraphQLBase
             case self::$CREATE_FLOAT_ATTRIBUTE:
                 return 'mutation createFloatAttribute($collectionId: String!, $key: String!, $required: Boolean!, $min: Float, $max: Float, $default: Float, $array: Boolean){
                     databaseCreateFloatAttribute (collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
-                        _id
                         key
                         required
                         min
@@ -169,7 +166,6 @@ trait GraphQLBase
             case self::$CREATE_BOOLEAN_ATTRIBUTE:
                 return 'mutation createBooleanAttribute($collectionId: String!, $key: String!, $required: Boolean!, $default: Boolean, $array: Boolean){
                     databaseCreateBooleanAttribute (collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
-                        _id
                         key
                         required
                         default
@@ -179,7 +175,6 @@ trait GraphQLBase
             case self::$CREATE_URL_ATTRIBUTE:
                 return 'mutation createUrlAttribute($collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
                     databaseCreateUrlAttribute (collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
-                        _id
                         key
                         required
                         default
@@ -189,7 +184,6 @@ trait GraphQLBase
             case self::$CREATE_EMAIL_ATTRIBUTE:
                 return 'mutation createEmailAttribute($collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
                     databaseCreateEmailAttribute (collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
-                        _id
                         key
                         required
                         default
@@ -199,7 +193,6 @@ trait GraphQLBase
             case self::$CREATE_IP_ATTRIBUTE:
                 return 'mutation createIpAttribute($collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
                     databaseCreateIpAttribute (collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
-                        _id
                         key
                         required
                         default
@@ -209,7 +202,6 @@ trait GraphQLBase
             case self::$CREATE_ENUM_ATTRIBUTE:
                 return 'mutation createEnumAttribute($collectionId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String, $array: Boolean){
                     databaseCreateEnumAttribute (collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default, array: $array) {
-                        _id
                         key
                         elements
                         required
@@ -221,13 +213,9 @@ trait GraphQLBase
                 return 'query getDocument($collectionId: String!, $documentId: String!){
                     databaseGetDocument (collectionId: $collectionId, documentId: $documentId) {
                         _id
-                        collectionId
-                        data {
-                            name
-                            age
-                            alive
-                            salary
-                        }
+                        _collection
+                        _read
+                        _write
                     }
                 }';
             case self::$LIST_DOCUMENTS :
@@ -244,15 +232,9 @@ trait GraphQLBase
                 return 'mutation createDocument($collectionId: String!, $documentId: String!, $data: Json!, $read: [String!]!, $write: [String!]!){
                     databaseCreateDocument (collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
                         _id
-                        documentId
-                        data {
-                            name
-                            age
-                            alive
-                            salary
-                        }
-                        read
-                        write
+                        _collection
+                        _read
+                        _write
                     }
                 }';
             case self::$CREATE_DOCUMENT_GQL_HOOKS:
@@ -266,15 +248,9 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_DOCUMENT:
                 return 'mutation updateDocument($collectionId: String!, $documentId: String!, $data: Json!, $read: [String!]!, $write: [String!]!){
-                    databaseUpdateDocument (collectionId: $collectionId, documentId: $documentId,data: $data, read: $read, write: $write) {
+                    databaseUpdateDocument (collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
                         _id
-                        collectionId
-                        data {
-                            name
-                            age
-                            alive
-                            salary
-                        }
+                        _collection
                     }
                 }';
             case self::$DELETE_DOCUMENT:
@@ -517,7 +493,7 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_TEAM:
-                return 'mutation createTeam($teamId: String!, $name: String!, $roles: [Json]){
+                return 'mutation createTeam($teamId: String!, $name: String!, $roles: [String]){
                     teamsCreate(teamId: $teamId, name : $name, roles: $roles) {
                         _id
                         name
@@ -721,7 +697,6 @@ trait GraphQLBase
     public function testCreateCollection(): array
     {
         $projectId = $this->getProject()['$id'];
-        $key = '';
         $query = $this->getQuery(self::$CREATE_COLLECTION);
 
         $collectionAttrs = [
@@ -729,7 +704,7 @@ trait GraphQLBase
             'name' => 'Actors',
             'permission' => 'collection',
             'read' => ['role:all'],
-            'write' => ['role:member', 'role:admin'],
+            'write' => ['role:member'],
         ];
 
         $gqlPayload = [
@@ -741,7 +716,6 @@ trait GraphQLBase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $key
         ], $gqlPayload);
 
         $errorMessage = 'User (role: guest) missing scope (collections.write)';
@@ -750,30 +724,26 @@ trait GraphQLBase
         $this->assertIsArray($actors['body']['data']);
         $this->assertNull($actors['body']['data']['databaseCreateCollection']);
 
-        $key = $this->createKey('test', ['collections.write']);
-
         $actors = $this->client->call(Client::METHOD_POST, '/graphql', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $key
+            'x-appwrite-key' => $this->getProject()['apiKey']
         ], $gqlPayload);
 
         $this->assertEquals(201, $actors['headers']['status-code']);
-        $this->assertNull($actors['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $actors['body']);
         $this->assertIsArray($actors['body']['data']);
 
         $data = $actors['body']['data']['databaseCreateCollection'];
         $this->assertEquals('Actors', $data['name']);
-        $this->assertArrayHasKey('id', $data);
-        $this->assertArrayHasKey('permissions', $data);
-        $this->assertContains('role:all', $data['read']);
-        $this->assertContains('role:member', $data['write']);
-        $this->assertContains('role:admin', $data['write']);
+        $this->assertArrayHasKey('_id', $data);
+        $this->assertArrayHasKey('permission', $data);
+        $this->assertContains('role:all', $data['_read']);
+        $this->assertContains('role:member', $data['_write']);
 
         return [
-            'collectionId' => $data['id'],
-            'key' => $key
+            'collectionId' => $data['_id'],
         ];
     }
 
@@ -784,10 +754,10 @@ trait GraphQLBase
     public function testCreateStringAttribute(array $data): void
     {
         $projectId = $this->getProject()['$id'];
-        $key = $data['key'];
+        $key = $this->getProject()['apiKey'];
         $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
 
-        $attributeAttrs = [
+        $stringAttrs = [
             'collectionId' => $data['collectionId'],
             'key' => 'name',
             'size' => 256,
@@ -796,7 +766,7 @@ trait GraphQLBase
 
         $gqlPayload = [
             'query' => $query,
-            'variables' => $attributeAttrs
+            'variables' => $stringAttrs
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -806,9 +776,12 @@ trait GraphQLBase
             'x-appwrite-key' => $key
         ], $gqlPayload);
 
-        $this->assertNull($attribute['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databaseCreateStringAttribute']);
+
+        // Wait for attribute to be ready
+        sleep(2);
     }
 
     /**
@@ -818,20 +791,20 @@ trait GraphQLBase
     public function testCreateIntegerAttribute(array $data): void
     {
         $projectId = $this->getProject()['$id'];
-        $key = $data['key'];
+        $key = $this->getProject()['apiKey'];
         $query = $this->getQuery(self::$CREATE_INTEGER_ATTRIBUTE);
 
-        $attributeAttrs = [
+        $intAttrs = [
             'collectionId' => $data['collectionId'],
             'key' => 'age',
             'min' => 18,
-            'max' => 99,
+            'max' => 150,
             'required' => true,
         ];
 
         $gqlPayload = [
             'query' => $query,
-            'variables' => $attributeAttrs
+            'variables' => $intAttrs
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -841,9 +814,12 @@ trait GraphQLBase
             'x-appwrite-key' => $key
         ], $gqlPayload);
 
-        $this->assertNull($attribute['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databaseCreateIntegerAttribute']);
+
+        // Wait for attribute to be ready
+        sleep(2);
     }
 
     /**
@@ -853,10 +829,10 @@ trait GraphQLBase
     public function testCreateBooleanAttribute(array $data): void
     {
         $projectId = $this->getProject()['$id'];
-        $key = $data['key'];
+        $key = $this->getProject()['apiKey'];
         $query = $this->getQuery(self::$CREATE_BOOLEAN_ATTRIBUTE);
 
-        $attributeAttrs = [
+        $booleanAttrs = [
             'collectionId' => $data['collectionId'],
             'key' => 'alive',
             'required' => true,
@@ -864,7 +840,7 @@ trait GraphQLBase
 
         $gqlPayload = [
             'query' => $query,
-            'variables' => $attributeAttrs
+            'variables' => $booleanAttrs
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -874,9 +850,12 @@ trait GraphQLBase
             'x-appwrite-key' => $key
         ], $gqlPayload);
 
-        $this->assertNull($attribute['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databaseCreateBooleanAttribute']);
+
+        // Wait for attribute to be ready
+        sleep(2);
     }
 
     /**
@@ -886,10 +865,10 @@ trait GraphQLBase
     public function testCreateFloatAttribute(array $data): void
     {
         $projectId = $this->getProject()['$id'];
-        $key = $data['key'];
+        $key = $this->getProject()['apiKey'];
         $query = $this->getQuery(self::$CREATE_FLOAT_ATTRIBUTE);
 
-        $attributeAttrs = [
+        $floatAttrs = [
             'collectionId' => $data['collectionId'],
             'key' => 'salary',
             'min' => 1000.0,
@@ -900,7 +879,7 @@ trait GraphQLBase
 
         $gqlPayload = [
             'query' => $query,
-            'variables' => $attributeAttrs
+            'variables' => $floatAttrs
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -910,9 +889,12 @@ trait GraphQLBase
             'x-appwrite-key' => $key
         ], $gqlPayload);
 
-        $this->assertNull($attribute['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databaseCreateFloatAttribute']);
+
+        // Wait for attribute to be ready
+        sleep(2);
     }
 
     /**
@@ -926,7 +908,7 @@ trait GraphQLBase
     public function testCreateDocumentREST(array $data): void
     {
         $projectId = $this->getProject()['$id'];
-        $key = $data['key'];
+        $key = $this->getProject()['apiKey'];
         $query = $this->getQuery(self::$CREATE_DOCUMENT_REST);
 
         $documentAttrs = [
@@ -951,7 +933,7 @@ trait GraphQLBase
             'x-appwrite-key' => $key
         ], $gqlPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databaseCreateDocument']);
     }
@@ -989,7 +971,7 @@ trait GraphQLBase
             'x-appwrite-key' => $key
         ], $gqlPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['actorCreate']);
     }

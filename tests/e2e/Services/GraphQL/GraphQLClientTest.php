@@ -47,6 +47,7 @@ class GraphQLClientTest extends Scope
                 'password' => 'password',
             ]
         ];
+
         $session1 = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -115,9 +116,12 @@ class GraphQLClientTest extends Scope
 
     /**
      * @depends testCreateCollection
+     * @depends testCreateStringAttribute
+     * @depends testCreateIntegerAttribute
+     * @depends testCreateBooleanAttribute
      * @depends testCreateAccounts
      */
-    public function testWildCardPermissions(array $data, array $accounts)
+    public function testWildCardPermissions(array $data, $str, $int, $bool, array $accounts)
     {
         $projectId = $this->getProject()['$id'];
 
@@ -137,28 +141,27 @@ class GraphQLClientTest extends Scope
             'read' => ['role:all'],
             'write' => ['role:all'],
         ];
+
         $graphQLPayload = [
             'query' => $query,
             'variables' => $docVariables
         ];
+
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $accounts['session1Cookie'],
         ], $graphQLPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databaseCreateDocument']);
 
         $doc = $document['body']['data']['databaseCreateDocument'];
-        $this->assertArrayHasKey('$id', $doc);
-        $this->assertEquals($data['collectionId'], $doc['$collection']);
-        $this->assertEquals('Robert', $doc['name']);
-        $this->assertEquals(100, $doc['age']);
-
-        $this->assertEquals($docVariables['read'], $doc['read']);
-        $this->assertEquals($docVariables['write'], $doc['write']);
+        $this->assertArrayHasKey('_id', $doc);
+        $this->assertEquals($data['collectionId'], $doc['_collection']);
+        $this->assertEquals($docVariables['read'], $doc['_read']);
+        $this->assertEquals($docVariables['write'], $doc['_write']);
 
         /*
         * Account 1 tries to access it 
@@ -166,7 +169,7 @@ class GraphQLClientTest extends Scope
         $query = $this->getQuery(self::$GET_DOCUMENT);
         $getDocumentVariables = [
             'collectionId' => $data['collectionId'],
-            'documentId' => $doc['$id']
+            'documentId' => $doc['_id']
         ];
         $graphQLPayload = [
             'query' => $query,
@@ -178,16 +181,16 @@ class GraphQLClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $accounts['session1Cookie'],
         ], $graphQLPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databaseGetDocument']);
 
         $doc = $document['body']['data']['databaseGetDocument'];
-        $this->assertArrayHasKey('$id', $doc);
-        $this->assertEquals($data['collectionId'], $doc['$collection']);
+        $this->assertArrayHasKey('_id', $doc);
+        $this->assertEquals($data['collectionId'], $doc['_collection']);
         $this->assertEquals('Robert', $doc['name']);
         $this->assertEquals(100, $doc['age']);
-        $this->assertEquals($docVariables['read'], $doc['read']);
+        $this->assertEquals($docVariables['read'], $doc['_read']);
         $this->assertEquals($docVariables['write'], $doc['write']);
 
         /*
@@ -199,25 +202,28 @@ class GraphQLClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $accounts['session2Cookie'],
         ], $graphQLPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databaseGetDocument']);
 
         $doc = $document['body']['data']['databaseGetDocument'];
-        $this->assertArrayHasKey('$id', $doc);
-        $this->assertEquals($data['collectionId'], $doc['$collection']);
+        $this->assertArrayHasKey('_id', $doc);
+        $this->assertEquals($data['collectionId'], $doc['_collection']);
         $this->assertEquals('Robert', $doc['name']);
         $this->assertEquals(100, $doc['age']);
-        $this->assertEquals($docVariables['read'], $doc['read']);
+        $this->assertEquals($docVariables['read'], $doc['_read']);
         $this->assertEquals($docVariables['write'], $doc['write']);
     }
 
     /**
      * @depends testCreateCollection
+     * @depends testCreateStringAttribute
+     * @depends testCreateIntegerAttribute
+     * @depends testCreateBooleanAttribute
      * @depends testCreateAccounts
      * @throws \Exception
      */
-    public function testUserRole(array $data, array $accounts)
+    public function testUserRole(array $data, $str, $int, $bool, array $accounts)
     {
         $projectId = $this->getProject()['$id'];
 
@@ -227,6 +233,7 @@ class GraphQLClientTest extends Scope
         $query = $this->getQuery(self::$CREATE_DOCUMENT_REST);
         $createDocumentVariables = [
             'collectionId' => $data['collectionId'],
+            'documentId' => 'unique()',
             'data' => [
                 'name' => 'Robert',
                 'age' => '100',
@@ -247,17 +254,15 @@ class GraphQLClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $accounts['session1Cookie'],
         ], $graphQLPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databaseCreateDocument']);
 
         $doc = $document['body']['data']['databaseCreateDocument'];
-        $this->assertArrayHasKey('$id', $doc);
-        $this->assertEquals($data['collectionId'], $doc['$collection']);
-        $this->assertEquals($createDocumentVariables['data']['name'], $doc['name']);
-        $this->assertEquals($createDocumentVariables['data']['age'], $doc['age']);
-        $this->assertEquals($createDocumentVariables['read'], $doc['read']);
-        $this->assertEquals($createDocumentVariables['write'], $doc['write']);
+        $this->assertArrayHasKey('_id', $doc);
+        $this->assertEquals($data['collectionId'], $doc['_collection']);
+        $this->assertEquals($createDocumentVariables['read'], $doc['_read']);
+        $this->assertEquals($createDocumentVariables['write'], $doc['_write']);
 
         /*
         * Account 1 tries to access it 
@@ -265,7 +270,7 @@ class GraphQLClientTest extends Scope
         $query = $this->getQuery(self::$GET_DOCUMENT);
         $getDocumentVariables = [
             'collectionId' => $data['collectionId'],
-            'documentId' => $doc['$id']
+            'documentId' => $doc['_id']
         ];
         $graphQLPayload = [
             'query' => $query,
@@ -277,16 +282,16 @@ class GraphQLClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $accounts['session1Cookie'],
         ], $graphQLPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databaseGetDocument']);
 
         $doc = $document['body']['data']['databaseGetDocument'];
-        $this->assertArrayHasKey('$id', $doc);
-        $this->assertEquals($data['collectionId'], $doc['$collection']);
+        $this->assertArrayHasKey('_id', $doc);
+        $this->assertEquals($data['collectionId'], $doc['_collection']);
         $this->assertEquals($createDocumentVariables['data']['name'], $doc['name']);
         $this->assertEquals($createDocumentVariables['data']['age'], $doc['age']);
-        $this->assertEquals($createDocumentVariables['read'], $doc['read']);
+        $this->assertEquals($createDocumentVariables['read'], $doc['_read']);
         $this->assertEquals($createDocumentVariables['write'], $doc['write']);
 
         /*
@@ -321,16 +326,14 @@ class GraphQLClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $accounts['session1Cookie'],
         ], $graphQLPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databaseUpdateDocument']);
 
         $doc = $document['body']['data']['database_updateDocument'];
-        $this->assertArrayHasKey('$id', $doc);
-        $this->assertEquals($data['collectionId'], $doc['$collection']);
-        $this->assertEquals($createDocumentVariables['data']['name'], $doc['name']);
-        $this->assertEquals($createDocumentVariables['data']['age'], $doc['age']);
-        $this->assertEquals($updateDocumentVariables['read'], $doc['read']);
+        $this->assertArrayHasKey('_id', $doc);
+        $this->assertEquals($data['collectionId'], $doc['_collection']);
+        $this->assertEquals($updateDocumentVariables['read'], $doc['_read']);
         $this->assertEquals($updateDocumentVariables['write'], $doc['write']);
 
         /*
@@ -351,25 +354,26 @@ class GraphQLClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $accounts['session2Cookie'],
         ], $graphQLPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databaseGetDocument']);
 
         $doc = $document['body']['data']['databaseGetDocument'];
-        $this->assertArrayHasKey('$id', $doc);
-        $this->assertEquals($data['collectionId'], $doc['$collection']);
-        $this->assertEquals($createDocumentVariables['data']['name'], $doc['name']);
-        $this->assertEquals($createDocumentVariables['data']['age'], $doc['age']);
-        $this->assertEquals($updateDocumentVariables['read'], $doc['read']);
+        $this->assertArrayHasKey('_id', $doc);
+        $this->assertEquals($data['collectionId'], $doc['_collection']);
+        $this->assertEquals($updateDocumentVariables['read'], $doc['_read']);
         $this->assertEquals($updateDocumentVariables['write'], $doc['write']);
     }
 
     /**
      * @depends testCreateCollection
+     * @depends testCreateStringAttribute
+     * @depends testCreateIntegerAttribute
+     * @depends testCreateBooleanAttribute
      * @depends testCreateAccounts
      * @throws \Exception
      */
-    public function testTeamRole(array $data, array $accounts)
+    public function testTeamRole(array $data, $str, $int, $bool, array $accounts)
     {
         $projectId = $this->getProject()['$id'];
         /**
@@ -377,7 +381,8 @@ class GraphQLClientTest extends Scope
          */
         $query = $this->getQuery(self::$CREATE_TEAM);
         $createTeamVariables = [
-            'name' => 'Test Team'
+            'teamId' => 'unique()',
+            'name' => 'Test Team',
         ];
         $graphQLPayload = [
             'query' => $query,
@@ -389,12 +394,12 @@ class GraphQLClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $accounts['session1Cookie'],
         ], $graphQLPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
-        $this->assertIsArray($document['body']['data']['teams_create']);
+        $this->assertIsArray($document['body']['data']['teamsCreate']);
 
-        $team = $document['body']['data']['teams_create'];
-        $this->assertArrayHasKey('id', $team);
+        $team = $document['body']['data']['teamsCreate'];
+        $this->assertArrayHasKey('_id', $team);
         $this->assertEquals($createTeamVariables['name'], $team['name']);
 
         /*
@@ -407,8 +412,8 @@ class GraphQLClientTest extends Scope
                 'name' => 'Robert',
                 'age' => 100
             ],
-            'read' => ["team:{$team['id']}"],
-            'write' => ["team:{$team['id']}"],
+            'read' => ["team:{$team['_id']}"],
+            'write' => ["team:{$team['_id']}"],
         ];
         $graphQLPayload = [
             'query' => $query,
@@ -420,16 +425,14 @@ class GraphQLClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $accounts['session1Cookie'],
         ], $graphQLPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databaseCreateDocument']);
 
         $doc = $document['body']['data']['databaseCreateDocument'];
-        $this->assertArrayHasKey('$id', $doc);
-        $this->assertEquals($data['collectionId'], $doc['$collection']);
-        $this->assertEquals($createDocumentVariables['data']['name'], $doc['name']);
-        $this->assertEquals($createDocumentVariables['data']['age'], $doc['age']);
-        $this->assertEquals($createDocumentVariables['read'], $doc['read']);
+        $this->assertArrayHasKey('_id', $doc);
+        $this->assertEquals($data['collectionId'], $doc['_collection']);
+        $this->assertEquals($createDocumentVariables['read'], $doc['_read']);
         $this->assertEquals($createDocumentVariables['write'], $doc['write']);
 
         /*
@@ -450,16 +453,14 @@ class GraphQLClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $accounts['session1Cookie'],
         ], $graphQLPayload);
 
-        $this->assertNull($document['body']['errors']);
+        $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databaseGetDocument']);
 
         $doc = $document['body']['data']['databaseGetDocument'];
-        $this->assertArrayHasKey('$id', $doc);
-        $this->assertEquals($data['collectionId'], $doc['$collection']);
-        $this->assertEquals($createDocumentVariables['data']['name'], $doc['name']);
-        $this->assertEquals($createDocumentVariables['data']['age'], $doc['age']);
-        $this->assertEquals($createDocumentVariables['read'], $doc['read']);
+        $this->assertArrayHasKey('_id', $doc);
+        $this->assertEquals($data['collectionId'], $doc['_collection']);
+        $this->assertEquals($createDocumentVariables['read'], $doc['_read']);
         $this->assertEquals($createDocumentVariables['write'], $doc['write']);
 
         /*
