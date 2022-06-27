@@ -109,13 +109,13 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_COLLECTION:
-                return 'mutation createCollection($id: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!) {
-                    databaseCreateCollection (id: $\id, name: $name, permission: $permission, read: $read, write: $write) {
+                return 'mutation createCollection($collectionId: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!) {
+                    databaseCreateCollection (collectionId: $collectionId, name: $name, permission: $permission, read: $read, write: $write) {
                         _id
+                        _read
+                        _write
                         name
                         permission
-                        read
-                        write
                     }
                 }';
             case self::$UPDATE_COLLECTION:
