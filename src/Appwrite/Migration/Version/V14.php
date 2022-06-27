@@ -75,6 +75,7 @@ class V14 extends Migration
 
             foreach ($documents as $document) {
                 go(function (Document $bucket, Document $document) {
+                    Console::log("Migrating File {$document->getId()}");
                     try {
                         /**
                          * Migrate $createdAt.
@@ -90,11 +91,11 @@ class V14 extends Migration
             }
 
             if ($count !== $this->limit) {
-                $nextCollection = null;
+                $nextFile = null;
             } else {
-                $nextCollection = end($documents);
+                $nextFile = end($documents);
             }
-        } while (!is_null($nextCollection));
+        } while (!is_null($nextFile));
     }
 
     /**
