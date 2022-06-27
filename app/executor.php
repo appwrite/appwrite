@@ -572,6 +572,18 @@ App::post('/v1/execution')
         }
     );
 
+App::get('/v1/health')
+    ->desc("Get usage stats of host machine")
+    ->inject('response')
+    ->action(function (Response $response) {
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->json([
+                'status' => 'pass'
+                // TODO: Add host machine stats using Utopia/System
+            ]);
+    });
+
 App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
 
 $http = new Server("0.0.0.0", 80);
