@@ -38,12 +38,19 @@ class MessagingV1 extends Worker
             'telesign' => new Telesign($user, $secret),
             default => null
         };
+
+        $this->from = App::getEnv('_APP_PHONE_FROM');
     }
 
     public function run(): void
     {
         if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
             Console::info('Skipped sms processing. No Phone provider has been set.');
+            return;
+        }
+
+        if (!$this->from) {
+            Console::info('Skipped sms processing. No phone number has been set.');
             return;
         }
 
