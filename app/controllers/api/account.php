@@ -2301,7 +2301,9 @@ App::post('/v1/account/verification/phone')
 
         $messaging
             ->setRecipient($user->getAttribute('phone'))
-            ->setMessage($secret);
+            ->setMessage($secret)
+            ->trigger()
+        ;
 
         $events
             ->setParam('userId', $user->getId())
