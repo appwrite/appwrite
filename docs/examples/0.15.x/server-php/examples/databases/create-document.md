@@ -11,6 +11,6 @@ $client
     ->setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-$databases = new Databases($client);
+$databases = new Databases($client, '[DATABASE_ID]');
 
-$result = $databases->createDocument('[DATABASE_ID]', '[COLLECTION_ID]', '[DOCUMENT_ID]', []);
+$result = $databases->createDocument('[COLLECTION_ID]', '[DOCUMENT_ID]', []);

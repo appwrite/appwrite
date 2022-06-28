@@ -2,7 +2,7 @@ import 'package:dart_appwrite/dart_appwrite.dart';
 
 void main() { // Init SDK
   Client client = Client();
-  Databases databases = Databases(client);
+  Databases databases = Databases(client, databaseId: '[DATABASE_ID]');
 
   client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
@@ -10,9 +10,7 @@ void main() { // Init SDK
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
   ;
 
-  Future result = databases.delete(
-    databaseId: '[DATABASE_ID]',
-  );
+  Future result = databases.delete();
 
   result
     .then((response) {

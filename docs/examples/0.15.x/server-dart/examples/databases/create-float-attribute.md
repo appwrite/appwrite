@@ -2,7 +2,7 @@ import 'package:dart_appwrite/dart_appwrite.dart';
 
 void main() { // Init SDK
   Client client = Client();
-  Databases databases = Databases(client);
+  Databases databases = Databases(client, databaseId: '[DATABASE_ID]');
 
   client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
@@ -11,10 +11,9 @@ void main() { // Init SDK
   ;
 
   Future result = databases.createFloatAttribute(
-    databaseId: '[DATABASE_ID]',
     collectionId: '[COLLECTION_ID]',
     key: '',
-    required: false,
+    xrequired: false,
   );
 
   result

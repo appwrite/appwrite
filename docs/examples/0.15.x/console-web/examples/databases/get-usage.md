@@ -2,7 +2,7 @@ import { Client, Databases } from "appwrite";
 
 const client = new Client();
 
-const databases = new Databases(client);
+const databases = new Databases(client, '[DATABASE_ID]');
 
 client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint

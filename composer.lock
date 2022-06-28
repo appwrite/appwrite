@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97fcbd8dc0f8596520021b938886dbca",
+    "content-hash": "27f63bdbc1b54f0f5cee981afe6da9b8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1583,7 +1583,7 @@
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v3.1.0",
+            "version": "v3.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
@@ -1630,7 +1630,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.1.0"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.1.1"
             },
             "funding": [
                 {
@@ -2828,16 +2828,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.19.1",
+            "version": "0.19.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "17cdffce7ea203ce9c6c951229aa3eb72417f645"
+                "reference": "91892b98880767019f340dee0074dcdc75329f94"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/17cdffce7ea203ce9c6c951229aa3eb72417f645",
-                "reference": "17cdffce7ea203ce9c6c951229aa3eb72417f645",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/91892b98880767019f340dee0074dcdc75329f94",
+                "reference": "91892b98880767019f340dee0074dcdc75329f94",
                 "shasum": ""
             },
             "require": {
@@ -2872,9 +2872,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.19.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.19.2"
             },
-            "time": "2022-06-27T20:01:09+00:00"
+            "time": "2022-06-28T11:15:16+00:00"
         },
         {
             "name": "doctrine/instantiator",

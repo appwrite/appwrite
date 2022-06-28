@@ -9,6 +9,6 @@ client = Client()
   .set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 )
 
-databases = Databases(client)
+databases = Databases(client, '[DATABASE_ID]')
 
-result = databases.update_document('[DATABASE_ID]', '[COLLECTION_ID]', '[DOCUMENT_ID]')
+result = databases.update_document('[COLLECTION_ID]', '[DOCUMENT_ID]')

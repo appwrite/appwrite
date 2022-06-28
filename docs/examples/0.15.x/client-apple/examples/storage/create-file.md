@@ -8,7 +8,7 @@ func main() async throws {
     let file = try await storage.createFile(
         bucketId: "[BUCKET_ID]",
         fileId: "[FILE_ID]",
-        file: File(name: "image.jpg", buffer: yourByteBuffer)
+        file: InputFile.fromPath("file.png")
     )
 
     print(String(describing: file)
