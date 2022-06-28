@@ -14,7 +14,7 @@ class TemplateTest extends TestCase
 
     public function setUp(): void
     {
-        $this->object = new Template(__DIR__.'/../../resources/template.tpl');
+        $this->object = new Template(__DIR__ . '/../../resources/template.tpl');
         $this->object
             ->setParam('{{world}}', 'WORLD')
         ;

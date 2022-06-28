@@ -2,6 +2,7 @@
 
 namespace Appwrite\Network\Validator;
 
+use Utopia\Validator\Hostname;
 use Utopia\Validator;
 
 /**
@@ -45,17 +46,16 @@ class Host extends Validator
      */
     public function isValid($value): bool
     {
+        // Check if value is valid URL
         $urlValidator = new URL();
 
         if (!$urlValidator->isValid($value)) {
             return false;
         }
 
-        if (\in_array(\parse_url($value, PHP_URL_HOST), $this->whitelist)) {
-            return true;
-        }
-
-        return false;
+        $hostname = \parse_url($value, PHP_URL_HOST);
+        $hostnameValidator = new Hostname($this->whitelist);
+        return $hostnameValidator->isValid($hostname);
     }
 
     /**

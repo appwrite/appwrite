@@ -1,15 +1,16 @@
 <?php
 
+use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__ . '/../init.php';
 
 Console::title('Database V1 Worker');
-Console::success(APP_NAME.' database worker v1 has started'."\n");
+Console::success(APP_NAME . ' database worker v1 has started' . "\n");
 
 class DatabaseV1 extends Worker
 {
@@ -20,39 +21,38 @@ class DatabaseV1 extends Worker
     public function run(): void
     {
         Authorization::disable();
-        $projectId = $this->args['projectId'] ?? '';
-        $type = $this->args['type'] ?? '';
-        $collection = $this->args['collection'] ?? [];
-        $collection = new Document($collection);
-        $document = $this->args['document'] ?? [];
-        $document = new Document($document);
 
-        if($collection->isEmpty()) {
+        $type = $this->args['type'];
+        $project = new Document($this->args['project']);
+        $collection = new Document($this->args['collection'] ?? []);
+        $document = new Document($this->args['document'] ?? []);
+
+        if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
         }
 
-        if($document->isEmpty()) {
+        if ($document->isEmpty()) {
             throw new Exception('Missing document');
         }
 
         switch (strval($type)) {
             case DATABASE_TYPE_CREATE_ATTRIBUTE:
-                $this->createAttribute($collection, $document, $projectId);
+                $this->createAttribute($collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_DELETE_ATTRIBUTE:
-                $this->deleteAttribute($collection, $document, $projectId);
+                $this->deleteAttribute($collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_CREATE_INDEX:
-                $this->createIndex($collection, $document, $projectId);
+                $this->createIndex($collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_DELETE_INDEX:
-                $this->deleteIndex($collection, $document, $projectId);
+                $this->deleteIndex($collection, $document, $project->getId());
                 break;
 
             default:
-                Console::error('No database operation for type: '.$type);
+                Console::error('No database operation for type: ' . $type);
                 break;
-            }
+        }
 
             Authorization::reset();
     }
@@ -71,7 +71,15 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $event = 'database.attributes.update';
+        $events = Event::generateEvents('collections.[collectionId].attributes.[attributeId].update', [
+            'collectionId' => $collection->getId(),
+            'attributeId' => $attribute->getId()
+        ]);
+        /**
+         * Fetch attribute from the database, since with Resque float values are loosing informations.
+         */
+        $attribute = $dbForProject->getDocument('attributes', $attribute->getId());
+
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $type = $attribute->getAttribute('type', '');
@@ -86,7 +94,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if(!$dbForProject->createAttribute('collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+            if (!$dbForProject->createAttribute('collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                 throw new Exception('Failed to create Attribute');
             }
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
@@ -94,12 +102,17 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
         } finally {
-            $target = Realtime::fromPayload($event, $attribute, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $attribute,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',
                 payload: $attribute->getArrayCopy(),
-                event: $event,
+                events: $events,
                 channels: $target['channels'],
                 roles: $target['roles'],
                 options: [
@@ -122,7 +135,10 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $event = 'database.attributes.delete';
+        $events = Event::generateEvents('collections.[collectionId].attributes.[attributeId].delete', [
+            'collectionId' => $collection->getId(),
+            'attributeId' => $attribute->getId()
+        ]);
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $status = $attribute->getAttribute('status', '');
@@ -135,7 +151,7 @@ class DatabaseV1 extends Worker
         // - failed: attribute was never created
         // - stuck: attribute was available but cannot be removed
         try {
-            if($status !== 'failed' && !$dbForProject->deleteAttribute('collection_' . $collection->getInternalId(), $key)) {
+            if ($status !== 'failed' && !$dbForProject->deleteAttribute('collection_' . $collection->getInternalId(), $key)) {
                 throw new Exception('Failed to delete Attribute');
             }
             $dbForProject->deleteDocument('attributes', $attribute->getId());
@@ -143,12 +159,17 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'stuck'));
         } finally {
-            $target = Realtime::fromPayload($event, $attribute, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $attribute,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',
                 payload: $attribute->getArrayCopy(),
-                event: $event,
+                events: $events,
                 channels: $target['channels'],
                 roles: $target['roles'],
                 options: [
@@ -173,7 +194,7 @@ class DatabaseV1 extends Worker
 
             if ($found !== false) {
                 // If found, remove entry from attributes, lengths, and orders
-                // array_values wraps array_diff to reindex array keys 
+                // array_values wraps array_diff to reindex array keys
                 // when found attribute is removed from array
                 $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
                 $lengths = \array_values(\array_diff($lengths, [$lengths[$found]]));
@@ -191,7 +212,8 @@ class DatabaseV1 extends Worker
                     // Check if an index exists with the same attributes and orders
                     $exists = false;
                     foreach ($indexes as $existing) {
-                        if ($existing->getAttribute('key') !== $index->getAttribute('key') // Ignore itself
+                        if (
+                            $existing->getAttribute('key') !== $index->getAttribute('key') // Ignore itself
                             && $existing->getAttribute('attributes') === $index->getAttribute('attributes')
                             && $existing->getAttribute('orders') === $index->getAttribute('orders')
                         ) {
@@ -200,7 +222,7 @@ class DatabaseV1 extends Worker
                         }
                     }
 
-                    if ($exists) { // Delete the duplicate if created, else update in db 
+                    if ($exists) { // Delete the duplicate if created, else update in db
                         $this->deleteIndex($collection, $index, $projectId);
                     } else {
                         $dbForProject->updateDocument('indexes', $index->getId(), $index);
@@ -223,7 +245,10 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $event = 'database.indexes.update';
+        $events = Event::generateEvents('collections.[collectionId].indexes.[indexId].update', [
+            'collectionId' => $collection->getId(),
+            'indexId' => $index->getId()
+        ]);
         $collectionId = $collection->getId();
         $key = $index->getAttribute('key', '');
         $type = $index->getAttribute('type', '');
@@ -233,7 +258,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if(!$dbForProject->createIndex('collection_' . $collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
+            if (!$dbForProject->createIndex('collection_' . $collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
                 throw new Exception('Failed to create Index');
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
@@ -241,12 +266,17 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'failed'));
         } finally {
-            $target = Realtime::fromPayload($event, $index, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $index,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',
                 payload: $index->getArrayCopy(),
-                event: $event,
+                events: $events,
                 channels: $target['channels'],
                 roles: $target['roles'],
                 options: [
@@ -269,14 +299,16 @@ class DatabaseV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $collectionId = $collection->getId();
+        $events = Event::generateEvents('collections.[collectionId].indexes.[indexId].delete', [
+            'collectionId' => $collection->getId(),
+            'indexId' => $index->getId()
+        ]);
         $key = $index->getAttribute('key');
         $status = $index->getAttribute('status', '');
-        $event = 'database.indexes.delete';
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if($status !== 'failed' && !$dbForProject->deleteIndex('collection_' . $collection->getInternalId(), $key)) {
+            if ($status !== 'failed' && !$dbForProject->deleteIndex('collection_' . $collection->getInternalId(), $key)) {
                 throw new Exception('Failed to delete index');
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
@@ -284,12 +316,17 @@ class DatabaseV1 extends Worker
             Console::error($th->getMessage());
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'stuck'));
         } finally {
-            $target = Realtime::fromPayload($event, $index, $project);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $events[0],
+                payload: $index,
+                project: $project
+            );
 
             Realtime::send(
                 projectId: 'console',
                 payload: $index->getArrayCopy(),
-                event: $event,
+                events: $events,
                 channels: $target['channels'],
                 roles: $target['roles'],
                 options: [
@@ -299,6 +336,6 @@ class DatabaseV1 extends Worker
             );
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('collections', $collection->getId());
     }
 }

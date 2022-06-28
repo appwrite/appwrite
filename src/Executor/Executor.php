@@ -6,17 +6,17 @@ use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
 
-class Executor 
+class Executor
 {
-    const METHOD_GET = 'GET';
-    const METHOD_POST = 'POST';
-    const METHOD_PUT = 'PUT';
-    const METHOD_PATCH = 'PATCH';
-    const METHOD_DELETE = 'DELETE';
-    const METHOD_HEAD = 'HEAD';
-    const METHOD_OPTIONS = 'OPTIONS';
-    const METHOD_CONNECT = 'CONNECT';
-    const METHOD_TRACE = 'TRACE';
+    public const METHOD_GET = 'GET';
+    public const METHOD_POST = 'POST';
+    public const METHOD_PUT = 'PUT';
+    public const METHOD_PATCH = 'PATCH';
+    public const METHOD_DELETE = 'DELETE';
+    public const METHOD_HEAD = 'HEAD';
+    public const METHOD_OPTIONS = 'OPTIONS';
+    public const METHOD_CONNECT = 'CONNECT';
+    public const METHOD_TRACE = 'TRACE';
 
     private $endpoint;
 
@@ -26,16 +26,19 @@ class Executor
         'content-type' => '',
     ];
 
-    public function __construct(string $endpoint = 'http://appwrite-executor/v1')
-    { 
+    public function __construct(string $endpoint)
+    {
+        if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
+            throw new Exception('Unsupported endpoint');
+        }
         $this->endpoint = $endpoint;
     }
 
     /**
      * Create runtime
-     * 
+     *
      * Launches a runtime container for a deployment ready for execution
-     * 
+     *
      * @param string $deploymentId
      * @param string $projectId
      * @param string $source
@@ -50,16 +53,15 @@ class Executor
      * @param array $commands
      */
     public function createRuntime(
-        string $deploymentId, 
-        string $projectId, 
+        string $deploymentId,
+        string $projectId,
         string $source,
-        string $runtime, 
+        string $runtime,
         string $baseImage,
         bool $remove = false,
         string $entrypoint = '',
         string $workdir = '',
         string $destination = '',
-        string $network = '',
         array $vars = [],
         array $commands = []
     ) {
@@ -76,7 +78,6 @@ class Executor
             'baseImage' => $baseImage,
             'entrypoint' => $entrypoint,
             'workdir' => $workdir,
-            'network' => empty($network) ? App::getEnv('_APP_EXECUTOR_RUNTIME_NETWORK', 'appwrite_runtimes') : $network,
             'vars' => $vars,
             'remove' => $remove,
             'commands' => $commands
@@ -89,16 +90,16 @@ class Executor
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
             throw new \Exception($response['body']['message'], $status);
-        } 
+        }
 
         return $response['body'];
     }
 
     /**
      * Delete Runtime
-     * 
+     *
      * Deletes a runtime and cleans up any containers remaining.
-     * 
+     *
      * @param string $projectId
      * @param string $deploymentId
      */
@@ -114,7 +115,7 @@ class Executor
         $params = [];
 
         $response = $this->call(self::METHOD_DELETE, $route, $headers, $params, true, 30);
-        
+
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
             throw new \Exception($response['body']['message'], $status);
@@ -125,7 +126,7 @@ class Executor
 
     /**
      * Create an execution
-     * 
+     *
      * @param string $projectId
      * @param string $deploymentId
      * @param string $path
@@ -135,7 +136,7 @@ class Executor
      * @param string runtime
      * @param string $baseImage
      * @param int $timeout
-     * 
+     *
      * @return array
      */
     public function createExecution(
@@ -156,7 +157,7 @@ class Executor
         ];
         $params = [
             'runtimeId' => "$projectId-$deploymentId",
-            'vars' => $vars, 
+            'vars' => $vars,
             'data' => $data,
             'timeout' => $timeout,
         ];
@@ -185,10 +186,18 @@ class Executor
                         );
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
                         $status = $response['headers']['status-code'];
+
+                        if ($status < 400) {
+                            return $response['body'];
+                        }
                         break;
                     case $status === 406:
                         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
                         $status = $response['headers']['status-code'];
+
+                        if ($status < 400) {
+                            return $response['body'];
+                        }
                         break;
                     default:
                         throw new \Exception($response['body']['message'], $status);
@@ -247,7 +256,7 @@ class Executor
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0); 
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
         curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
@@ -276,18 +285,18 @@ class Executor
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if($decode) {
+        if ($decode) {
             switch (substr($responseType, 0, strpos($responseType, ';'))) {
                 case 'application/json':
                     $json = json_decode($responseBody, true);
-    
+
                     if ($json === null) {
-                        throw new Exception('Failed to parse response: '.$responseBody);
+                        throw new Exception('Failed to parse response: ' . $responseBody);
                     }
-    
+
                     $responseBody = $json;
                     $json = null;
-                break;
+                    break;
             }
         }
 

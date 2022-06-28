@@ -3,31 +3,30 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Utopia\Exception;
 
 class Github extends OAuth2
 {
     /**
      * @var array
      */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [
         'user:email',
     ];
 
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'github';
     }
@@ -35,9 +34,9 @@ class Github extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return 'https://github.com/login/oauth/authorize?'. \http_build_query([
+        return 'https://github.com/login/oauth/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
@@ -52,7 +51,7 @@ class Github extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $response = $this->request(
                 'POST',
                 'https://github.com/login/oauth/access_token',
@@ -78,7 +77,7 @@ class Github extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $response = $this->request(
             'POST',
@@ -96,7 +95,7 @@ class Github extends OAuth2
         \parse_str($response, $output);
         $this->tokens = $output;
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -104,53 +103,59 @@ class Github extends OAuth2
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
-        }
-
-        return '';
+        return $user['id'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
-    {
-        $emails = \json_decode($this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token '.\urlencode($accessToken)]), true);
-
-        foreach ($emails as $email) {
-            if ($email['primary'] && $email['verified']) {
-                return $email['email'];
-            }
-        }
-
-        return '';
-    }
-
-    /**
-     * @param $accessToken
-     *
-     * @return string
-     */
-    public function getUserName(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
+        return $user['email'] ?? '';
+    }
+
+    /**
+     * Check if the OAuth email is verified
+     *
+     * @link https://docs.github.com/en/rest/users/emails#list-email-addresses-for-the-authenticated-user
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['verified'] ?? false) {
+            return true;
         }
 
-        return '';
+        return false;
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserName(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['name'] ?? '';
     }
 
     /**
@@ -161,7 +166,18 @@ class Github extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token '.\urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token ' . \urlencode($accessToken)]), true);
+
+            $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token ' . \urlencode($accessToken)]);
+
+            $emails = \json_decode($emails, true);
+            foreach ($emails as $email) {
+                if (isset($email['verified']) && $email['verified'] === true) {
+                    $this->user['email'] = $email['email'];
+                    $this->user['verified'] = $email['verified'];
+                    break;
+                }
+            }
         }
 
         return $this->user;

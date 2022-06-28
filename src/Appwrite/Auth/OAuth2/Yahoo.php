@@ -9,21 +9,20 @@ use Appwrite\Auth\OAuth2;
 
 class Yahoo extends OAuth2
 {
+    /**
+     * @var string
+     */
+    private string $endpoint = 'https://api.login.yahoo.com/oauth2/';
 
     /**
      * @var string
      */
-    private $endpoint = 'https://api.login.yahoo.com/oauth2/';
-
-    /**
-     * @var string
-     */
-    private $resourceEndpoint = 'https://api.login.yahoo.com/openid/v1/userinfo';
+    private string $resourceEndpoint = 'https://api.login.yahoo.com/openid/v1/userinfo';
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $scopes = [
         'sdct-r',
         'sdpp-w',
     ];
@@ -31,17 +30,17 @@ class Yahoo extends OAuth2
     /**
      * @var array
      */
-    protected $user = [];
-    
+    protected array $user = [];
+
     /**
      * @var array
      */
-    protected $tokens = [];
+    protected array $tokens = [];
 
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'yahoo';
     }
@@ -60,9 +59,9 @@ class Yahoo extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return $this->endpoint . 'request_auth?'.
+        return $this->endpoint . 'request_auth?' .
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
@@ -79,7 +78,7 @@ class Yahoo extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $headers = [
                 'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
                 'Content-Type: application/x-www-form-urlencoded',
@@ -105,7 +104,7 @@ class Yahoo extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = [
             'Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
@@ -122,7 +121,7 @@ class Yahoo extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -130,51 +129,55 @@ class Yahoo extends OAuth2
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['sub'])) {
-            return $user['sub'];
-        }
-
-        return '';
+        return $user['sub'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
-        }
-
-        return '';
+        return $user['email'] ?? '';
     }
 
     /**
-     * @param $accessToken
+     * Check if the OAuth email is verified
+     *
+     * If present, the email is verified. This was verfied through a manual Yahoo sign up process
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $email = $this->getUserEmail($accessToken);
+
+        return !empty($email);
+    }
+
+    /**
+     * @param string $accessToken
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
-        }
-
-        return '';
+        return $user['name'] ?? '';
     }
 
     /**
@@ -188,7 +191,7 @@ class Yahoo extends OAuth2
             $this->user = \json_decode($this->request(
                 'GET',
                 $this->resourceEndpoint,
-                ['Authorization: Bearer '.\urlencode($accessToken)]
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
             ), true);
         }
 

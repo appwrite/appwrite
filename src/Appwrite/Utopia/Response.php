@@ -76,116 +76,116 @@ use Appwrite\Utopia\Response\Model\UsageUsers;
 class Response extends SwooleResponse
 {
     // General
-    const MODEL_NONE = 'none';
-    const MODEL_ANY = 'any';
-    const MODEL_LOG = 'log';
-    const MODEL_LOG_LIST = 'logList';
-    const MODEL_ERROR = 'error';
-    const MODEL_METRIC = 'metric';
-    const MODEL_METRIC_LIST = 'metricList';
-    const MODEL_ERROR_DEV = 'errorDev';
-    const MODEL_BASE_LIST = 'baseList';
-    const MODEL_USAGE_DATABASE = 'usageDatabase';
-    const MODEL_USAGE_COLLECTION = 'usageCollection';
-    const MODEL_USAGE_USERS = 'usageUsers';
-    const MODEL_USAGE_BUCKETS = 'usageBuckets';
-    const MODEL_USAGE_STORAGE = 'usageStorage';
-    const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
-    const MODEL_USAGE_PROJECT = 'usageProject';
-    
+    public const MODEL_NONE = 'none';
+    public const MODEL_ANY = 'any';
+    public const MODEL_LOG = 'log';
+    public const MODEL_LOG_LIST = 'logList';
+    public const MODEL_ERROR = 'error';
+    public const MODEL_METRIC = 'metric';
+    public const MODEL_METRIC_LIST = 'metricList';
+    public const MODEL_ERROR_DEV = 'errorDev';
+    public const MODEL_BASE_LIST = 'baseList';
+    public const MODEL_USAGE_DATABASE = 'usageDatabase';
+    public const MODEL_USAGE_COLLECTION = 'usageCollection';
+    public const MODEL_USAGE_USERS = 'usageUsers';
+    public const MODEL_USAGE_BUCKETS = 'usageBuckets';
+    public const MODEL_USAGE_STORAGE = 'usageStorage';
+    public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
+    public const MODEL_USAGE_PROJECT = 'usageProject';
+
     // Database
-    const MODEL_COLLECTION = 'collection';
-    const MODEL_COLLECTION_LIST = 'collectionList';
-    const MODEL_INDEX = 'index';
-    const MODEL_INDEX_LIST = 'indexList';
-    const MODEL_DOCUMENT = 'document';
-    const MODEL_DOCUMENT_LIST = 'documentList';
+    public const MODEL_COLLECTION = 'collection';
+    public const MODEL_COLLECTION_LIST = 'collectionList';
+    public const MODEL_INDEX = 'index';
+    public const MODEL_INDEX_LIST = 'indexList';
+    public const MODEL_DOCUMENT = 'document';
+    public const MODEL_DOCUMENT_LIST = 'documentList';
 
     // Database Attributes
-    const MODEL_ATTRIBUTE = 'attribute';
-    const MODEL_ATTRIBUTE_LIST = 'attributeList';
-    const MODEL_ATTRIBUTE_STRING = 'attributeString';
-    const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
-    const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
-    const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
-    const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
-    const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
-    const MODEL_ATTRIBUTE_IP = 'attributeIp';
-    const MODEL_ATTRIBUTE_URL= 'attributeUrl';
+    public const MODEL_ATTRIBUTE = 'attribute';
+    public const MODEL_ATTRIBUTE_LIST = 'attributeList';
+    public const MODEL_ATTRIBUTE_STRING = 'attributeString';
+    public const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+    public const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
+    public const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
+    public const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
+    public const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
+    public const MODEL_ATTRIBUTE_IP = 'attributeIp';
+    public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
 
     // Users
-    const MODEL_USER = 'user';
-    const MODEL_USER_LIST = 'userList';
-    const MODEL_SESSION = 'session';
-    const MODEL_SESSION_LIST = 'sessionList';
-    const MODEL_TOKEN = 'token';
-    const MODEL_JWT = 'jwt';
-    const MODEL_PREFERENCES = 'preferences';
-    
+    public const MODEL_USER = 'user';
+    public const MODEL_USER_LIST = 'userList';
+    public const MODEL_SESSION = 'session';
+    public const MODEL_SESSION_LIST = 'sessionList';
+    public const MODEL_TOKEN = 'token';
+    public const MODEL_JWT = 'jwt';
+    public const MODEL_PREFERENCES = 'preferences';
+
     // Storage
-    const MODEL_FILE = 'file';
-    const MODEL_FILE_LIST = 'fileList';
-    const MODEL_BUCKET = 'bucket';
-    const MODEL_BUCKET_LIST = 'bucketList';
+    public const MODEL_FILE = 'file';
+    public const MODEL_FILE_LIST = 'fileList';
+    public const MODEL_BUCKET = 'bucket';
+    public const MODEL_BUCKET_LIST = 'bucketList';
 
     // Locale
-    const MODEL_LOCALE = 'locale';
-    const MODEL_COUNTRY = 'country';
-    const MODEL_COUNTRY_LIST = 'countryList';
-    const MODEL_CONTINENT = 'continent';
-    const MODEL_CONTINENT_LIST = 'continentList';
-    const MODEL_CURRENCY = 'currency';
-    const MODEL_CURRENCY_LIST = 'currencyList';
-    const MODEL_LANGUAGE = 'language';
-    const MODEL_LANGUAGE_LIST = 'languageList';
-    const MODEL_PHONE = 'phone';
-    const MODEL_PHONE_LIST = 'phoneList';
+    public const MODEL_LOCALE = 'locale';
+    public const MODEL_COUNTRY = 'country';
+    public const MODEL_COUNTRY_LIST = 'countryList';
+    public const MODEL_CONTINENT = 'continent';
+    public const MODEL_CONTINENT_LIST = 'continentList';
+    public const MODEL_CURRENCY = 'currency';
+    public const MODEL_CURRENCY_LIST = 'currencyList';
+    public const MODEL_LANGUAGE = 'language';
+    public const MODEL_LANGUAGE_LIST = 'languageList';
+    public const MODEL_PHONE = 'phone';
+    public const MODEL_PHONE_LIST = 'phoneList';
 
     // Teams
-    const MODEL_TEAM = 'team';
-    const MODEL_TEAM_LIST = 'teamList';
-    const MODEL_MEMBERSHIP = 'membership';
-    const MODEL_MEMBERSHIP_LIST = 'membershipList';
+    public const MODEL_TEAM = 'team';
+    public const MODEL_TEAM_LIST = 'teamList';
+    public const MODEL_MEMBERSHIP = 'membership';
+    public const MODEL_MEMBERSHIP_LIST = 'membershipList';
 
     // Functions
-    const MODEL_FUNCTION = 'function';
-    const MODEL_FUNCTION_LIST = 'functionList';
-    const MODEL_RUNTIME = 'runtime';
-    const MODEL_RUNTIME_LIST = 'runtimeList';
-    const MODEL_DEPLOYMENT = 'deployment';
-    const MODEL_DEPLOYMENT_LIST = 'deploymentList';
-    const MODEL_EXECUTION = 'execution';
-    const MODEL_EXECUTION_LIST = 'executionList';
-    const MODEL_BUILD = 'build';
-    const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
-    const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
- 
+    public const MODEL_FUNCTION = 'function';
+    public const MODEL_FUNCTION_LIST = 'functionList';
+    public const MODEL_RUNTIME = 'runtime';
+    public const MODEL_RUNTIME_LIST = 'runtimeList';
+    public const MODEL_DEPLOYMENT = 'deployment';
+    public const MODEL_DEPLOYMENT_LIST = 'deploymentList';
+    public const MODEL_EXECUTION = 'execution';
+    public const MODEL_EXECUTION_LIST = 'executionList';
+    public const MODEL_BUILD = 'build';
+    public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
+    public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
+
     // Project
-    const MODEL_PROJECT = 'project';
-    const MODEL_PROJECT_LIST = 'projectList';
-    const MODEL_WEBHOOK = 'webhook';
-    const MODEL_WEBHOOK_LIST = 'webhookList';
-    const MODEL_KEY = 'key';
-    const MODEL_KEY_LIST = 'keyList';
-    const MODEL_PLATFORM = 'platform';
-    const MODEL_PLATFORM_LIST = 'platformList';
-    const MODEL_DOMAIN = 'domain';
-    const MODEL_DOMAIN_LIST = 'domainList';
+    public const MODEL_PROJECT = 'project';
+    public const MODEL_PROJECT_LIST = 'projectList';
+    public const MODEL_WEBHOOK = 'webhook';
+    public const MODEL_WEBHOOK_LIST = 'webhookList';
+    public const MODEL_KEY = 'key';
+    public const MODEL_KEY_LIST = 'keyList';
+    public const MODEL_PLATFORM = 'platform';
+    public const MODEL_PLATFORM_LIST = 'platformList';
+    public const MODEL_DOMAIN = 'domain';
+    public const MODEL_DOMAIN_LIST = 'domainList';
 
     // Health
-    const MODEL_HEALTH_STATUS = 'healthStatus';
-    const MODEL_HEALTH_VERSION = 'healthVersion';
-    const MODEL_HEALTH_QUEUE = 'healthQueue';
-    const MODEL_HEALTH_TIME = 'healthTime';
-    const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
-    
+    public const MODEL_HEALTH_STATUS = 'healthStatus';
+    public const MODEL_HEALTH_VERSION = 'healthVersion';
+    public const MODEL_HEALTH_QUEUE = 'healthQueue';
+    public const MODEL_HEALTH_TIME = 'healthTime';
+    public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
+
     // Deprecated
-    const MODEL_PERMISSIONS = 'permissions';
-    const MODEL_RULE = 'rule';
-    const MODEL_TASK = 'task';
+    public const MODEL_PERMISSIONS = 'permissions';
+    public const MODEL_RULE = 'rule';
+    public const MODEL_TASK = 'task';
 
     // Tests (keep last)
-    const MODEL_MOCK = 'mock';
+    public const MODEL_MOCK = 'mock';
 
     /**
      * @var Filter
@@ -302,7 +302,7 @@ class Response extends SwooleResponse
     /**
      * HTTP content types
      */
-    const CONTENT_TYPE_YAML = 'application/x-yaml';
+    public const CONTENT_TYPE_YAML = 'application/x-yaml';
 
     /**
      * List of defined output objects
@@ -329,7 +329,7 @@ class Response extends SwooleResponse
     public function getModel(string $key): Model
     {
         if (!isset($this->models[$key])) {
-            throw new Exception('Undefined model: '.$key);
+            throw new Exception('Undefined model: ' . $key);
         }
 
         return $this->models[$key];
@@ -392,13 +392,13 @@ class Response extends SwooleResponse
                 if (!is_null($rule['default'])) {
                     $document->setAttribute($key, $rule['default']);
                 } else {
-                    throw new Exception('Model '.$model->getName().' is missing response key: '.$key);
+                    throw new Exception('Model ' . $model->getName() . ' is missing response key: ' . $key);
                 }
             }
 
             if ($rule['array']) {
                 if (!is_array($data[$key])) {
-                    throw new Exception($key.' must be an array of type '.$rule['type']);
+                    throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
                 foreach ($data[$key] as &$item) {
@@ -408,7 +408,7 @@ class Response extends SwooleResponse
                                 $condition = false;
                                 foreach ($this->getModel($type)->conditions as $attribute => $val) {
                                     $condition = $item->getAttribute($attribute) === $val;
-                                    if(!$condition) {
+                                    if (!$condition) {
                                         break;
                                     }
                                 }
@@ -422,7 +422,7 @@ class Response extends SwooleResponse
                         }
 
                         if (!array_key_exists($ruleType, $this->models)) {
-                            throw new Exception('Missing model for rule: '. $ruleType);
+                            throw new Exception('Missing model for rule: ' . $ruleType);
                         }
 
                         $item = $this->output($item, $ruleType);
@@ -465,7 +465,7 @@ class Response extends SwooleResponse
     /**
      * @return array
      */
-    public function getPayload():array
+    public function getPayload(): array
     {
         return $this->payload;
     }

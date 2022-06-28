@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Appwrite\Runtimes\Runtimes;
@@ -17,7 +18,10 @@ use Utopia\Orchestration\Adapter\DockerCLI;
 use Utopia\Orchestration\Orchestration;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Linode;
+use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
 use Utopia\Swoole\Request;
@@ -35,7 +39,7 @@ Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 const MAINTENANCE_INTERVAL = 3600; // 3600 seconds = 1 hour
 
 /**
-* Create a Swoole table to store runtime information 
+* Create a Swoole table to store runtime information
 */
 $activeRuntimes = new Swoole\Table(1024);
 $activeRuntimes->column('id', Swoole\Table::TYPE_STRING, 256);
@@ -64,8 +68,8 @@ $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
 $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 $logger = null;
 
-if(!empty($providerName) && !empty($providerConfig) && Logger::hasProvider($providerName)) {
-    $classname = '\\Utopia\\Logger\\Adapter\\'.\ucfirst($providerName);
+if (!empty($providerName) && !empty($providerConfig) && Logger::hasProvider($providerName)) {
+    $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
     $adapter = new $classname($providerConfig);
     $logger = new Logger($adapter);
 }
@@ -86,7 +90,7 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
 
         if ($route) {
             $log->addTag('method', $route->getMethod());
-            $log->addTag('url',  $route->getPath());
+            $log->addTag('url', $route->getPath());
         }
 
         $log->addTag('code', $error->getCode());
@@ -110,11 +114,13 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
     Console::error('[Error] Message: ' . $error->getMessage());
     Console::error('[Error] File: ' . $error->getFile());
     Console::error('[Error] Line: ' . $error->getLine());
-};
+}
 
-function getStorageDevice($root): Device {
+function getStorageDevice($root): Device
+{
     switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
-        case Storage::DEVICE_LOCAL:default:
+        case Storage::DEVICE_LOCAL:
+        default:
             return new Local($root);
         case Storage::DEVICE_S3:
             $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
@@ -130,6 +136,27 @@ function getStorageDevice($root): Device {
             $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
             return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+        case Storage::DEVICE_BACKBLAZE:
+            $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
+            $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
+            $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
+            $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
+            $backblazeAcl = 'private';
+            return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
+        case Storage::DEVICE_LINODE:
+            $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
+            $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
+            $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
+            $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
+            $linodeAcl = 'private';
+            return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
+        case Storage::DEVICE_WASABI:
+            $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
+            $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
+            $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
+            $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
+            $wasabiAcl = 'private';
+            return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
     }
 }
 
@@ -138,20 +165,22 @@ App::post('/v1/runtimes')
     ->param('runtimeId', '', new Text(64), 'Unique runtime ID.')
     ->param('source', '', new Text(0), 'Path to source files.')
     ->param('destination', '', new Text(0), 'Destination folder to store build files into.', true)
-    ->param('vars', [], new Assoc(), 'Environment Variables required for the build')
-    ->param('commands', [], new ArrayList(new Text(0)), 'Commands required to build the container')
-    ->param('runtime', '', new Text(128), 'Runtime for the cloud function')
-    ->param('network', '', new Text(128), 'Network to attach the container to')
-    ->param('baseImage', '', new Text(128), 'Base image name of the runtime')
-    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file', true)
-    ->param('remove', false, new Boolean(), 'Remove a runtime after execution')
-    ->param('workdir', '', new Text(256), 'Working directory', true)
+    ->param('vars', [], new Assoc(), 'Environment Variables required for the build.')
+    ->param('commands', [], new ArrayList(new Text(1024), 100), 'Commands required to build the container. Maximum of 100 commands are allowed, each 1024 characters long.')
+    ->param('runtime', '', new Text(128), 'Runtime for the cloud function.')
+    ->param('baseImage', '', new Text(128), 'Base image name of the runtime.')
+    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file.', true)
+    ->param('remove', false, new Boolean(), 'Remove a runtime after execution.')
+    ->param('workdir', '', new Text(256), 'Working directory.', true)
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
-    ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $network, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
-
+    ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
         if ($activeRuntimes->exists($runtimeId)) {
+            if ($activeRuntimes->get($runtimeId)['status'] == 'pending') {
+                throw new \Exception('A runtime with the same ID is already being created. Attempt a execution soon.', 500);
+            }
+
             throw new Exception('Runtime already exists.', 409);
         }
 
@@ -163,11 +192,24 @@ App::post('/v1/runtimes')
         $endTime = 0;
         $orchestration = $orchestrationPool->get();
 
+        $secret = \bin2hex(\random_bytes(16));
+
+        if (!$remove) {
+            $activeRuntimes->set($runtimeId, [
+                'id' => $containerId,
+                'name' => $runtimeId,
+                'created' => $startTime,
+                'updated' => $endTime,
+                'status' => 'pending',
+                'key' => $secret,
+            ]);
+        }
+
         try {
             Console::info('Building container : ' . $runtimeId);
-            
-            /** 
-             * Temporary file paths in the executor 
+
+            /**
+             * Temporary file paths in the executor
              */
             $tmpSource = "/tmp/$runtimeId/src/code.tar.gz";
             $tmpBuild = "/tmp/$runtimeId/builds/code.tar.gz";
@@ -178,7 +220,7 @@ App::post('/v1/runtimes')
             $sourceDevice = getStorageDevice("/");
             $localDevice = new Local();
             $buffer = $sourceDevice->read($source);
-            if(!$localDevice->write($tmpSource, $buffer)) {
+            if (!$localDevice->write($tmpSource, $buffer)) {
                 throw new Exception('Failed to copy source code to temporary directory', 500);
             };
 
@@ -194,7 +236,6 @@ App::post('/v1/runtimes')
             /**
              * Create container
              */
-            $secret = \bin2hex(\random_bytes(16));
             $vars = \array_merge($vars, [
                 'INTERNAL_RUNTIME_KEY' => $secret,
                 'INTERNAL_RUNTIME_ENTRYPOINT' => $entrypoint,
@@ -204,7 +245,7 @@ App::post('/v1/runtimes')
                 ->setCpus((int) App::getEnv('_APP_FUNCTIONS_CPUS', 0))
                 ->setMemory((int) App::getEnv('_APP_FUNCTIONS_MEMORY', 0))
                 ->setSwap((int) App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 0));
-            
+
             /** Keep the container alive if we have commands to be executed */
             $entrypoint = !empty($commands) ? [
                 'tail',
@@ -226,8 +267,8 @@ App::post('/v1/runtimes')
                 ],
                 workdir: $workdir,
                 volumes: [
-                    \dirname($tmpSource). ':/tmp:rw',
-                    \dirname($tmpBuild). ':/usr/code:rw'
+                    \dirname($tmpSource) . ':/tmp:rw',
+                    \dirname($tmpBuild) . ':/usr/code:rw'
                 ]
             );
 
@@ -235,11 +276,9 @@ App::post('/v1/runtimes')
                 throw new Exception('Failed to create build container', 500);
             }
 
-            if (!empty($network)) {
-                $orchestration->networkConnect($runtimeId, $network);
-            }
+            $orchestration->networkConnect($runtimeId, App::getEnv('OPEN_RUNTIMES_NETWORK', 'appwrite_runtimes'));
 
-            /** 
+            /**
              * Execute any commands if they were provided
              */
             if (!empty($commands)) {
@@ -248,7 +287,7 @@ App::post('/v1/runtimes')
                     command: $commands,
                     stdout: $stdout,
                     stderr: $stderr,
-                    timeout: App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)
+                    timeout: App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)
                 );
 
                 if (!$status) {
@@ -269,7 +308,7 @@ App::post('/v1/runtimes')
                 $outputPath = $destinationDevice->getPath(\uniqid() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
 
                 $buffer = $localDevice->read($tmpBuild);
-                if(!$destinationDevice->write($outputPath, $buffer, $localDevice->getFileMimeType($tmpBuild))) {
+                if (!$destinationDevice->write($outputPath, $buffer, $localDevice->getFileMimeType($tmpBuild))) {
                     throw new Exception('Failed to move built code to storage', 500);
                 };
 
@@ -283,8 +322,8 @@ App::post('/v1/runtimes')
             $endTime = \time();
             $container = array_merge($container, [
                 'status' => 'ready',
-                'stdout' => \utf8_encode($stdout),
-                'stderr' => \utf8_encode($stderr),
+                'response' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
+                'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
                 'startTime' => $startTime,
                 'endTime' => $endTime,
                 'duration' => $endTime - $startTime,
@@ -302,21 +341,23 @@ App::post('/v1/runtimes')
             }
 
             Console::success('Build Stage completed in ' . ($endTime - $startTime) . ' seconds');
-        
         } catch (Throwable $th) {
             Console::error('Build failed: ' . $th->getMessage() . $stdout);
+
             throw new Exception($th->getMessage() . $stdout, 500);
         } finally {
             // Container cleanup
-            if($remove) {
+            if ($remove) {
                 if (!empty($containerId)) {
                     // If container properly created
                     $orchestration->remove($containerId, true);
+                    $activeRuntimes->del($runtimeId);
                 } else {
                     // If whole creation failed, but container might have been initialized
                     try {
                         // Try to remove with contaier name instead of ID
                         $orchestration->remove($runtimeId, true);
+                        $activeRuntimes->del($runtimeId);
                     } catch (Throwable $th) {
                         // If fails, means initialization also failed.
                         // Contianer is not there, no need to remove
@@ -341,7 +382,7 @@ App::get('/v1/runtimes')
     ->action(function ($activeRuntimes, Response $response) {
         $runtimes = [];
 
-        foreach($activeRuntimes as $runtime) {
+        foreach ($activeRuntimes as $runtime) {
             $runtimes[] = $runtime;
         }
 
@@ -357,7 +398,7 @@ App::get('/v1/runtimes/:runtimeId')
     ->inject('response')
     ->action(function ($runtimeId, $activeRuntimes, Response $response) {
 
-        if(!$activeRuntimes->exists($runtimeId)) {
+        if (!$activeRuntimes->exists($runtimeId)) {
             throw new Exception('Runtime not found', 404);
         }
 
@@ -376,7 +417,7 @@ App::delete('/v1/runtimes/:runtimeId')
     ->inject('response')
     ->action(function (string $runtimeId, $orchestrationPool, $activeRuntimes, Response $response) {
 
-        if(!$activeRuntimes->exists($runtimeId)) {
+        if (!$activeRuntimes->exists($runtimeId)) {
             throw new Exception('Runtime not found', 404);
         }
 
@@ -410,17 +451,29 @@ App::delete('/v1/runtimes/:runtimeId')
 
 App::post('/v1/execution')
     ->desc('Create an execution')
-    ->param('runtimeId', '', new Text(64), 'The runtimeID to execute')
-    ->param('vars', [], new Assoc(), 'Environment variables required for the build')
-    ->param('data', '{}', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
+    ->param('runtimeId', '', new Text(64), 'The runtimeID to execute.')
+    ->param('vars', [], new Assoc(), 'Environment variables required for the build.')
+    ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(
         function (string $runtimeId, array $vars, string $data, $timeout, $activeRuntimes, Response $response) {
-
             if (!$activeRuntimes->exists($runtimeId)) {
                 throw new Exception('Runtime not found. Please create the runtime.', 404);
+            }
+
+            for ($i = 0; $i < 5; $i++) {
+                if ($activeRuntimes->get($runtimeId)['status'] === 'pending') {
+                    Console::info('Waiting for runtime to be ready...');
+                    sleep(1);
+                } else {
+                    break;
+                }
+
+                if ($i === 4) {
+                    throw new Exception('Runtime failed to launch in allocated time.', 500);
+                }
             }
 
             $runtime = $activeRuntimes->get($runtimeId);
@@ -430,7 +483,7 @@ App::post('/v1/execution')
             }
 
             Console::info('Executing Runtime: ' . $runtimeId);
-            
+
             $execution = [];
             $executionStart = \microtime(true);
             $stdout = '';
@@ -453,71 +506,59 @@ App::post('/v1/execution')
             \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
             \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-    
+
             \curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
                 'Content-Length: ' . \strlen($body),
                 'x-internal-challenge: ' . $secret,
                 'host: null'
             ]);
-    
+
             $executorResponse = \curl_exec($ch);
-    
+
             $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    
+
             $error = \curl_error($ch);
-    
+
             $errNo = \curl_errno($ch);
-    
+
             \curl_close($ch);
 
-            // If timeout error
-            if (in_array($errNo, [CURLE_OPERATION_TIMEDOUT, 110])) {
-                $statusCode = 124;
+            switch (true) {
+                /** No Error. */
+                case $errNo === 0:
+                    break;
+                /** Runtime not ready for requests yet. 111 is the swoole error code for Connection Refused - see https://openswoole.com/docs/swoole-error-code */
+                case $errNo === 111:
+                    throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 406);
+                /** Any other CURL error */
+                default:
+                    throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 500);
             }
-        
-            // 110 is the Swoole error code for timeout, see: https://www.swoole.co.uk/docs/swoole-error-code
-            if ($errNo !== 0 && $errNo !== CURLE_COULDNT_CONNECT && $errNo !== CURLE_OPERATION_TIMEDOUT && $errNo !== 110) {
-                throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 406);
+
+            switch (true) {
+                case $statusCode >= 500:
+                    $stderr = $executorResponse ?? 'Internal Runtime error.';
+                    break;
+                case $statusCode >= 100:
+                    $stdout = $executorResponse;
+                    break;
+                default:
+                    $stderr = $executorResponse ?? 'Execution failed.';
+                    break;
             }
-        
-            $executionData = [];
-        
-            if (!empty($executorResponse)) {
-                $executionData = json_decode($executorResponse, true);
-            }
-        
-            if (isset($executionData['code'])) {
-                $statusCode = $executionData['code'];
-            }
-        
-            if ($statusCode === 500) {
-                if (isset($executionData['message'])) {
-                    $stderr = $executionData['message'];
-                } else {
-                    $stderr = 'Internal Runtime error';
-                }
-            } else if ($statusCode === 124) {
-                $stderr = 'Execution timed out.';
-            } else if ($statusCode === 0) {
-                $stderr = 'Execution failed.';
-            } else if ($statusCode >= 200 && $statusCode < 300) {
-                $stdout = $executorResponse;
-            } else {
-                $stderr = 'Execution failed.';
-            }
-        
+
             $executionEnd = \microtime(true);
             $executionTime = ($executionEnd - $executionStart);
-            $functionStatus = ($statusCode >= 200 && $statusCode < 300) ? 'completed' : 'failed';
-        
+            $functionStatus = ($statusCode >= 500) ? 'failed' : 'completed';
+
             Console::success('Function executed in ' . $executionTime . ' seconds, status: ' . $functionStatus);
-        
+
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'stdout' => \utf8_encode(\mb_substr($stdout, -16384)),
-                'stderr' => \utf8_encode(\mb_substr($stderr, -16384)),
+                'response' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
+                'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
                 'time' => $executionTime,
             ];
 
@@ -543,7 +584,7 @@ App::setResource('activeRuntimes', fn() => $activeRuntimes);
 App::error(function ($utopia, $error, $request, $response) {
     $route = $utopia->match($request);
     logError($error, "httpError", $route);
-    
+
     switch ($error->getCode()) {
         case 400: // Error allowed publicly
         case 401: // Error allowed publicly
@@ -562,7 +603,7 @@ App::error(function ($utopia, $error, $request, $response) {
         default:
             $code = 500; // All other errors get the generic 500 server error status code
     }
-    
+
     $output = [
         'message' => $error->getMessage(),
         'code' => $error->getCode(),
@@ -583,24 +624,24 @@ App::error(function ($utopia, $error, $request, $response) {
 
 App::init(function ($request, $response) {
      $secretKey = $request->getHeader('x-appwrite-executor-key', '');
-     if (empty($secretKey)) {
-         throw new Exception('Missing executor key', 401);
-     }
-
-     if ($secretKey !== App::getEnv('_APP_EXECUTOR_SECRET', '')) {
+    if (empty($secretKey)) {
         throw new Exception('Missing executor key', 401);
-     }
+    }
+
+    if ($secretKey !== App::getEnv('_APP_EXECUTOR_SECRET', '')) {
+        throw new Exception('Missing executor key', 401);
+    }
 }, ['request', 'response']);
 
 
 $http->on('start', function ($http) {
     global $orchestrationPool;
     global $activeRuntimes;
-    
-    /** 
+
+    /**
      * Warmup: make sure images are ready to run fast 🚀
      */
-    $runtimes = new Runtimes();
+    $runtimes = new Runtimes('v1');
     $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
     $runtimes = $runtimes->getAll(true, $allowList);
     foreach ($runtimes as $runtime) {
@@ -688,11 +729,10 @@ $http->on('start', function ($http) {
             }
         }
     });
-
 });
 
 
-$http->on('beforeShutdown', function() {
+$http->on('beforeShutdown', function () {
     global $orchestrationPool;
     Console::info('Cleaning up containers before shutdown...');
 
@@ -701,7 +741,7 @@ $http->on('beforeShutdown', function() {
     $orchestrationPool->put($orchestration);
 
     foreach ($functionsToRemove as $container) {
-        go(function () use ($orchestrationPool, $container) { 
+        go(function () use ($orchestrationPool, $container) {
             try {
                 $orchestration = $orchestrationPool->get();
                 $orchestration->remove($container->getId(), true);
@@ -727,7 +767,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         logError($th, "serverError");
         $swooleResponse->setStatusCode(500);
         $output = [
-            'message' => 'Error: '. $th->getMessage(),
+            'message' => 'Error: ' . $th->getMessage(),
             'code' => 500,
             'file' => $th->getFile(),
             'line' => $th->getLine(),

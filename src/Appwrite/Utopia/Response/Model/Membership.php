@@ -22,23 +22,29 @@ class Membership extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('userName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User name.',
+                'default' => '',
+                'example' => 'John Doe',
+            ])
+            ->addRule('userEmail', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User email address.',
+                'default' => '',
+                'example' => 'john@appwrite.io',
+            ])
             ->addRule('teamId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Team ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('name', [
+            ->addRule('teamName', [
                 'type' => self::TYPE_STRING,
-                'description' => 'User name.',
+                'description' => 'Team name.',
                 'default' => '',
                 'example' => 'VIP',
-            ])
-            ->addRule('email', [
-                'type' => self::TYPE_STRING,
-                'description' => 'User email address.',
-                'default' => '',
-                'example' => 'john@appwrite.io',
             ])
             ->addRule('invited', [
                 'type' => self::TYPE_INTEGER,
@@ -73,7 +79,7 @@ class Membership extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Membership';
     }
@@ -83,7 +89,7 @@ class Membership extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_MEMBERSHIP;
     }
