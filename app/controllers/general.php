@@ -19,6 +19,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
+use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -176,6 +177,9 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
                 break;
             case version_compare($responseFormat, '0.13.4', '<='):
                 Response::setFilter(new ResponseV13());
+                break;
+            case version_compare($responseFormat, '0.14.0', '<='):
+                Response::setFilter(new ResponseV14());
                 break;
             default:
                 Response::setFilter(null);
