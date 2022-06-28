@@ -79,8 +79,8 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_AUDIT:
-                $timestamp = $payload['timestamp'] ?? 0;
-                $document = new Document($payload['document'] ?? []);
+                $timestamp = $this->args['timestamp'] ?? 0;
+                $document = new Document($this->args['document'] ?? []);
 
                 if (!empty($timestamp)) {
                     $this->deleteAuditLogs($this->args['timestamp']);
