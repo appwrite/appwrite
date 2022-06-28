@@ -148,7 +148,7 @@ To test if the translation is properly loaded, we will send a GET request to get
 First of all, we need to start a local instance of Appwrite. Thanks to Docker, this can be done using one command.
 
 ```shell
-$ docker-compose up -d
+docker compose up -d
 ```
 
 If this is your first time running Appwrite, it may take up to few minutes to download all images and start all containers. Once everything is started, you should see Appwrite running on `http://localhost:80`. When you visit this URL, it will ask you to sign up. After that, it will show you your empty dashboard where you need to create a new project - give it any name you want. Then you need to go to `Settings` of the project and copy `Project-ID`.

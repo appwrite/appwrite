@@ -28,9 +28,9 @@ $cli
         Console::success('Starting Data Migration to version ' . $version);
 
         $db = $register->get('db', true);
-        $cache = $register->get('cache', true);
-
-        $cache = new Cache(new RedisCache($cache));
+        $redis = $register->get('cache', true);
+        $redis->flushAll();
+        $cache = new Cache(new RedisCache($redis));
 
         $projectDB = new Database(new MariaDB($db), $cache);
         $projectDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
@@ -79,5 +79,6 @@ $cli
         }
 
         Swoole\Event::wait(); // Wait for Coroutines to finish
+        $redis->flushAll();
         Console::success('Data Migration Completed');
     });

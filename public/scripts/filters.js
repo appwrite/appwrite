@@ -29,13 +29,13 @@ window.ls.filter
     return !Number.isNaN($value) ? $value.toLocaleString() : "";
   })
   .add("date", function ($value, date) {
-    return date.format("Y-m-d", $value);
+    return $value ? date.format("Y-m-d", $value) : "";
   })
   .add("dateTime", function ($value, date) {
-    return date.format("Y-m-d H:i", $value);
+    return $value ? date.format("Y-m-d H:i", $value) : "";
   })
   .add("dateText", function ($value, date) {
-    return date.format("d M Y", $value);
+    return $value ? date.format("d M Y", $value) : "";
   })
   .add("timeSince", function ($value) {
     $value = $value * 1000;
@@ -212,10 +212,10 @@ window.ls.filter
     let document = container.get('project-document');
 
     if (collection && document && !document.$id) {
-      return 'database.createDocument';
+      return 'databases.createDocument';
     }
 
-    return 'database.updateDocument';
+    return 'databases.updateDocument';
   })
   .add("documentSuccess", function (container) {
     let document = container.get('project-document');

@@ -21,11 +21,29 @@ class Key extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Key creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Key update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Key name.',
                 'default' => '',
                 'example' => 'My API Key',
+            ])
+            ->addRule('expire', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Key expiration in Unix timestamp.',
+                'default' => 0,
+                'example' => '1653990687',
             ])
             ->addRule('scopes', [
                 'type' => self::TYPE_STRING,

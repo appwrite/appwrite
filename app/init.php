@@ -23,11 +23,17 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Phone\Mock;
+use Appwrite\Auth\Phone\Telesign;
+use Appwrite\Auth\Phone\TextMagic;
+use Appwrite\Auth\Phone\Twilio;
+use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Phone;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
@@ -78,9 +84,10 @@ const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
+const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
-const APP_CACHE_BUSTER = 305;
-const APP_VERSION_STABLE = '0.14.2';
+const APP_CACHE_BUSTER = 400;
+const APP_VERSION_STABLE = '0.15.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -118,6 +125,7 @@ const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
 // Deletion Types
+const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
 const DELETE_TYPE_PROJECTS = 'projects';
@@ -132,6 +140,7 @@ const DELETE_TYPE_CERTIFICATES = 'certificates';
 const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
+const DELETE_TYPE_SESSIONS = 'sessions';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -256,8 +265,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('attributes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
-            ], $database->getAttributeLimit());
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
+                new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
+            ], $database->getAttributeLimit(), 0, []);
     }
 );
 
@@ -269,7 +279,8 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('indexes', [
-                new Query('collectionId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
+                new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
             ], 64);
     }
 );
@@ -282,7 +293,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('platforms', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -295,7 +306,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('domains', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -308,7 +319,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -321,7 +332,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('webhooks', [
-                new Query('projectId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY);
     }
 );
@@ -333,7 +344,7 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database->find('sessions', [
-            new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+            new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
         ], APP_LIMIT_SUBQUERY));
     }
 );
@@ -346,7 +357,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn() => $database
             ->find('tokens', [
-                new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY));
     }
 );
@@ -359,7 +370,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn() => $database
             ->find('memberships', [
-                new Query('userId', Query::TYPE_EQUAL, [$document->getId()])
+                new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
             ], APP_LIMIT_SUBQUERY));
     }
 );
@@ -460,6 +471,11 @@ $register->set('dbPool', function () {
         ->withPassword($dbPass)
         ->withOptions([
             PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+            PDO::ATTR_TIMEOUT => 3, // Seconds
+            PDO::ATTR_PERSISTENT => true,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => true,
+            PDO::ATTR_STRINGIFY_FETCHES => true,
         ]),
         64
     );
@@ -541,7 +557,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/db/DBIP/dbip-country-lite-2022-03.mmdb');
+    return new Reader(__DIR__ . '/db/DBIP/dbip-country-lite-2022-06.mmdb');
 });
 $register->set('db', function () {
  // This is usually for our workers or CLI commands scope
@@ -552,11 +568,12 @@ $register->set('db', function () {
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
     $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
         PDO::ATTR_TIMEOUT => 3, // Seconds
         PDO::ATTR_PERSISTENT => true,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_EMULATE_PREPARES => true,
+        PDO::ATTR_STRINGIFY_FETCHES => true,
     ));
 
     return $pdo;
@@ -685,6 +702,7 @@ App::setResource('audits', fn() => new Audit());
 App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
+App::setResource('messaging', fn() => new Phone());
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
@@ -835,6 +853,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 App::setResource('console', function () {
     return new Document([
         '$id' => 'console',
+        '$internalId' => 'console',
         'name' => 'Appwrite',
         '$collection' => 'projects',
         'description' => 'Appwrite core engine',
@@ -864,12 +883,12 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function ($db, $cache, $project) {
+App::setResource('dbForProject', function ($db, $cache, Document $project) {
     $cache = new Cache(new RedisCache($cache));
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace("_{$project->getId()}");
+    $database->setNamespace("_{$project->getInternalId()}");
 
     return $database;
 }, ['db', 'cache', 'project']);
@@ -960,3 +979,17 @@ App::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
 }, ['register']);
+
+App::setResource('phone', function () {
+    $dsn = new DSN(App::getEnv('_APP_PHONE_PROVIDER'));
+    $user = $dsn->getUser();
+    $secret = $dsn->getPassword();
+
+    return match ($dsn->getHost()) {
+        'mock' => new Mock('', ''), // used for tests
+        'twilio' => new Twilio($user, $secret),
+        'text-magic' => new TextMagic($user, $secret),
+        'telesign' => new Telesign($user, $secret),
+        default => null
+    };
+});

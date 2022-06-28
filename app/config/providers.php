@@ -71,6 +71,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false
     ],
+    'dailymotion' => [
+        'name' => 'Dailymotion',
+        'developers' => 'https://developers.dailymotion.com/api/',
+        'icon' => 'icon-dailymotion',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false
+    ],
     'discord' => [
         'name' => 'Discord',
         'developers' => 'https://discordapp.com/developers/docs/topics/oauth2',
@@ -301,6 +311,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'zoom' => [
+        'name' => 'Zoom',
+        'developers' => 'https://marketplace.zoom.us/docs/guides/auth/oauth/',
+        'icon' => 'icon-zoom',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     // 'instagram' => [
     //     'name' => 'Instagram',
     //     'developers' => 'https://www.instagram.com/developer/',
@@ -317,16 +337,7 @@ return [ // Ordered by ABC.
     //     'beta' => false,
     //     'mock' => false,
     // ],
-    'zoom' => [
-        'name' => 'Zoom',
-        'developers' => 'https://marketplace.zoom.us/docs/guides/auth/oauth/',
-        'icon' => 'icon-zoom',
-        'enabled' => true,
-        'sandbox' => false,
-        'form' => false,
-        'beta' => false,
-        'mock' => false,
-    ],
+
     // Keep Last
     'mock' => [
         'name' => 'Mock',

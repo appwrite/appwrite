@@ -48,6 +48,11 @@ return [
         'description' => 'SMTP is disabled on your Appwrite instance. You can <a href="/docs/email-delivery">learn more about setting up SMTP</a> in our docs.',
         'code' => 503,
     ],
+    Exception::GENERAL_PHONE_DISABLED => [
+        'name' => Exception::GENERAL_PHONE_DISABLED,
+        'description' => 'Phone provider is not configured. Please check the _APP_PHONE_PROVIDER environment variable of your Appwrite server.',
+        'code' => 503,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
@@ -169,6 +174,16 @@ return [
         'name' => Exception::USER_AUTH_METHOD_UNSUPPORTED,
         'description' => 'The requested authentication method is either disabled or unsupported. Please check the supported authentication methods in the Appwrite console.',
         'code' => 501,
+    ],
+    Exception::USER_PHONE_ALREADY_EXISTS => [
+        'name' => Exception::USER_PHONE_ALREADY_EXISTS,
+        'description' => 'A user with the same phone number already exists in the current project.',
+        'code' => 409,
+    ],
+    Exception::USER_PHONE_NOT_FOUND => [
+        'name' => Exception::USER_PHONE_NOT_FOUND,
+        'description' => 'The current user does not have a phone number associated with their account.',
+        'code' => 400,
     ],
 
     /** Teams */
