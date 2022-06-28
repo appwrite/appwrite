@@ -727,6 +727,24 @@ trait DatabasesBase
         $this->assertCount(1, $releaseYearIndex['body']['attributes']);
         $this->assertEquals('releaseYear', $releaseYearIndex['body']['attributes'][0]);
 
+        $releaseWithDate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'releaseYearDated',
+            'type' => 'key',
+            'attributes' => ['releaseYear', '$createdAt', '$updatedAt'],
+        ]);
+
+        $this->assertEquals(201, $releaseWithDate['headers']['status-code']);
+        $this->assertEquals('releaseYearDated', $releaseWithDate['body']['key']);
+        $this->assertEquals('key', $releaseWithDate['body']['type']);
+        $this->assertCount(3, $releaseWithDate['body']['attributes']);
+        $this->assertEquals('releaseYear', $releaseWithDate['body']['attributes'][0]);
+        $this->assertEquals('$createdAt', $releaseWithDate['body']['attributes'][1]);
+        $this->assertEquals('$updatedAt', $releaseWithDate['body']['attributes'][2]);
+
         // wait for database worker to create index
         sleep(2);
 
@@ -737,11 +755,13 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['indexes']);
-        $this->assertCount(2, $movies['body']['indexes']);
+        $this->assertCount(3, $movies['body']['indexes']);
         $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
+        $this->assertEquals($releaseWithDate['body']['key'], $movies['body']['indexes'][2]['key']);
         $this->assertEquals('available', $movies['body']['indexes'][0]['status']);
         $this->assertEquals('available', $movies['body']['indexes'][1]['status']);
+        $this->assertEquals('available', $movies['body']['indexes'][2]['status']);
 
         return $data;
     }
