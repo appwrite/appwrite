@@ -583,11 +583,11 @@ class V14 extends Migration
                 break;
             case 'attributes':
             case 'indexes':
+                $internalId = $this->projectDB->getDocument('database_1', $document->getAttribute('collectionId'))->getInternalId();
                 /**
                  * Add Internal ID 'collectionId' for Subqueries.
                  */
                 if (!empty($document->getAttribute('collectionId')) && is_null($document->getAttribute('collectionInternalId'))) {
-                    $internalId = $this->projectDB->getDocument('database_1', $document->getAttribute('collectionId'))->getInternalId();
                     $document->setAttribute('collectionInternalId', $internalId);
                 }
                 /**
@@ -608,7 +608,7 @@ class V14 extends Migration
                      * Re-create Collection Document
                      */
                     $this->projectDB->deleteDocument($document->getCollection(), $document->getId());
-                    $this->projectDB->createDocument($document->getCollection(), $document->setAttribute('$id', "1_{$document->getInternalId()}_{$document->getAttribute('key')}"));
+                    $this->projectDB->createDocument($document->getCollection(), $document->setAttribute('$id', "1_{$internalId}_{$document->getAttribute('key')}"));
                 } catch (\Throwable $th) {
                     Console::warning("Create Collection Document - {$th->getMessage()}");
                 }
