@@ -50,6 +50,11 @@
   - Token (only `$createdAt`)
 - Added Databases Resource to the Database Service by @lohanidamodar in https://github.com/appwrite/appwrite/pull/3338
   - Added `databases.read` and `databases.write` Scopes for API Keys
+- Added New Runtimes
+  - Dart 2.17
+  - Deno 1.21
+  - Java 18
+  - Node 18
 - Webhooks now have a Signature Key for proof of Origin by @shimonewman in https://github.com/appwrite/appwrite/pull/3351
 - Start using Docker Compose V2 (from `docker-compose` to `docker compose`) by @Meldiron in https://github.com/appwrite/appwrite/pull/3362
 - Added support for selfhosted Gitlab (OAuth) by @Meldiron in https://github.com/appwrite/appwrite/pull/3366
