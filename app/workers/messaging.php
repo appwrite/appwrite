@@ -49,7 +49,7 @@ class MessagingV1 extends Worker
             return;
         }
 
-        if (!$this->from) {
+        if (empty($this->from)) {
             Console::info('Skipped sms processing. No phone number has been set.');
             return;
         }
