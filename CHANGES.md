@@ -59,6 +59,7 @@
 - Start using Docker Compose V2 (from `docker-compose` to `docker compose`) by @Meldiron in https://github.com/appwrite/appwrite/pull/3362
 - Added support for selfhosted Gitlab (OAuth) by @Meldiron in https://github.com/appwrite/appwrite/pull/3366
 - Added Dailymotion OAuth Provider by @2002Bishwajeet in https://github.com/appwrite/appwrite/pull/3371
+- Added Autodesk OAuth Provider by @Haimantika in https://github.com/appwrite/appwrite/pull/3420
 - Ignore Service Checks when using API Key by @stnguyen90 in https://github.com/appwrite/appwrite/pull/3270
 - Added WebM as MIME- and Preview Type by @chuongtang in https://github.com/appwrite/appwrite/pull/3327
 - Expired User Sessions are now deleted by the Maintenance Worker by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3324
