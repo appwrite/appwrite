@@ -130,7 +130,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 ENV PATH=/root/.cargo/bin:$PATH
 
-RUN apt-get update && apt-get install musl-tools build-essential libclang-dev clang-11 git tree -y
+RUN apt-get update && apt-get install musl-tools build-essential clang-11 git -y
 RUN rustup target add $(uname -m)-unknown-linux-musl
 
 # Install ZigBuild for easier cross-compilation
