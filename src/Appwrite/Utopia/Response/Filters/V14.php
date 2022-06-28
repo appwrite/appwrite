@@ -29,7 +29,6 @@ class V14 extends Filter
             case Response::MODEL_MEMBERSHIP:
             case Response::MODEL_PLATFORM:
             case Response::MODEL_PROJECT:
-            case Response::MODEL_PROJECT:
             case Response::MODEL_USER:
             case Response::MODEL_WEBHOOK:
                 $parsedResponse = $this->parseRemoveAttributes($content, ['$createdAt', '$updatedAt']);
