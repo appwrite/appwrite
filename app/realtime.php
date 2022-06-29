@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
