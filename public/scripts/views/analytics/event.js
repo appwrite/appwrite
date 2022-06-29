@@ -16,17 +16,13 @@
           element.getAttribute("data-analytics-category") || "undefined";
         let label = element.getAttribute("data-analytics-label") || "undefined";
 
-        if (!ga) {
-          console.error("Google Analytics ga object is not available");
-        }
-
         fetch('http://localhost:2000/v1/analytics', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            provider: 'GA',
+            provider: 'GoogleAnalytics',
             event: activity,
             category: category,
             additionalData: null,
