@@ -225,15 +225,14 @@ abstract class Worker
                 $database = new Database(new MariaDB($register->get('db')), $cache);
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
-                if(!empty($projectId)) {
+                if (!empty($projectId)) {
                     $database->setNamespace("_console");
                     $project = $database->getDocument('projects', $projectId);
-                    if(!$project->isEmpty()) {
-
+                    if (!$project->isEmpty()) {
                         $secrets = $project->getAttribute('databaseSecrets');
-                        
+
                         $filters['encrypt'] = [
-                            'encode' => function($value) use($secrets) {
+                            'encode' => function ($value) use ($secrets) {
                                 $version = array_key_last($secrets);
                                 $key = $secrets[$version];
                                 $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
@@ -246,19 +245,19 @@ abstract class Worker
                                     'version' => $version,
                                 ]);
                             },
-                            'decode' => function($value) use($secrets) {
-                                if(is_null($value)) {
+                            'decode' => function ($value) use ($secrets) {
+                                if (is_null($value)) {
                                     return null;
                                 }
-                                
+
                                 $value = json_decode($value, true);
                                 $version = $value['version'];
                                 $key = $secrets[$version];
-                        
+
                                 return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
                             }
                         ];
-                        
+
                         $database = new Database(new MariaDB($register->get('db')), $cache, $filters);
                         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                     }

@@ -519,7 +519,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 $fileSecret = OpenSSL::secretString();
                 $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                 $tag = null;
-                
+
                 $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $fileSecret, 0, $iv, $tag);
 
                 $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;

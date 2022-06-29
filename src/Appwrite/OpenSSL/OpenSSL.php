@@ -71,7 +71,7 @@ class OpenSSL
      *
      * @throws \Exception
      */
-    public static function secretString(int $length = 128):string
+    public static function secretString(int $length = 128): string
     {
         return \bin2hex(self::randomPseudoBytes($length));
     }
