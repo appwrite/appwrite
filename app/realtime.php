@@ -96,12 +96,11 @@ $server->error($logError);
 
 function getFilters(Document $project): array
 {
-    if(!$project->isEmpty()) {
-
+    if (!$project->isEmpty()) {
         $secrets = $project->getAttribute('databaseSecrets');
-        
+
         $filters['encrypt'] = [
-            'encode' => function($value) use($secrets) {
+            'encode' => function ($value) use ($secrets) {
                 $version = array_key_last($secrets);
                 $key = $secrets[$version];
                 $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
@@ -114,17 +113,17 @@ function getFilters(Document $project): array
                     'version' => $version,
                 ]);
             },
-            'decode' => function($value) use($secrets) {
-                if(is_null($value)) {
+            'decode' => function ($value) use ($secrets) {
+                if (is_null($value)) {
                     return null;
                 }
                 $value = json_decode($value, true);
                 $version = $value['version'];
                 $key = $secrets[$version];
-        
+
                 return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
             }
-        ];        
+        ];
     }
     return $filters;
 }
@@ -149,7 +148,7 @@ function getDatabase(Registry &$register, string $namespace, ?Document $project 
                 throw new Exception('Collection not ready');
             }
 
-            if(!is_null($project)) {
+            if (!is_null($project)) {
                 $filters = getFilters($project);
                 $database = new Database(new MariaDB($db), $cache, $filters);
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
@@ -533,13 +532,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        
+
         $projectId = $realtime->connections[$connection]['projectId'];
-        
+
         $database->setNamespace("_console");
         $project = Authorization::skip(fn() => $database->getDocument('projects', $realtime->connections[$connection]['projectId']));
-        
-        if($projectId != 'console') {
+
+        if ($projectId != 'console') {
             $filters = getFilters($database, $projectId);
             $database = new Database(new MariaDB($db), $cache, $filters);
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
