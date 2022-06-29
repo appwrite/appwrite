@@ -22,6 +22,12 @@ class Usage
         'network' => [
             'table' => 'appwrite_usage_network_all',
         ],
+        'inbound' => [
+            'table' => 'appwrite_usage_network_inbound',
+        ],
+        'outbound' => [
+            'table' => 'appwrite_usage_network_outbound',
+        ],
         'executions' => [
             'table' => 'appwrite_usage_executions_all',
         ],
