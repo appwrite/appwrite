@@ -15,9 +15,6 @@ use Utopia\Config\Config;
 
 require_once __DIR__ . '/../init.php';
 
-// Disable Auth since we already validate it in the API
-Authorization::disable();
-
 Console::title('Builds V1 Worker');
 Console::success(APP_NAME . ' build worker v1 has started');
 

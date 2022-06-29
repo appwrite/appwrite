@@ -1,0 +1,1 @@
+Sends the user a SMS with a secret key for creating a session. Use the returned user ID and the secret to submit a request to the [PUT /account/sessions/phone](/docs/client/account#accountUpdatePhoneSession) endpoint to complete the login process. The secret sent to the user's phone is valid for 15 minutes.

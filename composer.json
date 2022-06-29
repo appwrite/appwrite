@@ -36,7 +36,7 @@
         "ext-zlib": "*",
         "ext-sockets": "*",
         "appwrite/php-clamav": "1.1.*",
-        "appwrite/php-runtimes": "0.9.*",
+        "appwrite/php-runtimes": "0.10.*",
         "utopia-php/framework": "0.19.*",
         "utopia-php/logger": "0.3.*",
         "utopia-php/abuse": "0.7.*",
@@ -45,7 +45,7 @@
         "utopia-php/cache": "0.6.*",
         "utopia-php/cli": "0.12.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.17.*",
+        "utopia-php/database": "0.18.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
@@ -62,8 +62,7 @@
         "phpmailer/phpmailer": "6.6.0",
         "chillerlan/php-qrcode": "4.3.3",
         "adhocore/jwt": "1.1.2",
-        "slickdeals/statsd": "3.1.0",
-        "squizlabs/php_codesniffer": "^3.6"
+        "slickdeals/statsd": "3.1.0"
     },
     "repositories": [
         {
@@ -72,8 +71,9 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.18.8",
+        "appwrite/sdk-generator": "0.19.2",
         "phpunit/phpunit": "9.5.20",
+        "squizlabs/php_codesniffer": "^3.6",
         "swoole/ide-helper": "4.8.9",
         "textalk/websocket": "1.5.7"
     },

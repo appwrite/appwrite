@@ -1,4 +1,84 @@
-- Added support for selfhosted Gitlab (Oauth)
+# Version 0.15.0
+
+## BREAKING CHANGES
+- Docker Compose V2 is required now
+- The `POST:/v1/account/sessions` endpoint is now `POST:/v1/account/sessions/email`
+- All `/v1/database/...` endpoints are now `/v1/databases/...`
+- `dateCreated` attribute is removed from Teams
+- `dateCreated` attribute is removed from Executions
+- `dateCreated` attribute is removed from Files
+- `dateCreated` and `dateUpdated` attributes are removed from Functions
+- `dateCreated` and `dateUpdated` attributes are removed from Deployments
+- `dateCreated` and `dateUpdated` attributes are removed from Buckets
+- Following Events for Webhooks and Functions are changed:
+  - `collections.[COLLECTION_ID]` is now `databases.[DATABASE_ID].collections.[COLLECTION_ID]`
+  - `collections.[COLLECTION_ID].documents.[DOCUMENT_ID]` is now `databases.[DATABASE_ID].collections.[COLLECTION_ID].documents.[DOCUMENT_ID]`
+- Following Realtime Channels are changed:
+  - `collections.[COLLECTION_ID]` is now `databases.[DATABASE_ID].ollections.[COLLECTION_ID]`
+  - `collections.[COLLECTION_ID].documents` is now `databases.[DATABASE_ID].ollections.[COLLECTION_ID].documents`
+- After Migration a Database called `default` is created for all your existing Database Collections
+
+## Features
+- Added Phone Authentication by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3357
+  - Added Twilio Support
+  - Added TextMagic Support
+  - Added Telesign Support
+  - Added Endpoint to create Phone Session (`POST:/v1/account/sessions/phone`)
+  - Added Endpoint to confirm Phone Session (`PUT:/v1/account/sessions/phone`)
+  - Added Endpoint to update Account Phone Number (`PATCH:/v1/account/phone`)
+  - Added Endpoint to create Account Phone Verification (`POST:/v1/account/verification/phone`)
+  - Added Endpoint to confirm Account Phone Verification (`PUT:/v1/account/verification/phone`)
+  - Added `_APP_PHONE_PROVIDER` and `_APP_PHONE_FROM` Environment Variable
+  - Added `phone` and `phoneVerification` Attribute to User
+- Added `$createdAt` and `$updatedAt` Attributes by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3382
+  - Bucket
+  - Collection
+  - Deployment
+  - Document
+  - Domain
+  - Execution
+  - File
+  - Func
+  - Key
+  - Membership
+  - Platform
+  - Project
+  - Team
+  - User
+  - Webhook
+  - Session (only `$createdAt`)
+  - Token (only `$createdAt`)
+- Added Databases Resource to the Database Service by @lohanidamodar in https://github.com/appwrite/appwrite/pull/3338
+  - Added `databases.read` and `databases.write` Scopes for API Keys
+- Added New Runtimes
+  - Dart 2.17
+  - Deno 1.21
+  - Java 18
+  - Node 18
+- Webhooks now have a Signature Key for proof of Origin by @shimonewman in https://github.com/appwrite/appwrite/pull/3351
+- Start using Docker Compose V2 (from `docker-compose` to `docker compose`) by @Meldiron in https://github.com/appwrite/appwrite/pull/3362
+- Added support for selfhosted Gitlab (OAuth) by @Meldiron in https://github.com/appwrite/appwrite/pull/3366
+- Added Dailymotion OAuth Provider by @2002Bishwajeet in https://github.com/appwrite/appwrite/pull/3371
+- Added Autodesk OAuth Provider by @Haimantika in https://github.com/appwrite/appwrite/pull/3420
+- Ignore Service Checks when using API Key by @stnguyen90 in https://github.com/appwrite/appwrite/pull/3270
+- Added WebM as MIME- and Preview Type by @chuongtang in https://github.com/appwrite/appwrite/pull/3327
+- Expired User Sessions are now deleted by the Maintenance Worker by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3324
+- Increased JWT rate-limit to 100 per hour by @abnegate in https://github.com/appwrite/appwrite/pull/3345
+- Internal Database Relations are now resolved using the Internal ID by @fogelito in https://github.com/appwrite/appwrite/pull/3383
+- Permissions for Documents can be updated without payload now by @gepd in https://github.com/appwrite/appwrite/pull/3346
+
+## Bugs
+- Fixed Zoom OAuth scopes
+- Fixed empty build logs for Functions
+- Fixed unnecessary SMTP check on Team Invite using an API Key by @stnguyen90 in https://github.com/appwrite/appwrite/pull/3270
+- Fixed Error Message when adding Team Member to project by @stnguyen90 in https://github.com/appwrite/appwrite/pull/3296
+- Fixed .NET Runtime Logo by @adityaoberai in https://github.com/appwrite/appwrite/pull/3315
+- Fixed unnecessary Function execution delays by @Meldiron in https://github.com/appwrite/appwrite/pull/3348
+- Fixed Runtime race conditions on cold start by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/3361
+- Fixed Malayalam translation by @varghesejose2020 in https://github.com/appwrite/appwrite/pull/2561
+- Fixed English translation by @MATsxm in https://github.com/appwrite/appwrite/pull/3337
+- Fixed spelling in Realtime Worker logs by @gireeshp in https://github.com/appwrite/appwrite/pull/1663
+- Fixed Docs URL for Yammer OAuth by @everly-gif in https://github.com/appwrite/appwrite/pull/3402
 
 # Version 0.14.2
 

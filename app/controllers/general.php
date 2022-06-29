@@ -19,6 +19,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
+use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -177,6 +178,9 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
             case version_compare($responseFormat, '0.13.4', '<='):
                 Response::setFilter(new ResponseV13());
                 break;
+            case version_compare($responseFormat, '0.14.0', '<='):
+                Response::setFilter(new ResponseV14());
+                break;
             default:
                 Response::setFilter(null);
         }
@@ -279,6 +283,12 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
             $role = Auth::USER_ROLE_APP;
             $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
+            $expire = $key->getAttribute('expire', 0);
+
+            if (!empty($expire) && $expire < \time()) {
+                throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
+            }
+
             Authorization::setRole('role:' . Auth::USER_ROLE_APP);
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
         }
@@ -292,11 +302,10 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
 
     $service = $route->getLabel('sdk.namespace', '');
     if (!empty($service)) {
-        $roles = Authorization::getRoles();
         if (
             array_key_exists($service, $project->getAttribute('services', []))
             && !$project->getAttribute('services', [])[$service]
-            && !(Auth::isPrivilegedUser($roles) || Auth::isAppUser($roles))
+            && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
         ) {
             throw new AppwriteException('Service is disabled', 503, AppwriteException::GENERAL_SERVICE_DISABLED);
         }

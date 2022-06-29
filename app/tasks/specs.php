@@ -197,6 +197,7 @@ $cli
                     $services[] = [
                         'name' => $service['key'] ?? '',
                         'description' => $service['subtitle'] ?? '',
+                        'x-globalAttributes' => $service['globalAttributes'] ?? [],
                     ];
                 }
 

@@ -41,6 +41,6 @@ jobs:
     - name: Teardown
       if: always()
       run: |
-        docker ps -aq | xargs docker rm --force
-        docker volume prune --force
-        docker network prune --force
+        docker ps -aq | xargs docker rm --force || true
+        docker volume prune --force || true
+        docker network prune --force || true

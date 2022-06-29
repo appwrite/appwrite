@@ -103,7 +103,7 @@ services:
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor:/usr/src/code/vendor
+      # - ./vendor/utopia/database:/usr/src/code/vendor/utopia/database
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
@@ -175,6 +175,8 @@ services:
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_PHONE_PROVIDER
+      - _APP_PHONE_SECRET
 
   appwrite-realtime:
     entrypoint: realtime
@@ -317,10 +319,10 @@ services:
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
 
-  appwrite-worker-database:
-    entrypoint: worker-database
+  appwrite-worker-databases:
+    entrypoint: worker-databases
     <<: *x-logging
-    container_name: appwrite-worker-database
+    container_name: appwrite-worker-databases
     build:
       context: .
     networks:
@@ -524,6 +526,30 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
+  appwrite-worker-messaging:
+    entrypoint: worker-messaging
+    <<: *x-logging
+    container_name: appwrite-worker-messaging
+    build:
+      context: .
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_PHONE_PROVIDER
+      - _APP_PHONE_FROM
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
+
   appwrite-maintenance:
     entrypoint: maintenance
     <<: *x-logging
@@ -588,6 +614,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-schedule:
     entrypoint: schedule

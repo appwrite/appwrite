@@ -80,19 +80,19 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                     <td data-title="Name: ">
                                         <a data-ls-attrs="href=/console/users/user?id={{user.$id}}&project={{router.params.project}}">
                                             <span data-ls-bind="{{user.name}}" data-ls-attrs="title={{user.name}}"></span>
-                                            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} !== ''">Unknown</span>
-                                            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} === ''">Anonymous User</span>
+                                            <span data-ls-if="{{user.name|escape}} === '' && ({{user.email}} !== '' || {{user.phone}} !== '')">Unknown</span>
+                                            <span data-ls-if="{{user.name|escape}} === '' && {{user.email}} === '' && {{user.phone}} === ''">Anonymous User</span>
                                         </a>
                                     </td>
                                     <td data-title="Email: ">
-                                        <small data-ls-bind="{{user.email}}" data-ls-attrs="title={{user.email}}"></span>
+                                        <span data-ls-bind="{{user.email}}" data-ls-attrs="title={{user.email}}"></span>
                                     </td>
                                     <td data-title="Status: ">
-                                        <span data-ls-if="{{user.emailVerification}} === true && {{user.status}} === true">
+                                        <span data-ls-if="({{user.emailVerification}} || {{user.phoneVerification}}) && {{user.status}} === true">
                                             <span class="tag green">Verified</span>
                                         </span>
 
-                                        <span data-ls-if="{{user.emailVerification}} !== true && {{user.status}} === true">
+                                        <span data-ls-if="!({{user.emailVerification}} || {{user.phoneVerification}}) && {{user.status}} === true">
                                             <span class="tag">Unverified</span>
                                         </span>
 
@@ -248,7 +248,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                         <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.name}}" data-ls-attrs="title={{team.name}}"></a>
                                     </td>
                                     <td data-title="Members: "><span data-ls-bind="{{team.total}} members"></span></td>
-                                    <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|dateText}}"></small></td>
+                                    <td data-title="Date Created: "><small data-ls-bind="{{team.$createdAt|dateText}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>
