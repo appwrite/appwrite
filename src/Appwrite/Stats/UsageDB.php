@@ -221,6 +221,23 @@ class UsageDB extends Usage
     }
 
     /**
+     * Storage Stats
+     * Metrics: storage.total, storage.files.total, storage.buckets.{bucketId}.files.total,
+     * storage.buckets.count, storage.files.count, storage.buckets.{bucketId}.files.count
+     *
+     * @param string $projectId
+     *
+     * @return void
+     */
+    private function computeStats(string $projectId): void
+    {
+        $executionTotal = $this->sum($projectId, 'executions', 'time', 'functions.executionTime.total');
+        $buildTotal = $this->sum($projectId, 'builds', 'duration', 'functions.buildTime.total');
+
+        $this->createOrUpdateMetric($projectId, 'functions.compute.total', $executionTotal + $buildTotal);
+    }
+
+    /**
      * Database Stats
      * Collect all database stats
      * Metrics: database.collections.count, database.collections.{collectionId}.documents.count,
@@ -268,7 +285,7 @@ class UsageDB extends Usage
     {
         $this->foreachDocument('console', 'projects', [], function (Document $project) {
             $projectId = $project->getInternalId();
-
+            $this->computeStats($projectId);
             $this->usersStats($projectId);
             $this->databaseStats($projectId);
             $this->storageStats($projectId);
