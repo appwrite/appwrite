@@ -92,7 +92,7 @@ $logs = $this->getParam('logs', null);
                                             </td>
                                             <template x-for="attr in attributes">
                                                 <td x-show="attr.status === 'available'" :data-title="attr.key + ':'">
-                                                    <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collection}&databaseId={{router.params.databaseId}}&project=${project}`">
+                                                    <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collection}&databaseId={{databaseId}}&project=${project}`">
                                                         <span x-text="doc[attr.key] ?? 'n/a'"></span>
                                                     </a>
                                                 </td>
@@ -1161,11 +1161,15 @@ $logs = $this->getParam('logs', null);
             <div data-forms-clone="" data-label="Add Attribute" data-target="attributes-section" data-first="1">
                 <div class="row responsive thin margin-bottom-tiny">
                     <div class="col span-7 margin-bottom-small">
-                        <select data-duplications data-ls-attrs="name=attributes" class="margin-bottom-no">
-                            <option value="$id">$id</option>
-                            <option value="$createdAt">$createdAt</option>
-                            <option value="$updatedAt">$updatedAt</option>
-                            <option data-ls-loop="project-collection.attributes" data-ls-as="option" data-cast-to="array" data-ls-attrs="value={{option.key}}" data-ls-bind="{{option.key}}"></option>
+                        <select data-duplications data-ls-attrs="name=attributes" data-cast-to="array" class="margin-bottom-no">
+                            <optgroup label="Internal">
+                                <option value="$id">$id</option>
+                                <option value="$createdAt">$createdAt</option>
+                                <option value="$updatedAt">$updatedAt</option>
+                            </optgroup>
+                            <optgroup label="Attributes" data-ls-loop="project-collection.attributes" data-ls-as="option">
+                                <option data-ls-attrs="value={{option.key}}" data-ls-bind="{{option.key}}"></option>
+                            </optgroup>
                         </select>
                     </div>
                     <div class="col span-4 margin-bottom-small">
