@@ -172,18 +172,37 @@ class Usage
             'table' => 'appwrite_usage_users_sessions_delete',
         ],
         'functions.functionId.executions' => [
-            'table' => 'appwrite_usage_executions_all',
+            'table' => 'appwrite_usage_functions_executions_all',
             'groupBy' => ['functionId'],
         ],
-        'functions.functionId.compute' => [
-            'table' => 'appwrite_usage_executions_time',
+        'functions.functionId.builds' => [
+            'table' => 'appwrite_usage_functions_builds_all',
+            'groupBy' => ['functionId'],
+        ],
+        'functions.functionId.execution' => [
+            'table' => 'appwrite_usage_functions_executions_time',
+            'groupBy' => ['functionId'],
+        ],
+        'functions.functionId.build' => [
+            'table' => 'appwrite_usage_functions_builds_time',
+            'groupBy' => ['functionId'],
+        ],
+        'functions.functionId.compute' => [ // Built time + execution time
+            'table' => 'appwrite_usage_functions_compute_time',
             'groupBy' => ['functionId'],
         ],
         'functions.functionId.failures' => [
-            'table' => 'appwrite_usage_executions_all',
+            'table' => 'appwrite_usage_functions_executions_all',
             'groupBy' => ['functionId'],
             'filters' => [
                 'functionStatus' => 'failed',
+            ],
+        ],
+        'functions.functionId.builds' => [
+            'table' => 'appwrite_usage_functions_builds_all',
+            'groupBy' => ['functionId'],
+            'filters' => [
+                'functionBuildStatus' => 'failed',
             ],
         ],
     ];
