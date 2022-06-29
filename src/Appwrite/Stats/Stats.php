@@ -111,12 +111,12 @@ class Stats
             $this->statsd->increment('functions.executions.all' . $tags . ',functionId=' . $functionId . ',functionStatus=' . $functionStatus);
             $this->statsd->count('functions.executions.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
         }
-        if($functionBuild >= 1) {
+        if ($functionBuild >= 1) {
             $this->statsd->increment('functions.builds.all' . $tags . ',functionId=' . $functionId . ',functionBuildStatus=' . $functionBuildStatus);
             $this->statsd->count('functions.builds.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
         }
-        if($functionBuild + $functionExecution >= 1) {
-            $this->statsd->count('functions.compute.time' . $tags. ',functionId=' . $functionId, $functionCompute);
+        if ($functionBuild + $functionExecution >= 1) {
+            $this->statsd->count('functions.compute.time' . $tags . ',functionId=' . $functionId, $functionCompute);
         }
 
         $this->statsd->count('network.inbound' . $tags, $networkRequestSize);

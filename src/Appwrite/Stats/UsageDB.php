@@ -231,10 +231,10 @@ class UsageDB extends Usage
      */
     private function computeStats(string $projectId): void
     {
-        $executionTotal = $this->sum($projectId, 'executions', 'time', 'functions.executionTime.total');
-        $buildTotal = $this->sum($projectId, 'builds', 'duration', 'functions.buildTime.total');
+        $executionTotal = $this->sum($projectId, 'executions', 'time', 'functions.executionTime');
+        $buildTotal = $this->sum($projectId, 'builds', 'duration', 'functions.buildTime');
 
-        $this->createOrUpdateMetric($projectId, 'functions.compute.total', $executionTotal + $buildTotal);
+        $this->createOrUpdateMetric($projectId, 'functions.compute', $executionTotal + $buildTotal);
     }
 
     /**

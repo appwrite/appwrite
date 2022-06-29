@@ -197,14 +197,14 @@ class Usage
             'table' => 'appwrite_usage_functions_compute_time',
             'groupBy' => ['functionId'],
         ],
-        'functions.functionId.failures' => [
+        'functions.functionId.executions.failures' => [
             'table' => 'appwrite_usage_functions_executions_all',
             'groupBy' => ['functionId'],
             'filters' => [
                 'functionStatus' => 'failed',
             ],
         ],
-        'functions.functionId.builds' => [
+        'functions.functionId.builds.failures' => [
             'table' => 'appwrite_usage_functions_builds_all',
             'groupBy' => ['functionId'],
             'filters' => [
