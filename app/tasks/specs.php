@@ -206,7 +206,7 @@ $cli
             // var_dump($models);
             $arguments = [new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
             foreach (['swagger2', 'open-api3'] as $format) {
-                $formatInstance = match($format) {
+                $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),
                     'open-api3' => new OpenAPI3(...$arguments),
                     default => throw new Exception('Format not found: ' . $format)
