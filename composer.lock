@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "27f63bdbc1b54f0f5cee981afe6da9b8",
+    "content-hash": "5f84d34aaf40746cf5a5ea3d231b9aee",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2828,16 +2828,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.19.2",
+            "version": "0.19.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "91892b98880767019f340dee0074dcdc75329f94"
+                "reference": "a27cdc6b7e60e776a175be023e59cfd0e85bf4fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/91892b98880767019f340dee0074dcdc75329f94",
-                "reference": "91892b98880767019f340dee0074dcdc75329f94",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a27cdc6b7e60e776a175be023e59cfd0e85bf4fa",
+                "reference": "a27cdc6b7e60e776a175be023e59cfd0e85bf4fa",
                 "shasum": ""
             },
             "require": {
@@ -2872,9 +2872,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.19.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.19.3"
             },
-            "time": "2022-06-28T11:15:16+00:00"
+            "time": "2022-06-28T14:56:03+00:00"
         },
         {
             "name": "doctrine/instantiator",
