@@ -94,11 +94,8 @@ $logError = function (Throwable $error, string $action) use ($register) {
 
 $server->error($logError);
 
-function getFilters(Database $database, string $projectId): array
+function getFilters(Document $project): array
 {
-    $database->setNamespace('_console');
-    $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
-    $filters = [];
     if(!$project->isEmpty()) {
 
         $secrets = $project->getAttribute('databaseSecrets');
@@ -132,7 +129,7 @@ function getFilters(Database $database, string $projectId): array
     return $filters;
 }
 
-function getDatabase(Registry &$register, string $namespace)
+function getDatabase(Registry &$register, string $namespace, ?Document $project = null)
 {
     $attempts = 0;
 
@@ -152,16 +149,15 @@ function getDatabase(Registry &$register, string $namespace)
                 throw new Exception('Collection not ready');
             }
 
-            $projectId = substr($namespace, 1);
-            if($projectId != 'console') {
-                $filters = getFilters($database, $projectId);
+            if(!is_null($project)) {
+                $filters = getFilters($project);
                 $database = new Database(new MariaDB($db), $cache, $filters);
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                 $database->setNamespace($namespace);
             }
 
             break; // leave loop if successful
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
             if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
                 throw new \Exception('Failed to connect to database: ' . $e->getMessage());
@@ -186,24 +182,30 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($register, $containerId, &$statsDocument, $logError) {
-        try {
-            [$database, $returnDatabase] = getDatabase($register, '_console');
-            $document = new Document([
-                '$id' => $database->getId(),
-                '$collection' => 'realtime',
-                '$read' => [],
-                '$write' => [],
-                'container' => $containerId,
-                'timestamp' => time(),
-                'value' => '{}'
-            ]);
-            $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
-        } catch (\Throwable $th) {
-            call_user_func($logError, $th, "createWorkerDocument");
-        } finally {
-            call_user_func($returnDatabase);
-        }
+    go(function () use ($register, $containerId, &$statsDocument) {
+        $attempts = 0;
+        [$database, $returnDatabase] = getDatabase($register, '_console');
+        do {
+            try {
+                $attempts++;
+                $document = new Document([
+                    '$id' => $database->getId(),
+                    '$collection' => 'realtime',
+                    '$read' => [],
+                    '$write' => [],
+                    'container' => $containerId,
+                    'timestamp' => time(),
+                    'value' => '{}'
+                ]);
+
+                $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
+                break;
+            } catch (\Throwable $th) {
+                Console::warning("Collection not ready. Retrying connection ({$attempts})...");
+                sleep(DATABASE_RECONNECT_SLEEP);
+            }
+        } while (true);
+        call_user_func($returnDatabase);
     });
 
     /**
@@ -235,7 +237,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 });
 
 $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
-    Console::success('Worker ' . $workerId . ' started succefully');
+    Console::success('Worker ' . $workerId . ' started successfully');
 
     $attempts = 0;
     $start = time();
@@ -345,7 +347,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        [$database, $returnDatabase] = getDatabase($register, "_{$projectId}");
+                        [$consoleDatabase, $returnConsoleDatabase] = getDatabase($register, '_console');
+                        $project = Authorization::skip(fn() => $consoleDatabase->getDocument('projects', $projectId));
+                        [$database, $returnDatabase] = getDatabase($register, "_{$project->getInternalId()}", $project);
 
                         $user = $database->getDocument('users', $userId);
 
@@ -354,6 +358,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
 
                         call_user_func($returnDatabase);
+                        call_user_func($returnConsoleDatabase);
                     }
                 }
 
@@ -421,7 +426,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_{$project->getId()}");
+        $database->setNamespace("_{$project->getInternalId()}");
 
         /*
          *  Project Check
@@ -528,13 +533,18 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        
         $projectId = $realtime->connections[$connection]['projectId'];
+        
+        $database->setNamespace("_console");
+        $project = Authorization::skip(fn() => $database->getDocument('projects', $realtime->connections[$connection]['projectId']));
+        
         if($projectId != 'console') {
             $filters = getFilters($database, $projectId);
             $database = new Database(new MariaDB($db), $cache, $filters);
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         }
-        $database->setNamespace("_{$projectId}");
+        $database->setNamespace("_{$project->getInternalId()}");
 
         /*
          * Abuse Check

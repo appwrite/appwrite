@@ -118,6 +118,13 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             if (!$dbForConsole->getCollection($key)->isEmpty()) {
                 continue;
             }
+            /**
+             * Skip to prevent 0.15 migration issues.
+             */
+            if ($key === 'databases' && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'collections')) {
+                continue;
+            }
+
             Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
 
             $attributes = [];
@@ -155,8 +162,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createDocument('buckets', new Document([
                 '$id' => 'default',
                 '$collection' => 'buckets',
-                'dateCreated' => \time(),
-                'dateUpdated' => \time(),
                 'name' => 'Default',
                 'permission' => 'file',
                 'maximumFileSize' => (int) App::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
@@ -211,7 +216,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     });
 
     Console::success('Server started successfully (max payload is ' . number_format($payloadSize) . ' bytes)');
-
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 
     // listen ctrl + c

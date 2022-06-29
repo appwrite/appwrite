@@ -8,38 +8,41 @@ use Utopia\Database\Document;
 
 class Event
 {
-    const DATABASE_QUEUE_NAME = 'v1-database';
-    const DATABASE_CLASS_NAME = 'DatabaseV1';
+    public const DATABASE_QUEUE_NAME = 'v1-database';
+    public const DATABASE_CLASS_NAME = 'DatabaseV1';
 
-    const DELETE_QUEUE_NAME = 'v1-deletes';
-    const DELETE_CLASS_NAME = 'DeletesV1';
+    public const DELETE_QUEUE_NAME = 'v1-deletes';
+    public const DELETE_CLASS_NAME = 'DeletesV1';
 
-    const AUDITS_QUEUE_NAME = 'v1-audits';
-    const AUDITS_CLASS_NAME = 'AuditsV1';
+    public const AUDITS_QUEUE_NAME = 'v1-audits';
+    public const AUDITS_CLASS_NAME = 'AuditsV1';
 
-    const MAILS_QUEUE_NAME = 'v1-mails';
-    const MAILS_CLASS_NAME = 'MailsV1';
+    public const MAILS_QUEUE_NAME = 'v1-mails';
+    public const MAILS_CLASS_NAME = 'MailsV1';
 
-    const FUNCTIONS_QUEUE_NAME = 'v1-functions';
-    const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
+    public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
+    public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
 
-    const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
-    const WEBHOOK_CLASS_NAME = 'WebhooksV1';
+    public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
+    public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
-    const CERTIFICATES_QUEUE_NAME = 'v1-certificates';
-    const CERTIFICATES_CLASS_NAME = 'CertificatesV1';
+    public const CERTIFICATES_QUEUE_NAME = 'v1-certificates';
+    public const CERTIFICATES_CLASS_NAME = 'CertificatesV1';
 
-    const BUILDS_QUEUE_NAME = 'v1-builds';
-    const BUILDS_CLASS_NAME = 'BuildsV1';
+    public const BUILDS_QUEUE_NAME = 'v1-builds';
+    public const BUILDS_CLASS_NAME = 'BuildsV1';
+
+    public const MESSAGING_QUEUE_NAME = 'v1-messaging';
+    public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
     protected array $params = [];
     protected array $payload = [];
+    protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
-    protected ?Document $context = null;
 
     /**
      * @param string $queue
@@ -169,12 +172,13 @@ class Event
     /**
      * Set context for this event.
      *
+     * @param string $key
      * @param Document $context
      * @return self
      */
-    public function setContext(Document $context): self
+    public function setContext(string $key, Document $context): self
     {
-        $this->context = $context;
+        $this->context[$key] = $context;
 
         return $this;
     }
@@ -182,11 +186,13 @@ class Event
     /**
      * Get context for this event.
      *
+     * @param string $key
+     *
      * @return null|Document
      */
-    public function getContext(): ?Document
+    public function getContext(string $key): ?Document
     {
-        return $this->context;
+        return $this->context[$key] ?? null;
     }
 
     /**
@@ -292,14 +298,28 @@ class Event
         $type = $parts[0] ?? false;
         $resource = $parts[1] ?? false;
         $hasSubResource = $count > 3 && \str_starts_with($parts[3], '[');
+        $hasSubSubResource = $count > 5 && \str_starts_with($parts[5], '[') && $hasSubResource;
 
         if ($hasSubResource) {
             $subType = $parts[2];
             $subResource = $parts[3];
+        }
+
+        if ($hasSubSubResource) {
+            $subSubType = $parts[4];
+            $subSubResource = $parts[5];
+            if ($count == 8) {
+                $attribute = $parts[7];
+            }
+        }
+
+        if ($hasSubResource && !$hasSubSubResource) {
             if ($count === 6) {
                 $attribute = $parts[5];
             }
-        } else {
+        }
+
+        if (!$hasSubResource) {
             if ($count === 4) {
                 $attribute = $parts[3];
             }
@@ -307,18 +327,25 @@ class Event
 
         $subType ??= false;
         $subResource ??= false;
+        $subSubType ??= false;
+        $subSubResource ??= false;
         $attribute ??= false;
         $action = match (true) {
             !$hasSubResource && $count > 2 => $parts[2],
+            $hasSubSubResource => $parts[6] ?? false,
             $hasSubResource && $count > 4 => $parts[4],
             default => false
         };
+
+
 
         return [
             'type' => $type,
             'resource' => $resource,
             'subType' => $subType,
             'subResource' => $subResource,
+            'subSubType' => $subSubType,
+            'subSubResource' => $subSubResource,
             'action' => $action,
             'attribute' => $attribute,
         ];
@@ -332,7 +359,7 @@ class Event
      * @return array
      * @throws \InvalidArgumentException
      */
-    static function generateEvents(string $pattern, array $params = []): array
+    public static function generateEvents(string $pattern, array $params = []): array
     {
         // $params = \array_filter($params, fn($param) => !\is_array($param));
         $paramKeys = \array_keys($params);
@@ -345,6 +372,8 @@ class Event
         $resource = $parsed['resource'];
         $subType = $parsed['subType'];
         $subResource = $parsed['subResource'];
+        $subSubType = $parsed['subSubType'];
+        $subSubResource = $parsed['subSubResource'];
         $action = $parsed['action'];
         $attribute = $parsed['attribute'];
 
@@ -356,11 +385,21 @@ class Event
             throw new InvalidArgumentException("{$subResource} is missing from the params.");
         }
 
+        if ($subSubResource && !\in_array(\trim($subSubResource, "\[\]"), $paramKeys)) {
+            throw new InvalidArgumentException("{$subSubResource} is missing from the params.");
+        }
+
         /**
          * Create all possible patterns including placeholders.
          */
         if ($action) {
-            if ($subResource) {
+            if ($subSubResource) {
+                if ($attribute) {
+                    $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource, $action, $attribute]);
+                }
+                $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource, $action]);
+                $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource]);
+            } elseif ($subResource) {
                 if ($attribute) {
                     $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $action, $attribute]);
                 }
@@ -372,6 +411,9 @@ class Event
             if ($attribute) {
                 $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
             }
+        }
+        if ($subSubResource) {
+            $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $subSubType, $subSubResource]);
         }
         if ($subResource) {
             $patterns[] = \implode('.', [$type, $resource, $subType, $subResource]);
@@ -392,12 +434,24 @@ class Event
             $events[] = \str_replace($paramKeys, '*', $eventPattern);
             foreach ($paramKeys as $key) {
                 foreach ($paramKeys as $current) {
-                    if ($current === $key) {
-                        continue;
+                    if ($subSubResource) {
+                        foreach ($paramKeys as $subCurrent) {
+                            if ($subCurrent === $current || $subCurrent === $key) {
+                                continue;
+                            }
+                            $filtered1 = \array_filter($paramKeys, fn(string $k) => $k === $subCurrent);
+                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
+                            $filtered2 = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
+                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
+                        }
+                    } else {
+                        if ($current === $key) {
+                            continue;
+                        }
+                        $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                        $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                     }
-
-                    $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
-                    $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                 }
             }
         }
@@ -408,6 +462,9 @@ class Event
         $events = \array_map(fn (string $event) => \str_replace(['[', ']'], '', $event), $events);
         $events = \array_unique($events);
 
-        return $events;
+        /**
+         * Force a non-assoc array.
+         */
+        return \array_values($events);
     }
 }

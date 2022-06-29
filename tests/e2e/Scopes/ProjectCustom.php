@@ -68,6 +68,8 @@ trait ProjectCustom
                 'users.write',
                 'teams.read',
                 'teams.write',
+                'databases.read',
+                'databases.write',
                 'collections.read',
                 'collections.write',
                 'documents.read',
@@ -98,7 +100,7 @@ trait ProjectCustom
         ], [
             'name' => 'Webhook Test',
             'events' => [
-                'collections.*',
+                'databases.*',
                 'functions.*',
                 'buckets.*',
                 'teams.*',
@@ -118,6 +120,7 @@ trait ProjectCustom
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
+            'signatureKey' => $webhook['body']['signatureKey'],
         ];
 
         return self::$project;

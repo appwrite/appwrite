@@ -34,9 +34,21 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['user']);
 
         /**
+         * Create database
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'databaseId' => 'unique()',
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+        /**
          * Test Attributes
          */
-        $actors = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -49,7 +61,7 @@ class RealtimeConsoleClientTest extends Scope
 
         $actorsId = $actors['body']['$id'];
 
-        $name = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actorsId . '/attributes/string', array_merge([
+        $name = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -65,7 +77,6 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertEquals($name['body']['type'], 'string');
         $this->assertEquals($name['body']['size'], 256);
         $this->assertEquals($name['body']['required'], true);
-
         $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
@@ -75,16 +86,14 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(1, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("collections.{$actorsId}.attributes.{$actorsId}_{$attributeKey}.create", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.attributes.*.create", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.attributes.{$actorsId}_{$attributeKey}", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.attributes.*", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.{$actorsId}_{$attributeKey}.create", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.*.create", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.{$actorsId}_{$attributeKey}", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.*", $response['data']['events']);
-        $this->assertContains("collections.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.attributes.*.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.attributes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.attributes.*.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.attributes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}", $response['data']['events']);
+        $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
@@ -97,22 +106,20 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(1, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("collections.{$actorsId}.attributes.{$actorsId}_{$attributeKey}.update", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.attributes.*.update", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.attributes.{$actorsId}_{$attributeKey}", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.attributes.*", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.{$actorsId}_{$attributeKey}.update", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.*.update", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.{$actorsId}_{$attributeKey}", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.*", $response['data']['events']);
-        $this->assertContains("collections.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.attributes.*.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.attributes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.attributes.*.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.attributes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}", $response['data']['events']);
+        $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('available', $response['data']['payload']['status']);
 
         $client->close();
 
-        $data = ['actorsId' => $actorsId];
+        $data = ['actorsId' => $actorsId, 'databaseId' => $databaseId];
 
         return $data;
     }
@@ -124,6 +131,7 @@ class RealtimeConsoleClientTest extends Scope
     {
         $projectId = 'console';
         $actorsId = $data['actorsId'];
+        $databaseId = $data['databaseId'];
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -142,7 +150,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Indexes
          */
-        $index = $this->client->call(Client::METHOD_POST, '/database/collections/' . $actorsId . '/indexes', array_merge([
+        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -165,16 +173,12 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(1, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("collections.{$actorsId}.indexes.{$actorsId}_{$indexKey}.create", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.indexes.*.create", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.indexes.{$actorsId}_{$indexKey}", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.indexes.*", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.{$actorsId}_{$indexKey}.create", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.*.create", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.{$actorsId}_{$indexKey}", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.*", $response['data']['events']);
-        $this->assertContains("collections.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.indexes.*.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.indexes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.indexes.*.create", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.indexes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
@@ -187,16 +191,12 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(1, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("collections.{$actorsId}.indexes.{$actorsId}_{$indexKey}.update", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.indexes.*.update", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.indexes.{$actorsId}_{$indexKey}", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.indexes.*", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.{$actorsId}_{$indexKey}.update", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.*.update", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.{$actorsId}_{$indexKey}", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.*", $response['data']['events']);
-        $this->assertContains("collections.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.indexes.*.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.indexes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.indexes.*.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.indexes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('available', $response['data']['payload']['status']);
 
@@ -212,6 +212,7 @@ class RealtimeConsoleClientTest extends Scope
     {
         $actorsId = $data['actorsId'];
         $projectId = 'console';
+        $databaseId = $data['databaseId'];
 
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
@@ -231,7 +232,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Delete Index
          */
-        $attribute = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $actorsId . '/indexes/key_name', array_merge([
+        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes/key_name', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -247,16 +248,12 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(1, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("collections.{$actorsId}.indexes.{$actorsId}_{$indexKey}.delete", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.indexes.*.delete", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.indexes.{$actorsId}_{$indexKey}", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.indexes.*", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.{$actorsId}_{$indexKey}.delete", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.*.delete", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.{$actorsId}_{$indexKey}", $response['data']['events']);
-        $this->assertContains("collections.*.indexes.*", $response['data']['events']);
-        $this->assertContains("collections.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.indexes.*.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.indexes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.indexes.*.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.indexes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
@@ -271,6 +268,7 @@ class RealtimeConsoleClientTest extends Scope
     {
         $actorsId = $data['actorsId'];
         $projectId = 'console';
+        $databaseId = $data['databaseId'];
 
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
@@ -290,7 +288,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Delete Attribute
          */
-        $attribute = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $data['actorsId'] . '/attributes/name', array_merge([
+        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['actorsId'] . '/attributes/name', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -306,16 +304,12 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(1, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("collections.{$actorsId}.attributes.{$actorsId}_{$attributeKey}.delete", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.attributes.*.delete", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.attributes.{$actorsId}_{$attributeKey}", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}.attributes.*", $response['data']['events']);
-        $this->assertContains("collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.{$actorsId}_{$attributeKey}.delete", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.*.delete", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.{$actorsId}_{$attributeKey}", $response['data']['events']);
-        $this->assertContains("collections.*.attributes.*", $response['data']['events']);
-        $this->assertContains("collections.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.attributes.*.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.attributes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.attributes.*.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.attributes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();

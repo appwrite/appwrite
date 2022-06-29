@@ -21,6 +21,18 @@ class Webhook extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Webhook creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Webhook update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook name.',
@@ -57,6 +69,12 @@ class Webhook extends Model
                 'description' => 'HTTP basic authentication password.',
                 'default' => '',
                 'example' => 'password',
+            ])
+            ->addRule('signatureKey', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Signature key which can be used to validated incoming',
+                'default' => '',
+                'example' => 'ad3d581ca230e2b7059c545e5a',
             ])
         ;
     }
