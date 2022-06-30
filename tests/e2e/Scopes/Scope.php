@@ -95,7 +95,7 @@ abstract class Scope extends TestCase
 
         $this->assertEquals(201, $root['headers']['status-code']);
 
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions', [
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
@@ -147,7 +147,7 @@ abstract class Scope extends TestCase
 
         $this->assertEquals(201, $user['headers']['status-code']);
 
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions', [
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

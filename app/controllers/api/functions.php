@@ -66,8 +66,6 @@ App::post('/v1/functions')
         $function = $dbForProject->createDocument('functions', new Document([
             '$id' => $functionId,
             'execute' => $execute,
-            'dateCreated' => time(),
-            'dateUpdated' => time(),
             'status' => 'disabled',
             'name' => $name,
             'runtime' => $runtime,
@@ -102,7 +100,7 @@ App::get('/v1/functions')
     ->param('limit', 25, new Range(0, 100), 'Maximum number of functions to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the function used as the starting point for the query, excluding the function itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -315,7 +313,6 @@ App::put('/v1/functions/:functionId')
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
-            'dateUpdated' => time(),
             'name' => $name,
             'vars' => $vars,
             'events' => $events,
@@ -575,7 +572,6 @@ App::post('/v1/functions/:functionId/deployments')
                     '$write' => ['role:all'],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
-                    'dateCreated' => time(),
                     'entrypoint' => $entrypoint,
                     'path' => $path,
                     'size' => $fileSize,
@@ -605,7 +601,6 @@ App::post('/v1/functions/:functionId/deployments')
                     '$write' => ['role:all'],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
-                    'dateCreated' => time(),
                     'entrypoint' => $entrypoint,
                     'path' => $path,
                     'size' => $fileSize,
@@ -646,7 +641,7 @@ App::get('/v1/functions/:functionId/deployments')
     ->param('limit', 25, new Range(0, 100), 'Maximum number of deployments to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the deployment used as the starting point for the query, excluding the deployment itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -854,11 +849,11 @@ App::post('/v1/functions/:functionId/executions')
 
         $executionId = $dbForProject->getId();
 
+        /** @var Document $execution */
         $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
             '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
             '$write' => [],
-            'dateCreated' => time(),
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
@@ -894,7 +889,7 @@ App::post('/v1/functions/:functionId/executions')
         $events
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
-            ->setContext($function);
+            ->setContext('function', $function);
 
         if ($async) {
             $event = new Func();
@@ -952,7 +947,7 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
             $endtime = \microtime(true);
-            $time = $endtime - $execution->getAttribute('dateCreated');
+            $time = $endtime - $execution->getCreatedAt();
             $execution->setAttribute('time', $time);
             $execution->setAttribute('status', 'failed');
             $execution->setAttribute('statusCode', $th->getCode());
@@ -983,7 +978,7 @@ App::get('/v1/functions/:functionId/executions')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('cursor', '', new UID(), 'ID of the execution used as the starting point for the query, excluding the execution itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, int $limit, int $offset, string $search, string $cursor, string $cursorDirection, Response $response, Database $dbForProject) {

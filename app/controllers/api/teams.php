@@ -63,7 +63,6 @@ App::post('/v1/teams')
             '$write' => ['team:' . $teamId . '/owner'],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
-            'dateCreated' => \time(),
             'search' => implode(' ', [$teamId, $name]),
         ])));
 
@@ -74,7 +73,9 @@ App::post('/v1/teams')
                 '$read' => ['user:' . $user->getId(), 'team:' . $team->getId()],
                 '$write' => ['user:' . $user->getId(), 'team:' . $team->getId() . '/owner'],
                 'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
                 'teamId' => $team->getId(),
+                'teamInternalId' => $team->getInternalId(),
                 'roles' => $roles,
                 'invited' => \time(),
                 'joined' => \time(),
@@ -118,7 +119,7 @@ App::get('/v1/teams')
     ->param('limit', 25, new Range(0, 100), 'Maximum number of teams to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the team used as the starting point for the query, excluding the team itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -367,7 +368,9 @@ App::post('/v1/teams/:teamId/memberships')
             '$read' => ['role:all'],
             '$write' => ['user:' . $invitee->getId(), 'team:' . $team->getId() . '/owner'],
             'userId' => $invitee->getId(),
+            'userInternalId' => $invitee->getInternalId(),
             'teamId' => $team->getId(),
+            'teamInternalId' => $team->getInternalId(),
             'roles' => $roles,
             'invited' => \time(),
             'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
@@ -446,7 +449,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('limit', 25, new Range(0, 100), 'Maximum number of memberships to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -702,6 +705,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $session = new Document(array_merge([
             '$id' => $dbForProject->getId(),
             'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
             'provider' => Auth::SESSION_PROVIDER_EMAIL,
             'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak

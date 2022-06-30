@@ -34,6 +34,8 @@ $admins = [
     'buckets.write',
     'users.read',
     'users.write',
+    'databases.read',
+    'databases.write',
     'collections.read',
     'collections.write',
     'platforms.read',

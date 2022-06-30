@@ -4,7 +4,6 @@ namespace Appwrite\Tests;
 
 use Appwrite\Migration\Migration;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 use ReflectionMethod;
 use Utopia\Database\Document;
 

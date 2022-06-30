@@ -31,6 +31,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'autodesk' => [
+        'name' => 'Autodesk',
+        'developers' => 'https://forge.autodesk.com/en/docs/oauth/v2/developers_guide/overview/',
+        'icon' => 'icon-autodesk',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'bitbucket' => [
         'name' => 'BitBucket',
         'developers' => 'https://developer.atlassian.com/bitbucket',
@@ -55,6 +65,16 @@ return [ // Ordered by ABC.
         'name' => 'Box',
         'developers' => 'https://developer.box.com/reference/',
         'icon' => 'icon-box',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false
+    ],
+    'dailymotion' => [
+        'name' => 'Dailymotion',
+        'developers' => 'https://developers.dailymotion.com/api/',
+        'icon' => 'icon-dailymotion',
         'enabled' => true,
         'sandbox' => false,
         'form' => false,
@@ -291,6 +311,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'zoom' => [
+        'name' => 'Zoom',
+        'developers' => 'https://marketplace.zoom.us/docs/guides/auth/oauth/',
+        'icon' => 'icon-zoom',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     // 'instagram' => [
     //     'name' => 'Instagram',
     //     'developers' => 'https://www.instagram.com/developer/',
@@ -307,16 +337,7 @@ return [ // Ordered by ABC.
     //     'beta' => false,
     //     'mock' => false,
     // ],
-    'zoom' => [
-        'name' => 'Zoom',
-        'developers' => 'https://marketplace.zoom.us/docs/guides/auth/oauth/',
-        'icon' => 'icon-zoom',
-        'enabled' => true,
-        'sandbox' => false,
-        'form' => false,
-        'beta' => false,
-        'mock' => false,
-    ],
+
     // Keep Last
     'mock' => [
         'name' => 'Mock',
