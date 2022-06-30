@@ -132,27 +132,27 @@ $cli
                 foreach ($method as $route) {
                     /** @var \Utopia\Route $route */
                     $routeSecurity = $route->getLabel('sdk.auth', []);
-                    $sdkPlatofrms = [];
+                    $sdkPlaforms = [];
 
                     foreach ($routeSecurity as $value) {
                         switch ($value) {
                             case APP_AUTH_TYPE_SESSION:
-                                $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+                                $sdkPlaforms[] = APP_PLATFORM_CLIENT;
                                 break;
                             case APP_AUTH_TYPE_KEY:
-                                $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                                $sdkPlaforms[] = APP_PLATFORM_SERVER;
                                 break;
                             case APP_AUTH_TYPE_JWT:
-                                $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                                $sdkPlaforms[] = APP_PLATFORM_SERVER;
                                 break;
                             case APP_AUTH_TYPE_ADMIN:
-                                $sdkPlatofrms[] = APP_PLATFORM_CONSOLE;
+                                $sdkPlaforms[] = APP_PLATFORM_CONSOLE;
                                 break;
                         }
                     }
 
                     if (empty($routeSecurity)) {
-                        $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+                        $sdkPlaforms[] = APP_PLATFORM_CLIENT;
                     }
 
                     if (!$route->getLabel('docs', true)) {
@@ -171,7 +171,7 @@ $cli
                         continue;
                     }
 
-                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatofrms)) {
+                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlaforms)) {
                         continue;
                     }
 
