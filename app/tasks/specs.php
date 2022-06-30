@@ -19,7 +19,7 @@ $cli
     ->param('version', 'latest', new Text(8), 'Spec version', true)
     ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
     ->action(function ($version, $mode) use ($register) {
-        $db = $register->get('db');
+        $consoleDB = $register->get('consoleDB');
         $redis = $register->get('cache');
         $appRoutes = App::getRoutes();
         $response = new Response(new HttpResponse());
@@ -27,7 +27,7 @@ $cli
 
         App::setResource('request', fn () => new Request());
         App::setResource('response', fn () => $response);
-        App::setResource('db', fn () => $db);
+        App::setResource('consoleDB', fn () => $consoleDB);
         App::setResource('cache', fn () => $redis);
 
         $platforms = [

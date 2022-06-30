@@ -445,6 +445,21 @@ $register->set('logger', function () {
     return new Logger($adapter);
 });
 
+$register->set('dbMap', function () {
+    $dbs = App::getEnv('_APP_PROJECT_DB', '');
+    $dbs = explode(',', $dbs);
+
+    $dbMap = [];
+    foreach ($dbs as $db) {
+        $db = explode('=', $db);
+        $name = $db[0];
+        $dsn = $db[1];
+        $dbMap[$name] = $dsn;
+    }
+
+    return $dbMap;
+});
+
 $register->set('dbPool', function () {
     /** Parse the console databases */
     $consoleDb = App::getEnv('_APP_CONSOLE_DB', '');
@@ -474,13 +489,11 @@ $register->set('dbPool', function () {
     $pool->setConsoleDB($name);
 
     /** Parse the project databases */
-    $dbs = App::getEnv('_APP_PROJECT_DB', '');
-    $dbs = explode(',', $dbs);
-    foreach ($dbs as $db) {
-        $db = explode('=', $db);
-        $name = $db[0];
-        $dsn = new DSN($db[1]);
-        // var_dump($dsn->getHost(), $dsn->getPort(), $dsn->getDatabase(), $dsn->getUser(), $dsn->getPassword());
+    global $register;
+    $dbs = $register->get('dbMap');
+
+    foreach ($dbs as $name => $dsn) {
+        $dsn = new DSN($dsn);
         $projectPool = new PDOPool(
             (new PDOConfig())
             ->withHost($dsn->getHost())
@@ -578,13 +591,19 @@ $register->set('smtp', function () {
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/db/DBIP/dbip-country-lite-2022-03.mmdb');
 });
-$register->set('db', function () {
- // This is usually for our workers or CLI commands scope
-    $dbHost = App::getEnv('_APP_DB_HOST', '');
-    $dbPort = App::getEnv('_APP_DB_PORT', '');
-    $dbUser = App::getEnv('_APP_DB_USER', '');
-    $dbPass = App::getEnv('_APP_DB_PASS', '');
-    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+
+$register->set('consoleDB', function () {
+    /** This is usually for our workers or CLI commands scope */
+    $consoleDb = App::getEnv('_APP_CONSOLE_DB', '');
+    $consoleDb = explode(',', $consoleDb)[0];
+    $consoleDb = explode('=', $consoleDb);
+    $dsn = new DSN($consoleDb[1]);
+
+    $dbHost = $dsn->getHost();
+    $dbPort = $dsn->getPort();
+    $dbUser = $dsn->getUser();
+    $dbPass = $dsn->getPassword();
+    $dbScheme = $dsn->getDatabase();
 
     $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
@@ -596,6 +615,7 @@ $register->set('db', function () {
 
     return $pdo;
 });
+
 $register->set('cache', function () {
  // This is usually for our workers or CLI commands scope
     $redis = new Redis();
@@ -915,10 +935,9 @@ App::setResource('dbForProject', function ($projectDB, $cache, $project) {
     $database = new Database(new MariaDB($projectDB), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getId()}");
-    
+
     return $database;
 }, ['projectDB', 'cache', 'project']);
-
 
 App::setResource('deviceLocal', function () {
     return new Local();

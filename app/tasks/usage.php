@@ -2,6 +2,8 @@
 
 global $cli, $register;
 
+use Appwrite\DSN\DSN;
+use Swoole\Database\PDOProxy;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
@@ -236,12 +238,12 @@ $cli
         $max = 10;
         $sleep = 1;
 
-        $db = null;
+        $consoleDB = null;
         $redis = null;
         do { // connect to db
             try {
                 $attempts++;
-                $db = $register->get('db');
+                $consoleDB = $register->get('consoleDB');
                 $redis = $register->get('cache');
                 break; // leave the do-while if successful
             } catch (\Exception $e) {
@@ -255,18 +257,18 @@ $cli
 
         // TODO use inject
         $cacheAdapter = new Cache(new Redis($redis));
-        $dbForProject = new Database(new MariaDB($db), $cacheAdapter);
-        $dbForConsole = new Database(new MariaDB($db), $cacheAdapter);
-        $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForConsole = new Database(new MariaDB($consoleDB), $cacheAdapter);
         $dbForConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $dbForConsole->setNamespace('_console');
+
+        $dbPool = $register->get('dbPool');
 
         $latestTime = [];
 
         Authorization::disable();
 
         $iterations = 0;
-        Console::loop(function () use ($interval, $register, $dbForProject, $dbForConsole, $globalMetrics, $periods, &$latestTime, &$iterations) {
+        Console::loop(function () use ($interval, $register, $dbForConsole, $dbPool, $cacheAdapter, $globalMetrics, $periods, &$latestTime, &$iterations) {
             $now = date('d-m-Y H:i:s', time());
             Console::info("[{$now}] Aggregating usage data every {$interval} seconds");
 
@@ -324,6 +326,15 @@ $cli
                         foreach ($points as $point) {
                             $projectId = $point['projectId'];
 
+                            /** Get the Dabatase name from the console DB */
+                            $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
+                            $dbName = $project->getAttribute('database', '');
+                            $projectDB = $dbPool->get($dbName);
+
+                            $dbForProject = new Database(new MariaDB($projectDB), $cacheAdapter);
+                            $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+
+
                             if (!empty($projectId) && $projectId !== 'console') {
                                 $dbForProject->setNamespace('_' . $projectId);
                                 $metricUpdated = $metric;
@@ -364,6 +375,8 @@ $cli
                                     Console::warning($e->getTraceAsString());
                                 }
                             }
+
+                            $dbPool->put($projectDB, $dbName);
                         }
                     } catch (\Exception $e) {
                         Console::warning("Failed to Query: {$e->getMessage()}");
