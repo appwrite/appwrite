@@ -607,8 +607,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_ACCOUNT_SESSION:
-                return 'mutation createAccountSession($email: String!, $password: String!){
-                    accountCreateSession(email: $email, password: $password) {
+                return 'mutation createAccountEmailSession($email: String!, $password: String!){
+                    accountCreateEmailSession(email: $email, password: $password) {
                         _id
                         userId
                         expire

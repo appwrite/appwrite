@@ -60,7 +60,7 @@ class GraphQLAccountTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $session['body']);
         $this->assertIsArray($session['body']['data']);
-        $this->assertIsArray($session['body']['data']['accountCreateSession']);
+        $this->assertIsArray($session['body']['data']['accountCreateEmailSession']);
 
         $cookie = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
         $this->assertNotEmpty($cookie);
