@@ -12,13 +12,25 @@
 
       let project = router.params["project"] || 'None';
 
-      fetch('http://localhost:2000/v1/analytics', {
+      fetch('https://stats.appwrite.org/v1/analytics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           provider: 'GoogleAnalytics',
+          event: 'pageview',
+          url: window.location.href
+        })
+      });
+
+      fetch('https://stats.appwrite.org/v1/analytics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          provider: 'Plausible',
           event: 'pageview',
           url: window.location.href
         })
