@@ -607,8 +607,9 @@ class V14 extends Migration
                     /**
                      * Re-create Collection Document
                      */
+                    $internalId = $this->projectDB->getDocument('database_1', $document->getAttribute('collectionId'))->getInternalId();
                     $this->projectDB->deleteDocument($document->getCollection(), $document->getId());
-                    $this->projectDB->createDocument($document->getCollection(), $document->setAttribute('$id', "1_{$document->getInternalId()}_{$document->getAttribute('key')}"));
+                    $this->projectDB->createDocument($document->getCollection(), $document->setAttribute('$id', "1_{$internalId}_{$document->getAttribute('key')}"));
                 } catch (\Throwable $th) {
                     Console::warning("Create Collection Document - {$th->getMessage()}");
                 }
