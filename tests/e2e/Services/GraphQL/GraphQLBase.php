@@ -7,86 +7,109 @@ use Tests\E2E\Client;
 trait GraphQLBase
 {
     // Collections
-    static string $GET_COLLECTION = 'get_collection';
-    static string $LIST_COLLECTIONS = 'list_collections';
-    static string $CREATE_COLLECTION = 'create_collection';
-    static string $UPDATE_COLLECTION = 'update_collection';
-    static string $DELETE_COLLECTION = 'delete_collection';
+    public static string $GET_COLLECTION = 'get_collection';
+    public static string $LIST_COLLECTIONS = 'list_collections';
+    public static string $CREATE_COLLECTION = 'create_collection';
+    public static string $UPDATE_COLLECTION = 'update_collection';
+    public static string $DELETE_COLLECTION = 'delete_collection';
     // Attributes
-    static string $CREATE_STRING_ATTRIBUTE = 'create_string_attribute';
-    static string $CREATE_INTEGER_ATTRIBUTE = 'create_integer_attribute';
-    static string $CREATE_FLOAT_ATTRIBUTE = 'create_float_attribute';
-    static string $CREATE_BOOLEAN_ATTRIBUTE = 'create_boolean_attribute';
-    static string $CREATE_URL_ATTRIBUTE = 'create_string_attribute';
-    static string $CREATE_EMAIL_ATTRIBUTE = 'create_string_attribute';
-    static string $CREATE_IP_ATTRIBUTE = 'create_string_attribute';
-    static string $CREATE_ENUM_ATTRIBUTE = 'create_string_attribute';
+    public static string $CREATE_STRING_ATTRIBUTE = 'create_string_attribute';
+    public static string $CREATE_INTEGER_ATTRIBUTE = 'create_integer_attribute';
+    public static string $CREATE_FLOAT_ATTRIBUTE = 'create_float_attribute';
+    public static string $CREATE_BOOLEAN_ATTRIBUTE = 'create_boolean_attribute';
+    public static string $CREATE_URL_ATTRIBUTE = 'create_string_attribute';
+    public static string $CREATE_EMAIL_ATTRIBUTE = 'create_string_attribute';
+    public static string $CREATE_IP_ATTRIBUTE = 'create_string_attribute';
+    public static string $CREATE_ENUM_ATTRIBUTE = 'create_string_attribute';
     // Documents
-    static string $GET_DOCUMENT = 'get_document';
-    static string $LIST_DOCUMENTS = 'list_documents';
-    static string $CREATE_DOCUMENT_REST = 'create_document_rest';
-    static string $CREATE_DOCUMENT_GQL_HOOKS = 'create_document_hooks';
-    static string $UPDATE_DOCUMENT = 'update_document';
-    static string $DELETE_DOCUMENT = 'delete_document';
+    public static string $GET_DOCUMENT = 'get_document';
+    public static string $LIST_DOCUMENTS = 'list_documents';
+    public static string $CREATE_DOCUMENT_REST = 'create_document_rest';
+    public static string $CREATE_CUSTOM_ENTITY = 'create_document_hooks';
+    public static string $UPDATE_DOCUMENT = 'update_document';
+    public static string $DELETE_DOCUMENT = 'delete_document';
 
     // Locales
-    static string $LIST_COUNTRIES = 'list_countries';
+    public static string $LIST_COUNTRIES = 'list_countries';
 
     // Projects
-    static string $CREATE_API_KEY = 'create_key';
+    public static string $CREATE_API_KEY = 'create_key';
 
     // Account
-    static string $GET_ACCOUNT = 'get_account';
-    static string $CREATE_ACCOUNT = 'create_account';
-    static string $UPDATE_ACCOUNT_NAME = 'update_account_name';
-    static string $UPDATE_ACCOUNT_EMAIL = 'update_account_email';
-    static string $UPDATE_ACCOUNT_PASSWORD = 'update_account_password';
-    static string $UPDATE_ACCOUNT_PREFS = 'update_account_prefs';
-    static string $DELETE_ACCOUNT = 'delete_account';
-    static string $GET_ACCOUNT_SESSION = 'get_account_session';
-    static string $LIST_ACCOUNT_SESSIONS = 'list_account_sessions';
-    static string $CREATE_ACCOUNT_SESSION = 'create_account_session';
-    static string $DELETE_ACCOUNT_SESSION = 'delete_account_session';
-    static string $DELETE_ACCOUNT_SESSIONS = 'delete_account_sessions';
+    public static string $CREATE_ACCOUNT = 'create_account';
+    public static string $CREATE_ACCOUNT_SESSION = 'create_account_session';
+    public static string $CREATE_ANONYMOUS_SESSION = 'create_anonymous_session';
+    public static string $CREATE_ACCOUNT_JWT = 'create_account_jwt';
+    public static string $CREATE_MAGIC_URL = 'create_magic_url';
+    public static string $CREATE_PASSWORD_RECOVERY = 'create_password_recovery';
+    public static string $CREATE_EMAIL_VERIFICATION = 'create_email_verification';
+    public static string $CREATE_PHONE_VERIFICATION = 'create_phone_verification';
+    public static string $GET_ACCOUNT = 'get_account';
+    public static string $GET_ACCOUNT_SESSION = 'get_account_session';
+    public static string $GET_ACCOUNT_SESSIONS = 'get_account_sessions';
+    public static string $GET_ACCOUNT_PREFS = 'get_account_preferences';
+    public static string $GET_ACCOUNT_LOGS = 'get_account_logs';
+    public static string $UPDATE_ACCOUNT_NAME = 'update_account_name';
+    public static string $UPDATE_ACCOUNT_EMAIL = 'update_account_email';
+    public static string $UPDATE_ACCOUNT_PASSWORD = 'update_account_password';
+    public static string $UPDATE_ACCOUNT_PREFS = 'update_account_prefs';
+    public static string $UPDATE_ACCOUNT_PHONE = 'update_account_phone';
+    public static string $UPDATE_ACCOUNT_STATUS = 'update_account_status';
+    public static string $UPDATE_MAGIC_URL = 'confirm_magic_url';
+    public static string $UPDATE_PASSWORD_RECOVERY = 'confirm_password_recovery';
+    public static string $UPDATE_EMAIL_VERIFICATION = 'confirm_email_verification';
+    public static string $UPDATE_PHONE_VERIFICATION = 'confirm_phone_verification';
+    public static string $DELETE_ACCOUNT_SESSION = 'delete_account_session';
+    public static string $DELETE_ACCOUNT_SESSIONS = 'delete_account_sessions';
+    public static string $DELETE_ACCOUNT = 'delete_account';
     // Users
-    static string $GET_USER = 'get_user';
-    static string $LIST_USERS = 'list_user';
-    static string $CREATE_USER = 'create_user';
-    static string $UPDATE_USER_STATUS = 'update_user_status';
-    static string $UPDATE_USER_NAME = 'update_user_name';
-    static string $UPDATE_USER_EMAIL = 'update_user_email';
-    static string $UPDATE_USER_PASSWORD = 'update_user_password';
-    static string $UPDATE_USER_PREFS = 'update_user_prefs';
-    static string $DELETE_USER = 'delete_user';
+    public static string $CREATE_USER = 'create_user';
+    public static string $GET_USER = 'get_user';
+    public static string $GET_USERS = 'list_user';
+    public static string $GET_USER_PREFERENCES = 'get_user_preferences';
+    public static string $GET_USER_SESSIONS = 'get_user_sessions';
+    public static string $GET_USER_MEMBERSHIPS = 'get_user_memberships';
+    public static string $GET_USER_LOGS = 'get_user_logs';
+    public static string $UPDATE_USER_STATUS = 'update_user_status';
+    public static string $UPDATE_USER_NAME = 'update_user_name';
+    public static string $UPDATE_USER_EMAIL = 'update_user_email';
+    public static string $UPDATE_USER_EMAIL_VERIFICATION = 'update_email_verification';
+    public static string $UPDATE_USER_PHONE_VERIFICATION = 'update_email_verification';
+    public static string $UPDATE_USER_PASSWORD = 'update_user_password';
+    public static string $UPDATE_USER_PHONE = 'update_user_phone';
+    public static string $UPDATE_USER_PREFS = 'update_user_prefs';
+    public static string $DELETE_USER_SESSIONS = 'delete_user_sessions';
+    public static string $DELETE_USER_SESSION = 'delete_user_session';
+    public static string $DELETE_USER = 'delete_user';
     // Teams
-    static string $GET_TEAM = 'get_team';
-    static string $LIST_TEAMS = 'list_teams';
-    static string $CREATE_TEAM = 'create_team';
-    static string $UPDATE_TEAM = 'update_team';
-    static string $DELETE_TEAM = 'delete_team';
-    static string $GET_TEAM_MEMBERSHIP = 'get_team_membership';
-    static string $LIST_TEAM_MEMBERSHIPS = 'list_team_memberships';
-    static string $CREATE_TEAM_MEMBERSHIP = 'create_team_membership';
-    static string $UPDATE_MEMBERSHIP_STATUS = 'update_membership_status';
-    static string $DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
+    public static string $GET_TEAM = 'get_team';
+    public static string $LIST_TEAMS = 'list_teams';
+    public static string $CREATE_TEAM = 'create_team';
+    public static string $UPDATE_TEAM = 'update_team';
+    public static string $DELETE_TEAM = 'delete_team';
+    public static string $GET_TEAM_MEMBERSHIP = 'get_team_membership';
+    public static string $LIST_TEAM_MEMBERSHIPS = 'list_team_memberships';
+    public static string $CREATE_TEAM_MEMBERSHIP = 'create_team_membership';
+    public static string $UPDATE_MEMBERSHIP_STATUS = 'update_membership_status';
+    public static string $DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
 
     // Functions
-    static string $GET_FUNCTION = 'get_function';
-    static string $LIST_FUNCTIONS = 'list_functions';
-    static string $CREATE_FUNCTION = 'create_function';
-    static string $UPDATE_FUNCTION = 'update_function';
-    static string $DELETE_FUNCTION = 'delete_function';
+    public static string $GET_FUNCTION = 'get_function';
+    public static string $LIST_FUNCTIONS = 'list_functions';
+    public static string $CREATE_FUNCTION = 'create_function';
+    public static string $UPDATE_FUNCTION = 'update_function';
+    public static string $DELETE_FUNCTION = 'delete_function';
     // Deployments
-    static string $LIST_DEPLOYMENTS = 'list_deployments';
-    static string $GET_DEPLOYMENT = 'get_deployment';
-    static string $CREATE_DEPLOYMENT = 'create_deployment';
-    static string $DELETE_DEPLOYMENT = 'delete_deployment';
+    public static string $LIST_DEPLOYMENTS = 'list_deployments';
+    public static string $GET_DEPLOYMENT = 'get_deployment';
+    public static string $CREATE_DEPLOYMENT = 'create_deployment';
+    public static string $DELETE_DEPLOYMENT = 'delete_deployment';
     // Executions
-    static string $LIST_EXECUTIONS = 'list_executions';
-    static string $GET_EXECUTION = 'get_execution';
-    static string $CREATE_EXECUTION = 'create_execution';
-    static string $DELETE_EXECUTION = 'delete_execution';
-    static string $RETRY_BUILD = 'retry_build';
+    public static string $LIST_EXECUTIONS = 'list_executions';
+    public static string $GET_EXECUTION = 'get_execution';
+    public static string $CREATE_EXECUTION = 'create_execution';
+    public static string $DELETE_EXECUTION = 'delete_execution';
+    public static string $RETRY_BUILD = 'retry_build';
 
     public function getQuery(string $name): string
     {
