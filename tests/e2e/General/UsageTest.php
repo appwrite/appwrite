@@ -41,7 +41,7 @@ class UsageTest extends Scope {
             $this->assertEquals($email, $res['body']['email']);
             $this->assertNotEmpty($res['body']['$id']);
             $this->usersCount++;
-            $this->requestsCount += 2;
+            $this->requestsCount++;
         }
         sleep(65);
 
@@ -62,4 +62,11 @@ class UsageTest extends Scope {
         $this->assertEquals($this->usersCount, $res['requests'][array_key_last($res['requests'])]['value']);
     }
 
+    protected function tearDown(): void
+    {
+        $this->usersCount = 0;
+        $this->requestsCount = 0;
+        $this->projectId = '';
+        $this->headers = [];
+    }
 }
