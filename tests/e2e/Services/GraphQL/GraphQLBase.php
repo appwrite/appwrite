@@ -265,7 +265,7 @@ trait GraphQLBase
                 }';
             case self::$CREATE_CUSTOM_ENTITY:
                 return 'mutation createActor($name: String!, $age: Int!, $alive: Boolean!, $salary: Float) {
-                    actorCreate(name: $name, age: $age, alive: $alive, salary: $salary) {
+                    actorsCreate(name: $name, age: $age, alive: $alive, salary: $salary) {
                         _id
                         name
                         age
