@@ -413,7 +413,15 @@ class Builder
                 $swoole->server['request_method'] = $route->getMethod();
                 $swoole->server['request_uri'] = $route->getPath();
                 $swoole->server['path_info'] = $route->getPath();
-                $swoole->post = $args;
+
+                switch ($route->getMethod()) {
+                    case 'GET':
+                        $swoole->get = $args;
+                        break;
+                    default:
+                        $swoole->post = $args;
+                        break;
+                }
 
                 self::resolve($utopia, $swoole, $response, $resolve, $reject);
             }
