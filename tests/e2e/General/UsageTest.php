@@ -6,17 +6,19 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
-class UsageTest extends Scope {
+class UsageTest extends Scope
+{
     use ProjectCustom;
     use SideServer;
 
     protected array $headers = [];
     protected string $projectId;
-    
+
     protected int $usersCount = 0;
     protected int $requestsCount = 0;
 
-    protected function setUp(): void {
+    protected function setUp(): void
+    {
         parent::setUp();
         $project = $this->getProject(true);
         $this->projectId = $project['$id'];
@@ -27,8 +29,8 @@ class UsageTest extends Scope {
 
     public function testUsersStats(): void
     {
-        
-        for($i = 0; $i<10; $i++) {
+
+        for ($i = 0; $i < 10; $i++) {
             $email = uniqid() . 'user@usage.test';
             $password = 'password';
             $name = uniqid() . 'User';
@@ -51,7 +53,7 @@ class UsageTest extends Scope {
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ];
-        
+
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $this->projectId . '/usage?range=30d', $headers);
         $res = $res['body'];
 
