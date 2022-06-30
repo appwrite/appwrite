@@ -31,12 +31,6 @@ You can also fetch all the collections in your current project using
 appwrite init collection
 ```
 
-The CLI also comes with a convenient `--all` flag to perform both these steps at once.
-
-```sh
-appwrite init --all
-```
-
 * ### Creating and deploying cloud functions
 
 The CLI makes it extremely easy to create and deploy Appwrite's cloud functions. Initialise your new function using
@@ -81,12 +75,6 @@ Similarly, you can deploy all your collections to your Appwrite server using
 ```sh
 appwrite deploy collections
 ```
-
-The `deploy` command also comes with a convenient `--all` flag to deploy all your functions and collections at once.
-
-```sh
-appwrite deploy --all
-``` 
 
 > ### Note
 > By default, requests to domains with self signed SSL certificates (or no certificates) are disabled. If you trust the domain, you can bypass the certificate validation using
