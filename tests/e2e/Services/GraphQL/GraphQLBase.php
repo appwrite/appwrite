@@ -232,26 +232,28 @@ trait GraphQLBase
                         array
                     }
                 }';
-            case self::$GET_DOCUMENT :
+            case self::$GET_DOCUMENT:
                 return 'query getDocument($collectionId: String!, $documentId: String!){
                     databaseGetDocument (collectionId: $collectionId, documentId: $documentId) {
                         _id
                         _collection
                         _read
                         _write
+                        data
                     }
                 }';
-            case self::$LIST_DOCUMENTS :
+            case self::$LIST_DOCUMENTS:
                 return 'query listDocuments($collectionId: String, $filters: [Json]){
                     databaseListDocuments (collectionId: $collectionId, filters: $filters) {
                         total
                         documents {
                             _id
                             collectionId
+                            data
                         }
                     }   
                 }';
-            case self::$CREATE_DOCUMENT_REST :
+            case self::$CREATE_DOCUMENT_REST:
                 return 'mutation createDocument($collectionId: String!, $documentId: String!, $data: Json!, $read: [String!]!, $write: [String!]!){
                     databaseCreateDocument (collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
                         _id
@@ -260,7 +262,7 @@ trait GraphQLBase
                         _write
                     }
                 }';
-            case self::$CREATE_DOCUMENT_GQL_HOOKS:
+            case self::$CREATE_CUSTOM_ENTITY:
                 return 'mutation createActor($name: String!, $age: Int!, $alive: Boolean!, $salary: Float) {
                     actorCreate(name: $name, age: $age, alive: $alive, salary: $salary) {
                         _id
@@ -281,7 +283,7 @@ trait GraphQLBase
                     databaseDeleteDocument (collectionId: $collectionId, documentId: $documentId)
                 }';
 
-            case self::$GET_USER :
+            case self::$GET_USER:
                 return 'query getUser ($userId : String!) {
                     usersGet(userId : $userId) {
                         _id
@@ -292,9 +294,46 @@ trait GraphQLBase
                         emailVerification
                     }
                 }';
-            case self::$LIST_USERS:
-                return 'query listUsers($filters: [Json]){
-                    usersList (filters: $filters) {
+            case self::$GET_USER_PREFERENCES:
+                return 'query getUserPreferences ($userId : String!) {
+                    usersGetPrefs(userId : $userId) {
+                        data
+                    }
+                }';
+            case self::$GET_USER_SESSIONS:
+                return 'query getUserSessions ($userId : String!) {
+                    usersGetSessions(userId : $userId) {
+                        total 
+                        sessions {
+                            _id
+                            userId
+                        }
+                    }
+                }';
+            case self::$GET_USER_MEMBERSHIPS:
+                return 'query getUserMemberships ($userId : String!) {
+                    usersGetMemberships(userId : $userId) {
+                        total
+                        memberships {
+                            _id
+                            userId
+                            teamId
+                        }
+                    }
+                }';
+            case self::$GET_USER_LOGS:
+                return 'query getUserLogs ($userId : String!) {
+                    usersGetLogs(userId : $userId) {
+                        total
+                        logs {
+                            event
+                            userId
+                        }
+                    }
+                }';
+            case self::$GET_USERS:
+                return 'query listUsers($search: String, $limit: Int, $offset: Int, $cursor: String, $cursorDirection: String, $orderType: String) {
+                    usersList (search: $search, limit: $limit, offset: $offset, cursor: $cursor, cursorDirection: $cursorDirection, orderType: $orderType) {
                         total
                         users {
                             _id
@@ -306,7 +345,7 @@ trait GraphQLBase
                         }
                     }   
                 }';
-            case self::$CREATE_USER :
+            case self::$CREATE_USER:
                 return 'mutation createUser($userId: String!, $email: String!, $password: String!, $name: String){
                     usersCreate (userId: $userId, email: $email, password: $password, name: $name) {
                         _id
@@ -318,14 +357,11 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_USER_STATUS:
-                return 'mutation updateUserStatus($userId: String!, $status: String!){
+                return 'mutation updateUserStatus($userId: String!, $status: Boolean!){
                     usersUpdateStatus (userId: $userId, status: $status) {
                         _id
                         name
-                        registration
-                        status
                         email
-                        emailVerification
                     }
                 }';
             case self::$UPDATE_USER_NAME:
@@ -361,14 +397,42 @@ trait GraphQLBase
                         emailVerification
                     }
                 }';
+            case self::$UPDATE_USER_PHONE:
+                return 'mutation updateUserPhone($userId: String!, number: String!){
+                    usersUpdatePhone (userId: $userId, number: number) {
+                        name
+                        email
+                    }
+                }';
             case self::$UPDATE_USER_PREFS:
                 return 'mutation updateUserPrefs($userId: String!, $prefs: Json!){
                     usersUpdatePrefs (userId: $userId, prefs: $prefs) {
-                        _id
-                        name
+                        data
                     }
                 }';
-            case self::$DELETE_USER :
+            case self::$UPDATE_USER_EMAIL_VERIFICATION:
+                return 'mutation updateUserEmailVerification($userId: String!, $emailVerification: Boolean!){
+                    usersUpdateVerification (userId: $userId, emailVerification: $emailVerification) {
+                        name
+                        email
+                    }
+                }';
+            case self::$UPDATE_USER_PHONE_VERIFICATION:
+                return 'mutation updateUserPhoneVerification($userId: String!, $phoneVerification: Boolean!){
+                    usersUpdatePhoneVerification (userId: $userId, phoneVerification: $phoneVerification) {
+                        name
+                        email
+                    }
+                }';
+            case self::$DELETE_USER_SESSIONS:
+                return 'mutation deleteUserSessions($userId: String!){
+                    usersDeleteSessions (userId: $userId)
+                }';
+            case self::$DELETE_USER_SESSION:
+                return 'mutation deleteUserSession($userId: String!, $sessionId: String!){
+                    usersDeleteSession (userId: $userId, sessionId: $sessionId)
+                }';
+            case self::$DELETE_USER:
                 return 'mutation deleteUser($userId: String!) {
                     usersDelete(userId: $userId)
                 }';
@@ -382,7 +446,7 @@ trait GraphQLBase
                         }
                     }
                 }';
-            case self::$CREATE_API_KEY :
+            case self::$CREATE_API_KEY:
                 return 'mutation createKey($projectId: String!, $name: String!, $scopes: [String!]!){
                     projectsCreateKey (projectId: $projectId, name: $name, scopes: $scopes) {
                         _id
@@ -394,7 +458,7 @@ trait GraphQLBase
             case self::$GET_ACCOUNT:
                 return 'query getAccount {
                     accountGet {
-                        id
+                        _id
                         name
                         email
                         status
@@ -402,7 +466,7 @@ trait GraphQLBase
                         emailVerification
                     }
                 }';
-            case self::$CREATE_ACCOUNT :
+            case self::$CREATE_ACCOUNT:
                 return 'mutation createAccount($userId: String!, $email: String!, $password: String!, $name: String){
                     accountCreate (userId: $userId, email: $email, password: $password, name: $name) {
                         _id
@@ -413,40 +477,43 @@ trait GraphQLBase
                         emailVerification
                     }
                 }';
-            case self::$UPDATE_ACCOUNT_NAME :
-                return 'mutation updateAccountName($userId: String!, $name: String!){
-                    accountUpdateName (userId: $userId, name: $name) {
+            case self::$UPDATE_ACCOUNT_NAME:
+                return 'mutation updateAccountName($name: String!){
+                    accountUpdateName (name: $name) {
                         _id
                         name
-                        registration
                         status
                         email
-                        emailVerification
                     }
                 }';
-            case self::$UPDATE_ACCOUNT_EMAIL :
-                return 'mutation updateAccountEmail($userId: String!, $email: String!){
-                    accountUpdateEmail (userId: $userId, email: $email) {
+            case self::$UPDATE_ACCOUNT_EMAIL:
+                return 'mutation updateAccountEmail($email: String!, $password: String!){
+                    accountUpdateEmail (email: $email, password: $password) {
                         _id
                         name
-                        registration
                         status
                         email
-                        emailVerification
                     }
                 }';
-            case self::$UPDATE_ACCOUNT_PASSWORD :
-                return 'mutation updateAccountPassword($userId: String!, $password: String!){
-                    accountUpdatePassword (userId: $userId, password: $password) {
+            case self::$UPDATE_ACCOUNT_PASSWORD:
+                return 'mutation updateAccountPassword($password: String!, $oldPassword: String!){
+                    accountUpdatePassword (password: $password, oldPassword: $oldPassword) {
                         _id
                         name
-                        registration
                         status
                         email
-                        emailVerification
                     }
                 }';
-            case self::$UPDATE_ACCOUNT_PREFS :
+            case self::$UPDATE_ACCOUNT_PHONE:
+                return 'mutation updateAccountPhone($phone: String!, $password: String!){
+                    accountUpdatePhone (phone: $phone, password: $password) {
+                        _id
+                        name
+                        status
+                        email
+                    }
+                }';
+            case self::$UPDATE_ACCOUNT_PREFS:
                 return 'mutation updateAccountPrefs($userId: String!, $prefs: Json!){
                     accountUpdatePrefs (userId: $userId, prefs: $prefs) {
                         _id
@@ -457,28 +524,21 @@ trait GraphQLBase
                         emailVerification
                     }
                 }';
+            case self::$UPDATE_ACCOUNT_STATUS:
+                return 'mutation updateAccountStatus{
+                    accountUpdateStatus {
+                        status
+                        email
+                    }
+                }';
             case self::$GET_ACCOUNT_SESSION:
-                return 'query getAccountSession {
-                    accountSessionGet {
+                return 'query getAccountSession($sessionId: String!) {
+                    accountGetSession(sessionId: $sessionId) {
                         _id
                         userId
-                        projectId
-                        scopes
-                        expires
                     }
                 }';
-            case self::$LIST_ACCOUNT_SESSIONS:
-                return 'query listAccountSessions {
-                    accountSessionsList {
-                        total
-                        sessions {
-                            _id
-                            userId
-                            expires
-                        }
-                    }
-                }';
-            case self::$CREATE_ACCOUNT_SESSION :
+            case self::$CREATE_ACCOUNT_SESSION:
                 return 'mutation createAccountSession($email: String!, $password: String!){
                     accountCreateSession (email: $email, password: $password) {
                         _id
@@ -488,13 +548,119 @@ trait GraphQLBase
                         current
                     }
                 }';
-            case self::$DELETE_ACCOUNT_SESSION :
+            case self::$DELETE_ACCOUNT_SESSION:
                 return 'mutation deleteAccountSession($sessionId: String!){
                     accountDeleteSession (sessionId: $sessionId)
                 }';
             case self::$DELETE_ACCOUNT_SESSIONS:
                 return 'mutation deleteAccountSessions {
                     accountDeleteSessions
+                }';
+            case self::$CREATE_MAGIC_URL:
+                return 'mutation createMagicURL($userId: String!, $email: String!){
+                    accountCreateMagicURLSession (userId: $userId, email: $email) {
+                        userId
+                        expire
+                    }
+                }';
+            case self::$UPDATE_MAGIC_URL:
+                return 'mutation confirmMagicURL($userId: String!, $secret: String!){
+                    accountUpdateMagicURLSession (userId: $userId, secret: $secret) {
+                        userId
+                        expire
+                        provider
+                        ip
+                    }
+                }';
+            case self::$CREATE_ANONYMOUS_SESSION:
+                return 'mutation createAnonymousSession {
+                    accountCreateAnonymousSession {
+                        _id
+                        userId
+                    }
+                }';
+            case self::$CREATE_ACCOUNT_JWT:
+                return 'mutation createJWT{
+                    accountCreateJWT {
+                        jwt
+                    }
+                }';
+            case self::$GET_ACCOUNT_PREFS:
+                return 'query getAccountPreferences {
+                    accountGetPrefs { 
+                        data 
+                    }
+                }';
+            case self::$GET_ACCOUNT_SESSIONS:
+                return 'query getAccountSessions {
+                    accountGetSessions {
+                        total
+                        sessions {
+                            _id
+                            userId
+                            expire
+                        }
+                    }
+                }';
+            case self::$GET_ACCOUNT_LOGS:
+                return 'query getAccountLogs {
+                    accountGetLogs {
+                        total
+                        logs {
+                            event
+                            userId
+                            ip
+                            countryName
+                        }
+                    }
+                }';
+            case self::$CREATE_PASSWORD_RECOVERY:
+                return 'mutation createPasswordRecovery($email: String!, $url: String!){
+                    accountCreateRecovery (email: $email, url: $url) {
+                        userId
+                        secret
+                        expire
+                    }
+                }';
+            case self::$UPDATE_PASSWORD_RECOVERY:
+                return 'mutation confirmPasswordRecovery($userId: String!, $secret: String!, $password: String!, $passwordAgain: String!) {
+                    accountUpdateRecovery (userId: $userId, secret: $secret, password: $password, passwordAgain: $passwordAgain) {
+                        userId
+                        secret
+                        expire
+                    }
+                }';
+            case self::$CREATE_EMAIL_VERIFICATION:
+                return 'mutation createVerification($url: String!){
+                    accountCreateVerification (url: $url) {
+                        userId
+                        secret
+                        expire
+                    }
+                }';
+            case self::$UPDATE_EMAIL_VERIFICATION:
+                return 'mutation confirmVerification($userId: String!, $secret: String!) {
+                    accountUpdateVerification (userId: $userId, secret: $secret) {
+                        userId
+                        secret
+                        expire
+                    }
+                }';
+            case self::$CREATE_PHONE_VERIFICATION:
+                return 'mutation createPhoneVerification {
+                    accountCreatePhoneVerification {
+                        userId
+                        secret
+                        expire
+                    }
+                }';
+            case self::$UPDATE_PHONE_VERIFICATION:
+                return 'mutation confirmPhoneVerification($userId: String!, $secret: String!) {
+                    accountUpdatePhoneVerification (userId: $userId, secret: $secret) {
+                        userId
+                        secret
+                        expire
+                    }
                 }';
             case self::$GET_TEAM:
                 return 'query getTeam($teamId: String!){
@@ -570,7 +736,7 @@ trait GraphQLBase
                         roles
                     }
                 }';
-            case self::$UPDATE_MEMBERSHIP_STATUS :
+            case self::$UPDATE_MEMBERSHIP_STATUS:
                 return 'mutation updateTeamMembership($teamId: String!, $inviteId: String!, $userId: String!, $secret: String!){
                     teamsUpdateMembershipStatus(teamId: $teamId, inviteId: $inviteId, userId: $userId, secret: $secret ) {
                         _id
@@ -713,290 +879,4 @@ trait GraphQLBase
 
         throw new \InvalidArgumentException('Invalid query type');
     }
-
-    /**
-     * @throws \Exception
-     */
-    public function testCreateCollection(): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_COLLECTION);
-
-        $collectionAttrs = [
-            'collectionId' => 'actors',
-            'name' => 'Actors',
-            'permission' => 'collection',
-            'read' => ['role:all'],
-            'write' => ['role:member'],
-        ];
-
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => $collectionAttrs
-        ];
-
-        $actors = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $gqlPayload);
-
-        $errorMessage = 'User (role: guest) missing scope (collections.write)';
-        $this->assertEquals(401, $actors['headers']['status-code']);
-        $this->assertEquals($errorMessage, $actors['body']['errors'][0]['message']);
-        $this->assertIsArray($actors['body']['data']);
-        $this->assertNull($actors['body']['data']['databaseCreateCollection']);
-
-        $actors = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $gqlPayload);
-
-        $this->assertEquals(201, $actors['headers']['status-code']);
-        $this->assertArrayNotHasKey('errors', $actors['body']);
-        $this->assertIsArray($actors['body']['data']);
-
-        $data = $actors['body']['data']['databaseCreateCollection'];
-        $this->assertEquals('Actors', $data['name']);
-        $this->assertArrayHasKey('_id', $data);
-        $this->assertArrayHasKey('permission', $data);
-        $this->assertContains('role:all', $data['_read']);
-        $this->assertContains('role:member', $data['_write']);
-
-        return [
-            'collectionId' => $data['_id'],
-        ];
-    }
-
-    /**
-     * @depends testCreateCollection
-     * @throws \Exception
-     */
-    public function testCreateStringAttribute(array $data): void
-    {
-        $projectId = $this->getProject()['$id'];
-        $key = $this->getProject()['apiKey'];
-        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
-
-        $stringAttrs = [
-            'collectionId' => $data['collectionId'],
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ];
-
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => $stringAttrs
-        ];
-
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $key
-        ], $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $attribute['body']);
-        $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['databaseCreateStringAttribute']);
-
-        // Wait for attribute to be ready
-        sleep(2);
-    }
-
-    /**
-     * @depends testCreateCollection
-     * @throws \Exception
-     */
-    public function testCreateIntegerAttribute(array $data): void
-    {
-        $projectId = $this->getProject()['$id'];
-        $key = $this->getProject()['apiKey'];
-        $query = $this->getQuery(self::$CREATE_INTEGER_ATTRIBUTE);
-
-        $intAttrs = [
-            'collectionId' => $data['collectionId'],
-            'key' => 'age',
-            'min' => 18,
-            'max' => 150,
-            'required' => true,
-        ];
-
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => $intAttrs
-        ];
-
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $key
-        ], $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $attribute['body']);
-        $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['databaseCreateIntegerAttribute']);
-
-        // Wait for attribute to be ready
-        sleep(2);
-    }
-
-    /**
-     * @depends testCreateCollection
-     * @throws \Exception
-     */
-    public function testCreateBooleanAttribute(array $data): void
-    {
-        $projectId = $this->getProject()['$id'];
-        $key = $this->getProject()['apiKey'];
-        $query = $this->getQuery(self::$CREATE_BOOLEAN_ATTRIBUTE);
-
-        $booleanAttrs = [
-            'collectionId' => $data['collectionId'],
-            'key' => 'alive',
-            'required' => true,
-        ];
-
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => $booleanAttrs
-        ];
-
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $key
-        ], $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $attribute['body']);
-        $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['databaseCreateBooleanAttribute']);
-
-        // Wait for attribute to be ready
-        sleep(2);
-    }
-
-    /**
-     * @depends testCreateCollection
-     * @throws \Exception
-     */
-    public function testCreateFloatAttribute(array $data): void
-    {
-        $projectId = $this->getProject()['$id'];
-        $key = $this->getProject()['apiKey'];
-        $query = $this->getQuery(self::$CREATE_FLOAT_ATTRIBUTE);
-
-        $floatAttrs = [
-            'collectionId' => $data['collectionId'],
-            'key' => 'salary',
-            'min' => 1000.0,
-            'max' => 999999.99,
-            'default' => 1000.0,
-            'required' => false,
-        ];
-
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => $floatAttrs
-        ];
-
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $key
-        ], $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $attribute['body']);
-        $this->assertIsArray($attribute['body']['data']);
-        $this->assertIsArray($attribute['body']['data']['databaseCreateFloatAttribute']);
-
-        // Wait for attribute to be ready
-        sleep(2);
-    }
-
-    /**
-     * @depends testCreateCollection
-     * @depends testCreateStringAttribute
-     * @depends testCreateIntegerAttribute
-     * @depends testCreateBooleanAttribute
-     * @depends testCreateFloatAttribute
-     * @throws \Exception
-     */
-    public function testCreateDocumentREST(array $data): void
-    {
-        $projectId = $this->getProject()['$id'];
-        $key = $this->getProject()['apiKey'];
-        $query = $this->getQuery(self::$CREATE_DOCUMENT_REST);
-
-        $documentAttrs = [
-            'collectionId' => $data['collectionId'],
-            'data' => [
-                'name' => 'John Doe',
-                'age' => 30,
-                'alive' => true,
-                'salary' => 9999.5
-            ]
-        ];
-
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => $documentAttrs
-        ];
-
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $key
-        ], $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $document['body']);
-        $this->assertIsArray($document['body']['data']);
-        $this->assertIsArray($document['body']['data']['databaseCreateDocument']);
-    }
-
-    /**
-     * @depends testCreateCollection
-     * @depends testCreateStringAttribute
-     * @depends testCreateIntegerAttribute
-     * @depends testCreateBooleanAttribute
-     * @depends testCreateFloatAttribute
-     * @throws \Exception
-     */
-    public function testCreateDocumentGQL(array $data): void
-    {
-        $projectId = $this->getProject()['$id'];
-        $key = '';
-        $query = $this->getQuery(self::$CREATE_DOCUMENT_GQL_HOOKS);
-
-        $documentAttrs = [
-            'name' => 'John Doe',
-            'age' => 30,
-            'alive' => true,
-            'salary' => 9999.5,
-        ];
-
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => $documentAttrs
-        ];
-
-        $document = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $key
-        ], $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $document['body']);
-        $this->assertIsArray($document['body']['data']);
-        $this->assertIsArray($document['body']['data']['actorCreate']);
-    }
-
 }
