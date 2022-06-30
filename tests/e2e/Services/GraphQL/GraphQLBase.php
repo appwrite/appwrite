@@ -83,14 +83,15 @@ trait GraphQLBase
     public static string $DELETE_USER = 'delete_user';
     // Teams
     public static string $GET_TEAM = 'get_team';
-    public static string $LIST_TEAMS = 'list_teams';
+    public static string $GET_TEAMS = 'list_teams';
     public static string $CREATE_TEAM = 'create_team';
     public static string $UPDATE_TEAM = 'update_team';
     public static string $DELETE_TEAM = 'delete_team';
     public static string $GET_TEAM_MEMBERSHIP = 'get_team_membership';
-    public static string $LIST_TEAM_MEMBERSHIPS = 'list_team_memberships';
+    public static string $GET_TEAM_MEMBERSHIPS = 'list_team_memberships';
     public static string $CREATE_TEAM_MEMBERSHIP = 'create_team_membership';
-    public static string $UPDATE_MEMBERSHIP_STATUS = 'update_membership_status';
+    public static string $UPDATE_TEAM_MEMBERSHIP_ROLES = 'update_team_membership_roles';
+    public static string $UPDATE_TEAM_MEMBERSHIP_STATUS = 'update_membership_status';
     public static string $DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
 
     // Functions
@@ -664,18 +665,17 @@ trait GraphQLBase
                 }';
             case self::$GET_TEAM:
                 return 'query getTeam($teamId: String!){
-                    teamGet (teamId: $teamId) {
+                    teamsGet (teamId: $teamId) {
                         _id
                         name
                         total
                     }
                 }';
-            case self::$LIST_TEAMS:
+            case self::$GET_TEAMS:
                 return 'query listTeams {
                     teamsList {
                         total
                         teams {
-                            _id
                             name
                             total
                         }
@@ -686,7 +686,6 @@ trait GraphQLBase
                     teamsCreate(teamId: $teamId, name : $name, roles: $roles) {
                         _id
                         name
-                        dateCreated,
                         total
                     }
                 }';
@@ -695,6 +694,7 @@ trait GraphQLBase
                     teamsUpdate(teamId: $teamId, name : $name) {
                         _id
                         name
+                        total
                     }
                 }';
             case self::$DELETE_TEAM:
@@ -702,48 +702,65 @@ trait GraphQLBase
                     teamsDelete(teamId: $teamId)
                 }';
             case self::$GET_TEAM_MEMBERSHIP:
-                return 'query getTeamMembership($teamId: String!, $userId: String!){
-                    teamGetMembership (teamId: $teamId, userId: $userId) {
-                        _id
-                        name
-                        email
-                        invited
-                    }
-                }';
-            case self::$LIST_TEAM_MEMBERSHIPS:
-                return 'query listTeamMemberships($teamId: String!){
-                    teamListMemberships (teamId: $teamId) {
+                return 'query getTeamMembership($teamId: String!, $membershipId: String!){
+                    teamsGetMembership (teamId: $teamId, membershipId: $membershipId) {
                         total
                         memberships {
                             _id
-                            name
-                            email
-                            invited
+                            teamId
+                            userName
+                            userEmail
+                        }
+                    }
+                }';
+            case self::$GET_TEAM_MEMBERSHIPS:
+                return 'query getTeamMemberships($teamId: String!){
+                    teamsGetMemberships (teamId: $teamId) {
+                        total
+                        memberships {
+                            _id
+                            teamId
+                            userName
+                            userEmail
                         }
                     }
                 }';
             case self::$CREATE_TEAM_MEMBERSHIP:
-                return 'mutation createTeamMembership($teamId: String!, $email: String!, $name: String, $roles: [Json]!, $url: String!){
+                return 'mutation createTeamMembership($teamId: String!, $email: String!, $name: String, $roles: [String!]!, $url: String!){
                     teamsCreateMembership(teamId: $teamId, email: $email, name : $name, roles: $roles, url: $url) {
                         _id
                         userId
                         teamId
-                        name 
-                        email
+                        userName 
+                        userEmail
                         invited 
                         joined 
                         confirm
                         roles
                     }
                 }';
-            case self::$UPDATE_MEMBERSHIP_STATUS:
-                return 'mutation updateTeamMembership($teamId: String!, $inviteId: String!, $userId: String!, $secret: String!){
-                    teamsUpdateMembershipStatus(teamId: $teamId, inviteId: $inviteId, userId: $userId, secret: $secret ) {
+            case self::$UPDATE_TEAM_MEMBERSHIP_ROLES:
+                return 'mutation updateTeamMembershipRoles($teamId: String!, $membershipId: String!, $roles: [String!]!){
+                    teamsUpdateMembershipRoles(teamId: $teamId, membershipId: $membershipId, roles: $roles) {
                         _id
                         userId
                         teamId
-                        name 
-                        email
+                        userName 
+                        userEmail
+                        invited 
+                        joined 
+                        confirm
+                        roles
+                    }
+                }';
+            case self::$UPDATE_TEAM_MEMBERSHIP_STATUS:
+                return 'mutation updateTeamMembership($teamId: String!, $membershipId: String!, $userId: String!, $secret: String!){
+                    teamsUpdateMembershipStatus(teamId: $teamId, membershipId: $membershipId, userId: $userId, secret: $secret ) {
+                        _id
+                        userId
+                        teamId
+                        userName 
+                        userEmail
                         invited 
                         joined 
                         confirm

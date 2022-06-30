@@ -408,7 +408,7 @@ class GraphQLClientTest extends Scope
         $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 13);
 
         /** Update membership status  */
-        $query = $this->getQuery(self::$UPDATE_MEMBERSHIP_STATUS);
+        $query = $this->getQuery(self::$UPDATE_TEAM_MEMBERSHIP_STATUS);
         $updateMembershipStatus = [
             'teamId' => $team['id'],
             'inviteId' => $inviteUid,
