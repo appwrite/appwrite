@@ -480,7 +480,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_USER_EMAIL_VERIFICATION:
                 return 'mutation updateUserEmailVerification($userId: String!, $emailVerification: Boolean!){
-                    usersUpdateVerification(userId: $userId, emailVerification: $emailVerification) {
+                    usersUpdateEmailVerification(userId: $userId, emailVerification: $emailVerification) {
                         name
                         email
                     }
@@ -552,6 +552,7 @@ trait GraphQLBase
                         name
                         status
                         email
+                        phone
                     }
                 }';
             case self::$UPDATE_ACCOUNT_EMAIL:
@@ -573,12 +574,13 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_ACCOUNT_PHONE:
-                return 'mutation updateAccountPhone($phone: String!, $password: String!){
-                    accountUpdatePhone(phone: $phone, password: $password) {
+                return 'mutation updateAccountPhone($number: Json!, $password: String!){
+                    accountUpdatePhone(number: $number, password: $password) {
                         _id
                         name
                         status
                         email
+                        phone
                     }
                 }';
             case self::$UPDATE_ACCOUNT_PREFS:

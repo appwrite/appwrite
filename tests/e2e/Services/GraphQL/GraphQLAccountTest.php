@@ -114,31 +114,30 @@ class GraphQLAccountTest extends Scope
         return $token['body']['data']['accountCreateVerification'];
     }
 
-//    public function testCreatePhoneVerification(): array
-//    {
-//        $projectId = $this->getProject()['$id'];
-//        $query = $this->getQuery(self::$CREATE_PHONE_VERIFICATION);
-//        $graphQLPayload = [
-//            'query' => $query,
-//            'variables' => [
-//                'phone' => '+123456789',
-//                'url' => 'https://example.com/verification'
-//            ],
-//        ];
-//
-//        $token = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $projectId,
-//        ], $this->getHeaders()), $graphQLPayload);
-//
-//        \var_dump($token);
-//
-//        $this->assertArrayNotHasKey('errors', $token['body']);
-//        $this->assertIsArray($token['body']['data']);
-//        $this->assertIsArray($token['body']['data']['accountCreatePhoneVerification']);
-//
-//        return $token['body']['data']['accountCreatePhoneVerification'];
-//    }
+    /**
+     * @depends testUpdateAccountPhone
+     * @return array
+     * @throws \Exception
+     */
+    public function testCreatePhoneVerification(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$CREATE_PHONE_VERIFICATION);
+        $graphQLPayload = [
+            'query' => $query,
+        ];
+
+        $token = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertArrayNotHasKey('errors', $token['body']);
+        $this->assertIsArray($token['body']['data']);
+        $this->assertIsArray($token['body']['data']['accountCreatePhoneVerification']);
+
+        return $token['body']['data']['accountCreatePhoneVerification'];
+    }
 
     public function testCreatePasswordRecovery(): array
     {
@@ -367,7 +366,7 @@ class GraphQLAccountTest extends Scope
             'query' => $query,
             'variables' => [
                 'oldPassword' => 'password',
-                'password' => 'newpassword',
+                'password' => 'password',
             ]
         ];
 
@@ -383,32 +382,30 @@ class GraphQLAccountTest extends Scope
         return $account;
     }
 
-//    public function testUpdateAccountPhone(): array
-//    {
-//        $projectId = $this->getProject()['$id'];
-//        $query = $this->getQuery(self::$UPDATE_ACCOUNT_PHONE);
-//        $graphQLPayload = [
-//            'query' => $query,
-//            'variables' => [
-//                'phone' => '+123456789',
-//                'password' => 'password',
-//            ]
-//        ];
-//
-//        $account = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $projectId,
-//        ], $this->getHeaders()), $graphQLPayload);
-//
-//        \var_dump($account);
-//
-//        $this->assertArrayNotHasKey('errors', $account['body']);
-//        $this->assertIsArray($account['body']['data']);
-//        $this->assertIsArray($account['body']['data']['accountUpdatePhone']);
-//        $this->assertEquals('+123456789', $account['body']['data']['accountUpdatePhone']['phone']);
-//
-//        return $account;
-//    }
+    public function testUpdateAccountPhone(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$UPDATE_ACCOUNT_PHONE);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'number' => '+123456789',
+                'password' => 'password',
+            ]
+        ];
+
+        $account = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertArrayNotHasKey('errors', $account['body']);
+        $this->assertIsArray($account['body']['data']);
+        $this->assertIsArray($account['body']['data']['accountUpdatePhone']);
+        $this->assertEquals('+123456789', $account['body']['data']['accountUpdatePhone']['phone']);
+
+        return $account;
+    }
 
     public function testUpdateAccountStatus(): array
     {
