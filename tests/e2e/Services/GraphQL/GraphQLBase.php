@@ -6,9 +6,15 @@ use Tests\E2E\Client;
 
 trait GraphQLBase
 {
+    // Databases
+    public static string $CREATE_DATABASE = 'create_database';
+    public static string $GET_DATABASES = 'get_databases';
+    public static string $GET_DATABASE = 'get_database';
+    public static string $UPDATE_DATABASE = 'update_database';
+    public static string $DELETE_DATABASE = 'delete_database';
     // Collections
     public static string $GET_COLLECTION = 'get_collection';
-    public static string $LIST_COLLECTIONS = 'list_collections';
+    public static string $GET_COLLECTIONS = 'list_collections';
     public static string $CREATE_COLLECTION = 'create_collection';
     public static string $UPDATE_COLLECTION = 'update_collection';
     public static string $DELETE_COLLECTION = 'delete_collection';
@@ -17,10 +23,14 @@ trait GraphQLBase
     public static string $CREATE_INTEGER_ATTRIBUTE = 'create_integer_attribute';
     public static string $CREATE_FLOAT_ATTRIBUTE = 'create_float_attribute';
     public static string $CREATE_BOOLEAN_ATTRIBUTE = 'create_boolean_attribute';
-    public static string $CREATE_URL_ATTRIBUTE = 'create_string_attribute';
-    public static string $CREATE_EMAIL_ATTRIBUTE = 'create_string_attribute';
-    public static string $CREATE_IP_ATTRIBUTE = 'create_string_attribute';
-    public static string $CREATE_ENUM_ATTRIBUTE = 'create_string_attribute';
+    public static string $CREATE_URL_ATTRIBUTE = 'create_url_attribute';
+    public static string $CREATE_EMAIL_ATTRIBUTE = 'create_email_attribute';
+    public static string $CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
+    public static string $CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
+    public static string $GET_ATTRIBUTES = 'get_attributes';
+    public static string $GET_ATTRIBUTE = 'get_attribute';
+    public static string $UPDATE_ATTRIBUTE = 'update_attribute';
+    public static string $DELETE_ATTRIBUTE = 'delete_attribute';
     // Documents
     public static string $GET_DOCUMENT = 'get_document';
     public static string $LIST_DOCUMENTS = 'list_documents';
@@ -115,16 +125,48 @@ trait GraphQLBase
     public function getQuery(string $name): string
     {
         switch ($name) {
-            case self::$GET_COLLECTION:
-                return 'query getCollection($collectionId: String!) {
-                    databaseGetCollection(collectionId: $collectionId) {
+            case self::$CREATE_DATABASE:
+                return 'mutation createDatabase($databaseId: String!, $name: String!) {
+                    databasesCreateDatabase(databaseId: $databaseId, name: $name) {
                         _id
                         name
                     }
                 }';
-            case self::$LIST_COLLECTIONS:
-                return 'query listCollections {
-                    databaseListCollections {
+            case self::$GET_DATABASES:
+                return 'query getDatabases {
+                    databasesGetDatabases {
+                        _id
+                        name
+                    }
+                }';
+            case self::$GET_DATABASE:
+                return 'query getDatabase($databaseId: String!) {
+                    databasesGetDatabase(databaseId: $databaseId) {
+                        _id
+                        name
+                    }
+                }';
+            case self::$UPDATE_DATABASE:
+                return 'mutation updateDatabase($databaseId: String!, $name: String!) {
+                    databasesUpdateDatabase(databaseId: $databaseId, name: $name) {
+                        _id
+                        name
+                    }
+                }';
+            case self::$DELETE_DATABASE:
+                return 'mutation deleteDatabase($databaseId: String!) {
+                    databasesDeleteDatabase(databaseId: $databaseId)
+                }';
+            case self::$GET_COLLECTION:
+                return 'query getCollection($databaseId: String!, $collectionId: String!) {
+                    databasesGetCollection(databaseId: $databaseId, collectionId: $collectionId) {
+                        _id
+                        name
+                    }
+                }';
+            case self::$GET_COLLECTIONS:
+                return 'query listCollections($databaseId: String!) {
+                    databasesListCollections(databaseId: $databaseId) {
                         total
                         collections {
                             _id
@@ -133,8 +175,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_COLLECTION:
-                return 'mutation createCollection($collectionId: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!) {
-                    databaseCreateCollection (collectionId: $collectionId, name: $name, permission: $permission, read: $read, write: $write) {
+                return 'mutation createCollection($databaseId: String!, $collectionId: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!) {
+                    databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $name, permission: $permission, read: $read, write: $write) {
                         _id
                         _read
                         _write
@@ -143,8 +185,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_COLLECTION:
-                return 'mutation updateCollection($collectionId: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!, $enabled: Boolean){
-                    databaseUpdateCollection (collectionId: $collectionId, name: $name, permission: $permission, read: $read, write: $write, enabled: $enabled) {
+                return 'mutation updateCollection($databaseId: String!, $collectionId: String!, $name: String!, $permission: String!, $read: [String!], $write: [String!], $enabled: Boolean){
+                    databasesUpdateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $name, permission: $permission, read: $read, write: $write, enabled: $enabled) {
                         _id
                         _read
                         _write
@@ -153,12 +195,12 @@ trait GraphQLBase
                     }
                 }';
             case self::$DELETE_COLLECTION:
-                return 'mutation deleteCollection($collectionId: String!){
-                    databaseDeleteCollection (collectionId: $collectionId)
+                return 'mutation deleteCollection($databaseId: String!, $collectionId: String!){
+                    databasesDeleteCollection(databaseId: $databaseId, collectionId: $collectionId)
                 }';
             case self::$CREATE_STRING_ATTRIBUTE:
-                return 'mutation createStringAttribute($collectionId: String!, $key: String!, $size: Int!, $required: Boolean!, $default: String, $array: Boolean){
-                    databaseCreateStringAttribute (collectionId: $collectionId, key: $key, size: $size, required: $required, default: $default, array: $array) {
+                return 'mutation createStringAttribute($databaseId: String!, $collectionId: String!, $key: String!, $size: Int!, $required: Boolean!, $default: String, $array: Boolean){
+                    databasesCreateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, size: $size, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -166,8 +208,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_INTEGER_ATTRIBUTE:
-                return 'mutation createIntegerAttribute($collectionId: String!, $key: String!, $required: Boolean!, $min: Int, $max: Int, $default: Int, $array: Boolean){
-                    databaseCreateIntegerAttribute (collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
+                return 'mutation createIntegerAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Int, $max: Int, $default: Int, $array: Boolean){
+                    databasesCreateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
                         key
                         required
                         min
@@ -177,8 +219,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_FLOAT_ATTRIBUTE:
-                return 'mutation createFloatAttribute($collectionId: String!, $key: String!, $required: Boolean!, $min: Float, $max: Float, $default: Float, $array: Boolean){
-                    databaseCreateFloatAttribute (collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
+                return 'mutation createFloatAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Float, $max: Float, $default: Float, $array: Boolean){
+                    databasesCreateFloatAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default, array: $array) {
                         key
                         required
                         min
@@ -188,8 +230,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_BOOLEAN_ATTRIBUTE:
-                return 'mutation createBooleanAttribute($collectionId: String!, $key: String!, $required: Boolean!, $default: Boolean, $array: Boolean){
-                    databaseCreateBooleanAttribute (collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
+                return 'mutation createBooleanAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: Boolean, $array: Boolean){
+                    databasesCreateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -197,8 +239,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_URL_ATTRIBUTE:
-                return 'mutation createUrlAttribute($collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    databaseCreateUrlAttribute (collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
+                return 'mutation createUrlAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
+                    databasesCreateUrlAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -206,8 +248,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_EMAIL_ATTRIBUTE:
-                return 'mutation createEmailAttribute($collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    databaseCreateEmailAttribute (collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
+                return 'mutation createEmailAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
+                    databasesCreateEmailAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -215,8 +257,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_IP_ATTRIBUTE:
-                return 'mutation createIpAttribute($collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
-                    databaseCreateIpAttribute (collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
+                return 'mutation createIpAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
+                    databasesCreateIpAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
                         key
                         required
                         default
@@ -224,8 +266,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_ENUM_ATTRIBUTE:
-                return 'mutation createEnumAttribute($collectionId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String, $array: Boolean){
-                    databaseCreateEnumAttribute (collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default, array: $array) {
+                return 'mutation createEnumAttribute($databaseId: String!, $collectionId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String, $array: Boolean){
+                    databasesCreateEnumAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default, array: $array) {
                         key
                         elements
                         required
@@ -233,9 +275,34 @@ trait GraphQLBase
                         array
                     }
                 }';
+            case self::$GET_ATTRIBUTES:
+                return 'query getAttributes($databaseId: String!, $collectionId: String!) {
+                    databasesGetAttributes(databaseId: $databaseId, collectionId: $collectionId) {
+                        total
+                        attributes {
+                            key
+                            required
+                            default
+                            array
+                        }
+                    }
+                }';
+            case self::$GET_ATTRIBUTE:
+                return 'query getAttribute($databaseId: String!, $collectionId: String!, $key: String!) {
+                    databasesGetAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
+                        key
+                        required
+                        default
+                        array
+                    }
+                }';
+            case self::$DELETE_ATTRIBUTE:
+                return 'mutation deleteAttribute($databaseId: String!, $collectionId: String!, $key: String!){
+                    databasesDeleteAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key)
+                }';
             case self::$GET_DOCUMENT:
                 return 'query getDocument($collectionId: String!, $documentId: String!){
-                    databaseGetDocument (collectionId: $collectionId, documentId: $documentId) {
+                    databasesGetDocument(collectionId: $collectionId, documentId: $documentId) {
                         _id
                         _collection
                         _read
@@ -245,7 +312,7 @@ trait GraphQLBase
                 }';
             case self::$LIST_DOCUMENTS:
                 return 'query listDocuments($collectionId: String, $filters: [Json]){
-                    databaseListDocuments (collectionId: $collectionId, filters: $filters) {
+                    databasesListDocuments(collectionId: $collectionId, filters: $filters) {
                         total
                         documents {
                             _id
@@ -256,7 +323,7 @@ trait GraphQLBase
                 }';
             case self::$CREATE_DOCUMENT_REST:
                 return 'mutation createDocument($collectionId: String!, $documentId: String!, $data: Json!, $read: [String!]!, $write: [String!]!){
-                    databaseCreateDocument (collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
+                    databasesCreateDocument(collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
                         _id
                         _collection
                         _read
@@ -274,18 +341,18 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_DOCUMENT:
                 return 'mutation updateDocument($collectionId: String!, $documentId: String!, $data: Json!, $read: [String!]!, $write: [String!]!){
-                    databaseUpdateDocument (collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
+                    databasesUpdateDocument(collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
                         _id
                         _collection
                     }
                 }';
             case self::$DELETE_DOCUMENT:
                 return 'mutation deleteDocument($collectionId: String!, $documentId: String!){
-                    databaseDeleteDocument (collectionId: $collectionId, documentId: $documentId)
+                    databasesDeleteDocument(collectionId: $collectionId, documentId: $documentId)
                 }';
 
             case self::$GET_USER:
-                return 'query getUser ($userId : String!) {
+                return 'query getUser($userId : String!) {
                     usersGet(userId : $userId) {
                         _id
                         name
@@ -296,13 +363,13 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_USER_PREFERENCES:
-                return 'query getUserPreferences ($userId : String!) {
+                return 'query getUserPreferences($userId : String!) {
                     usersGetPrefs(userId : $userId) {
                         data
                     }
                 }';
             case self::$GET_USER_SESSIONS:
-                return 'query getUserSessions ($userId : String!) {
+                return 'query getUserSessions($userId : String!) {
                     usersGetSessions(userId : $userId) {
                         total 
                         sessions {
@@ -312,7 +379,7 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_USER_MEMBERSHIPS:
-                return 'query getUserMemberships ($userId : String!) {
+                return 'query getUserMemberships($userId : String!) {
                     usersGetMemberships(userId : $userId) {
                         total
                         memberships {
@@ -323,7 +390,7 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_USER_LOGS:
-                return 'query getUserLogs ($userId : String!) {
+                return 'query getUserLogs($userId : String!) {
                     usersGetLogs(userId : $userId) {
                         total
                         logs {
@@ -334,7 +401,7 @@ trait GraphQLBase
                 }';
             case self::$GET_USERS:
                 return 'query listUsers($search: String, $limit: Int, $offset: Int, $cursor: String, $cursorDirection: String, $orderType: String) {
-                    usersList (search: $search, limit: $limit, offset: $offset, cursor: $cursor, cursorDirection: $cursorDirection, orderType: $orderType) {
+                    usersList(search: $search, limit: $limit, offset: $offset, cursor: $cursor, cursorDirection: $cursorDirection, orderType: $orderType) {
                         total
                         users {
                             _id
@@ -348,7 +415,7 @@ trait GraphQLBase
                 }';
             case self::$CREATE_USER:
                 return 'mutation createUser($userId: String!, $email: String!, $password: String!, $name: String){
-                    usersCreate (userId: $userId, email: $email, password: $password, name: $name) {
+                    usersCreate(userId: $userId, email: $email, password: $password, name: $name) {
                         _id
                         name
                         registration
@@ -359,7 +426,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_USER_STATUS:
                 return 'mutation updateUserStatus($userId: String!, $status: Boolean!){
-                    usersUpdateStatus (userId: $userId, status: $status) {
+                    usersUpdateStatus(userId: $userId, status: $status) {
                         _id
                         name
                         email
@@ -367,7 +434,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_USER_NAME:
                 return 'mutation updateUserName($userId: String!, $name: String!){
-                    usersUpdateName (userId: $userId, name: $name) {
+                    usersUpdateName(userId: $userId, name: $name) {
                         _id
                         name
                         registration
@@ -378,7 +445,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_USER_EMAIL:
                 return 'mutation updateUserEmail($userId: String!, $email: String!){
-                    usersUpdateEmail (userId: $userId, email: $email) {
+                    usersUpdateEmail(userId: $userId, email: $email) {
                         _id
                         name
                         registration
@@ -389,7 +456,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_USER_PASSWORD:
                 return 'mutation updateUserPassword($userId: String!, $password: String!){
-                    usersUpdatePassword (userId: $userId, password: $password) {
+                    usersUpdatePassword(userId: $userId, password: $password) {
                         _id
                         name
                         registration
@@ -400,38 +467,38 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_USER_PHONE:
                 return 'mutation updateUserPhone($userId: String!, number: String!){
-                    usersUpdatePhone (userId: $userId, number: number) {
+                    usersUpdatePhone(userId: $userId, number: number) {
                         name
                         email
                     }
                 }';
             case self::$UPDATE_USER_PREFS:
                 return 'mutation updateUserPrefs($userId: String!, $prefs: Json!){
-                    usersUpdatePrefs (userId: $userId, prefs: $prefs) {
+                    usersUpdatePrefs(userId: $userId, prefs: $prefs) {
                         data
                     }
                 }';
             case self::$UPDATE_USER_EMAIL_VERIFICATION:
                 return 'mutation updateUserEmailVerification($userId: String!, $emailVerification: Boolean!){
-                    usersUpdateVerification (userId: $userId, emailVerification: $emailVerification) {
+                    usersUpdateVerification(userId: $userId, emailVerification: $emailVerification) {
                         name
                         email
                     }
                 }';
             case self::$UPDATE_USER_PHONE_VERIFICATION:
                 return 'mutation updateUserPhoneVerification($userId: String!, $phoneVerification: Boolean!){
-                    usersUpdatePhoneVerification (userId: $userId, phoneVerification: $phoneVerification) {
+                    usersUpdatePhoneVerification(userId: $userId, phoneVerification: $phoneVerification) {
                         name
                         email
                     }
                 }';
             case self::$DELETE_USER_SESSIONS:
                 return 'mutation deleteUserSessions($userId: String!){
-                    usersDeleteSessions (userId: $userId)
+                    usersDeleteSessions(userId: $userId)
                 }';
             case self::$DELETE_USER_SESSION:
                 return 'mutation deleteUserSession($userId: String!, $sessionId: String!){
-                    usersDeleteSession (userId: $userId, sessionId: $sessionId)
+                    usersDeleteSession(userId: $userId, sessionId: $sessionId)
                 }';
             case self::$DELETE_USER:
                 return 'mutation deleteUser($userId: String!) {
@@ -449,7 +516,7 @@ trait GraphQLBase
                 }';
             case self::$CREATE_API_KEY:
                 return 'mutation createKey($projectId: String!, $name: String!, $scopes: [String!]!){
-                    projectsCreateKey (projectId: $projectId, name: $name, scopes: $scopes) {
+                    projectsCreateKey(projectId: $projectId, name: $name, scopes: $scopes) {
                         _id
                         name
                         scopes
@@ -469,7 +536,7 @@ trait GraphQLBase
                 }';
             case self::$CREATE_ACCOUNT:
                 return 'mutation createAccount($userId: String!, $email: String!, $password: String!, $name: String){
-                    accountCreate (userId: $userId, email: $email, password: $password, name: $name) {
+                    accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
                         _id
                         name
                         registration
@@ -480,7 +547,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_ACCOUNT_NAME:
                 return 'mutation updateAccountName($name: String!){
-                    accountUpdateName (name: $name) {
+                    accountUpdateName(name: $name) {
                         _id
                         name
                         status
@@ -489,7 +556,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_ACCOUNT_EMAIL:
                 return 'mutation updateAccountEmail($email: String!, $password: String!){
-                    accountUpdateEmail (email: $email, password: $password) {
+                    accountUpdateEmail(email: $email, password: $password) {
                         _id
                         name
                         status
@@ -498,7 +565,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_ACCOUNT_PASSWORD:
                 return 'mutation updateAccountPassword($password: String!, $oldPassword: String!){
-                    accountUpdatePassword (password: $password, oldPassword: $oldPassword) {
+                    accountUpdatePassword(password: $password, oldPassword: $oldPassword) {
                         _id
                         name
                         status
@@ -507,7 +574,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_ACCOUNT_PHONE:
                 return 'mutation updateAccountPhone($phone: String!, $password: String!){
-                    accountUpdatePhone (phone: $phone, password: $password) {
+                    accountUpdatePhone(phone: $phone, password: $password) {
                         _id
                         name
                         status
@@ -516,7 +583,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_ACCOUNT_PREFS:
                 return 'mutation updateAccountPrefs($userId: String!, $prefs: Json!){
-                    accountUpdatePrefs (userId: $userId, prefs: $prefs) {
+                    accountUpdatePrefs(userId: $userId, prefs: $prefs) {
                         _id
                         name
                         registration
@@ -541,7 +608,7 @@ trait GraphQLBase
                 }';
             case self::$CREATE_ACCOUNT_SESSION:
                 return 'mutation createAccountSession($email: String!, $password: String!){
-                    accountCreateSession (email: $email, password: $password) {
+                    accountCreateSession(email: $email, password: $password) {
                         _id
                         userId
                         expire
@@ -551,7 +618,7 @@ trait GraphQLBase
                 }';
             case self::$DELETE_ACCOUNT_SESSION:
                 return 'mutation deleteAccountSession($sessionId: String!){
-                    accountDeleteSession (sessionId: $sessionId)
+                    accountDeleteSession(sessionId: $sessionId)
                 }';
             case self::$DELETE_ACCOUNT_SESSIONS:
                 return 'mutation deleteAccountSessions {
@@ -559,14 +626,14 @@ trait GraphQLBase
                 }';
             case self::$CREATE_MAGIC_URL:
                 return 'mutation createMagicURL($userId: String!, $email: String!){
-                    accountCreateMagicURLSession (userId: $userId, email: $email) {
+                    accountCreateMagicURLSession(userId: $userId, email: $email) {
                         userId
                         expire
                     }
                 }';
             case self::$UPDATE_MAGIC_URL:
                 return 'mutation confirmMagicURL($userId: String!, $secret: String!){
-                    accountUpdateMagicURLSession (userId: $userId, secret: $secret) {
+                    accountUpdateMagicURLSession(userId: $userId, secret: $secret) {
                         userId
                         expire
                         provider
@@ -617,7 +684,7 @@ trait GraphQLBase
                 }';
             case self::$CREATE_PASSWORD_RECOVERY:
                 return 'mutation createPasswordRecovery($email: String!, $url: String!){
-                    accountCreateRecovery (email: $email, url: $url) {
+                    accountCreateRecovery(email: $email, url: $url) {
                         userId
                         secret
                         expire
@@ -625,7 +692,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_PASSWORD_RECOVERY:
                 return 'mutation confirmPasswordRecovery($userId: String!, $secret: String!, $password: String!, $passwordAgain: String!) {
-                    accountUpdateRecovery (userId: $userId, secret: $secret, password: $password, passwordAgain: $passwordAgain) {
+                    accountUpdateRecovery(userId: $userId, secret: $secret, password: $password, passwordAgain: $passwordAgain) {
                         userId
                         secret
                         expire
@@ -633,7 +700,7 @@ trait GraphQLBase
                 }';
             case self::$CREATE_EMAIL_VERIFICATION:
                 return 'mutation createVerification($url: String!){
-                    accountCreateVerification (url: $url) {
+                    accountCreateVerification(url: $url) {
                         userId
                         secret
                         expire
@@ -641,7 +708,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_EMAIL_VERIFICATION:
                 return 'mutation confirmVerification($userId: String!, $secret: String!) {
-                    accountUpdateVerification (userId: $userId, secret: $secret) {
+                    accountUpdateVerification(userId: $userId, secret: $secret) {
                         userId
                         secret
                         expire
@@ -657,7 +724,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_PHONE_VERIFICATION:
                 return 'mutation confirmPhoneVerification($userId: String!, $secret: String!) {
-                    accountUpdatePhoneVerification (userId: $userId, secret: $secret) {
+                    accountUpdatePhoneVerification(userId: $userId, secret: $secret) {
                         userId
                         secret
                         expire
@@ -665,7 +732,7 @@ trait GraphQLBase
                 }';
             case self::$GET_TEAM:
                 return 'query getTeam($teamId: String!){
-                    teamsGet (teamId: $teamId) {
+                    teamsGet(teamId: $teamId) {
                         _id
                         name
                         total
@@ -703,7 +770,7 @@ trait GraphQLBase
                 }';
             case self::$GET_TEAM_MEMBERSHIP:
                 return 'query getTeamMembership($teamId: String!, $membershipId: String!){
-                    teamsGetMembership (teamId: $teamId, membershipId: $membershipId) {
+                    teamsGetMembership(teamId: $teamId, membershipId: $membershipId) {
                         total
                         memberships {
                             _id
@@ -715,7 +782,7 @@ trait GraphQLBase
                 }';
             case self::$GET_TEAM_MEMBERSHIPS:
                 return 'query getTeamMemberships($teamId: String!){
-                    teamsGetMemberships (teamId: $teamId) {
+                    teamsGetMemberships(teamId: $teamId) {
                         total
                         memberships {
                             _id
