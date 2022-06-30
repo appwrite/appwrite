@@ -69,7 +69,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         do {
             try {
                 $attempts++;
-                $db = $register->get('dbPool')->getConsoleDB();
+                $consoleDB = $register->get('dbPool')->getConsoleDB();
                 $redis = $register->get('redisPool')->get();
                 break; // leave the do-while if successful
             } catch (\Exception $e) {
@@ -81,7 +81,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             }
         } while ($attempts < $max);
 
-        App::setResource('db', fn() => $db);
+        App::setResource('consoleDB', fn() => $consoleDB);
         App::setResource('cache', fn() => $redis);
 
         $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
@@ -243,15 +243,15 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $app = new App('UTC');
 
     $dbPool = $register->get('dbPool');
-    $db = $dbPool->getConsoleDB();
+    $consoleDB = $dbPool->getConsoleDB();
     $redis = $register->get('redisPool')->get();
 
-    App::setResource('db', fn() => $db);
+    App::setResource('consoleDB', fn() => $consoleDB);
     App::setResource('dbPool', fn() => $dbPool);
     App::setResource('cache', fn() => $redis);
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
-    $projectDB = $db;
+    $projectDB = $consoleDB;
     if ($projectId !== 'console') {
         $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
         $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
@@ -359,7 +359,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $swooleResponse->end(\json_encode($output));
     } finally {
         /** @var PDOPool $consolePool */
-        $dbPool->putConsoleDb($db);
+        $dbPool->putConsoleDb($consoleDB);
 
         if (!empty($dbName) && !empty($projectDB)) {
             $dbPool->put($projectDB, $dbName);

@@ -899,15 +899,15 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForConsole', function ($db, $cache) {
+App::setResource('dbForConsole', function ($consoleDB, $cache) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database(new MariaDB($db), $cache);
+    $database = new Database(new MariaDB($consoleDB), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace('_console');
 
     return $database;
-}, ['db', 'cache']);
+}, ['consoleDB', 'cache']);
 
 
 App::setResource('deviceLocal', function () {
