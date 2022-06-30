@@ -336,11 +336,6 @@ class Builder
                 $methodName = $namespace . \ucfirst($route->getLabel('sdk.method', ''));
                 $responseModelNames = $route->getLabel('sdk.response.model', "none");
 
-                // TODO: Handle "none" responses
-                if ($responseModelNames === "none") {
-                    continue;
-                }
-
                 $responseModels = \is_array($responseModelNames)
                     ? \array_map(static fn($m) => $response->getModel($m), $responseModelNames)
                     : [$response->getModel($responseModelNames)];
