@@ -120,6 +120,14 @@ class Builder
         $name = $model->getType();
         $fields = [];
 
+        if ($model->isAny()) {
+            $fields['data'] = [
+                'type' => Type::string(),
+                'description' => 'Data field',
+                'resolve' => fn($object, $args, $context, $info) => json_encode($object, JSON_FORCE_OBJECT),
+            ];
+        }
+
         foreach ($rules as $key => $props) {
             $escapedKey = str_replace('$', '_', $key);
 
