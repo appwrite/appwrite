@@ -86,10 +86,10 @@ App::post('/v1/projects')
             throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
         }
 
-        ['name' => $dbName, 'db' => $db] = $dbPool->getAny();
+        ['name' => $dbName, 'db' => $projectDB] = $dbPool->getAny();
         
         $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => $projectId == 'unique()' ? $dbForConsole->getId() : $projectId,
+            '$id' => $projectId,
             '$read' => ['team:' . $teamId],
             '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
             'name' => $name,
@@ -116,7 +116,7 @@ App::post('/v1/projects')
         ]));
 
         $cache = new Cache(new RedisCache($cache));
-        $dbForProject = new Database(new MariaDB($db), $cache);
+        $dbForProject = new Database(new MariaDB($projectDB), $cache);
         $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $dbForProject->setNamespace("_{$projectId}");
         $dbForProject->create('appwrite');
@@ -164,7 +164,7 @@ App::post('/v1/projects')
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
-        $dbPool->put($db, $dbName);
+        $dbPool->put($projectDB, $dbName);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($project, Response::MODEL_PROJECT);

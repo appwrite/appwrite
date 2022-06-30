@@ -261,13 +261,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         }
     }
 
-    App::setResource('dbForProject', function ($cache) use ($projectDB, $projectId) {
-        $cache = new Cache(new RedisCache($cache));
-        $database = new Database(new MariaDB($projectDB), $cache);
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_{$projectId}");
-        return $database;
-    }, ['cache']);
+    App::setResource('projectDB', fn() => $projectDB);
 
     try {
         Authorization::cleanRoles();
