@@ -92,7 +92,7 @@ $logs = $this->getParam('logs', null);
                                             </td>
                                             <template x-for="attr in attributes">
                                                 <td x-show="attr.status === 'available'" :data-title="attr.key + ':'">
-                                                    <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collection}&databaseId={{databaseId}}&project=${project}`">
+                                                    <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collection}&databaseId=${databaseId}&project=${project}`">
                                                         <span x-text="doc[attr.key] ?? 'n/a'"></span>
                                                     </a>
                                                 </td>
