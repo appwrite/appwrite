@@ -515,7 +515,7 @@ trait WebhooksBase
         $this->assertIsArray($webhook['data']['$read']);
         $this->assertIsArray($webhook['data']['$write']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertIsString($webhook['data']['$createdAt']);
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -571,7 +571,7 @@ trait WebhooksBase
         $this->assertIsArray($webhook['data']['$read']);
         $this->assertIsArray($webhook['data']['$write']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertIsString($webhook['data']['$createdAt']);
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -622,7 +622,7 @@ trait WebhooksBase
         $this->assertIsArray($webhook['data']['$read']);
         $this->assertIsArray($webhook['data']['$write']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertIsString($webhook['data']['$createdAt']);
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -705,7 +705,7 @@ trait WebhooksBase
         $this->assertEquals('Arsenal', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertIsString($webhook['data']['$createdAt']);
 
         /**
          * Test for FAILURE
@@ -750,7 +750,7 @@ trait WebhooksBase
         $this->assertEquals('Demo New', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertIsString($webhook['data']['$createdAt']);
 
         /**
          * Test for FAILURE
@@ -799,7 +799,7 @@ trait WebhooksBase
         $this->assertEquals('Chelsea', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertIsString($webhook['data']['$createdAt']);
 
         /**
          * Test for FAILURE
