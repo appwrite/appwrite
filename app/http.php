@@ -17,9 +17,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
-use Utopia\Cache\Cache;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 
@@ -69,7 +66,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         do {
             try {
                 $attempts++;
-                $consoleDB = $register->get('dbPool')->getConsoleDB();
+                $consoleDB = $register->get('dbPool')->getConsoleDBFromPool();
                 $redis = $register->get('redisPool')->get();
                 break; // leave the do-while if successful
             } catch (\Exception $e) {
@@ -243,11 +240,11 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $app = new App('UTC');
 
     $dbPool = $register->get('dbPool');
-    $consoleDB = $dbPool->getConsoleDB();
+    $consoleDB = $dbPool->getConsoleDBFromPool();
     $redis = $register->get('redisPool')->get();
 
-    App::setResource('consoleDB', fn() => $consoleDB);
     App::setResource('dbPool', fn() => $dbPool);
+    App::setResource('consoleDB', fn() => $consoleDB);
     App::setResource('cache', fn() => $redis);
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
@@ -257,7 +254,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
         $dbName = $project->getAttribute('database', '');
         if (!empty($dbName)) {
-            $projectDB = $register->get('dbPool')->get($dbName);
+            $projectDB = $dbPool->getDBFromPool($dbName);
         }
     }
 

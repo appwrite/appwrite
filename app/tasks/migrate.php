@@ -27,16 +27,16 @@ $cli
 
         Console::success('Starting Data Migration to version ' . $version);
 
-        $consoleDB = $register->get('consoleDB', true);
+        $db = $register->get('db', true);
         $cache = $register->get('cache', true);
 
         $cache = new Cache(new RedisCache($cache));
 
         // TODO: Iterate through all project DBs
-        $projectDB = new Database(new MariaDB($consoleDB), $cache);
+        $projectDB = new Database(new MariaDB($db), $cache);
         $projectDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
-        $consoleDB = new Database(new MariaDB($consoleDB), $cache);
+        $consoleDB = new Database(new MariaDB($db), $cache);
         $consoleDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $consoleDB->setNamespace('_project_console');
 

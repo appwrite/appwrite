@@ -445,72 +445,28 @@ $register->set('logger', function () {
     return new Logger($adapter);
 });
 
-$register->set('dbMap', function () {
-    $dbs = App::getEnv('_APP_PROJECT_DB', '');
-    $dbs = explode(',', $dbs);
-
-    $dbMap = [];
-    foreach ($dbs as $db) {
-        $db = explode('=', $db);
-        $name = $db[0];
-        $dsn = $db[1];
-        $dbMap[$name] = $dsn;
-    }
-
-    return $dbMap;
-});
 
 $register->set('dbPool', function () {
     /** Parse the console databases */
-    $consoleDb = App::getEnv('_APP_CONSOLE_DB', '');
-    $consoleDb = explode(',', $consoleDb)[0];
-    $consoleDb = explode('=', $consoleDb);
-    $name = $consoleDb[0];
-    $dsn = new DSN($consoleDb[1]);
-
-    /** Create a new Database Pool */
-    $pool = new DatabasePool();
-
-    $consolePool = new PDOPool(
-        (new PDOConfig())
-        ->withHost($dsn->getHost())
-        ->withPort($dsn->getPort())
-        ->withDbName($dsn->getDatabase())
-        ->withCharset('utf8mb4')
-        ->withUsername($dsn->getUser())
-        ->withPassword($dsn->getPassword())
-        ->withOptions([
-            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-        ]),
-        64
-    );
-
-    $pool->add($name, $consolePool);
-    $pool->setConsoleDB($name);
+    $consoleDB = App::getEnv('_APP_CONSOLE_DB', '');
+    $consoleDB = explode(',', $consoleDB)[0];
+    $consoleDB = explode('=', $consoleDB);
+    $name = $consoleDB[0];
+    $dsn = $consoleDB[1];
+    $consoleDBs[$name] = $dsn;
 
     /** Parse the project databases */
-    global $register;
-    $dbs = $register->get('dbMap');
-
-    foreach ($dbs as $name => $dsn) {
-        $dsn = new DSN($dsn);
-        $projectPool = new PDOPool(
-            (new PDOConfig())
-            ->withHost($dsn->getHost())
-            ->withPort($dsn->getPort())
-            ->withDbName($dsn->getDatabase())
-            ->withCharset('utf8mb4')
-            ->withUsername($dsn->getUser())
-            ->withPassword($dsn->getPassword())
-            ->withOptions([
-                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-            ]),
-            64
-        );
-
-        $pool->add($name, $projectPool);
+    $projectDBs = [];
+    $projectDB = App::getEnv('_APP_PROJECT_DB', '');
+    $projectDB = explode(',', $projectDB);
+    foreach ($projectDB as $db) {
+        $db = explode('=', $db);
+        $name = $db[0];
+        $dsn = $db[1];
+        $projectDBs[$name] = $dsn;
     }
 
+    $pool = new DatabasePool($consoleDBs, $projectDBs);
     return $pool;
 });
 
@@ -590,30 +546,6 @@ $register->set('smtp', function () {
 });
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/db/DBIP/dbip-country-lite-2022-03.mmdb');
-});
-
-$register->set('consoleDB', function () {
-    /** This is usually for our workers or CLI commands scope */
-    $consoleDb = App::getEnv('_APP_CONSOLE_DB', '');
-    $consoleDb = explode(',', $consoleDb)[0];
-    $consoleDb = explode('=', $consoleDb);
-    $dsn = new DSN($consoleDb[1]);
-
-    $dbHost = $dsn->getHost();
-    $dbPort = $dsn->getPort();
-    $dbUser = $dsn->getUser();
-    $dbPass = $dsn->getPassword();
-    $dbScheme = $dsn->getDatabase();
-
-    $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-        PDO::ATTR_TIMEOUT => 3, // Seconds
-        PDO::ATTR_PERSISTENT => true,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    ));
-
-    return $pdo;
 });
 
 $register->set('cache', function () {

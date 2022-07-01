@@ -86,7 +86,7 @@ App::post('/v1/projects')
             throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
         }
 
-        ['name' => $dbName, 'db' => $projectDB] = $dbPool->getAny();
+        ['name' => $dbName, 'db' => $projectDB] = $dbPool->getAnyFromPool();
         
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
