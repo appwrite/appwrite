@@ -1545,7 +1545,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $oldAttributes[] = [
             'key' => '$createdAt',
-            'type' => 'integer',
+            'type' => 'string',
             'status' => 'available',
             'signed' => false,
             'required' => false,
@@ -1556,7 +1556,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $oldAttributes[] = [
             'key' => '$updatedAt',
-            'type' => 'integer',
+            'type' => 'string',
             'status' => 'available',
             'signed' => false,
             'required' => false,
