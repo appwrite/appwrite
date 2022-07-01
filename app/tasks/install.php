@@ -25,7 +25,7 @@ $cli
          * 2. Check for older setup and get older version - DONE
          *  2.1 If older version is equal or bigger(?) than current version, **stop setup**
          *  2.2. Get ENV vars - DONE
-         *   2.2.1 Fetch from older ompo.yml file
+         *   2.2.1 Fetch from older docker-compose.yml file
          *   2.2.2 Fetch from older .env file (manually parse)
          *  2.3 Use old ENV vars as default values
          *  2.4 Ask for all required vars not given as CLI args and if in interactive mode
