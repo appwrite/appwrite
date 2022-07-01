@@ -2,8 +2,6 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
-use Tests\E2E\Client;
-
 trait GraphQLBase
 {
     // Databases
@@ -13,9 +11,9 @@ trait GraphQLBase
     public static string $UPDATE_DATABASE = 'update_database';
     public static string $DELETE_DATABASE = 'delete_database';
     // Collections
+    public static string $CREATE_COLLECTION = 'create_collection';
     public static string $GET_COLLECTION = 'get_collection';
     public static string $GET_COLLECTIONS = 'list_collections';
-    public static string $CREATE_COLLECTION = 'create_collection';
     public static string $UPDATE_COLLECTION = 'update_collection';
     public static string $DELETE_COLLECTION = 'delete_collection';
     // Attributes
@@ -29,13 +27,17 @@ trait GraphQLBase
     public static string $CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
     public static string $GET_ATTRIBUTES = 'get_attributes';
     public static string $GET_ATTRIBUTE = 'get_attribute';
-    public static string $UPDATE_ATTRIBUTE = 'update_attribute';
     public static string $DELETE_ATTRIBUTE = 'delete_attribute';
+    // Indexes
+    public static string $CREATE_INDEX = 'create_index';
+    public static string $GET_INDEXES = 'get_indexes';
+    public static string $GET_INDEX = 'get_index';
+    public static string $DELETE_INDEX = 'delete_index';
     // Documents
-    public static string $GET_DOCUMENT = 'get_document';
-    public static string $LIST_DOCUMENTS = 'list_documents';
-    public static string $CREATE_DOCUMENT_REST = 'create_document_rest';
+    public static string $CREATE_DOCUMENT = 'create_document_rest';
     public static string $CREATE_CUSTOM_ENTITY = 'create_document_hooks';
+    public static string $GET_DOCUMENTS = 'list_documents';
+    public static string $GET_DOCUMENT = 'get_document';
     public static string $UPDATE_DOCUMENT = 'update_document';
     public static string $DELETE_DOCUMENT = 'delete_document';
 
@@ -122,40 +124,56 @@ trait GraphQLBase
     public static string $DELETE_EXECUTION = 'delete_execution';
     public static string $RETRY_BUILD = 'retry_build';
 
+    // Buckets
+    public static string $CREATE_BUCKET = 'create_bucket';
+    public static string $GET_BUCKETS = 'list_buckets';
+    public static string $GET_BUCKET = 'get_bucket';
+    public static string $UPDATE_BUCKET = 'update_bucket';
+    public static string $DELETE_BUCKET = 'delete_bucket';
+    // Files
+    public static string $CREATE_FILE = 'create_file';
+    public static string $GET_FILES = 'list_files';
+    public static string $GET_FILE = 'get_file';
+    public static string $UPDATE_FILE = 'update_file';
+    public static string $DELETE_FILE = 'delete_file';
+
     public function getQuery(string $name): string
     {
         switch ($name) {
             case self::$CREATE_DATABASE:
                 return 'mutation createDatabase($databaseId: String!, $name: String!) {
-                    databasesCreateDatabase(databaseId: $databaseId, name: $name) {
+                    databasesCreate(databaseId: $databaseId, name: $name) {
                         _id
                         name
                     }
                 }';
             case self::$GET_DATABASES:
                 return 'query getDatabases {
-                    databasesGetDatabases {
-                        _id
-                        name
+                    databasesList {
+                        total
+                        databases {
+                            _id
+                            name
+                        }
                     }
                 }';
             case self::$GET_DATABASE:
                 return 'query getDatabase($databaseId: String!) {
-                    databasesGetDatabase(databaseId: $databaseId) {
+                    databasesGet(databaseId: $databaseId) {
                         _id
                         name
                     }
                 }';
             case self::$UPDATE_DATABASE:
                 return 'mutation updateDatabase($databaseId: String!, $name: String!) {
-                    databasesUpdateDatabase(databaseId: $databaseId, name: $name) {
+                    databasesUpdate(databaseId: $databaseId, name: $name) {
                         _id
                         name
                     }
                 }';
             case self::$DELETE_DATABASE:
                 return 'mutation deleteDatabase($databaseId: String!) {
-                    databasesDeleteDatabase(databaseId: $databaseId)
+                    databasesDelete(databaseId: $databaseId)
                 }';
             case self::$GET_COLLECTION:
                 return 'query getCollection($databaseId: String!, $collectionId: String!) {
@@ -275,15 +293,47 @@ trait GraphQLBase
                         array
                     }
                 }';
+            case self::$CREATE_INDEX:
+                return 'mutation createIndex($databaseId: String!, $collectionId: String!, $key: String!, $type: String!, $attributes: [String!]!, $orders: [String!]){
+                    databasesCreateIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key, type: $type, attributes: $attributes, orders: $orders) {
+                        key
+                        type
+                        status
+                    }
+                }';
+            case self::$GET_INDEXES:
+                return 'query getIndexes($databaseId: String!, $collectionId: String!) {
+                    databasesGetIndexes(databaseId: $databaseId, collectionId: $collectionId) {
+                        total
+                        indexes {
+                            key
+                            type
+                            status
+                        }
+                    }
+                }';
+            case self::$GET_INDEX:
+                return 'query getIndex($databaseId: String!, $collectionId: String!, $key: String!) {
+                    databasesGetIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
+                        key
+                        type
+                        status
+                    }
+                }';
+            case self::$DELETE_INDEX:
+                return 'mutation deleteIndex($databaseId: String!, $collectionId: String!, $key: String!){
+                    databasesDeleteIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key)
+                }';
             case self::$GET_ATTRIBUTES:
                 return 'query getAttributes($databaseId: String!, $collectionId: String!) {
-                    databasesGetAttributes(databaseId: $databaseId, collectionId: $collectionId) {
+                    databasesListAttributes(databaseId: $databaseId, collectionId: $collectionId) {
                         total
                         attributes {
                             key
                             required
                             default
                             array
+                            status
                         }
                     }
                 }';
@@ -301,8 +351,8 @@ trait GraphQLBase
                     databasesDeleteAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key)
                 }';
             case self::$GET_DOCUMENT:
-                return 'query getDocument($collectionId: String!, $documentId: String!){
-                    databasesGetDocument(collectionId: $collectionId, documentId: $documentId) {
+                return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!){
+                    databasesGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
                         _id
                         _collection
                         _read
@@ -310,7 +360,7 @@ trait GraphQLBase
                         data
                     }
                 }';
-            case self::$LIST_DOCUMENTS:
+            case self::$GET_DOCUMENTS:
                 return 'query listDocuments($collectionId: String, $filters: [Json]){
                     databasesListDocuments(collectionId: $collectionId, filters: $filters) {
                         total
@@ -321,9 +371,9 @@ trait GraphQLBase
                         }
                     }   
                 }';
-            case self::$CREATE_DOCUMENT_REST:
-                return 'mutation createDocument($collectionId: String!, $documentId: String!, $data: Json!, $read: [String!]!, $write: [String!]!){
-                    databasesCreateDocument(collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
+            case self::$CREATE_DOCUMENT:
+                return 'mutation createDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $read: [String!]!, $write: [String!]!){
+                    databasesCreateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
                         _id
                         _collection
                         _read
@@ -961,6 +1011,84 @@ trait GraphQLBase
             case self::$RETRY_BUILD:
                 return 'mutation retryBuild($functionId: String!, $deploymentId: String!) {
                     functionsRetryBuild(functionId: $functionId, deploymentId: $deploymentId)
+                }';
+            case self::$CREATE_BUCKET:
+                return 'mutation createBucket($bucketId: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!) {
+                    storageCreateBucket(bucketId: $bucketId, name: $name, permission: $permission, read: $read, write: $write) {
+                        _id
+                        name
+                        enabled
+                    }
+                }';
+            case self::$GET_BUCKETS:
+                return 'query getBuckets {
+                    storageListBuckets {
+                        total
+                        buckets {
+                            _id
+                            name
+                            enabled
+                        }
+                    }
+                }';
+            case self::$GET_BUCKET:
+                return 'query getBucket($bucketId: String!) {
+                    storageGetBucket(bucketId: $bucketId) {
+                        _id
+                        name
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_BUCKET:
+                return 'mutation updateBucket($bucketId: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!) {
+                    storageUpdateBucket(bucketId: $bucketId, name: $name, permission: $permission, read: $read, write: $write) {
+                        _id
+                        name
+                        enabled
+                    }
+                }';
+            case self::$DELETE_BUCKET:
+                return 'mutation deleteBucket($bucketId: String!) {
+                    storageDeleteBucket(bucketId: $bucketId)
+                }';
+            case self::$CREATE_FILE:
+                return 'mutation createFile($bucketId: String!, $fileId: String!, $file: InputFile!, $read: [String!]!, $write: [String!]!) {
+                    storageCreateFile(bucketId: $bucketId, fileId: $fileId, file: $file, read: $read, write: $write) {
+                        _id
+                        name
+                        content
+                    }
+                }';
+            case self::$GET_FILES:
+                return 'query getFiles($bucketId: String!) {
+                    storageListFiles(bucketId: $bucketId) {
+                        total
+                        files {
+                            _id
+                            name
+                            content
+                        }
+                    }
+                }';
+            case self::$GET_FILE:
+                return 'query getFile($bucketId: String!, $fileId: String!) {
+                    storageGetFile(bucketId: $bucketId, fileId: $fileId) {
+                        _id
+                        name
+                        content
+                    }
+                }';
+            case self::$UPDATE_FILE:
+                return 'mutation updateFile($bucketId: String!, $fileId: String!, $file: InputFile!, $read: [String!]!, $write: [String!]!) {
+                    storageUpdateFile(bucketId: $bucketId, fileId: $fileId, file: $file, read: $read, write: $write) {
+                        _id
+                        name
+                        content
+                    }
+                }';
+            case self::$DELETE_FILE:
+                return 'mutation deleteFile($bucketId: String!, $fileId: String!) {
+                    storageDeleteFile(bucketId: $bucketId, fileId: $fileId)
                 }';
         }
 
