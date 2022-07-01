@@ -84,7 +84,7 @@ trait GraphQLBase
     public static string $UPDATE_USER_NAME = 'update_user_name';
     public static string $UPDATE_USER_EMAIL = 'update_user_email';
     public static string $UPDATE_USER_EMAIL_VERIFICATION = 'update_email_verification';
-    public static string $UPDATE_USER_PHONE_VERIFICATION = 'update_email_verification';
+    public static string $UPDATE_USER_PHONE_VERIFICATION = 'update_phone_verification';
     public static string $UPDATE_USER_PASSWORD = 'update_user_password';
     public static string $UPDATE_USER_PHONE = 'update_user_phone';
     public static string $UPDATE_USER_PREFS = 'update_user_prefs';
@@ -488,6 +488,7 @@ trait GraphQLBase
             case self::$UPDATE_USER_PHONE_VERIFICATION:
                 return 'mutation updateUserPhoneVerification($userId: String!, $phoneVerification: Boolean!){
                     usersUpdatePhoneVerification(userId: $userId, phoneVerification: $phoneVerification) {
+                        _id
                         name
                         email
                     }
@@ -725,8 +726,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_PHONE_VERIFICATION:
-                return 'mutation confirmPhoneVerification($userId: String!, $secret: String!) {
-                    accountUpdatePhoneVerification(userId: $userId, secret: $secret) {
+                return 'mutation confirmPhoneVerification($userId: String!, $phoneVerification: Boolean!) {
+                    accountUpdatePhoneVerification(userId: $userId, phoneVerification: $phoneVerification) {
                         userId
                         secret
                         expire

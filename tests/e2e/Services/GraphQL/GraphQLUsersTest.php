@@ -214,31 +214,31 @@ class GraphQLUsersTest extends Scope
 
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
-        $this->assertIsArray($user['body']['data']['usersUpdateVerification']);
+        $this->assertIsArray($user['body']['data']['usersUpdateEmailVerification']);
     }
 
-//    public function testUpdateUserPhoneVerification()
-//    {
-//        $projectId = $this->getProject()['$id'];
-//        $query = $this->getQuery(self::$UPDATE_USER_PHONE_VERIFICATION);
-//        $graphQLPayload = [
-//            'query' => $query,
-//            'variables' => [
-//                'userId' => $this->getUser()['$id'],
-//                'phoneVerification' => true,
-//            ]
-//        ];
-//
-//        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $projectId,
-//        ], $this->getHeaders()), $graphQLPayload);
-//
-//        $this->assertIsArray($user['body']['data']);
-//        $this->assertArrayNotHasKey('errors', $user['body']);
-//        $this->assertIsArray($user['body']['data']['usersUpdatePhoneVerification']);
-//        $this->assertEquals($this->getUser()['$id'], $user['body']['data']['usersUpdatePhoneVerification']['_id']);
-//    }
+    public function testUpdateUserPhoneVerification()
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$UPDATE_USER_PHONE_VERIFICATION);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'userId' => $this->getUser()['$id'],
+                'phoneVerification' => true,
+            ]
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertIsArray($user['body']['data']);
+        $this->assertArrayNotHasKey('errors', $user['body']);
+        $this->assertIsArray($user['body']['data']['usersUpdatePhoneVerification']);
+        $this->assertEquals($this->getUser()['$id'], $user['body']['data']['usersUpdatePhoneVerification']['_id']);
+    }
 
     public function testUpdateUserName()
     {
