@@ -237,13 +237,13 @@ $cli
         $attempts = 0;
         $max = 10;
         $sleep = 1;
-
+        $dbPool = $register->get('dbPool');
         $consoleDB = null;
         $redis = null;
         do { // connect to db
             try {
                 $attempts++;
-                $consoleDB = $register->get('consoleDB');
+                $consoleDB = $dbPool->getConsoleDB();
                 $redis = $register->get('cache');
                 break; // leave the do-while if successful
             } catch (\Exception $e) {
@@ -260,8 +260,6 @@ $cli
         $dbForConsole = new Database(new MariaDB($consoleDB), $cacheAdapter);
         $dbForConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $dbForConsole->setNamespace('_console');
-
-        $dbPool = $register->get('dbPool');
 
         $latestTime = [];
 

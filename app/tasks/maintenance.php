@@ -24,7 +24,8 @@ function getConsoleDB(): Database
         try {
             $attempts++;
             $cache = new Cache(new RedisCache($register->get('cache')));
-            $database = new Database(new MariaDB($register->get('consoleDB')), $cache);
+            $consoleDB = $register->get('dbPool')->getConsoleDB();
+            $database = new Database(new MariaDB($consoleDB), $cache);
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace('_console'); // Main DB
 

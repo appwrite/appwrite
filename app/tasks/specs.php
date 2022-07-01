@@ -19,7 +19,7 @@ $cli
     ->param('version', 'latest', new Text(8), 'Spec version', true)
     ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
     ->action(function ($version, $mode) use ($register) {
-        $consoleDB = $register->get('consoleDB');
+        $consoleDB = $register->get('dbPool')->getConsoleDB();
         $redis = $register->get('cache');
         $appRoutes = App::getRoutes();
         $response = new Response(new HttpResponse());

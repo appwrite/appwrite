@@ -17,6 +17,7 @@ use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\S3;
 use Exception;
+use PDO;
 
 abstract class Worker
 {
@@ -159,7 +160,20 @@ abstract class Worker
      */
     protected function getProjectDB(string $projectId): Database
     {
-        return $this->getDB(self::DATABASE_PROJECT, $projectId);
+        if (!$projectId) {
+            throw new \Exception('ProjectID not provided - cannot get database');
+        }
+        $namespace = "_{$projectId}";
+
+        global $register;
+        $dbForConsole = $this->getConsoleDB();
+        $project = $dbForConsole->getDocument('projects', $projectId);
+        $dbName = $project->getAttribute('database', '');
+
+        $projectDB = $register->get('dbPool')->getDB($dbName);
+
+
+        return $this->getDB(self::DATABASE_PROJECT, $projectDB, $namespace);
     }
 
     /**
@@ -168,7 +182,12 @@ abstract class Worker
      */
     protected function getConsoleDB(): Database
     {
-        return $this->getDB(self::DATABASE_CONSOLE);
+        global $register;
+        $consoleDB = $register->get('dbPool')->getConsoleDB();
+        $namespace = "_console";
+        $sleep = 5; // ConsoleDB needs extra sleep time to ensure tables are created
+
+        return $this->getDB(self::DATABASE_CONSOLE, $consoleDB, $namespace, $sleep);
     }
 
     /**
@@ -177,36 +196,16 @@ abstract class Worker
      * @param string $projectId of internal or external DB
      * @return Database
      */
-    private function getDB($type, $projectId = ''): Database
+    private function getDB(string $type, PDO $pdo, string $namespace, int $sleep = DATABASE_RECONNECT_SLEEP): Database
     {
         global $register;
-
-        $namespace = '';
-        $sleep = DATABASE_RECONNECT_SLEEP; // overwritten when necessary
-
-        switch ($type) {
-            case self::DATABASE_PROJECT:
-                if (!$projectId) {
-                    throw new \Exception('ProjectID not provided - cannot get database');
-                }
-                $namespace = "_{$projectId}";
-                break;
-            case self::DATABASE_CONSOLE:
-                $namespace = "_console";
-                $sleep = 5; // ConsoleDB needs extra sleep time to ensure tables are created
-                break;
-            default:
-                throw new \Exception('Unknown database type: ' . $type);
-                break;
-        }
-
+        $cache = $register->get('cache');
         $attempts = 0;
-
         do {
             try {
                 $attempts++;
-                $cache = new Cache(new RedisCache($register->get('cache')));
-                $database = new Database(new MariaDB($register->get('db')), $cache);
+                $cache = new Cache(new RedisCache($cache));
+                $database = new Database(new MariaDB($pdo), $cache);
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                 $database->setNamespace($namespace); // Main DB
 

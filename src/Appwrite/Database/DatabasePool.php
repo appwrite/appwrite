@@ -81,11 +81,7 @@ class DatabasePool {
      */
     public function getDB(string $name): ?PDO
     {
-        $dsn = $this->dsn[$name] ?? false;
-
-        if ($dsn === false) {
-            throw new Exception("Database with name : $name not found.", 500);
-        }
+        $dsn = $this->databases[$name] ?? throw new Exception("Database with name : $name not found.", 500);
 
         $dsn =  new DSN($dsn);
         $dbHost = $dsn->getHost();

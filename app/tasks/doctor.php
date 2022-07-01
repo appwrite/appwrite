@@ -96,7 +96,7 @@ $cli
         }
 
         try {
-            $register->get('consoleDB'); /* @var $db PDO */
+            $register->get('dbPool')->getConsoleDB(); /* @var $db PDO */
             Console::success('Database............connected 👍');
         } catch (\Throwable $th) {
             Console::error('Database.........disconnected 👎');
