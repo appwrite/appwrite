@@ -22,7 +22,7 @@ class Podio extends OAuth2
     /**
      * @var string
      */
-    private string $apiEndpoint = 'https://api.podio.com/oauth';
+    private string $apiEndpoint = 'https://api.podio.com';
 
     /**
      * @var array
@@ -76,12 +76,12 @@ class Podio extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->apiEndpoint . '/token',
+                $this->apiEndpoint . '/oauth/token',
                 ['Content-Type: application/x-www-form-urlencoded'],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
                     'code' => $code,
-                    // 'redirect_uri' => $this->callback,
+                    'redirect_uri' => $this->callback,
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
                     // 'scope' => \implode(' ', $this->getScopes())
@@ -101,7 +101,7 @@ class Podio extends OAuth2
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->apiEndpoint . '/oauth2/token',
+            $this->apiEndpoint . '/oauth/token',
             ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'grant_type' => 'refresh_token',
@@ -127,7 +127,7 @@ class Podio extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['id'] ?? '';
+        return \strval($user['user_id']) ?? '';
     }
 
     /**
@@ -139,7 +139,7 @@ class Podio extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['email'] ?? '';
+        return $user['mail'] ?? '';
     }
 
     /**
@@ -155,7 +155,11 @@ class Podio extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if ($user['verified'] ?? false) {
+        $mails = $user['mails'];
+        $mainMailIndex = \array_search($user['mail'], \array_map(fn($m) => $m['mail'], $mails));
+        $mainMain = $mails[$mainMailIndex];
+
+        if ($mainMain['verified'] ?? false) {
             return true;
         }
 
@@ -169,9 +173,7 @@ class Podio extends OAuth2
      */
     public function getUserName(string $accessToken): string
     {
-        $user = $this->getUser($accessToken);
-
-        return $user['username'] ?? '';
+        return '';
     }
 
     /**
@@ -187,7 +189,6 @@ class Podio extends OAuth2
                 $this->apiEndpoint . '/user',
                 ['Authorization: Bearer ' . \urlencode($accessToken)]
             );
-            \var_dump($user);
             $this->user = \json_decode($user, true);
         }
 
