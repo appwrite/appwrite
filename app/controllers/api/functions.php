@@ -925,7 +925,6 @@ App::post('/v1/functions/:functionId/executions')
 
         /** Execute function */
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-        $executionResponse = [];
         try {
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
@@ -946,12 +945,14 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
-            $endtime = \microtime(true);
-            $time = $endtime - $execution->getCreatedAt();
-            $execution->setAttribute('time', $time);
-            $execution->setAttribute('status', 'failed');
-            $execution->setAttribute('statusCode', $th->getCode());
-            $execution->setAttribute('stderr', $th->getMessage());
+            $created = new DateTime($execution->getCreatedAt());
+            $now = Database::getCurrentDateTimeObject();
+            $interval = $now->diff($created);
+            $execution
+                ->setAttribute('time', (float)$interval->format('%s.%f'))
+                ->setAttribute('status', 'failed')
+                ->setAttribute('statusCode', $th->getCode())
+                ->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());
         }
 
