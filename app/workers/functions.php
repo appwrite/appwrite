@@ -296,9 +296,7 @@ class FunctionsV1 extends Worker
                 ->setAttribute('stderr', $executionResponse['stderr'])
                 ->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
-            $created = new DateTime($execution->getCreatedAt());
-            $now = Database::getCurrentDateTimeObject();
-            $interval = $now->diff($created);
+            $interval = (new DateTime())->diff(new DateTime($execution->getCreatedAt()));
             $execution
                 ->setAttribute('time', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
