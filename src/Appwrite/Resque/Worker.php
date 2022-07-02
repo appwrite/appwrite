@@ -160,18 +160,19 @@ abstract class Worker
      */
     protected function getProjectDB(string $projectId): Database
     {
+        global $register;
+
         if (!$projectId) {
             throw new \Exception('ProjectID not provided - cannot get database');
         }
+        
         $namespace = "_{$projectId}";
 
-        global $register;
         $dbForConsole = $this->getConsoleDB();
         $project = $dbForConsole->getDocument('projects', $projectId);
         $dbName = $project->getAttribute('database', '');
 
         $projectDB = $register->get('dbPool')->getDB($dbName);
-
 
         return $this->getDB(self::DATABASE_PROJECT, $projectDB, $namespace);
     }

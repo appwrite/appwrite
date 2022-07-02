@@ -324,16 +324,17 @@ $cli
                         foreach ($points as $point) {
                             $projectId = $point['projectId'];
 
-                            /** Get the Dabatase name from the console DB */
-                            $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
-                            $dbName = $project->getAttribute('database', '');
-                            $projectDB = $dbPool->get($dbName);
-
-                            $dbForProject = new Database(new MariaDB($projectDB), $cacheAdapter);
-                            $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-
-
                             if (!empty($projectId) && $projectId !== 'console') {
+                                 /** Get the Dabatase name from the console DB */
+                                $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
+                                var_dump($projectId);
+                                var_dump($project);
+                                $dbName = $project->getAttribute('database', '');
+                                $projectDB = $dbPool->getDB($dbName);
+
+                                $dbForProject = new Database(new MariaDB($projectDB), $cacheAdapter);
+                                $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+
                                 $dbForProject->setNamespace('_' . $projectId);
                                 $metricUpdated = $metric;
 
@@ -373,8 +374,6 @@ $cli
                                     Console::warning($e->getTraceAsString());
                                 }
                             }
-
-                            $dbPool->put($projectDB, $dbName);
                         }
                     } catch (\Exception $e) {
                         Console::warning("Failed to Query: {$e->getMessage()}");
