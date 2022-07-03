@@ -376,7 +376,7 @@ App::post('/v1/teams/:teamId/memberships')
             'invited' => \time(),
             'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
             'confirm' => ($isPrivilegedUser || $isAppUser),
-            'secret' => Auth::hash($secret),
+            'secret' => $isAppUser ? Auth::hash($secret) : '',
             'search' => implode(' ', [$membershipId, $invitee->getId()])
         ]);
 
@@ -424,11 +424,11 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('membershipId', $membership->getId())
             ->setPayload(
             $response->output(
-                $membership->setAttribute('secret', $secret),
+                $membership->setAttribute('secret', $isAppUser ? $secret : ''),
                 Response::MODEL_MEMBERSHIP
             ));
         ;
-        
+
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic(
             $membership
