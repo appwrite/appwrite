@@ -862,7 +862,11 @@ trait WebhooksBase
         $this->assertCount(2, $webhook['data']['roles']);
         $this->assertIsInt($webhook['data']['joined']);
         $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
-
+        
+        $this->assertEquals($team['body']['secret'], '');
+        if('server' === $this->getSide()) {
+            $this->assertNotEmpty($webhook['data']['secret']);
+        }
         /**
          * Test for FAILURE
          */
