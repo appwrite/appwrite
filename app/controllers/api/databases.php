@@ -2283,7 +2283,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$read'] = (is_null($read)) ? ($document->getRead() ?? []) : $read; // By default inherit read permissions
         $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
 
-        if(Authorization::isRole('role:' . Auth::USER_ROLE_APP)) {
+        if (Authorization::isRole('role:' . Auth::USER_ROLE_APP)) {
             // Is server, allow overriding creation date
             $data['$createdAt'] = $data['$createdAt'] ?? $collection->getCreatedAt();
         } else {
