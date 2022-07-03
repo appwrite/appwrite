@@ -123,7 +123,7 @@ trait ProjectCustom
             'webhookId' => $webhook['body']['$id'],
             'signatureKey' => $webhook['body']['signatureKey'],
         ];
-        if($fresh) {
+        if ($fresh) {
             return $project;
         }
         self::$project = $project;
