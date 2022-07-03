@@ -42,10 +42,23 @@ class UsageTest extends Scope
             ]);
             $this->assertEquals($email, $res['body']['email']);
             $this->assertNotEmpty($res['body']['$id']);
+
+            if($i < 5) {
+                $userId = $res['body']['$id'];
+                $res = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $this->headers);
+                $this->assertEquals($userId, $res['body']['$id']);
+                $res = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $this->headers);
+                $this->assertEmpty($res['body']);
+                $this->requestsCount += 2;
+                $this->usersCount--;
+            }
+
             $this->usersCount++;
             $this->requestsCount++;
         }
-        sleep(65);
+
+
+        sleep(75);
 
         // console request
         $headers = [
@@ -60,8 +73,18 @@ class UsageTest extends Scope
         $this->assertEquals(8, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['users']));
-        $this->assertEquals($this->requestsCount, $res['users'][array_key_last($res['users'])]['value']);
-        $this->assertEquals($this->usersCount, $res['requests'][array_key_last($res['requests'])]['value']);
+        $this->assertEquals($this->usersCount, $res['users'][array_key_last($res['users'])]['value']);
+        $this->assertEquals($this->requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
+
+        $res = $this->client->call(Client::METHOD_GET, '/users/usage?range=30d', array_merge($headers, [
+            'x-appwrite-project' => $this->projectId,
+            'x-appwrite-mode' => 'admin'
+        ]));
+        $res = $res['body'];
+        $this->assertEquals(10, $res['usersCreate'][array_key_last($res['usersCreate'])]['value']);
+        $this->assertEquals(5, $res['usersRead'][array_key_last($res['usersRead'])]['value']);
+        $this->assertEquals(5, $res['usersDelete'][array_key_last($res['usersDelete'])]['value']);
+        
     }
 
     protected function tearDown(): void
