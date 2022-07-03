@@ -27,7 +27,8 @@ class VideoCustomServerTest extends Scope
             'write' => ['role:all']
         ]);
 
-        $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
+        //$source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
+        $source = __DIR__ . "/../../../resources/disk-a/very-large-file-1.mov";
         $totalSize = \filesize($source);
         $chunkSize = 5 * 1024 * 1024;
         $handle = @fopen($source, "rb");
@@ -42,7 +43,7 @@ class VideoCustomServerTest extends Scope
         $id = '';
 
         while (!feof($handle)) {
-            $curlFile = new \CURLFile('data:' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'in1.mp4');
+            $curlFile = new \CURLFile('data:' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'very-large-file-1.mov');
             $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
 
             if (!empty($id)) {
@@ -56,6 +57,8 @@ class VideoCustomServerTest extends Scope
                 'write' => ['role:all'],
             ]);
             $counter++;
+
+            $this->assertNotEmpty($file['body']['$id']);
             $id = $file['body']['$id'];
         }
         @fclose($handle);

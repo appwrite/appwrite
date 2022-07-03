@@ -149,7 +149,6 @@ App::post('/v1/projects')
                     'orders' => $index['orders'],
                 ]);
             }
-            var_dump($key);
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
