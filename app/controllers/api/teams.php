@@ -298,6 +298,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
+        $useEmail = App::getEnv('_APP_SMTP_USE_EMAIL', true);
 
         if (!$isPrivilegedUser && !$isAppUser && empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
@@ -401,7 +402,7 @@ App::post('/v1/teams/:teamId/memberships')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
         $url = Template::unParseURL($url);
 
-        if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
+        if (!$isPrivilegedUser && !$isAppUser && $useEmail) { // No need of confirmation when in admin or app mode
             $mails
                 ->setType(MAIL_TYPE_INVITATION)
                 ->setRecipient($email)
