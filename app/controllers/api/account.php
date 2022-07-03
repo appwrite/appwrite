@@ -594,6 +594,7 @@ App::post('/v1/account/sessions/magic-url')
     ->desc('Create Magic URL session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
+    ->label('event', 'users.[userId].sessions.[tokenId].magic.create')
     ->label('auth.type', 'magic-url')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
@@ -698,7 +699,11 @@ App::post('/v1/account/sessions/magic-url')
             ->trigger()
         ;
 
-        $events->setPayload(
+        $events
+            ->setParam('userId', $user->getId())
+            ->setParam('tokenId', $token->getId())
+            ->setUser($user)
+            ->setPayload(
             $response->output(
                 $token->setAttribute('secret', $loginSecret),
                 Response::MODEL_TOKEN
