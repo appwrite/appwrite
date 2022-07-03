@@ -862,7 +862,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $fileLogos = Config::getParam('storage-logos');
 
         $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-        $key = \md5($fileId . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
+        $key = \md5('preview' . $fileId . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
 
         if ($bucket->getAttribute('permission') === 'bucket') {
             // skip authorization
@@ -893,7 +893,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-            $key = \md5($path . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
+            $key = \md5('preview' . $path . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
             $deviceFiles = $deviceLocal;
         }
 
@@ -904,9 +904,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId)); // Limit file number or size
+        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
-
         if (empty($output)) {
             // when file extension is not provided and the mime type is not one of our supported outputs
             // we fallback to `jpg` output format
@@ -914,6 +913,19 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         if ($data) {
+            $cacheRow = $dbForProject->getDocument('cache', $key);
+
+            if($cacheRow->isEmpty()){
+                Authorization::skip(fn () => $dbForProject->createDocument('cache',  new Document([
+                    '$id' => $key,
+                    'dateAccessed' => time(),
+                    'path' => 'app-' . $project->getId()
+                ])));
+            } else {
+                $cacheRow->setAttribute('dateAccessed', time());
+                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheRow->getId(), $cacheRow));
+            }
+
             return $response
                 ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
                 ->addHeader('Expires', $date)

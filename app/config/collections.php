@@ -2764,6 +2764,45 @@ $collections = [
             ],
         ]
     ],
+    'cache' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'cache',
+        'name' => 'Cache',
+        'attributes' => [
+            [
+                '$id' => 'dateAccessed',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                    'array' => false,
+                    '$id' => 'path',
+                    'type' => Database::VAR_STRING,
+                    'format' => '',
+                    'size' => 100,
+                    'signed' => true,
+                    'required' => true,
+                    'default' => null,
+                    'filters' => [],
+            ],
+
+         ],
+        'indexes' => [
+            [
+                '$id' => '_key_accessed',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['dateAccessed'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+        ],
+    ],
     'files' => [
         '$collection' => 'buckets',
         '$id' => 'files',

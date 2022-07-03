@@ -36,6 +36,7 @@ class DeletesV1 extends Worker
 
     public function run(): void
     {
+
         $project = new Document($this->args['project'] ?? []);
         $type = $this->args['type'] ?? '';
 
@@ -112,6 +113,11 @@ class DeletesV1 extends Worker
             case DELETE_TYPE_USAGE:
                 $this->deleteUsageStats($this->args['timestamp1d'], $this->args['timestamp30m']);
                 break;
+
+            case DELETE_TYPE_CACHE:
+                $this->deleteCache($this->args['timestamp']);
+                break;
+
             default:
                 Console::error('No delete operation for type: ' . $type);
                 break;
@@ -120,6 +126,31 @@ class DeletesV1 extends Worker
 
     public function shutdown(): void
     {
+    }
+
+
+    /**
+     * @param int $timestamp
+     */
+    protected function deleteCache( int $timestamp): void
+    {
+        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+
+            $dbForProject = $this->getProjectDB($projectId);
+            $cache = new Local(APP_STORAGE_CACHE);
+
+            $this->deleteByGroup('cache', [
+                new Query('dateAccessed', Query::TYPE_LESSER, [$timestamp])
+            ], $dbForProject
+                , function (Document $document) use ($cache) {
+                    $path = $cache->getRoot() . '/' . $document->getAttribute('path') . '/' .  $document->getId();
+                    if ($cache->delete($path)) {
+                        Console::success('Deleting cache file: ' . $path);
+                    } else {
+                        Console::error('**Failed to delete cache file: ' . $path);
+                    }
+                });
+        });
     }
 
     /**
@@ -279,12 +310,16 @@ class DeletesV1 extends Worker
      */
     protected function deleteExpiredSessions(int $timestamp): void
     {
-        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+        $this->deleteForProjectIds(
+
+            function (string $projectId) use ($timestamp) {
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Sessions
             $this->deleteByGroup('sessions', [
                 new Query('expire', Query::TYPE_LESSER, [$timestamp])
             ], $dbForProject);
+
+
         });
     }
 

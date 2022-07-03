@@ -107,6 +107,7 @@ services:
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
       # - ./debug:/tmp
       - ./dev:/usr/local/dev
     depends_on:
@@ -301,6 +302,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -561,6 +563,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
     environment:

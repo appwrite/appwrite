@@ -10,7 +10,9 @@ use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Image\Image;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
@@ -18,7 +20,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
+$avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response, Database $dbForProject) {
 
     $code = \strtolower($code);
     $type = \strtolower($type);
@@ -48,9 +50,20 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
 
     $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
     $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
-
     if ($data) {
         //$output = (empty($output)) ? $type : $output;
+
+        $cacheRow = $dbForProject->getDocument('cache', $key);
+        if($cacheRow->isEmpty()){
+            Authorization::skip(fn () => $dbForProject->createDocument('cache',  new Document([
+                '$id' => $key,
+                'dateAccessed' => time(),
+                'path' => 'app-0'
+            ])));
+        } else {
+            $cacheRow->setAttribute('dateAccessed', time());
+            Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheRow->getId(), $cacheRow));
+        }
 
         return $response
             ->setContentType('image/png')
@@ -94,7 +107,8 @@ App::get('/v1/avatars/credit-cards/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(fn (string $code, int $width, int $height, int $quality, Response $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
+    ->inject('dbForProject')
+    ->action(fn (string $code, int $width, int $height, int $quality, Response $response, Database $dbForProject) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response, $dbForProject));
 
 App::get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
@@ -112,7 +126,8 @@ App::get('/v1/avatars/browsers/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('browsers', $code, $width, $height, $quality, $response));
+    ->inject('dbForProject')
+    ->action(fn (string $code, int $width, int $height, int $quality, Response $response, Database $dbForProject) => $avatarCallback('browsers', $code, $width, $height, $quality, $response, $dbForProject));
 
 App::get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
@@ -130,7 +145,8 @@ App::get('/v1/avatars/flags/:code')
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('flags', $code, $width, $height, $quality, $response));
+    ->inject('dbForProject')
+    ->action(fn (string $code, int $width, int $height, int $quality, Response $response, Database $dbForProject) => $avatarCallback('flags', $code, $width, $height, $quality, $response, $dbForProject));
 
 App::get('/v1/avatars/image')
     ->desc('Get Image from URL')
@@ -147,7 +163,8 @@ App::get('/v1/avatars/image')
     ->param('width', 400, new Range(0, 2000), 'Resize preview image width, Pass an integer between 0 to 2000. Defaults to 400.', true)
     ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000. Defaults to 400.', true)
     ->inject('response')
-    ->action(function (string $url, int $width, int $height, Response $response) {
+    ->inject('dbForProject')
+    ->action(function (string $url, int $width, int $height, Response $response, Database $dbForProject)  {
 
         $quality = 80;
         $output = 'png';
@@ -158,6 +175,20 @@ App::get('/v1/avatars/image')
         $data = $cache->load($key, 60 * 60 * 24 * 7/* 1 week */);
 
         if ($data) {
+            $cacheRow = $dbForProject->getDocument('cache', $key);
+
+            if($cacheRow->isEmpty()){
+                Authorization::skip(fn () => $dbForProject->createDocument('cache',  new Document([
+                    '$id' => $key,
+                    'dateAccessed' => time(),
+                    'path' => 'app-0'
+
+                ])));
+            } else {
+                $cacheRow->setAttribute('dateAccessed', time());
+                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheRow->getId(), $cacheRow));
+            }
+
             return $response
                 ->setContentType('image/png')
                 ->addHeader('Expires', $date)
@@ -211,7 +242,8 @@ App::get('/v1/avatars/favicon')
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
     ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to fetch the favicon from.')
     ->inject('response')
-    ->action(function (string $url, Response $response) {
+    ->inject('dbForProject')
+    ->action(function (string $url, Response $response, Database $dbForProject) {
 
         $width = 56;
         $height = 56;
@@ -222,8 +254,20 @@ App::get('/v1/avatars/favicon')
         $type = 'png';
         $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
-
         if ($data) {
+            $cacheRow = $dbForProject->getDocument('cache', $key);
+
+            if($cacheRow->isEmpty()){
+                Authorization::skip(fn () => $dbForProject->createDocument('cache',  new Document([
+                    '$id' => $key,
+                    'dateAccessed' => time(),
+                    'path' => 'app-0'
+                ])));
+            } else {
+                $cacheRow->setAttribute('dateAccessed', time());
+                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheRow->getId(), $cacheRow));
+            }
+
             return $response
                 ->setContentType('image/png')
                 ->addHeader('Expires', $date)

@@ -127,6 +127,15 @@ $cli
             }
         }
 
+        function notifyDeleteCache($interval)
+        {
+
+            (new Delete())
+                ->setType(DELETE_TYPE_CACHE)
+                ->setTimestamp(time() - $interval)
+                ->trigger();
+        }
+
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
@@ -134,8 +143,9 @@ $cli
         $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
+        $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
             $database = getConsoleDB();
 
             $time = date('d-m-Y H:i:s', time());
@@ -147,5 +157,6 @@ $cli
             notifyDeleteConnections();
             notifyDeleteExpiredSessions();
             renewCertificates($database);
+            notifyDeleteCache($cacheRetention);
         }, $interval);
     });
