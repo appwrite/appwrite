@@ -36,7 +36,7 @@ class Podio extends OAuth2
     /**
      * @var array
      */
-    protected array $scopes = [];
+    protected array $scopes = []; // No scopes required
 
     /**
      * @return string
@@ -70,8 +70,6 @@ class Podio extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        // /token?grant_type=refresh_token&client_id=YOUR_APP_ID&client_secret=YOUR_APP_SECRET&refresh_token=REFRESH_TOKEN
-
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
@@ -143,8 +141,6 @@ class Podio extends OAuth2
 
     /**
      * Check if the OAuth email is verified
-     *
-     * @link https://discord.com/developers/docs/resources/user
      *
      * @param string $accessToken
      *
