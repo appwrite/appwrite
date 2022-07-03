@@ -11,14 +11,14 @@ class Podio extends OAuth2
 {
     /**
      * Endpoint used for initiating OAuth flow
-     * 
+     *
      * @var string
      */
     private string $endpoint = 'https://podio.com/oauth';
 
     /**
      * Endpoint for communication with API server
-     * 
+     *
      * @var string
      */
     private string $apiEndpoint = 'https://api.podio.com';
