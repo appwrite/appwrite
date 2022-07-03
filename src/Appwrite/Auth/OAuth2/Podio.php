@@ -10,16 +10,15 @@ use Appwrite\Auth\OAuth2;
 class Podio extends OAuth2
 {
     /**
+     * Endpoint used for initiating OAuth flow
+     * 
      * @var string
      */
-    private string $endpoint = 'http://oauth.net/2';
+    private string $endpoint = 'https://podio.com/oauth';
 
     /**
-     * @var string
-     */
-    private string $authEndpoint = 'https://podio.com/oauth';
-
-    /**
+     * Endpoint for communication with API server
+     * 
      * @var string
      */
     private string $apiEndpoint = 'https://api.podio.com';
@@ -52,7 +51,7 @@ class Podio extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->authEndpoint . '/authorize?' .
+        $url = $this->endpoint . '/authorize?' .
             \http_build_query([
                 // 'response_type' => 'code',
                 'client_id' => $this->appID,
