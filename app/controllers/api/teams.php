@@ -420,8 +420,16 @@ App::post('/v1/teams/:teamId/memberships')
         ;
 
         $events
+            ->setParam('userId', $invitee->getId())
             ->setParam('teamId', $team->getId())
+            ->setParam('tokenId', $secret)
+            ->setUser($user)
             ->setParam('membershipId', $membership->getId())
+            ->setPayload(
+            $response->output(
+                $token->setAttribute('secret', $loginSecret),
+                Response::MODEL_TOKEN
+            ));
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
