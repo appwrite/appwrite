@@ -43,7 +43,7 @@ class UsageTest extends Scope
             $this->assertEquals($email, $res['body']['email']);
             $this->assertNotEmpty($res['body']['$id']);
 
-            if($i < 5) {
+            if ($i < 5) {
                 $userId = $res['body']['$id'];
                 $res = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $this->headers);
                 $this->assertEquals($userId, $res['body']['$id']);
@@ -84,7 +84,6 @@ class UsageTest extends Scope
         $this->assertEquals(10, $res['usersCreate'][array_key_last($res['usersCreate'])]['value']);
         $this->assertEquals(5, $res['usersRead'][array_key_last($res['usersRead'])]['value']);
         $this->assertEquals(5, $res['usersDelete'][array_key_last($res['usersDelete'])]['value']);
-        
     }
 
     protected function tearDown(): void
