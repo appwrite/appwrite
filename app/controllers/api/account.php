@@ -702,11 +702,7 @@ App::post('/v1/account/sessions/magic-url')
             ;
         }
 
-        $events
-            ->setParam('userId', $user->getId())
-            ->setParam('tokenId', $loginSecret)
-            ->setUser($user)
-            ->setPayload(
+        $events->setPayload(
             $response->output(
                 $token->setAttribute('secret', $loginSecret),
                 Response::MODEL_TOKEN
