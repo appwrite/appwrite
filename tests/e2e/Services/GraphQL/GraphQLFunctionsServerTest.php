@@ -69,6 +69,8 @@ class GraphQLFunctionsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+        \var_dump($deployment);
+
         $this->assertIsArray($deployment['body']['data']);
         $this->assertArrayNotHasKey('errors', $deployment['body']);
         $deployment = $deployment['body']['data']['functionsCreateDeployment'];
@@ -122,7 +124,7 @@ class GraphQLFunctionsServerTest extends Scope
     public function testCreateRetryBuild($function): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_RETRY_BUILD);
+        $query = $this->getQuery(self::$RETRY_BUILD);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -336,8 +338,6 @@ class GraphQLFunctionsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        \var_dump($function);
-
         $this->assertIsArray($function['body']['data']);
         $this->assertArrayNotHasKey('errors', $function['body']);
         $function = $function['body']['data']['functionsUpdate'];
@@ -368,7 +368,7 @@ class GraphQLFunctionsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 
     /**
