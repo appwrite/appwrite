@@ -53,10 +53,8 @@ class Podio extends OAuth2
     {
         $url = $this->endpoint . '/authorize?' .
             \http_build_query([
-                // 'response_type' => 'code',
                 'client_id' => $this->appID,
                 'state' => \json_encode($this->state),
-                // 'scope' => \implode(' ', $this->getScopes()),
                 'redirect_uri' => $this->callback
             ]);
 
@@ -80,8 +78,7 @@ class Podio extends OAuth2
                     'code' => $code,
                     'redirect_uri' => $this->callback,
                     'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
-                    // 'scope' => \implode(' ', $this->getScopes())
+                    'client_secret' => $this->appSecret
                 ])
             ), true);
         }
@@ -168,7 +165,9 @@ class Podio extends OAuth2
      */
     public function getUserName(string $accessToken): string
     {
-        return '';
+        $user = $this->getUser($accessToken);
+
+        return $user['name'] ?? '';
     }
 
     /**
@@ -179,12 +178,20 @@ class Podio extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request(
+            $user = \json_decode($this->request(
                 'GET',
                 $this->apiEndpoint . '/user',
                 ['Authorization: Bearer ' . \urlencode($accessToken)]
-            );
-            $this->user = \json_decode($user, true);
+            ), true);
+
+            $profile = \json_decode($this->request(
+                'GET',
+                $this->apiEndpoint . '/user/profile',
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
+            ), true);
+
+            $this->user = $user;
+            $this->user['name'] = $profile['name'];
         }
 
         return $this->user;
