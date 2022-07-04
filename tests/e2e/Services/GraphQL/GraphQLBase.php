@@ -73,7 +73,6 @@ trait GraphQLBase
     public static string $UPDATE_PHONE_VERIFICATION = 'confirm_phone_verification';
     public static string $DELETE_ACCOUNT_SESSION = 'delete_account_session';
     public static string $DELETE_ACCOUNT_SESSIONS = 'delete_account_sessions';
-    public static string $DELETE_ACCOUNT = 'delete_account';
     // Users
     public static string $CREATE_USER = 'create_user';
     public static string $GET_USER = 'get_user';
@@ -107,18 +106,19 @@ trait GraphQLBase
     public static string $DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
 
     // Functions
-    public static string $GET_FUNCTION = 'get_function';
-    public static string $LIST_FUNCTIONS = 'list_functions';
     public static string $CREATE_FUNCTION = 'create_function';
-    public static string $UPDATE_FUNCTION = 'update_function';
-    public static string $DELETE_FUNCTION = 'delete_function';
-    // Deployments
-    public static string $LIST_DEPLOYMENTS = 'list_deployments';
-    public static string $GET_DEPLOYMENT = 'get_deployment';
     public static string $CREATE_DEPLOYMENT = 'create_deployment';
+    public static string $GET_FUNCTIONS = 'list_functions';
+    public static string $GET_FUNCTION = 'get_function';
+    public static string $GET_DEPLOYMENTS = 'list_deployments';
+    public static string $GET_DEPLOYMENT = 'get_deployment';
+    public static string $GET_RUNTIMES = 'list_runtimes';
+    public static string $UPDATE_FUNCTION = 'update_function';
+    public static string $UPDATE_FUNCTION_DEPLOYMENT = 'update_function_deployment';
+    public static string $DELETE_FUNCTION = 'delete_function';
     public static string $DELETE_DEPLOYMENT = 'delete_deployment';
     // Executions
-    public static string $LIST_EXECUTIONS = 'list_executions';
+    public static string $GET_EXECUTIONS = 'list_executions';
     public static string $GET_EXECUTION = 'get_execution';
     public static string $CREATE_EXECUTION = 'create_execution';
     public static string $DELETE_EXECUTION = 'delete_execution';
@@ -134,6 +134,9 @@ trait GraphQLBase
     public static string $CREATE_FILE = 'create_file';
     public static string $GET_FILES = 'list_files';
     public static string $GET_FILE = 'get_file';
+    public static string $GET_FILE_PREVIEW = 'get_file_preview';
+    public static string $GET_FILE_DOWNLOAD = 'get_file_download';
+    public static string $GET_FILE_VIEW = 'get_file_view';
     public static string $UPDATE_FILE = 'update_file';
     public static string $DELETE_FILE = 'delete_file';
 
@@ -900,9 +903,9 @@ trait GraphQLBase
                         execute
                     }
                 }';
-            case self::$LIST_FUNCTIONS:
-                return 'query listFunctions($teamId: String!) {
-                    functionsList(teamId: $teamId) {
+            case self::$GET_FUNCTIONS:
+                return 'query listFunctions {
+                    functionsList {
                         total
                         functions {
                             _id
@@ -912,8 +915,41 @@ trait GraphQLBase
                         }
                     }
                 }';
+            case self::$GET_RUNTIMES:
+                return 'query listRuntimes {
+                    functionsListRuntimes {
+                        total
+                        runtimes {
+                            name
+                            version
+                            supports
+                        }
+                    }
+                }';
+            case self::$GET_DEPLOYMENTS:
+                return 'query listDeployments($functionId: String!) {
+                    functionsListDeployments(functionId: $functionId) {
+                        total
+                        deployments {
+                            _id
+                            buildStdout
+                            buildStderr
+                        }
+                    }
+                }';
+            case self::$GET_DEPLOYMENT:
+                return 'query getDeployment($functionId: String!, $deploymentId: String!) {
+                    functionsGetDeployment(functionId: $functionId, deploymentId: $deploymentId) {
+                        total
+                        deployments {
+                            _id
+                            buildStdout
+                            buildStderr
+                        }
+                    }
+                }';
             case self::$CREATE_FUNCTION:
-                return 'mutation createFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $vars: Json, $events: [String!], $schedule: String, $timeout: Int) {
+                return 'mutation createFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $vars: Json, $events: [Json], $schedule: String, $timeout: Int) {
                     functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, vars: $vars, events: $events, schedule: $schedule, timeout: $timeout) {
                         _id
                         name
@@ -922,8 +958,17 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_FUNCTION:
-                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $vars: Json, $events: [String!], $schedule: String, $timeout: Int) {
-                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, vars: $vars, events: $events, schedule: $schedule, timeout: $timeout) {
+                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $vars: Json, $events: [Json], $schedule: String, $timeout: Int) {
+                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, vars: $vars, events: $events, schedule: $schedule, timeout: $timeout) {
+                        _id
+                        name
+                        runtime
+                        execute
+                    }
+                }';
+            case self::$UPDATE_FUNCTION_DEPLOYMENT:
+                return 'mutation updateFunctionDeployment($functionId: String!, $deploymentId: String!) {
+                    functionsUpdateDeployment(functionId: $functionId, deploymentId: $deploymentId) {
                         _id
                         name
                         runtime
@@ -934,34 +979,9 @@ trait GraphQLBase
                 return 'mutation deleteFunction($functionId: String!) {
                     functionsDelete(functionId: $functionId)
                 }';
-            case self::$GET_DEPLOYMENT:
-                return 'query getDeployment($functionId: String!$deploymentId: , String!) {
-                    functionsGetDeployments(functionId: $functionId, deploymentId: $deploymentId) {
-                        _id
-                        entrypoint
-                        size
-                        status
-                        buildStdout
-                        buildStderr
-                    }
-                }';
-            case self::$LIST_DEPLOYMENTS:
-                return 'query listDeployments($functionId: String!) {
-                    functionsListDeployments(functionId: $functionId) {
-                        total
-                        deployments {
-                            _id
-                            entrypoint
-                            size
-                            status
-                            buildStdout
-                            buildStderr
-                        }
-                    }
-                }';
             case self::$CREATE_DEPLOYMENT:
                 return 'mutation createDeployment($functionId: String!, $entrypoint: String!, $code: String!, $activate: Boolean!) {
-                    functionsCreateDeployment(functionId: $functionId, entrypoint: $entrypoint, size: $size, vars: $vars, events: $events, schedule: $schedule, timeout: $timeout) {
+                    functionsCreateDeployment(functionId: $functionId, entrypoint: $entrypoint, code: $code, activate: $activate) {
                         _id
                         entrypoint
                         size
@@ -983,14 +1003,13 @@ trait GraphQLBase
                         stderr
                     }
                 }';
-            case self::$LIST_EXECUTIONS:
+            case self::$GET_EXECUTIONS:
                 return 'query listExecutions($functionId: String!) {
                     functionsListExecutions(functionId: $functionId) {
                         total
                         executions {
                             _id
                             status
-                            stdout
                             stderr
                         }
                     }
@@ -1000,6 +1019,7 @@ trait GraphQLBase
                     functionsCreateExecution(functionId: $functionId) {
                         _id
                         status
+                        response
                         stdout
                         stderr
                     }
@@ -1040,7 +1060,7 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_BUCKET:
-                return 'mutation updateBucket($bucketId: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!) {
+                return 'mutation updateBucket($bucketId: String!, $name: String!, $permission: String!, $read: [String!], $write: [String!]) {
                     storageUpdateBucket(bucketId: $bucketId, name: $name, permission: $permission, read: $read, write: $write) {
                         _id
                         name
@@ -1052,11 +1072,10 @@ trait GraphQLBase
                     storageDeleteBucket(bucketId: $bucketId)
                 }';
             case self::$CREATE_FILE:
-                return 'mutation createFile($bucketId: String!, $fileId: String!, $file: InputFile!, $read: [String!]!, $write: [String!]!) {
+                return 'mutation createFile($bucketId: String!, $fileId: String!, $file: String!, $read: [String!]!, $write: [String!]!) {
                     storageCreateFile(bucketId: $bucketId, fileId: $fileId, file: $file, read: $read, write: $write) {
                         _id
                         name
-                        content
                     }
                 }';
             case self::$GET_FILES:
@@ -1066,7 +1085,6 @@ trait GraphQLBase
                         files {
                             _id
                             name
-                            content
                         }
                     }
                 }';
@@ -1075,15 +1093,34 @@ trait GraphQLBase
                     storageGetFile(bucketId: $bucketId, fileId: $fileId) {
                         _id
                         name
-                        content
+                    }
+                }';
+            case self::$GET_FILE_PREVIEW:
+                return 'query getFilePreview($bucketId: String!, $fileId: String!) {
+                    storageGetFilePreview(bucketId: $bucketId, fileId: $fileId) {
+                        _id
+                        name
+                    }
+                }';
+            case self::$GET_FILE_DOWNLOAD:
+                return 'query getFileDownload($bucketId: String!, $fileId: String!) {
+                    storageGetFileDownload(bucketId: $bucketId, fileId: $fileId) {
+                        _id
+                        name
+                    }
+                }';
+            case self::$GET_FILE_VIEW:
+                return 'query getFileView($bucketId: String!, $fileId: String!) {
+                    storageGetFileView(bucketId: $bucketId, fileId: $fileId) {
+                        _id
+                        name
                     }
                 }';
             case self::$UPDATE_FILE:
-                return 'mutation updateFile($bucketId: String!, $fileId: String!, $file: InputFile!, $read: [String!]!, $write: [String!]!) {
-                    storageUpdateFile(bucketId: $bucketId, fileId: $fileId, file: $file, read: $read, write: $write) {
+                return 'mutation updateFile($bucketId: String!, $fileId: String!, $read: [String!], $write: [String!]) {
+                    storageUpdateFile(bucketId: $bucketId, fileId: $fileId, read: $read, write: $write) {
                         _id
                         name
-                        content
                     }
                 }';
             case self::$DELETE_FILE:

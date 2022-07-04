@@ -5,45 +5,15 @@ namespace Tests\E2E\Services\GraphQL;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Scopes\SideServer;
 
-class GraphQLStorageServerTest extends Scope
+class GraphQLStorageClientTest extends Scope
 {
     use ProjectCustom;
-    use SideServer;
+    use SideClient;
     use GraphQLBase;
 
-    public function testCreateBucket(): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_BUCKET);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'bucketId' => 'actors',
-                'name' => 'Actors',
-                'permission' => 'bucket',
-                'read' => ['role:all'],
-                'write' => ['role:all'],
-            ]
-        ];
-
-        $bucket = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertIsArray($bucket['body']['data']);
-        $this->assertArrayNotHasKey('errors', $bucket['body']);
-        $bucket = $bucket['body']['data']['storageCreateBucket'];
-        $this->assertEquals('Actors', $bucket['name']);
-
-        return $bucket;
-    }
-
-    /**
-     * @depends testCreateBucket
-     */
     public function testCreateFile($bucket): array
     {
         $projectId = $this->getProject()['$id'];
@@ -71,57 +41,6 @@ class GraphQLStorageServerTest extends Scope
         $this->assertEquals('actor.json', $file['fileId']);
 
         return $file;
-    }
-
-    public function testGetBuckets(): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_BUCKETS);
-        $gqlPayload = [
-            'query' => $query,
-        ];
-
-        $buckets = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertIsArray($buckets['body']['data']);
-        $this->assertArrayNotHasKey('errors', $buckets['body']);
-        $buckets = $buckets['body']['data']['storageListBuckets'];
-        $this->assertIsArray($buckets);
-
-        return $buckets;
-    }
-
-    /**
-     * @depends testCreateBucket
-     * @param $bucket
-     * @return array
-     * @throws \Exception
-     */
-    public function testGetBucket($bucket): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_BUCKET);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'bucketId' => $bucket['_id'],
-            ]
-        ];
-
-        $bucket = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertIsArray($bucket['body']['data']);
-        $this->assertArrayNotHasKey('errors', $bucket['body']);
-        $bucket = $bucket['body']['data']['storageGetBucket'];
-        $this->assertEquals('Actors', $bucket['name']);
-
-        return $bucket;
     }
 
     /**
@@ -281,38 +200,6 @@ class GraphQLStorageServerTest extends Scope
     }
 
     /**
-     * @depends testCreateBucket
-     * @param $bucket
-     * @return array
-     * @throws \Exception
-     */
-    public function testUpdateBucket($bucket): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_BUCKET);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'bucketId' => $bucket['_id'],
-                'name' => 'Actors Updated',
-                'permission' => 'bucket',
-            ]
-        ];
-
-        $bucket = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertIsArray($bucket['body']['data']);
-        $this->assertArrayNotHasKey('errors', $bucket['body']);
-        $bucket = $bucket['body']['data']['storageUpdateBucket'];
-        $this->assertEquals('Actors Updated', $bucket['name']);
-
-        return $bucket;
-    }
-
-    /**
      * @depends testCreateFile
      * @param $file
      * @return array
@@ -343,31 +230,6 @@ class GraphQLStorageServerTest extends Scope
         $this->assertIsArray($file);
 
         return $file;
-    }
-
-    /**
-     * @depends testCreateBucket
-     * @param $bucket
-     * @return array
-     * @throws \Exception
-     */
-    public function testDeleteBucket($bucket): void
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_BUCKET);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'bucketId' => $bucket['_id'],
-            ]
-        ];
-
-        $bucket = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertEquals(204, $bucket['headers']['status-code']);
     }
 
     /**
