@@ -52,7 +52,6 @@ class UsageTest extends Scope
                 $requestsCount += 2;
                 $usersCount--;
             }
-
         }
 
 
@@ -84,7 +83,8 @@ class UsageTest extends Scope
         $this->assertEquals(5, $res['usersDelete'][array_key_last($res['usersDelete'])]['value']);
     }
 
-    public function testStorageStats() {
+    public function testStorageStats()
+    {
         $bucketId = '';
         $bucketsCount = 0;
         $requestsCount = 0;
@@ -93,7 +93,9 @@ class UsageTest extends Scope
         $bucketsDelete = 0;
         $bucketsRead = 0;
         $filesCount = 0;
-
+        $filesRead = 0;
+        $filesCreate = 0;
+        $filesDelete = 0;
 
         for ($i = 0; $i < 10; $i++) {
             $name = uniqid() . ' bucket';
@@ -105,8 +107,7 @@ class UsageTest extends Scope
             $this->assertEquals($name, $res['body']['name']);
             $this->assertNotEmpty($res['body']['$id']);
             $bucketId = $res['body']['$id'];
-            array_push($bucketIds, $bucketId);
-            
+
             $bucketsCreate++;
             $bucketsCount++;
             $requestsCount++;
@@ -119,40 +120,61 @@ class UsageTest extends Scope
                 $res = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, $this->headers);
                 $this->assertEmpty($res['body']);
                 $bucketsDelete++;
-                array_pop($bucketIds);
-                
+
                 $requestsCount += 2;
                 $bucketsCount--;
             }
-
         }
 
         // upload some files
-        for ($i = 0; $i < 10; $i++) {
-            $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', $this->headers, [
-                'fileId' => 'unique()',
-                'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png', '', 'logo.png')),
-            ]);
+        $files = [
+            [
+                'path' => realpath(__DIR__ . '/../../resources/logo.png'),
+                'name' => 'logo.png',
+            ],
+            [
+                'path' => realpath(__DIR__ . '/../../resources/file.png'),
+                'name' => 'file.png',
+            ],
+            [
+                'path' => realpath(__DIR__ . '/../../resources/disk-a/kitten-3.gif'),
+                'name' => 'kitten-3.gif',
+            ],
+            [
+                'path' => realpath(__DIR__ . '/../../resources/disk-a/kitten-1.jpg'),
+                'name' => 'kitten-1.jpg',
+            ],
+            ];
 
+        for ($i = 0; $i < 10; $i++) {
+            $file = $files[$i % count($files)];
+            $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge($this->headers, ['content-type' => 'multipart/form-data']), [
+                'fileId' => 'unique()',
+                'file' => new CURLFile($file['path'], '', $file['name']),
+            ]);
             $this->assertNotEmpty($res['body']['$id']);
 
-            $storageTotal += $res['body']['size'];
+            $fileSize = $res['body']['sizeOriginal'];
+            $storageTotal += $fileSize;
             $filesCount++;
+            $filesCreate++;
             $requestsCount++;
-            
-            
+
+            $fileId = $res['body']['$id'];
             if ($i < 5) {
-                $res = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, $this->headers);
-                $this->assertEquals($bucketId, $res['body']['$id']);
-                $res = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, $this->headers);
+                $res = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $this->headers);
+                $this->assertEquals($fileId, $res['body']['$id']);
+                $filesRead++;
+
+                $res = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, $this->headers);
                 $this->assertEmpty($res['body']);
-                array_pop($bucketIds);
+                $filesDelete++;
                 $requestsCount += 2;
                 $filesCount--;
+                $storageTotal -=  $fileSize;
             }
-
         }
-        
+
         sleep(75);
 
         // console request
@@ -167,16 +189,35 @@ class UsageTest extends Scope
 
         $this->assertEquals(8, count($res));
         $this->assertEquals(30, count($res['requests']));
+        $this->assertEquals(30, count($res['storage']));
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
+        $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
 
-        $res = $this->client->call(Client::METHOD_GET, '/users/usage?range=30d', array_merge($headers, [
+        $res = $this->client->call(Client::METHOD_GET, '/storage/usage?range=30d', array_merge($headers, [
             'x-appwrite-project' => $this->projectId,
             'x-appwrite-mode' => 'admin'
         ]));
         $res = $res['body'];
-        $this->assertEquals(10, $res['usersCreate'][array_key_last($res['usersCreate'])]['value']);
-        $this->assertEquals(5, $res['usersRead'][array_key_last($res['usersRead'])]['value']);
-        $this->assertEquals(5, $res['usersDelete'][array_key_last($res['usersDelete'])]['value']);
+        $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesStorage'])]['value']);
+        $this->assertEquals($bucketsCount, $res['bucketsCount'][array_key_last($res['bucketsCount'])]['value']);
+        $this->assertEquals($bucketsRead, $res['bucketsRead'][array_key_last($res['bucketsRead'])]['value']);
+        $this->assertEquals($bucketsCreate, $res['bucketsCreate'][array_key_last($res['bucketsCreate'])]['value']);
+        $this->assertEquals($bucketsDelete, $res['bucketsDelete'][array_key_last($res['bucketsDelete'])]['value']);
+        $this->assertEquals($filesCount, $res['filesCount'][array_key_last($res['filesCount'])]['value']);
+        $this->assertEquals($filesRead, $res['filesRead'][array_key_last($res['filesRead'])]['value']);
+        $this->assertEquals($filesCreate, $res['filesCreate'][array_key_last($res['filesCreate'])]['value']);
+        $this->assertEquals($filesDelete, $res['filesDelete'][array_key_last($res['filesDelete'])]['value']);
+
+        $res = $this->client->call(Client::METHOD_GET, '/storage/' . $bucketId . '/usage?range=30d', array_merge($headers, [
+            'x-appwrite-project' => $this->projectId,
+            'x-appwrite-mode' => 'admin'
+        ]));
+        $res = $res['body'];
+        $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesStorage'])]['value']);
+        $this->assertEquals($filesCount, $res['filesCount'][array_key_last($res['filesCount'])]['value']);
+        $this->assertEquals($filesRead, $res['filesRead'][array_key_last($res['filesRead'])]['value']);
+        $this->assertEquals($filesCreate, $res['filesCreate'][array_key_last($res['filesCreate'])]['value']);
+        $this->assertEquals($filesDelete, $res['filesDelete'][array_key_last($res['filesDelete'])]['value']);
     }
 
     protected function tearDown(): void
