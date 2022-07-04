@@ -236,7 +236,7 @@ class GraphQLTeamsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(204, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
     }
 
     public function testDeleteTeam()
