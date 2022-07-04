@@ -1356,9 +1356,6 @@ trait AccountBase
         $sessionId = $response['body']['$id'];
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
-        var_dump($sessionId);
-        var_dump($session);
-
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',

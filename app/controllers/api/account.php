@@ -1252,11 +1252,10 @@ App::get('/v1/account')
     ->inject('user')
     ->inject('usage')
     ->action(function (Response $response, Document $user, Stats $usage) {
-var_dump("********** 1 ");
+
         $usage->setParam('users.read', 1);
-        var_dump("********** 2 ");
+
         $response->dynamic($user, Response::MODEL_USER);
-        var_dump("********** 3 ");
     });
 
 App::get('/v1/account/prefs')
