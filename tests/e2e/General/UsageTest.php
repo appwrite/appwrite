@@ -1,6 +1,7 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
+namespace Tests\E2E\General;
+
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
