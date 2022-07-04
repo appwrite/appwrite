@@ -446,7 +446,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertIsString($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -784,7 +784,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertIsString($response['body']['registration']);
         $this->assertEquals($response['body']['phone'], $number);
         $this->assertTrue($response['body']['phoneVerification']);
 
@@ -835,7 +835,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertIsString($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -877,7 +877,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertIsString($response['body']['registration']);
         $this->assertEquals($response['body']['phone'], $newPhone);
 
         /**

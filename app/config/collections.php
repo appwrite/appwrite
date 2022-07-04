@@ -825,7 +825,7 @@ $collections = [
             ],
             [
                 '$id' => 'updated',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_DATETIME, // ok!
                 'format' => '',
                 'size' => 0,
                 'signed' => true,
@@ -1162,7 +1162,7 @@ $collections = [
             ],
             [
                 '$id' => 'passwordUpdate',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => true,
@@ -1184,7 +1184,7 @@ $collections = [
             ],
             [
                 '$id' => 'registration',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => true,
@@ -2459,7 +2459,7 @@ $collections = [
             ],
             [
                 '$id' => 'issueDate',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_DATETIME, // ok!
                 'format' => '',
                 'size' => 0,
                 'signed' => true,
@@ -2470,7 +2470,7 @@ $collections = [
             ],
             [
                 '$id' => 'renewDate',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_INTEGER, // cert.pem is time stamp?
                 'format' => '',
                 'size' => 0,
                 'signed' => true,
@@ -2503,7 +2503,7 @@ $collections = [
             ],
             [
                 '$id' => 'updated',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => true,

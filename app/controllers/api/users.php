@@ -63,8 +63,8 @@ App::post('/v1/users')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => Auth::passwordHash($password),
-                'passwordUpdate' => \time(),
-                'registration' => \time(),
+                'passwordUpdate' => Database::getCurrentDateTime(),
+                'registration' => Database::getCurrentDateTime(),
                 'reset' => false,
                 'name' => $name,
                 'prefs' => new \stdClass(),
@@ -550,7 +550,7 @@ App::patch('/v1/users/:userId/password')
 
         $user
             ->setAttribute('password', Auth::passwordHash($password))
-            ->setAttribute('passwordUpdate', \time());
+            ->setAttribute('passwordUpdate', Database::getCurrentDateTime());
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 

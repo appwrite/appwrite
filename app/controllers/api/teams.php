@@ -339,8 +339,8 @@ App::post('/v1/teams/:teamId/memberships')
                      * team invite and OAuth to allow password updates without an
                      * old password
                      */
-                    'passwordUpdate' => 0,
-                    'registration' => \time(),
+                    'passwordUpdate' => null,
+                    'registration' => Database::getCurrentDateTime(),
                     'reset' => false,
                     'name' => $name,
                     'prefs' => new \stdClass(),

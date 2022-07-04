@@ -1244,7 +1244,7 @@ App::post('/v1/projects/:projectId/domains')
             '$write' => ['role:all'],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
-            'updated' => \time(),
+            'updated' => Database::getCurrentDateTime(),
             'domain' => $domain->get(),
             'tld' => $domain->getSuffix(),
             'registerable' => $domain->getRegisterable(),

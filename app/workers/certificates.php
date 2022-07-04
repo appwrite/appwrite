@@ -116,7 +116,7 @@ class CertificatesV1 extends Worker
             // Update certificate info stored in database
             $certificate->setAttribute('renewDate', $this->getRenewDate($domain->get()));
             $certificate->setAttribute('attempts', 0);
-            $certificate->setAttribute('issueDate', \time());
+            $certificate->setAttribute('issueDate', Database::getCurrentDateTime());
         } catch (Throwable $e) {
             // Set exception as log in certificate document
             $certificate->setAttribute('log', $e->getMessage());
@@ -129,7 +129,7 @@ class CertificatesV1 extends Worker
             $this->notifyError($domain->get(), $e->getMessage(), $attempts);
         } finally {
             // All actions result in new updatedAt date
-            $certificate->setAttribute('updated', \time());
+            $certificate->setAttribute('updated', Database::getCurrentDateTime());
 
             // Save all changes we made to certificate document into database
             $this->saveCertificateDocument($domain->get(), $certificate);
@@ -399,7 +399,7 @@ class CertificatesV1 extends Worker
         ], 1000);
 
         foreach ($domains as $domainDocument) {
-            $domainDocument->setAttribute('updated', \time());
+            $domainDocument->setAttribute('updated', Database::getCurrentDateTime());
             $domainDocument->setAttribute('certificateId', $certificateId);
 
             $this->dbForConsole->updateDocument('domains', $domainDocument->getId(), $domainDocument);

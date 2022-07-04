@@ -311,6 +311,8 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
         }
     }
 
+var_dump($scope, $scopes);
+
     if (!\in_array($scope, $scopes)) {
         if ($project->isEmpty()) { // Check if permission is denied because project is missing
             throw new AppwriteException('Project not found', 404, AppwriteException::PROJECT_NOT_FOUND);

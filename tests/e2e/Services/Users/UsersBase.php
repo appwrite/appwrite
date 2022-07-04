@@ -33,7 +33,7 @@ trait UsersBase
         $this->assertEquals($body['name'], 'Cristiano Ronaldo');
         $this->assertEquals($body['email'], 'cristiano.ronaldo@manchester-united.co.uk');
         $this->assertEquals($body['status'], true);
-        $this->assertGreaterThan(0, $body['registration']);
+        $this->assertGreaterThan('2000-01-01 00:00:00', $body['registration']);
 
         /**
          * Test Create with Custom ID for SUCCESS
@@ -53,7 +53,7 @@ trait UsersBase
         $this->assertEquals($res['body']['name'], 'Lionel Messi');
         $this->assertEquals($res['body']['email'], 'lionel.messi@psg.fr');
         $this->assertEquals(true, $res['body']['status']);
-        $this->assertGreaterThan(0, $res['body']['registration']);
+        $this->assertGreaterThan('2000-01-01 00:00:00', $res['body']['registration']);
 
         return ['userId' => $body['$id']];
     }
@@ -228,7 +228,7 @@ trait UsersBase
         $this->assertEquals($user['body']['name'], 'Cristiano Ronaldo');
         $this->assertEquals($user['body']['email'], 'cristiano.ronaldo@manchester-united.co.uk');
         $this->assertEquals($user['body']['status'], true);
-        $this->assertGreaterThan(0, $user['body']['registration']);
+        $this->assertGreaterThan('2000-01-01 00:00:00', $user['body']['registration']);
 
         $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', array_merge([
             'content-type' => 'application/json',

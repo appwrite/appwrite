@@ -102,8 +102,8 @@ App::post('/v1/account')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => Auth::passwordHash($password),
-                'passwordUpdate' => \time(),
-                'registration' => \time(),
+                'passwordUpdate' => Database::getCurrentDateTime(),
+                'registration' => Database::getCurrentDateTime(),
                 'reset' => false,
                 'name' => $name,
                 'prefs' => new \stdClass(),
@@ -483,8 +483,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'passwordUpdate' => 0,
-                        'registration' => \time(),
+                        'passwordUpdate' => null,
+                        'registration' => Database::getCurrentDateTime(),
                         'reset' => false,
                         'name' => $name,
                         'prefs' => new \stdClass(),
@@ -648,8 +648,8 @@ App::post('/v1/account/sessions/magic-url')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => null,
-                'passwordUpdate' => 0,
-                'registration' => \time(),
+                'passwordUpdate' => null,
+                'registration' => Database::getCurrentDateTime(),
                 'reset' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
@@ -891,8 +891,8 @@ App::post('/v1/account/sessions/phone')
                 'phoneVerification' => false,
                 'status' => true,
                 'password' => null,
-                'passwordUpdate' => 0,
-                'registration' => \time(),
+                'passwordUpdate' => null,
+                'registration' => Database::getCurrentDateTime(),
                 'reset' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
@@ -1117,8 +1117,8 @@ App::post('/v1/account/sessions/anonymous')
             'emailVerification' => false,
             'status' => true,
             'password' => null,
-            'passwordUpdate' => 0,
-            'registration' => \time(),
+            'passwordUpdate' => null,
+            'registration' => Database::getCurrentDateTime(),
             'reset' => false,
             'name' => null,
             'prefs' => new \stdClass(),
@@ -1252,10 +1252,11 @@ App::get('/v1/account')
     ->inject('user')
     ->inject('usage')
     ->action(function (Response $response, Document $user, Stats $usage) {
-
+var_dump("********** 1 ");
         $usage->setParam('users.read', 1);
-
+        var_dump("********** 2 ");
         $response->dynamic($user, Response::MODEL_USER);
+        var_dump("********** 3 ");
     });
 
 App::get('/v1/account/prefs')
@@ -1478,7 +1479,7 @@ App::patch('/v1/account/password')
     ->action(function (string $password, string $oldPassword, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         // Check old password only if its an existing user.
-        if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
+        if ($user->getAttribute('passwordUpdate') !== null && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
         }
 
@@ -1487,7 +1488,7 @@ App::patch('/v1/account/password')
             $user->getId(),
             $user
                 ->setAttribute('password', Auth::passwordHash($password))
-                ->setAttribute('passwordUpdate', \time())
+                ->setAttribute('passwordUpdate', Database::getCurrentDateTime())
         );
 
         $audits
@@ -2062,7 +2063,7 @@ App::put('/v1/account/recovery')
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
                 ->setAttribute('password', Auth::passwordHash($password))
-                ->setAttribute('passwordUpdate', \time())
+                ->setAttribute('passwordUpdate', Database::getCurrentDateTime())
                 ->setAttribute('emailVerification', true));
 
         $recoveryDocument = $dbForProject->getDocument('tokens', $recovery);

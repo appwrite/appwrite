@@ -18,16 +18,16 @@ class User extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'User creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => get_class() . ' creation date in Datetime',
+                'default' => '',
+                'example' => '1975-06-12 13:30:59',
             ])
             ->addRule('$updatedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'User update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => get_class() . ' update date in Datetime.',
+                'default' => '',
+                'example' => '1975-06-12 13:30:59',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
@@ -36,10 +36,10 @@ class User extends Model
                 'example' => 'John Doe',
             ])
             ->addRule('registration', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'User registration date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'User registration date in Datetime.',
+                'default' => null,
+                'example' => '1975-06-12 13:30:59',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_BOOLEAN,
@@ -48,10 +48,10 @@ class User extends Model
                 'example' => true,
             ])
             ->addRule('passwordUpdate', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Unix timestamp of the most recent password update',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Datetime of the most recent password update',
+                'default' => '',
+                'example' => '1975-06-12 13:30:59',
             ])
             ->addRule('email', [
                 'type' => self::TYPE_STRING,
