@@ -22,13 +22,13 @@ class Func extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Function creation date in Datetime',
                 'default' => '',
-                'example' => '1975-06-12 13:30:59',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Function update date in Datetime',
                 'default' => '',
-                'example' => '1975-06-12 13:30:59',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('execute', [
                 'type' => self::TYPE_STRING,

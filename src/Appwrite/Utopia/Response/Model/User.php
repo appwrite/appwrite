@@ -21,13 +21,13 @@ class User extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => get_class() . ' creation date in Datetime',
                 'default' => '',
-                'example' => '1975-06-12 13:30:59',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => get_class() . ' update date in Datetime.',
                 'default' => '',
-                'example' => '1975-06-12 13:30:59',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
@@ -39,7 +39,7 @@ class User extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'User registration date in Datetime.',
                 'default' => null,
-                'example' => '1975-06-12 13:30:59',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_BOOLEAN,
@@ -51,7 +51,7 @@ class User extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Datetime of the most recent password update',
                 'default' => '',
-                'example' => '1975-06-12 13:30:59',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('email', [
                 'type' => self::TYPE_STRING,

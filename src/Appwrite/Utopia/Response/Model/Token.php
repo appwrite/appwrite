@@ -20,7 +20,7 @@ class Token extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => get_class() . ' creation date in Datetime',
                 'default' => '',
-                'example' => '1975-06-12 13:30:59',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,

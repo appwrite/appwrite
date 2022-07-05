@@ -1452,7 +1452,7 @@ $collections = [
             ],
             [
                 '$id' => 'providerAccessTokenExpiry',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => true,

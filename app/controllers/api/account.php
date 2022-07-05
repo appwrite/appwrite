@@ -517,7 +517,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'providerUid' => $oauth2ID,
             'providerAccessToken' => $accessToken,
             'providerRefreshToken' => $refreshToken,
-            'providerAccessTokenExpiry' => \time() + (int) $accessTokenExpiry,
+            'providerAccessTokenExpiry' => Database::dateAddSeconds(new DateTime(), (int)$accessTokenExpiry),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -661,8 +661,6 @@ App::post('/v1/account/sessions/magic-url')
         }
 
         $loginSecret = Auth::tokenGenerator();
-
-        //$expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
         $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $token = new Document([
@@ -906,8 +904,6 @@ App::post('/v1/account/sessions/phone')
         }
 
         $secret = $phone->generateSecretDigits();
-
-        //$expire = \time() + Auth::TOKEN_EXPIRATION_PHONE;
         $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_PHONE);
 
         $token = new Document([
@@ -1824,7 +1820,7 @@ App::patch('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                     ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                    ->setAttribute('providerAccessTokenExpiry', \time() + (int) $oauth2->getAccessTokenExpiry(''));
+                    ->setAttribute('providerAccessTokenExpiry', Database::dateAddSeconds(new DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
                 $dbForProject->updateDocument('sessions', $sessionId, $session);
 
@@ -1967,7 +1963,6 @@ App::post('/v1/account/recovery')
             throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED);
         }
 
-        //$expire = \time() + Auth::TOKEN_EXPIRATION_RECOVERY;
         $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_RECOVERY);
 
         $secret = Auth::tokenGenerator();
@@ -2127,10 +2122,7 @@ App::post('/v1/account/verification')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-
         $verificationSecret = Auth::tokenGenerator();
-
-        //$expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
         $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
@@ -2282,11 +2274,8 @@ App::post('/v1/account/verification/phone')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-
         $verificationSecret = Auth::tokenGenerator();
-
         $secret = $phone->generateSecretDigits();
-        //$expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
         $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([

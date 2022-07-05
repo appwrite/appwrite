@@ -20,7 +20,7 @@ class Session extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => get_class() . ' creation date in Datetime',
                 'default' => '',
-                'example' => '1975-06-12 13:30:59',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
@@ -32,7 +32,7 @@ class Session extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => get_class() . ' expiration date in Datetime',
                 'default' => '',
-                'example' => '1975-06-12 13:30:59',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('provider', [
                 'type' => self::TYPE_STRING,
@@ -53,10 +53,10 @@ class Session extends Model
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
             ])
             ->addRule('providerAccessTokenExpiry', [
-                'type' => self::TYPE_INTEGER,
+                'type' => self::TYPE_DATETIME,
                 'description' => 'Date, the Unix timestamp of when the access token expires.',
-                'default' => 0,
-                'example' => 1592981250,
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('providerRefreshToken', [
                 'type' => self::TYPE_STRING,
