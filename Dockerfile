@@ -266,14 +266,14 @@ COPY ./src /usr/src/code/src
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
-    mkdir -p /storage/video && \
+    mkdir -p /storage/videos && \
     mkdir -p /storage/cache && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
     mkdir -p /storage/debug && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
-    chown -Rf www-data.www-data /storage/video && chmod -Rf 0755 /storage/video && \
+    chown -Rf www-data.www-data /storage/videos && chmod -Rf 0755 /storage/videos && \
     chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
     chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
     chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \

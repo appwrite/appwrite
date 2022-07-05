@@ -153,7 +153,7 @@ App::post('/v1/projects')
         }
 
         if($dbForProject->exists($dbForProject->getDefaultDatabase(), 'video_profiles')) {
-            foreach (Config::getParam('profiles', []) as $profile) {
+            foreach (Config::getParam('video-profiles', []) as $profile) {
                 Authorization::skip(function () use ($project, $profile, $dbForProject) {
                     return $dbForProject->createDocument('video_profiles', new Document([
                         'name' => $profile['name'],

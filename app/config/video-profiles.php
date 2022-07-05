@@ -2,7 +2,7 @@
 
 return [
     [
-        'id'   => 1,
+
         'name' => '360p',
         'videoBitrate' => 890, //video bitrate in Kbps
         'audioBitrate' => 64, //audio bitrate in Kbps
@@ -10,7 +10,6 @@ return [
         'height' => 360, //height resolution in px
     ],
     [
-        'id'   => 2,
         'name' => '576p',
         'videoBitrate' => 2538,
         'audioBitrate' => 128,
@@ -18,7 +17,6 @@ return [
         'height' => 576,
     ],
     [
-        'id'   => 3,
         'name' => '720p',
         'videoBitrate' => 3551,
         'audioBitrate' => 128,

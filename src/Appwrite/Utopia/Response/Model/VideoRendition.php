@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class FileRendition extends Model
+class VideoRendition extends Model
 {
     public function __construct()
     {
@@ -16,25 +16,19 @@ class FileRendition extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('bucketId', [
+            ->addRule('videoId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Bucket ID.',
+                'description' => 'Video ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('fileId', [
+            ->addRule('profileId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'File ID.',
+                'description' => 'profile ID.',
                 'default' => '',
                 'example' => 'd5fg5ehg1c168g7c',
             ])
-            ->addRule('renditionId', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Rendition ID.',
-                'default' => '',
-                'example' => 3,
-            ])
-            ->addRule('renditionName', [
+            ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Rendition name.',
                 'default' => '',
@@ -61,6 +55,12 @@ class FileRendition extends Model
             ->addRule('progress', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Rendition trascoding progress',
+                'default' => 0,
+                'example' => 88,
+            ])
+            ->addRule('stream', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Rendition trascoding stream protocol type',
                 'default' => 0,
                 'example' => 88,
             ])

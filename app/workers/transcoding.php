@@ -5,6 +5,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Resque\Worker;
 use Streaming\Format\StreamFormat;
 use Streaming\Media;
+use Streaming\Metadata;
 use Streaming\Representation;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -34,7 +35,8 @@ class TranscodingV1 extends Worker
 
     const HLS_BASE_URL = '';
 
-    protected string $basePath = '/tmp/';
+    //protected string $basePath = '/tmp/';
+    protected string $basePath = '/usr/src/code/tests/tmp/';
 
     protected string $inDir;
 
@@ -68,20 +70,20 @@ class TranscodingV1 extends Worker
         $this->database = $this->getProjectDB($project->getId());
 
         $sourceVideo = Authorization::skip(fn() => $this->database->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$this->args['videoId']])]));
-        if(empty($sourceVideo)){
+        if (empty($sourceVideo)) {
             throw new Exception('Video not found');
         }
 
         $profile = Authorization::skip(fn() => $this->database->findOne('video_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$this->args['profileId']])]));
-        if(empty($profile)){
+        if (empty($profile)) {
             throw new Exception('profile not found');
-         }
+        }
 
         $user = new Document($this->args['user'] ?? []);
-        $bucket = Authorization::skip(fn() => $this->database->getDocument('buckets',  $sourceVideo['bucketId']));
+        $bucket = Authorization::skip(fn() => $this->database->getDocument('buckets', $sourceVideo['bucketId']));
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(fn() => $this->database->getDocument('bucket_' . $bucket->getInternalId(),  $video['fileId']));
+            $file = Authorization::skip(fn() => $this->database->getDocument('bucket_' . $bucket->getInternalId(), $video['fileId']));
         } else {
             $file = $this->database->getDocument('bucket_' . $bucket->getInternalId(), $sourceVideo['fileId']);
         }
@@ -127,25 +129,24 @@ class TranscodingV1 extends Worker
         if (!empty($rendition)) {
             Authorization::skip(fn() => $this->database->deleteDocument($collection, $rendition->getId()));
             $deviceFiles = $this->getVideoDevice($project->getId());
-            if(!empty($rendition['path'])) {
+            if (!empty($rendition['path'])) {
                 $deviceFiles->deletePath($rendition['path']);
             }
         }
 
         $stream = !empty($rendition['stream']) ? $rendition['stream'] : 'hls';
-        //$general = $this->getMetadataExport($ffprobe->streams($inPath));
-        //var_dump($general);
-//        if(!empty($general)) {
-//            foreach ($general as $key => $value) {
-//                $sourceVideo->setAttribute($key, $value);
-//            }
-//
-//            Authorization::skip(fn() => $this->database->updateDocument(
-//                'videos',
-//                $sourceVideo->getId(),
-//                $sourceVideo
-//            ));
-//        }
+        $general = $this->getVideoInfo($ffprobe->streams($inPath));
+        if(!empty($general)) {
+            foreach ($general as $key => $value) {
+                $sourceVideo->setAttribute($key, $value);
+            }
+
+            Authorization::skip(fn() => $this->database->updateDocument(
+                'videos',
+                $sourceVideo->getId(),
+                $sourceVideo
+            ));
+        }
 
 
         $video = $ffmpeg->open($inPath);
@@ -159,142 +160,108 @@ class TranscodingV1 extends Worker
                         'status'    => self::STATUS_TRANSCODE_START,
                         'stream'    => $stream,
                     ]));
-                });
+        });
 
-                try {
-                    $representation = (new Representation())->
-                    setKiloBitrate($profile->getAttribute('videoBitrate'))->
-                    setAudioKiloBitrate($profile->getAttribute('audioBitrate'))->
-                    setResize( $profile->getAttribute('width'), $profile->getAttribute('height'));
+        try {
+            $representation = (new Representation())->
+            setKiloBitrate($profile->getAttribute('videoBitrate'))->
+            setAudioKiloBitrate($profile->getAttribute('audioBitrate'))->
+            setResize($profile->getAttribute('width'), $profile->getAttribute('height'));
 
-                    $format = new Streaming\Format\X264();
-                    $format->on('progress', function ($video, $format, $percentage) use ($query, $collection) {
-                        if ($percentage % 3 === 0) {
-                            $query->setAttribute('progress', (string)$percentage);
-                            Authorization::skip(fn() => $this->database->updateDocument(
-                                $collection,
-                                $query->getId(),
-                                $query
-                            ));
-                        }
-                    });
-
-
-                    list($general, $metadata) = $this->transcode($stream, $video, $format, $representation);
-
-                    if (!empty($metadata)) {
-                        $query->setAttribute('metadata', json_encode($metadata));
-                    }
-
-                    if(!empty($general)) {
-                        foreach ($general as $key => $value) {
-                            $query->setAttribute($key, $value);
-                        }
-                    }
-
-                    $query->setAttribute('status', self::STATUS_TRANSCODE_END);
-                    $query->setAttribute('endedAt', time());
-                    Authorization::skip(fn() => $this->database->updateDocument(
-                        $collection,
-                        $query->getId(),
-                        $query
-                    ));
-
-                 /** Upload & remove files **/
-                    $start = 0;
-                    $fileNames = scandir($this->outDir);
-
-                    foreach ($fileNames as $fileName) {
-                        if (
-                            $fileName === '.' ||
-                            $fileName === '..' ||
-                            str_contains($fileName, '.json')
-                        ) {
-                            continue;
-                        }
-
-                        $deviceFiles = $this->getVideoDevice($project->getId());
-                        $devicePath = $deviceFiles->getPath($this->args['videoId']);
-                        $devicePath = str_ireplace($deviceFiles->getRoot(), $deviceFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $devicePath);
-                        $data = $this->getFilesDevice($project->getId())->read($this->outDir . $fileName);
-                        $renditionDir = $profile->getAttribute('width') . 'X' . $profile->getAttribute('height') . '@' .$profile->getAttribute('videoBitrate');
-                        $renditionPath = $devicePath . DIRECTORY_SEPARATOR . $renditionDir;
-                        $this->getVideoDevice($project->getId())->write($renditionPath . DIRECTORY_SEPARATOR .  $fileName, $data, \mime_content_type($this->outDir . $fileName));
-
-                        if ($start === 0) {
-                            $query->setAttribute('status', self::STATUS_UPLOADING);
-                            $query->setAttribute('path', $renditionPath);
-                            Authorization::skip(fn() => $this->database->updateDocument(
-                                $collection,
-                                $query->getId(),
-                                $query
-                            ));
-                            $start = 1;
-                        }
-
-                        //$metadata=[];
-                        //$chunksUploaded = $deviceFiles->upload($file, $path, -1, 1, $metadata);
-                        //var_dump($chunksUploaded);
-                        // if (empty($chunksUploaded)) {
-                        //  throw new Exception('Failed uploading file', 500, Exception::GENERAL_SERVER_ERROR);
-                        //}
-                        // }
-
-                        @unlink($this->outDir . $fileName);
-                    }
-
-                    $query->setAttribute('status', self::STATUS_PACKAGE_END);
-                    Authorization::skip(fn() => $this->database->updateDocument(
-                        $collection,
-                        $query->getId(),
-                        $query
-                    ));
-                } catch (\Throwable $th) {
-                    $query->setAttribute('metadata', json_encode([
-                    'code' => $th->getCode(),
-                    'message' => $th->getMessage(),
-                    ]));
-
-                    $query->setAttribute('status', self::STATUS_ERROR);
+            $format = new Streaming\Format\X264();
+            $format->on('progress', function ($video, $format, $percentage) use ($query, $collection) {
+                if ($percentage % 3 === 0) {
+                    $query->setAttribute('progress', (string)$percentage);
                     Authorization::skip(fn() => $this->database->updateDocument(
                         $collection,
                         $query->getId(),
                         $query
                     ));
                 }
-        }
+            });
 
-    /**
-     * @param $metadata array
-     * @return array
-     */
-    private function getMetadataExport(array $metadata): array
-    {
-        $info = [];
 
-        if (!empty($metadata['stream']['resolutions'][0])) {
-            $general = $metadata['stream']['resolutions'][0];
-            $parts = explode("X", $general['dimension']);
-            $info['width']   = $parts['0'];
-            $info['height']  = $parts['1'];
-        }
+            list($general, $metadata) = $this->transcode($stream, $video, $format, $representation);
 
-        if (!empty($metadata['video']['streams'])) {
-            foreach ($metadata['video']['streams'] as $streams) {
-                if ($streams['codec_type'] === 'video') {
-                    $info['duration']       = $streams['duration'];
-                    $info['videoCodec']     = $streams['codec_name'] . ',' . $streams['codec_tag_string'];
-                    $info['videoBitrate']   = $streams['bit_rate'];
-                    $info['videoFramerate'] = $streams['avg_frame_rate'];
-                } elseif ($streams['codec_type'] === 'audio') {
-                    $info['audioCodec']     = $streams['codec_name'] . ',' . $streams['codec_tag_string'];
-                    $info['audioBitrate']   = $streams['sample_rate'];
-                    $info['audioSamplerate'] = $streams['bit_rate'];
+            if (!empty($metadata)) {
+                $query->setAttribute('metadata', json_encode($metadata));
+            }
+
+            if (!empty($general)) {
+                foreach ($general as $key => $value) {
+                    $query->setAttribute($key, $value);
                 }
             }
-        }
 
-        return $info;
+            $query->setAttribute('status', self::STATUS_TRANSCODE_END);
+            $query->setAttribute('endedAt', time());
+            Authorization::skip(fn() => $this->database->updateDocument(
+                $collection,
+                $query->getId(),
+                $query
+            ));
+
+         /** Upload & remove files **/
+            $start = 0;
+            $fileNames = scandir($this->outDir);
+
+            foreach ($fileNames as $fileName) {
+                if (
+                    $fileName === '.' ||
+                    $fileName === '..' ||
+                    str_contains($fileName, '.json')
+                ) {
+                    continue;
+                }
+
+                $deviceFiles = $this->getVideoDevice($project->getId());
+                $devicePath = $deviceFiles->getPath($this->args['videoId']);
+                $data = $this->getFilesDevice($project->getId())->read($this->outDir . $fileName);
+                $renditionDir = $profile->getAttribute('width') . 'X' . $profile->getAttribute('height') . '@' . $profile->getAttribute('videoBitrate');
+                $renditionPath = $devicePath . DIRECTORY_SEPARATOR . $renditionDir;
+                $this->getVideoDevice($project->getId())->write($renditionPath . DIRECTORY_SEPARATOR .  $fileName, $data, \mime_content_type($this->outDir . $fileName));
+
+                if ($start === 0) {
+                    $query->setAttribute('status', self::STATUS_UPLOADING);
+                    $query->setAttribute('path', $renditionPath);
+                    Authorization::skip(fn() => $this->database->updateDocument(
+                        $collection,
+                        $query->getId(),
+                        $query
+                    ));
+                    $start = 1;
+                }
+
+                //$metadata=[];
+                //$chunksUploaded = $deviceFiles->upload($file, $path, -1, 1, $metadata);
+                //var_dump($chunksUploaded);
+                // if (empty($chunksUploaded)) {
+                //  throw new Exception('Failed uploading file', 500, Exception::GENERAL_SERVER_ERROR);
+                //}
+                // }
+
+                //@unlink($this->outDir . $fileName);
+            }
+
+            $query->setAttribute('status', self::STATUS_PACKAGE_END);
+            Authorization::skip(fn() => $this->database->updateDocument(
+                $collection,
+                $query->getId(),
+                $query
+            ));
+        } catch (\Throwable $th) {
+            $query->setAttribute('metadata', json_encode([
+            'code' => $th->getCode(),
+            'message' => $th->getMessage(),
+            ]));
+
+            $query->setAttribute('status', self::STATUS_ERROR);
+            Authorization::skip(fn() => $this->database->updateDocument(
+                $collection,
+                $query->getId(),
+                $query
+            ));
+        }
     }
 
     /**
@@ -321,13 +288,16 @@ class TranscodingV1 extends Worker
                 ->addRepresentation($representation)
                 ->setAdditionalParams($additionalParams)
                 ->save($this->outPath);
-                var_dump($this->outPath);
+
                     $xml = simplexml_load_string(
                         file_get_contents($this->outDir . $this->args['fileId'] . '.mpd')
                     );
 
+                $metadata = $this->getVideoInfo($dash->metadata());
+                $metadata['width'] = $representation->getWidth();
+                $metadata['height'] = $representation->getHeight();
                 return [
-                        $this->getMetadataExport($dash->metadata()->export()),
+                        $metadata,
                         ['mpeg-dash'   => !empty($xml) ? json_decode(json_encode((array)$xml), true) : []],
                       ];
         }
@@ -340,12 +310,33 @@ class TranscodingV1 extends Worker
             ->setAdditionalParams($additionalParams)
             ->setHlsBaseUrl(self::HLS_BASE_URL)
             ->save($this->outPath);
-             var_dump($this->outPath);
+
+            $metadata = $this->getVideoInfo($hls->metadata()->getVideoStreams());
+            $metadata['width'] = $representation->getWidth();
+            $metadata['height'] = $representation->getHeight();
+
+            $this->rewriteHlsRefs($this->outPath . '_' . $representation->getHeight() . 'P.m3u8');
+
         return [
-            $this->getMetadataExport($hls->metadata()->export()), []
+            $metadata, []
         ];
     }
 
+    private function rewriteHlsRefs($path)
+    {
+        $handle = fopen($path, "r");
+        $destination = fopen($path . '_tmp', "w");
+        if ($handle) {
+            while (($line = fgets($handle)) !== false) {
+                if (str_contains($line, ".ts")) {
+                    //$return['data'][$i]['url'] = str_replace(array("\r","\n"),"",$line);
+                }
+                fwrite($destination, str_replace(array("\r","\n"), "", $line) . PHP_EOL);
+            }
+            fclose($handle);
+            fclose($destination);
+        }
+    }
 
     /**
      * @param $streams StreamCollection
@@ -353,13 +344,27 @@ class TranscodingV1 extends Worker
      */
     private function getVideoInfo(StreamCollection $streams): array
     {
+        var_dump([
+            'duration' => $streams->videos()->first()->get('duration'),
+            'height' => $streams->videos()->first()->get('height'),
+            'width' => $streams->videos()->first()->get('width'),
+            'videoCodec'   => $streams->videos()->first()->get('codec_name') . ',' . $streams->videos()->first()->get('codec_tag_string'),
+            'videoFramerate' => $streams->videos()->first()->get('avg_frame_rate'),
+            'videoBitrate' =>  (int)$streams->videos()->first()->get('bit_rate'),
+            'audioCodec' =>  $streams->audios()->first()->get('codec_name') . ',' . $streams->audios()->first()->get('codec_tag_string'),
+            'audioSamplerate' => (int)$streams->audios()->first()->get('sample_rate'),
+            'audioBitrate'   =>  (int)$streams->audios()->first()->get('bit_rate'),
+        ]);
         return [
             'duration' => $streams->videos()->first()->get('duration'),
             'height' => $streams->videos()->first()->get('height'),
             'width' => $streams->videos()->first()->get('width'),
-            'frameRate' => $streams->videos()->first()->get('r_frame_rate'),
-            'bitrateKb' => $streams->videos()->first()->get('bit_rate') / 1000,
-            'bitrateMb' =>  $streams->videos()->first()->get('bit_rate') / 1000 / 1000,
+            'videoCodec'   => $streams->videos()->first()->get('codec_name') . ',' . $streams->videos()->first()->get('codec_tag_string'),
+            'videoFramerate' => $streams->videos()->first()->get('avg_frame_rate'),
+            'videoBitrate' =>  (int)$streams->videos()->first()->get('bit_rate'),
+            'audioCodec' =>  $streams->audios()->first()->get('codec_name') . ',' . $streams->audios()->first()->get('codec_tag_string'),
+            'audioSamplerate' => (int)$streams->audios()->first()->get('sample_rate'),
+            'audioBitrate'   =>  (int)$streams->audios()->first()->get('bit_rate'),
         ];
     }
 
