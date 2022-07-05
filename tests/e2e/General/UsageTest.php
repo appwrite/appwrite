@@ -319,7 +319,6 @@ class UsageTest extends Scope
                 'documentId' => 'unique()',
                 'data' => ['name' => $name]
             ]);
-            var_dump($res);
             $this->assertEquals($name, $res['body']['name']);
             $this->assertNotEmpty($res['body']['$id']);
             $documentId = $res['body']['$id'];
