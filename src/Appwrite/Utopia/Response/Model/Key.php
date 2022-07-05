@@ -40,10 +40,10 @@ class Key extends Model
                 'example' => 'My API Key',
             ])
             ->addRule('expire', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Key expiration in Unix timestamp.',
-                'default' => 0,
-                'example' => '1653990687',
+                'type' => self::TYPE_DATETIME,
+                'description' => get_class() . ' expiration date in Datetime',
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('scopes', [
                 'type' => self::TYPE_STRING,

@@ -3,6 +3,7 @@
 namespace Appwrite\Auth;
 
 use Utopia\Database\Document;
+use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 
 class Auth
@@ -206,7 +207,7 @@ class Auth
                 $token->isSet('expire') &&
                 $token->getAttribute('type') == $type &&
                 $token->getAttribute('secret') === self::hash($secret) &&
-                $token->getAttribute('expire') >= \time()
+                $token->getAttribute('expire') >= Database::getCurrentDateTime()
             ) {
                 return (string)$token->getId();
             }
@@ -225,7 +226,7 @@ class Auth
                 $token->isSet('expire') &&
                 $token->getAttribute('type') == Auth::TOKEN_TYPE_PHONE &&
                 $token->getAttribute('secret') === $secret &&
-                $token->getAttribute('expire') >= \time()
+                $token->getAttribute('expire') >= Database::getCurrentDateTime()
             ) {
                 return (string) $token->getId();
             }
@@ -251,7 +252,7 @@ class Auth
                 $session->isSet('expire') &&
                 $session->isSet('provider') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
-                $session->getAttribute('expire') >= \time()
+                $session->getAttribute('expire') >= Database::getCurrentDateTime()
             ) {
                 return (string)$session->getId();
             }

@@ -193,7 +193,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
-        $this->assertIsInt($webhook['data']['expire']);
+        $this->assertIsString($webhook['data']['expire']);
         $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);

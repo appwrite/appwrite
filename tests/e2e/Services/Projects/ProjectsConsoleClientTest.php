@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Projects;
 
+use Appwrite\Auth\Auth;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
@@ -1279,7 +1280,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => time() + 3600,
+            'expire' => Database::dateAddSeconds(new \DateTime(), 3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/health', [
@@ -1299,7 +1300,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => 0,
+            'expire' => null,
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/health', [
@@ -1319,7 +1320,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => time() - 3600,
+            'expire' => Database::dateAddSeconds(new \DateTime(), -3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/health', [
@@ -1346,7 +1347,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test Update',
             'scopes' => ['users.read', 'users.write', 'collections.read'],
-            'expire' => time() + 360,
+            'expire' => Database::dateAddSeconds(new \DateTime(), 360),
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
