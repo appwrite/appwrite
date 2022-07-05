@@ -27,41 +27,41 @@ class VideoCustomServerTest extends Scope
             'write' => ['role:all']
         ]);
 
-        //$source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
-        $source = __DIR__ . "/../../../resources/disk-a/very-large-file-1.mov";
-        $totalSize = \filesize($source);
-        $chunkSize = 5 * 1024 * 1024;
-        $handle = @fopen($source, "rb");
-        $fileId = 'unique()';
-        $mimeType = mime_content_type($source);
-        $counter = 0;
-        $size = filesize($source);
-        $headers = [
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ];
-        $id = '';
-
-        while (!feof($handle)) {
-            $curlFile = new \CURLFile('data:' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'very-large-file-1.mov');
-            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
-
-            if (!empty($id)) {
-                $headers['x-appwrite-id'] = $id;
-            }
-
-            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
-                'fileId' => $fileId,
-                'file' => $curlFile,
-                'read' => ['role:all'],
-                'write' => ['role:all'],
-            ]);
-            $counter++;
-
-            $this->assertNotEmpty($file['body']['$id']);
-            $id = $file['body']['$id'];
-        }
-        @fclose($handle);
+//        //$source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
+//        $source = __DIR__ . "/../../../resources/disk-a/very-large-file-1.mov";
+//        $totalSize = \filesize($source);
+//        $chunkSize = 5 * 1024 * 1024;
+//        $handle = @fopen($source, "rb");
+//        $fileId = 'unique()';
+//        $mimeType = mime_content_type($source);
+//        $counter = 0;
+//        $size = filesize($source);
+//        $headers = [
+//            'content-type' => 'multipart/form-data',
+//            'x-appwrite-project' => $this->getProject()['$id']
+//        ];
+//        $id = '';
+//
+//        while (!feof($handle)) {
+//            $curlFile = new \CURLFile('data:' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'very-large-file-1.mov');
+//            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+//
+//            if (!empty($id)) {
+//                $headers['x-appwrite-id'] = $id;
+//            }
+//
+//            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
+//                'fileId' => $fileId,
+//                'file' => $curlFile,
+//                'read' => ['role:all'],
+//                'write' => ['role:all'],
+//            ]);
+//            $counter++;
+//
+//            $this->assertNotEmpty($file['body']['$id']);
+//            $id = $file['body']['$id'];
+//        }
+//        @fclose($handle);
 
         return [
             'bucketId' => $bucket['body']['$id'],

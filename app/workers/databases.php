@@ -5,7 +5,6 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__ . '/../init.php';
 
@@ -20,12 +19,11 @@ class DatabaseV1 extends Worker
 
     public function run(): void
     {
-        Authorization::disable();
-
         $type = $this->args['type'];
         $project = new Document($this->args['project']);
         $collection = new Document($this->args['collection'] ?? []);
         $document = new Document($this->args['document'] ?? []);
+        $database = new Document($this->args['database'] ?? []);
 
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
@@ -37,24 +35,22 @@ class DatabaseV1 extends Worker
 
         switch (strval($type)) {
             case DATABASE_TYPE_CREATE_ATTRIBUTE:
-                $this->createAttribute($collection, $document, $project->getId());
+                $this->createAttribute($database, $collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_DELETE_ATTRIBUTE:
-                $this->deleteAttribute($collection, $document, $project->getId());
+                $this->deleteAttribute($database, $collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_CREATE_INDEX:
-                $this->createIndex($collection, $document, $project->getId());
+                $this->createIndex($database, $collection, $document, $project->getId());
                 break;
             case DATABASE_TYPE_DELETE_INDEX:
-                $this->deleteIndex($collection, $document, $project->getId());
+                $this->deleteIndex($database, $collection, $document, $project->getId());
                 break;
 
             default:
                 Console::error('No database operation for type: ' . $type);
                 break;
         }
-
-            Authorization::reset();
     }
 
     public function shutdown(): void
@@ -62,16 +58,18 @@ class DatabaseV1 extends Worker
     }
 
     /**
+     * @param Document $database
      * @param Document $collection
      * @param Document $attribute
      * @param string $projectId
      */
-    protected function createAttribute(Document $collection, Document $attribute, string $projectId): void
+    protected function createAttribute(Document $database, Document $collection, Document $attribute, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $events = Event::generateEvents('collections.[collectionId].attributes.[attributeId].update', [
+        $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].update', [
+            'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
             'attributeId' => $attribute->getId()
         ]);
@@ -94,7 +92,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if (!$dbForProject->createAttribute('collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+            if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                 throw new Exception('Failed to create Attribute');
             }
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
@@ -106,7 +104,7 @@ class DatabaseV1 extends Worker
                 // Pass first, most verbose event pattern
                 event: $events[0],
                 payload: $attribute,
-                project: $project
+                project: $project,
             );
 
             Realtime::send(
@@ -117,25 +115,28 @@ class DatabaseV1 extends Worker
                 roles: $target['roles'],
                 options: [
                     'projectId' => $projectId,
+                    'databaseId' => $database->getId(),
                     'collectionId' => $collection->getId()
                 ]
             );
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
     /**
+     * @param Document $database
      * @param Document $collection
      * @param Document $attribute
      * @param string $projectId
      */
-    protected function deleteAttribute(Document $collection, Document $attribute, string $projectId): void
+    protected function deleteAttribute(Document $database, Document $collection, Document $attribute, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $events = Event::generateEvents('collections.[collectionId].attributes.[attributeId].delete', [
+        $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete', [
+            'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
             'attributeId' => $attribute->getId()
         ]);
@@ -151,7 +152,7 @@ class DatabaseV1 extends Worker
         // - failed: attribute was never created
         // - stuck: attribute was available but cannot be removed
         try {
-            if ($status !== 'failed' && !$dbForProject->deleteAttribute('collection_' . $collection->getInternalId(), $key)) {
+            if ($status !== 'failed' && !$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
                 throw new Exception('Failed to delete Attribute');
             }
             $dbForProject->deleteDocument('attributes', $attribute->getId());
@@ -174,6 +175,7 @@ class DatabaseV1 extends Worker
                 roles: $target['roles'],
                 options: [
                     'projectId' => $projectId,
+                    'databaseId' => $database->getId(),
                     'collectionId' => $collection->getId()
                 ]
             );
@@ -223,7 +225,7 @@ class DatabaseV1 extends Worker
                     }
 
                     if ($exists) { // Delete the duplicate if created, else update in db
-                        $this->deleteIndex($collection, $index, $projectId);
+                        $this->deleteIndex($database, $collection, $index, $projectId);
                     } else {
                         $dbForProject->updateDocument('indexes', $index->getId(), $index);
                     }
@@ -231,21 +233,23 @@ class DatabaseV1 extends Worker
             }
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collectionId);
-        $dbForProject->deleteCachedCollection('collection_' . $collection->getInternalId());
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
     }
 
     /**
+     * @param Document $database
      * @param Document $collection
      * @param Document $index
      * @param string $projectId
      */
-    protected function createIndex(Document $collection, Document $index, string $projectId): void
+    protected function createIndex(Document $database, Document $collection, Document $index, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $events = Event::generateEvents('collections.[collectionId].indexes.[indexId].update', [
+        $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].update', [
+            'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
             'indexId' => $index->getId()
         ]);
@@ -258,7 +262,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if (!$dbForProject->createIndex('collection_' . $collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
+            if (!$dbForProject->createIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
                 throw new Exception('Failed to create Index');
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
@@ -281,25 +285,28 @@ class DatabaseV1 extends Worker
                 roles: $target['roles'],
                 options: [
                     'projectId' => $projectId,
+                    'databaseId' => $database->getId(),
                     'collectionId' => $collection->getId()
                 ]
             );
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collectionId);
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
     /**
+     * @param Document $database
      * @param Document $collection
      * @param Document $index
      * @param string $projectId
      */
-    protected function deleteIndex(Document $collection, Document $index, string $projectId): void
+    protected function deleteIndex(Document $database, Document $collection, Document $index, string $projectId): void
     {
         $dbForConsole = $this->getConsoleDB();
         $dbForProject = $this->getProjectDB($projectId);
 
-        $events = Event::generateEvents('collections.[collectionId].indexes.[indexId].delete', [
+        $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].delete', [
+            'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
             'indexId' => $index->getId()
         ]);
@@ -308,7 +315,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if ($status !== 'failed' && !$dbForProject->deleteIndex('collection_' . $collection->getInternalId(), $key)) {
+            if ($status !== 'failed' && !$dbForProject->deleteIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
                 throw new Exception('Failed to delete index');
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
@@ -331,11 +338,12 @@ class DatabaseV1 extends Worker
                 roles: $target['roles'],
                 options: [
                     'projectId' => $projectId,
+                    'databaseId' => $database->getId(),
                     'collectionId' => $collection->getId()
                 ]
             );
         }
 
-        $dbForProject->deleteCachedDocument('collections', $collection->getId());
+        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collection->getId());
     }
 }

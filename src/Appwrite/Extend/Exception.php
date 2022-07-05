@@ -40,6 +40,7 @@ class Exception extends \Exception
     public const GENERAL_UNAUTHORIZED_SCOPE        = 'general_unauthorized_scope';
     public const GENERAL_RATE_LIMIT_EXCEEDED       = 'general_rate_limit_exceeded';
     public const GENERAL_SMTP_DISABLED             = 'general_smtp_disabled';
+    public const GENERAL_PHONE_DISABLED            = 'general_phone_disabled';
     public const GENERAL_ARGUMENT_INVALID          = 'general_argument_invalid';
     public const GENERAL_QUERY_LIMIT_EXCEEDED      = 'general_query_limit_exceeded';
     public const GENERAL_QUERY_INVALID             = 'general_query_invalid';
@@ -66,6 +67,8 @@ class Exception extends \Exception
     public const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
     public const USER_UNAUTHORIZED                 = 'user_unauthorized';
     public const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
+    public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
+    public const USER_PHONE_NOT_FOUND              = 'user_phone_not_found';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -112,6 +115,10 @@ class Exception extends \Exception
     /** Execution */
     public const EXECUTION_NOT_FOUND               = 'execution_not_found';
 
+    /** Databases */
+    public const DATABASE_NOT_FOUND              = 'database_not_found';
+    public const DATABASE_ALREADY_EXISTS         = 'database_already_exists';
+
     /** Collections */
     public const COLLECTION_NOT_FOUND              = 'collection_not_found';
     public const COLLECTION_ALREADY_EXISTS         = 'collection_already_exists';
@@ -147,6 +154,7 @@ class Exception extends \Exception
     public const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
     public const PROJECT_MISSING_USER_ID           = 'project_missing_user_id';
     public const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
+    public const PROJECT_KEY_EXPIRED               = 'project_key_expired';
 
     /** Webhooks */
     public const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';

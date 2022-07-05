@@ -84,6 +84,6 @@ class VideoRendition extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_FILE_RENDITION;
+        return Response::MODEL_VIDEO_RENDITION;
     }
 }
