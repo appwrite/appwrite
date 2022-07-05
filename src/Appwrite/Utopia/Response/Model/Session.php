@@ -29,10 +29,10 @@ class Session extends Model
                 'example' => '5e5bb8c16897e',
             ])
             ->addRule('expire', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Session expiration date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => get_class() . ' expiration date in Datetime',
+                'default' => '',
+                'example' => '1975-06-12 13:30:59',
             ])
             ->addRule('provider', [
                 'type' => self::TYPE_STRING,

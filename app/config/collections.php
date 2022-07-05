@@ -963,7 +963,7 @@ $collections = [
             ],
             [
                 '$id' => 'expire',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => false,
@@ -1347,7 +1347,7 @@ $collections = [
             ],
             [
                 '$id' => 'expire',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => true,
@@ -1485,7 +1485,7 @@ $collections = [
             ],
             [
                 '$id' => 'expire',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => true,
