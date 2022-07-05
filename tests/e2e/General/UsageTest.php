@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use CURLFile;
 
 class UsageTest extends Scope
 {
@@ -84,7 +85,7 @@ class UsageTest extends Scope
         $this->assertEquals(5, $res['usersDelete'][array_key_last($res['usersDelete'])]['value']);
     }
 
-    public function testStorageStats()
+    public function testStorageStats(): void
     {
         $bucketId = '';
         $bucketsCount = 0;
@@ -219,6 +220,207 @@ class UsageTest extends Scope
         $this->assertEquals($filesRead, $res['filesRead'][array_key_last($res['filesRead'])]['value']);
         $this->assertEquals($filesCreate, $res['filesCreate'][array_key_last($res['filesCreate'])]['value']);
         $this->assertEquals($filesDelete, $res['filesDelete'][array_key_last($res['filesDelete'])]['value']);
+    }
+
+    public function testDatabaseStats(): void
+    {
+        $databaseId = '';
+        $collectionId = '';
+        
+        $requestsCount = 0;
+        $databasesCount = 0;
+        $databasesCreate = 0;
+        $databasesRead = 0;
+        $databasesDelete = 0;
+
+        $collectionsCount = 0;
+        $collectionsCreate = 0;
+        $collectionsRead = 0;
+        $collectionsUpdate = 0;
+        $collectionsDelete = 0;
+
+        $documentsCount = 0;
+        $documentsCreate = 0;
+        $documentsRead = 0;
+        $documentsDelete = 0;
+
+        for ($i = 0; $i < 10; $i++) {
+            $name = uniqid() . ' database';
+            $res = $this->client->call(Client::METHOD_POST, '/databases', $this->headers, [
+                'databaseId' => 'unique()',
+                'name' => $name,
+            ]);
+            $this->assertEquals($name, $res['body']['name']);
+            $this->assertNotEmpty($res['body']['$id']);
+            $databaseId = $res['body']['$id'];
+
+            $requestsCount++;
+            $databasesCount++;
+            $databasesCreate++;
+
+            if($i < 5) {
+                $res = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, $this->headers);
+                $this->assertEquals($databaseId, $res['body']['$id']);
+                $databasesRead++;
+
+                $res = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $this->headers);
+                $this->assertEmpty($res['body']);
+                $databasesDelete++;
+
+                $databasesCount--;
+                $requestsCount += 2;
+            }
+        }
+
+        for ($i = 0; $i < 10; $i++) {
+            $name = uniqid() . ' collection';
+            $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->headers, [
+                'collectionId' => 'unique()',
+                'name' => $name,
+                'permission' => 'collection',
+                'read' => ['role:all'],
+                'write' => ['role:all']
+            ]);
+            $this->assertEquals($name, $res['body']['name']);
+            $this->assertNotEmpty($res['body']['$id']);
+            $collectionId = $res['body']['$id'];
+
+            $requestsCount++;
+            $collectionsCount++;
+            $collectionsCreate++;
+
+            if($i < 5) {
+                $res = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, $this->headers);
+                $this->assertEquals($collectionId, $res['body']['$id']);
+                $collectionsRead++;
+
+                $res = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, $this->headers);
+                $this->assertEmpty($res['body']);
+                $collectionsDelete++;
+
+                $collectionsCount--;
+                $requestsCount += 2;
+            }
+        }
+
+        $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string', $this->headers, [
+            'key' => 'name',
+            'size' => 255,
+            'required' => true,
+        ]);
+        $this->assertEquals('name', $res['body']['key']);
+        $collectionsUpdate++;
+        $requestsCount++;
+        sleep(10);
+
+        for ($i = 0; $i < 10; $i++) {
+            $name = uniqid() . ' collection';
+            $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $this->headers, [
+                'documentId' => 'unique()',
+                'data' => ['name' => $name]
+            ]);
+            var_dump($res);
+            $this->assertEquals($name, $res['body']['name']);
+            $this->assertNotEmpty($res['body']['$id']);
+            $documentId = $res['body']['$id'];
+
+            $requestsCount++;
+            $documentsCount++;
+            $documentsCreate++;
+
+            if($i < 5) {
+                $res = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, $this->headers);
+                $this->assertEquals($documentId, $res['body']['$id']);
+                $documentsRead++;
+
+                $res = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, $this->headers);
+                $this->assertEmpty($res['body']);
+                $documentsDelete++;
+
+                $documentsCount--;
+                $requestsCount += 2;
+            }
+        }
+
+        sleep(85);
+
+        // check datbase stats
+        $headers = [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ];
+        $res = $this->client->call(Client::METHOD_GET, '/projects/' . $this->projectId . '/usage?range=30d', $headers);
+        $res = $res['body'];
+
+        $this->assertEquals(8, count($res));
+        $this->assertEquals(30, count($res['requests']));
+        $this->assertEquals(30, count($res['storage']));
+        $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
+        $this->assertEquals($collectionsCount, $res['collections'][array_key_last($res['collections'])]['value']);
+        $this->assertEquals($documentsCount, $res['documents'][array_key_last($res['documents'])]['value']);
+
+        $res = $this->client->call(Client::METHOD_GET, '/databases/usage?range=30d', array_merge($headers, [
+            'x-appwrite-project' => $this->projectId,
+            'x-appwrite-mode' => 'admin'
+        ]));
+        $res = $res['body'];
+        $this->assertEquals($databasesCount, $res['databasesCount'][array_key_last($res['databasesCount'])]['value']);
+        $this->assertEquals($collectionsCount, $res['collectionsCount'][array_key_last($res['collectionsCount'])]['value']);
+        $this->assertEquals($documentsCount, $res['documentsCount'][array_key_last($res['documentsCount'])]['value']);
+
+        $this->assertEquals($databasesCreate, $res['databsesCreate'][array_key_last($res['databasesCreate'])]['value']);
+        $this->assertEquals($databasesRead, $res['databasesRead'][array_key_last($res['databasesRead'])]['value']);
+        $this->assertEquals($databasesDelete, $res['databsasesDelete'][array_key_last($res['databasesDelete'])]['value']);
+        
+        $this->assertEquals($collectionsCreate, $res['collectionsCreate'][array_key_last($res['collectionsCreate'])]['value']);
+        $this->assertEquals($collectionsRead, $res['collectionsRead'][array_key_last($res['collectionsRead'])]['value']);
+        $this->assertEquals($collectionsUpdate, $res['collectionsUpdate'][array_key_last($res['collectionsUpdate'])]['value']);
+        $this->assertEquals($collectionsDelete, $res['collectionsDelete'][array_key_last($res['collectionsDelete'])]['value']);
+        
+        $this->assertEquals($documentsCreate, $res['documentsCreate'][array_key_last($res['documentsCreate'])]['value']);
+        $this->assertEquals($documentsRead, $res['documentsRead'][array_key_last($res['documentsRead'])]['value']);
+        $this->assertEquals($documentsDelete, $res['documentsDelete'][array_key_last($res['documentsDelete'])]['value']);
+
+        $res = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage?range=30d', array_merge($headers, [
+            'x-appwrite-project' => $this->projectId,
+            'x-appwrite-mode' => 'admin'
+        ]));
+        $res = $res['body'];
+        $this->assertEquals($collectionsCount, $res['collectionsCount'][array_key_last($res['collectionsCount'])]['value']);
+        $this->assertEquals($documentsCount, $res['documentsCount'][array_key_last($res['documentsCount'])]['value']);
+
+        $this->assertEquals($collectionsCreate, $res['collectionsCreate'][array_key_last($res['collectionsCreate'])]['value']);
+        $this->assertEquals($collectionsRead, $res['collectionsRead'][array_key_last($res['collectionsRead'])]['value']);
+        $this->assertEquals($collectionsUpdate, $res['collectionsUpdate'][array_key_last($res['collectionsUpdate'])]['value']);
+        $this->assertEquals($collectionsDelete, $res['collectionsDelete'][array_key_last($res['collectionsDelete'])]['value']);
+        
+        $this->assertEquals($documentsCreate, $res['documentsCreate'][array_key_last($res['documentsCreate'])]['value']);
+        $this->assertEquals($documentsRead, $res['documentsRead'][array_key_last($res['documentsRead'])]['value']);
+        $this->assertEquals($documentsDelete, $res['documentsDelete'][array_key_last($res['documentsDelete'])]['value']);
+
+        $res = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/usage?range=30d', array_merge($headers, [
+            'x-appwrite-project' => $this->projectId,
+            'x-appwrite-mode' => 'admin'
+        ]));
+        $res = $res['body'];
+        $this->assertEquals($documentsCount, $res['documentsCount'][array_key_last($res['documentsCount'])]['value']);
+
+        $this->assertEquals($documentsCreate, $res['documentsCreate'][array_key_last($res['documentsCreate'])]['value']);
+        $this->assertEquals($documentsRead, $res['documentsRead'][array_key_last($res['documentsRead'])]['value']);
+        $this->assertEquals($documentsDelete, $res['documentsDelete'][array_key_last($res['documentsDelete'])]['value']);
+        
+    }
+
+    public function testFunctionsStats(): void
+    {
+        // create some functions
+        // create some successful deployments and some
+        // failed deployments
+        // execute some functions
+        // some failed executions
+        // test the stats
+
     }
 
     protected function tearDown(): void
