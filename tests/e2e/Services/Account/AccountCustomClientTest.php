@@ -8,6 +8,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 
+use Utopia\Database\Database;
 use function sleep;
 
 class AccountCustomClientTest extends Scope
@@ -538,7 +539,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('123456', $response['body']['providerAccessToken']);
         $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
-        $this->assertGreaterThan(\time() + 14400 - 5, $response['body']['providerAccessTokenExpiry']); // 5 seconds allowed networking delay
+        $this->assertGreaterThan(Database::dateAddSeconds(new \DateTime(), 14400 - 5), $response['body']['providerAccessTokenExpiry']); // 5 seconds allowed networking delay
 
         $initialExpiry = $response['body']['providerAccessTokenExpiry'];
 

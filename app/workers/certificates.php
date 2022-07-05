@@ -296,10 +296,9 @@ class CertificatesV1 extends Worker
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         $certData = openssl_x509_parse(file_get_contents($certPath));
-        $validTo = $certData['validTo_time_t'] ?? 0;
-        $expiryInAdvance = (60 * 60 * 24 * 30); // 30 days
-
-        return $validTo - $expiryInAdvance;
+        $validTo = $certData['validTo_time_t'] ?? null;
+        $dt = (new \DateTime())->setTimestamp($validTo);
+        return Database::dateAddSeconds($dt, -60 * 60 * 24 * 30); // -30 days
     }
 
     /**

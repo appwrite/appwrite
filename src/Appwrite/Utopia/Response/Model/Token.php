@@ -35,10 +35,10 @@ class Token extends Model
                 'example' => '',
             ])
             ->addRule('expire', [
-                'type' => self::TYPE_INTEGER,
+                'type' => self::TYPE_DATETIME,
                 'description' => 'Token expiration date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
         ;
     }
