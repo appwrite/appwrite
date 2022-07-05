@@ -226,7 +226,7 @@ class UsageTest extends Scope
     {
         $databaseId = '';
         $collectionId = '';
-        
+
         $requestsCount = 0;
         $databasesCount = 0;
         $databasesCreate = 0;
@@ -258,7 +258,7 @@ class UsageTest extends Scope
             $databasesCount++;
             $databasesCreate++;
 
-            if($i < 5) {
+            if ($i < 5) {
                 $res = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId, $this->headers);
                 $this->assertEquals($databaseId, $res['body']['$id']);
                 $databasesRead++;
@@ -289,7 +289,7 @@ class UsageTest extends Scope
             $collectionsCount++;
             $collectionsCreate++;
 
-            if($i < 5) {
+            if ($i < 5) {
                 $res = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, $this->headers);
                 $this->assertEquals($collectionId, $res['body']['$id']);
                 $collectionsRead++;
@@ -327,7 +327,7 @@ class UsageTest extends Scope
             $documentsCount++;
             $documentsCreate++;
 
-            if($i < 5) {
+            if ($i < 5) {
                 $res = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, $this->headers);
                 $this->assertEquals($documentId, $res['body']['$id']);
                 $documentsRead++;
@@ -371,12 +371,12 @@ class UsageTest extends Scope
         $this->assertEquals($databasesCreate, $res['databsesCreate'][array_key_last($res['databasesCreate'])]['value']);
         $this->assertEquals($databasesRead, $res['databasesRead'][array_key_last($res['databasesRead'])]['value']);
         $this->assertEquals($databasesDelete, $res['databsasesDelete'][array_key_last($res['databasesDelete'])]['value']);
-        
+
         $this->assertEquals($collectionsCreate, $res['collectionsCreate'][array_key_last($res['collectionsCreate'])]['value']);
         $this->assertEquals($collectionsRead, $res['collectionsRead'][array_key_last($res['collectionsRead'])]['value']);
         $this->assertEquals($collectionsUpdate, $res['collectionsUpdate'][array_key_last($res['collectionsUpdate'])]['value']);
         $this->assertEquals($collectionsDelete, $res['collectionsDelete'][array_key_last($res['collectionsDelete'])]['value']);
-        
+
         $this->assertEquals($documentsCreate, $res['documentsCreate'][array_key_last($res['documentsCreate'])]['value']);
         $this->assertEquals($documentsRead, $res['documentsRead'][array_key_last($res['documentsRead'])]['value']);
         $this->assertEquals($documentsDelete, $res['documentsDelete'][array_key_last($res['documentsDelete'])]['value']);
@@ -393,7 +393,7 @@ class UsageTest extends Scope
         $this->assertEquals($collectionsRead, $res['collectionsRead'][array_key_last($res['collectionsRead'])]['value']);
         $this->assertEquals($collectionsUpdate, $res['collectionsUpdate'][array_key_last($res['collectionsUpdate'])]['value']);
         $this->assertEquals($collectionsDelete, $res['collectionsDelete'][array_key_last($res['collectionsDelete'])]['value']);
-        
+
         $this->assertEquals($documentsCreate, $res['documentsCreate'][array_key_last($res['documentsCreate'])]['value']);
         $this->assertEquals($documentsRead, $res['documentsRead'][array_key_last($res['documentsRead'])]['value']);
         $this->assertEquals($documentsDelete, $res['documentsDelete'][array_key_last($res['documentsDelete'])]['value']);
@@ -408,7 +408,6 @@ class UsageTest extends Scope
         $this->assertEquals($documentsCreate, $res['documentsCreate'][array_key_last($res['documentsCreate'])]['value']);
         $this->assertEquals($documentsRead, $res['documentsRead'][array_key_last($res['documentsRead'])]['value']);
         $this->assertEquals($documentsDelete, $res['documentsDelete'][array_key_last($res['documentsDelete'])]['value']);
-        
     }
 
     public function testFunctionsStats(): void
@@ -419,7 +418,6 @@ class UsageTest extends Scope
         // execute some functions
         // some failed executions
         // test the stats
-
     }
 
     protected function tearDown(): void
