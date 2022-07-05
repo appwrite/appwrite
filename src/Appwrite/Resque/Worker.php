@@ -17,6 +17,7 @@ use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\S3;
 use Exception;
+use Utopia\Database\Validator\Authorization;
 
 abstract class Worker
 {
@@ -112,6 +113,11 @@ abstract class Worker
     public function perform(): void
     {
         try {
+            /**
+             * Disabling global authorization in workers.
+             */
+            Authorization::disable();
+            Authorization::setDefaultStatus(false);
             $this->run();
         } catch (\Throwable $error) {
             foreach (self::$errorCallbacks as $errorCallback) {
@@ -159,7 +165,16 @@ abstract class Worker
      */
     protected function getProjectDB(string $projectId): Database
     {
-        return $this->getDB(self::DATABASE_PROJECT, $projectId);
+        $consoleDB = $this->getConsoleDB();
+
+        if ($projectId === 'console') {
+            return $consoleDB;
+        }
+
+        /** @var Document $project */
+        $project = Authorization::skip(fn() => $consoleDB->getDocument('projects', $projectId));
+
+        return $this->getDB(self::DATABASE_PROJECT, $projectId, $project->getInternalId());
     }
 
     /**
@@ -177,7 +192,7 @@ abstract class Worker
      * @param string $projectId of internal or external DB
      * @return Database
      */
-    private function getDB($type, $projectId = ''): Database
+    private function getDB(string $type, string $projectId = '', string $projectInternalId = ''): Database
     {
         global $register;
 
@@ -189,7 +204,7 @@ abstract class Worker
                 if (!$projectId) {
                     throw new \Exception('ProjectID not provided - cannot get database');
                 }
-                $namespace = "_{$projectId}";
+                $namespace = "_{$projectInternalId}";
                 break;
             case self::DATABASE_CONSOLE:
                 $namespace = "_console";

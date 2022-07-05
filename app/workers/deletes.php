@@ -15,9 +15,6 @@ use Utopia\Audit\Audit;
 
 require_once __DIR__ . '/../init.php';
 
-Authorization::disable();
-Authorization::setDefaultStatus(false);
-
 Console::title('Deletes V1 Worker');
 Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
 
@@ -47,6 +44,9 @@ class DeletesV1 extends Worker
                 $document = new Document($this->args['document'] ?? []);
 
                 switch ($document->getCollection()) {
+                    case DELETE_TYPE_DATABASES:
+                        $this->deleteDatabase($document, $project->getId());
+                        break;
                     case DELETE_TYPE_COLLECTIONS:
                         $this->deleteCollection($document, $project->getId());
                         break;
@@ -79,8 +79,8 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_AUDIT:
-                $timestamp = $payload['timestamp'] ?? 0;
-                $document = new Document($payload['document'] ?? []);
+                $timestamp = $this->args['timestamp'] ?? 0;
+                $document = new Document($this->args['document'] ?? []);
 
                 if (!empty($timestamp)) {
                     $this->deleteAuditLogs($this->args['timestamp']);
@@ -98,6 +98,10 @@ class DeletesV1 extends Worker
 
             case DELETE_TYPE_REALTIME:
                 $this->deleteRealtimeUsage($this->args['timestamp']);
+                break;
+
+            case DELETE_TYPE_SESSIONS:
+                $this->deleteExpiredSessions($this->args['timestamp']);
                 break;
 
             case DELETE_TYPE_CERTIFICATES:
@@ -119,16 +123,36 @@ class DeletesV1 extends Worker
     }
 
     /**
+     * @param Document $document database document
+     * @param string $projectId
+     */
+    protected function deleteDatabase(Document $document, string $projectId): void
+    {
+        $databaseId = $document->getId();
+
+        $dbForProject = $this->getProjectDB($projectId);
+
+        $this->deleteByGroup('database_' . $document->getInternalId(), [], $dbForProject, function ($document) use ($projectId) {
+            $this->deleteCollection($document, $projectId);
+        });
+
+        $dbForProject->deleteCollection('database_' . $document->getInternalId());
+
+        $this->deleteAuditLogsByResource('database/' . $databaseId, $projectId);
+    }
+
+    /**
      * @param Document $document teams document
      * @param string $projectId
      */
     protected function deleteCollection(Document $document, string $projectId): void
     {
         $collectionId = $document->getId();
+        $databaseId = str_replace('database_', '', $document->getCollection());
 
         $dbForProject = $this->getProjectDB($projectId);
 
-        $dbForProject->deleteCollection('collection_' . $document->getInternalId());
+        $dbForProject->deleteCollection('database_' . $databaseId . '_collection_' . $document->getInternalId());
 
         $this->deleteByGroup('attributes', [
             new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
@@ -245,7 +269,21 @@ class DeletesV1 extends Worker
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Executions
             $this->deleteByGroup('executions', [
-                new Query('dateCreated', Query::TYPE_LESSER, [$timestamp])
+                new Query('$createdAt', Query::TYPE_LESSER, [$timestamp])
+            ], $dbForProject);
+        });
+    }
+
+    /**
+     * @param int $timestamp
+     */
+    protected function deleteExpiredSessions(int $timestamp): void
+    {
+        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+            $dbForProject = $this->getProjectDB($projectId);
+            // Delete Sessions
+            $this->deleteByGroup('sessions', [
+                new Query('expire', Query::TYPE_LESSER, [$timestamp])
             ], $dbForProject);
         });
     }

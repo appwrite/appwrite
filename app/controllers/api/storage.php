@@ -107,8 +107,6 @@ App::post('/v1/storage/buckets')
             $bucket = $dbForProject->createDocument('buckets', new Document([
                 '$id' => $bucketId,
                 '$collection' => 'buckets',
-                'dateCreated' => \time(),
-                'dateUpdated' => \time(),
                 'name' => $name,
                 'permission' => $permission,
                 'maximumFileSize' => $maximumFileSize,
@@ -159,7 +157,7 @@ App::get('/v1/storage/buckets')
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('cursor', '', new UID(), 'ID of the bucket used as the starting point for the query, excluding the bucket itself. Should be used for efficient pagination when working with large sets of data.', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -357,7 +355,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(function (string $bucketId, string $fileId, array $file, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if (
@@ -554,7 +552,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         '$id' => $fileId,
                         '$read' => $read,
                         '$write' => $write,
-                        'dateCreated' => \time(),
                         'bucketId' => $bucket->getId(),
                         'name' => $fileName,
                         'path' => $path,
@@ -624,7 +621,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         '$id' => $fileId,
                         '$read' => $read,
                         '$write' => $write,
-                        'dateCreated' => \time(),
                         'bucketId' => $bucket->getId(),
                         'name' => $fileName,
                         'path' => $path,
@@ -666,7 +662,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setContext($bucket)
+            ->setContext('bucket', $bucket)
         ;
 
         $metadata = null; // was causing leaks as it was passed by reference
@@ -692,7 +688,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->param('limit', 25, new Range(0, 100), 'Maximum number of files to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1373,7 +1369,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setContext($bucket)
+            ->setContext('bucket', $bucket)
         ;
 
         $audits->setResource('file/' . $file->getId());
@@ -1475,7 +1471,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setContext($bucket)
+            ->setContext('bucket', $bucket)
             ->setPayload($response->output($file, Response::MODEL_FILE))
         ;
 
