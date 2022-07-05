@@ -60,7 +60,8 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
                 'dateAccessed' => time(),
                 'path' => 'app-0'
             ])));
-        } else {
+        }
+        else {
             $cacheRow->setAttribute('dateAccessed', time());
             Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheRow->getId(), $cacheRow));
         }
