@@ -26,8 +26,8 @@
   - `collections.[COLLECTION_ID]` is now `databases.[DATABASE_ID].collections.[COLLECTION_ID]`
   - `collections.[COLLECTION_ID].documents.[DOCUMENT_ID]` is now `databases.[DATABASE_ID].collections.[COLLECTION_ID].documents.[DOCUMENT_ID]`
 - Following Realtime Channels are changed:
-  - `collections.[COLLECTION_ID]` is now `databases.[DATABASE_ID].ollections.[COLLECTION_ID]`
-  - `collections.[COLLECTION_ID].documents` is now `databases.[DATABASE_ID].ollections.[COLLECTION_ID].documents`
+  - `collections.[COLLECTION_ID]` is now `databases.[DATABASE_ID].collections.[COLLECTION_ID]`
+  - `collections.[COLLECTION_ID].documents` is now `databases.[DATABASE_ID].collections.[COLLECTION_ID].documents`
 - After Migration a Database called `default` is created for all your existing Database Collections
 
 ## Features
