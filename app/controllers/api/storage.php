@@ -913,17 +913,17 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         if ($data) {
-            $cacheRow = $dbForProject->getDocument('cache', $key);
+            $fileCache = $dbForProject->getDocument('cache', $key);
 
-            if($cacheRow->isEmpty()){
-                Authorization::skip(fn () => $dbForProject->createDocument('cache',  new Document([
+            if ($fileCache->isEmpty()) {
+                Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
-                    'dateAccessed' => time(),
+                    'accessedAt' => time(),
                     'path' => 'app-' . $project->getId()
                 ])));
             } else {
-                $cacheRow->setAttribute('dateAccessed', time());
-                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheRow->getId(), $cacheRow));
+                $fileCache->setAttribute('accessedAt', time());
+                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $fileCache->getId(), $fileCache));
             }
 
             return $response

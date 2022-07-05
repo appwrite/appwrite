@@ -53,16 +53,16 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     if ($data) {
         //$output = (empty($output)) ? $type : $output;
 
-        $cacheRow = $dbForProject->getDocument('cache', $key);
-        if($cacheRow->isEmpty()){
-            Authorization::skip(fn () => $dbForProject->createDocument('cache',  new Document([
+        $fileCache = $dbForProject->getDocument('cache', $key);
+        if ($fileCache->isEmpty()) {
+            Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                 '$id' => $key,
-                'dateAccessed' => time(),
+                'accessedAt' => time(),
                 'path' => 'app-0'
             ])));
         } else {
-            $cacheRow->setAttribute('dateAccessed', time());
-            Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheRow->getId(), $cacheRow));
+            $fileCache->setAttribute('accessedAt', time());
+            Authorization::skip(fn () => $dbForProject->updateDocument('cache', $fileCache->getId(), $fileCache));
         }
 
         return $response
@@ -164,7 +164,7 @@ App::get('/v1/avatars/image')
     ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000. Defaults to 400.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $url, int $width, int $height, Response $response, Database $dbForProject)  {
+    ->action(function (string $url, int $width, int $height, Response $response, Database $dbForProject) {
 
         $quality = 80;
         $output = 'png';
@@ -175,18 +175,18 @@ App::get('/v1/avatars/image')
         $data = $cache->load($key, 60 * 60 * 24 * 7/* 1 week */);
 
         if ($data) {
-            $cacheRow = $dbForProject->getDocument('cache', $key);
+            $fileCache = $dbForProject->getDocument('cache', $key);
 
-            if($cacheRow->isEmpty()){
-                Authorization::skip(fn () => $dbForProject->createDocument('cache',  new Document([
+            if ($fileCache->isEmpty()) {
+                Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
-                    'dateAccessed' => time(),
+                    'accessedAt' => time(),
                     'path' => 'app-0'
 
                 ])));
             } else {
-                $cacheRow->setAttribute('dateAccessed', time());
-                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheRow->getId(), $cacheRow));
+                $fileCache->setAttribute('accessedAt', time());
+                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $fileCache->getId(), $fileCache));
             }
 
             return $response
@@ -255,17 +255,17 @@ App::get('/v1/avatars/favicon')
         $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
         if ($data) {
-            $cacheRow = $dbForProject->getDocument('cache', $key);
+            $fileCache = $dbForProject->getDocument('cache', $key);
 
-            if($cacheRow->isEmpty()){
-                Authorization::skip(fn () => $dbForProject->createDocument('cache',  new Document([
+            if ($fileCache->isEmpty()) {
+                Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
-                    'dateAccessed' => time(),
+                    'accessedAt' => time(),
                     'path' => 'app-0'
                 ])));
             } else {
-                $cacheRow->setAttribute('dateAccessed', time());
-                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheRow->getId(), $cacheRow));
+                $fileCache->setAttribute('accessedAt', time());
+                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $fileCache->getId(), $fileCache));
             }
 
             return $response

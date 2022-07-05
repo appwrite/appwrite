@@ -132,24 +132,28 @@ class DeletesV1 extends Worker
     /**
      * @param int $timestamp
      */
-    protected function deleteCache( int $timestamp): void
+    protected function deleteCache(int $timestamp): void
     {
         $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
 
             $dbForProject = $this->getProjectDB($projectId);
             $cache = new Local(APP_STORAGE_CACHE);
 
-            $this->deleteByGroup('cache', [
-                new Query('dateAccessed', Query::TYPE_LESSER, [$timestamp])
-            ], $dbForProject
-                , function (Document $document) use ($cache) {
+            $this->deleteByGroup(
+                'cache',
+                [
+                new Query('accessedAt', Query::TYPE_LESSER, [$timestamp])
+                ],
+                $dbForProject,
+                function (Document $document) use ($cache) {
                     $path = $cache->getRoot() . '/' . $document->getAttribute('path') . '/' .  $document->getId();
                     if ($cache->delete($path)) {
                         Console::success('Deleting cache file: ' . $path);
                     } else {
                         Console::error('**Failed to delete cache file: ' . $path);
                     }
-                });
+                }
+            );
         });
     }
 
@@ -311,16 +315,14 @@ class DeletesV1 extends Worker
     protected function deleteExpiredSessions(int $timestamp): void
     {
         $this->deleteForProjectIds(
-
             function (string $projectId) use ($timestamp) {
-            $dbForProject = $this->getProjectDB($projectId);
+                $dbForProject = $this->getProjectDB($projectId);
             // Delete Sessions
-            $this->deleteByGroup('sessions', [
+                $this->deleteByGroup('sessions', [
                 new Query('expire', Query::TYPE_LESSER, [$timestamp])
-            ], $dbForProject);
-
-
-        });
+                ], $dbForProject);
+            }
+        );
     }
 
     /**

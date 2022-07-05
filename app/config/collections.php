@@ -2770,7 +2770,7 @@ $collections = [
         'name' => 'Cache',
         'attributes' => [
             [
-                '$id' => 'dateAccessed',
+                '$id' => 'accessedAt',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2797,7 +2797,7 @@ $collections = [
             [
                 '$id' => '_key_accessed',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['dateAccessed'],
+                'attributes' => ['accessedAt'],
                 'lengths' => [],
                 'orders' => [],
             ],
