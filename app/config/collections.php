@@ -2183,7 +2183,7 @@ $collections = [
         'name' => 'Builds',
         'attributes' => [
             [
-                '$id' => 'startTime',
+                '$id' => 'startTime', // todo: change to datetime
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2194,7 +2194,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'endTime',
+                '$id' => 'endTime', // todo: change to datetime
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2398,7 +2398,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'time',
+                '$id' => 'time', // todo: change to datetime???
                 'type' => Database::VAR_FLOAT,
                 'format' => '',
                 'size' => 0,
