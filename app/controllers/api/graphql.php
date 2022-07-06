@@ -16,7 +16,7 @@ use Utopia\Validator\Text;
 
 App::get('/v1/graphql')
     ->desc('GraphQL Endpoint')
-    ->groups(['api', 'grapgql'])
+    ->groups(['grapgql'])
     ->label('scope', 'graphql')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'graphql')
@@ -41,7 +41,7 @@ App::get('/v1/graphql')
 
 App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
-    ->groups(['api', 'grapgql'])
+    ->groups(['grapgql'])
     ->label('scope', 'graphql')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'graphql')
