@@ -246,6 +246,12 @@ class Auth
     public static function sessionVerify(array $sessions, string $secret)
     {
         foreach ($sessions as $session) {
+            var_dump($session);
+            var_dump($session->getAttribute('expire'), Database::getCurrentDateTime());
+            var_dump($session->getAttribute('expire') >= Database::getCurrentDateTime());
+            var_dump("-----------------");
+
+
             /** @var Document $session */
             if (
                 $session->isSet('secret') &&
