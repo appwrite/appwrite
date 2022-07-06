@@ -53,18 +53,21 @@ return [
         'optional' => true,
         'icon' => '/images/services/avatars.png',
     ],
-    'database' => [
-        'key' => 'database',
-        'name' => 'Database',
-        'subtitle' => 'The Database service allows you to create structured collections of documents, query and filter lists of documents',
-        'description' => '/docs/services/database.md',
-        'controller' => 'api/database.php',
+    'databases' => [
+        'key' => 'databases',
+        'name' => 'Databases',
+        'subtitle' => 'The Databases service allows you to create structured collections of documents, query and filter lists of documents',
+        'description' => '/docs/services/databases.md',
+        'controller' => 'api/databases.php',
         'sdk' => true,
         'docs' => true,
-        'docsUrl' => 'https://appwrite.io/docs/client/database',
+        'docsUrl' => 'https://appwrite.io/docs/client/databases',
         'tests' => false,
         'optional' => true,
-        'icon' => '/images/services/database.png',
+        'icon' => '/images/services/databases.png',
+        'globalAttributes' => [
+            'databaseId'
+        ]
     ],
     'locale' => [
         'key' => 'locale',

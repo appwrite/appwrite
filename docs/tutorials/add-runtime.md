@@ -245,7 +245,7 @@ Make sure to replace all instances of `LANGUAGE_NAME` with your language's name 
 Once you have done this and saved it, it is finally time to move onto one of the final steps.
 
 ### 5.4 Running the tests.
-Running the tests is easy, simply run `docker-compose up` in the root of the `runtimes` folder. This will launch a Docker container with the test script and start running through all the runtimes making sure to test them thoroughly.
+Running the tests is easy, simply run `docker compose up` in the root of the `runtimes` folder. This will launch a Docker container with the test script and start running through all the runtimes making sure to test them thoroughly.
 
 If all tests pass then congratulations! You can now go ahead and file a PR against the `runtimes` repo making sure to target the `refactor` branch, make sure you're ready to respond to any feedback which can arise during our code review.
 
@@ -254,4 +254,4 @@ First of all, commit the changes with the message `Added XXX Runtime` and push i
 
 ## ![face_with_head_bandage](https://github.githubassets.com/images/icons/emoji/unicode/1f915.png) Stuck ?
 
-If you need any help with the contribution, feel free to head over to [our discord channel](https://appwrite.io/discord) and we'll be happy to help you out.
+If you need any help with the contribution, feel free to head over to [our Discord channel](https://appwrite.io/discord) and we'll be happy to help you out.

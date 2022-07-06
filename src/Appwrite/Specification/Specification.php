@@ -4,14 +4,8 @@ namespace Appwrite\Specification;
 
 class Specification
 {
-    /**
-     * @var Format
-     */
-    protected $format;
+    protected Format $format;
 
-    /**
-     * @param Format $format
-     */
     public function __construct(Format $format)
     {
         $this->format = $format;
