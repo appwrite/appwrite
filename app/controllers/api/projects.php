@@ -823,7 +823,7 @@ App::post('/v1/projects/:projectId/keys')
     ->param('expire', null, new DatetimeValidation(), 'Expiration time in DateTime. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, array $scopes, string $expire, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $name, array $scopes, string|null $expire, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -933,7 +933,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('expire', null, new DatetimeValidation(), 'Expiration time in DateTime. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $keyId, string $name, array $scopes, string $expire, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $keyId, string $name, array $scopes, string|null $expire, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 

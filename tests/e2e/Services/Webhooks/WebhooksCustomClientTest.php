@@ -282,7 +282,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
-        $this->assertIsInt($webhook['data']['expire']);
+        $this->assertIsString($webhook['data']['expire']);
         $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
@@ -368,7 +368,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
-        $this->assertIsInt($webhook['data']['expire']);
+        $this->assertIsString($webhook['data']['expire']);
         $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
@@ -679,7 +679,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $this->assertIsNumeric($webhook['data']['expire']);
+        $this->assertIsString($webhook['data']['expire']);
 
         $data['secret'] = $webhook['data']['secret'];
 
@@ -739,7 +739,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $this->assertIsNumeric($webhook['data']['expire']);
+        $this->assertIsString($webhook['data']['expire']);
 
         $data['secret'] = $webhook['data']['secret'];
 
@@ -795,7 +795,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $this->assertIsNumeric($webhook['data']['expire']);
+        $this->assertIsString($webhook['data']['expire']);
 
         $data['secret'] = $webhook['data']['secret'];
 
@@ -853,7 +853,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $this->assertIsNumeric($webhook['data']['expire']);
+        $this->assertIsString($webhook['data']['expire']);
 
         $data['secret'] = $webhook['data']['secret'];
 

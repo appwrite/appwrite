@@ -812,9 +812,7 @@ trait AccountBase
         $this->assertEquals('Account Verification', $lastEmail['subject']);
 
         $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-
-        $expireTime = strpos($lastEmail['text'], 'expire=' . $response['body']['expire'], 0);
-
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
         $this->assertNotFalse($expireTime);
 
         $secretTest = strpos($lastEmail['text'], 'secret=' . $response['body']['secret'], 0);
@@ -1107,7 +1105,7 @@ trait AccountBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $this->assertIsNumeric($response['body']['expire']);
+        $this->assertIsString($response['body']['expire']);
 
         $lastEmail = $this->getLastEmail();
 
@@ -1117,7 +1115,7 @@ trait AccountBase
 
         $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . $response['body']['expire'], 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
 
         $this->assertNotFalse($expireTime);
 
@@ -1270,7 +1268,7 @@ trait AccountBase
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . $response['body']['expire'], 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
 
         $this->assertNotFalse($expireTime);
 
