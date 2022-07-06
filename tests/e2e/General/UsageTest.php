@@ -57,7 +57,7 @@ class UsageTest extends Scope
         }
 
 
-        sleep(75);
+        sleep(25);
 
         // console request
         $headers = [
@@ -177,7 +177,7 @@ class UsageTest extends Scope
             }
         }
 
-        sleep(75);
+        sleep(25);
 
         // console request
         $headers = [
@@ -341,7 +341,7 @@ class UsageTest extends Scope
             }
         }
 
-        sleep(85);
+        sleep(35);
 
         // check datbase stats
         $headers = [
@@ -368,9 +368,9 @@ class UsageTest extends Scope
         $this->assertEquals($collectionsCount, $res['collectionsCount'][array_key_last($res['collectionsCount'])]['value']);
         $this->assertEquals($documentsCount, $res['documentsCount'][array_key_last($res['documentsCount'])]['value']);
 
-        $this->assertEquals($databasesCreate, $res['databsesCreate'][array_key_last($res['databasesCreate'])]['value']);
+        $this->assertEquals($databasesCreate, $res['databasesCreate'][array_key_last($res['databasesCreate'])]['value']);
         $this->assertEquals($databasesRead, $res['databasesRead'][array_key_last($res['databasesRead'])]['value']);
-        $this->assertEquals($databasesDelete, $res['databsasesDelete'][array_key_last($res['databasesDelete'])]['value']);
+        $this->assertEquals($databasesDelete, $res['databasesDelete'][array_key_last($res['databasesDelete'])]['value']);
 
         $this->assertEquals($collectionsCreate, $res['collectionsCreate'][array_key_last($res['collectionsCreate'])]['value']);
         $this->assertEquals($collectionsRead, $res['collectionsRead'][array_key_last($res['collectionsRead'])]['value']);
