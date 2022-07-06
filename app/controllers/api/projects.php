@@ -155,7 +155,7 @@ App::post('/v1/projects')
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
-        if($dbForProject->exists($dbForProject->getDefaultDatabase(), 'video_profiles')) {
+        if ($dbForProject->exists($dbForProject->getDefaultDatabase(), 'video_profiles')) {
             foreach (Config::getParam('video-profiles', []) as $profile) {
                 Authorization::skip(function () use ($project, $profile, $dbForProject) {
                     return $dbForProject->createDocument('video_profiles', new Document([
@@ -164,7 +164,7 @@ App::post('/v1/projects')
                         'audioBitrate' => $profile['audioBitrate'],
                         'width'  => $profile['width'],
                         'height' => $profile['height'],
-                        'stream' => 'hls'
+                        'stream' => $profile['stream']
                     ]));
                 });
             }

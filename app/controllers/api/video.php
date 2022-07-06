@@ -3,6 +3,8 @@
 use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Audit;
+use Appwrite\Event\Audit as EventAudit;
+use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Transcoding;
@@ -43,6 +45,70 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Swoole\Request;
 use Streaming\Representation;
+
+/**
+ * Validate file Permissions
+ *
+ * @param Database $dbForProject
+ * @param string $bucketId
+ * @param string $fileId
+ * @param array|null $read
+ * @param array|null $write
+ * @param string $mode
+ * @return Document $file
+ * @throws Exception
+ */
+function validateFilePermissions(Database $dbForProject, string $bucketId, string $fileId, string $mode, ?array $read, ?array $write): Document
+{
+    /** @var Utopia\Database\Document $project */
+    /** @var Utopia\Database\Document $user */
+
+    $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+    if (
+        $bucket->isEmpty()
+        || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)
+    ) {
+        throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
+    }
+
+    // Check bucket permissions when enforced
+    $permissionBucket = $bucket->getAttribute('permission') === 'bucket';
+    if ($permissionBucket) {
+        $validator = new Authorization('write');
+        if (!$validator->isValid($bucket->getWrite())) {
+            throw new Exception('Unauthorized file permissions', 401, Exception::USER_UNAUTHORIZED);
+        }
+    }
+
+    $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
+    $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
+
+    // Users can only add their roles to files, API keys and Admin users can add any
+    $roles = Authorization::getRoles();
+
+    if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+        foreach ($read as $role) {
+            if (!Authorization::isRole($role)) {
+                throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
+            }
+        }
+        foreach ($write as $role) {
+            if (!Authorization::isRole($role)) {
+                throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
+            }
+        }
+    }
+
+    if ($bucket->getAttribute('permission') === 'bucket') {
+        // skip authorization
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+    } else {
+        $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+    }
+
+    return $file;
+}
 
 App::get('/v1/video/profiles')
     ->alias('/v1/video/video/profiles', [])
@@ -91,53 +157,12 @@ App::post('/v1/video/buckets/:bucketId/files/:fileId')
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
 
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $read, $write);
 
-        if (
-            $bucket->isEmpty()
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)
-        ) {
-            throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
-        }
-
-        // Check bucket permissions when enforced
-        $permissionBucket = $bucket->getAttribute('permission') === 'bucket';
-        if ($permissionBucket) {
-            $validator = new Authorization('write');
-            if (!$validator->isValid($bucket->getWrite())) {
-                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-            }
-        }
-
-        $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
-        $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
-
-        // Users can only add their roles to files, API keys and Admin users can add any
-        $roles = Authorization::getRoles();
-
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            foreach ($read as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-                }
-            }
-            foreach ($write as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-                }
-            }
-        }
-
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            // skip authorization
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
-        } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-        }
         try {
-            $video = Authorization::skip(function () use ($dbForProject, $bucket, $file) {
+            $video = Authorization::skip(function () use ($dbForProject, $bucketId, $file) {
                 return $dbForProject->createDocument('videos', new Document([
-                    'bucketId'  => $bucket->getId(),
+                    'bucketId'  => $bucketId,
                     'fileId'    => $file->getId(),
                     'size'      => $file->getAttribute('sizeOriginal'),
                 ]));
@@ -186,49 +211,7 @@ App::post('/v1/video/:videoId/rendition/:profileId')
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $video['bucketId']));
-
-        if (
-            $bucket->isEmpty()
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)
-        ) {
-            throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
-        }
-
-        // Check bucket permissions when enforced
-        $permissionBucket = $bucket->getAttribute('permission') === 'bucket';
-        if ($permissionBucket) {
-            $validator = new Authorization('write');
-            if (!$validator->isValid($bucket->getWrite())) {
-                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-            }
-        }
-
-        $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
-        $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
-
-        // Users can only add their roles to files, API keys and Admin users can add any
-        $roles = Authorization::getRoles();
-
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            foreach ($read as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-                }
-            }
-            foreach ($write as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-                }
-            }
-        }
-
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            // skip authorization
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $video['fileId']));
-        } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $video['fileId']);
-        }
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $read, $write);
 
         $profile = Authorization::skip(fn() => $dbForProject->findOne('video_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$profileId])]));
 
@@ -261,7 +244,7 @@ App::get('/v1/video/:videoId/:stream/renditions')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function (string $videoId, string $stream, ?array $read, ?array $write,  Response $response, Database $dbForProject, Stats $usage, string $mode) {
+    ->action(function (string $videoId, string $stream, ?array $read, ?array $write, Response $response, Database $dbForProject, Stats $usage, string $mode) {
 
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
@@ -272,49 +255,7 @@ App::get('/v1/video/:videoId/:stream/renditions')
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $video['bucketId']));
-
-        if (
-            $bucket->isEmpty()
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)
-        ) {
-            throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
-        }
-
-        // Check bucket permissions when enforced
-        $permissionBucket = $bucket->getAttribute('permission') === 'bucket';
-        if ($permissionBucket) {
-            $validator = new Authorization('write');
-            if (!$validator->isValid($bucket->getWrite())) {
-                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-            }
-        }
-
-        $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
-        $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
-
-        // Users can only add their roles to files, API keys and Admin users can add any
-        $roles = Authorization::getRoles();
-
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            foreach ($read as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-                }
-            }
-            foreach ($write as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-                }
-            }
-        }
-
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            // skip authorization
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $video['fileId']));
-        } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $video['fileId']);
-        }
+        $file = validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $read, $write);
 
         $queries = [
             new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
@@ -331,122 +272,94 @@ App::get('/v1/video/:videoId/:stream/renditions')
         ]), Response::MODEL_VIDEO_RENDITIONS_LIST);
     });
 
-App::get('/v1/video/:videoId/:stream/:namespace/:fileName')
-    ->alias('/v1/video/buckets/:bucketId/files/:stream/:fileId', [])
-    ->desc('Get video  playlist manifest')
+
+
+App::get('/v1/video/:videoId/:stream/:profile/:fileName')
+    ->alias('/v1/video/:videoId/:stream/:profile/:fileName', [])
+    ->desc('Get video  playlist manifests')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('stream', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
-    ->param('namespace', '', new WhiteList(['master']), 'stream protocol name')
+    ->param('profile', '', new Text(18), 'folder name')
+    ->param('fileName', '', new Text(128), 'playlist file name')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('videosDevice')
     ->inject('usage')
     ->inject('mode')
-    ->action(function (string $videoId, string $stream, string $namespace, ?array $read, ?array $write, Response $response, Database $dbForProject, Stats $usage, string $mode) {
+    ->action(function (string $videoId, string $stream, string $profile, string $fileName, ?array $read, ?array $write, Response $response, Database $dbForProject, Device $videosDevice, Stats $usage, string $mode) {
 
         /** @var Utopia\Database\Document $project */
         /** @var Utopia\Database\Document $user */
 
-        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
+        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
+            new Query('_uid', Query::TYPE_EQUAL, [$videoId])
+        ]));
 
         if ($video->isEmpty()) {
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $video['bucketId']));
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $read, $write);
 
-        if (
-            $bucket->isEmpty()
-            || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)
-        ) {
-            throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
-        }
-
-        // Check bucket permissions when enforced
-        $permissionBucket = $bucket->getAttribute('permission') === 'bucket';
-        if ($permissionBucket) {
-            $validator = new Authorization('write');
-            if (!$validator->isValid($bucket->getWrite())) {
-                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-            }
-        }
-
-        $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
-        $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
-
-        // Users can only add their roles to files, API keys and Admin users can add any
-        $roles = Authorization::getRoles();
-
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            foreach ($read as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-                }
-            }
-            foreach ($write as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-                }
-            }
-        }
-
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            // skip authorization
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $video['fileId']));
-        } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $video['fileId']);
-        }
-
-        $queries = [
+        $renditions = Authorization::skip(fn () => $dbForProject->find('video_renditions', [
             new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
             new Query('endedAt', Query::TYPE_GREATER, [0]),
             new Query('status', Query::TYPE_EQUAL, ['ready']),
-            new Query('stream', Query::TYPE_EQUAL, ['stream']),
-        ];
-
-        $renditions = Authorization::skip(fn () => $dbForProject->find('video_renditions', $queries, 12, 0, [], ['ASC']));
+            new Query('stream', Query::TYPE_EQUAL, [$stream]),
+        ], 12, 0, [], ['ASC']));
 
         if (empty($renditions)) {
             throw new Exception('Renditions not found');
         }
 
-        if ($stream === 'hls') {
-            foreach ($renditions as $rendition) {
-                $metadata = $rendition->getAttribute('metadata');
-                $fileId = $rendition->getAttribute('fileId');
-                $t['bandwidth']    = (($metadata['general']['video']['bitrate'] + $metadata['general']['audio']['bitrate']) * 1024);
-                $t['resolution'] = $metadata['general']['resolution'];
-                $t['name'] = $rendition->getAttribute('renditionName');
-                $t['path'] = $rendition->getAttribute('renditionName') .  DIRECTORY_SEPARATOR . $fileId . '_' . $rendition->getAttribute('renditionName') . '.m3u8';
-                $params[] = $t;
-            }
+        $ct['m3u8'] = 'application/x-mpegurl';
+        $ct['mpd']  = 'application/dash+xml';
+        $ct['ts']   = 'video/MP2T';
+        $ct['m4s']   = 'video/iso.segment';
+        $ext = pathinfo($fileName, PATHINFO_EXTENSION);
+        $baseUrl = 'http://127.0.0.1/v1/video/' . $videoId . '/' . $stream . '/' ;
 
-            $template = new View(__DIR__ . '/../../views/video/hls.phtml');
-            $template->setParam('params', $params);
-            $response->setContentType('application/x-mpegurl');
-            $response->send($template->render());
 
-        } else {
-
-            $adaptations = [];
-            foreach ($renditions as $rendition) {
-                $metadata = $rendition->getAttribute('metadata');
-                foreach ($metadata['dash']['Period']['AdaptationSet'] as $set) {
-                    $adaption = $set['@attributes'];
-                    $adaption['baseUrl'] = $rendition->getAttribute('renditionName') . DIRECTORY_SEPARATOR;
-                    $adaption['representation'] = $set['Representation']['@attributes'];
-                    $adaption['representation']['SegmentTemplate'] = $set['Representation']['SegmentTemplate']['@attributes'];
-                    $adaption['representation']['segmentTemplate']['segmentTimeline'] = $set['Representation']['SegmentTemplate']['SegmentTimeline'];
-                    $adaptations[] = $adaption;
+        if ($profile === 'master') {
+            if ($stream === 'hls') {
+                foreach ($renditions as $rendition) {
+                    $t['bandwidth'] = $rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate');
+                    $t['resolution'] = $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height');
+                    $t['name'] = $rendition->getAttribute('name');
+                    $t['path'] = $baseUrl . $rendition->getAttribute('name') . '/' . $rendition->getAttribute('videoId') . '_' . $rendition->getAttribute('name') . '.m3u8';
+                    $params[] = $t;
                 }
-            }
 
-            $template = new View(__DIR__ . '/../../views/video/dash.phtml');
-            $template->setParam('params', $adaptations);
-            $response->setContentType('application/dash+xml');
-            $response->send($template->render());
+                $template = new View(__DIR__ . '/../../views/video/hls.phtml');
+                $template->setParam('params', $params);
+                $output = $template->render();
+            } else {
+                $adaptations = [];
+                foreach ($renditions as $rendition) {
+                    $metadata = $rendition->getAttribute('metadata');
+                    foreach ($metadata['mpeg-dash']['Period']['AdaptationSet'] as $set) {
+                        $adaption = $set['@attributes'];
+                        $adaption['baseUrl'] = $baseUrl . $rendition->getAttribute('name') . '/';
+                        $adaption['representation'] = $set['Representation']['@attributes'];
+                        $adaption['representation']['SegmentTemplate'] = $set['Representation']['SegmentTemplate']['@attributes'];
+                        $adaption['representation']['segmentTemplate']['segmentTimeline'] = $set['Representation']['SegmentTemplate']['SegmentTimeline'];
+                        $adaptations[] = $adaption;
+                    }
+                }
+
+                $template = new View(__DIR__ . '/../../views/video/dash.phtml');
+                $template->setParam('params', $adaptations);
+                $response->setContentType($ct[$ext]);
+                $output = $template->render();
+            }
+        } else {
+            $output = $videosDevice->read($videosDevice->getRoot() . '/' . $videoId . '/' . $profile . '/' . $fileName);
         }
+
+        $response->setContentType($ct[$ext])
+            ->send($output);
     });

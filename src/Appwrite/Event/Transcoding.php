@@ -7,7 +7,6 @@ use Utopia\Database\Document;
 
 class Transcoding extends Event
 {
-
     protected string $videoId = '';
     protected string $profileId = '';
 

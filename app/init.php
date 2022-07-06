@@ -915,6 +915,10 @@ App::setResource('deviceFiles', function ($project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
+App::setResource('videosDevice', function ($project) {
+    return getDevice(APP_STORAGE_VIDEO . '/app-' . $project->getId());
+}, ['project']);
+
 App::setResource('deviceFunctions', function ($project) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);

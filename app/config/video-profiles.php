@@ -8,6 +8,7 @@ return [
         'audioBitrate' => 64, //audio bitrate in Kbps
         'width' =>  640, //width resolution in px
         'height' => 360, //height resolution in px
+        'stream' => 'mpeg-dash'
     ],
     [
         'name' => '576p',
@@ -15,6 +16,7 @@ return [
         'audioBitrate' => 128,
         'width' => 1024,
         'height' => 576,
+        'stream' => 'mpeg-dash'
     ],
     [
         'name' => '720p',
@@ -22,6 +24,7 @@ return [
         'audioBitrate' => 128,
         'width' => 1280,
         'height' => 720,
+        'stream' => 'mpeg-dash'
     ],
 
 ];

@@ -122,7 +122,6 @@ App::post('/v1/storage/buckets')
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
             $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
-
         } catch (Duplicate $th) {
             throw new Exception('Bucket already exists', 409, Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }
@@ -474,9 +473,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
             });
         } else {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-            var_dump('&&&&&&&');
-            var_dump($fileId);
-            var_dump($file);
         }
 
         $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
@@ -577,7 +573,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                     }
                 } else {
-
                     $file = $file
                         ->setAttribute('$read', $read)
                         ->setAttribute('$write', $write)
@@ -614,7 +609,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 ->setParam('bucketId', $bucketId)
             ;
         } else {
-
             try {
                 if ($file->isEmpty()) {
                     $doc = new Document([
