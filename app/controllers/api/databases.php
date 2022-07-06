@@ -1713,15 +1713,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         $indexes = $collection->getAttribute('indexes');
 
         // Search for index
-        $indexIndex = array_search($key, array_column($indexes, 'key'));
+        $indexIndex = array_search($key, array_map(fn($idx) => $idx['key'], $indexes));
 
         if ($indexIndex === false) {
             throw new Exception('Index not found', 404, Exception::INDEX_NOT_FOUND);
         }
 
-        $index = new Document([\array_merge($indexes[$indexIndex], [
-            'collectionId' => $database->getInternalId() . '_' . $collectionId,
-        ])]);
+        $index = $indexes[$indexIndex];
+        $index->setAttribute('collectionId', $database->getInternalId() . '_' . $collectionId);
 
         $usage
             ->setParam('databaseId', $databaseId)
@@ -2562,6 +2561,7 @@ App::get('/v1/databases/usage')
     });
 
 App::get('/v1/databases/:databaseId/usage')
+    ->alias('/v1/database/usage', ['databaseId' => 'default'])
     ->desc('Get usage stats for the database')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -2669,7 +2669,7 @@ App::get('/v1/databases/:databaseId/usage')
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
-    ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
+    ->alias('/v1/database/collections/:collectionId/usage', ['databaseId' => 'default'])
     ->desc('Get usage stats for a collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
