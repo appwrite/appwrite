@@ -254,7 +254,7 @@ class Auth
                 $session->getAttribute('secret') === self::hash($secret) &&
                 $session->getAttribute('expire') >= Database::getCurrentDateTime()
             ) {
-                return (string)$session->getId();
+                return $session->getId();
             }
         }
 
