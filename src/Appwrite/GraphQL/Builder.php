@@ -189,6 +189,7 @@ class Builder
 
         switch ((!empty($validator)) ? \get_class($validator) : '') {
             case 'Appwrite\Auth\Validator\Password':
+            case 'Appwrite\Event\Validator\Event':
             case 'Appwrite\Network\Validator\CNAME':
             case 'Appwrite\Network\Validator\Domain':
             case 'Appwrite\Network\Validator\Email':
@@ -235,8 +236,10 @@ class Builder
                 break;
             case 'Utopia\Validator\Assoc':
             case 'Utopia\Validator\JSON':
-            default:
                 $type = self::json();
+                break;
+            default:
+                $type = Type::string();
                 break;
         }
 

@@ -1066,7 +1066,7 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_FUNCTION:
-                return 'mutation createFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $vars: Json, $events: [Json], $schedule: String, $timeout: Int) {
+                return 'mutation createFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $vars: Json, $events: [String], $schedule: String, $timeout: Int) {
                     functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, vars: $vars, events: $events, schedule: $schedule, timeout: $timeout) {
                         _id
                         name
@@ -1075,7 +1075,7 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_FUNCTION:
-                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $vars: Json, $events: [Json], $schedule: String, $timeout: Int) {
+                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $vars: Json, $events: [String], $schedule: String, $timeout: Int) {
                     functionsUpdate(functionId: $functionId, name: $name, execute: $execute, vars: $vars, events: $events, schedule: $schedule, timeout: $timeout) {
                         _id
                         name
