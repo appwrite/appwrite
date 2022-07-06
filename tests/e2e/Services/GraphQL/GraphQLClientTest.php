@@ -2,11 +2,9 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
-use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-
 
 class GraphQLClientTest extends Scope
 {
@@ -437,5 +435,4 @@ class GraphQLClientTest extends Scope
 //        $this->assertEquals(true, $updatedMembership['confirm']);
 //
 //    }
-
 }

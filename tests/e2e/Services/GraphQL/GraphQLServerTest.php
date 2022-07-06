@@ -2,17 +2,16 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
-use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-
 
 class GraphQLServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
     use GraphQLBase;
+
 //
 //    public function testScopeBasedAuth()
 //    {
@@ -58,5 +57,4 @@ class GraphQLServerTest extends Scope
 //        $this->assertIsArray($countries['body']['data']);
 //        $this->assertNull($countries['body']['data']['localeGetCountries']);
 //    }
-
 }
