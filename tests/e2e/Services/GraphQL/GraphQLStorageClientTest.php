@@ -6,7 +6,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Tests\E2E\Scopes\SideServer;
 
 class GraphQLStorageClientTest extends Scope
 {
@@ -14,6 +13,38 @@ class GraphQLStorageClientTest extends Scope
     use SideClient;
     use GraphQLBase;
 
+    public function testCreateBucket(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$CREATE_BUCKET);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'bucketId' => 'actors',
+                'name' => 'Actors',
+                'permission' => 'bucket',
+                'read' => ['role:all'],
+                'write' => ['role:all'],
+            ]
+        ];
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $gqlPayload);
+
+        $this->assertIsArray($bucket['body']['data']);
+        $this->assertArrayNotHasKey('errors', $bucket['body']);
+        $bucket = $bucket['body']['data']['storageCreateBucket'];
+        $this->assertEquals('Actors', $bucket['name']);
+
+        return $bucket;
+    }
+
+    /**
+     * @depends testCreateBucket
+     */
     public function testCreateFile($bucket): array
     {
         $projectId = $this->getProject()['$id'];
