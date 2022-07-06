@@ -204,7 +204,7 @@ trait TeamsBaseServer
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertEquals(1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertIsInt($response['body']['dateCreated']);
+        $this->assertIsInt($response['body']['$createdAt']);
 
 
         /** Delete User */
@@ -230,6 +230,6 @@ trait TeamsBaseServer
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertEquals(0, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertIsInt($response['body']['dateCreated']);
+        $this->assertIsInt($response['body']['$createdAt']);
     }
 }
