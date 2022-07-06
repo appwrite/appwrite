@@ -700,6 +700,7 @@ class Builder
 
         $result = $apiResponse->getPayload();
 
+        $gqlResponse->setContentType($apiResponse->getContentType());
         $gqlResponse->setStatusCode($apiResponse->getStatusCode());
 
         if ($apiResponse->getStatusCode() < 200 || $apiResponse->getStatusCode() >= 400) {
