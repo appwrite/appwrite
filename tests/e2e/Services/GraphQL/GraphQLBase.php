@@ -412,12 +412,14 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_CUSTOM_ENTITY:
-                return 'mutation createActor($name: String!, $age: Int!, $alive: Boolean!, $salary: Float) {
-                    actorsCreate(name: $name, age: $age, alive: $alive, salary: $salary) {
-                        _id
+                return 'mutation createActor($name: String!, $age: Int!, $alive: Boolean!, $salary: Float, $email: String!, $role: String!, $ip: String, $url: String){
+                    actorsCreate(name: $name, age: $age, alive: $alive, salary: $salary, email: $email, role: $role, ip: $ip, url: $url) {
                         name
                         age
                         alive
+                        salary
+                        email
+                        role
                     }
                 }';
             case self::$UPDATE_DOCUMENT:

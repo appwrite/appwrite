@@ -473,6 +473,7 @@ class Builder
             $count += count($attrs);
             go(function () use ($utopia, $request, $response, $dbForProject, &$collections, &$queryFields, &$mutationFields, $limit, &$offset, $attrs, $userId, $wg) {
                 foreach ($attrs as $attr) {
+                    $databaseId = $attr->getAttribute('databaseId');
                     $collectionId = $attr->getAttribute('collectionId');
 
                     if ($attr->getAttribute('status') !== 'available') {
@@ -502,27 +503,27 @@ class Builder
                     $queryFields[$collectionId . 'Get'] = [
                         'type' => $objectType,
                         'args' => self::$defaultDocumentArgs['id'],
-                        'resolve' => self::resolveDocumentGet($utopia, $request, $response, $dbForProject, $collectionId)
+                        'resolve' => self::resolveDocumentGet($utopia, $request, $response, $dbForProject, $databaseId, $collectionId)
                     ];
                     $queryFields[$collectionId . 'List'] = [
                         'type' => $objectType,
                         'args' => self::$defaultDocumentArgs['list'],
-                        'resolve' => self::resolveDocumentList($utopia, $request, $response, $dbForProject, $collectionId)
+                        'resolve' => self::resolveDocumentList($utopia, $request, $response, $dbForProject, $databaseId, $collectionId)
                     ];
                     $mutationFields[$collectionId . 'Create'] = [
                         'type' => $objectType,
                         'args' => $attributes,
-                        'resolve' => self::resolveDocumentMutate($utopia, $request, $response, $dbForProject, $collectionId, 'POST')
+                        'resolve' => self::resolveDocumentMutate($utopia, $request, $response, $dbForProject, $databaseId, $collectionId, 'POST')
                     ];
                     $mutationFields[$collectionId . 'Update'] = [
                         'type' => $objectType,
                         'args' => $attributes,
-                        'resolve' => self::resolveDocumentMutate($utopia, $request, $response, $dbForProject, $collectionId, 'PATCH')
+                        'resolve' => self::resolveDocumentMutate($utopia, $request, $response, $dbForProject, $databaseId, $collectionId, 'PATCH')
                     ];
                     $mutationFields[$collectionId . 'Delete'] = [
                         'type' => $objectType,
                         'args' => self::$defaultDocumentArgs['id'],
-                        'resolve' => self::resolveDocumentDelete($utopia, $request, $response, $dbForProject, $collectionId)
+                        'resolve' => self::resolveDocumentDelete($utopia, $request, $response, $dbForProject, $databaseId, $collectionId)
                     ];
                 }
                 $wg->done();
@@ -545,19 +546,21 @@ class Builder
         Request $request,
         Response $response,
         Database $dbForProject,
+        string $databaseId,
         string $collectionId
     ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
-            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
+            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 try {
                     $swoole = $request->getSwoole();
                     $swoole->post = [
+                        'databaseId' => $databaseId,
                         'collectionId' => $collectionId,
                         'documentId' => $args['id'],
                     ];
                     $swoole->server['request_method'] = 'GET';
-                    $swoole->server['request_uri'] = "/v1/database/collections/$collectionId/documents/{$args['id']}";
-                    $swoole->server['path_info'] = "/v1/database/collections/$collectionId/documents/{$args['id']}";
+                    $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
+                    $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
 
                     self::resolve($utopia, $swoole, $response, $resolve, $reject);
                 } catch (\Throwable $e) {
@@ -573,12 +576,14 @@ class Builder
         Request $request,
         Response $response,
         Database $dbForProject,
-        string $collectionId
+        string $databaseId,
+        string $collectionId,
     ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
-            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
+            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 $swoole = $request->getSwoole();
                 $swoole->post = [
+                    'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'limit' => $args['limit'],
                     'offset' => $args['offset'],
@@ -588,8 +593,8 @@ class Builder
                     'orderType' => $args['orderType'],
                 ];
                 $swoole->server['request_method'] = 'GET';
-                $swoole->server['request_uri'] = "/v1/database/collections/$collectionId/documents";
-                $swoole->server['path_info'] = "/v1/database/collections/$collectionId/documents";
+                $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
+                $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
 
                 self::resolve($utopia, $swoole, $response, $resolve, $reject);
             }
@@ -601,11 +606,12 @@ class Builder
         Request $request,
         Response $response,
         Database $dbForProject,
+        string $databaseId,
         string $collectionId,
         string $method,
     ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
-            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $method, $type, $args) {
+            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $databaseId, $collectionId, $method, $type, $args) {
                 $swoole = $request->getSwoole();
 
                 $id = $args['id'] ?? 'unique()';
@@ -618,6 +624,7 @@ class Builder
 
                 // Order must be the same as the route params
                 $swoole->post = [
+                    'databaseId' => $databaseId,
                     'documentId' => $id,
                     'collectionId' => $collectionId,
                     'data' => $args,
@@ -625,8 +632,8 @@ class Builder
                     'write' => $write,
                 ];
                 $swoole->server['request_method'] = $method;
-                $swoole->server['request_uri'] = "/v1/database/collections/$collectionId/documents";
-                $swoole->server['path_info'] = "/v1/database/collections/$collectionId/documents";
+                $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
+                $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
 
                 self::resolve($utopia, $swoole, $response, $resolve, $reject);
             }
@@ -638,18 +645,20 @@ class Builder
         Request $request,
         Response $response,
         Database $dbForProject,
+        string $databaseId,
         string $collectionId
     ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
-            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $collectionId, $type, $args) {
+            function (callable $resolve, callable $reject) use ($utopia, $request, $response, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 $swoole = $request->getSwoole();
                 $swoole->post = [
+                    'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'documentId' => $args['id'],
                 ];
                 $swoole->server['request_method'] = 'DELETE';
-                $swoole->server['request_uri'] = "/v1/database/collections/$collectionId/documents/{$args['id']}";
-                $swoole->server['path_info'] = "/v1/database/collections/$collectionId/documents/{$args['id']}";
+                $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
+                $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
 
                 self::resolve($utopia, $swoole, $response, $resolve, $reject);
             }
