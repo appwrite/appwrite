@@ -308,28 +308,28 @@ class GraphQLUsersTest extends Scope
         $this->assertIsArray($user['body']['data']['usersUpdatePassword']);
     }
 
-//    public function testUpdateUserPhone()
-//    {
-//        $projectId = $this->getProject()['$id'];
-//        $query = $this->getQuery(self::$UPDATE_USER_PHONE);
-//        $graphQLPayload = [
-//            'query' => $query,
-//            'variables' => [
-//                'userId' => $this->getUser()['$id'],
-//                'phone' => '+123456789'
-//            ],
-//        ];
-//
-//        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $projectId,
-//        ], $this->getHeaders()), $graphQLPayload);
-//
-//        $this->assertIsArray($user['body']['data']);
-//        $this->assertArrayNotHasKey('errors', $user['body']);
-//        $this->assertIsArray($user['body']['data']['usersUpdatePhone']);
-//        $this->assertEquals('+123456789', $user['body']['data']['usersUpdatePhone']['phone']);
-//    }
+    public function testUpdateUserPhone()
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$UPDATE_USER_PHONE);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'userId' => $this->getUser()['$id'],
+                'number' => '+123456789'
+            ],
+        ];
+
+        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertIsArray($user['body']['data']);
+        $this->assertArrayNotHasKey('errors', $user['body']);
+        $this->assertIsArray($user['body']['data']['usersUpdatePhone']);
+        $this->assertEquals('+123456789', $user['body']['data']['usersUpdatePhone']['phone']);
+    }
 
     public function testUpdateUserPrefs()
     {
