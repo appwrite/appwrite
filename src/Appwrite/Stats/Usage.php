@@ -101,7 +101,7 @@ class Usage
         ],
         'databases.databaseId.collections.collectionId.documents.create' => [
             'table' => 'appwrite_usage_databases_documents_create',
-            'groupBy' => ['collectionId'],
+            'groupBy' => ['databaseId', 'collectionId'],
         ],
         'databases.databaseId.collections.collectionId.documents.read' => [
             'table' => 'appwrite_usage_databases_documents_read',
@@ -332,7 +332,7 @@ class Usage
                         if (empty($groupedBy)) {
                             continue;
                         }
-                        $metricUpdated = str_replace($groupBy, $groupedBy, $metric);
+                        $metricUpdated = str_replace($groupBy, $groupedBy, $metricUpdated);
                     }
                 }
 
