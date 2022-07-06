@@ -57,7 +57,7 @@ class UsageTest extends Scope
         }
 
 
-        sleep(25);
+        sleep(35);
 
         // console request
         $headers = [
@@ -177,7 +177,7 @@ class UsageTest extends Scope
             }
         }
 
-        sleep(25);
+        sleep(35);
 
         // console request
         $headers = [
