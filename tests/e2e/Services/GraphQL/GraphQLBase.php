@@ -334,7 +334,7 @@ trait GraphQLBase
                 }';
             case self::$GET_INDEXES:
                 return 'query getIndexes($databaseId: String!, $collectionId: String!) {
-                    databasesGetIndexes(databaseId: $databaseId, collectionId: $collectionId) {
+                    databasesListIndexes(databaseId: $databaseId, collectionId: $collectionId) {
                         total
                         indexes {
                             key
@@ -392,12 +392,12 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_DOCUMENTS:
-                return 'query listDocuments($collectionId: String, $filters: [Json]){
-                    databasesListDocuments(collectionId: $collectionId, filters: $filters) {
+                return 'query listDocuments($databaseId: String!, $collectionId: String!){
+                    databasesListDocuments(databaseId: $databaseId, collectionId: $collectionId) {
                         total
                         documents {
                             _id
-                            collectionId
+                            _collection
                             data
                         }
                     }   
@@ -421,15 +421,16 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_DOCUMENT:
-                return 'mutation updateDocument($collectionId: String!, $documentId: String!, $data: Json!, $read: [String!]!, $write: [String!]!){
-                    databasesUpdateDocument(collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
+                return 'mutation updateDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $read: [String!], $write: [String!]){
+                    databasesUpdateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
                         _id
                         _collection
+                        data
                     }
                 }';
             case self::$DELETE_DOCUMENT:
-                return 'mutation deleteDocument($collectionId: String!, $documentId: String!){
-                    databasesDeleteDocument(collectionId: $collectionId, documentId: $documentId)
+                return 'mutation deleteDocument($databaseId: String!, $collectionId: String!, $documentId: String!){
+                    databasesDeleteDocument($databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId)
                 }';
 
             case self::$GET_USER:
