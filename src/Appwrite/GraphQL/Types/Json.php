@@ -12,7 +12,7 @@ use GraphQL\Language\AST\StringValueNode;
 use GraphQL\Type\Definition\ScalarType;
 
 // https://github.com/webonyx/graphql-php/issues/129#issuecomment-309366803
-class JsonType extends ScalarType
+class Json extends ScalarType
 {
     public $name = 'Json';
     public $description =
@@ -40,25 +40,24 @@ class JsonType extends ScalarType
     public function parseLiteral(Node $valueNode, ?array $variables = null)
     {
         switch ($valueNode) {
-            case ($valueNode instanceof StringValueNode):
-            case ($valueNode instanceof BooleanValueNode):
+            case $valueNode instanceof StringValueNode:
+            case $valueNode instanceof BooleanValueNode:
                 return $valueNode->value;
-            case ($valueNode instanceof IntValueNode):
-            case ($valueNode instanceof FloatValueNode):
+            case $valueNode instanceof IntValueNode:
+            case $valueNode instanceof FloatValueNode:
                 return floatval($valueNode->value);
-            case ($valueNode instanceof ObjectValueNode): {
+            case $valueNode instanceof ObjectValueNode:
                 $value = [];
                 foreach ($valueNode->fields as $field) {
-                    $value[$field->name->value] = $this->parseLiteral($field->value);
+                    $value[$field->name->value] =
+                        $this->parseLiteral($field->value);
                 }
                 return $value;
-            }
             case ($valueNode instanceof ListValueNode):
                 return array_map([$this, 'parseLiteral'], $valueNode->values);
             default:
                 return null;
         }
-
     }
 
     private function identity($value)

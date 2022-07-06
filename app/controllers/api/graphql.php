@@ -11,8 +11,10 @@ use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
+use Utopia\Storage\Validator\File;
 
 App::get('/v1/graphql')
     ->desc('GraphQL Endpoint')
@@ -55,6 +57,9 @@ App::post('/v1/graphql')
     ->param('query', '', new Text(1024), 'The query to execute. Max 1024 chars.', true)
     ->param('operationName', null, new Text(256), 'Name of the operation to execute', true)
     ->param('variables', [], new JSON(), 'Variables to use in the operation', true)
+    ->param('operations', '', new Text(1024), 'Variables to use in the operation', true)
+    ->param('map', '', new Text(1024), 'Variables to use in the operation', true)
+    ->param('files', [], new ArrayList(new File()), 'Files to upload. Use a path that is relative to the current directory.', true)
     ->inject('request')
     ->inject('response')
     ->inject('promiseAdapter')
@@ -69,6 +74,9 @@ function graphqlRequest(
     string $query,
     ?string $operationName,
     ?array $variables,
+    ?string $operations,
+    ?string $map,
+    ?array $files,
     Appwrite\Utopia\Request $request,
     Appwrite\Utopia\Response $response,
     CoroutinePromiseAdapter $promiseAdapter,
@@ -95,6 +103,23 @@ function graphqlRequest(
         $debugFlags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     } else {
         $debugFlags = DebugFlag::NONE;
+    }
+
+    $map = \json_decode($map, true);
+    $result = \json_decode($operations, true);
+    if ($request->getHeader('content-type') === 'multipart/form-data') {
+        foreach ($map as $fileKey => $locations) {
+            foreach ($locations as $location) {
+                $items = &$result;
+                foreach (explode('.', $location) as $key) {
+                    if (!isset($items[$key]) || !is_array($items[$key])) {
+                        $items[$key] = [];
+                    }
+                    $items = &$items[$key];
+                }
+                $items = $request->getFiles($fileKey);
+            }
+        }
     }
 
     $promise = GraphQL::promiseToExecute(

@@ -550,9 +550,10 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_USER_PHONE:
-                return 'mutation updateUserPhone($userId: String!, number: String!){
-                    usersUpdatePhone(userId: $userId, number: number) {
+                return 'mutation updateUserPhone($userId: String!, $number: String!){
+                    usersUpdatePhone(userId: $userId, number: $number) {
                         name
+                        phone
                         email
                     }
                 }';
@@ -747,7 +748,7 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_ACCOUNT_PHONE:
-                return 'mutation updateAccountPhone($number: Json!, $password: String!){
+                return 'mutation updateAccountPhone($number: String!, $password: String!){
                     accountUpdatePhone(number: $number, password: $password) {
                         _id
                         name
@@ -1099,7 +1100,7 @@ trait GraphQLBase
                     functionsDelete(functionId: $functionId)
                 }';
             case self::$CREATE_DEPLOYMENT:
-                return 'mutation createDeployment($functionId: String!, $entrypoint: String!, $code: String!, $activate: Boolean!) {
+                return 'mutation createDeployment($functionId: String!, $entrypoint: String!, $code: InputFile!, $activate: Boolean!) {
                     functionsCreateDeployment(functionId: $functionId, entrypoint: $entrypoint, code: $code, activate: $activate) {
                         _id
                         entrypoint

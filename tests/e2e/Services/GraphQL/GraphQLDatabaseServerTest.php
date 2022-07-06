@@ -447,8 +447,6 @@ class GraphQLDatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        \var_dump($actor);
-
         $this->assertArrayNotHasKey('errors', $actor['body']);
         $this->assertIsArray($actor['body']['data']);
         $this->assertIsArray($actor['body']['data']['actorsCreate']);

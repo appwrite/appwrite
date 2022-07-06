@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -53,12 +54,13 @@ class GraphQLFunctionsServerTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_DEPLOYMENT);
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/ruby/code.tar.gz";
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'functionId' => $function['_id'],
                 'entrypoint' => 'main.rb',
-                'code' => realpath(__DIR__ . '/../../../resources/functions') . "/ruby/code.tar.gz",
+                'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
                 'activate' => true,
             ]
         ];

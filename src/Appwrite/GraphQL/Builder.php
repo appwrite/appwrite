@@ -2,7 +2,8 @@
 
 namespace Appwrite\GraphQL;
 
-use Appwrite\GraphQL\Types\JsonType;
+use Appwrite\GraphQL\Types\InputFile;
+use Appwrite\GraphQL\Types\Json;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
@@ -23,7 +24,8 @@ use function Co\go;
 
 class Builder
 {
-    protected static ?JsonType $jsonParser = null;
+    protected static ?Json $jsonType = null;
+    protected static ?InputFile $inputFile = null;
 
     protected static array $typeMapping = [];
     protected static array $defaultDocumentArgs = [];
@@ -90,17 +92,20 @@ class Builder
         ];
     }
 
-    /**
-     * Create a singleton for $jsonParser
-     *
-     * @return JsonType
-     */
-    public static function json(): JsonType
+    public static function json(): Json
     {
-        if (is_null(self::$jsonParser)) {
-            self::$jsonParser = new JsonType();
+        if (is_null(self::$jsonType)) {
+            self::$jsonType = new Json();
         }
-        return self::$jsonParser;
+        return self::$jsonType;
+    }
+
+    public static function inputFile(): InputFile
+    {
+        if (is_null(self::$inputFile)) {
+            self::$inputFile = new InputFile();
+        }
+        return self::$inputFile;
     }
 
     /**
@@ -199,7 +204,6 @@ class Builder
             case 'Appwrite\Network\Validator\URL':
             case 'Appwrite\Task\Validator\Cron':
             case 'Appwrite\Utopia\Database\Validator\CustomId':
-            case 'Appwrite\Storage\Validator\File':
             case 'Utopia\Database\Validator\Key':
             case 'Utopia\Database\Validator\CustomId':
             case 'Utopia\Database\Validator\UID':
@@ -237,6 +241,9 @@ class Builder
             case 'Utopia\Validator\Assoc':
             case 'Utopia\Validator\JSON':
                 $type = self::json();
+                break;
+            case 'Appwrite\Storage\Validator\File':
+                $type = self::inputFile();
                 break;
             default:
                 $type = Type::string();
