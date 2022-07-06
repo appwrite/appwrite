@@ -1,3 +1,11 @@
+# Version 0.15.2
+## Bugs
+- Fixed Realtime Authentication for the Console by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3506
+- Fixed Collection Usage by @stnguyen90 in https://github.com/appwrite/appwrite/pull/3505
+- Fixed `$createdAt` after updating document by @Meldiron in https://github.com/appwrite/appwrite/pull/3498
+- Fixed Redirect after deleting Collection in Console @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3476
+- Fixed broken Link for Documents under Collections by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3469
+
 # Version 0.15.1
 ## Bugs
 - Fixed SMS for `createVerification` by @christyjacob4 in https://github.com/appwrite/appwrite/pull/3454

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "266a47c93a9de6f1c36211aa5cf52799",
+    "content-hash": "dedc6a6328b4fdc5dfbd556a08534403",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -236,16 +236,16 @@
         },
         {
             "name": "chillerlan/php-settings-container",
-            "version": "2.1.3",
+            "version": "2.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/chillerlan/php-settings-container.git",
-                "reference": "125dd573b45ffc7cabecf385986a356ba2c6f602"
+                "reference": "1beb7df3c14346d4344b0b2e12f6f9a74feabd4a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/chillerlan/php-settings-container/zipball/125dd573b45ffc7cabecf385986a356ba2c6f602",
-                "reference": "125dd573b45ffc7cabecf385986a356ba2c6f602",
+                "url": "https://api.github.com/repos/chillerlan/php-settings-container/zipball/1beb7df3c14346d4344b0b2e12f6f9a74feabd4a",
+                "reference": "1beb7df3c14346d4344b0b2e12f6f9a74feabd4a",
                 "shasum": ""
             },
             "require": {
@@ -296,7 +296,7 @@
                     "type": "ko_fi"
                 }
             ],
-            "time": "2022-03-09T13:18:58+00:00"
+            "time": "2022-07-05T22:32:14+00:00"
         },
         {
             "name": "colinmollenhour/credis",
@@ -2828,16 +2828,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.19.4",
+            "version": "0.19.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "51a8e4205cd4809deeff8121a24e717642d68564"
+                "reference": "04de540cf683e2b08b3192c137dde7f2c37003d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/51a8e4205cd4809deeff8121a24e717642d68564",
-                "reference": "51a8e4205cd4809deeff8121a24e717642d68564",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/04de540cf683e2b08b3192c137dde7f2c37003d9",
+                "reference": "04de540cf683e2b08b3192c137dde7f2c37003d9",
                 "shasum": ""
             },
             "require": {
@@ -2872,9 +2872,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.19.4"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.19.5"
             },
-            "time": "2022-06-29T15:19:58+00:00"
+            "time": "2022-07-06T11:05:57+00:00"
         },
         {
             "name": "doctrine/instantiator",
