@@ -1061,6 +1061,7 @@ trait GraphQLBase
                 return 'query getDeployment($functionId: String!, $deploymentId: String!) {
                     functionsGetDeployment(functionId: $functionId, deploymentId: $deploymentId) {
                         _id
+                        buildId
                         buildStdout
                         buildStderr
                     }
@@ -1187,9 +1188,10 @@ trait GraphQLBase
                     storageDeleteBucket(bucketId: $bucketId)
                 }';
             case self::$CREATE_FILE:
-                return 'mutation createFile($bucketId: String!, $fileId: String!, $file: String!, $read: [String!]!, $write: [String!]!) {
+                return 'mutation createFile($bucketId: String!, $fileId: String!, $file: InputFile!, $read: [String!]!, $write: [String!]!) {
                     storageCreateFile(bucketId: $bucketId, fileId: $fileId, file: $file, read: $read, write: $write) {
                         _id
+                        bucketId
                         name
                     }
                 }';
@@ -1212,24 +1214,15 @@ trait GraphQLBase
                 }';
             case self::$GET_FILE_PREVIEW:
                 return 'query getFilePreview($bucketId: String!, $fileId: String!) {
-                    storageGetFilePreview(bucketId: $bucketId, fileId: $fileId) {
-                        _id
-                        name
-                    }
+                    storageGetFilePreview(bucketId: $bucketId, fileId: $fileId)
                 }';
             case self::$GET_FILE_DOWNLOAD:
                 return 'query getFileDownload($bucketId: String!, $fileId: String!) {
-                    storageGetFileDownload(bucketId: $bucketId, fileId: $fileId) {
-                        _id
-                        name
-                    }
+                    storageGetFileDownload(bucketId: $bucketId, fileId: $fileId)
                 }';
             case self::$GET_FILE_VIEW:
                 return 'query getFileView($bucketId: String!, $fileId: String!) {
-                    storageGetFileView(bucketId: $bucketId, fileId: $fileId) {
-                        _id
-                        name
-                    }
+                    storageGetFileView(bucketId: $bucketId, fileId: $fileId)
                 }';
             case self::$UPDATE_FILE:
                 return 'mutation updateFile($bucketId: String!, $fileId: String!, $read: [String!], $write: [String!]) {

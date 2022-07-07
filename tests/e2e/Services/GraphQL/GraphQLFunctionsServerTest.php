@@ -121,10 +121,8 @@ class GraphQLFunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
-    public function testCreateRetryBuild($function, $deployment): array
+    public function testCreateRetryBuild($function, $deployment): void
     {
-        \var_dump($deployment);
-
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$RETRY_BUILD);
         $gqlPayload = [
@@ -141,14 +139,8 @@ class GraphQLFunctionsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        \var_dump($retryBuild);
-
-        $this->assertIsArray($retryBuild['body']['data']);
-        $this->assertArrayNotHasKey('errors', $retryBuild['body']);
-        $retryBuild = $retryBuild['body']['data']['functionsRetryBuild'];
-        $this->assertIsArray($retryBuild);
-
-        return $retryBuild;
+        $this->assertIsArray($retryBuild['body']['errors']);
+        $this->assertEquals("Build not failed", $retryBuild['body']['errors'][0]['message']);
     }
 
     public function testGetFunctions(): array

@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -50,28 +51,32 @@ class GraphQLStorageClientTest extends Scope
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_FILE);
         $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'bucketId' => $bucket['_id'],
-                'fileId' => 'unique()',
-                'file' => '{"name":"John Doe","age":42}',
-                'permissions' => 'file',
-                'read' => ['role:all'],
-                'write' => ['role:all'],
-            ]
+            'operations' => \json_encode([
+                'query' => $query,
+                'variables' => [
+                    'bucketId' => $bucket['_id'],
+                    'fileId' => 'unique()',
+                    'file' => null,
+                    'permissions' => 'file',
+                    'read' => ['role:all'],
+                    'write' => ['role:all'],
+                ]
+            ]),
+            'map' => \json_encode([
+                'file' => ["variables.file"]
+            ]),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
         ];
 
         $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
+            'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($file['body']['data']);
         $this->assertArrayNotHasKey('errors', $file['body']);
-        $file = $file['body']['data']['storageCreateFile'];
-        $this->assertEquals('actor.json', $file['fileId']);
 
-        return $file;
+        return $file['body']['data']['storageCreateFile'];
     }
 
     /**
@@ -105,7 +110,9 @@ class GraphQLStorageClientTest extends Scope
     }
 
     /**
+     * @depends testCreateBucket
      * @depends testCreateFile
+     * @param $bucket
      * @param $file
      * @return array
      * @throws \Exception
@@ -118,7 +125,7 @@ class GraphQLStorageClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $bucket['_id'],
-                'fileId' => $file['fileId'],
+                'fileId' => $file['_id'],
             ]
         ];
 
@@ -129,10 +136,8 @@ class GraphQLStorageClientTest extends Scope
 
         $this->assertIsArray($file['body']['data']);
         $this->assertArrayNotHasKey('errors', $file['body']);
-        $file = $file['body']['data']['storageGetFile'];
-        $this->assertEquals('actor.json', $file['fileId']);
 
-        return $file;
+        return $file['body']['data']['storageGetFile'];
     }
 
     /**
@@ -149,7 +154,7 @@ class GraphQLStorageClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $file['bucketId'],
-                'fileId' => $file['fileId'],
+                'fileId' => $file['_id'],
                 'width' => 100,
                 'height' => 100,
             ]
@@ -160,10 +165,7 @@ class GraphQLStorageClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertIsArray($file['body']['data']);
-        $this->assertArrayNotHasKey('errors', $file['body']);
-        $file = $file['body']['data']['storageGetFilePreview'];
-        $this->assertEquals('actor.json', $file['fileId']);
+        $this->assertEquals(46719, \strlen($file['body']));
 
         return $file;
     }
@@ -182,7 +184,7 @@ class GraphQLStorageClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $file['bucketId'],
-                'fileId' => $file['fileId'],
+                'fileId' => $file['_id'],
             ]
         ];
 
@@ -191,12 +193,7 @@ class GraphQLStorageClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertIsArray($file['body']['data']);
-        $this->assertArrayNotHasKey('errors', $file['body']);
-        $file = $file['body']['data']['storageGetFileDownload'];
-        $this->assertEquals('actor.json', $file['fileId']);
-
-        return $file;
+        $this->assertEquals(47218, \strlen($file['body']));
     }
 
     /**
@@ -205,7 +202,7 @@ class GraphQLStorageClientTest extends Scope
      * @return array
      * @throws \Exception
      */
-    public function testGetFileView($file): array
+    public function testGetFileView($file): void
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$GET_FILE_VIEW);
@@ -213,7 +210,7 @@ class GraphQLStorageClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $file['bucketId'],
-                'fileId' => $file['fileId'],
+                'fileId' => $file['_id'],
             ]
         ];
 
@@ -222,12 +219,7 @@ class GraphQLStorageClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertIsArray($file['body']['data']);
-        $this->assertArrayNotHasKey('errors', $file['body']);
-        $file = $file['body']['data']['storageGetFileView'];
-        $this->assertEquals('actor.json', $file['fileId']);
-
-        return $file;
+        $this->assertEquals(47218, \strlen($file['body']));
     }
 
     /**
@@ -244,7 +236,7 @@ class GraphQLStorageClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $file['bucketId'],
-                'fileId' => $file['fileId'],
+                'fileId' => $file['_id'],
                 'read' => ['role:all'],
                 'write' => ['role:all'],
             ]
@@ -277,7 +269,7 @@ class GraphQLStorageClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $file['bucketId'],
-                'fileId' => $file['fileId'],
+                'fileId' => $file['_id'],
             ]
         ];
 
@@ -286,6 +278,6 @@ class GraphQLStorageClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertEquals(204, $file['headers']['status-code']);
+        $this->assertEquals(200, $file['headers']['status-code']);
     }
 }

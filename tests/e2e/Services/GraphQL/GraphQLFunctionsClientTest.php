@@ -71,13 +71,16 @@ class GraphQLFunctionsClientTest extends Scope
             'code' => new CURLFile($code, 'application/gzip', 'code.tar.gz'),
         ];
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $gqlPayload);
 
         $this->assertIsArray($deployment['body']['data']);
         $this->assertArrayNotHasKey('errors', $deployment['body']);
+
+        sleep(10);
 
         return $deployment['body']['data']['functionsCreateDeployment'];
     }
@@ -108,46 +111,7 @@ class GraphQLFunctionsClientTest extends Scope
 
         $this->assertIsArray($execution['body']['data']);
         $this->assertArrayNotHasKey('errors', $execution['body']);
-        $execution = $execution['body']['data']['functionsCreateExecution'];
-        $this->assertEquals('actor.json', $execution['executionId']);
-
-        return $execution;
-    }
-
-    /**
-     * @depends testCreateFunction
-     * @depends testCreateDeployment
-     * @depends testCreateExecution
-     * @param $function
-     * @param $deployment
-     * @param $execution
-     * @return array
-     * @throws \Exception
-     */
-    public function testCreateRetryBuild($function, $deployment, $execution): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$RETRY_BUILD);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'functionId' => $function['_id'],
-                'deploymentId' => $deployment['deploymentId'],
-                'buildId' => $execution['executionId'],
-            ]
-        ];
-
-        $retryBuild = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertIsArray($retryBuild['body']['data']);
-        $this->assertArrayNotHasKey('errors', $retryBuild['body']);
-        $retryBuild = $retryBuild['body']['data']['functionsRetryBuild'];
-        $this->assertIsArray($retryBuild);
-
-        return $retryBuild;
+        return $execution['body']['data']['functionsCreateExecution'];
     }
 
     /**
