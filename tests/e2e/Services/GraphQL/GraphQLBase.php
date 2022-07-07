@@ -1060,12 +1060,9 @@ trait GraphQLBase
             case self::$GET_DEPLOYMENT:
                 return 'query getDeployment($functionId: String!, $deploymentId: String!) {
                     functionsGetDeployment(functionId: $functionId, deploymentId: $deploymentId) {
-                        total
-                        deployments {
-                            _id
-                            buildStdout
-                            buildStderr
-                        }
+                        _id
+                        buildStdout
+                        buildStderr
                     }
                 }';
             case self::$CREATE_FUNCTION:
@@ -1103,6 +1100,7 @@ trait GraphQLBase
                 return 'mutation createDeployment($functionId: String!, $entrypoint: String!, $code: InputFile!, $activate: Boolean!) {
                     functionsCreateDeployment(functionId: $functionId, entrypoint: $entrypoint, code: $code, activate: $activate) {
                         _id
+                        buildId
                         entrypoint
                         size
                         status
@@ -1119,7 +1117,6 @@ trait GraphQLBase
                     functionsGetExecution(functionId: $functionId, executionId: $executionId) {
                         _id
                         status
-                        stdout
                         stderr
                     }
                 }';
@@ -1135,12 +1132,10 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_EXECUTION:
-                return 'mutation createExecution($functionId: String!) {
-                    functionsCreateExecution(functionId: $functionId) {
+                return 'mutation createExecution($functionId: String!, $data: String, $async: Boolean) {
+                    functionsCreateExecution(functionId: $functionId, data: $data, async: $async) {
                         _id
                         status
-                        response
-                        stdout
                         stderr
                     }
                 }';

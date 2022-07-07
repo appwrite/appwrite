@@ -56,27 +56,30 @@ class GraphQLFunctionsClientTest extends Scope
         $query = $this->getQuery(self::$CREATE_DEPLOYMENT);
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/ruby/code.tar.gz";
         $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'functionId' => $function['_id'],
-                'entrypoint' => 'main.rb',
-                'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
-                'activate' => true,
-            ]
+            'operations' => \json_encode([
+                'query' => $query,
+                'variables' => [
+                    'functionId' => $function['_id'],
+                    'entrypoint' => 'main.rb',
+                    'activate' => true,
+                    'code' => null,
+                ]
+            ]),
+            'map' => \json_encode([
+                'code' => ["variables.code"]
+            ]),
+            'code' => new CURLFile($code, 'application/gzip', 'code.tar.gz'),
         ];
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'content-type' => 'application/json',
+        $deployment = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $gqlPayload);
+        ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($deployment['body']['data']);
         $this->assertArrayNotHasKey('errors', $deployment['body']);
-        $deployment = $deployment['body']['data']['functionsCreateDeployment'];
-        $this->assertEquals('actor.json', $deployment['deploymentId']);
 
-        return $deployment;
+        return $deployment['body']['data']['functionsCreateDeployment'];
     }
 
     /**

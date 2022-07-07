@@ -56,39 +56,42 @@ class GraphQLFunctionsServerTest extends Scope
         $query = $this->getQuery(self::$CREATE_DEPLOYMENT);
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/ruby/code.tar.gz";
         $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'functionId' => $function['_id'],
-                'entrypoint' => 'main.rb',
-                'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
-                'activate' => true,
-            ]
+            'operations' => \json_encode([
+                'query' => $query,
+                'variables' => [
+                    'functionId' => $function['_id'],
+                    'entrypoint' => 'main.rb',
+                    'activate' => true,
+                    'code' => null,
+                ]
+            ]),
+            'map' => \json_encode([
+                'code' => ["variables.code"]
+            ]),
+            'code' => new CURLFile($code, 'application/gzip', 'code.tar.gz'),
         ];
 
         $deployment = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
+            'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        \var_dump($deployment);
-
         $this->assertIsArray($deployment['body']['data']);
         $this->assertArrayNotHasKey('errors', $deployment['body']);
-        $deployment = $deployment['body']['data']['functionsCreateDeployment'];
-        $this->assertEquals('actor.json', $deployment['deploymentId']);
 
-        return $deployment;
+        sleep(10);
+
+        return $deployment['body']['data']['functionsCreateDeployment'];
     }
 
     /**
      * * @depends testCreateFunction
      * @depends testCreateDeployment
      * @param $function
-     * @param $deployment
      * @return array
      * @throws \Exception
      */
-    public function testCreateExecution($function, $deployment): array
+    public function testCreateExecution($function): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_EXECUTION);
@@ -106,30 +109,30 @@ class GraphQLFunctionsServerTest extends Scope
 
         $this->assertIsArray($execution['body']['data']);
         $this->assertArrayNotHasKey('errors', $execution['body']);
-        $execution = $execution['body']['data']['functionsCreateExecution'];
-        $this->assertEquals('actor.json', $execution['executionId']);
 
-        return $execution;
+        return $execution['body']['data']['functionsCreateExecution'];
     }
 
     /**
      * @depends testCreateFunction
-     * @depends testCreateDeployment
-     * @depends testCreateExecution
+     * @depends testGetDeployment
      * @param $function
      * @param $deployment
-     * @param $execution
      * @return array
      * @throws \Exception
      */
-    public function testCreateRetryBuild($function): array
+    public function testCreateRetryBuild($function, $deployment): array
     {
+        \var_dump($deployment);
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$RETRY_BUILD);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'functionId' => $function['_id'],
+                'deploymentId' => $deployment['_id'],
+                'buildId' => $deployment['buildId'],
             ]
         ];
 
@@ -137,6 +140,8 @@ class GraphQLFunctionsServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
+
+        \var_dump($retryBuild);
 
         $this->assertIsArray($retryBuild['body']['data']);
         $this->assertArrayNotHasKey('errors', $retryBuild['body']);
@@ -250,6 +255,38 @@ class GraphQLFunctionsServerTest extends Scope
 
     /**
      * @depends testCreateFunction
+     * @depends testCreateDeployment
+     * @param $function
+     * @return array
+     * @throws \Exception
+     */
+    public function testGetDeployment($function, $deployment)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$GET_DEPLOYMENT);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'functionId' => $function['_id'],
+                'deploymentId' => $deployment['_id'],
+            ]
+        ];
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertIsArray($deployment['body']['data']);
+        $this->assertArrayNotHasKey('errors', $deployment['body']);
+        $deployment = $deployment['body']['data']['functionsGetDeployment'];
+        $this->assertIsArray($deployment);
+
+        return $deployment;
+    }
+
+    /**
+     * @depends testCreateFunction
      * @param $function
      * @return array
      * @throws \Exception
@@ -349,35 +386,9 @@ class GraphQLFunctionsServerTest extends Scope
 
     /**
      * @depends testCreateFunction
-     * @param $function
-     * @return array
-     * @throws \Exception
-     */
-    public function testDeleteFunction($function): void
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_FUNCTION);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'functionId' => $function['_id'],
-            ]
-        ];
-
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-    }
-
-    /**
-     * @depends testCreateFunction
      * @depends testCreateDeployment
      * @param $function
      * @param $deployment
-     * @return array
      * @throws \Exception
      */
     public function testDeleteDeployment($function, $deployment): void
@@ -397,6 +408,31 @@ class GraphQLFunctionsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateFunction
+     * @depends testDeleteDeployment
+     * @param $function
+     * @throws \Exception
+     */
+    public function testDeleteFunction($function): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$DELETE_FUNCTION);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'functionId' => $function['_id'],
+            ]
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 }
