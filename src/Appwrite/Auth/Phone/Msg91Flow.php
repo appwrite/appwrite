@@ -16,9 +16,9 @@ class Msg91Flow extends Phone
 
     /**
      * For Flow based sending SMS sender ID should not be set in flow
-     * In environment _APP_PHONE_PROVIDER format is 'phone://[senderID]:[authKey]@msg91-flow'.
+     * In environment _APP_PHONE_PROVIDER format is 'phone://[senderID]:[authKey]@msg91'.
      * _APP_PHONE_FROM value is flow ID created in Msg91
-     * Eg. _APP_PHONE_PROVIDER = phone://DINESH:5e1e93cad6fc054d8e759a5b@msg91-flow
+     * Eg. _APP_PHONE_PROVIDER = phone://DINESH:5e1e93cad6fc054d8e759a5b@msg91
      * _APP_PHONE_FROM = 3968636f704b303135323339
      * @param string $from-> utilized from for flow id
      * @param string $to
