@@ -11,10 +11,8 @@ use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
-use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
-use Utopia\Storage\Validator\File;
 
 App::get('/v1/graphql')
     ->desc('GraphQL Endpoint')
@@ -57,13 +55,67 @@ App::post('/v1/graphql')
     ->param('query', '', new Text(1024), 'The query to execute. Max 1024 chars.', true)
     ->param('operationName', null, new Text(256), 'Name of the operation to execute', true)
     ->param('variables', [], new JSON(), 'Variables to use in the operation', true)
-    ->param('operations', '', new Text(1024), 'Variables to use in the operation', true)
-    ->param('map', '', new Text(1024), 'Variables to use in the operation', true)
     ->inject('request')
     ->inject('response')
     ->inject('promiseAdapter')
     ->inject('gqlSchema')
     ->action(Closure::fromCallable('graphqlRequest'));
+
+App::post('/v1/graphql')
+    ->desc('GraphQL Endpoint')
+    ->groups(['grapgql'])
+    ->label('scope', 'graphql')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'graphql')
+    ->label('sdk.method', 'upload')
+    ->label('sdk.description', '/docs/references/graphql/upload.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('abuse-limit', 60)
+    ->label('abuse-time', 60)
+    ->param('operations', '', new Text(1024), 'Query and variables for operation', true)
+    ->param('map', '', new Text(1024), 'Map of form data keys to file replacement dot paths within the operations JSON. For example: "variables.code"', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('promiseAdapter')
+    ->inject('gqlSchema')
+    ->action(Closure::fromCallable('graphqlUpload'));
+
+/**
+ * @throws Exception
+ */
+function graphqlUpload(
+    ?string $operations,
+    ?string $map,
+    Appwrite\Utopia\Request $request,
+    Appwrite\Utopia\Response $response,
+    CoroutinePromiseAdapter $promiseAdapter,
+    Type\Schema $gqlSchema
+): void {
+    $contentType = $request->getHeader('content-type');
+    if (!\str_starts_with($contentType, 'multipart/form-data')) {
+        throw new Exception('Invalid content type', 400);
+    }
+    $map = \json_decode($map, true);
+    $operations = \json_decode($operations, true);
+    foreach ($map as $fileKey => $locations) {
+        foreach ($locations as $location) {
+            $items = &$operations;
+            foreach (explode('.', $location) as $key) {
+                if (!isset($items[$key]) || !is_array($items[$key])) {
+                    $items[$key] = [];
+                }
+                $items = &$items[$key];
+            }
+            $items = $request->getFiles($fileKey);
+        }
+    }
+    $query = $operations['query'];
+    $variables = $operations['variables'];
+
+    graphqlRequest($query, null, $variables, $request, $response, $promiseAdapter, $gqlSchema);
+}
 
 /**
  * @throws Exception
@@ -73,38 +125,15 @@ function graphqlRequest(
     string $query,
     ?string $operationName,
     ?array $variables,
-    ?string $operations,
-    ?string $map,
     Appwrite\Utopia\Request $request,
     Appwrite\Utopia\Response $response,
     CoroutinePromiseAdapter $promiseAdapter,
     Type\Schema $gqlSchema
 ): void {
     $contentType = $request->getHeader('content-type');
-
     if ($contentType === 'application/graphql') {
         $query = $request->getSwoole()->rawContent();
     }
-
-    if (\str_starts_with($contentType, 'multipart/form-data')) {
-        $map = \json_decode($map, true);
-        $operations = \json_decode($operations, true);
-        foreach ($map as $fileKey => $locations) {
-            foreach ($locations as $location) {
-                $items = &$operations;
-                foreach (explode('.', $location) as $key) {
-                    if (!isset($items[$key]) || !is_array($items[$key])) {
-                        $items[$key] = [];
-                    }
-                    $items = &$items[$key];
-                }
-                $items = $request->getFiles($fileKey);
-            }
-        }
-        $query = $operations['query'];
-        $variables = $operations['variables'];
-    }
-
     if (empty($query)) {
         throw new Exception('No query supplied.', 400, Exception::GRAPHQL_NO_QUERY);
     }
