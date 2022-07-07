@@ -268,17 +268,6 @@ abstract class Worker
 
 
     /**
-     * Get Video Storage Device
-     * @param string $projectId of the project
-     * @return Device
-     */
-    protected function getVideoDevice($projectId): Device
-    {
-        return $this->getDevice(APP_STORAGE_VIDEO . '/app-' . $projectId);
-    }
-
-
-    /**
      * Get Builds Storage Device
      * @param string $projectId of the project
      * @return Device
