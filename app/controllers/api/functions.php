@@ -329,9 +329,8 @@ App::put('/v1/functions/:functionId')
                 ->setFunction($function)
                 ->setType('schedule')
                 ->setUser($user)
-                ->setProject($project);
-
-            $functionEvent->schedule($next);
+                ->setProject($project)
+                ->schedule(new DateTime($next));
         }
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -393,8 +392,8 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             $functionEvent
                 ->setType('schedule')
                 ->setFunction($function)
-                ->setProject($project);
-            $functionEvent->schedule($next);
+                ->setProject($project)
+                ->schedule(new DateTime($next));
         }
 
         $events

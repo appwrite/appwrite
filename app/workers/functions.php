@@ -164,10 +164,9 @@ class FunctionsV1 extends Worker
                     ->setFunction($function)
                     ->setType('schedule')
                     ->setUser($user)
-                    ->setProject($project);
-
-                // Async task reschedule
-                $reschedule->schedule($next);
+                    ->setProject($project)
+                    ->schedule(new DateTime($next));
+                ;
 
                 $this->execute(
                     project: $project,

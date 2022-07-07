@@ -2732,7 +2732,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'timestamp',
+                '$id' => 'timestamp', // todo: change to datetime???
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
