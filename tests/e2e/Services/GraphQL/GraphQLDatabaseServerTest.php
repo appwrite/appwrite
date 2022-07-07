@@ -371,13 +371,13 @@ class GraphQLDatabaseServerTest extends Scope
 
     /**
      * @depends testCreateStringAttribute
+     * @depends testCreateIntegerAttribute
+     * @depends testCreateBooleanAttribute
+     * @depends testCreateEnumAttribute
      * @throws Exception
      */
     public function testCreateDocument($data): array
     {
-        // Wait for attributes to be available
-        sleep(3);
-
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_DOCUMENT);
         $gqlPayload = [
@@ -817,103 +817,103 @@ class GraphQLDatabaseServerTest extends Scope
         $this->assertStringContainsString('New Document Name', $document['data']);
     }
 
-//    /**
-//     * @depends testCreateDocument
-//     * @throws Exception
-//     */
-//    public function testDeleteDocument($data): void
-//    {
-//        $projectId = $this->getProject()['$id'];
-//        $query = $this->getQuery(self::$DELETE_DOCUMENT);
-//        $gqlPayload = [
-//            'query' => $query,
-//            'variables' => [
-//                'databaseId' => $data['database']['_id'],
-//                'collectionId' => $data['collection']['_id'],
-//                'documentId' => $data['document']['_id'],
-//            ]
-//        ];
-//
-//        $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $projectId,
-//        ], $this->getHeaders()), $gqlPayload);
-//
-//        $this->assertEquals(204, $document['headers']['status-code']);
-//    }
-//
-//    /**
-//     * @depends testCreateStringAttribute
-//     * @throws Exception
-//     */
-//    public function testDeleteAttribute($data): void
-//    {
-//        // Wait for attributes to be available
-//        sleep(3);
-//
-//        $projectId = $this->getProject()['$id'];
-//        $query = $this->getQuery(self::$DELETE_ATTRIBUTE);
-//        $gqlPayload = [
-//            'query' => $query,
-//            'variables' => [
-//                'databaseId' => $data['database']['_id'],
-//                'collectionId' => $data['collection']['_id'],
-//                'key' => 'name',
-//            ]
-//        ];
-//
-//        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $projectId,
-//        ], $this->getHeaders()), $gqlPayload);
-//
-//        $this->assertEquals(204, $attribute['headers']['status-code']);
-//    }
-//
-//    /**
-//     * @depends testCreateCollection
-//     * @throws Exception
-//     */
-//    public function testDeleteCollection($data)
-//    {
-//        $projectId = $this->getProject()['$id'];
-//        $query = $this->getQuery(self::$DELETE_COLLECTION);
-//        $gqlPayload = [
-//            'query' => $query,
-//            'variables' => [
-//                'databaseId' => $data['database']['_id'],
-//                'collectionId' => $data['collection']['_id'],
-//            ]
-//        ];
-//
-//        $collection = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $projectId,
-//        ], $this->getHeaders()), $gqlPayload);
-//
-//        $this->assertEquals(204, $collection['headers']['status-code']);
-//    }
-//
-//    /**
-//     * @depends testCreateDatabase
-//     * @throws Exception
-//     */
-//    public function testDeleteDatabase($database)
-//    {
-//        $projectId = $this->getProject()['$id'];
-//        $query = $this->getQuery(self::$DELETE_DATABASE);
-//        $gqlPayload = [
-//            'query' => $query,
-//            'variables' => [
-//                'databaseId' => $database['_id'],
-//            ]
-//        ];
-//
-//        $database = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $projectId,
-//        ], $this->getHeaders()), $gqlPayload);
-//
-//        $this->assertEquals(204, $database['headers']['status-code']);
-//    }
+    /**
+     * @depends testCreateDocument
+     * @throws Exception
+     */
+    public function testDeleteDocument($data): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$DELETE_DOCUMENT);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'documentId' => $data['document']['_id'],
+            ]
+        ];
+
+        $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateStringAttribute
+     * @throws Exception
+     */
+    public function testDeleteAttribute($data): void
+    {
+        // Wait for attributes to be available
+        sleep(3);
+
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$DELETE_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'name',
+            ]
+        ];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertEquals(204, $attribute['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateCollection
+     * @throws Exception
+     */
+    public function testDeleteCollection($data)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$DELETE_COLLECTION);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+            ]
+        ];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertEquals(204, $collection['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     * @throws Exception
+     */
+    public function testDeleteDatabase($database)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$DELETE_DATABASE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $database['_id'],
+            ]
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertEquals(204, $database['headers']['status-code']);
+    }
 }
