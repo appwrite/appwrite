@@ -239,24 +239,6 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
 
 
     $route = $utopia->match($request);
-    $groups = $route->getGroups();
-    if (in_array('cache', $groups)) {
-        if (!empty($cacheKey) && !empty($cachePath)) {
-            $cacheLog = $dbForProject->getDocument('cache', $cacheKey);
-            if ($cacheLog->isEmpty()) {
-                Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
-                  '$id' => $cacheKey,
-                  'accessedAt' => time(),
-                  'path' => $cachePath
-              ])));
-            } else {
-                $cacheLog->setAttribute('accessedAt', time());
-                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
-            }
-        }
-    }
-
-
     if (
         App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
         && $project->getId()
