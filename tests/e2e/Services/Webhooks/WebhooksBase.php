@@ -860,7 +860,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);
         $this->assertCount(2, $webhook['data']['roles']);
-        $this->assertIsInt($webhook['data']['joined']);
+        $this->assertIsString($webhook['data']['joined']);
         $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
 
         /**
@@ -932,7 +932,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);
         $this->assertCount(2, $webhook['data']['roles']);
-        $this->assertIsInt($webhook['data']['joined']);
+        $this->assertIsString($webhook['data']['joined']);
         $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
     }
 }

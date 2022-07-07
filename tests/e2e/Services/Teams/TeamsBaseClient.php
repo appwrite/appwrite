@@ -110,7 +110,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertIsInt($response['body']['joined']);
+        $this->assertIsString($response['body']['joined']);
         $this->assertEquals(false, $response['body']['confirm']);
 
         $lastEmail = $this->getLastEmail();
@@ -244,7 +244,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertIsInt($response['body']['joined']);
+        $this->assertIsString($response['body']['joined']);
         $this->assertEquals(true, $response['body']['confirm']);
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
         $data['session'] = $session;

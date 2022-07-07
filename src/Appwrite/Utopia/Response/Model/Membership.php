@@ -59,16 +59,16 @@ class Membership extends Model
                 'example' => 'VIP',
             ])
             ->addRule('invited', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Date, the user has been invited to join the team in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Date, the user has been invited to join the team in Datetime',
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('joined', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Date, the user has accepted the invitation to join the team in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Date, the user has accepted the invitation to join the team in Datetime',
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('confirm', [
                 'type' => self::TYPE_BOOLEAN,

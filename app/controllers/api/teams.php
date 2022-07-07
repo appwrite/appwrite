@@ -77,8 +77,8 @@ App::post('/v1/teams')
                 'teamId' => $team->getId(),
                 'teamInternalId' => $team->getInternalId(),
                 'roles' => $roles,
-                'invited' => \time(),
-                'joined' => \time(),
+                'invited' => Database::getCurrentDateTime(),
+                'joined' => Database::getCurrentDateTime(),
                 'confirm' => true,
                 'secret' => '',
                 'search' => implode(' ', [$membershipId, $user->getId()])
@@ -372,8 +372,8 @@ App::post('/v1/teams/:teamId/memberships')
             'teamId' => $team->getId(),
             'teamInternalId' => $team->getInternalId(),
             'roles' => $roles,
-            'invited' => \time(),
-            'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
+            'invited' => Database::getCurrentDateTime(),
+            'joined' => ($isPrivilegedUser || $isAppUser) ? Database::getCurrentDateTime() : null,
             'confirm' => ($isPrivilegedUser || $isAppUser),
             'secret' => Auth::hash($secret),
             'search' => implode(' ', [$membershipId, $invitee->getId()])
@@ -686,7 +686,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         $membership // Attach user to team
-            ->setAttribute('joined', \time())
+            ->setAttribute('joined', Database::getCurrentDateTime())
             ->setAttribute('confirm', true)
         ;
 

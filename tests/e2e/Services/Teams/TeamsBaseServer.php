@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
+use Utopia\Database\Database;
 
 trait TeamsBaseServer
 {
@@ -59,8 +60,8 @@ trait TeamsBaseServer
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertIsInt($response['body']['joined']);
-        $this->assertGreaterThan(0, $response['body']['joined']);
+        $this->assertIsString($response['body']['joined']);
+        $this->assertGreaterThan($response['body']['joined'], Database::getCurrentDateTime());
         $this->assertEquals(true, $response['body']['confirm']);
 
         $userUid = $response['body']['userId'];
