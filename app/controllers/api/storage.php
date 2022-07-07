@@ -610,7 +610,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         '$id' => $fileId,
                         '$read' => $read,
                         '$write' => $write,
-                        'dateCreated' => \time(),
                         'bucketId' => $bucket->getId(),
                         'name' => $fileName,
                         'path' => $path,
