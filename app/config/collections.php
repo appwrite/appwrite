@@ -2658,7 +2658,7 @@ $collections = [
             ],
             [
                 '$id' => 'time',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_INTEGER, // todo: change to datetime
                 'format' => '',
                 'size' => 0,
                 'signed' => false,
