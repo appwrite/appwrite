@@ -36,7 +36,7 @@ class MessagingV1 extends Worker
             'twilio' => new Twilio($user, $secret),
             'text-magic' => new TextMagic($user, $secret),
             'telesign' => new Telesign($user, $secret),
-            'msg91-flow' => new Msg91Flow($user, $secret),
+            'msg91' => new Msg91Flow($user, $secret),
             default => null
         };
 
