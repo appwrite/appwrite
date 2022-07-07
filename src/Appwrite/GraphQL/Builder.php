@@ -207,8 +207,6 @@ class Builder
             case 'Utopia\Database\Validator\Key':
             case 'Utopia\Database\Validator\CustomId':
             case 'Utopia\Database\Validator\UID':
-            case 'Utopia\Storage\Validator\File':
-            case 'Utopia\Validator\File':
             case 'Utopia\Validator\HexColor':
             case 'Utopia\Validator\Length':
             case 'Utopia\Validator\Text':
@@ -242,7 +240,7 @@ class Builder
             case 'Utopia\Validator\JSON':
                 $type = self::json();
                 break;
-            case 'Appwrite\Storage\Validator\File':
+            case 'Utopia\Storage\Validator\File':
                 $type = self::inputFile();
                 break;
             default:
