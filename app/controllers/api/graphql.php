@@ -59,7 +59,6 @@ App::post('/v1/graphql')
     ->param('variables', [], new JSON(), 'Variables to use in the operation', true)
     ->param('operations', '', new Text(1024), 'Variables to use in the operation', true)
     ->param('map', '', new Text(1024), 'Variables to use in the operation', true)
-    ->param('files', [], new ArrayList(new File()), 'Files to upload. Use a path that is relative to the current directory.', true)
     ->inject('request')
     ->inject('response')
     ->inject('promiseAdapter')
@@ -76,17 +75,36 @@ function graphqlRequest(
     ?array $variables,
     ?string $operations,
     ?string $map,
-    ?array $files,
     Appwrite\Utopia\Request $request,
     Appwrite\Utopia\Response $response,
     CoroutinePromiseAdapter $promiseAdapter,
     Type\Schema $gqlSchema
-): void
-{
-    if ($request->getHeader('content-type') === 'application/graphql') {
-        // TODO: Add getRawContent() method to Request
+): void {
+    $contentType = $request->getHeader('content-type');
+
+    if ($contentType === 'application/graphql') {
         $query = $request->getSwoole()->rawContent();
     }
+
+    if (\str_starts_with($contentType, 'multipart/form-data')) {
+        $map = \json_decode($map, true);
+        $operations = \json_decode($operations, true);
+        foreach ($map as $fileKey => $locations) {
+            foreach ($locations as $location) {
+                $items = &$operations;
+                foreach (explode('.', $location) as $key) {
+                    if (!isset($items[$key]) || !is_array($items[$key])) {
+                        $items[$key] = [];
+                    }
+                    $items = &$items[$key];
+                }
+                $items = $request->getFiles($fileKey);
+            }
+        }
+        $query = $operations['query'];
+        $variables = $operations['variables'];
+    }
+
     if (empty($query)) {
         throw new Exception('No query supplied.', 400, Exception::GRAPHQL_NO_QUERY);
     }
@@ -103,23 +121,6 @@ function graphqlRequest(
         $debugFlags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     } else {
         $debugFlags = DebugFlag::NONE;
-    }
-
-    $map = \json_decode($map, true);
-    $result = \json_decode($operations, true);
-    if ($request->getHeader('content-type') === 'multipart/form-data') {
-        foreach ($map as $fileKey => $locations) {
-            foreach ($locations as $location) {
-                $items = &$result;
-                foreach (explode('.', $location) as $key) {
-                    if (!isset($items[$key]) || !is_array($items[$key])) {
-                        $items[$key] = [];
-                    }
-                    $items = &$items[$key];
-                }
-                $items = $request->getFiles($fileKey);
-            }
-        }
     }
 
     $promise = GraphQL::promiseToExecute(
