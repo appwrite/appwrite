@@ -35,11 +35,17 @@ trait GraphQLBase
     public static string $DELETE_INDEX = 'delete_index';
     // Documents
     public static string $CREATE_DOCUMENT = 'create_document_rest';
-    public static string $CREATE_CUSTOM_ENTITY = 'create_document_hooks';
     public static string $GET_DOCUMENTS = 'list_documents';
     public static string $GET_DOCUMENT = 'get_document';
     public static string $UPDATE_DOCUMENT = 'update_document';
     public static string $DELETE_DOCUMENT = 'delete_document';
+
+    // Custom Entities
+    public static string $CREATE_CUSTOM_ENTITY = 'create_custom_entity';
+    public static string $GET_CUSTOM_ENTITIES = 'get_custom_entities';
+    public static string $GET_CUSTOM_ENTITY = 'get_custom_entity';
+    public static string $UPDATE_CUSTOM_ENTITY = 'update_custom_entity';
+    public static string $DELETE_CUSTOM_ENTITY = 'delete_custom_entity';
 
     // Localization
     public static string $GET_LOCALE = 'get_locale';
@@ -414,6 +420,7 @@ trait GraphQLBase
             case self::$CREATE_CUSTOM_ENTITY:
                 return 'mutation createActor($name: String!, $age: Int!, $alive: Boolean!, $salary: Float, $email: String!, $role: String!, $ip: String, $url: String){
                     actorsCreate(name: $name, age: $age, alive: $alive, salary: $salary, email: $email, role: $role, ip: $ip, url: $url) {
+                        _id
                         name
                         age
                         alive
@@ -422,6 +429,52 @@ trait GraphQLBase
                         role
                     }
                 }';
+            case self::$GET_CUSTOM_ENTITIES:
+                return 'query getCustomEntities($name: String!){
+                    actorsList(name: $name) {
+                        total
+                        actors {
+                            name
+                            age
+                            alive
+                            salary
+                            email
+                            role
+                            ip
+                            url
+                        }
+                    }
+                }';
+            case self::$GET_CUSTOM_ENTITY:
+                return 'query getCustomEntity($id: String!){
+                    actorsGet(id: $id) {
+                        name
+                        age
+                        alive
+                        salary
+                        email
+                        role
+                        ip
+                        url
+                    }
+                }';
+            case self::$UPDATE_CUSTOM_ENTITY:
+                return 'mutation updateCustomEntity($id: String!, $name: String!, $age: Int!, $alive: Boolean!, $salary: Float, $email: String!, $role: String!, $ip: String, $url: String){
+                    actorsUpdate(id: $id, name: $name, age: $age, alive: $alive, salary: $salary, email: $email, role: $role, ip: $ip, url: $url) {
+                        name
+                        age
+                        alive
+                        salary
+                        email
+                        role
+                        ip
+                        url
+                    }
+                }';
+            case self::$DELETE_CUSTOM_ENTITY:
+                return 'mutation deleteCustomEntity($id: String!){
+                        actorsDelete(id: $id)
+                    }';
             case self::$UPDATE_DOCUMENT:
                 return 'mutation updateDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $read: [String!], $write: [String!]){
                     databasesUpdateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {

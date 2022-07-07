@@ -426,7 +426,7 @@ class GraphQLDatabaseServerTest extends Scope
      * @depends testCreateEnumAttribute
      * @throws Exception
      */
-    public function testCreateCustomEntity(): void
+    public function testCreateCustomEntity(): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_CUSTOM_ENTITY);
@@ -447,9 +447,13 @@ class GraphQLDatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+
         $this->assertArrayNotHasKey('errors', $actor['body']);
         $this->assertIsArray($actor['body']['data']);
-        $this->assertIsArray($actor['body']['data']['actorsCreate']);
+        $actor = $actor['body']['data']['actorsCreate'];
+        $this->assertIsArray($actor);
+
+        return $actor;
     }
 
     public function testGetDatabases(): void
@@ -706,30 +710,30 @@ class GraphQLDatabaseServerTest extends Scope
         $this->assertIsArray($document['body']['data']['databasesGetDocument']);
     }
 
-//    /**
-//     * @depends testCreateCustomEntity
-//     * @throws Exception
-//     */
-//    public function testGetCustomEntity($data)
-//    {
-//        $projectId = $this->getProject()['$id'];
-//        $query = $this->getQuery(self::$GET_CUSTOM_ENTITY);
-//        $gqlPayload = [
-//            'query' => $query,
-//            'variables' => [
-//                'id' => $data['entity']['_id'],
-//            ]
-//        ];
-//
-//        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $projectId,
-//        ], $this->getHeaders()), $gqlPayload);
-//
-//        $this->assertArrayNotHasKey('errors', $entity['body']);
-//        $this->assertIsArray($entity['body']['data']);
-//        $this->assertIsArray($entity['body']['data']['actorGet']);
-//    }
+    /**
+     * @depends testCreateCustomEntity
+     * @throws Exception
+     */
+    public function testGetCustomEntity($data)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$GET_CUSTOM_ENTITY);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'id' => $data['_id'],
+            ]
+        ];
+
+        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertArrayNotHasKey('errors', $entity['body']);
+        $this->assertIsArray($entity['body']['data']);
+        $this->assertIsArray($entity['body']['data']['actorsGet']);
+    }
 
     /**
      * @depends testCreateDatabase

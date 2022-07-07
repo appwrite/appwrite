@@ -16,7 +16,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Registry\Registry;
 use Utopia\Route;
 use Utopia\Validator;
 
@@ -497,7 +496,7 @@ class Builder
                 foreach ($collections as $collectionId => $attributes) {
                     $objectType = new ObjectType([
                         'name' => $collectionId,
-                        'fields' => $attributes
+                        'fields' => \array_merge(["_id" => ['type' => Type::string()]], $attributes),
                     ]);
 
                     $attributes = \array_merge(
@@ -695,7 +694,6 @@ class Builder
         }
 
         $gqlResponse = $response;
-
         $request = new Request($swoole);
         $apiResponse = new Response($response->getSwoole());
         $apiResponse->setContentType(Response::CONTENT_TYPE_NULL);
@@ -710,31 +708,42 @@ class Builder
 
             $utopia->execute($route, $request);
         } catch (\Throwable $e) {
-            $gqlResponse->setStatusCode($apiResponse->getStatusCode());
+            self::reassign($gqlResponse, $apiResponse);
             $reject($e);
             return;
         }
 
+        self::reassign($gqlResponse, $apiResponse);
+
         $result = $apiResponse->getPayload();
 
-        $gqlResponse->setContentType($apiResponse->getContentType());
-        $gqlResponse->setStatusCode($apiResponse->getStatusCode());
+        if ($result['$id']) {
+            $result['_id'] = $result['$id'];
+        }
 
         if ($apiResponse->getStatusCode() < 200 || $apiResponse->getStatusCode() >= 400) {
             $reject(new GQLException($result['message'], $apiResponse->getStatusCode()));
             return;
         }
 
-        // Add headers and cookies from inner to outer response
-        // TODO: Add setters to response to allow setting entire array at once
+        $resolve($result);
+    }
+
+    /**
+     * @param Response $gqlResponse
+     * @param Response $apiResponse
+     * @return void
+     * @throws \Utopia\Exception
+     */
+    private static function reassign(Response $gqlResponse, Response $apiResponse): void
+    {
+        $gqlResponse->setContentType($apiResponse->getContentType());
+        $gqlResponse->setStatusCode($apiResponse->getStatusCode());
         foreach ($apiResponse->getHeaders() as $key => $value) {
             $gqlResponse->addHeader($key, $value);
         }
         foreach ($apiResponse->getCookies() as $name => $cookie) {
             $gqlResponse->addCookie($name, $cookie['value'], $cookie['expire'], $cookie['path'], $cookie['domain'], $cookie['secure'], $cookie['httponly']);
         }
-
-
-        $resolve($result);
     }
 }
