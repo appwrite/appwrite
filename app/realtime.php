@@ -102,13 +102,14 @@ function getDatabase(Registry &$register, string $namespace)
     $consoleDB = $register->get('dbPool')->getConsoleDBFromPool();
     $db = $consoleDB;
     $dbName = '';
+
     if ($namespace != '_console') {
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($consoleDB), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace('_console'); // Main DB
 
-        $project = $consoleDB->getDocument('projects', $namespace);
+        $project = $database->getDocument('projects', ltrim($namespace, '_'));
         $dbName = $project->getAttribute('database', '');
         if (!empty($dbName)) {
             $projectDB = $register->get('dbPool')->getDBFromPool($dbName);
@@ -319,8 +320,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
+                        
                         [$database, $returnDatabase] = getDatabase($register, "_{$projectId}");
-
                         $user = $database->getDocument('users', $userId);
 
                         $roles = Auth::getRoles($user);
@@ -391,7 +392,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         /*
          *  Project Check
          */
-        var_dump($project);
+        // var_dump($project);
         if (empty($project->getId())) {
             throw new Exception('Missing or unknown project ID', 1008);
         }
