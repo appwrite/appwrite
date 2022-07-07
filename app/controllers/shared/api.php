@@ -165,7 +165,7 @@ App::init(function (App $utopia, Request $request, Document $project) {
     }
 }, ['utopia', 'request', 'project'], 'auth');
 
-App::shutdown(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, string $cacheKey, string $cachePath) {
+App::shutdown(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) {
 
     if (!empty($events->getEvent())) {
         if (empty($events->getPayload())) {
@@ -250,4 +250,4 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
             ->setParam('networkResponseSize', $response->getSize())
             ->submit();
     }
-}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode', 'dbForProject', 'cacheKey', 'cachePath'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode', 'dbForProject'], 'api');
