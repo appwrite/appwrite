@@ -122,7 +122,6 @@ App::post('/v1/storage/buckets')
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
             $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
-
         } catch (Duplicate $th) {
             throw new Exception('Bucket already exists', 409, Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }
@@ -611,6 +610,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         '$id' => $fileId,
                         '$read' => $read,
                         '$write' => $write,
+                        'dateCreated' => \time(),
                         'bucketId' => $bucket->getId(),
                         'name' => $fileName,
                         'path' => $path,
@@ -801,7 +801,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->alias('/v1/storage/files/:fileId/preview', ['bucketId' => 'default'])
     ->desc('Get File Preview')
-    ->groups(['api', 'storage'])
+    ->groups(['api', 'storage', 'cache'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
@@ -907,6 +907,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())); // Limit file number or size
         $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
+
         if (empty($output)) {
             // when file extension is not provided and the mime type is not one of our supported outputs
             // we fallback to `jpg` output format
@@ -914,18 +915,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         if ($data) {
-            $fileCache = $dbForProject->getDocument('cache', $key);
-
-            if ($fileCache->isEmpty()) {
-                Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
-                    '$id' => $key,
-                    'accessedAt' => time(),
-                    'path' => 'app-' . $project->getId()
-                ])));
-            } else {
-                $fileCache->setAttribute('accessedAt', time());
-                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $fileCache->getId(), $fileCache));
-            }
+            App::setResource('cacheKey', fn () => $key);
+            App::setResource('cachePath', fn () => 'app-' . $project->getId());
 
             return $response
                 ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])

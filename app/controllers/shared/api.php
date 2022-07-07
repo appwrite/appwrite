@@ -165,7 +165,7 @@ App::init(function (App $utopia, Request $request, Document $project) {
     }
 }, ['utopia', 'request', 'project'], 'auth');
 
-App::shutdown(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) {
+App::shutdown(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, string $cacheKey, string $cachePath) {
 
     if (!empty($events->getEvent())) {
         if (empty($events->getPayload())) {
@@ -237,7 +237,26 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
         $database->trigger();
     }
 
+
     $route = $utopia->match($request);
+    $groups = $route->getGroups();
+    if (in_array('cache', $groups)) {
+        if (!empty($cacheKey) && !empty($cachePath)) {
+            $cacheLog = $dbForProject->getDocument('cache', $cacheKey);
+            if ($cacheLog->isEmpty()) {
+                Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
+                  '$id' => $cacheKey,
+                  'accessedAt' => time(),
+                  'path' => $cachePath
+              ])));
+            } else {
+                $cacheLog->setAttribute('accessedAt', time());
+                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+            }
+        }
+    }
+
+
     if (
         App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
         && $project->getId()
@@ -249,4 +268,4 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
             ->setParam('networkResponseSize', $response->getSize())
             ->submit();
     }
-}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode', 'dbForProject'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode', 'dbForProject', 'cacheKey', 'cachePath'], 'api');

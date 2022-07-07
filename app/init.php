@@ -86,8 +86,8 @@ const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
-const APP_CACHE_BUSTER = 400;
-const APP_VERSION_STABLE = '0.15.0';
+const APP_CACHE_BUSTER = 402;
+const APP_VERSION_STABLE = '0.15.2';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -96,7 +96,6 @@ const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
 const APP_STORAGE_UPLOADS = '/storage/uploads';
-const APP_STORAGE_VIDEO = '/storage/video';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -164,32 +163,6 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 /*
  * ENV vars
  */
-Config::load('renditions', __DIR__ . '/config/renditions.php');
-Config::load('events', __DIR__ . '/config/events.php');
-Config::load('auth', __DIR__ . '/config/auth.php');
-Config::load('errors', __DIR__ . '/config/errors.php');
-Config::load('providers', __DIR__ . '/config/providers.php');
-Config::load('platforms', __DIR__ . '/config/platforms.php');
-Config::load('collections', __DIR__ . '/config/collections.php');
-Config::load('runtimes', __DIR__ . '/config/runtimes.php');
-Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
-Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
-Config::load('services', __DIR__ . '/config/services.php');  // List of services
-Config::load('variables', __DIR__ . '/config/variables.php');  // List of env variables
-Config::load('avatar-browsers', __DIR__ . '/config/avatars/browsers.php');
-Config::load('avatar-credit-cards', __DIR__ . '/config/avatars/credit-cards.php');
-Config::load('avatar-flags', __DIR__ . '/config/avatars/flags.php');
-Config::load('locale-codes', __DIR__ . '/config/locale/codes.php');
-Config::load('locale-currencies', __DIR__ . '/config/locale/currencies.php');
-Config::load('locale-eu', __DIR__ . '/config/locale/eu.php');
-Config::load('locale-languages', __DIR__ . '/config/locale/languages.php');
-Config::load('locale-phones', __DIR__ . '/config/locale/phones.php');
-Config::load('locale-countries', __DIR__ . '/config/locale/countries.php');
-Config::load('locale-continents', __DIR__ . '/config/locale/continents.php');
-Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
-Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
-Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
-Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
 Config::load('errors', __DIR__ . '/config/errors.php');
