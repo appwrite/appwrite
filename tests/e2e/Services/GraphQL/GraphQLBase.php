@@ -47,27 +47,6 @@ trait GraphQLBase
     public static string $UPDATE_CUSTOM_ENTITY = 'update_custom_entity';
     public static string $DELETE_CUSTOM_ENTITY = 'delete_custom_entity';
 
-    // Localization
-    public static string $GET_LOCALE = 'get_locale';
-    public static string $LIST_COUNTRIES = 'list_countries';
-    public static string $LIST_EU_COUNTRIES = 'list_eu_countries';
-    public static string $LIST_COUNTRY_PHONE_CODES = 'list_country_phone_codes';
-    public static string $LIST_CONTINENTS = 'list_continents';
-    public static string $LIST_CURRENCIES = 'list_currencies';
-    public static string $LIST_LANGUAGES = 'list_languages';
-
-    // Avatars
-    public static string $GET_CREDIT_CARD_ICON = 'get_credit_card_icon';
-    public static string $GET_BROWSER_ICON = 'get_browser_icon';
-    public static string $GET_COUNTRY_FLAG = 'get_country_flag';
-    public static string $GET_IMAGE_FROM_URL = 'get_image_from_url';
-    public static string $GET_FAVICON = 'get_favicon';
-    public static string $GET_QRCODE = 'get_qrcode';
-    public static string $GET_USER_INITIALS = 'get_user_initials';
-
-    // Projects
-    public static string $CREATE_API_KEY = 'create_key';
-
     // Account
     public static string $CREATE_ACCOUNT = 'create_account';
     public static string $CREATE_ACCOUNT_SESSION = 'create_account_session';
@@ -94,6 +73,7 @@ trait GraphQLBase
     public static string $UPDATE_PHONE_VERIFICATION = 'confirm_phone_verification';
     public static string $DELETE_ACCOUNT_SESSION = 'delete_account_session';
     public static string $DELETE_ACCOUNT_SESSIONS = 'delete_account_sessions';
+
     // Users
     public static string $CREATE_USER = 'create_user';
     public static string $GET_USER = 'get_user';
@@ -113,6 +93,7 @@ trait GraphQLBase
     public static string $DELETE_USER_SESSIONS = 'delete_user_sessions';
     public static string $DELETE_USER_SESSION = 'delete_user_session';
     public static string $DELETE_USER = 'delete_user';
+
     // Teams
     public static string $GET_TEAM = 'get_team';
     public static string $GET_TEAMS = 'list_teams';
@@ -138,6 +119,7 @@ trait GraphQLBase
     public static string $UPDATE_FUNCTION_DEPLOYMENT = 'update_function_deployment';
     public static string $DELETE_FUNCTION = 'delete_function';
     public static string $DELETE_DEPLOYMENT = 'delete_deployment';
+
     // Executions
     public static string $GET_EXECUTIONS = 'list_executions';
     public static string $GET_EXECUTION = 'get_execution';
@@ -151,6 +133,7 @@ trait GraphQLBase
     public static string $GET_BUCKET = 'get_bucket';
     public static string $UPDATE_BUCKET = 'update_bucket';
     public static string $DELETE_BUCKET = 'delete_bucket';
+
     // Files
     public static string $CREATE_FILE = 'create_file';
     public static string $GET_FILES = 'list_files';
@@ -173,6 +156,23 @@ trait GraphQLBase
     public static string $GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
     public static string $GET_ANITVIRUS_HEALTH = 'get_antivirus_health';
 
+    // Localization
+    public static string $GET_LOCALE = 'get_locale';
+    public static string $LIST_COUNTRIES = 'list_countries';
+    public static string $LIST_EU_COUNTRIES = 'list_eu_countries';
+    public static string $LIST_COUNTRY_PHONE_CODES = 'list_country_phone_codes';
+    public static string $LIST_CONTINENTS = 'list_continents';
+    public static string $LIST_CURRENCIES = 'list_currencies';
+    public static string $LIST_LANGUAGES = 'list_languages';
+
+    // Avatars
+    public static string $GET_CREDIT_CARD_ICON = 'get_credit_card_icon';
+    public static string $GET_BROWSER_ICON = 'get_browser_icon';
+    public static string $GET_COUNTRY_FLAG = 'get_country_flag';
+    public static string $GET_IMAGE_FROM_URL = 'get_image_from_url';
+    public static string $GET_FAVICON = 'get_favicon';
+    public static string $GET_QRCODE = 'get_qrcode';
+    public static string $GET_USER_INITIALS = 'get_user_initials';
 
     public function getQuery(string $name): string
     {
@@ -740,15 +740,6 @@ trait GraphQLBase
             case self::$GET_USER_INITIALS:
                 return 'query getUserInitials($name: String!) {
                     avatarsGetInitials(name: $name)
-                }';
-            case self::$CREATE_API_KEY:
-                return 'mutation createKey($projectId: String!, $name: String!, $scopes: [String!]!){
-                    projectsCreateKey(projectId: $projectId, name: $name, scopes: $scopes) {
-                        _id
-                        name
-                        scopes
-                        secret
-                    }
                 }';
             case self::$GET_ACCOUNT:
                 return 'query getAccount {

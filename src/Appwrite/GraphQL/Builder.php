@@ -715,18 +715,18 @@ class Builder
 
         self::reassign($gqlResponse, $apiResponse);
 
-        $result = $apiResponse->getPayload();
+        $payload = $apiResponse->getPayload();
 
-        if ($result['$id']) {
-            $result['_id'] = $result['$id'];
+        if (\array_key_exists('$id', $payload)) {
+            $payload['_id'] = $payload['$id'];
         }
 
         if ($apiResponse->getStatusCode() < 200 || $apiResponse->getStatusCode() >= 400) {
-            $reject(new GQLException($result['message'], $apiResponse->getStatusCode()));
+            $reject(new GQLException($payload['message'], $apiResponse->getStatusCode()));
             return;
         }
 
-        $resolve($result);
+        $resolve($payload);
     }
 
     /**
