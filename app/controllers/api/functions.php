@@ -73,8 +73,8 @@ App::post('/v1/functions')
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
-            'schedulePrevious' => 0,
-            'scheduleNext' => 0,
+            'schedulePrevious' => null,
+            'scheduleNext' => null,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ]));
@@ -308,8 +308,8 @@ App::put('/v1/functions/:functionId')
         }
 
         $original = $function->getAttribute('schedule', '');
-        $cron = (!empty($function->getAttribute('deployment', null)) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (!empty($function->getAttribute('deployment', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+        $cron = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
+        $next = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? Database::dateFormat($cron->getNextRunDate()) : null;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
@@ -317,7 +317,7 @@ App::put('/v1/functions/:functionId')
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
-            'scheduleNext' => (int)$next,
+            'scheduleNext' => $next,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
@@ -381,11 +381,11 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
 
         $schedule = $function->getAttribute('schedule', '');
         $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? Database::dateFormat($cron->getNextRunDate()) : null;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'deployment' => $deployment->getId(),
-            'scheduleNext' => (int)$next,
+            'scheduleNext' => $next,
         ])));
 
         if ($next) { // Init first schedule

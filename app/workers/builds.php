@@ -6,6 +6,7 @@ use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Cron\CronExpression;
 use Executor\Executor;
+use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -184,8 +185,8 @@ class BuildsV1 extends Worker
             /** Update function schedule */
             $schedule = $function->getAttribute('schedule', '');
             $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
-            $function->setAttribute('scheduleNext', (int)$next);
+            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? Database::dateFormat($cron->getNextRunDate()) : null;
+            $function->setAttribute('scheduleNext', $next);
             $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
         } catch (\Throwable $th) {
             $endtime = \time();

@@ -147,21 +147,17 @@ class FunctionsV1 extends Worker
                 }
 
                 $cron = new CronExpression($function->getAttribute('schedule'));
-                $next = (int) $cron->getNextRunDate()->format('U');
+                $next = Database::dateFormat($cron->getNextRunDate());
 
                 $function
                     ->setAttribute('scheduleNext', $next)
-                    ->setAttribute('schedulePrevious', \time());
+                    ->setAttribute('schedulePrevious', Database::getCurrentDateTime());
 
                 $function = $database->updateDocument(
                     'functions',
                     $function->getId(),
-                    $function->setAttribute('scheduleNext', (int) $next)
+                    $function->setAttribute('scheduleNext', $next)
                 );
-
-                if ($function === false) {
-                    throw new Exception('Function update failed.');
-                }
 
                 $reschedule = new Func();
                 $reschedule
