@@ -2406,7 +2406,8 @@ trait DatabasesBase
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
             'data' => [
                 'title' => 'Again Updated Date Test',
-                '$createdAt' => 1657271810 // Try to update it, should not work
+                '$createdAt' => 1657271810, // Try to update it, should not work
+                '$updatedAt' => 1657271810 // Try to update it, should not work
             ]
         ]);
 
@@ -2414,6 +2415,7 @@ trait DatabasesBase
         $this->assertEquals($document['body']['$createdAt'], $createdAt);
         $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
         $this->assertNotEquals($document['body']['$updatedAt'], $updatedAtSecond);
+        $this->assertNotEquals($document['body']['$updatedAt'], 1657271810);
 
         return $data;
     }
