@@ -5,7 +5,7 @@ namespace Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2;
 
 // Reference Material
-// [DOCS FROM OAUTH PROVIDER]
+// https://disqus.com/api/docs/auth/
 
 class Disqus extends OAuth2
 {
