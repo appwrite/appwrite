@@ -5,10 +5,10 @@
 
 x-logging: &x-logging
   logging:
-    driver: 'json-file'
+    driver: "json-file"
     options:
-      max-file: '5'
-      max-size: '10m'
+      max-file: "5"
+      max-size: "10m"
 
 x-env-storage: &x-env-storage |-
   _APP_STORAGE_DEVICE
@@ -34,7 +34,7 @@ x-env-storage: &x-env-storage |-
   _APP_STORAGE_WASABI_REGION
   _APP_STORAGE_WASABI_BUCKET
 
-version: '3'
+version: "3"
 
 services:
   traefik:
@@ -76,7 +76,7 @@ services:
         - DEBUG=false
         - TESTING=true
         - VERSION=dev
-    ports: 
+    ports:
       - 9501:80
     networks:
       - appwrite
@@ -113,7 +113,7 @@ services:
       - mariadb
       - redis
       # - clamav
-    entrypoint: 
+    entrypoint:
       - php
       - -e
       - app/http.php
@@ -165,8 +165,8 @@ services:
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
+      - _APP_FUNCTIONS_PROXY_SECRET
+      - _APP_FUNCTIONS_PROXY_HOST
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_STATSD_HOST
@@ -185,7 +185,7 @@ services:
     build:
       context: .
     restart: unless-stopped
-    ports: 
+    ports:
       - 9505:80
     labels:
       - "traefik.enable=true"
@@ -293,7 +293,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
@@ -316,8 +316,8 @@ services:
       - *x-env-storage
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
+      - _APP_FUNCTIONS_PROXY_SECRET
+      - _APP_FUNCTIONS_PROXY_HOST
 
   appwrite-worker-databases:
     entrypoint: worker-databases
@@ -327,7 +327,7 @@ services:
       context: .
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       # - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
@@ -357,7 +357,7 @@ services:
       context: .
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -366,8 +366,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
+      - _APP_FUNCTIONS_PROXY_SECRET
+      - _APP_FUNCTIONS_PROXY_HOST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -391,7 +391,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
@@ -465,8 +465,8 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
+      - _APP_FUNCTIONS_PROXY_SECRET
+      - _APP_FUNCTIONS_PROXY_HOST
       - _APP_USAGE_STATS
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
@@ -478,7 +478,7 @@ services:
     stop_signal: SIGINT
     build:
       context: .
-      args: 
+      args:
         - DEBUG=false
         - TESTING=true
         - VERSION=dev
@@ -487,6 +487,53 @@ services:
       runtimes:
     ports:
       - 9519:80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
+      - /tmp:/tmp:rw
+    depends_on:
+      - redis
+      - mariadb
+      - appwrite
+      - appwrite-functions-proxy
+    environment:
+      - _APP_ENV
+      - _APP_VERSION
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_FUNCTIONS_BUILD_TIMEOUT
+      - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_RUNTIMES
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_FUNCTIONS_INACTIVE_THRESHOLD
+      - _APP_EXECUTOR_SECRET
+      - OPEN_RUNTIMES_NETWORK
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
+      - *x-env-storage
+      - DOCKERHUB_PULL_USERNAME
+      - DOCKERHUB_PULL_PASSWORD
+
+  appwrite-executor2:
+    container_name: appwrite-executor2
+    <<: *x-logging
+    entrypoint: executor
+    stop_signal: SIGINT
+    build:
+      context: .
+      args:
+        - DEBUG=false
+        - TESTING=true
+        - VERSION=dev
+    networks:
+      appwrite:
+      runtimes:
+    ports:
+      - 9529:80
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./app:/usr/src/code/app
@@ -676,7 +723,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
+    command: "mysqld --innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
   # smtp:
@@ -690,7 +737,7 @@ services:
   #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
   #     - SMARTHOST_HOST=smtp
   #     - SMARTHOST_PORT=587
-  
+
   redis:
     image: redis:6.2-alpine
     <<: *x-logging
@@ -730,12 +777,12 @@ services:
     <<: *x-logging
     networks:
       - appwrite
-    environment: 
+    environment:
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
 
   # Dev Tools Start ------------------------------------------------------------------------------------------
-  # 
+  #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
   #
   # Here is a description of the different tools and why are we using them:
@@ -752,7 +799,7 @@ services:
     container_name: appwrite-mailcatcher
     <<: *x-logging
     ports:
-      - '9503:1080'
+      - "9503:1080"
     networks:
       - appwrite
 
@@ -761,7 +808,7 @@ services:
     container_name: appwrite-requestcatcher
     <<: *x-logging
     ports:
-      - '9504:5000'
+      - "9504:5000"
     networks:
       - appwrite
 
@@ -823,7 +870,7 @@ services:
   #     - './debug:/tmp'
   #   ports:
   #     - '3001:80'
-  
+
   # Dev Tools End   ------------------------------------------------------------------------------------------
 
 networks:

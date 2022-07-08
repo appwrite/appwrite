@@ -924,7 +924,7 @@ App::post('/v1/functions/:functionId/executions')
         ]);
 
         /** Execute function */
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(App::getEnv('_APP_FUNCTIONS_PROXY_HOST'));
         $executionResponse = [];
         try {
             $executionResponse = $executor->createExecution(

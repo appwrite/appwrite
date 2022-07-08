@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   traefik:
@@ -27,7 +27,7 @@ services:
     networks:
       - gateway
       - appwrite
-  
+
   appwrite:
     container_name: appwrite
     build:
@@ -36,7 +36,7 @@ services:
         - TESTING=true
         - VERSION=dev
     restart: unless-stopped
-    ports: 
+    ports:
       - 9501:80
     networks:
       - appwrite
@@ -88,7 +88,7 @@ services:
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
-      - _APP_EXECUTOR_HOST
+      - _APP_FUNCTIONS_PROXY_HOST
 
   appwrite-worker-usage:
     entrypoint: worker-usage
@@ -182,7 +182,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
     environment:
@@ -194,7 +194,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_EXECUTOR_HOST
+      - _APP_FUNCTIONS_PROXY_HOST
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -207,7 +207,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
@@ -249,7 +249,7 @@ services:
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
       - _APP_FUNCTIONS_MEMORY_SWAP
-      - _APP_EXECUTOR_HOST
+      - _APP_FUNCTIONS_PROXY_HOST
 
   appwrite-worker-mails:
     entrypoint: worker-mails
@@ -269,7 +269,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
-  
+
   appwrite-worker-builds:
     entrypoint: worker-builds
     container_name: appwrite-worker-builds
@@ -277,7 +277,7 @@ services:
       context: .
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -296,8 +296,8 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
+      - _APP_FUNCTIONS_PROXY_SECRET
+      - _APP_FUNCTIONS_PROXY_HOST
 
   appwrite-schedule:
     entrypoint: schedule
@@ -329,14 +329,14 @@ services:
       - MYSQL_DATABASE=appwrite
       - MYSQL_USER=user
       - MYSQL_PASSWORD=password
-    command: 'mysqld --innodb-flush-method=fsync'
+    command: "mysqld --innodb-flush-method=fsync"
 
   maildev:
     image: djfarrelly/maildev
     container_name: appwrite-maildev
     restart: unless-stopped
     ports:
-      - '1080:80'
+      - "1080:80"
     networks:
       - appwrite
 

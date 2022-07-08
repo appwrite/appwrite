@@ -29,23 +29,23 @@ $redisPool = new RedisPool(
     64
 );
 
-function markDown(Cache $cache, string $executorId, string $error) {
+function markOffline(Cache $cache, string $executorId, string $error) {
     $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
 
-    $cache->save('executors-' . $executorId, [ 'state' => 'down' ]);
+    $cache->save('executors-' . $executorId, [ 'state' => 'offline' ]);
 
-    if(!$data || $data['state'] === 'up') {
+    if(!$data || $data['state'] === 'online') {
         Console::warning('Executor "' . $executorId . '" went down! Message:');
         Console::warning($error);
     }
 }
 
-function markUp(cache $cache, string $executorId) {
+function markOnline(cache $cache, string $executorId) {
     $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
 
-    $cache->save('executors-' . $executorId, [ 'state' => 'up' ]);
+    $cache->save('executors-' . $executorId, [ 'state' => 'online' ]);
 
-    if(!$data || $data['state'] === 'down') {
+    if(!$data || $data['state'] === 'offline') {
         Console::success('Executor "' . $executorId . '" went online.');
     }
 }
@@ -83,9 +83,9 @@ function fetchExecutorsState(RedisPool $redisPool)
                 \curl_close($ch);
 
                 if ($statusCode === 200) {
-                    markUp($cache, $id);
+                    markOnline($cache, $id);
                 } else {
-                    markDown($cache, $id, $error);
+                    markOffline($cache, $id, $error);
                 }
             } catch (\Exception $err) {
                 throw $err;
@@ -97,6 +97,11 @@ function fetchExecutorsState(RedisPool $redisPool)
 };
 
 Timer::tick(30000, fn (int $timerId, array $params) => fetchExecutorsState($params[0]), [$redisPool]);
+
+Console::success("Waiting for executors to start...");
+
+\sleep(5); // Wait a little so executors can start
+
 fetchExecutorsState($redisPool);
 
 Console::success("Functions proxy is ready.");

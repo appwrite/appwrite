@@ -710,7 +710,7 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTOR_SECRET',
-                'description' => 'The secret key used by Appwrite to communicate with the function executor. Make sure to change this!',
+                'description' => 'The secret key used by Appwrite functions proxy to communicate with the function executor. Make sure to change this!',
                 'introduction' => '0.13.0',
                 'default' => 'your-secret-key',
                 'required' => false,
@@ -718,7 +718,7 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_EXECUTOR_HOST',
+                'name' => '_APP_FUNCTIONS_PROXY_HOST',
                 'description' => 'The host used by Appwrite to communicate with the function executor!',
                 'introduction' => '0.13.0',
                 'default' => 'http://appwrite-executor/v1',
@@ -785,6 +785,15 @@ return [
                 'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_EXECUTORS',
+                'description' => 'The host used by Appwrite to communicate with the functions proxy.',
+                'introduction' => '0.16.0',
+                'default' => 'main=http://appwrite-executor/v1',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
