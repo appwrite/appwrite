@@ -30,26 +30,26 @@ class Notion extends OAuth2
      * @var array
      */
     protected $scopes = [
-      "address_r",
-      "address_w",
-      "billing_r",
-      "cart_r",
-      "cart_w",
-      "email_r",
-      "favorites_r",
-      "favorites_w",
-      "feedback_r",
-      "listings_d",
-      "listings_r",
-      "listings_w",
-      "profile_r",
-      "profile_w",
-      "recommend_r",
-      "recommend_w",
-      "shops_r",
-      "shops_w",
-      "transactions_r",
-      "transactions_w",    
+        "address_r",
+        "address_w",
+        "billing_r",
+        "cart_r",
+        "cart_w",
+        "email_r",
+        "favorites_r",
+        "favorites_w",
+        "feedback_r",
+        "listings_d",
+        "listings_r",
+        "listings_w",
+        "profile_r",
+        "profile_w",
+        "recommend_r",
+        "recommend_w",
+        "shops_r",
+        "shops_w",
+        "transactions_r",
+        "transactions_w",    
     ];
 
     private $pkce = '';
@@ -180,17 +180,17 @@ class Notion extends OAuth2
      */
     protected function getUser(string $accessToken)
     {
-      if(!empty($this->user)) {
-        return $this->user;
-      }
+        if(!empty($this->user)) {
+          return $this->user;
+        }
 
-      $headers = ['Authorization: Bearer ' . $accessToken];
+        $headers = ['Authorization: Bearer ' . $accessToken];
       
-      $this->user = \json_decode($this->request(
-        'GET',
-         'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
-      ), true);
+        $this->user = \json_decode($this->request(
+          'GET',
+          'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
+        ), true);
 
-      return $this->user;
+        return $this->user;
     }
 }
