@@ -30,7 +30,7 @@ class Disqus extends OAuth2
                 'client_id' => $this->appID,
                 'state' => \json_encode($this->state),
                 'redirect_uri' => $this->callback,
-                'scope' => \implode(' ', $this->getScopes())
+                'scope' => \implode(',', $this->getScopes())
             ]);
 
         return $url;
@@ -82,7 +82,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $userId = $user["id"];
+        $userId = $user["response"]["id"];
 
         return $userId;
     }
@@ -91,7 +91,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $userEmail = $user["email"];
+        $userEmail = $user["response"]["email"];
 
         return $userEmail;
     }
@@ -100,7 +100,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $isVerified = "[USER VERIFICATION STATUS]";
+        $isVerified = $user["response"]["isAnonymous"];
 
         return $isVerified;
     }
@@ -109,7 +109,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $username = $user["username"] ?? '';
+        $username = $user["response"]["username"] ?? '';
 
         return $username;
     }
@@ -119,9 +119,9 @@ class Disqus extends OAuth2
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                $this->endpoint . 'users/details.json?' . \http_build_query([
+                $this->endpoint . '3.0/users/details.json?' . \http_build_query([
                     'access_token' => $accessToken,
-                    'api_key' => $this->appId,
+                    'api_key' => $this->appID,
                     'api_secret' => $this->appSecret
                 ]),
             );
