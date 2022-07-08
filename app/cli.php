@@ -8,6 +8,8 @@ use Utopia\Database\Validator\Authorization;
 
 Authorization::disable();
 
-Tasks::init();
-Tasks::getCli()->run();
+$tasks = new Tasks();
+$tasks
+    ->init()
+    ->run();
 

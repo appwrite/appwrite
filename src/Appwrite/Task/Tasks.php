@@ -6,19 +6,19 @@ use Appwrite\Task\Usage;
 use Appwrite\Task\Version;
 
 class Tasks {
-    protected static CLI $cli;
+    protected CLI $cli;
 
-
-    public static function init(): void
+    public function init(): Tasks
     {
-        self::$cli = new CLI();
-        self::$cli->addTask(Vars::getTask());
-        self::$cli->addTask(Usage::getTask());
-        self::$cli->addTask(Version::getTask());
+        $this->cli = new CLI();
+        $this->cli->addTask(Vars::getTask());
+        $this->cli->addTask(Usage::getTask());
+        $this->cli->addTask(Version::getTask());
+        return $this;
     }
 
-    public static function getCli(): CLI
+    public function run(): CLI
     {
-        return self::$cli;
+        return $this->cli->run();
     }
 }
