@@ -148,13 +148,9 @@ class Notion extends OAuth2
      */
     public function getUserID(string $accessToken):string
     {
-        $response = $this->getUser($accessToken);
+        $components = explode('.', $accessToken);
 
-        if (isset($response['bot']['owner']['user']['id'])) {
-            return $response['bot']['owner']['user']['id'];
-        }
-
-        return '';
+        return $components[0];
     }
 
     /**
@@ -164,7 +160,7 @@ class Notion extends OAuth2
      */
     public function getUserEmail(string $accessToken):string
     {
-        return '';
+        return $this->getUser($accessToken)['primary_email'];
     }
 
     /**
@@ -174,7 +170,7 @@ class Notion extends OAuth2
      */
     public function getUserName(string $accessToken):string
     {
-        return '';
+        return $this->getUser($accessToken)['login_name'];
     }
 
     /**
@@ -184,6 +180,17 @@ class Notion extends OAuth2
      */
     protected function getUser(string $accessToken)
     {
+      if(!empty($this->user)) {
         return $this->user;
+      }
+
+      $headers = ['Authorization: Bearer ' . $accessToken];
+      
+      $this->user = \json_decode($this->request(
+        'GET',
+         'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
+      ), true);
+
+      return $this->user;
     }
 }
