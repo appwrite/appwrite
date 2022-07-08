@@ -43,7 +43,7 @@
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.8.*",
         "utopia-php/cache": "0.6.*",
-        "utopia-php/cli": "0.12.*",
+        "utopia-php/cli": "dev-feat-allow-adding-task as 0.12.0",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.18.*",
         "utopia-php/locale": "0.4.*",

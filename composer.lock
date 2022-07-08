@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dedc6a6328b4fdc5dfbd556a08534403",
+    "content-hash": "4bd2cfb69f671c01e68b67221f8664fd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1947,16 +1947,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.12.0",
+            "version": "dev-feat-allow-adding-task",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "6d164b752efeb1ca089e3a517bc274d8b383474b"
+                "reference": "1ecc371b018f6e65d7d70b65f1c8b7a74c9ebcb2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/6d164b752efeb1ca089e3a517bc274d8b383474b",
-                "reference": "6d164b752efeb1ca089e3a517bc274d8b383474b",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/1ecc371b018f6e65d7d70b65f1c8b7a74c9ebcb2",
+                "reference": "1ecc371b018f6e65d7d70b65f1c8b7a74c9ebcb2",
                 "shasum": ""
             },
             "require": {
@@ -1994,9 +1994,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.12.0"
+                "source": "https://github.com/utopia-php/cli/tree/feat-allow-adding-task"
             },
-            "time": "2022-02-18T22:10:41+00:00"
+            "time": "2022-07-08T01:44:31+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -5346,9 +5346,18 @@
             "time": "2022-05-17T05:48:52+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/cli",
+            "version": "dev-feat-allow-adding-task",
+            "alias": "0.12.0",
+            "alias_normalized": "0.12.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/cli": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5370,5 +5379,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
