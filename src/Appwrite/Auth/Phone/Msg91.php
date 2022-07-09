@@ -7,7 +7,7 @@ use Appwrite\Auth\Phone;
 // Reference Material
 // https://docs.msg91.com/p/tf9GTextN/e/Irz7-x1PK/MSG91
 
-class Msg91Flow extends Phone
+class Msg91 extends Phone
 {
     /**
      * @var string
@@ -30,7 +30,7 @@ class Msg91Flow extends Phone
         $to = ltrim($to, '+');
         $this->request(
             method: 'POST',
-            url: $this->endpoint . '/messages',
+            url: $this->endpoint,
             payload: \http_build_query([
                 'sender' => $this->user,
                 'otp' => $message,
