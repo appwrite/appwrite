@@ -68,10 +68,11 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
 
     $data = $image->output($output, $quality);
 
+    $cache->save($key, $data);
+
     App::setResource('cacheKey', fn () => $key);
     App::setResource('cachePath', fn () => 'app-0');
 
-    $cache->save($key, $data);
 
     $response
         ->setContentType('image/png')
@@ -194,10 +195,10 @@ App::get('/v1/avatars/image')
 
         $data = $image->output($output, $quality);
 
+        $cache->save($key, $data);
+
         App::setResource('cacheKey', fn () => $key);
         App::setResource('cachePath', fn () => 'app-0');
-
-        $cache->save($key, $data);
 
         $response
             ->setContentType('image/png')
@@ -327,10 +328,10 @@ App::get('/v1/avatars/favicon')
                 throw new Exception('Favicon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
             }
 
+            $cache->save($key, $data);
+
             App::setResource('cacheKey', fn () => $key);
             App::setResource('cachePath', fn () => 'app-0');
-
-            $cache->save($key, $data);
 
             return $response
                 ->setContentType('image/x-icon')
@@ -353,10 +354,10 @@ App::get('/v1/avatars/favicon')
 
         $data = $image->output($output, $quality);
 
+        $cache->save($key, $data);
+
         App::setResource('cacheKey', fn () => $key);
         App::setResource('cachePath', fn () => 'app-0');
-
-        $cache->save($key, $data);
 
         $response
             ->setContentType('image/png')
