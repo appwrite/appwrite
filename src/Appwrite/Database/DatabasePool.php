@@ -9,6 +9,12 @@ use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\PDOProxy;
 use Utopia\App;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 
 class DatabasePool {
 
@@ -24,10 +30,12 @@ class DatabasePool {
      * 
      * Array to store mappings from database names to DSNs
      */
-    protected array $databases = [];
+    protected array $dsns = [];
 
     /**
      * @var string
+     * 
+     * The name of the console Database
      */
     protected string $consoleDB = '';
 
@@ -49,10 +57,10 @@ class DatabasePool {
         }
 
         $this->consoleDB = array_key_first($consoleDB);
-        $this->databases = array_merge($consoleDB, $projectDB);
+        $this->dsns = array_merge($consoleDB, $projectDB);
 
-        /** Create PDO pool instances for all the databases */
-        foreach ($this->databases as $name => $dsn) {
+        /** Create PDO pool instances for all the dsns */
+        foreach ($this->dsns as $name => $dsn) {
             $dsn = new DSN($dsn);
             $pool = new PDOPool(
                 (new PDOConfig())
@@ -67,21 +75,20 @@ class DatabasePool {
                 ]),
                 64
             );
-    
+
             $this->pools[$name] = $pool;
         }
     }
 
     /**
-     * Get a single PDO instance
+     * Get a PDO instance by database name
      * 
      * @param string $name
-     * 
      * @return ?PDO
      */
-    public function getDB(string $name): ?PDO
+    private function getPDO(string $name): ?PDO
     {
-        $dsn = $this->databases[$name] ?? throw new Exception("Database with name : $name not found.", 500);
+        $dsn = $this->dsns[$name] ?? throw new Exception("Database with name : $name not found.", 500);
 
         $dsn =  new DSN($dsn);
         $dbHost = $dsn->getHost();
@@ -102,16 +109,147 @@ class DatabasePool {
     }
 
     /**
-     * Get a PDO instance from the list of available database pools . To be used in co-routines
+     * @param string $projectID
      * 
-     * @param string $name
+     * @return string 
      * 
-     * @return ?PDOProxy
+     * Function to return the name of the database from the project ID
      */
-    public function getDBFromPool(string $name): ?PDOProxy
+    private function getName(string $projectID, \Redis $redis): string
     {
+        if ($projectID === 'console') {
+            return $this->consoleDB;
+        }
+
+        $pdo = $this->getPDO($this->consoleDB);
+        $cache = new Cache(new RedisCache($redis));
+        
+        $database = new Database(new MariaDB($pdo), $cache);
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setNamespace("_console");
+        
+        $project = Authorization::skip(fn() => $database->getDocument('projects', $projectID));
+        $database = $project->getAttribute('database', '');
+        
+        return $database;
+    }
+
+    /**
+     * Get a single PDO instance for a project
+     * 
+     * @param string $projectId
+     * 
+     * @return ?Database
+     */
+    public function getDB(string $projectID, \Redis $cache): ?Database
+    {
+        /** Get DB name from the console database */
+        $name = $this->getName($projectID, $cache);
+
+        if (empty($name)) {
+            throw new Exception("Database with name : $name not found.", 500);
+        }
+
+        /** Get a PDO instance using the databse name */
+        $pdo = $this->getPDO($name);
+        $cache = new Cache(new RedisCache($cache));
+        $database = new Database(new MariaDB($pdo), $cache);
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setNamespace("_{$projectID}");
+
+        return $database;
+    }
+
+
+    // private function attemptConnection(PDO|PDOProxy $pdo, ?string $namespace, \Redis $cache): Database 
+    // {
+        
+    // }
+
+    /**
+     * Get a PDO instance from the list of available database pools . Meant to be used in co-routines
+     * 
+     * @param string $projectId
+     * 
+     * @return array
+     */
+    public function getDBFromPool(string $projectID, \Redis $redis): array
+    {
+        /** Get DB name from the console database */
+        $name = $this->getName($projectID, $redis);
         $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_PROJECT_DB in .env", 500);
-        return $pool->get();
+        
+        $namespace = "_$projectID";
+        $attempts = 0;
+        do {
+            try {
+                $attempts++;
+                $pdo = $pool->get();
+                $cache = new Cache(new RedisCache($redis));
+                $database = new Database(new MariaDB($pdo), $cache);
+                $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                $database->setNamespace($namespace);
+
+                // if (!$database->exists($database->getDefaultDatabase(), 'metadata')) {
+                //     throw new Exception('Collection not ready');
+                // }
+                break; // leave loop if successful
+            } catch (\Exception $e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
+                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                }
+                sleep(DATABASE_RECONNECT_SLEEP);
+            }
+        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
+
+        return [
+            $database,
+            function () use ($pdo, $name) {
+                $this->put($pdo, $name);
+            }
+        ];
+    }
+
+     /**
+     * Function to get a random PDO instance from the available database pools
+     * 
+     * @return array [PDO, string]
+     */
+    public function getAnyFromPool(\Redis $redis): array
+    {
+        $name = array_rand($this->pools);
+        $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_PROJECT_DB in .env", 500);
+
+        $attempts = 0;
+        do {
+            try {
+                $attempts++;
+                $pdo = $pool->get();
+                $cache = new Cache(new RedisCache($redis));
+                $database = new Database(new MariaDB($pdo), $cache);
+                $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+
+                // if (!$database->exists($database->getDefaultDatabase(), 'metadata')) {
+                //     throw new Exception('Collection not ready');
+                // }
+                break; // leave loop if successful
+            } catch (\Exception $e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
+                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                }
+                sleep(DATABASE_RECONNECT_SLEEP);
+            }
+        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
+
+        return [
+            $database,
+            function () use ($pdo, $name) {
+                $this->put($pdo, $name);
+            },
+            $name
+        ];
     }
 
     /**
@@ -131,79 +269,63 @@ class DatabasePool {
         $pool->put($db);
     }
 
-    /**
-     * Function to get a random PDO instance from the available database pools
-     * 
-     * @return array [PDO, string]
-     */
-    public function getAnyFromPool(): array
-    {
-        $key = array_rand($this->pools);
-        $pool = $this->getDBFromPool($key);
+    // /**
+    //  * Convenience methods for console DB
+    //  */
 
-        return [
-            'name' => $key, 
-            'db' => $pool
-        ];
-    }
+    // /**
+    //  * Function to get a single instace of the console DB
+    //  * 
+    //  * @return ?PDO
+    //  */
+    // public function getConsoleDB(): ?PDO
+    // {
+    //     if (empty($this->consoleDB)) {
+    //         throw new Exception('Console DB is not defined', 500);
+    //     };
 
-    /**
-     * Convenience methods for console DB
-     */
+    //     return $this->getDB($this->consoleDB);
+    // }
 
-    /**
-     * Function to get a single instace of the console DB
-     * 
-     * @return ?PDO
-     */
-    public function getConsoleDB(): ?PDO
-    {
-        if (empty($this->consoleDB)) {
-            throw new Exception('Console DB is not defined', 500);
-        };
+    // /**
+    //  * Function to get an instance of the console DB from the database pool
+    //  * 
+    //  * @return ?PDOProxy
+    //  */
+    // public function getConsoleDBFromPool(): ?PDOProxy
+    // {
+    //     if (empty($this->consoleDB)) {
+    //         throw new Exception("Console DB not set", 500);
+    //     }
 
-        return $this->getDB($this->consoleDB);
-    }
+    //     return $this->getDBFromPool($this->consoleDB);
+    // }
 
-    /**
-     * Function to get an instance of the console DB from the database pool
-     * 
-     * @return ?PDOProxy
-     */
-    public function getConsoleDBFromPool(): ?PDOProxy
-    {
-        if (empty($this->consoleDB)) {
-            throw new Exception("Console DB not set", 500);
-        }
+    // /**
+    //  * Return the console DB back to the console database pool
+    //  *
+    //  * @param PDOProxy $db
+    //  * 
+    //  * @return void
+    //  */
+    // public function putConsoleDB(PDOProxy $db): void
+    // {
+    //    $this->put($db, $this->consoleDB);
+    // }
 
-        return $this->getDBFromPool($this->consoleDB);
-    }
-
-    /**
-     * Return the console DB back to the console database pool
-     *
-     * @param PDOProxy $db
-     * 
-     * @return void
-     */
-    public function putConsoleDB(PDOProxy $db): void
-    {
-       $this->put($db, $this->consoleDB);
-    }
-
-    /**
-     * Function to set the name of the console database
-     * 
-     * @param string $consoleDB
-     * 
-     * @return void
-     */
-    public function setConsoleDB(string $consoleDB): void
-    {
-        if(!isset($this->pools[$consoleDB])) {
-            throw new Exception("Console DB with name : $consoleDB not found. Add it using ", 500);
-        }
+    // /**
+    //  * Function to set the name of the console database
+    //  * 
+    //  * @param string $consoleDB
+    //  * 
+    //  * @return void
+    //  */
+    // public function setConsoleDB(string $consoleDB): void
+    // {
+    //     if(!isset($this->pools[$consoleDB])) {
+    //         throw new Exception("Console DB with name : $consoleDB not found. Add it using ", 500);
+    //     }
         
-        $this->consoleDB = $consoleDB;
-    }
+    //     $this->consoleDB = $consoleDB;
+    // }
 }

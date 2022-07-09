@@ -58,30 +58,13 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function () use ($register, $app) {
-        // wait for database to be ready
-        $attempts = 0;
-        $max = 10;
-        $sleep = 1;
 
-        do {
-            try {
-                $attempts++;
-                $consoleDB = $register->get('dbPool')->getConsoleDBFromPool();
-                $redis = $register->get('redisPool')->get();
-                break; // leave the do-while if successful
-            } catch (\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= $max) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-                }
-                sleep($sleep);
-            }
-        } while ($attempts < $max);
-
-        App::setResource('consoleDB', fn() => $consoleDB);
+        $redis = $register->get('redisPool')->get();
         App::setResource('cache', fn() => $redis);
-
-        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+        
+        $dbPool = $register->get('dbPool');
+        [$dbForConsole, $returnDatabase] = $dbPool->getDBFromPool('console', $redis);
+        App::setResource('dbForConsole', fn() => $dbForConsole);
 
         Console::success('[Setup] - Server database init started...');
         $collections = Config::getParam('collections', []); /** @var array $collections */
@@ -207,6 +190,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         }
 
+        call_user_func($returnDatabase);
+
         Console::success('[Setup] - Server database init completed...');
     });
 
@@ -239,26 +224,18 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     $app = new App('UTC');
 
-    $dbPool = $register->get('dbPool');
-    $consoleDB = $dbPool->getConsoleDBFromPool();
     $redis = $register->get('redisPool')->get();
-
-    App::setResource('dbPool', fn() => $dbPool);
-    App::setResource('consoleDB', fn() => $consoleDB);
     App::setResource('cache', fn() => $redis);
 
-    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
-    $projectDB = $consoleDB;
-    if ($projectId !== 'console') {
-        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
-        $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
-        $dbName = $project->getAttribute('database', '');
-        if (!empty($dbName)) {
-            $projectDB = $dbPool->getDBFromPool($dbName);
-        }
-    }
+    $dbPool = $register->get('dbPool');
+    App::setResource('dbPool', fn() => $dbPool);
 
-    App::setResource('projectDB', fn() => $projectDB);
+    [$dbForConsole, $returnConsoleDB] = $dbPool->getDBFromPool('console', $redis);
+    App::setResource('dbForConsole', fn() => $dbForConsole);
+
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+    [$dbForProject, $returnProjectDB] = $dbPool->getDBFromPool($projectId, $redis);
+    App::setResource('dbForProject', fn() => $dbForProject);
 
     try {
         Authorization::cleanRoles();
@@ -349,12 +326,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $swooleResponse->end(\json_encode($output));
     } finally {
-        /** @var PDOPool $consolePool */
-        $dbPool->putConsoleDb($consoleDB);
-
-        if (!empty($dbName) && !empty($projectDB)) {
-            $dbPool->put($projectDB, $dbName);
-        }
+        call_user_func($returnConsoleDB);
+        call_user_func($returnProjectDB);
 
         /** @var RedisPool $redisPool */
         $redisPool = $register->get('redisPool');

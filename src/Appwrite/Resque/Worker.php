@@ -161,20 +161,13 @@ abstract class Worker
     protected function getProjectDB(string $projectId): Database
     {
         global $register;
-
         if (!$projectId) {
             throw new \Exception('ProjectID not provided - cannot get database');
         }
-        
-        $namespace = "_{$projectId}";
-
-        $dbForConsole = $this->getConsoleDB();
-        $project = $dbForConsole->getDocument('projects', $projectId);
-        $dbName = $project->getAttribute('database', '');
-
-        $projectDB = $register->get('dbPool')->getDB($dbName);
-
-        return $this->getDB(self::DATABASE_PROJECT, $projectDB, $namespace);
+        $cache = $register->get('cache');
+        $dbPool = $register->get('dbPool');
+        $dbForProject = $dbPool->getDB($projectId, $cache);
+        return $dbForProject;
     }
 
     /**
@@ -184,51 +177,11 @@ abstract class Worker
     protected function getConsoleDB(): Database
     {
         global $register;
-        $consoleDB = $register->get('dbPool')->getConsoleDB();
-        $namespace = "_console";
-        $sleep = 5; // ConsoleDB needs extra sleep time to ensure tables are created
-
-        return $this->getDB(self::DATABASE_CONSOLE, $consoleDB, $namespace, $sleep);
-    }
-
-    /**
-     * Get console database
-     * @param string $type One of (internal, external, console)
-     * @param string $projectId of internal or external DB
-     * @return Database
-     */
-    private function getDB(string $type, PDO $pdo, string $namespace, int $sleep = DATABASE_RECONNECT_SLEEP): Database
-    {
-        global $register;
         $cache = $register->get('cache');
-        $attempts = 0;
-        do {
-            try {
-                $attempts++;
-                $cache = new Cache(new RedisCache($cache));
-                $database = new Database(new MariaDB($pdo), $cache);
-                $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                $database->setNamespace($namespace); // Main DB
+        $dbPool = $register->get('dbPool');
 
-                if (!empty($projectId) && !$database->getDocument('projects', $projectId)->isEmpty()) {
-                    throw new \Exception("Project does not exist: {$projectId}");
-                }
-
-                if ($type === self::DATABASE_CONSOLE && !$database->exists($database->getDefaultDatabase(), '_metadata')) {
-                    throw new \Exception('Console project not ready');
-                }
-
-                break; // leave loop if successful
-            } catch (\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-                }
-                sleep($sleep);
-            }
-        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-
-        return $database;
+        $dbForConsole = $dbPool->getDB('console', $cache);
+        return $dbForConsole;
     }
 
     /**

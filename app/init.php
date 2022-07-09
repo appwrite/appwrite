@@ -847,26 +847,6 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForConsole', function ($consoleDB, $cache) {
-    $cache = new Cache(new RedisCache($cache));
-
-    $database = new Database(new MariaDB($consoleDB), $cache);
-    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_console');
-
-    return $database;
-}, ['consoleDB', 'cache']);
-
-App::setResource('dbForProject', function ($projectDB, $cache, $project) {
-    $cache = new Cache(new RedisCache($cache));
-
-    $database = new Database(new MariaDB($projectDB), $cache);
-    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace("_{$project->getId()}");
-
-    return $database;
-}, ['projectDB', 'cache', 'project']);
-
 App::setResource('deviceLocal', function () {
     return new Local();
 });
