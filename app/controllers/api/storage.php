@@ -970,6 +970,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $cache->save($key, $data);
 
+        App::setResource('cacheKey', fn () => $key);
+        App::setResource('cachePath', fn () => 'app-' . $project->getId());
+
+
         $usage
             ->setParam('storage.files.read', 1)
             ->setParam('bucketId', $bucketId)

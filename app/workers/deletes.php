@@ -149,7 +149,7 @@ class DeletesV1 extends Worker
                     if ($cache->delete($path)) {
                         Console::success('Deleting cache file: ' . $path);
                     } else {
-                        Console::error('**Failed to delete cache file: ' . $path);
+                        Console::error('Failed to delete cache file: ' . $path);
                     }
                 }
             );

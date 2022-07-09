@@ -208,7 +208,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      # - ./vendor:/usr/src/code/vendor
+       - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis

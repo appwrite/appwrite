@@ -237,7 +237,6 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
         $database->trigger();
     }
 
-
     $route = $utopia->match($request);
     if (
         App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
