@@ -31,7 +31,7 @@ class Msg91 extends Phone
         $this->request(
             method: 'POST',
             url: $this->endpoint,
-            payload: \http_build_query([
+            payload: json_encode([
                 'sender' => $this->user,
                 'otp' => $message,
                 'flow_id' => $from,
