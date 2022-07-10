@@ -7,11 +7,13 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use CURLFile;
+use Tests\E2E\Services\Functions\FunctionsBase;
 
 class UsageTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
+    use FunctionsBase;
 
     protected array $headers = [];
     protected string $projectId;
@@ -418,6 +420,98 @@ class UsageTest extends Scope
         // execute some functions
         // some failed executions
         // test the stats
+        $functionId = '';
+        $requestsCount = 0;
+        $deploymentsTotal = 0;
+        $executions = 0;
+        $failures = 0;
+        $compute = 0;
+
+
+        $response1 = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => 'unique()',
+            'name' => 'Test',
+            'runtime' => 'php-8.0',
+            'vars' => [
+                'funcKey1' => 'funcValue1',
+                'funcKey2' => 'funcValue2',
+                'funcKey3' => 'funcValue3',
+            ],
+            'events' => [
+                'users.*.create',
+                'users.*.delete',
+            ],
+            'schedule' => '0 0 1 1 *',
+            'timeout' => 10,
+        ]);
+
+        $functionId = $response1['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $response1['headers']['status-code']);
+        $this->assertNotEmpty($response1['body']['$id']);
+
+        $requestsCount++;
+
+        $folder = 'php';
+        $code = realpath(__DIR__ . '/../../resources/functions') . "/$folder/code.tar.gz";
+        $this->packageCode($folder);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.php',
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertNotEmpty($deployment['body']['$id']);
+        $this->assertIsInt($deployment['body']['$createdAt']);
+        $this->assertEquals('index.php', $deployment['body']['entrypoint']);
+
+        
+        // Wait for deployment to build.
+        sleep(30);
+        
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => false,
+        ]);
+        
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+        $this->assertEquals($functionId, $execution['body']['functionId']);
+        $compute += $execution['time'];
+        $executions++;
+
+        sleep(35);
+        // TEST usage stats
+
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '30d'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(count($response['body']), 4);
+        $this->assertEquals($response['body']['range'], '30d');
+        $this->assertIsArray($response['body']['functionsExecutions']);
+        $this->assertIsArray($response['body']['functionsFailures']);
+        $this->assertIsArray($response['body']['functionsCompute']);
+
+        $this->assertEquals($executions, $response['functionsExecutions'][array_key_last($response['functionsExecutions'])]['value']);
+        $this->assertEquals($compute, $response['functionsCompute'][array_key_last($response['functionsCompute'])]['value']);
+        $this->assertEquals($failures, $response['functionsFailures'][array_key_last($response['functionsFailures'])]['value']);
+
     }
 
     protected function tearDown(): void
