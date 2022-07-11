@@ -96,7 +96,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
             'key' => $key,
             'databaseInternalId' => $db->getInternalId(),
-            'databaseId' => $db->getInternalId(),
+            'databaseId' => $db->getId(),
             'collectionInternalId' => $collection->getInternalId(),
             'collectionId' => $collectionId,
             'type' => $type,
