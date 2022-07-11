@@ -297,6 +297,8 @@ class Builder
         $schemaVersion = $register->has('apiSchemaVersion') ? $register->get('apiSchemaVersion') : '';
         $apiSchema = $register->has('apiSchema') ? $register->get('apiSchema') : false;
 
+        App::setResource('current', fn() => $utopia);
+
         if (!$apiSchema || \version_compare($envVersion, $schemaVersion, "!=")) {
             $apiSchema = self::buildAPISchema($utopia);
             $register->set('apiSchema', fn() => $apiSchema);
@@ -443,6 +445,7 @@ class Builder
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $route, $args, $context, $info) {
                 // Mutate the original request object to match route
+                $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
@@ -579,6 +582,7 @@ class Builder
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 try {
+                    $utopia = $utopia->getResource('current', true);
                     $request = $utopia->getResource('request', true);
                     $response = $utopia->getResource('response', true);
                     $swoole = $request->getSwoole();
@@ -608,6 +612,7 @@ class Builder
     ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
+                $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
@@ -639,6 +644,7 @@ class Builder
     ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $method, $type, $args) {
+                $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
@@ -677,6 +683,7 @@ class Builder
     ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
+                $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
