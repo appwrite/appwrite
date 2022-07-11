@@ -708,25 +708,15 @@ class Builder
         callable $resolve,
         callable $reject,
     ): void {
-        $request = $utopia->getResource('request');
-        $response = $utopia->getResource('response');
-        $swoole = $request->getSwoole();
-
         // Drop json content type so post args are used directly
-        if (
-            \array_key_exists('content-type', $swoole->header)
-            && $swoole->header['content-type'] === 'application/json'
-        ) {
-            unset($swoole->header['content-type']);
+        if ($request->getHeader('content-type') === 'application/json') {
+            unset($request->getSwoole()->header['content-type']);
         }
 
-        $gqlResponse = $response;
-        $request = new Request($swoole);
-        $apiResponse = new Response($response->getSwoole());
-        $apiResponse->setContentType(Response::CONTENT_TYPE_NULL);
-
+        $request = new Request($request->getSwoole());
         $utopia->setResource('request', fn() => $request);
-        $utopia->setResource('response', fn() => $apiResponse);
+
+        $response->setContentType(Response::CONTENT_TYPE_NULL);
 
         try {
             // Set route to null so match doesn't early return the GraphQL route
@@ -735,43 +725,22 @@ class Builder
 
             $utopia->execute($route, $request);
         } catch (\Throwable $e) {
-            self::reassign($gqlResponse, $apiResponse);
             $reject($e);
             return;
         }
 
-        self::reassign($gqlResponse, $apiResponse);
+        $payload = $response->getPayload();
 
-        $payload = $apiResponse->getPayload();
+        if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 400) {
+            $reject(new GQLException($payload['message'], $response->getStatusCode()));
+            return;
+        }
 
         if (\array_key_exists('$id', $payload)) {
             $payload['_id'] = $payload['$id'];
         }
 
-        if ($apiResponse->getStatusCode() < 200 || $apiResponse->getStatusCode() >= 400) {
-            $reject(new GQLException($payload['message'], $apiResponse->getStatusCode()));
-            return;
-        }
-
         $resolve($payload);
-    }
-
-    /**
-     * @param Response $gqlResponse
-     * @param Response $apiResponse
-     * @return void
-     * @throws \Utopia\Exception
-     */
-    private static function reassign(Response $gqlResponse, Response $apiResponse): void
-    {
-        $gqlResponse->setContentType($apiResponse->getContentType());
-        $gqlResponse->setStatusCode($apiResponse->getStatusCode());
-        foreach ($apiResponse->getHeaders() as $key => $value) {
-            $gqlResponse->addHeader($key, $value);
-        }
-        foreach ($apiResponse->getCookies() as $name => $cookie) {
-            $gqlResponse->addCookie($name, $cookie['value'], $cookie['expire'], $cookie['path'], $cookie['domain'], $cookie['secure'], $cookie['httponly']);
-        }
     }
 
     /**
