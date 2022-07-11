@@ -11,16 +11,14 @@ use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use Swoole\Coroutine\WaitGroup;
+use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Route;
 use Utopia\Validator;
-use Swoole\Http\Response as SwooleResponse;
 
 use function Co\go;
 
@@ -400,13 +398,11 @@ class Builder
                         ];
                     }
 
-                    $resolve = self::resolveAPIRequest($utopia, $route);
-
                     $field = [
                         'type' => $type,
                         'description' => $description,
                         'args' => $args,
-                        'resolve' => $resolve
+                        'resolve' => self::resolveAPIRequest($utopia, $route)
                     ];
 
                     switch ($method) {
@@ -447,7 +443,8 @@ class Builder
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $route, $args, $context, $info) {
                 // Mutate the original request object to match route
-                $request = $utopia->getResource('request');
+                $request = $utopia->getResource('request', true);
+                $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
                 $swoole->server['request_method'] = $route->getMethod();
                 $swoole->server['request_uri'] = $route->getPath();
@@ -462,7 +459,7 @@ class Builder
                         break;
                 }
 
-                self::resolve($utopia, $resolve, $reject);
+                self::resolve($utopia, $request, $response, $resolve, $reject);
             }
         );
     }
@@ -582,7 +579,8 @@ class Builder
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 try {
-                    $request = $utopia->getResource('request');
+                    $request = $utopia->getResource('request', true);
+                    $response = $utopia->getResource('response', true);
                     $swoole = $request->getSwoole();
                     $swoole->post = [
                         'databaseId' => $databaseId,
@@ -593,7 +591,7 @@ class Builder
                     $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
                     $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
 
-                    self::resolve($utopia, $resolve, $reject);
+                    self::resolve($utopia, $request, $response, $resolve, $reject);
                 } catch (\Throwable $e) {
                     $reject($e);
                     return;
@@ -610,7 +608,8 @@ class Builder
     ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
-                $request = $utopia->getResource('request');
+                $request = $utopia->getResource('request', true);
+                $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
                 $swoole->post = [
                     'databaseId' => $databaseId,
@@ -626,7 +625,7 @@ class Builder
                 $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
                 $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
 
-                self::resolve($utopia, $resolve, $reject);
+                self::resolve($utopia, $request, $response, $resolve, $reject);
             }
         );
     }
@@ -640,7 +639,8 @@ class Builder
     ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $method, $type, $args) {
-                $request = $utopia->getResource('request');
+                $request = $utopia->getResource('request', true);
+                $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
 
                 $id = $args['id'] ?? 'unique()';
@@ -664,7 +664,7 @@ class Builder
                 $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
                 $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
 
-                self::resolve($utopia, $resolve, $reject);
+                self::resolve($utopia, $request, $response, $resolve, $reject);
             }
         );
     }
@@ -677,7 +677,8 @@ class Builder
     ): callable {
         return fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
-                $request = $utopia->getResource('request');
+                $request = $utopia->getResource('request', true);
+                $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
                 $swoole->post = [
                     'databaseId' => $databaseId,
@@ -688,7 +689,7 @@ class Builder
                 $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
                 $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
 
-                self::resolve($utopia, $resolve, $reject);
+                self::resolve($utopia, $request, $response, $resolve, $reject);
             }
         );
     }
@@ -702,6 +703,8 @@ class Builder
      */
     private static function resolve(
         App $utopia,
+        Request $request,
+        Response $response,
         callable $resolve,
         callable $reject,
     ): void {
