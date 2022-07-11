@@ -80,7 +80,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $userId = $user['response']['id'];
+        $userId = $user['id'];
 
         return $userId;
     }
@@ -89,7 +89,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $userEmail = $user['response']['email'];
+        $userEmail = $user['email'];
 
         return $userEmail;
     }
@@ -101,7 +101,7 @@ class Disqus extends OAuth2
         // Look out for the change in their enpoint.
         // It's in Beta so they may provide a parameter in the future.
         // https://disqus.com/api/docs/users/details/
-        // $isVerified = $user['response']['isAnonymous'];
+        // $isVerified = $user['isAnonymous'];
 
         return false;
     }
@@ -110,7 +110,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $username = $user['response']['name'] ?? '';
+        $username = $user['name'] ?? '';
 
         return $username;
     }
@@ -126,7 +126,7 @@ class Disqus extends OAuth2
                     'api_secret' => $this->appSecret
                 ]),
             );
-            $this->user = \json_decode($user, true);
+            $this->user = \json_decode($user, true)['response'];
         }
 
         return $this->user;
