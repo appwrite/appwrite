@@ -1010,4 +1010,3 @@ App::setResource('promiseAdapter', function ($register) {
 App::setResource('gqlSchema', function ($utopia, $dbForProject, $user) {
     return Builder::buildSchema($utopia, $dbForProject, $user);
 }, ['utopia', 'dbForProject', 'user']);
-

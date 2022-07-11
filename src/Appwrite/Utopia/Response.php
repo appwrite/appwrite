@@ -193,9 +193,6 @@ class Response extends SwooleResponse
     // Tests (keep last)
     public const MODEL_MOCK = 'mock';
 
-    // Content type
-    const CONTENT_TYPE_NULL = 'null';
-
     /**
      * @var Filter
      */
@@ -325,6 +322,7 @@ class Response extends SwooleResponse
      * HTTP content types
      */
     public const CONTENT_TYPE_YAML = 'application/x-yaml';
+    public const CONTENT_TYPE_NULL = 'null';
 
     /**
      * List of defined output objects
@@ -368,9 +366,9 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Returns the model that was used to 
+     * Returns the model that was used to
      * parse the currrent payload
-     * 
+     *
      * @return string
      */
     public function getCurrentModel(): string
@@ -396,19 +394,19 @@ class Response extends SwooleResponse
             $output = self::getFilter()->parse($output, $model);
         }
 
-        switch($this->getContentType()) {
+        switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
                 $this->json(!empty($output) ? $output : new stdClass());
                 break;
-            
+
             case self::CONTENT_TYPE_YAML:
                 $this->yaml(!empty($output) ? $output : new stdClass());
                 break;
-                
+
             case self::CONTENT_TYPE_NULL:
                 break;
 
-            default :
+            default:
                 if ($model === self::MODEL_NONE) {
                     $this->noContent();
                 } else {
@@ -554,5 +552,4 @@ class Response extends SwooleResponse
     {
         return self::$filter != null;
     }
-
 }

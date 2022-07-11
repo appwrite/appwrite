@@ -3,6 +3,7 @@
 namespace Appwrite\GraphQL;
 
 use Swoole\Coroutine\Channel;
+
 use function Co\go;
 
 /**
@@ -12,9 +13,9 @@ use function Co\go;
  */
 class CoroutinePromise
 {
-    const STATE_PENDING = 1;
-    const STATE_FULFILLED = 0;
-    const STATE_REJECTED = -1;
+    protected const STATE_PENDING = 1;
+    protected const STATE_FULFILLED = 0;
+    protected const STATE_REJECTED = -1;
 
     protected int $state = self::STATE_PENDING;
 

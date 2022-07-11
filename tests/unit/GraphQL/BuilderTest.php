@@ -12,8 +12,6 @@ use Utopia\App;
 
 class BuilderTest extends TestCase
 {
-
-    
     /**
      * @var Response
      */
@@ -25,10 +23,9 @@ class BuilderTest extends TestCase
         Builder::init();
     }
 
-    public function testCreateTypeMapping() 
+    public function testCreateTypeMapping()
     {
         $model = $this->response->getModel(Response::MODEL_COLLECTION);
         $typeMapping = Builder::getModelTypeMapping($model, $this->response);
     }
-
 }

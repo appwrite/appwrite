@@ -172,7 +172,7 @@ class Exception extends \Exception
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
 
     /** GraphqQL */
-    const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
+    public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
 
     private $type = '';
 

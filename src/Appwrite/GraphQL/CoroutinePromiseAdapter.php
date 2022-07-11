@@ -7,6 +7,7 @@ use GraphQL\Executor\Promise\Promise;
 use GraphQL\Executor\Promise\PromiseAdapter;
 use GraphQL\Utils\Utils;
 use Swoole\Coroutine\Channel;
+
 use function Co\go;
 
 class CoroutinePromiseAdapter implements PromiseAdapter
@@ -35,7 +36,7 @@ class CoroutinePromiseAdapter implements PromiseAdapter
 
     public function create(callable $resolver): Promise
     {
-        $promise = new CoroutinePromise(function($resolve, $reject) use($resolver) {
+        $promise = new CoroutinePromise(function ($resolve, $reject) use ($resolver) {
             $resolver($resolve, $reject);
         });
 
@@ -44,7 +45,7 @@ class CoroutinePromiseAdapter implements PromiseAdapter
 
     public function createFulfilled($value = null): Promise
     {
-        $promise = new CoroutinePromise(function($resolve, $reject) use($value) {
+        $promise = new CoroutinePromise(function ($resolve, $reject) use ($value) {
             $resolve($value);
         });
 
