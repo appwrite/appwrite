@@ -13,13 +13,13 @@ class Disqus extends OAuth2
     protected array $user = [];
     protected array $tokens = [];
     protected array $scopes = [
-        "read",
-        "email",
+        'read',
+        'email',
     ];
 
     public function getName(): string
     {
-        return "disqus";
+        return 'disqus';
     }
 
     public function getLoginURL(): string
@@ -42,12 +42,12 @@ class Disqus extends OAuth2
             $this->tokens = \json_decode($this->request(
                 'POST',
                 $this->endpoint . 'oauth/2.0/access_token/',
-                ["Content-Type: application/x-www-form-urlencoded"],
+                ['Content-Type: application/x-www-form-urlencoded'],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
-                    "client_id" => $this->appID,
-                    "client_secret" => $this->appSecret,
-                    "redirect_uri" => $this->callback,
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'redirect_uri' => $this->callback,
                     'code' => $code,
                     'scope' => \implode(' ', $this->getScopes()),
                 ])
@@ -82,7 +82,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $userId = $user["response"]["id"];
+        $userId = $user['response']['id'];
 
         return $userId;
     }
@@ -91,7 +91,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $userEmail = $user["response"]["email"];
+        $userEmail = $user['response']['email'];
 
         return $userEmail;
     }
@@ -100,7 +100,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $isVerified = $user["response"]["isAnonymous"];
+        $isVerified = $user['response']['isAnonymous'];
 
         return $isVerified;
     }
@@ -109,7 +109,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $username = $user["response"]["username"] ?? '';
+        $username = $user['response']['username'] ?? '';
 
         return $username;
     }
