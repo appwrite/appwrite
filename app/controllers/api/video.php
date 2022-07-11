@@ -132,6 +132,60 @@ App::get('/v1/video/profiles')
     });
 
 
+App::post('/v1/video/:videoId/subtitles')
+    ->alias('/v1/video/:videoId/subtitles', [])
+    ->desc('Link a subtitle file to a video')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.write')
+    ->param('videoId', null, new UID(), 'Video unique ID.')
+    ->param('bucketId', '', new CustomId(), 'Subtitle bucket unique ID.')
+    ->param('fileId', '', new CustomId(), 'Subtitle file unique ID.')
+    ->param('name', '', new Text(128), 'Subtitle name.')
+    ->param('code', '', new Text(128), 'Subtitle code name.')
+    ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
+    ->inject('audits')
+    ->inject('usage')
+    ->inject('events')
+    ->inject('mode')
+    ->inject('deviceFiles')
+    ->inject('deviceLocal')
+    ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, $project, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+        /** @var Utopia\Database\Document $project */
+        /** @var Utopia\Database\Document $user */
+
+        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
+
+        if ($video->isEmpty()) {
+            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+        }
+
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $read, $write);
+        validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $read, $write);
+
+        try {
+            $subtitle = Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $fileId, $name, $code) {
+                return $dbForProject->createDocument('video_subtitles', new Document([
+                    'videoId'   => $videoId,
+                    'bucketId'  => $bucketId,
+                    'fileId'    => $fileId,
+                    'name'      => $name,
+                    'code'      => $code,
+                ]));
+            });
+        } catch (StructureException $exception) {
+            throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
+        }
+
+        $response->json(['result' => 'ok']);
+    });
+
+
 App::post('/v1/video/buckets/:bucketId/files/:fileId')
     ->alias('/v1/video/files', ['bucketId' => 'default'])
     ->desc('Create video')
@@ -278,6 +332,7 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
     ->alias('/v1/video/:videoId/:stream/:profile/:fileName', [])
     ->desc('Get video  playlist manifests')
     ->groups(['api', 'storage'])
+    #->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
     ->label('scope', 'files.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('stream', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
@@ -323,19 +378,31 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
         $ext = pathinfo($fileName, PATHINFO_EXTENSION);
         $baseUrl = 'http://127.0.0.1/v1/video/' . $videoId . '/' . $stream . '/' ;
 
-
         if ($profile === 'master') {
             if ($stream === 'hls') {
+                $subtitles = Authorization::skip(fn () => $dbForProject->find('video_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$video->getId()])], 12, 0, [], ['ASC']));
+                $paramsSubtitles = [];
+                foreach ($subtitles as $subtitle) {
+                        $paramsSubtitles[] = [
+                            'name' => $subtitle->getAttribute('name'),
+                            'code' => $subtitle->getAttribute('code'),
+                            'uri' => $baseUrl  . $videoId . '_subtitles_' . $subtitle->getAttribute('code') . '.m3u8',
+                        ];
+                }
+                $paramsRenditions = [];
                 foreach ($renditions as $rendition) {
-                    $t['bandwidth'] = $rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate');
-                    $t['resolution'] = $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height');
-                    $t['name'] = $rendition->getAttribute('name');
-                    $t['path'] = $baseUrl . $rendition->getAttribute('name') . '/' . $rendition->getAttribute('videoId') . '_' . $rendition->getAttribute('name') . '.m3u8';
-                    $params[] = $t;
+                    $paramsRenditions[] = [
+                        'bandwidth' => $rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate'),
+                        'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
+                        'name' => $rendition->getAttribute('name'),
+                        'uri'  => $baseUrl . $rendition->getAttribute('name') . '/' . $rendition->getAttribute('videoId') . '_' . $rendition->getAttribute('name') . '.m3u8',
+                        'subs' => !empty($paramsSubtitles) ? ' SUBTITLES="subs"' : '',
+                        ];
                 }
 
                 $template = new View(__DIR__ . '/../../views/video/hls.phtml');
-                $template->setParam('params', $params);
+                $template->setParam('paramsSubtitles', $paramsSubtitles);
+                $template->setParam('paramsRenditions', $paramsRenditions);
                 $output = $template->render();
             } else {
                 $adaptations = [];

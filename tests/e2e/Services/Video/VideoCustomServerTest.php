@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Storage;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\VideoCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
@@ -11,71 +12,77 @@ class VideoCustomServerTest extends Scope
 {
     use StorageBase;
     use ProjectCustom;
+    use VideoCustom;
     use SideServer;
 
-    public function testCreateBucketFile(): array
+    public function testTranscodeWithSubs() :array
     {
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+
+        $response = $this->client->call(Client::METHOD_POST, '/video/buckets/' . $this->getBucket()['$id'] . '/files/' .  $this->getVideo()['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => 'unique()',
-            'name' => 'Test Bucket 2',
-            'permission' => 'file',
             'read' => ['role:all'],
             'write' => ['role:all']
         ]);
 
-        //$source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
-        $source = __DIR__ . "/../../../resources/disk-a/very-big-file-2.mov";
-        $totalSize = \filesize($source);
-        $chunkSize = 5 * 1024 * 1024;
-        $handle = @fopen($source, "rb");
-        $fileId = 'unique()';
-        $mimeType = mime_content_type($source);
-        $counter = 0;
-        $size = filesize($source);
-        $headers = [
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ];
-        $id = '';
+        $videoId = $response['body']['$id'];
 
-        while (!feof($handle)) {
-            $curlFile = new \CURLFile('data:' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'very-large-file-1.mov');
-            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+        $response = $this->client->call(Client::METHOD_POST, '/video/' . $videoId . '/subtitles', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => $this->getBucket()['$id'],
+            'fileId' => $this->getSubtitle()['$id'],
+            'name'   => 'hebrew',
+            'code'   => 'heb',
+            'read' => ['role:all'],
+            'write' => ['role:all']
+        ]);
 
-            if (!empty($id)) {
-                $headers['x-appwrite-id'] = $id;
-            }
+        $response = $this->client->call(Client::METHOD_POST, '/video/' . $videoId . '/subtitles', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => $this->getBucket()['$id'],
+            'fileId' => $this->getSubtitle()['$id'],
+            'name'   => 'english',
+            'code'   => 'eng',
+            'read' => ['role:all'],
+            'write' => ['role:all']
+        ]);
 
-            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
-                'fileId' => $fileId,
-                'file' => $curlFile,
-                'read' => ['role:all'],
-                'write' => ['role:all'],
-            ]);
-            $counter++;
+        $response = $this->client->call(Client::METHOD_GET, '/video/profiles', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' =>  $this->getProject()['apiKey'],
+        ]);
 
-            $this->assertNotEmpty($file['body']['$id']);
-            $id = $file['body']['$id'];
-        }
-        @fclose($handle);
 
+        $profileId = $response['body']['profiles'][0]['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/video/' . $videoId . '/rendition/' .  $profileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'read' => ['role:all'],
+            'write' => ['role:all']
+        ]);
         return [
-            'bucketId' => $bucket['body']['$id'],
-            'fileId'  => $id,
-            ];
+                'videoId' => $videoId,
+                'stream' => ''
+                ];
     }
 
-    /**
-     * @depends testCreateBucketFile
-     */
-    public function testTranscodingRendition($data): array
+
+    public function testTranscodingRendition(): array
     {
 
-        $response = $this->client->call(Client::METHOD_POST, '/video/buckets/' . $data['bucketId'] . '/files/' .  $data['fileId'], [
+        $response = $this->client->call(Client::METHOD_POST, '/video/buckets/' . $this->getBucket()['$id'] . '/files/' .  $this->getVideo()['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -114,7 +121,7 @@ class VideoCustomServerTest extends Scope
     }
 
     /**
-     * @depends testTranscodingRendition
+     * @depends testTranscodeWithSubs
      */
     public function testGetRendition(array $data): array
     {
@@ -130,8 +137,6 @@ class VideoCustomServerTest extends Scope
             'write' => ['role:all']
         ]);
 
-
-
         $this->assertNotEmpty($response['body']['renditions']);
 
         $videoId = $response['body']['renditions'][0]['videoId'];
@@ -139,6 +144,7 @@ class VideoCustomServerTest extends Scope
         $profileName = $response['body']['renditions'][0]['name'];
         $stream = $response['body']['renditions'][0]['stream'];
 
+        var_dump($response['body']);
 
         return [
             'videoId' => $videoId,
@@ -164,6 +170,8 @@ class VideoCustomServerTest extends Scope
             'write' => ['role:all']
         ]);
 
+        var_dump($response['body']);
+
         $response = $this->client->call(Client::METHOD_GET, '/video/' . $data['videoId'] . '/' . $data['stream'] . '/' . $data['profileName'] . '/' . $data['videoId'] . '_360p.m3u8', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -175,7 +183,7 @@ class VideoCustomServerTest extends Scope
 
         var_dump($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/video/' . $data['videoId'] . '/hls/' . $data['profileName'] . '/' .  $data['videoId'] . '_360p_0000.ts', [
+        $response = $this->client->call(Client::METHOD_GET, '/video/' . $data['videoId'] . '/' . $data['stream'] . '/' . $data['profileName'] . '/' .  $data['videoId'] . '_360p_0000.ts', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -185,24 +193,25 @@ class VideoCustomServerTest extends Scope
         ]);
 
         var_dump($response['body']);
+
     }
 
-    /**
-     * @depends testTranscodingRendition
-     */
-    public function testDashStreamRender($data): void
-    {
-        sleep(20);
-
-        $response = $this->client->call(Client::METHOD_GET, '/video/' . $data['videoId'] . '/mpeg-dash/master/' . $data['videoId'] . '.mpd', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'read' => ['role:all'],
-            'write' => ['role:all']
-        ]);
-
-        var_dump($response['body']);
-    }
+//    /**
+//     * @depends testTranscodingRendition
+//     */
+//    public function testDashStreamRender($data): void
+//    {
+//        sleep(20);
+//
+//        $response = $this->client->call(Client::METHOD_GET, '/video/' . $data['videoId'] . '/mpeg-dash/master/' . $data['videoId'] . '.mpd', [
+//            'content-type' => 'application/json',
+//            'x-appwrite-project' => $this->getProject()['$id'],
+//            'x-appwrite-key' => $this->getProject()['apiKey'],
+//        ], [
+//            'read' => ['role:all'],
+//            'write' => ['role:all']
+//        ]);
+//
+//        var_dump($response['body']);
+//    }
 }

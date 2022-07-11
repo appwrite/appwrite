@@ -4,6 +4,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Resque\Worker;
 use Streaming\Format\StreamFormat;
+use Streaming\HLSSubtitle;
 use Streaming\Media;
 use Streaming\Metadata;
 use Streaming\Representation;
@@ -15,6 +16,8 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use FFMpeg\FFProbe\DataMapping\StreamCollection;
 use Utopia\Storage\Compression\Algorithms\GZIP;
+use Captioning\Format\SubripFile;
+use Captioning\Format\WebvttFile;
 
 require_once __DIR__ . '/../init.php';
 
@@ -81,12 +84,7 @@ class TranscodingV1 extends Worker
         }
 
         $bucket = Authorization::skip(fn() => $this->database->getDocument('buckets', $sourceVideo['bucketId']));
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(fn() => $this->database->getDocument('bucket_' . $bucket->getInternalId(), $sourceVideo['fileId']));
-        } else {
-            $file = $this->database->getDocument('bucket_' . $bucket->getInternalId(), $sourceVideo['fileId']);
-        }
-
+        $file = Authorization::skip(fn() => $this->database->getDocument('bucket_' . $bucket->getInternalId(), $sourceVideo['fileId']));
         $data = $this->getFilesDevice($project->getId())->read($file->getAttribute('path'));
         $fileName = basename($file->getAttribute('path'));
         $inPath = $this->inDir . $fileName;
@@ -149,6 +147,43 @@ class TranscodingV1 extends Worker
         $video = $ffmpeg->open($inPath);
         $this->setRenditionName($profile);
 
+        $subs = [];
+        $subtitles = Authorization::skip(fn () => $this->database->find('video_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$this->args['videoId']])], 12, 0, [], ['ASC']));
+        foreach ($subtitles as $subtitle) {
+            $subtitleBucket = Authorization::skip(fn() => $this->database->getDocument('buckets', $subtitle->getAttribute('bucketId')));
+            $subtitleFile = Authorization::skip(fn() => $this->database->getDocument('bucket_' . $subtitleBucket->getInternalId(), $subtitle->getAttribute('fileId')));
+            $subtitleData = $this->getFilesDevice($project->getId())->read($subtitleFile->getAttribute('path'));
+            $subtitleFileName = basename($subtitleFile->getAttribute('path'));
+
+            if (!empty($subtitleFile->getAttribute('openSSLCipher'))) { // Decrypt
+                $subtitleData = OpenSSL::decrypt(
+                    $subtitleData,
+                    $subtitleFile->getAttribute('openSSLCipher'),
+                    App::getEnv('_APP_OPENSSL_KEY_V' . $subtitleFile->getAttribute('openSSLVersion')),
+                    0,
+                    \hex2bin($subtitleFile->getAttribute('openSSLIV')),
+                    \hex2bin($subtitleFile->getAttribute('openSSLTag'))
+                );
+            }
+
+            if (!empty($subtitleFile->getAttribute('algorithm', ''))) {
+                $compressor = new GZIP();
+                $subtitleData = $compressor->decompress($subtitleData);
+            }
+
+            $this->getFilesDevice($project->getId())->write($this->inDir . $subtitleFileName, $subtitleData, $subtitleFile->getAttribute('mimeType'));
+            $ext = pathinfo($subtitleFileName, PATHINFO_EXTENSION);
+            if ($ext === 'srt') {
+                $srt = new SubripFile($this->inDir . $subtitleFileName);
+                $srt->convertTo('webvtt')->save($this->inDir . $this->args['videoId'] . '.vtt');
+            }
+            $subs[] = [
+                 'name' => $subtitle->getAttribute('name'),
+                 'code' => $subtitle->getAttribute('code'),
+                 'path' => $this->inDir . $this->args['videoId'] . '.vtt',
+            ];
+        }
+
         $query = Authorization::skip(function () use ($collection, $profile) {
                     return $this->database->createDocument($collection, new Document([
                         'videoId'  => $this->args['videoId'],
@@ -179,7 +214,7 @@ class TranscodingV1 extends Worker
             });
 
 
-            list($general, $metadata) = $this->transcode($profile['stream'], $video, $format, $representation);
+            list($general, $metadata) = $this->transcode($profile['stream'], $video, $format, $representation, $subs);
             if (!empty($metadata)) {
                 $query->setAttribute('metadata', json_encode($metadata));
             }
@@ -214,11 +249,15 @@ class TranscodingV1 extends Worker
                 $deviceFiles  = $this->getVideoDevice($project->getId());
                 $devicePath   = $deviceFiles->getPath($this->args['videoId']);
                 $data = $this->getFilesDevice($project->getId())->read($this->outDir . $fileName);
-                $renditionPath = $devicePath . DIRECTORY_SEPARATOR . $this->getRenditionName();
-                $this->getVideoDevice($project->getId())->write($renditionPath . DIRECTORY_SEPARATOR .  $fileName, $data, \mime_content_type($this->outDir . $fileName));
+                $to = $devicePath . '/' . $this->getRenditionName() . '/';
+                if (str_contains($fileName, "_subtitles_") || str_contains($fileName, ".vtt")) {
+                    $to = $devicePath . '/';
+                }
+
+                $this->getVideoDevice($project->getId())->write($to .  $fileName, $data, \mime_content_type($this->outDir . $fileName));
                 if ($start === 0) {
                     $query->setAttribute('status', self::STATUS_UPLOADING);
-                    $query->setAttribute('path', $renditionPath);
+                    $query->setAttribute('path', $devicePath . '/' . $this->getRenditionName());
                     Authorization::skip(fn() => $this->database->updateDocument(
                         $collection,
                         $query->getId(),
@@ -266,7 +305,7 @@ class TranscodingV1 extends Worker
      * @param $representation Representation
      * @return array
      */
-    private function transcode(string $stream, Media $video, StreamFormat $format, Representation $representation): string | array
+    private function transcode(string $stream, Media $video, StreamFormat $format, Representation $representation, array $subtitles): string | array
     {
 
         $additionalParams = [
@@ -299,23 +338,50 @@ class TranscodingV1 extends Worker
         }
 
 
-        $hls = $video->hls()
-            ->setFormat($format)
+        $hls = $video->hls();
+
+
+        foreach ($subtitles as $subtitle) {
+            $sub = new HLSSubtitle($subtitle['path'], $subtitle['name'], $subtitle['code']);
+            $sub->default();
+            $sub->setM3u8Uri($this->getHlsBaseUri(false) .  $this->args['videoId'] . '_subtitles_' . $subtitle['code'] . '.m3u8');
+            $hls->subtitle($sub);
+        }
+
+
+        $hls->setFormat($format)
             ->setHlsTime($segementSize)
             ->addRepresentation($representation)
             ->setAdditionalParams($additionalParams)
-            ->setHlsBaseUrl('http://127.0.0.1/v1/video/' . $this->args['videoId'] . '/' . self::STREAM_HLS . '/' . $this->getRenditionName() . '/')
+            ->setHlsBaseUrl($this->getHlsBaseUri())
             ->save($this->outPath);
 
         $general = $this->getVideoInfo($hls->metadata()->getVideoStreams());
         $general['width'] = $representation->getWidth();
         $general['height'] = $representation->getHeight();
 
-        //$this->rewriteHlsLines($this->outPath . '_' . $this->getRenditionName() . '.m3u8');
+        foreach ($subtitles as $subtitle) {
+            $this->rewriteHlsLines($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
+        }
 
         return [
             $general, []
         ];
+    }
+
+    /**
+     * @param bool $nest
+     * @return string
+     */
+    private function getHlsBaseUri(bool $nest = true): string
+    {
+        $uri = 'http://127.0.0.1/v1/video/' . $this->args['videoId'] . '/' . self::STREAM_HLS . '/';
+
+        if (empty($nest)) {
+            return $uri;
+        }
+
+        return $uri . $this->getRenditionName() . '/';
     }
 
     private function rewriteHlsLines($path)
@@ -325,13 +391,15 @@ class TranscodingV1 extends Worker
         if ($handle) {
             while (($line = fgets($handle)) !== false) {
                 $newLine = str_replace(array("\r","\n"), "", $line);
-                if (str_contains($line, ".ts")) {
-                    $newLine = 'http://127.0.0.1/v1/video/' . $this->args['videoId'] . '/' . self::STREAM_HLS . '/' . $this->getRenditionName() . '/' . $newLine;
-                    var_dump($newLine);
+                if (
+                    str_contains($line, ".ts") ||
+                    str_contains($line, ".vtt") ||
+                    str_contains($line, ".m3u8")
+                ) {
+                    $newLine = $this->getHlsBaseUri(str_contains($line, ".vtt") ?? false) . $newLine;
                 }
                 fwrite($destination, $newLine . PHP_EOL);
             }
-            var_dump($path . '_tmp -> ' . $path);
             rename($path . '_tmp', $path);
             fclose($handle);
             fclose($destination);

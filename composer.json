@@ -64,6 +64,7 @@
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0",
         "aminyazdanpanah/php-ffmpeg-video-streaming": "^1.2",
+        "captioning/captioning": "2.*",
         "squizlabs/php_codesniffer": "^3.6",
         "ext-simplexml": "*"
     },
