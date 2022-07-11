@@ -110,7 +110,7 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $username = $user['response']['username'] ?? '';
+        $username = $user['response']['name'] ?? '';
 
         return $username;
     }
