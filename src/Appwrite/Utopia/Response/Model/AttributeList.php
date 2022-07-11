@@ -40,7 +40,7 @@ class AttributeList extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Attributes List';
     }
@@ -50,7 +50,7 @@ class AttributeList extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_ATTRIBUTE_LIST;
     }

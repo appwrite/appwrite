@@ -113,20 +113,24 @@ class Stats
         $this->statsd->count('network.all' . $tags, $networkRequestSize + $networkResponseSize);
 
         $dbMetrics = [
-            'database.collections.create',
-            'database.collections.read',
-            'database.collections.update',
-            'database.collections.delete',
-            'database.documents.create',
-            'database.documents.read',
-            'database.documents.update',
-            'database.documents.delete',
+            'databases.create',
+            'databases.read',
+            'databases.update',
+            'databases.delete',
+            'databases.collections.create',
+            'databases.collections.read',
+            'databases.collections.update',
+            'databases.collections.delete',
+            'databases.documents.create',
+            'databases.documents.read',
+            'databases.documents.update',
+            'databases.documents.delete',
         ];
 
         foreach ($dbMetrics as $metric) {
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
-                $tags = ",projectId={$projectId},collectionId=" . ($this->params['collectionId'] ?? '');
+                $tags = ",projectId={$projectId},collectionId=" . ($this->params['collectionId'] ?? '') . ",databaseId=" . ($this->params['databaseId'] ?? '');
                 $this->statsd->increment($metric . $tags);
             }
         }
@@ -173,7 +177,7 @@ class Stats
         foreach ($sessionsMetrics as $metric) {
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
-                $tags = ",projectId={$projectId},provider=". ($this->params['provider'] ?? '');
+                $tags = ",projectId={$projectId},provider=" . ($this->params['provider'] ?? '');
                 $this->statsd->count($metric . $tags, $value);
             }
         }

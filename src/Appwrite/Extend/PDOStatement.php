@@ -76,7 +76,7 @@ class PDOStatement extends PDOStatementNative
             foreach ($this->values as $key => $set) {
                 $this->PDOStatement->bindValue($key, $set['value'], $set['data_type']);
             }
-     
+
             foreach ($this->params as $key => $set) {
                 $this->PDOStatement->bindParam($key, $set['variable'], $set['data_type'], $set['length'], $set['driver_options']);
             }
@@ -109,7 +109,7 @@ class PDOStatement extends PDOStatementNative
     public function fetchAll(int $fetch_style = PDO::FETCH_BOTH, mixed ...$fetch_args)
     {
         $result = $this->PDOStatement->fetchAll();
-        
+
         return $result;
     }
 }

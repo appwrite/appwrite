@@ -31,7 +31,7 @@ abstract class Scope extends TestCase
         $this->client = null;
     }
 
-    protected function getLastEmail():array
+    protected function getLastEmail(): array
     {
         sleep(3);
 
@@ -44,25 +44,25 @@ abstract class Scope extends TestCase
         return [];
     }
 
-    protected function getLastRequest():array
+    protected function getLastRequest(): array
     {
         sleep(2);
-        
+
         $resquest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
         $resquest['data'] = json_decode($resquest['data'], true);
-        
+
         return $resquest;
     }
 
     /**
      * @return array
      */
-    abstract public function getHeaders():array;
+    abstract public function getHeaders(): array;
 
     /**
      * @return array
      */
-    abstract public function getProject():array;
+    abstract public function getProject(): array;
 
     /**
      * @var array
@@ -78,7 +78,7 @@ abstract class Scope extends TestCase
             return self::$root;
         }
 
-        $email = uniqid().'user@localhost.test';
+        $email = uniqid() . 'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -95,7 +95,7 @@ abstract class Scope extends TestCase
 
         $this->assertEquals(201, $root['headers']['status-code']);
 
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions', [
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
@@ -130,7 +130,7 @@ abstract class Scope extends TestCase
             return self::$user[$this->getProject()['$id']];
         }
 
-        $email = uniqid().'user@localhost.test';
+        $email = uniqid() . 'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -147,7 +147,7 @@ abstract class Scope extends TestCase
 
         $this->assertEquals(201, $user['headers']['status-code']);
 
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions', [
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -156,7 +156,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
         self::$user[$this->getProject()['$id']] = [
             '$id' => $user['body']['$id'],

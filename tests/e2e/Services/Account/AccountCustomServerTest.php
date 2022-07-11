@@ -12,9 +12,9 @@ class AccountCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testCreateAccount():array
+    public function testCreateAccount(): array
     {
-        $email = uniqid().'user@localhost.test';
+        $email = uniqid() . 'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -33,7 +33,7 @@ class AccountCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        
+
         return [];
     }
 }

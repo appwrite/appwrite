@@ -164,16 +164,16 @@ class HTTPTest extends Scope
         $client = new Client();
         $client->setEndpoint('https://validator.swagger.io');
 
-        foreach($files as $file) {
-            if(in_array($file, ['.', '..'])) {
+        foreach ($files as $file) {
+            if (in_array($file, ['.', '..'])) {
                 continue;
             }
 
-            if(
+            if (
                 (strpos($file, 'latest') === false) &&
                 (strpos($file, '0.12.x') === false) &&
                 (strpos($file, '0.13.x') === false)
-             ) {
+            ) {
                 continue;
             }
 
@@ -182,7 +182,7 @@ class HTTPTest extends Scope
              */
             $response = $client->call(Client::METHOD_POST, '/validator/debug', [
                 'content-type' => 'application/json',
-            ], json_decode(file_get_contents($directory.$file), true));
+            ], json_decode(file_get_contents($directory . $file), true));
 
             $response['body'] = json_decode($response['body'], true);
             $this->assertEquals(200, $response['headers']['status-code']);
@@ -190,7 +190,8 @@ class HTTPTest extends Scope
         }
     }
 
-    public function testVersions() {
+    public function testVersions()
+    {
         /**
          * Test without header
          */

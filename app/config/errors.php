@@ -1,7 +1,7 @@
 <?php
 
 /**
- * List of server wide error codes and their respective messages. 
+ * List of server wide error codes and their respective messages.
  */
 
 use Appwrite\Extend\Exception;
@@ -11,17 +11,17 @@ return [
     Exception::GENERAL_UNKNOWN => [
         'name' => Exception::GENERAL_UNKNOWN,
         'description' => 'An unknown error has occured. Please check the logs for more information.',
-        'code' => 500, 
+        'code' => 500,
     ],
     Exception::GENERAL_MOCK => [
         'name' => Exception::GENERAL_MOCK,
         'description' => 'General errors thrown by the mock controller used for testing.',
-        'code' => 400, 
+        'code' => 400,
     ],
     Exception::GENERAL_ACCESS_FORBIDDEN => [
         'name' => Exception::GENERAL_ACCESS_FORBIDDEN,
         'description' => 'Access to this API is forbidden.',
-        'code' => 401, 
+        'code' => 401,
     ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
@@ -46,6 +46,11 @@ return [
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
         'description' => 'SMTP is disabled on your Appwrite instance. You can <a href="/docs/email-delivery">learn more about setting up SMTP</a> in our docs.',
+        'code' => 503,
+    ],
+    Exception::GENERAL_PHONE_DISABLED => [
+        'name' => Exception::GENERAL_PHONE_DISABLED,
+        'description' => 'Phone provider is not configured. Please check the _APP_PHONE_PROVIDER environment variable of your Appwrite server.',
         'code' => 503,
     ],
     Exception::GENERAL_ARGUMENT_INVALID => [
@@ -76,6 +81,11 @@ return [
     Exception::GENERAL_SERVER_ERROR => [
         'name' => Exception::GENERAL_SERVER_ERROR,
         'description' => 'An internal server error occurred.',
+        'code' => 500,
+    ],
+    Exception::GENERAL_PROTOCOL_UNSUPPORTED => [
+        'name' => Exception::GENERAL_PROTOCOL_UNSUPPORTED,
+        'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
     ],
 
@@ -164,6 +174,16 @@ return [
         'name' => Exception::USER_AUTH_METHOD_UNSUPPORTED,
         'description' => 'The requested authentication method is either disabled or unsupported. Please check the supported authentication methods in the Appwrite console.',
         'code' => 501,
+    ],
+    Exception::USER_PHONE_ALREADY_EXISTS => [
+        'name' => Exception::USER_PHONE_ALREADY_EXISTS,
+        'description' => 'A user with the same phone number already exists in the current project.',
+        'code' => 409,
+    ],
+    Exception::USER_PHONE_NOT_FOUND => [
+        'name' => Exception::USER_PHONE_NOT_FOUND,
+        'description' => 'The current user does not have a phone number associated with their account.',
+        'code' => 400,
     ],
 
     /** Teams */
