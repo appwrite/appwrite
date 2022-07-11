@@ -423,7 +423,7 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
                         'bandwidth' => $rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate'),
                         'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
                         'name' => $rendition->getAttribute('name'),
-                        'uri'  => $baseUrl . $rendition->getAttribute('name') . '/' . $rendition->getAttribute('videoId') . '_' . $rendition->getAttribute('name') . '.m3u8',
+                        'uri'  => $baseUrl . $rendition->getAttribute('name') . '/' . $rendition->getAttribute('videoId') . '_' . $rendition->getAttribute('height') . 'p.m3u8',
                         'subs' => !empty($paramsSubtitles) ? ' SUBTITLES="subs"' : '',
                         ];
                 }
