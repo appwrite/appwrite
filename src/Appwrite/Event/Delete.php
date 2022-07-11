@@ -8,10 +8,10 @@ use Utopia\Database\Document;
 class Delete extends Event
 {
     protected string $type = '';
-    protected ?int $timestamp = null;
-    protected ?int $timestamp1d = null;
-    protected ?int $timestamp30m = null;
     protected ?Document $document = null;
+    protected ?string $datetime = null;
+    protected ?string $datetime1d = null;
+    protected ?string $datetime30m = null;
 
     public function __construct()
     {
@@ -42,41 +42,38 @@ class Delete extends Event
     }
 
     /**
-     * Set timestamp.
+     * set Datetime.
      *
-     * @param int $timestamp
+     * @param string $datetime
      * @return self
      */
-    public function setTimestamp(int $timestamp): self
+    public function setDatetime(string $datetime): self
     {
-        $this->timestamp = $timestamp;
-
+        $this->datetime = $datetime;
         return $this;
     }
 
     /**
-     * Set timestamp for 1 day interval.
+     * Set datetime for 1 day interval.
      *
-     * @param int $timestamp
+     * @param string $datetime
      * @return self
      */
-    public function setTimestamp1d(int $timestamp): self
+    public function setDatetime1d(string $datetime): self
     {
-        $this->timestamp1d = $timestamp;
-
+        $this->datetime1d = $datetime;
         return $this;
     }
 
     /**
-     * Sets timestamp for 30m interval.
+     * Sets datetime for 30m interval.
      *
-     * @param int $timestamp
+     * @param string $datetime
      * @return self
      */
-    public function setTimestamp30m(int $timestamp): self
+    public function setDatetime30m(string $datetime): self
     {
-        $this->timestamp30m = $timestamp;
-
+        $this->datetime30m = $datetime;
         return $this;
     }
 
@@ -115,9 +112,9 @@ class Delete extends Event
             'project' => $this->project,
             'type' => $this->type,
             'document' => $this->document,
-            'timestamp' => $this->timestamp,
-            'timestamp1d' => $this->timestamp1d,
-            'timestamp30m' => $this->timestamp30m
+            'datetime' => $this->datetime,
+            'datetime1d' => $this->datetime1d,
+            'datetime30m' => $this->datetime30m
         ]);
     }
 }

@@ -2183,22 +2183,22 @@ $collections = [
         'name' => 'Builds',
         'attributes' => [
             [
-                '$id' => 'startTime', // todo: change to datetime
-                'type' => Database::VAR_INTEGER,
+                '$id' => 'startTime', // todo: change to datetime in motion
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
             [
-                '$id' => 'endTime', // todo: change to datetime
-                'type' => Database::VAR_INTEGER,
+                '$id' => 'endTime', // todo: change to datetime in motion
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
@@ -2398,7 +2398,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'time', // todo: change to datetime???
+                '$id' => 'time',
                 'type' => Database::VAR_FLOAT,
                 'format' => '',
                 'size' => 0,
@@ -2658,11 +2658,11 @@ $collections = [
             ],
             [
                 '$id' => 'time',
-                'type' => Database::VAR_INTEGER, // todo: change to datetime
+                'type' => Database::VAR_DATETIME,// todo: change to datetime in motion
                 'format' => '',
                 'size' => 0,
                 'signed' => false,
-                'required' => true,
+                'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -2699,16 +2699,16 @@ $collections = [
                 'orders' => [Database::ORDER_DESC],
             ],
             [
-                '$id' => '_key_metric',
+                '$id' => '_key_period_time',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['metric'],
+                'attributes' => ['period', 'time'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_metric_period',
+                '$id' => '_key_metric_period_time',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['metric', 'period'],
+                'attributes' => ['metric', 'period', 'time'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],
             ],

@@ -2529,11 +2529,11 @@ App::get('/v1/databases/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => Database::dateAddSeconds(new DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
-                    // TODO@kodumbeats explore performance if query is ordered by time ASC
+                    // Added 3'rd level to Index [period, metric, time] because of order by.
                     $stats[$metric] = array_reverse($stats[$metric]);
                 }
             });
@@ -2641,7 +2641,7 @@ App::get('/v1/databases/:databaseId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => Database::dateAddSeconds(new DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -2754,7 +2754,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => Database::dateAddSeconds(new DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }

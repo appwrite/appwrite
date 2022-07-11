@@ -4,7 +4,6 @@ use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Appwrite\Resque\Worker;
 use Executor\Executor;
 use Utopia\Storage\Device\Local;
@@ -75,16 +74,16 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_EXECUTIONS:
-                $this->deleteExecutionLogs($this->args['timestamp']);
+                $this->deleteExecutionLogs($this->args['datetime']);
                 break;
 
             case DELETE_TYPE_AUDIT:
-                $timestamp = $this->args['timestamp'] ?? 0;
-                $document = new Document($this->args['document'] ?? []);
-
-                if (!empty($timestamp)) {
-                    $this->deleteAuditLogs($this->args['timestamp']);
+                $datetime = $this->args['datetime'] ?? null;
+                if (!empty($datetime)) {
+                    $this->deleteAuditLogs($datetime);
                 }
+
+                $document = new Document($this->args['document'] ?? []);
 
                 if (!$document->isEmpty()) {
                     $this->deleteAuditLogsByResource('document/' . $document->getId(), $project->getId());
@@ -93,15 +92,15 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_ABUSE:
-                $this->deleteAbuseLogs($this->args['timestamp']);
+                $this->deleteAbuseLogs($this->args['datetime']);
                 break;
 
             case DELETE_TYPE_REALTIME:
-                $this->deleteRealtimeUsage($this->args['timestamp']);
+                $this->deleteRealtimeUsage($this->args['datetime']);
                 break;
 
             case DELETE_TYPE_SESSIONS:
-                $this->deleteExpiredSessions($this->args['timestamp']);
+                $this->deleteExpiredSessions($this->args['datetime']);
                 break;
 
             case DELETE_TYPE_CERTIFICATES:
@@ -110,7 +109,7 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($this->args['timestamp1d'], $this->args['timestamp30m']);
+                $this->deleteUsageStats($this->args['dateTime1d'], $this->args['dateTime30m']);
                 break;
             default:
                 Console::error('No delete operation for type: ' . $type);
@@ -166,21 +165,21 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param int $timestamp1d
-     * @param int $timestamp30m
+     * @param string $datetime1d
+     * @param string $datetime30m
      */
-    protected function deleteUsageStats(int $timestamp1d, int $timestamp30m)
+    protected function deleteUsageStats(string $datetime1d, string $datetime30m)
     {
-        $this->deleteForProjectIds(function (string $projectId) use ($timestamp1d, $timestamp30m) {
+        $this->deleteForProjectIds(function (string $projectId) use ($datetime1d, $datetime30m) {
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Usage stats
             $this->deleteByGroup('stats', [
-                new Query('time', Query::TYPE_LESSER, [$timestamp1d]),
+                new Query('time', Query::TYPE_LESSER, [$datetime1d]),
                 new Query('period', Query::TYPE_EQUAL, ['1d']),
             ], $dbForProject);
 
             $this->deleteByGroup('stats', [
-                new Query('time', Query::TYPE_LESSER, [$timestamp30m]),
+                new Query('time', Query::TYPE_LESSER, [$datetime30m]),
                 new Query('period', Query::TYPE_EQUAL, ['30m']),
             ], $dbForProject);
         });
@@ -261,61 +260,62 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param int $timestamp
+     * @param string $datetime
      */
-    protected function deleteExecutionLogs(int $timestamp): void
+    protected function deleteExecutionLogs(string $datetime): void
     {
-        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+        $this->deleteForProjectIds(function (string $projectId) use ($datetime) {
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Executions
             $this->deleteByGroup('executions', [
-                new Query('$createdAt', Query::TYPE_LESSER, [$timestamp])
+                new Query('$createdAt', Query::TYPE_LESSER, [$datetime])
             ], $dbForProject);
         });
     }
 
     /**
-     * @param int $timestamp
+     * @param string $datetime
      */
-    protected function deleteExpiredSessions(int $timestamp): void
+    protected function deleteExpiredSessions(string $datetime): void
     {
-        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+        $this->deleteForProjectIds(function (string $projectId) use ($datetime) {
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Sessions
             $this->deleteByGroup('sessions', [
-                new Query('expire', Query::TYPE_LESSER, [$timestamp])
+                new Query('expire', Query::TYPE_LESSER, [$datetime])
             ], $dbForProject);
         });
     }
 
     /**
-     * @param int $timestamp
+     * @param string $datetime
      */
-    protected function deleteRealtimeUsage(int $timestamp): void
+    protected function deleteRealtimeUsage(string $datetime): void
     {
-        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+        $this->deleteForProjectIds(function (string $projectId) use ($datetime) {
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Dead Realtime Logs
             $this->deleteByGroup('realtime', [
-                new Query('timestamp', Query::TYPE_LESSER, [$timestamp])
+                new Query('timestamp', Query::TYPE_LESSER, [$datetime])
             ], $dbForProject);
         });
     }
 
     /**
-     * @param int $timestamp
+     * @param string $datetime
+     * @throws Exception
      */
-    protected function deleteAbuseLogs(int $timestamp): void
+    protected function deleteAbuseLogs(string $datetime): void
     {
-        if ($timestamp == 0) {
-            throw new Exception('Failed to delete audit logs. No timestamp provided');
+        if (empty($datetime)) {
+            throw new Exception('Failed to delete audit logs. No datetime provided');
         }
 
-        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+        $this->deleteForProjectIds(function (string $projectId) use ($datetime) {
             $dbForProject = $this->getProjectDB($projectId);
             $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
             $abuse = new Abuse($timeLimit);
-
+            $timestamp = (new DateTime($datetime))->getTimestamp(); //todo:make abuse get datetime
             $status = $abuse->cleanup($timestamp);
             if (!$status) {
                 throw new Exception('Failed to delete Abuse logs for project ' . $projectId);
@@ -324,16 +324,19 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param int $timestamp
+     * @param string $datetime
+     * @throws Exception
      */
-    protected function deleteAuditLogs(int $timestamp): void
+    protected function deleteAuditLogs(string $datetime): void
     {
-        if ($timestamp == 0) {
-            throw new Exception('Failed to delete audit logs. No timestamp provided');
+        if (empty($datetime)) {
+            throw new Exception('Failed to delete audit logs. No datetime provided');
         }
-        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+
+        $this->deleteForProjectIds(function (string $projectId) use ($datetime) {
             $dbForProject = $this->getProjectDB($projectId);
             $audit = new Audit($dbForProject);
+            $timestamp = (new DateTime($datetime))->getTimestamp(); //todo:make audit get datetime
             $status = $audit->cleanup($timestamp);
             if (!$status) {
                 throw new Exception('Failed to delete Audit logs for project' . $projectId);
@@ -342,7 +345,8 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param int $timestamp
+     * @param string $resource
+     * @param string $projectId
      */
     protected function deleteAuditLogsByResource(string $resource, string $projectId): void
     {
