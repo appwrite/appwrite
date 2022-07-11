@@ -420,6 +420,8 @@ services:
     container_name: appwrite-functions-proxy
     build:
       context: .
+    ports:
+      - 5544:80
     networks:
       - appwrite
     volumes:
@@ -436,6 +438,7 @@ services:
       - _APP_REDIS_PASS
       - _APP_EXECUTORS
       - _APP_EXECUTOR_SECRET
+      - _APP_FUNCTIONS_PROXY_SECRET
 
   appwrite-worker-functions:
     entrypoint: worker-functions
@@ -487,53 +490,6 @@ services:
       runtimes:
     ports:
       - 9519:80
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-      - appwrite-functions:/storage/functions:rw
-      - appwrite-builds:/storage/builds:rw
-      - /tmp:/tmp:rw
-    depends_on:
-      - redis
-      - mariadb
-      - appwrite
-      - appwrite-functions-proxy
-    environment:
-      - _APP_ENV
-      - _APP_VERSION
-      - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CONTAINERS
-      - _APP_FUNCTIONS_RUNTIMES
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_MEMORY_SWAP
-      - _APP_FUNCTIONS_INACTIVE_THRESHOLD
-      - _APP_EXECUTOR_SECRET
-      - OPEN_RUNTIMES_NETWORK
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
-      - *x-env-storage
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
-
-  appwrite-executor2:
-    container_name: appwrite-executor2
-    <<: *x-logging
-    entrypoint: executor
-    stop_signal: SIGINT
-    build:
-      context: .
-      args:
-        - DEBUG=false
-        - TESTING=true
-        - VERSION=dev
-    networks:
-      appwrite:
-      runtimes:
-    ports:
-      - 9529:80
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./app:/usr/src/code/app
