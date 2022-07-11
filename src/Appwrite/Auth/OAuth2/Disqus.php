@@ -100,9 +100,12 @@ class Disqus extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        $isVerified = $user['response']['isAnonymous'];
+        // Look out for the change in their enpoint.
+        // It's in Beta so they may provide a parameter in the future.
+        // https://disqus.com/api/docs/users/details/
+        // $isVerified = $user['response']['isAnonymous'];
 
-        return $isVerified;
+        return false;
     }
 
     public function getUserName(string $accessToken): string
