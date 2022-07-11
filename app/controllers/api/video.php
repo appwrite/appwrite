@@ -58,10 +58,9 @@ use Streaming\Representation;
  * @return Document $file
  * @throws Exception
  */
-function validateFilePermissions(Database $dbForProject, string $bucketId, string $fileId, string $mode, ?array $read, ?array $write): Document
+function validateFilePermissions(Database $dbForProject, string $bucketId, string $fileId, string $mode, Document $user, ?array $read, ?array $write): Document
 {
     /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Document $user */
 
     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -113,8 +112,15 @@ function validateFilePermissions(Database $dbForProject, string $bucketId, strin
 App::get('/v1/video/profiles')
     ->alias('/v1/video/video/profiles', [])
     ->desc('Get all video profiles')
-    ->groups(['api', 'storage'])
+    ->groups(['api', 'video'])
     ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'getProfiles')
+    ->label('sdk.description', '/docs/references/video/get-profiles.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VIDEO_PROFILE_LIST)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (Response $response, Database $dbForProject) {
@@ -135,8 +141,9 @@ App::get('/v1/video/profiles')
 App::post('/v1/video/:videoId/subtitles')
     ->alias('/v1/video/:videoId/subtitles', [])
     ->desc('Link a subtitle file to a video')
-    ->groups(['api', 'storage'])
+    ->groups(['api', 'video'])
     ->label('scope', 'files.write')
+    // TODO: Add sdk labels
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('bucketId', '', new CustomId(), 'Subtitle bucket unique ID.')
     ->param('fileId', '', new CustomId(), 'Subtitle file unique ID.')
@@ -157,7 +164,6 @@ App::post('/v1/video/:videoId/subtitles')
     ->inject('deviceLocal')
     ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, $project, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Document $user */
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
@@ -165,8 +171,8 @@ App::post('/v1/video/:videoId/subtitles')
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $read, $write);
-        validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $read, $write);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user, $read, $write);
+        validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user, $read, $write);
 
         try {
             $subtitle = Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $fileId, $name, $code) {
@@ -187,10 +193,16 @@ App::post('/v1/video/:videoId/subtitles')
 
 
 App::post('/v1/video/buckets/:bucketId/files/:fileId')
-    ->alias('/v1/video/files', ['bucketId' => 'default'])
-    ->desc('Create video')
-    ->groups(['api', 'storage'])
+    ->desc('Create Video')
+    ->groups(['api', 'video'])
     ->label('scope', 'files.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'create')
+    ->label('sdk.description', '/docs/references/video/create.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VIDEO)
 //    ->label('event', 'buckets.[bucketId].files.[fileId].create')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new CustomId(), 'File ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
@@ -209,9 +221,8 @@ App::post('/v1/video/buckets/:bucketId/files/:fileId')
     ->inject('deviceLocal')
     ->action(action: function (string $bucketId, string $fileId, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, $project, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Document $user */
 
-        $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $read, $write);
+        $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user, $read, $write);
 
         try {
             $video = Authorization::skip(function () use ($dbForProject, $bucketId, $file) {
@@ -237,8 +248,14 @@ App::post('/v1/video/buckets/:bucketId/files/:fileId')
 App::post('/v1/video/:videoId/rendition/:profileId')
     ->alias('/v1/video/:videoId/rendition/:profileId', [])
     ->desc('Start transcoding video rendition')
-    ->groups(['api', 'storage'])
+    ->groups(['api', 'video'])
     ->label('scope', 'files.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'createTranscoding')
+    ->label('sdk.description', '/docs/references/video/create-transcoding.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
 //    ->label('event', 'buckets.[bucketId].files.[fileId].create')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('profileId', '', new CustomId(), 'Profile unique ID.')
@@ -257,7 +274,6 @@ App::post('/v1/video/:videoId/rendition/:profileId')
     ->inject('deviceLocal')
     ->action(action: function (string $videoId, string $profileId, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, $project, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Document $user */
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
@@ -265,7 +281,7 @@ App::post('/v1/video/:videoId/rendition/:profileId')
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $read, $write);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user, $read, $write);
 
         $profile = Authorization::skip(fn() => $dbForProject->findOne('video_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$profileId])]));
 
@@ -281,15 +297,22 @@ App::post('/v1/video/:videoId/rendition/:profileId')
            ->setProfileId($profile->getId())
            ->trigger();
 
-        $response->json(['result' => 'ok']);
+        $response->noContent();
     });
 
 
 App::get('/v1/video/:videoId/:stream/renditions')
     ->alias('/v1/video/:videoId/renditions', [])
     ->desc('Get File renditions')
-    ->groups(['api', 'storage'])
+    ->groups(['api', 'video'])
     ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'getRenditions')
+    ->label('sdk.description', '/docs/references/video/get-renditions.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VIDEO_RENDITIONS_LIST)
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('stream', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
     ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
@@ -298,10 +321,10 @@ App::get('/v1/video/:videoId/:stream/renditions')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('mode')
-    ->action(function (string $videoId, string $stream, ?array $read, ?array $write, Response $response, Database $dbForProject, Stats $usage, string $mode) {
+    ->inject('user')
+    ->action(function (string $videoId, string $stream, ?array $read, ?array $write, Response $response, Database $dbForProject, Stats $usage, string $mode, Document $user) {
 
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Document $user */
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
@@ -309,7 +332,7 @@ App::get('/v1/video/:videoId/:stream/renditions')
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
-        $file = validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $read, $write);
+        $file = validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user, $read, $write);
 
         $queries = [
             new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
@@ -330,9 +353,15 @@ App::get('/v1/video/:videoId/:stream/renditions')
 
 App::get('/v1/video/:videoId/:stream/:profile/:fileName')
     ->alias('/v1/video/:videoId/:stream/:profile/:fileName', [])
-    ->desc('Get video  playlist manifests')
-    ->groups(['api', 'storage'])
-    #->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->desc('Get video playlist manifests')
+    ->groups(['api', 'video'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'getPlaylist')
+    ->label('sdk.description', '/docs/references/video/get-playlist.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    // TODO: Response model
     ->label('scope', 'files.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('stream', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
@@ -345,10 +374,9 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
     ->inject('videosDevice')
     ->inject('usage')
     ->inject('mode')
-    ->action(function (string $videoId, string $stream, string $profile, string $fileName, ?array $read, ?array $write, Response $response, Database $dbForProject, Device $videosDevice, Stats $usage, string $mode) {
-
+    ->inject('user')
+    ->action(function (string $videoId, string $stream, string $profile, string $fileName, ?array $read, ?array $write, Response $response, Database $dbForProject, Device $videosDevice, Stats $usage, string $mode, Document $user) {
         /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Document $user */
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
@@ -358,7 +386,7 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $read, $write);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user, $read, $write);
 
         $renditions = Authorization::skip(fn () => $dbForProject->find('video_renditions', [
             new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
@@ -368,7 +396,7 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
         ], 12, 0, [], ['ASC']));
 
         if (empty($renditions)) {
-            throw new Exception('Renditions not found');
+            throw new Exception('Renditions not found'); // TODO: Proper error code
         }
 
         $ct['m3u8'] = 'application/x-mpegurl';
