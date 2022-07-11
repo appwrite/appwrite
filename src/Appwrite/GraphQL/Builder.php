@@ -331,8 +331,9 @@ class Builder
         ksort($queryFields);
         ksort($mutationFields);
 
-        $time_elapsed_secs = (microtime(true) - $start) * 1000;
-        Console::info('[INFO] Built GraphQL Schema in ' . $time_elapsed_secs . 'ms');
+        $timeElapsedMillis = (microtime(true) - $start) * 1000;
+        $timeElapsedMillis = \number_format((float) $timeElapsedMillis, 3, '.', '');
+        Console::info('[INFO] Built GraphQL Schema in ' . $timeElapsedMillis . 'ms');
 
         return new Schema([
             'query' => new ObjectType([
@@ -424,8 +425,9 @@ class Builder
                 }
             }
         }
-        $time_elapsed_secs = (microtime(true) - $start) * 1000;
-        Console::info("[INFO] Built GraphQL REST API Schema in ${time_elapsed_secs}ms");
+        $timeElapsedMillis = (microtime(true) - $start) * 1000;
+        $timeElapsedMillis = \number_format((float) $timeElapsedMillis, 3, '.', '');
+        Console::info("[INFO] Built GraphQL REST API Schema in ${timeElapsedMillis}ms");
 
         return [
             'query' => $queryFields,
@@ -561,8 +563,9 @@ class Builder
         }
         $wg->wait();
 
-        $time_elapsed_secs = (microtime(true) - $start) * 1000;
-        Console::info('[INFO] Built GraphQL Project Collection Schema in ' . $time_elapsed_secs . 'ms (' . $count . ' attributes)');
+        $timeElapsedMillis = (microtime(true) - $start) * 1000;
+        $timeElapsedMillis = \number_format((float) $timeElapsedMillis, 3, '.', '');
+        Console::info('[INFO] Built GraphQL Project Collection Schema in ' . $timeElapsedMillis . 'ms (' . $count . ' attributes)');
 
         return [
             'query' => $queryFields,
