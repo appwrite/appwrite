@@ -27,6 +27,7 @@ use Appwrite\Auth\Phone\Mock;
 use Appwrite\Auth\Phone\Telesign;
 use Appwrite\Auth\Phone\TextMagic;
 use Appwrite\Auth\Phone\Twilio;
+use Appwrite\Auth\Phone\Msg91;
 use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
@@ -990,6 +991,7 @@ App::setResource('phone', function () {
         'twilio' => new Twilio($user, $secret),
         'text-magic' => new TextMagic($user, $secret),
         'telesign' => new Telesign($user, $secret),
+        'msg91' => new Msg91($user, $secret),
         default => null
     };
 });
