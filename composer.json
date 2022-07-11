@@ -9,6 +9,11 @@
             "email": "eldad@appwrite.io"
         }
     ],
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "lint": "vendor/bin/phpcs",
+        "format": "vendor/bin/phpcbf"
+    },
     "autoload": {
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
