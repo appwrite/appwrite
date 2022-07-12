@@ -2,12 +2,12 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-
+use FunctionsProxy\Adapter\Random;
+use FunctionsProxy\Adapter\RoundRobin;
+use Swoole\Coroutine\Http\Client;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Swoole\Http\Server;
-use Utopia\Swoole\Request;
-use Utopia\Swoole\Response;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Swoole\Http\Request as SwooleRequest;
@@ -38,23 +38,27 @@ $redisPool = new RedisPool(
     64
 );
 
-function markOffline(Cache $cache, string $executorId, string $error) {
+$adapter = new RoundRobin($redisPool);
+
+function markOffline(Cache $cache, string $executorId, string $error)
+{
     $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
 
-    $cache->save('executors-' . $executorId, [ 'state' => 'offline' ]);
+    $cache->save('executors-' . $executorId, ['status' => 'offline']);
 
-    if(!$data || $data['state'] === 'online') {
+    if (!$data || $data['status'] === 'online') {
         Console::warning('Executor "' . $executorId . '" went down! Message:');
         Console::warning($error);
     }
 }
 
-function markOnline(cache $cache, string $executorId) {
+function markOnline(cache $cache, string $executorId)
+{
     $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
 
-    $cache->save('executors-' . $executorId, [ 'state' => 'online' ]);
+    $cache->save('executors-' . $executorId, ['status' => 'online']);
 
-    if(!$data || $data['state'] === 'offline') {
+    if (!$data || $data['status'] === 'offline') {
         Console::success('Executor "' . $executorId . '" went online.');
     }
 }
@@ -72,7 +76,7 @@ function fetchExecutorsState(RedisPool $redisPool)
             try {
                 [$id, $hostname] = \explode('=', $executor);
 
-                $endpoint = $hostname . '/health';
+                $endpoint = 'http://' . $hostname . '/v1/health';
 
                 $ch = \curl_init();
 
@@ -166,85 +170,51 @@ Console::success("Waiting for executors to start...");
 
 \sleep(5); // Wait a little so executors can start
 
-// fetchExecutorsState($redisPool);
-// Timer::tick(30000, fn (int $timerId, array $params) => fetchExecutorsState($params[0]), [$redisPool]);
-
-Console::success("Functions proxy is ready.");
-
-App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
+fetchExecutorsState($redisPool);
 
 $http = new Server("0.0.0.0", 80);
 
-/** Set callbacks */
-App::error(function ($utopia, $error, $request, $response) {
-    $route = $utopia->match($request);
-    logError($error, "httpError", $route);
+$run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter) {
+    $secretKey = $request->header['x-appwrite-functions-proxy-key'] ?? '';
 
-    switch ($error->getCode()) {
-        case 400: // Error allowed publicly
-        case 401: // Error allowed publicly
-        case 402: // Error allowed publicly
-        case 403: // Error allowed publicly
-        case 404: // Error allowed publicly
-        case 406: // Error allowed publicly
-        case 409: // Error allowed publicly
-        case 412: // Error allowed publicly
-        case 425: // Error allowed publicly
-        case 429: // Error allowed publicly
-        case 501: // Error allowed publicly
-        case 503: // Error allowed publicly
-            $code = $error->getCode();
-            break;
-        default:
-            $code = 500; // All other errors get the generic 500 server error status code
+    if (empty($secretKey)) {
+        throw new Exception('Missing proxy key');
+    }
+    if ($secretKey !== App::getEnv('_APP_FUNCTIONS_PROXY_SECRET', '')) {
+        throw new Exception('Missing proxy key');
     }
 
-    $output = [
-        'message' => $error->getMessage(),
-        'code' => $error->getCode(),
-        'file' => $error->getFile(),
-        'line' => $error->getLine(),
-        'trace' => $error->getTrace(),
-        'version' => App::getEnv('_APP_VERSION', 'UNKNOWN')
-    ];
+    $executorHostname = $adapter->getNextExecutor();
 
-    $response
-        ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-        ->addHeader('Expires', '0')
-        ->addHeader('Pragma', 'no-cache')
-        ->setStatusCode($code);
+    \var_dump($request->server['request_uri']);
+    \var_dump($request->server['request_method']);
+    \var_dump($executorHostname);
 
-    $response->json($output);
-}, ['utopia', 'error', 'request', 'response']);
+    $client = new Client($executorHostname, 80);
+    $client->setMethod($request->server['request_method'] ?? 'GET');
+    $client->setData($request->getData());
+    $client->setHeaders(\array_merge($request->header, [
+        'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
+    ]));
 
-App::get('/')
-    ->desc("Proxy request into executor")
-    ->inject('response')
-    ->action(function (Response $response) {
-        $response
-            ->setStatusCode(Response::STATUS_CODE_OK)
-            ->json([ 'works' => true ]);
-    });
+    $status = $client->execute($request->server['request_uri'] ?? '/');
 
-App::init(function ($request, $response) {
-    $secretKey = $request->getHeader('x-appwrite-functions-proxy-key', '');
+    $response->setStatusCode(200);
+    $response->end(\json_encode([
+        'data' => $status,
+        'data2' => $client->getBody(),
+        'data3' => $client->getStatusCode(),
+        'data4' => $client->errCode
+    ]));
+};
 
-   if (empty($secretKey)) {
-       throw new Exception('Missing proxy key', 401);
-   }
+$http->on('start', function () use ($redisPool) {
+    Timer::tick(30000, fn (int $timerId, array $params) => fetchExecutorsState($params[0]), [$redisPool]);
+});
 
-   if ($secretKey !== App::getEnv('_APP_FUNCTIONS_PROXY_SECRET', '')) {
-       throw new Exception('Missing proxy key', 401);
-   }
-}, ['request', 'response']);
-
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
-    $request = new Request($swooleRequest);
-    $response = new Response($swooleResponse);
-    $app = new App('UTC');
-
+$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($run) {
     try {
-        $app->run($request, $response);
+        call_user_func($run, $swooleRequest, $swooleResponse);
     } catch (\Throwable $th) {
         logError($th, "serverError");
         $swooleResponse->setStatusCode(500);
@@ -258,5 +228,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $swooleResponse->end(\json_encode($output));
     }
 });
+
+Console::success("Functions proxy is ready.");
 
 $http->start();
