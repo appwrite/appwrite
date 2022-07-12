@@ -111,7 +111,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['joined']));
+        $this->assertEquals(false, DateTime::isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
         $lastEmail = $this->getLastEmail();
