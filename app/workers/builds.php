@@ -7,6 +7,7 @@ use Appwrite\Utopia\Response\Model\Deployment;
 use Cron\CronExpression;
 use Executor\Executor;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Storage\Storage;
@@ -75,7 +76,7 @@ class BuildsV1 extends Worker
         }
 
         $buildId = $deployment->getAttribute('buildId', '');
-        $startTime = Database::getCurrentDateTime();
+        $startTime = DateTime::getCurrentDateTime();
         if (empty($buildId)) {
             $buildId = $dbForProject->getId();
             $build = $dbForProject->createDocument('builds', new Document([
@@ -166,7 +167,7 @@ class BuildsV1 extends Worker
 
             /** Update the build document */
 
-            //$response['endTime'] = Database::dateFormat((new DateTime())->setTimestamp($response['endTime'])); //todo: fix to datetime
+            //$response['endTime'] = DateTime::dateFormat((new \DateTime())->setTimestamp($response['endTime'])); //todo: fix to datetime
 
             $build->setAttribute('endTime', $response['endTime']);
             $build->setAttribute('duration', $response['duration']);
@@ -186,12 +187,12 @@ class BuildsV1 extends Worker
             /** Update function schedule */
             $schedule = $function->getAttribute('schedule', '');
             $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? Database::dateFormat($cron->getNextRunDate()) : null;
+            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::dateFormat($cron->getNextRunDate()) : null;
             $function->setAttribute('scheduleNext', $next);
             $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
         } catch (\Throwable $th) {
-            $endtime = Database::getCurrentDateTime();
-            $interval = (new DateTime($endtime))->diff(new DateTime($startTime));
+            $endtime = DateTime::getCurrentDateTime();
+            $interval = (new \DateTime($endtime))->diff(new \DateTime($startTime));
             $build->setAttribute('endTime', $endtime);
             $build->setAttribute('duration', $interval->format('%s'));
             $build->setAttribute('status', 'failed');

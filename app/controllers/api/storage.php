@@ -15,6 +15,7 @@ use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Structure as StructureException;
@@ -1547,7 +1548,7 @@ App::get('/v1/storage/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => Database::dateAddSeconds(new DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::dateAddSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -1656,7 +1657,7 @@ App::get('/v1/storage/:bucketId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => Database::dateAddSeconds(new DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::dateAddSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }

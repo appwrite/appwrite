@@ -22,6 +22,7 @@ use Appwrite\Task\Validator\Cron;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\ArrayList;
@@ -256,7 +257,7 @@ App::get('/v1/functions/:functionId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => Database::dateAddSeconds(new DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::dateAddSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -309,7 +310,7 @@ App::put('/v1/functions/:functionId')
 
         $original = $function->getAttribute('schedule', '');
         $cron = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? Database::dateFormat($cron->getNextRunDate()) : null;
+        $next = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::dateFormat($cron->getNextRunDate()) : null;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
@@ -330,7 +331,7 @@ App::put('/v1/functions/:functionId')
                 ->setType('schedule')
                 ->setUser($user)
                 ->setProject($project)
-                ->schedule(new DateTime($next));
+                ->schedule(new \DateTime($next));
         }
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -380,7 +381,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
 
         $schedule = $function->getAttribute('schedule', '');
         $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? Database::dateFormat($cron->getNextRunDate()) : null;
+        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::dateFormat($cron->getNextRunDate()) : null;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'deployment' => $deployment->getId(),
@@ -393,7 +394,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
                 ->setType('schedule')
                 ->setFunction($function)
                 ->setProject($project)
-                ->schedule(new DateTime($next));
+                ->schedule(new \DateTime($next));
         }
 
         $events
@@ -944,7 +945,7 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
-            $interval = (new DateTime())->diff(new DateTime($execution->getCreatedAt()));
+            $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution
                 ->setAttribute('time', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')

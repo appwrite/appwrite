@@ -23,6 +23,7 @@ use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Hostname;
@@ -285,7 +286,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
 
             $expire = $key->getAttribute('expire');
 
-            if (!empty($expire) && $expire < Database::getCurrentDateTime()) {
+            if (!empty($expire) && $expire < DateTime::getCurrentDateTime()) {
                 throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
             }
 

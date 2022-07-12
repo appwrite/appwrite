@@ -17,6 +17,7 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\DatetimeValidation;
@@ -314,7 +315,7 @@ App::get('/v1/projects/:projectId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => Database::dateAddSeconds(new DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::dateAddSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -820,7 +821,7 @@ App::post('/v1/projects/:projectId/keys')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
-    ->param('expire', null, new DatetimeValidation(), 'Expiration time in DateTime. Use null for unlimited expiration.', true)
+    ->param('expire', null, new DateTimeValidation(), 'Expiration time in DateTime. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, array $scopes, string|null $expire, Response $response, Database $dbForConsole) {
@@ -1245,7 +1246,7 @@ App::post('/v1/projects/:projectId/domains')
             '$write' => ['role:all'],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
-            'updated' => Database::getCurrentDateTime(),
+            'updated' => DateTime::getCurrentDateTime(),
             'domain' => $domain->get(),
             'tld' => $domain->getSuffix(),
             'registerable' => $domain->getRegisterable(),

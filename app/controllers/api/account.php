@@ -26,6 +26,7 @@ use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -102,8 +103,8 @@ App::post('/v1/account')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => Auth::passwordHash($password),
-                'passwordUpdate' => Database::getCurrentDateTime(),
-                'registration' => Database::getCurrentDateTime(),
+                'passwordUpdate' => DateTime::getCurrentDateTime(),
+                'registration' => DateTime::getCurrentDateTime(),
                 'reset' => false,
                 'name' => $name,
                 'prefs' => new \stdClass(),
@@ -175,7 +176,7 @@ App::post('/v1/account/sessions/email')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
@@ -215,8 +216,8 @@ App::post('/v1/account/sessions/email')
         }
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($profile->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($profile->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
@@ -484,7 +485,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'status' => true, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
                         'passwordUpdate' => null,
-                        'registration' => Database::getCurrentDateTime(),
+                        'registration' => DateTime::getCurrentDateTime(),
                         'reset' => false,
                         'name' => $name,
                         'prefs' => new \stdClass(),
@@ -507,7 +508,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
 
         $session = new Document(array_merge([
             '$id' => $dbForProject->getId(),
@@ -517,7 +518,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'providerUid' => $oauth2ID,
             'providerAccessToken' => $accessToken,
             'providerRefreshToken' => $refreshToken,
-            'providerAccessTokenExpiry' => Database::dateAddSeconds(new DateTime(), (int)$accessTokenExpiry),
+            'providerAccessTokenExpiry' => DateTime::dateAddSeconds(new \DateTime(), (int)$accessTokenExpiry),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
@@ -584,8 +585,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->redirect($state['success'])
         ;
     });
@@ -650,7 +651,7 @@ App::post('/v1/account/sessions/magic-url')
                 'status' => true,
                 'password' => null,
                 'passwordUpdate' => null,
-                'registration' => Database::getCurrentDateTime(),
+                'registration' => DateTime::getCurrentDateTime(),
                 'reset' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
@@ -661,7 +662,7 @@ App::post('/v1/account/sessions/magic-url')
         }
 
         $loginSecret = Auth::tokenGenerator();
-        $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $token = new Document([
             '$id' => $dbForProject->getId(),
@@ -761,7 +762,7 @@ App::put('/v1/account/sessions/magic-url')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
 
         $session = new Document(array_merge(
             [
@@ -819,8 +820,8 @@ App::put('/v1/account/sessions/magic-url')
         $protocol = $request->getProtocol();
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
@@ -893,7 +894,7 @@ App::post('/v1/account/sessions/phone')
                 'status' => true,
                 'password' => null,
                 'passwordUpdate' => null,
-                'registration' => Database::getCurrentDateTime(),
+                'registration' => DateTime::getCurrentDateTime(),
                 'reset' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
@@ -904,7 +905,7 @@ App::post('/v1/account/sessions/phone')
         }
 
         $secret = $phone->generateSecretDigits();
-        $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_PHONE);
+        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE);
 
         $token = new Document([
             '$id' => $dbForProject->getId(),
@@ -991,7 +992,7 @@ App::put('/v1/account/sessions/phone')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
 
         $session = new Document(array_merge(
             [
@@ -1047,8 +1048,8 @@ App::put('/v1/account/sessions/phone')
         $protocol = $request->getProtocol();
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
@@ -1119,7 +1120,7 @@ App::post('/v1/account/sessions/anonymous')
             'status' => true,
             'password' => null,
             'passwordUpdate' => null,
-            'registration' => Database::getCurrentDateTime(),
+            'registration' => DateTime::getCurrentDateTime(),
             'reset' => false,
             'name' => null,
             'prefs' => new \stdClass(),
@@ -1134,7 +1135,7 @@ App::post('/v1/account/sessions/anonymous')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
 
         $session = new Document(array_merge(
             [
@@ -1178,8 +1179,8 @@ App::post('/v1/account/sessions/anonymous')
         }
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
@@ -1489,7 +1490,7 @@ App::patch('/v1/account/password')
             $user->getId(),
             $user
                 ->setAttribute('password', Auth::passwordHash($password))
-                ->setAttribute('passwordUpdate', Database::getCurrentDateTime())
+                ->setAttribute('passwordUpdate', DateTime::getCurrentDateTime())
         );
 
         $audits
@@ -1820,7 +1821,7 @@ App::patch('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                     ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                    ->setAttribute('providerAccessTokenExpiry', Database::dateAddSeconds(new DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+                    ->setAttribute('providerAccessTokenExpiry', DateTime::dateAddSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
                 $dbForProject->updateDocument('sessions', $sessionId, $session);
 
@@ -1963,7 +1964,7 @@ App::post('/v1/account/recovery')
             throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED);
         }
 
-        $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_RECOVERY);
+        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_RECOVERY);
 
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
@@ -2064,7 +2065,7 @@ App::put('/v1/account/recovery')
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
                 ->setAttribute('password', Auth::passwordHash($password))
-                ->setAttribute('passwordUpdate', Database::getCurrentDateTime())
+                ->setAttribute('passwordUpdate', DateTime::getCurrentDateTime())
                 ->setAttribute('emailVerification', true));
 
         $recoveryDocument = $dbForProject->getDocument('tokens', $recovery);
@@ -2123,7 +2124,7 @@ App::post('/v1/account/verification')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
         $verificationSecret = Auth::tokenGenerator();
-        $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
             '$id' => $dbForProject->getId(),
@@ -2276,7 +2277,7 @@ App::post('/v1/account/verification/phone')
         $isAppUser = Auth::isAppUser($roles);
         $verificationSecret = Auth::tokenGenerator();
         $secret = $phone->generateSecretDigits();
-        $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
             '$id' => $dbForProject->getId(),

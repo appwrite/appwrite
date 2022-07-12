@@ -2183,7 +2183,7 @@ $collections = [
         'name' => 'Builds',
         'attributes' => [
             [
-                '$id' => 'startTime', // todo: change to datetime in motion
+                '$id' => 'startTime',
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
@@ -2194,7 +2194,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'endTime', // todo: change to datetime in motion
+                '$id' => 'endTime',
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
@@ -2658,7 +2658,7 @@ $collections = [
             ],
             [
                 '$id' => 'time',
-                'type' => Database::VAR_DATETIME,// todo: change to datetime in motion
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => false,
@@ -2732,11 +2732,11 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'timestamp', // todo: change to datetime???
-                'type' => Database::VAR_INTEGER,
+                '$id' => 'timestamp',
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,

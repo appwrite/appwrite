@@ -12,8 +12,8 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__ . '/../init.php';
 
@@ -147,11 +147,11 @@ class FunctionsV1 extends Worker
                 }
 
                 $cron = new CronExpression($function->getAttribute('schedule'));
-                $next = Database::dateFormat($cron->getNextRunDate());
+                $next = DateTime::dateFormat($cron->getNextRunDate());
 
                 $function
                     ->setAttribute('scheduleNext', $next)
-                    ->setAttribute('schedulePrevious', Database::getCurrentDateTime());
+                    ->setAttribute('schedulePrevious', DateTime::getCurrentDateTime());
 
                 $function = $database->updateDocument(
                     'functions',
@@ -165,7 +165,7 @@ class FunctionsV1 extends Worker
                     ->setType('schedule')
                     ->setUser($user)
                     ->setProject($project)
-                    ->schedule(new DateTime($next));
+                    ->schedule(new \DateTime($next));
                 ;
 
                 $this->execute(
@@ -291,7 +291,7 @@ class FunctionsV1 extends Worker
                 ->setAttribute('stderr', $executionResponse['stderr'])
                 ->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
-            $interval = (new DateTime())->diff(new DateTime($execution->getCreatedAt()));
+            $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution
                 ->setAttribute('time', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')

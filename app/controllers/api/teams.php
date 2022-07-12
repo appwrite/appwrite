@@ -22,6 +22,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
+use Utopia\Database\DateTime;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
@@ -77,8 +78,8 @@ App::post('/v1/teams')
                 'teamId' => $team->getId(),
                 'teamInternalId' => $team->getInternalId(),
                 'roles' => $roles,
-                'invited' => Database::getCurrentDateTime(),
-                'joined' => Database::getCurrentDateTime(),
+                'invited' => DateTime::getCurrentDateTime(),
+                'joined' => DateTime::getCurrentDateTime(),
                 'confirm' => true,
                 'secret' => '',
                 'search' => implode(' ', [$membershipId, $user->getId()])
@@ -340,7 +341,7 @@ App::post('/v1/teams/:teamId/memberships')
                      * old password
                      */
                     'passwordUpdate' => null,
-                    'registration' => Database::getCurrentDateTime(),
+                    'registration' => DateTime::getCurrentDateTime(),
                     'reset' => false,
                     'name' => $name,
                     'prefs' => new \stdClass(),
@@ -372,8 +373,8 @@ App::post('/v1/teams/:teamId/memberships')
             'teamId' => $team->getId(),
             'teamInternalId' => $team->getInternalId(),
             'roles' => $roles,
-            'invited' => Database::getCurrentDateTime(),
-            'joined' => ($isPrivilegedUser || $isAppUser) ? Database::getCurrentDateTime() : null,
+            'invited' => DateTime::getCurrentDateTime(),
+            'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::getCurrentDateTime() : null,
             'confirm' => ($isPrivilegedUser || $isAppUser),
             'secret' => Auth::hash($secret),
             'search' => implode(' ', [$membershipId, $invitee->getId()])
@@ -686,7 +687,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         $membership // Attach user to team
-            ->setAttribute('joined', Database::getCurrentDateTime())
+            ->setAttribute('joined', DateTime::getCurrentDateTime())
             ->setAttribute('confirm', true)
         ;
 
@@ -700,7 +701,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expire = Database::dateAddSeconds(new DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
             '$id' => $dbForProject->getId(),
@@ -743,8 +744,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ;
 
         $response->dynamic(

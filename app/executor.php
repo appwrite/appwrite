@@ -12,7 +12,7 @@ use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Orchestration\Adapter\DockerCLI;
@@ -189,8 +189,8 @@ App::post('/v1/runtimes')
         $containerId = '';
         $stdout = '';
         $stderr = '';
-        $startTime = Database::getCurrentDateTime();
-        $startTimeUnix = (new DateTime($startTime))->getTimestamp();
+        $startTime = DateTime::getCurrentDateTime();
+        $startTimeUnix = (new \DateTime($startTime))->getTimestamp();
         $endTimeUnix = 0;
         $orchestration = $orchestrationPool->get();
 
@@ -321,8 +321,8 @@ App::post('/v1/runtimes')
                 $stdout = 'Build Successful!';
             }
 
-            $endTime = Database::getCurrentDateTime();
-            $endTimeUnix = (new DateTime($endTime))->getTimestamp();
+            $endTime = DateTime::getCurrentDateTime();
+            $endTimeUnix = (new \DateTime($endTime))->getTimestamp();
             $duration = $endTimeUnix - $startTimeUnix;
 
             $container = array_merge($container, [

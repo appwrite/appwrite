@@ -315,7 +315,7 @@ class DeletesV1 extends Worker
             $dbForProject = $this->getProjectDB($projectId);
             $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
             $abuse = new Abuse($timeLimit);
-            $timestamp = (new DateTime($datetime))->getTimestamp(); //todo:make abuse get datetime
+            $timestamp = (new \DateTime($datetime))->getTimestamp(); //todo:make abuse get datetime
             $status = $abuse->cleanup($timestamp);
             if (!$status) {
                 throw new Exception('Failed to delete Abuse logs for project ' . $projectId);
@@ -336,7 +336,7 @@ class DeletesV1 extends Worker
         $this->deleteForProjectIds(function (string $projectId) use ($datetime) {
             $dbForProject = $this->getProjectDB($projectId);
             $audit = new Audit($dbForProject);
-            $timestamp = (new DateTime($datetime))->getTimestamp(); //todo:make audit get datetime
+            $timestamp = (new \DateTime($datetime))->getTimestamp(); //todo:make audit get datetime
             $status = $audit->cleanup($timestamp);
             if (!$status) {
                 throw new Exception('Failed to delete Audit logs for project' . $projectId);
