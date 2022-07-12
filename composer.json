@@ -42,7 +42,7 @@
         "ext-sockets": "*",
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.10.*",
-        "utopia-php/framework": "0.19.*",
+        "abnegate/framework": "dev-feat-graphql-helpers",
         "utopia-php/logger": "0.3.*",
         "utopia-php/abuse": "0.7.*",
         "utopia-php/analytics": "0.2.*",
@@ -70,9 +70,16 @@
         "slickdeals/statsd": "3.1.0",
         "webonyx/graphql-php": "14.1.1"
     },
+    "replace": {
+        "utopia-php/framework": "*"
+    },
     "repositories": [
         {
             "url": "https://github.com/appwrite/runtimes.git",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/abnegate/framework.git",
             "type": "git"
         }
     ],
