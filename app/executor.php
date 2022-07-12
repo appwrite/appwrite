@@ -322,8 +322,8 @@ App::post('/v1/runtimes')
             $endTime = \time();
             $container = array_merge($container, [
                 'status' => 'ready',
-                'response' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
-                'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
+                'response' => \mb_strcut($stdout, 0, App::getEnv('_APP_FUNCTIONS_RESPONSE_SIZE_LIMIT', 1000000)), // Default Limit to 1MB
+                'stderr' => \mb_strcut($stderr, 0, App::getEnv('_APP_FUNCTIONS_RESPONSE_SIZE_LIMIT', 1000000)), // Default Limit to 1MB
                 'startTime' => $startTime,
                 'endTime' => $endTime,
                 'duration' => $endTime - $startTime,
