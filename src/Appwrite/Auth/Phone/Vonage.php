@@ -5,7 +5,7 @@ namespace Appwrite\Auth\Phone;
 use Appwrite\Auth\Phone;
 
 // Reference Material
-// https://dashboard.nexmo.com/getting-started/sms
+// https://developer.vonage.com/api/sms
 
 class Vonage extends Phone
 {
@@ -23,7 +23,6 @@ class Vonage extends Phone
     public function send(string $from, string $to, string $message): void
     {
         $to = ltrim($to, '+');
-        $from = "Appwrite";
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
 
         $this->request(
