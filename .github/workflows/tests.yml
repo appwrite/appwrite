@@ -28,7 +28,7 @@ jobs:
         docker pull php:8.0-cli-alpine
         docker compose build --progress=plain
         docker compose up -d
-        sleep 15
+        sleep 60
 
     - name: Doctor
       run: docker compose exec -T appwrite doctor
