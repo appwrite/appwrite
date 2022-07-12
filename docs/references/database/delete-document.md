@@ -1,1 +1,0 @@
-Delete a document by its unique ID.
