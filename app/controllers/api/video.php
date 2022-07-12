@@ -272,8 +272,7 @@ App::post('/v1/video/:videoId/rendition/:profileId')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(action: function (string $videoId, string $profileId, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, $project, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
-        /** @var Utopia\Database\Document $project */
+    ->action(action: function (string $videoId, string $profileId, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
@@ -319,12 +318,11 @@ App::get('/v1/video/:videoId/:stream/renditions')
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('usage')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $stream, ?array $read, ?array $write, Response $response, Database $dbForProject, Stats $usage, string $mode, Document $user) {
-
-        /** @var Utopia\Database\Document $project */
+    ->action(function (string $videoId, string $stream, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $project, Stats $usage, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
@@ -371,18 +369,19 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
     ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('videosDevice')
     ->inject('usage')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $stream, string $profile, string $fileName, ?array $read, ?array $write, Response $response, Database $dbForProject, Device $videosDevice, Stats $usage, string $mode, Document $user) {
-        /** @var Utopia\Database\Document $project */
+    ->action(function (string $videoId, string $stream, string $profile, string $fileName, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $project, Device $videosDevice, Stats $usage, string $mode, Document $user) {
+
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
         ]));
 
-        if ($video->isEmpty()) {
+        if (empty($video)){
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
@@ -420,7 +419,7 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
                 $paramsRenditions = [];
                 foreach ($renditions as $rendition) {
                     $paramsRenditions[] = [
-                        'bandwidth' => $rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate'),
+                        'bandwidth' => ($rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate')),
                         'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
                         'name' => $rendition->getAttribute('name'),
                         'uri'  => $baseUrl . $rendition->getAttribute('name') . '/' . $rendition->getAttribute('videoId') . '_' . $rendition->getAttribute('height') . 'p.m3u8',
@@ -431,7 +430,7 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
                 $template = new View(__DIR__ . '/../../views/video/hls.phtml');
                 $template->setParam('paramsSubtitles', $paramsSubtitles);
                 $template->setParam('paramsRenditions', $paramsRenditions);
-                $output = $template->render();
+                $output = $template->render(false);
             } else {
                 $adaptations = [];
                 foreach ($renditions as $rendition) {
@@ -449,7 +448,7 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
                 $template = new View(__DIR__ . '/../../views/video/dash.phtml');
                 $template->setParam('params', $adaptations);
                 $response->setContentType($ct[$ext]);
-                $output = $template->render();
+                $output = $template->render(false);
             }
         } else {
             $output = $videosDevice->read($videosDevice->getRoot() . '/' . $videoId . '/' . $profile . '/' . $fileName);

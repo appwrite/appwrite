@@ -15,7 +15,7 @@ class VideoCustomServerTest extends Scope
     use VideoCustom;
     use SideServer;
 
-    public function testTranscodeWithSubs() :array
+    public function testTranscodeWithSubs(): array
     {
 
         $response = $this->client->call(Client::METHOD_POST, '/video/buckets/' . $this->getBucket()['$id'] . '/files/' .  $this->getVideo()['$id'], [
@@ -82,7 +82,7 @@ class VideoCustomServerTest extends Scope
     public function testTranscodingRendition(): array
     {
 
-        $response = $this->client->call(Client::METHOD_POST, '/video/buckets/' . $this->getBucket()['$id'] . '/files/' .  $this->getVideo()['$id'], [
+        $response = $this->client->call(Client::METHOD_POST, '/video/buckets/' . $this->getBucket()['$id'] . '/files/' . $this->getVideo()['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -96,27 +96,26 @@ class VideoCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/video/profiles', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' =>  $this->getProject()['apiKey'],
-        ]);
-
-
-        $profileId = $response['body']['profiles'][0]['$id'];
-
-        $response = $this->client->call(Client::METHOD_POST, '/video/' . $videoId . '/rendition/' .  $profileId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'read' => ['role:all'],
-            'write' => ['role:all']
         ]);
 
 
-        $this->assertNotEmpty($profileId);
+        foreach ($response['body']['profiles'] as $profile) {
+
+             $profileId = $profile['$id'];
+
+            $response = $this->client->call(Client::METHOD_POST, '/video/' . $videoId . '/rendition/' . $profileId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'read' => ['role:all'],
+                'write' => ['role:all']
+            ]);
+          }
 
         return [
             'videoId' => $videoId,
-            'profileId' => $profileId,
         ];
     }
 
@@ -193,7 +192,6 @@ class VideoCustomServerTest extends Scope
         ]);
 
         var_dump($response['body']);
-
     }
 
 //    /**

@@ -6,7 +6,6 @@ use Appwrite\Resque\Worker;
 use Streaming\Format\StreamFormat;
 use Streaming\HLSSubtitle;
 use Streaming\Media;
-use Streaming\Metadata;
 use Streaming\Representation;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -17,7 +16,6 @@ use Utopia\Database\Validator\Authorization;
 use FFMpeg\FFProbe\DataMapping\StreamCollection;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Captioning\Format\SubripFile;
-use Captioning\Format\WebvttFile;
 
 require_once __DIR__ . '/../init.php';
 
@@ -36,6 +34,7 @@ class TranscodingV1 extends Worker
     const STATUS_ERROR               = 'error';
 
     const STREAM_HLS = 'hls';
+    const STREAM_MPEG_DASH = 'mpeg-dash';
 
     //protected string $basePath = '/tmp/';
     protected string $basePath = '/usr/src/code/tests/tmp/';
@@ -351,12 +350,15 @@ class TranscodingV1 extends Worker
 
         $hls->setFormat($format)
             ->setHlsTime($segementSize)
+            ->setHlsAllowCache(false)
             ->addRepresentation($representation)
             ->setAdditionalParams($additionalParams)
             ->setHlsBaseUrl($this->getHlsBaseUri())
             ->save($this->outPath);
 
         $general = $this->getVideoInfo($hls->metadata()->getVideoStreams());
+        $general['videoBitrate'] = $representation->getKiloBitrate() * 1024;
+        $general['audioBitrate'] = $representation->getAudioKiloBitrate() * 1024;
         $general['width'] = $representation->getWidth();
         $general['height'] = $representation->getHeight();
 
@@ -412,18 +414,21 @@ class TranscodingV1 extends Worker
      */
     private function getVideoInfo(StreamCollection $streams): array
     {
-        return [
-            'duration' => $streams->videos()->first()->get('duration'),
-            'height' => $streams->videos()->first()->get('height'),
-            'width' => $streams->videos()->first()->get('width'),
-            'videoCodec'   => $streams->videos()->first()->get('codec_name') . ',' . $streams->videos()->first()->get('codec_tag_string'),
-            'videoFramerate' => $streams->videos()->first()->get('avg_frame_rate'),
-            'videoBitrate' =>  (int)$streams->videos()->first()->get('bit_rate'),
-            'audioCodec' =>  $streams->audios()->first()->get('codec_name') . ',' . $streams->audios()->first()->get('codec_tag_string'),
-            'audioSamplerate' => (int)$streams->audios()->first()->get('sample_rate'),
-            'audioBitrate'   =>  (int)$streams->audios()->first()->get('bit_rate'),
-        ];
+        //var_dump($streams->videos()->first()->get('bit_rate'));
+        //var_dump($streams->audios()->first()->get('bit_rate'));
+            return [
+                'duration' => !empty($streams->videos()) ? $streams->videos()->first()->get('duration') : '0',
+                'height' => !empty($streams->videos()) ? $streams->videos()->first()->get('height') : 0,
+                'width' => !empty($streams->videos()) ? $streams->videos()->first()->get('width') : 0,
+                'videoCodec'   => !empty($streams->videos()) ? $streams->videos()->first()->get('codec_name') . ',' . $streams->videos()->first()->get('codec_tag_string') : '',
+                'videoFramerate' => !empty($streams->videos()) ? $streams->videos()->first()->get('avg_frame_rate') : '',
+                'videoBitrate' =>  !empty($streams->videos()) ? (int)$streams->videos()->first()->get('bit_rate') : 0,
+                'audioCodec' =>  !empty($streams->audios()) ? $streams->audios()->first()->get('codec_name') . ',' . $streams->audios()->first()->get('codec_tag_string') : '',
+                'audioSamplerate' => !empty($streams->audios()) ? (int)$streams->audios()->first()->get('sample_rate') : 0,
+                'audioBitrate'   =>  !empty($streams->audios()) ? (int)$streams->audios()->first()->get('bit_rate') : 0,
+                ];
     }
+
 
     private function setRenditionName($profile)
     {
