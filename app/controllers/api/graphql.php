@@ -27,9 +27,9 @@ App::get('/v1/graphql')
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new Text(4096), 'The query to execute. Max 1024 chars.')
-    ->param('operationName', null, new Text(256), 'Name of the operation to execute', true)
-    ->param('variables', [], new JSON(), 'Variables to use in the operation', true)
+    ->param('query', '', new Text(2048), 'The query to execute. Max 2048 chars')
+    ->param('operationName', null, new Text(512), 'Name of the operation to execute. Required if multiple operations are provided', true)
+    ->param('variables', [], new JSON(), 'Map of variables to use as replacement values in the query', true)
     ->inject('request')
     ->inject('response')
     ->inject('utopia')
@@ -52,11 +52,11 @@ App::post('/v1/graphql')
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new Text(4096), 'The query to execute. Max 1024 chars.', true)
-    ->param('operationName', null, new Text(256), 'Name of the operation to execute', true)
-    ->param('variables', [], new JSON(), 'Variables to use in the operation', true)
-    ->param('operations', '', new Text(4096), 'Variables to use in the operation', true)
-    ->param('map', '', new Text(1024), 'Variables to use in the operation', true)
+    ->param('query', '', new Text(2048), 'The query to execute. Max 1024 chars. Required if the request content type is "application/json"', true)
+    ->param('operationName', null, new Text(512), 'Name of the operation to execute. Required if multiple operations are provided', true)
+    ->param('variables', [], new JSON(), 'Map of variables to use as replacement values in the query', true)
+    ->param('operations', '', new Text(4096), 'JSON encoded query and variables with nulled file values. Required if the request content type "multipart/form-data"', true)
+    ->param('map', '', new Text(1024), 'Map of form-data filenames to the operations dot-path to inject the file to. For example: "variables.file"', true)
     ->inject('request')
     ->inject('response')
     ->inject('promiseAdapter')
@@ -85,8 +85,8 @@ function graphqlRequest(
     }
 
     if (\str_starts_with($contentType, 'multipart/form-data')) {
-        $map = \json_decode($map, true);
         $operations = \json_decode($operations, true);
+        $map = \json_decode($map, true);
         foreach ($map as $fileKey => $locations) {
             foreach ($locations as $location) {
                 $items = &$operations;
