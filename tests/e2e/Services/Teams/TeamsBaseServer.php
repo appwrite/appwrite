@@ -61,7 +61,7 @@ trait TeamsBaseServer
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertIsString($response['body']['joined']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['joined']));
         $this->assertGreaterThan('2020-07-07 07:58:44', DateTime::getCurrentDateTime());
         $this->assertEquals(true, $response['body']['confirm']);
 
@@ -206,8 +206,7 @@ trait TeamsBaseServer
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertEquals(1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertIsString($response['body']['$createdAt']);
-
+        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
 
         /** Delete User */
         $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $userUid, array_merge([
@@ -232,6 +231,6 @@ trait TeamsBaseServer
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertEquals(0, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertIsString($response['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
     }
 }

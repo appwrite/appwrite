@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 
 trait DatabasesBase
 {
@@ -1369,7 +1370,7 @@ trait DatabasesBase
         $this->assertEquals($document['headers']['status-code'], 201);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertNotEquals($document['body']['$createdAt'], 5);
+        $this->assertEquals(true, DateTime::isValid($document['body']['$createdAt']));
         $this->assertEquals('user:' . $this->getUser()['$id'], $document['body']['$read'][0]);
         $this->assertEquals('user:' . $this->getUser()['$id'], $document['body']['$write'][0]);
 
