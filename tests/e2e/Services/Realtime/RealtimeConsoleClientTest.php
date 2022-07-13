@@ -13,6 +13,111 @@ class RealtimeConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
+    public function testManualAuthentication()
+    {
+        $user = $this->getUser();
+        $userId = $user['$id'] ?? '';
+        $session = $user['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost'
+        ]);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('account', $response['data']['channels']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => [
+                'session' => $session
+            ]
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('response', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals('authentication', $response['data']['to']);
+        $this->assertTrue($response['data']['success']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($userId, $response['data']['user']['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => [
+                'session' => 'invalid_session'
+            ]
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Session is not valid.', $response['data']['message']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => []
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Payload is not valid.', $response['data']['message']);
+
+        $client->send(\json_encode([
+            'type' => 'unknown',
+            'data' => [
+                'session' => 'invalid_session'
+            ]
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Message type is not valid.', $response['data']['message']);
+
+        $client->send(\json_encode([
+            'test' => '123',
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Message format is not valid.', $response['data']['message']);
+
+
+        $client->close();
+    }
+
     public function testAttributes()
     {
         $user = $this->getUser();

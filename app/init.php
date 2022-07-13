@@ -27,6 +27,7 @@ use Appwrite\Auth\Phone\Mock;
 use Appwrite\Auth\Phone\Telesign;
 use Appwrite\Auth\Phone\TextMagic;
 use Appwrite\Auth\Phone\Twilio;
+use Appwrite\Auth\Phone\Msg91;
 use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
@@ -86,8 +87,8 @@ const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
-const APP_CACHE_BUSTER = 401;
-const APP_VERSION_STABLE = '0.15.1';
+const APP_CACHE_BUSTER = 402;
+const APP_VERSION_STABLE = '0.15.2';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -996,6 +997,7 @@ App::setResource('phone', function () {
         'twilio' => new Twilio($user, $secret),
         'text-magic' => new TextMagic($user, $secret),
         'telesign' => new Telesign($user, $secret),
+        'msg91' => new Msg91($user, $secret),
         default => null
     };
 });
