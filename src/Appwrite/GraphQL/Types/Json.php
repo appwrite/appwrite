@@ -17,22 +17,14 @@ class Json extends ScalarType
     public $name = 'Json';
     public $description =
         'The `JSON` scalar type represents JSON values as specified by
-        [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).';
+        [ECMA-404](https://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).';
 
-    public function __construct(?string $name = null)
-    {
-        if ($name) {
-            $this->name = $name;
-        }
-        parent::__construct();
-    }
-
-    public function parseValue($value)
+    public function serialize($value)
     {
         return $this->identity($value);
     }
 
-    public function serialize($value)
+    public function parseValue($value)
     {
         return $this->identity($value);
     }

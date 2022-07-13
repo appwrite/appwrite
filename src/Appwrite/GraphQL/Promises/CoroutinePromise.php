@@ -1,10 +1,10 @@
 <?php
 
-namespace Appwrite\GraphQL;
+namespace Appwrite\GraphQL\Promises;
 
+use GraphQL\Error\InvariantViolation;
+use GraphQL\Utils\Utils;
 use Swoole\Coroutine\Channel;
-
-use function Co\go;
 
 /**
  * Inspired by https://github.com/streamcommon/promise/blob/master/lib/ExtSwoolePromise.php
@@ -34,8 +34,7 @@ class CoroutinePromise
             $this->setResult($value);
             $this->setState(self::STATE_REJECTED);
         };
-
-        go(function () use ($executor, $resolve, $reject) {
+        \go(function () use ($executor, $resolve, $reject) {
             try {
                 $executor($resolve, $reject);
             } catch (\Throwable $exception) {
@@ -143,7 +142,7 @@ class CoroutinePromise
             foreach ($promises as $promise) {
                 if (!$promise instanceof CoroutinePromise) {
                     $channel->close();
-                    throw new \RuntimeException('Not an Appwrite\GraphQL\CoroutinePromise');
+                    throw new InvariantViolation('Expected instance of CoroutinePromise, got ' . Utils::printSafe($promise));
                 }
                 $promise->then(function ($value) use ($key, &$result, $channel) {
                     $result[$key] = $value;

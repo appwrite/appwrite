@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Appwrite\GraphQL\CoroutinePromiseAdapter;
+use Appwrite\GraphQL\Promises\CoroutinePromiseAdapter;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
 use GraphQL\GraphQL;

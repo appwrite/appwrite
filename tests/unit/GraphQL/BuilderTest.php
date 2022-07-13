@@ -3,7 +3,8 @@
 namespace Appwrite\Tests;
 
 use Appwrite\Event\Event;
-use Appwrite\GraphQL\Builder;
+use Appwrite\GraphQL\SchemaBuilder;
+use Appwrite\GraphQL\TypeRegistry;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use PHPUnit\Framework\TestCase;
@@ -12,20 +13,20 @@ use Utopia\App;
 
 class BuilderTest extends TestCase
 {
-    /**
-     * @var Response
-     */
-    protected $response = null;
+    protected ?Response $response = null;
 
     public function setUp(): void
     {
         $this->response = new Response(new SwooleResponse());
-        Builder::init();
+        TypeRegistry::init($this->response->getModels());
     }
 
+    /**
+     * @throws \Exception
+     */
     public function testCreateTypeMapping()
     {
         $model = $this->response->getModel(Response::MODEL_COLLECTION);
-        $typeMapping = Builder::getModelTypeMapping($model, $this->response);
+        $typeMapping = TypeRegistry::get($model->getType());
     }
 }
