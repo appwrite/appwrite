@@ -87,9 +87,9 @@ class GraphQLContentTypeTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
-        
+
         $bucket = $bucket['body']['data']['storageCreateBucket'];
-        
+
         $query = $this->getQuery(self::$CREATE_FILE);
         $gqlPayload = [
             'operations' => \json_encode([

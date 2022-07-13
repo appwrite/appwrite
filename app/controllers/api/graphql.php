@@ -100,7 +100,7 @@ function graphqlRequest(
     if (empty($query)) {
         throw new Exception('No query supplied.', 400, Exception::GRAPHQL_NO_QUERY);
     }
-    
+
     $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 200);
     $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_QUERY_DEPTH', 3);
 
@@ -114,9 +114,9 @@ function graphqlRequest(
     } else {
         $debugFlags = DebugFlag::NONE;
     }
-    
+
     $promises = [];
-    foreach($query as $indexed) {
+    foreach ($query as $indexed) {
         $promises[] = GraphQL::promiseToExecute(
             $promiseAdapter,
             $gqlSchema,

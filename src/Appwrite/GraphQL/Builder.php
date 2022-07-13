@@ -300,9 +300,11 @@ class Builder
         $collectionSchemaDirty = $register->has('schemaDirty') && $register->get('schemaDirty');
         $apiSchemaDirty = \version_compare($envVersion, $schemaVersion, "!=");
 
-        if (!$collectionSchemaDirty
+        if (
+            !$collectionSchemaDirty
             && !$apiSchemaDirty
-            && $register->has('fullSchema')) {
+            && $register->has('fullSchema')
+        ) {
             $timeElapsedMillis = (microtime(true) - $start) * 1000;
             $timeElapsedMillis = \number_format((float) $timeElapsedMillis, 3, '.', '');
             Console::info('[INFO] Fetched GraphQL Schema in ' . $timeElapsedMillis . 'ms');
