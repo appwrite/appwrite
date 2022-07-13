@@ -3,7 +3,6 @@ namespace Appwrite\Task;
 
 use Throwable;
 use Exception;
-use Appwrite\Task\Task;
 use Appwrite\Stats\Usage as InfluxUsage;
 use Appwrite\Stats\UsageDB;
 use InfluxDB\Database as InfluxDatabase;
@@ -16,11 +15,10 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
-use Utopia\CLI\Task as CLITask;
+use Utopia\Platform\Action;
 
-class Usage implements Task{
-    private static CLITask $task;
-    protected static function getDatabase(Registry &$register, string $namespace): Database
+class Usage extends Action{
+    protected function getDatabase(Registry &$register, string $namespace): Database
     {
         $attempts = 0;
     
@@ -52,7 +50,7 @@ class Usage implements Task{
         return $database;
     }
     
-    protected static function getInfluxDB(Registry &$register): InfluxDatabase
+    protected function getInfluxDB(Registry &$register): InfluxDatabase
     {
         /** @var InfluxDB\Client $client */
         $client = $register->get('influxdb');
@@ -78,8 +76,17 @@ class Usage implements Task{
         return $database;
     }
     
-    public static function getTask(): CLITask
+    public function __construct()
     {
+        
+        
+        $this
+            ->desc('Schedules syncing data from influxdb to Appwrite console db')
+            ->callback(fn () => $this->action());
+    }
+
+    public function action() {
+
         global $register;
 
         Authorization::disable();
@@ -119,60 +126,52 @@ class Usage implements Task{
             Console::warning($error->getTraceAsString());
         };
 
-        $usage = new CLITask('usage');
-        
-        $usage
-            ->desc('Schedules syncing data from influxdb to Appwrite console db')
-            ->action(function () use ($register, $logError) {
-                Console::title('Usage Aggregation V1');
-                Console::success(APP_NAME . ' usage aggregation process v1 has started');
-        
-                $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
-        
-                $database = self::getDatabase($register, '_console');
-                $influxDB = self::getInfluxDB($register);
-        
-                $usage = new InfluxUsage($database, $influxDB, $logError);
-                $usageDB = new UsageDB($database, $logError);
-        
-                $iterations = 0;
-                Console::loop(function () use ($interval, $usage, $usageDB, &$iterations) {
-                    $now = date('d-m-Y H:i:s', time());
-                    Console::info("[{$now}] Aggregating usage data every {$interval} seconds");
-        
-                    $loopStart = microtime(true);
-        
-                    /**
-                     * Aggregate InfluxDB every 30 seconds
-                     */
-                    $usage->collect();
-        
-                    if ($iterations % 30 != 0) { // return if 30 iterations has not passed
-                        $iterations++;
-                        $loopTook = microtime(true) - $loopStart;
-                        $now = date('d-m-Y H:i:s', time());
-                        Console::info("[{$now}] Aggregation took {$loopTook} seconds");
-                        return;
-                    }
-        
-                    $iterations = 0; // Reset iterations to prevent overflow when running for long time
-                    /**
-                     * Aggregate MariaDB every 15 minutes
-                     * Some of the queries here might contain full-table scans.
-                     */
-                    $now = date('d-m-Y H:i:s', time());
-                    Console::info("[{$now}] Aggregating database counters.");
-        
-                    $usageDB->collect();
-        
-                    $iterations++;
-                    $loopTook = microtime(true) - $loopStart;
-                    $now = date('d-m-Y H:i:s', time());
-        
-                    Console::info("[{$now}] Aggregation took {$loopTook} seconds");
-                }, $interval);
-            });
-        self::$task = $usage;
-        return self::$task;
+        Console::title('Usage Aggregation V1');
+        Console::success(APP_NAME . ' usage aggregation process v1 has started');
+
+        $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
+
+        $database = self::getDatabase($register, '_console');
+        $influxDB = self::getInfluxDB($register);
+
+        $usage = new InfluxUsage($database, $influxDB, $logError);
+        $usageDB = new UsageDB($database, $logError);
+
+        $iterations = 0;
+        Console::loop(function () use ($interval, $usage, $usageDB, &$iterations) {
+            $now = date('d-m-Y H:i:s', time());
+            Console::info("[{$now}] Aggregating usage data every {$interval} seconds");
+
+            $loopStart = microtime(true);
+
+            /**
+             * Aggregate InfluxDB every 30 seconds
+             */
+            $usage->collect();
+
+            if ($iterations % 30 != 0) { // return if 30 iterations has not passed
+                $iterations++;
+                $loopTook = microtime(true) - $loopStart;
+                $now = date('d-m-Y H:i:s', time());
+                Console::info("[{$now}] Aggregation took {$loopTook} seconds");
+                return;
+            }
+
+            $iterations = 0; // Reset iterations to prevent overflow when running for long time
+            /**
+             * Aggregate MariaDB every 15 minutes
+             * Some of the queries here might contain full-table scans.
+             */
+            $now = date('d-m-Y H:i:s', time());
+            Console::info("[{$now}] Aggregating database counters.");
+
+            $usageDB->collect();
+
+            $iterations++;
+            $loopTook = microtime(true) - $loopStart;
+            $now = date('d-m-Y H:i:s', time());
+
+            Console::info("[{$now}] Aggregation took {$loopTook} seconds");
+        }, $interval);
     }
 }

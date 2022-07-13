@@ -2,21 +2,16 @@
 namespace Appwrite\Task;
 
 use Utopia\App;
-use Appwrite\Task\Task;
-use Utopia\CLI\Task as CLITask;
 use Utopia\CLI\Console;
+use Utopia\Platform\Action;
 
-class Version implements Task {
-    protected static CLITask $task;
-
-    public static function getTask(): CLITask {
-        $version = new CLITask('version');
-        $version
+class Version extends Action {
+    public function __construct()
+    {
+        $this
             ->desc('Get the server version')
-            ->action(function () {
+            ->callback(function () {
                 Console::log(App::getEnv('_APP_VERSION', 'UNKNOWN'));
             });
-        self::$task = $version;
-        return self::$task;
     }
 }

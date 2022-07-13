@@ -42,13 +42,14 @@
         "ext-sockets": "*",
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.10.*",
-        "utopia-php/framework": "0.19.*",
+        "utopia-php/framework": "dev-feat-public-add-route as 0.19.21",
         "utopia-php/logger": "0.3.*",
         "utopia-php/abuse": "0.7.*",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.8.*",
         "utopia-php/cache": "0.6.*",
-        "utopia-php/cli": "dev-feat-allow-adding-task as 0.12.0",
+        "utopia-php/cli": "0.12.0",
+        "utopia-php/platform": "dev-dev",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.18.*",
         "utopia-php/locale": "0.4.*",
@@ -72,6 +73,10 @@
     "repositories": [
         {
             "url": "https://github.com/appwrite/runtimes.git",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/platform.git",
             "type": "git"
         }
     ],

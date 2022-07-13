@@ -1,34 +1,32 @@
 <?php
 namespace Appwrite\Task;
 use Utopia\App;
-use Utopia\CLI\Task as CLITask;
 use Utopia\Config\Config;
 use Utopia\CLI\Console;
+use Utopia\Platform\Action;
 
-
-class Vars implements Task{
-    private static CLITask $task;
+class Vars extends Action{
     
-    public static function getTask(): CLITask
+    public function __construct()
     {
-        $vars = new CLITask('vars');
-        $vars
+        $this
             ->desc('List all the server environment variables')
-            ->action(function () {
-                $config = Config::getParam('variables', []);
-                $vars = [];
-        
-                foreach ($config as $category) {
-                    foreach ($category['variables'] ?? [] as $var) {
-                        $vars[] = $var;
-                    }
-                }
-        
-                foreach ($vars as $key => $value) {
-                    Console::log('- ' . $value['name'] . '=' . App::getEnv($value['name'], ''));
-                }
-            });
-        self::$task = $vars;
-        return self::$task;
+            ->callback(fn () => $this->action());
+    }
+
+    public function action(): void
+    {
+        $config = Config::getParam('variables', []);
+        $vars = [];
+
+        foreach ($config as $category) {
+            foreach ($category['variables'] ?? [] as $var) {
+                $vars[] = $var;
+            }
+        }
+
+        foreach ($vars as $key => $value) {
+            Console::log('- ' . $value['name'] . '=' . App::getEnv($value['name'], ''));
+        }
     }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4bd2cfb69f671c01e68b67221f8664fd",
+    "content-hash": "3775608dcbc4262c4edd8710aa94ce4d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1947,16 +1947,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "dev-feat-allow-adding-task",
+            "version": "0.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "1ecc371b018f6e65d7d70b65f1c8b7a74c9ebcb2"
+                "reference": "6d164b752efeb1ca089e3a517bc274d8b383474b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/1ecc371b018f6e65d7d70b65f1c8b7a74c9ebcb2",
-                "reference": "1ecc371b018f6e65d7d70b65f1c8b7a74c9ebcb2",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/6d164b752efeb1ca089e3a517bc274d8b383474b",
+                "reference": "6d164b752efeb1ca089e3a517bc274d8b383474b",
                 "shasum": ""
             },
             "require": {
@@ -1994,9 +1994,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/feat-allow-adding-task"
+                "source": "https://github.com/utopia-php/cli/tree/0.12.0"
             },
-            "time": "2022-07-08T01:44:31+00:00"
+            "time": "2022-02-18T22:10:41+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -2169,16 +2169,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.19.21",
+            "version": "dev-feat-public-add-route",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "3b7bd8e4acf84fd7d560ced8e0142221d302575d"
+                "reference": "d16f3d44375beb1e880600957ac65e97699d6e23"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/3b7bd8e4acf84fd7d560ced8e0142221d302575d",
-                "reference": "3b7bd8e4acf84fd7d560ced8e0142221d302575d",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/d16f3d44375beb1e880600957ac65e97699d6e23",
+                "reference": "d16f3d44375beb1e880600957ac65e97699d6e23",
                 "shasum": ""
             },
             "require": {
@@ -2212,9 +2212,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.19.21"
+                "source": "https://github.com/utopia-php/framework/tree/feat-public-add-route"
             },
-            "time": "2022-05-12T18:42:28+00:00"
+            "time": "2022-07-10T08:39:49+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2439,6 +2439,63 @@
                 "source": "https://github.com/utopia-php/orchestration/tree/0.4.1"
             },
             "time": "2022-02-20T09:23:06+00:00"
+        },
+        {
+            "name": "utopia-php/platform",
+            "version": "dev-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/platform.git",
+                "reference": "370565fcc39996506357338e28cad97cb9e3db0f"
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-redis": "*",
+                "php": ">=8.0",
+                "utopia-php/cli": "0.12.*",
+                "utopia-php/framework": "dev-feat-public-add-route as 0.19.21"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "squizlabs/php_codesniffer": "^3.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Platform\\": "src/Platform"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Platform"
+                }
+            },
+            "scripts": {
+                "format": [
+                    "vendor/bin/phpcbf"
+                ],
+                "test": [
+                    "docker-compose up -d && sleep 10 && docker-compose exec web vendor/bin/phpunit --configuration phpunit.xml"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "Light and Fast Platform Library",
+            "keywords": [
+                "cache",
+                "framework",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "time": "2022-07-13T05:59:26+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -5348,15 +5405,16 @@
     ],
     "aliases": [
         {
-            "package": "utopia-php/cli",
-            "version": "dev-feat-allow-adding-task",
-            "alias": "0.12.0",
-            "alias_normalized": "0.12.0.0"
+            "package": "utopia-php/framework",
+            "version": "dev-feat-public-add-route",
+            "alias": "0.19.21",
+            "alias_normalized": "0.19.21.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/cli": 20
+        "utopia-php/framework": 20,
+        "utopia-php/platform": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
