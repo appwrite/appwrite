@@ -861,7 +861,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['teamId']);
         $this->assertCount(2, $webhook['data']['roles']);
         $this->assertIsInt($webhook['data']['joined']);
-        $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);   
+        $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
         if ($this->getSide() === 'client') {
             $this->assertEquals($webhook['data']['secret'], '');
         }
