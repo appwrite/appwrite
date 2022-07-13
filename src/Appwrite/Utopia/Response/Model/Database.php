@@ -22,6 +22,18 @@ class Database extends Model
                 'default' => '',
                 'example' => 'My Database',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Collection creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Collection update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
         ;
     }
 
