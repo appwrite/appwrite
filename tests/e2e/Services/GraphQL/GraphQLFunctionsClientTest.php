@@ -80,7 +80,7 @@ class GraphQLFunctionsClientTest extends Scope
         $this->assertIsArray($deployment['body']['data']);
         $this->assertArrayNotHasKey('errors', $deployment['body']);
 
-        sleep(15);
+        sleep(10);
 
         return $deployment['body']['data']['functionsCreateDeployment'];
     }
