@@ -376,7 +376,7 @@ App::post('/v1/teams/:teamId/memberships')
             'invited' => \time(),
             'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
             'confirm' => ($isPrivilegedUser || $isAppUser),
-            'secret' => $isAppUser ? Auth::hash($secret) : '',
+            'secret' => Auth::hash($secret),
             'search' => implode(' ', [$membershipId, $invitee->getId()])
         ]);
 
