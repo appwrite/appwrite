@@ -18,6 +18,8 @@ use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 
 class Usage extends Action{
+    public const NAME = 'usage';
+
     protected function getDatabase(Registry &$register, string $namespace): Database
     {
         $attempts = 0;

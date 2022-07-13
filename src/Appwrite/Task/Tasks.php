@@ -7,8 +7,16 @@ class Tasks extends Service {
     public function __construct()
     {
         $this->type = self::TYPE_CLI;
-        $this->addAction('version', new Version());
-        $this->addAction('usage', new Usage());
-        $this->addAction('vars', new Vars());
+        $this
+            ->addAction(Version::NAME, new Version())
+            ->addAction(Usage::NAME, new Usage())
+            ->addAction(Vars::NAME, new Vars())
+            ->addAction(SSL::NAME, new SSL())
+            ->addAction(Doctor::NAME, new Doctor())
+            ->addAction(Install::NAME, new Install())
+            ->addAction(Maintenance::NAME, new Maintenance())
+            ->addAction(Migrate::NAME, new Migrate())
+            ->addAction(SDKs::NAME, new SDKs())
+            ->addAction(Specs::NAME, new Specs());
     }
 }

@@ -6,6 +6,8 @@ use Utopia\CLI\Console;
 use Utopia\Platform\Action;
 
 class Vars extends Action{
+
+    public const NAME = 'vars';
     
     public function __construct()
     {

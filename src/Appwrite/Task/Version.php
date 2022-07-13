@@ -6,6 +6,8 @@ use Utopia\CLI\Console;
 use Utopia\Platform\Action;
 
 class Version extends Action {
+    public const NAME = 'version';
+
     public function __construct()
     {
         $this
