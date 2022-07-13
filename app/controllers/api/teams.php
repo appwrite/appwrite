@@ -78,8 +78,8 @@ App::post('/v1/teams')
                 'teamId' => $team->getId(),
                 'teamInternalId' => $team->getInternalId(),
                 'roles' => $roles,
-                'invited' => DateTime::getCurrentDateTime(),
-                'joined' => DateTime::getCurrentDateTime(),
+                'invited' => DateTime::now(),
+                'joined' => DateTime::now(),
                 'confirm' => true,
                 'secret' => '',
                 'search' => implode(' ', [$membershipId, $user->getId()])
@@ -341,7 +341,7 @@ App::post('/v1/teams/:teamId/memberships')
                      * old password
                      */
                     'passwordUpdate' => null,
-                    'registration' => DateTime::getCurrentDateTime(),
+                    'registration' => DateTime::now(),
                     'reset' => false,
                     'name' => $name,
                     'prefs' => new \stdClass(),
@@ -373,8 +373,8 @@ App::post('/v1/teams/:teamId/memberships')
             'teamId' => $team->getId(),
             'teamInternalId' => $team->getInternalId(),
             'roles' => $roles,
-            'invited' => DateTime::getCurrentDateTime(),
-            'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::getCurrentDateTime() : null,
+            'invited' => DateTime::now(),
+            'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
             'confirm' => ($isPrivilegedUser || $isAppUser),
             'secret' => Auth::hash($secret),
             'search' => implode(' ', [$membershipId, $invitee->getId()])
@@ -687,7 +687,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         $membership // Attach user to team
-            ->setAttribute('joined', DateTime::getCurrentDateTime())
+            ->setAttribute('joined', DateTime::now())
             ->setAttribute('confirm', true)
         ;
 
@@ -701,7 +701,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expire = DateTime::dateAddSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
             '$id' => $dbForProject->getId(),

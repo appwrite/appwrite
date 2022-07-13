@@ -315,7 +315,7 @@ App::get('/v1/projects/:projectId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::dateAddSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -1246,7 +1246,7 @@ App::post('/v1/projects/:projectId/domains')
             '$write' => ['role:all'],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
-            'updated' => DateTime::getCurrentDateTime(),
+            'updated' => DateTime::now(),
             'domain' => $domain->get(),
             'tld' => $domain->getSuffix(),
             'registerable' => $domain->getRegisterable(),

@@ -189,7 +189,7 @@ App::post('/v1/runtimes')
         $containerId = '';
         $stdout = '';
         $stderr = '';
-        $startTime = DateTime::getCurrentDateTime();
+        $startTime = DateTime::now();
         $startTimeUnix = (new \DateTime($startTime))->getTimestamp();
         $endTimeUnix = 0;
         $orchestration = $orchestrationPool->get();
@@ -321,7 +321,7 @@ App::post('/v1/runtimes')
                 $stdout = 'Build Successful!';
             }
 
-            $endTime = DateTime::getCurrentDateTime();
+            $endTime = DateTime::now();
             $endTimeUnix = (new \DateTime($endTime))->getTimestamp();
             $duration = $endTimeUnix - $startTimeUnix;
 

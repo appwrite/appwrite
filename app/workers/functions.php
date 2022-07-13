@@ -147,11 +147,11 @@ class FunctionsV1 extends Worker
                 }
 
                 $cron = new CronExpression($function->getAttribute('schedule'));
-                $next = DateTime::dateFormat($cron->getNextRunDate());
+                $next = DateTime::format($cron->getNextRunDate());
 
                 $function
                     ->setAttribute('scheduleNext', $next)
-                    ->setAttribute('schedulePrevious', DateTime::getCurrentDateTime());
+                    ->setAttribute('schedulePrevious', DateTime::now());
 
                 $function = $database->updateDocument(
                     'functions',

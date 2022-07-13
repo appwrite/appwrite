@@ -1281,7 +1281,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => DateTime::dateAddSeconds(new \DateTime(), 3600),
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/health', [
@@ -1321,7 +1321,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => DateTime::dateAddSeconds(new \DateTime(), -3600),
+            'expire' => DateTime::addSeconds(new \DateTime(), -3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/health', [
@@ -1348,7 +1348,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test Update',
             'scopes' => ['users.read', 'users.write', 'collections.read'],
-            'expire' => DateTime::dateAddSeconds(new \DateTime(), 360),
+            'expire' => DateTime::addSeconds(new \DateTime(), 360),
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

@@ -64,8 +64,8 @@ App::post('/v1/users')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => Auth::passwordHash($password),
-                'passwordUpdate' => DateTime::getCurrentDateTime(),
-                'registration' => DateTime::getCurrentDateTime(),
+                'passwordUpdate' => DateTime::now(),
+                'registration' => DateTime::now(),
                 'reset' => false,
                 'name' => $name,
                 'prefs' => new \stdClass(),
@@ -551,7 +551,7 @@ App::patch('/v1/users/:userId/password')
 
         $user
             ->setAttribute('password', Auth::passwordHash($password))
-            ->setAttribute('passwordUpdate', DateTime::getCurrentDateTime());
+            ->setAttribute('passwordUpdate', DateTime::now());
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -926,7 +926,7 @@ App::get('/v1/users/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::dateAddSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }

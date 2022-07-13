@@ -58,7 +58,7 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_EXECUTIONS)
-                ->setDatetime(DateTime::dateAddSeconds(new \DateTime(), -1 * $interval))
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
@@ -66,7 +66,7 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_ABUSE)
-                ->setDatetime(DateTime::dateAddSeconds(new \DateTime(), -1 * $interval))
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
@@ -74,7 +74,7 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_AUDIT)
-                ->setDatetime(DateTime::dateAddSeconds(new \DateTime(), -1 * $interval))
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
@@ -82,8 +82,8 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_USAGE)
-                ->setDateTime1d(DateTime::dateAddSeconds(new \DateTime(), -1 * $interval1d))
-                ->setDateTime30m(DateTime::dateAddSeconds(new \DateTime(), -1 * $interval30m))
+                ->setDateTime1d(DateTime::addSeconds(new \DateTime(), -1 * $interval1d))
+                ->setDateTime30m(DateTime::addSeconds(new \DateTime(), -1 * $interval30m))
                 ->trigger();
         }
 
@@ -91,7 +91,7 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_REALTIME)
-                ->setDatetime(DateTime::dateAddSeconds(new \DateTime(), -60))
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -60))
                 ->trigger();
         }
 
@@ -99,13 +99,13 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_SESSIONS)
-                ->setDatetime(DateTime::dateAddSeconds(new \DateTime(), -1 * Auth::TOKEN_EXPIRATION_LOGIN_LONG))
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * Auth::TOKEN_EXPIRATION_LOGIN_LONG))
                 ->trigger();
         }
 
         function renewCertificates($dbForConsole)
         {
-            $time = DateTime::getCurrentDateTime();
+            $time = DateTime::now();
 
             $certificates = $dbForConsole->find('certificates', [
                 new Query('attempts', Query::TYPE_LESSEREQUAL, [5]), // Maximum 5 attempts
@@ -140,7 +140,7 @@ $cli
         Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
             $database = getConsoleDB();
 
-            $time = DateTime::getCurrentDateTime();
+            $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
             notifyDeleteExecutionLogs($executionLogsRetention);

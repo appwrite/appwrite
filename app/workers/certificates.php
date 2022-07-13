@@ -116,7 +116,7 @@ class CertificatesV1 extends Worker
             // Update certificate info stored in database
             $certificate->setAttribute('renewDate', $this->getRenewDate($domain->get()));
             $certificate->setAttribute('attempts', 0);
-            $certificate->setAttribute('issueDate', DateTime::getCurrentDateTime());
+            $certificate->setAttribute('issueDate', DateTime::now());
         } catch (Throwable $e) {
             // Set exception as log in certificate document
             $certificate->setAttribute('log', $e->getMessage());
@@ -129,7 +129,7 @@ class CertificatesV1 extends Worker
             $this->notifyError($domain->get(), $e->getMessage(), $attempts);
         } finally {
             // All actions result in new updatedAt date
-            $certificate->setAttribute('updated', DateTime::getCurrentDateTime());
+            $certificate->setAttribute('updated', DateTime::now());
 
             // Save all changes we made to certificate document into database
             $this->saveCertificateDocument($domain->get(), $certificate);
@@ -298,7 +298,7 @@ class CertificatesV1 extends Worker
         $certData = openssl_x509_parse(file_get_contents($certPath));
         $validTo = $certData['validTo_time_t'] ?? null;
         $dt = (new \DateTime())->setTimestamp($validTo);
-        return DateTime::dateAddSeconds($dt, -60 * 60 * 24 * 30); // -30 days
+        return DateTime::addSeconds($dt, -60 * 60 * 24 * 30); // -30 days
     }
 
     /**
@@ -398,7 +398,7 @@ class CertificatesV1 extends Worker
         ], 1000);
 
         foreach ($domains as $domainDocument) {
-            $domainDocument->setAttribute('updated', DateTime::getCurrentDateTime());
+            $domainDocument->setAttribute('updated', DateTime::now());
             $domainDocument->setAttribute('certificateId', $certificateId);
 
             $this->dbForConsole->updateDocument('domains', $domainDocument->getId(), $domainDocument);
