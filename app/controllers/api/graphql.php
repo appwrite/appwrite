@@ -27,7 +27,7 @@ App::get('/v1/graphql')
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new JSON(), 'The query or queries to execute.', body: true)
+    ->param('query', '', new JSON(), 'The query or queries to execute.', fullBody: true)
     ->inject('request')
     ->inject('response')
     ->inject('utopia')
@@ -50,7 +50,7 @@ App::post('/v1/graphql')
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new JSON(), 'The query or queries to execute.', body: true)
+    ->param('query', '', new JSON(), 'The query or queries to execute.', fullBody: true)
     ->inject('request')
     ->inject('response')
     ->inject('promiseAdapter')
@@ -121,8 +121,8 @@ function graphqlRequest(
             $promiseAdapter,
             $gqlSchema,
             $indexed['query'],
-            variableValues: $indexed['variables'],
-            operationName: $indexed['operationName'],
+            variableValues: $indexed['variables'] ?? null,
+            operationName: $indexed['operationName'] ?? null,
             validationRules: $validations
         );
     }

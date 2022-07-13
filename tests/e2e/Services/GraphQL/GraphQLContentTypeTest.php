@@ -8,7 +8,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
-class GraphQLBodyTypeTest extends Scope
+class GraphQLContentTypeTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
