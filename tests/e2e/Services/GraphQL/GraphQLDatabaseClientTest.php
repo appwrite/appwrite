@@ -288,6 +288,6 @@ class GraphQLDatabaseClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals(204, $document['headers']['status-code']);
     }
 }
