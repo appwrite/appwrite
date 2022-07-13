@@ -74,9 +74,7 @@ function graphqlRequest(
         $query = [ 'query' => $request->getSwoole()->rawContent() ];
     }
 
-    $batch = true;
     if (!isset($query[0])) {
-        $batch = false;
         $query = [$query];
     }
 
