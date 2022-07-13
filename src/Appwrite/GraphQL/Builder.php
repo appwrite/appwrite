@@ -291,22 +291,32 @@ class Builder
         Database $dbForProject,
         Document $user,
     ): Schema {
+        App::setResource('current', fn() => $utopia);
+
         $start = microtime(true);
         $register = $utopia->getResource('register');
         $envVersion = App::getEnv('_APP_VERSION');
         $schemaVersion = $register->has('apiSchemaVersion') ? $register->get('apiSchemaVersion') : '';
-        $apiSchema = $register->has('apiSchema') ? $register->get('apiSchema') : false;
+        $collectionSchemaDirty = $register->has('schemaDirty') && $register->get('schemaDirty');
+        $apiSchemaDirty = \version_compare($envVersion, $schemaVersion, "!=");
 
-        App::setResource('current', fn() => $utopia);
+        if (!$collectionSchemaDirty
+            && !$apiSchemaDirty
+            && $register->has('fullSchema')) {
+            $timeElapsedMillis = (microtime(true) - $start) * 1000;
+            $timeElapsedMillis = \number_format((float) $timeElapsedMillis, 3, '.', '');
+            Console::info('[INFO] Fetched GraphQL Schema in ' . $timeElapsedMillis . 'ms');
 
-        if (!$apiSchema || \version_compare($envVersion, $schemaVersion, "!=")) {
+            return $register->get('fullSchema');
+        }
+
+        if ($register->has('apiSchema') && !$apiSchemaDirty) {
+            $apiSchema = $register->get('apiSchema');
+        } else {
             $apiSchema = self::buildAPISchema($utopia);
             $register->set('apiSchema', fn() => $apiSchema);
             $register->set('apiSchemaVersion', fn() => $envVersion);
         }
-
-        $collectionSchemaDirty = $register->has('schemaDirty')
-            && $register->get('schemaDirty');
 
         if ($register->has('collectionSchema') && !$collectionSchemaDirty) {
             $collectionSchema = $register->get('collectionSchema');
@@ -315,15 +325,6 @@ class Builder
             $register->set('collectionSchema', fn() => $collectionSchema);
             $register->set('schemaDirty', fn() => false);
         }
-
-//        $changeSet = $cache->load('collectionChangeSet', INF);
-//        if ($collectionSchema && $collectionSchemaDirty) {
-//            foreach ($changeSet as $change) {
-//                $collectionSchema = self::applyChange($collectionSchema, $change);
-//            }
-//        } elseif (!$collectionSchema) {
-//            $collectionSchema = self::buildCollectionsSchema($utopia, $dbForProject, $user);
-//        }
 
         $queryFields = \array_merge_recursive($apiSchema['query'], $collectionSchema['query']);
         $mutationFields = \array_merge_recursive($apiSchema['mutation'], $collectionSchema['mutation']);
@@ -335,7 +336,7 @@ class Builder
         $timeElapsedMillis = \number_format((float) $timeElapsedMillis, 3, '.', '');
         Console::info('[INFO] Built GraphQL Schema in ' . $timeElapsedMillis . 'ms');
 
-        return new Schema([
+        $schema = new Schema([
             'query' => new ObjectType([
                 'name' => 'Query',
                 'fields' => $queryFields
@@ -345,6 +346,10 @@ class Builder
                 'fields' => $mutationFields
             ])
         ]);
+
+        $register->set('fullSchema', fn() => $schema);
+
+        return $schema;
     }
 
     /**
