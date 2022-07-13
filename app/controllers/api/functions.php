@@ -439,7 +439,7 @@ App::delete('/v1/functions/:functionId')
 
         $events->setParam('functionId', $function->getId());
 
-        $response->dynamic(new Document(), Response::MODEL_NONE);
+        $response->noContent();
     });
 
 App::post('/v1/functions/:functionId/deployments')
@@ -781,7 +781,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($deployment);
 
-        $response->dynamic(new Document(), Response::MODEL_NONE);
+        $response->noContent();
     });
 
 App::post('/v1/functions/:functionId/executions')

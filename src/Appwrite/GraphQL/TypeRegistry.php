@@ -126,7 +126,7 @@ class TypeRegistry
                 } else {
                     try {
                         $complexModel = self::$models[$type];
-                        $type = self::get($complexModel);
+                        $type = self::get($complexModel->getType());
                     } catch (\Exception) {
                         Console::error('Could not find model for ' . $type);
                     }

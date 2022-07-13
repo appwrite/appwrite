@@ -2,6 +2,7 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\CoroutinePromiseAdapter;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
 use GraphQL\GraphQL;
@@ -70,32 +71,14 @@ function graphqlRequest(
     $contentType = $request->getHeader('content-type');
 
     if ($contentType === 'application/graphql') {
-        $query = [ 'query' => $request->getSwoole()->rawContent() ];
+        $query = parseGraphqlRequest($request);
     }
-
+    if (\str_starts_with($contentType, 'multipart/form-data')) {
+        $query = parseMultipartRequest($query, $request);
+    }
     if (!isset($query[0])) {
         $query = [$query];
     }
-
-    if (\str_starts_with($contentType, 'multipart/form-data')) {
-        $operations = \json_decode($query[0]['operations'], true);
-        $map = \json_decode($query[0]['map'], true);
-        foreach ($map as $fileKey => $locations) {
-            foreach ($locations as $location) {
-                $items = &$operations;
-                foreach (\explode('.', $location) as $key) {
-                    if (!isset($items[$key]) || !\is_array($items[$key])) {
-                        $items[$key] = [];
-                    }
-                    $items = &$items[$key];
-                }
-                $items = $request->getFiles($fileKey);
-            }
-        }
-        $query[0]['query'] = $operations['query'];
-        $query[0]['variables'] = $operations['variables'];
-    }
-
     if (empty($query)) {
         throw new Exception('No query supplied.', 400, Exception::GRAPHQL_NO_QUERY);
     }
@@ -109,9 +92,9 @@ function graphqlRequest(
 
     if (App::isProduction()) {
         $validations[] = new DisableIntrospection();
-        $debugFlags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
-    } else {
         $debugFlags = DebugFlag::NONE;
+    } else {
+        $debugFlags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     }
 
     $promises = [];
@@ -130,18 +113,11 @@ function graphqlRequest(
     $wg = new WaitGroup();
     $wg->add();
     $promiseAdapter->all($promises)->then(
-        function ($result) use ($response, &$output, $wg, $debugFlags) {
-            foreach ($result as $queryResponse) {
-                $output[] = $queryResponse->toArray($debugFlags);
-            }
-            if (isset($output[1])) {
-                $output = \array_merge_recursive(...$output);
-            } else {
-                $output = $output[0];
-            }
+        function (array $results) use (&$output, &$wg, $debugFlags) {
+            processResult($results, $output, $debugFlags);
             $wg->done();
         },
-        function ($error) use ($response, &$output, $wg) {
+        function ($error) use (&$output, $wg) {
             $output = ['errors' => [$error]];
             $wg->done();
         }
@@ -149,4 +125,64 @@ function graphqlRequest(
     $wg->wait();
 
     $response->json($output);
+}
+
+/**
+ * Parse an application/graphql request
+ *
+ * @param Request $request
+ * @return array
+ */
+function parseGraphqlRequest(Request $request): array
+{
+    return [ 'query' => $request->getSwoole()->rawContent() ];
+}
+
+/**
+ * Parse a multipart/form-data request
+ *
+ * @param array $query
+ * @param Request $request
+ * @return array
+ */
+function parseMultipartRequest(array $query, Request $request): array
+{
+    $operations = \json_decode($query['operations'], true);
+    $map = \json_decode($query['map'], true);
+    foreach ($map as $fileKey => $locations) {
+        foreach ($locations as $location) {
+            $items = &$operations;
+            foreach (\explode('.', $location) as $key) {
+                if (!isset($items[$key]) || !\is_array($items[$key])) {
+                    $items[$key] = [];
+                }
+                $items = &$items[$key];
+            }
+            $items = $request->getFiles($fileKey);
+        }
+    }
+    $query['query'] = $operations['query'];
+    $query['variables'] = $operations['variables'];
+
+    return $query;
+}
+
+/**
+ * Process an array of results for output
+ *
+ * @param $result
+ * @param $output
+ * @param $debugFlags
+ * @return void
+ */
+function processResult($result, &$output, $debugFlags): void
+{
+    if (!isset($result[1])) {
+        $output = $result[0]->toArray($debugFlags);
+    } else {
+        $output = \array_merge_recursive(...\array_map(
+            fn ($item) => $item->toArray($debugFlags),
+            $result
+        ));
+    }
 }
