@@ -725,8 +725,7 @@ class WebhooksCustomClientTest extends Scope
         $data['secret'] = $webhook['data']['secret'];
 
         return $data;
-    }
-    
+    }    
 
     /**
      * @depends testCreateAccountRecovery

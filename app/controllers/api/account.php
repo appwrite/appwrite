@@ -693,7 +693,7 @@ App::post('/v1/account/sessions/magic-url')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expire, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
-        if($useEmail) {
+        if ($useEmail) {
             $mails
                 ->setType(MAIL_TYPE_MAGIC_SESSION)
                 ->setRecipient($user->getAttribute('email'))
@@ -1993,7 +1993,7 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        if($useEmail) {
+        if ($useEmail) {
             $mails
                 ->setType(MAIL_TYPE_RECOVERY)
                 ->setRecipient($profile->getAttribute('email', ''))
@@ -2157,7 +2157,7 @@ App::post('/v1/account/verification')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        if($useEmail) {
+        if ($useEmail) {
             $mails
                 ->setType(MAIL_TYPE_VERIFICATION)
                 ->setRecipient($user->getAttribute('email'))

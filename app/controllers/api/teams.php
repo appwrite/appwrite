@@ -424,8 +424,8 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('membershipId', $membership->getId())
             ->setPayload(
             $response->output(
-                $membership->setAttribute('secret', $isAppUser ? $secret : ''),
-                Response::MODEL_MEMBERSHIP
+                    $membership->setAttribute('secret', $isAppUser ? $secret : ''),
+                    Response::MODEL_MEMBERSHIP
             ));
         ;
 

@@ -27,7 +27,7 @@ return [
             'create' => [
                 '$description' => 'This event triggers when a magic link token for a session is created.',
             ],
-        ],
+            ],
         ],
         'recovery' => [
             '$model' => Response::MODEL_TOKEN,
