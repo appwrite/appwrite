@@ -274,7 +274,7 @@ abstract class Worker
      */
     protected function getVideoDevice($projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_VIDEO . '/app-' . $projectId);
+        return $this->getDevice(APP_STORAGE_VIDEOS . '/app-' . $projectId);
     }
 
 

@@ -3122,10 +3122,10 @@ $collections = [
             ],
         ]
     ],
-    'video_renditions' => [
+    'videos_renditions' => [
         '$collection' => Database::METADATA,
-        '$id' => 'video_renditions',
-        '$name' => 'Video_renditions',
+        '$id' => 'videos_renditions',
+        '$name' => 'Videos_renditions',
         'attributes' => [
             [
                 '$id' => 'videoId',
@@ -3347,10 +3347,10 @@ $collections = [
             ],
         ]
     ],
-    'video_profiles' => [
+    'videos_profiles' => [
         '$collection' => Database::METADATA,
-        '$id' => 'video_profiles',
-        '$name' => 'Video_profiles',
+        '$id' => 'videos_profiles',
+        '$name' => 'Videos_profiles',
         'attributes' => [
             [
                 '$id' => 'name',
@@ -3429,10 +3429,10 @@ $collections = [
             ],
         ]
     ],
-    'video_subtitles' => [
+    'videos_subtitles' => [
         '$collection' => Database::METADATA,
-        '$id' => 'video_subtitles',
-        '$name' => 'Video_subtitles',
+        '$id' => 'videos_subtitles',
+        '$name' => 'Videos_subtitles',
         'attributes' => [
             [
                 '$id' => 'videoId',
@@ -3468,6 +3468,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'path',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'name',
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -3496,7 +3507,17 @@ $collections = [
                 'size' => 0,
                 'signed' => true,
                 'required' => false,
-                'default' => null,
+                'default' => false,
+                'array' => false,
+                'filters' => [],
+            ],[
+                '$id' => 'status',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => '',
                 'array' => false,
                 'filters' => [],
             ],

@@ -155,10 +155,10 @@ App::post('/v1/projects')
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForProject->exists($dbForProject->getDefaultDatabase(), 'video_profiles')) {
-            foreach (Config::getParam('video-profiles', []) as $profile) {
+        if ($dbForProject->exists($dbForProject->getDefaultDatabase(), 'videos_profiles')) {
+            foreach (Config::getParam('videos-profiles', []) as $profile) {
                 Authorization::skip(function () use ($project, $profile, $dbForProject) {
-                    return $dbForProject->createDocument('video_profiles', new Document([
+                    return $dbForProject->createDocument('videos_profiles', new Document([
                         'name' => $profile['name'],
                         'videoBitrate' => $profile['videoBitrate'],
                         'audioBitrate' => $profile['audioBitrate'],

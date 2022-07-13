@@ -186,12 +186,12 @@ return [
         'optional' => false,
         'icon' => '',
     ],
-    'video' => [
-        'key' => 'video',
-        'name' => 'Video',
-        'subtitle' => 'Appwrite\'s Video Endpoint',
-        'description' => 'Video Endpoint',
-        'controller' => 'api/video.php',
+    'videos' => [
+        'key' => 'videos',
+        'name' => 'Videos',
+        'subtitle' => 'Appwrite\'s Videos Endpoint',
+        'description' => 'Videos Endpoint',
+        'controller' => 'api/videos.php',
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',

@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\ClamAV\Network;
+
 use Appwrite\Event\Audit;
 use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Event\Database as EventDatabase;
@@ -44,7 +44,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Swoole\Request;
-use Streaming\Representation;
+
 
 /**
  * Validate file Permissions
@@ -52,36 +52,29 @@ use Streaming\Representation;
  * @param Database $dbForProject
  * @param string $bucketId
  * @param string $fileId
- * @param array|null $read
- * @param array|null $write
  * @param string $mode
  * @return Document $file
  * @throws Exception
  */
-function validateFilePermissions(Database $dbForProject, string $bucketId, string $fileId, string $mode, Document $user, ?array $read, ?array $write): Document
+function validateFilePermissions(Database $dbForProject, string $bucketId, string $fileId, string $mode, Document $user): Document
 {
-    /** @var Utopia\Database\Document $project */
 
     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-    if (
-        $bucket->isEmpty()
-        || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)
-    ) {
+    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
         throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
     }
 
     // Check bucket permissions when enforced
     $permissionBucket = $bucket->getAttribute('permission') === 'bucket';
     if ($permissionBucket) {
-        $validator = new Authorization('write');
-        if (!$validator->isValid($bucket->getWrite())) {
+        $validator = new Authorization('read');
+        if (!$validator->isValid($bucket->getRead())) {
             throw new Exception('Unauthorized file permissions', 401, Exception::USER_UNAUTHORIZED);
         }
     }
 
-    $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
-    $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
+    $read = !$user->isEmpty() ? ['user:' . $user->getId()] : []; // By default set read permissions for user
 
     // Users can only add their roles to files, API keys and Admin users can add any
     $roles = Authorization::getRoles();
@@ -90,11 +83,6 @@ function validateFilePermissions(Database $dbForProject, string $bucketId, strin
         foreach ($read as $role) {
             if (!Authorization::isRole($role)) {
                 throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-            }
-        }
-        foreach ($write as $role) {
-            if (!Authorization::isRole($role)) {
-                throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
             }
         }
     }
@@ -109,15 +97,15 @@ function validateFilePermissions(Database $dbForProject, string $bucketId, strin
     return $file;
 }
 
-App::get('/v1/video/profiles')
-    ->alias('/v1/video/video/profiles', [])
+App::get('/v1/videos/profiles')
+    ->alias('/v1/videos/videos/profiles', [])
     ->desc('Get all video profiles')
     ->groups(['api', 'video'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'video')
     ->label('sdk.method', 'getProfiles')
-    ->label('sdk.description', '/docs/references/video/get-profiles.md') // TODO: Create markdown
+    ->label('sdk.description', '/docs/references/videos/get-profiles.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VIDEO_PROFILE_LIST)
@@ -125,36 +113,40 @@ App::get('/v1/video/profiles')
     ->inject('dbForProject')
     ->action(function (Response $response, Database $dbForProject) {
 
-        $profiles = Authorization::skip(fn () => $dbForProject->find('video_profiles', [], 12, 0, [], ['ASC']));
+        $profiles = Authorization::skip(fn () => $dbForProject->find('videos_profiles', [], 12, 0, [], ['ASC']));
 
         if (empty($profiles)) {
             throw new Exception('Video profiles where not found', 404, Exception::PROFILES_NOT_FOUND);
         }
 
         $response->dynamic(new Document([
-            'total' => $dbForProject->count('video_profiles', [], APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('videos_profiles', [], APP_LIMIT_COUNT),
             'profiles' => $profiles,
         ]), Response::MODEL_VIDEO_PROFILE_LIST);
     });
 
 
-App::post('/v1/video/:videoId/subtitles')
-    ->alias('/v1/video/:videoId/subtitles', [])
-    ->desc('Link a subtitle file to a video')
+App::post('/v1/videos/:videoId/subtitles')
+    ->alias('/v1/videos/:videoId/subtitles', [])
+    ->desc('Attach a subtitle file to a video')
     ->groups(['api', 'video'])
     ->label('scope', 'files.write')
-    // TODO: Add sdk labels
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'addSubtitles')
+    ->label('sdk.description', '/docs/references/videos/add-subtitles.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('bucketId', '', new CustomId(), 'Subtitle bucket unique ID.')
     ->param('fileId', '', new CustomId(), 'Subtitle file unique ID.')
     ->param('name', '', new Text(128), 'Subtitle name.')
     ->param('code', '', new Text(128), 'Subtitle code name.')
-    ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->param('default', false, new Boolean(true), 'Default subtitle.')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
@@ -162,26 +154,26 @@ App::post('/v1/video/:videoId/subtitles')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, $project, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
-        /** @var Utopia\Database\Document $project */
+    ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Request $request, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
-        if ($video->isEmpty()) {
+        if (empty($video)) {
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user, $read, $write);
-        validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user, $read, $write);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+        validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user);
 
         try {
-            $subtitle = Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $fileId, $name, $code) {
-                return $dbForProject->createDocument('video_subtitles', new Document([
+            Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $fileId, $name, $code, $default) {
+                return $dbForProject->createDocument('videos_subtitles', new Document([
                     'videoId'   => $videoId,
                     'bucketId'  => $bucketId,
                     'fileId'    => $fileId,
                     'name'      => $name,
                     'code'      => $code,
+                    'default'   => $default,
                 ]));
             });
         } catch (StructureException $exception) {
@@ -192,26 +184,22 @@ App::post('/v1/video/:videoId/subtitles')
     });
 
 
-App::post('/v1/video/buckets/:bucketId/files/:fileId')
+App::post('/v1/video')
     ->desc('Create Video')
     ->groups(['api', 'video'])
     ->label('scope', 'files.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'video')
     ->label('sdk.method', 'create')
-    ->label('sdk.description', '/docs/references/video/create.md') // TODO: Create markdown
+    ->label('sdk.description', '/docs/references/videos/create.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VIDEO)
-//    ->label('event', 'buckets.[bucketId].files.[fileId].create')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new CustomId(), 'File ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
     ->inject('user')
     ->inject('audits')
     ->inject('usage')
@@ -219,10 +207,10 @@ App::post('/v1/video/buckets/:bucketId/files/:fileId')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(action: function (string $bucketId, string $fileId, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, $project, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->action(action: function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
         /** @var Utopia\Database\Document $project */
 
-        $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user, $read, $write);
+        $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user);
 
         try {
             $video = Authorization::skip(function () use ($dbForProject, $bucketId, $file) {
@@ -245,22 +233,20 @@ App::post('/v1/video/buckets/:bucketId/files/:fileId')
     });
 
 
-App::post('/v1/video/:videoId/rendition/:profileId')
-    ->alias('/v1/video/:videoId/rendition/:profileId', [])
+App::post('/v1/videos/:videoId/rendition')
+    ->alias('/v1/videos/:videoId/rendition', [])
     ->desc('Start transcoding video rendition')
     ->groups(['api', 'video'])
     ->label('scope', 'files.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'video')
     ->label('sdk.method', 'createTranscoding')
-    ->label('sdk.description', '/docs/references/video/create-transcoding.md') // TODO: Create markdown
+    ->label('sdk.description', '/docs/references/videos/create-transcoding.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
 //    ->label('event', 'buckets.[bucketId].files.[fileId].create')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('profileId', '', new CustomId(), 'Profile unique ID.')
-    ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -272,7 +258,7 @@ App::post('/v1/video/:videoId/rendition/:profileId')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(action: function (string $videoId, string $profileId, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->action(action: function (string $videoId, string $profileId, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
@@ -280,9 +266,9 @@ App::post('/v1/video/:videoId/rendition/:profileId')
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user, $read, $write);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
 
-        $profile = Authorization::skip(fn() => $dbForProject->findOne('video_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$profileId])]));
+        $profile = Authorization::skip(fn() => $dbForProject->findOne('videos_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$profileId])]));
 
         if (!$profile) {
             throw new Exception('Video profile not found', 400, Exception::PROFILES_NOT_FOUND);
@@ -300,29 +286,26 @@ App::post('/v1/video/:videoId/rendition/:profileId')
     });
 
 
-App::get('/v1/video/:videoId/:stream/renditions')
-    ->alias('/v1/video/:videoId/renditions', [])
+App::get('/v1/videos/:videoId/:stream/renditions')
+    ->alias('/v1/videos/:videoId/renditions', [])
     ->desc('Get File renditions')
     ->groups(['api', 'video'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'video')
     ->label('sdk.method', 'getRenditions')
-    ->label('sdk.description', '/docs/references/video/get-renditions.md') // TODO: Create markdown
+    ->label('sdk.description', '/docs/references/videos/get-renditions.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VIDEO_RENDITIONS_LIST)
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('stream', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
-    ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
     ->inject('usage')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $stream, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $project, Stats $usage, string $mode, Document $user) {
+    ->action(function (string $videoId, string $stream, Response $response, Database $dbForProject, Stats $usage, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
@@ -330,7 +313,7 @@ App::get('/v1/video/:videoId/:stream/renditions')
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
-        $file = validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user, $read, $write);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
 
         $queries = [
             new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
@@ -339,24 +322,23 @@ App::get('/v1/video/:videoId/:stream/renditions')
             new Query('stream', Query::TYPE_EQUAL, [$stream]),
         ];
 
-        $renditions = Authorization::skip(fn () => $dbForProject->find('video_renditions', $queries, 12, 0, [], ['ASC']));
+        $renditions = Authorization::skip(fn () => $dbForProject->find('videos_renditions', $queries, 12, 0, [], ['ASC']));
 
         $response->dynamic(new Document([
-            'total'      => $dbForProject->count('video_renditions', $queries, APP_LIMIT_COUNT),
+            'total'      => $dbForProject->count('videos_renditions', $queries, APP_LIMIT_COUNT),
             'renditions' => $renditions,
         ]), Response::MODEL_VIDEO_RENDITIONS_LIST);
     });
 
 
-
-App::get('/v1/video/:videoId/:stream/:profile/:fileName')
-    ->alias('/v1/video/:videoId/:stream/:profile/:fileName', [])
+App::get('/v1/videos/:videoId/:stream/:profile/:fileName')
+    ->alias('/v1/videos/:videoId/:stream/:profile/:fileName', [])
     ->desc('Get video playlist manifests')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'video')
     ->label('sdk.method', 'getPlaylist')
-    ->label('sdk.description', '/docs/references/video/get-playlist.md') // TODO: Create markdown
+    ->label('sdk.description', '/docs/references/videos/get-playlist.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     // TODO: Response model
@@ -365,29 +347,25 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
     ->param('stream', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
     ->param('profile', '', new Text(18), 'folder name')
     ->param('fileName', '', new Text(128), 'playlist file name')
-    ->param('read', null, new Permissions(), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
     ->inject('videosDevice')
     ->inject('usage')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $stream, string $profile, string $fileName, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $project, Device $videosDevice, Stats $usage, string $mode, Document $user) {
-
+    ->action(function (string $videoId, string $stream, string $profile, string $fileName, Response $response, Database $dbForProject, Device $videosDevice, Stats $usage, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
         ]));
 
-        if (empty($video)){
+        if (empty($video)) {
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user, $read, $write);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
 
-        $renditions = Authorization::skip(fn () => $dbForProject->find('video_renditions', [
+        $renditions = Authorization::skip(fn () => $dbForProject->find('videos_renditions', [
             new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
             new Query('endedAt', Query::TYPE_GREATER, [0]),
             new Query('status', Query::TYPE_EQUAL, ['ready']),
@@ -398,28 +376,30 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
             throw new Exception('Renditions not found'); // TODO: Proper error code
         }
 
-        $ct['m3u8'] = 'application/x-mpegurl';
-        $ct['mpd']  = 'application/dash+xml';
-        $ct['ts']   = 'video/MP2T';
-        $ct['m4s']   = 'video/iso.segment';
+        $contentType['m3u8'] = 'application/x-mpegurl';
+        $contentType['mpd']  = 'application/dash+xml';
+        $contentType['ts']   = 'video/MP2T';
+        $contentType['m4s']   = 'video/iso.segment';
+        $contentType['vtt']   = 'text/vtt';
         $ext = pathinfo($fileName, PATHINFO_EXTENSION);
-        $baseUrl = 'http://127.0.0.1/v1/video/' . $videoId . '/' . $stream . '/' ;
+        $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/' . $stream . '/' ;
 
         if ($profile === 'master') {
             if ($stream === 'hls') {
-                $subtitles = Authorization::skip(fn () => $dbForProject->find('video_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$video->getId()])], 12, 0, [], ['ASC']));
+                $subtitles = Authorization::skip(fn () => $dbForProject->find('videos_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$video->getId()])], 12, 0, [], ['ASC']));
                 $paramsSubtitles = [];
                 foreach ($subtitles as $subtitle) {
                         $paramsSubtitles[] = [
                             'name' => $subtitle->getAttribute('name'),
                             'code' => $subtitle->getAttribute('code'),
-                            'uri' => $baseUrl  . $videoId . '_subtitles_' . $subtitle->getAttribute('code') . '.m3u8',
+                            'default' => !empty($subtitle->getAttribute('default')) ? 'YES' : 'NO',
+                            'uri'  => $baseUrl  . $subtitle->getAttribute('path') . '/' . $videoId . '_subtitles_' . $subtitle->getAttribute('code') . '.m3u8',
                         ];
                 }
                 $paramsRenditions = [];
                 foreach ($renditions as $rendition) {
                     $paramsRenditions[] = [
-                        'bandwidth' => ($rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate')),
+                        'bandwidth'  => ($rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate')),
                         'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
                         'name' => $rendition->getAttribute('name'),
                         'uri'  => $baseUrl . $rendition->getAttribute('name') . '/' . $rendition->getAttribute('videoId') . '_' . $rendition->getAttribute('height') . 'p.m3u8',
@@ -427,7 +407,7 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
                         ];
                 }
 
-                $template = new View(__DIR__ . '/../../views/video/hls.phtml');
+                $template = new View(__DIR__ . '/../../views/videos/hls.phtml');
                 $template->setParam('paramsSubtitles', $paramsSubtitles);
                 $template->setParam('paramsRenditions', $paramsRenditions);
                 $output = $template->render(false);
@@ -445,15 +425,14 @@ App::get('/v1/video/:videoId/:stream/:profile/:fileName')
                     }
                 }
 
-                $template = new View(__DIR__ . '/../../views/video/dash.phtml');
+                $template = new View(__DIR__ . '/../../views/videos/dash.phtml');
                 $template->setParam('params', $adaptations);
-                $response->setContentType($ct[$ext]);
+                $response->setContentType($contentType[$ext]);
                 $output = $template->render(false);
             }
         } else {
             $output = $videosDevice->read($videosDevice->getRoot() . '/' . $videoId . '/' . $profile . '/' . $fileName);
         }
 
-        $response->setContentType($ct[$ext])
-            ->send($output);
+        $response->setContentType($contentType[$ext])->send($output);
     });

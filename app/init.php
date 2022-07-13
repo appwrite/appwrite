@@ -98,7 +98,7 @@ const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bi
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
-const   APP_STORAGE_VIDEO = '/storage/videos';
+const APP_STORAGE_VIDEOS = '/storage/videos';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
@@ -174,7 +174,7 @@ Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
 Config::load('variables', __DIR__ . '/config/variables.php');  // List of env variables
-Config::load('video-profiles', __DIR__ . '/config/video-profiles.php');
+Config::load('videos-profiles', __DIR__ . '/config/videos-profiles.php');
 Config::load('avatar-browsers', __DIR__ . '/config/avatars/browsers.php');
 Config::load('avatar-credit-cards', __DIR__ . '/config/avatars/credit-cards.php');
 Config::load('avatar-flags', __DIR__ . '/config/avatars/flags.php');
@@ -915,7 +915,7 @@ App::setResource('deviceFiles', function ($project) {
 }, ['project']);
 
 App::setResource('videosDevice', function ($project) {
-    return getDevice(APP_STORAGE_VIDEO . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_VIDEOS . '/app-' . $project->getId());
 }, ['project']);
 
 App::setResource('deviceFunctions', function ($project) {
