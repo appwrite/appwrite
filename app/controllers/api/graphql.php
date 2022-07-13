@@ -12,7 +12,6 @@ use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\Validator\JSON;
-use Utopia\Validator\Text;
 
 App::get('/v1/graphql')
     ->desc('GraphQL Endpoint')

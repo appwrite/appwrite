@@ -485,7 +485,7 @@ trait GraphQLBase
                 }';
             case self::$DELETE_DOCUMENT:
                 return 'mutation deleteDocument($databaseId: String!, $collectionId: String!, $documentId: String!){
-                    databasesDeleteDocument($databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId)
+                    databasesDeleteDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId)
                 }';
 
             case self::$GET_USER:
