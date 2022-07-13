@@ -1,6 +1,0 @@
-<?php
-$key = $this->getParam('key', '');
-$required = $this->getParam('required', '');
-$namespace = $this->getParam('namespace', '');
-?>
-<input name="<?php echo $this->escape($key); ?>" type="email" autocomplete="off" data-ls-bind="{{<?php echo $this->escape($namespace); ?>}}" placeholder="me@example.com"<?php if($required): ?> required<?php endif; ?> class="margin-bottom-no">

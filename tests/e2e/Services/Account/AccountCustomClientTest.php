@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Account;
 
+use Appwrite\Auth\Phone\Mock;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -79,7 +80,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -121,7 +122,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 401);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -160,7 +161,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -201,7 +202,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 401);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -239,7 +240,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -270,6 +271,7 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['headers']['x-ratelimit-remaining'], 99);
         $this->assertNotEmpty($response['body']['jwt']);
         $this->assertIsString($response['body']['jwt']);
 
@@ -447,7 +449,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -672,5 +674,313 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['users']);
         $this->assertCount(1, $response['body']['users']);
         $this->assertEquals($response['body']['users'][0]['email'], $email);
+    }
+
+
+    public function testCreatePhone(): array
+    {
+        $number = '+123456789';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => 'unique()',
+            'number' => $number,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEmpty($response['body']['secret']);
+        $this->assertIsNumeric($response['body']['expire']);
+
+        $userId = $response['body']['userId'];
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => 'unique()'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $data['token'] = Mock::$defaultDigits;
+        $data['id'] = $userId;
+        $data['number'] = $number;
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreatePhone
+     */
+    public function testCreateSessionWithPhone(array $data): array
+    {
+        $id = $data['id'] ?? '';
+        $token = $data['token'] ?? '';
+        $number = $data['number'] ?? '';
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => 'ewewe',
+            'secret' => $token,
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $id,
+            'secret' => 'sdasdasdasd',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $id,
+            'secret' => $token,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+
+        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals($response['body']['phone'], $number);
+        $this->assertTrue($response['body']['phoneVerification']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $id,
+            'secret' => $token,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $data['session'] = $session;
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateSessionWithPhone
+     */
+    public function testConvertPhoneToPassword(array $data): array
+    {
+        $session = $data['session'];
+        $email = uniqid() . 'new@localhost.test';
+        $password = 'new-password';
+
+        /**
+         * Test for SUCCESS
+         */
+        $email = uniqid() . 'new@localhost.test';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertIsArray($response['body']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals($response['body']['email'], $email);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
+        return $data;
+    }
+
+    /**
+     * @depends testConvertPhoneToPassword
+     */
+    public function testUpdatePhone(array $data): array
+    {
+        $newPhone = '+45632569856';
+        $session = $data['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'number' => $newPhone,
+            'password' => 'new-password'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertIsArray($response['body']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals($response['body']['phone'], $newPhone);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 401);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), []);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $data['phone'] = $newPhone;
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdatePhone
+     */
+    public function testPhoneVerification(array $data): array
+    {
+        $session = $data['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+
+        ]));
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEmpty($response['body']['secret']);
+        $this->assertIsNumeric($response['body']['expire']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testPhoneVerification
+     */
+    public function testUpdatePhoneVerification($data): array
+    {
+        $id = $data['id'] ?? '';
+        $session = $data['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verification/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'userId' => $id,
+            'secret' => Mock::$defaultDigits,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verification/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'userId' => 'ewewe',
+            'secret' => Mock::$defaultDigits,
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verification/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'userId' => $id,
+            'secret' => '999999',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        return $data;
     }
 }

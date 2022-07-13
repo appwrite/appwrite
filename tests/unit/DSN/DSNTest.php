@@ -7,7 +7,6 @@ use PHPUnit\Framework\TestCase;
 
 class DSNTest extends TestCase
 {
-
     public function setUp(): void
     {
     }

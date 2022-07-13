@@ -130,8 +130,9 @@ function getDatabase(Registry &$register, string $namespace)
             if (!$database->exists($database->getDefaultDatabase(), 'realtime')) {
                 throw new Exception('Collection not ready');
             }
+
             break; // leave loop if successful
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
             if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
                 throw new \Exception('Failed to connect to database: ' . $e->getMessage());
@@ -161,24 +162,30 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($register, $containerId, &$statsDocument, $logError) {
-        try {
-            [$database, $returnDatabase] = getDatabase($register, '_console');
-            $document = new Document([
-                '$id' => $database->getId(),
-                '$collection' => 'realtime',
-                '$read' => [],
-                '$write' => [],
-                'container' => $containerId,
-                'timestamp' => time(),
-                'value' => '{}'
-            ]);
-            $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
-        } catch (\Throwable $th) {
-            call_user_func($logError, $th, "createWorkerDocument");
-        } finally {
-            call_user_func($returnDatabase);
-        }
+    go(function () use ($register, $containerId, &$statsDocument) {
+        $attempts = 0;
+        [$database, $returnDatabase] = getDatabase($register, '_console');
+        do {
+            try {
+                $attempts++;
+                $document = new Document([
+                    '$id' => $database->getId(),
+                    '$collection' => 'realtime',
+                    '$read' => [],
+                    '$write' => [],
+                    'container' => $containerId,
+                    'timestamp' => time(),
+                    'value' => '{}'
+                ]);
+
+                $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
+                break;
+            } catch (\Throwable $th) {
+                Console::warning("Collection not ready. Retrying connection ({$attempts})...");
+                sleep(DATABASE_RECONNECT_SLEEP);
+            }
+        } while (true);
+        call_user_func($returnDatabase);
     });
 
     /**
@@ -320,8 +327,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        
-                        [$database, $returnDatabase] = getDatabase($register, "_{$projectId}");
+                        [$consoleDatabase, $returnConsoleDatabase] = getDatabase($register, '_console');
+                        $project = Authorization::skip(fn() => $consoleDatabase->getDocument('projects', $projectId));
+                        [$database, $returnDatabase] = getDatabase($register, "_{$project->getInternalId()}");
+
                         $user = $database->getDocument('users', $userId);
 
                         $roles = Auth::getRoles($user);
@@ -329,6 +338,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
 
                         call_user_func($returnDatabase);
+                        call_user_func($returnConsoleDatabase);
                     }
                 }
 
@@ -388,6 +398,14 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     try {
         /** @var \Utopia\Database\Document $project */
         $project = $app->getResource('project');
+
+        /** @var \Utopia\Database\Document $console */
+        $console = $app->getResource('console');
+
+        $cache = new Cache(new RedisCache($redis));
+        $database = new Database(new MariaDB($db), $cache);
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setNamespace("_{$project->getInternalId()}");
 
         /*
          *  Project Check
@@ -542,7 +560,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         
         $database = new Database(new MariaDB($projectDB), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_$projectId");
+        $database->setNamespace("_console");
+        $projectId = $realtime->connections[$connection]['projectId'];
+
+        if ($projectId !== 'console') {
+            $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
+            $database->setNamespace("_{$project->getInternalId()}");
+        }
 
         /*
          * Abuse Check

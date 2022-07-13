@@ -36,8 +36,6 @@ class CertificatesV1 extends Worker
 
     public function run(): void
     {
-        Authorization::disable();
-        Authorization::setDefaultStatus(false);
         /**
          * 1. Read arguments and validate domain
          * 2. Get main domain

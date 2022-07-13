@@ -18,6 +18,7 @@ use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\S3;
 use Exception;
 use PDO;
+use Utopia\Database\Validator\Authorization;
 
 abstract class Worker
 {
@@ -113,6 +114,11 @@ abstract class Worker
     public function perform(): void
     {
         try {
+            /**
+             * Disabling global authorization in workers.
+             */
+            Authorization::disable();
+            Authorization::setDefaultStatus(false);
             $this->run();
         } catch (\Throwable $error) {
             foreach (self::$errorCallbacks as $errorCallback) {

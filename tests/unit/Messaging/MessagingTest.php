@@ -202,7 +202,7 @@ class MessagingTest extends TestCase
          * Test Collection Level Permissions
          */
         $result = Realtime::fromPayload(
-            event: 'collections.collection_id.documents.document_id.create',
+            event: 'databases.database_id.collections.collection_id.documents.document_id.create',
             payload: new Document([
                 '$id' => 'test',
                 '$collection' => 'collection',
@@ -214,6 +214,9 @@ class MessagingTest extends TestCase
                 '$read' => ['role:all'],
                 '$write' => ['role:all'],
                 'permission' => 'collection'
+            ]),
+            database: new Document([
+                '$id' => 'database',
             ])
         );
 
@@ -224,7 +227,7 @@ class MessagingTest extends TestCase
          * Test Document Level Permissions
          */
         $result = Realtime::fromPayload(
-            event: 'collections.collection_id.documents.document_id.create',
+            event: 'databases.database_id.collections.collection_id.documents.document_id.create',
             payload: new Document([
                 '$id' => 'test',
                 '$collection' => 'collection',
@@ -236,6 +239,9 @@ class MessagingTest extends TestCase
                 '$read' => ['role:admin'],
                 '$write' => ['role:admin'],
                 'permission' => 'document'
+            ]),
+            database: new Document([
+                '$id' => 'database',
             ])
         );
 
