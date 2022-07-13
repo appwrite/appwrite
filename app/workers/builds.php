@@ -194,6 +194,7 @@ class BuildsV1 extends Worker
             $build->setAttribute('status', 'failed');
             $build->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());
+            Console::error($th->getTraceAsString());
         } finally {
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 

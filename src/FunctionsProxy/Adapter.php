@@ -2,6 +2,7 @@
 
 namespace FunctionsProxy;
 
+use Exception;
 use Swoole\Database\RedisPool;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis;
@@ -16,14 +17,16 @@ abstract class Adapter
         $this->redisPool = $redisPool;
     }
 
-    private function getConnection(): array {
+    private function getConnection(): array
+    {
         $redis = $this->redisPool->get();
         $cache = new Cache(new Redis($redis));
 
-        return [$cache, fn() => $this->redisPool->put($redis)];
+        return [$cache, fn () => $this->redisPool->put($redis)];
     }
 
-    protected function getExecutors(): array {
+    protected function getExecutors(): array
+    {
         [$cache, $returnCache] = $this->getConnection();
 
         $responseExecutors = [];
@@ -33,10 +36,10 @@ abstract class Adapter
 
             foreach ($executors as $executor) {
                 [$id, $hostname] = \explode('=', $executor);
-                
+
                 $data = $cache->load('executors-' . $id, 60 * 60 * 24 * 30 * 3); // 3 months
 
-                if($data['status'] !== 'online') {
+                if ($data['status'] !== 'online') {
                     continue;
                 }
 
@@ -48,6 +51,10 @@ abstract class Adapter
             }
         } finally {
             call_user_func($returnCache);
+        }
+
+        if (\count($responseExecutors) <= 0) {
+            throw new Exception("No executor is online.");
         }
 
         return $responseExecutors;

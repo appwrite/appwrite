@@ -40,36 +40,36 @@ $redisPool = new RedisPool(
 
 $adapter = new RoundRobin($redisPool);
 
-function markOffline(Cache $cache, string $executorId, string $error)
+function markOffline(Cache $cache, string $executorId, string $error, bool $forceShowError = false)
 {
     $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
 
     $cache->save('executors-' . $executorId, ['status' => 'offline']);
 
-    if (!$data || $data['status'] === 'online') {
+    if (!$data || $data['status'] === 'online' || $forceShowError) {
         Console::warning('Executor "' . $executorId . '" went down! Message:');
         Console::warning($error);
     }
 }
 
-function markOnline(cache $cache, string $executorId)
+function markOnline(cache $cache, string $executorId, bool $forceShowError = false)
 {
     $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
 
     $cache->save('executors-' . $executorId, ['status' => 'online']);
 
-    if (!$data || $data['status'] === 'offline') {
+    if (!$data || $data['status'] === 'offline' || $forceShowError) {
         Console::success('Executor "' . $executorId . '" went online.');
     }
 }
 
 // Fetch info about executors
-function fetchExecutorsState(RedisPool $redisPool)
+function fetchExecutorsState(RedisPool $redisPool, bool $forceShowError = false)
 {
     $executors = \explode(',', App::getEnv('_APP_EXECUTORS', ''));
 
     foreach ($executors as $executor) {
-        go(function () use ($redisPool, $executor) {
+        go(function () use ($redisPool, $executor, $forceShowError) {
             $redis = $redisPool->get();
             $cache = new Cache(new Redis($redis));
 
@@ -96,9 +96,10 @@ function fetchExecutorsState(RedisPool $redisPool)
                 \curl_close($ch);
 
                 if ($statusCode === 200) {
-                    markOnline($cache, $id);
+                    markOnline($cache, $id, $forceShowError);
                 } else {
-                    markOffline($cache, $id, $error);
+                    $message = 'Code: ' . $statusCode . ' with response "' . $executorResponse .  '" and error error: ' . $error;
+                    markOffline($cache, $id, $message, $forceShowError);
                 }
             } catch (\Exception $err) {
                 throw $err;
@@ -170,12 +171,29 @@ Console::success("Waiting for executors to start...");
 
 \sleep(5); // Wait a little so executors can start
 
-fetchExecutorsState($redisPool);
+fetchExecutorsState($redisPool, true);
+
+Console::log("State of executors at startup:");
+
+go(function () use ($redisPool) {
+    $executors = \explode(',', App::getEnv('_APP_EXECUTORS', ''));
+
+    $redis = $redisPool->get();
+    $cache = new Cache(new Redis($redis));
+
+    foreach ($executors as $executor) {
+        [$id, $hostname] = \explode('=', $executor);
+        $data = $cache->load('executors-' . $id, 60 * 60 * 24 * 30 * 3); // 3 months
+        Console::log('Executor ' . $id . ' is ' . ($data['status'] ?? 'unknown') . '.');
+    }
+});
+
+Swoole\Event::wait();
 
 $http = new Server("0.0.0.0", 80);
 
 $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter) {
-    $secretKey = $request->header['x-appwrite-functions-proxy-key'] ?? '';
+    $secretKey = $request->header['x-appwrite-executor-key'] ?? '';
 
     if (empty($secretKey)) {
         throw new Exception('Missing proxy key');
@@ -186,26 +204,21 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
 
     $executorHostname = $adapter->getNextExecutor();
 
-    \var_dump($request->server['request_uri']);
-    \var_dump($request->server['request_method']);
-    \var_dump($executorHostname);
+    Console::success("Executing on " . $executorHostname);
 
     $client = new Client($executorHostname, 80);
     $client->setMethod($request->server['request_method'] ?? 'GET');
-    $client->setData($request->getData());
     $client->setHeaders(\array_merge($request->header, [
         'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
     ]));
+    $client->setData($request->getContent());
 
     $status = $client->execute($request->server['request_uri'] ?? '/');
 
-    $response->setStatusCode(200);
-    $response->end(\json_encode([
-        'data' => $status,
-        'data2' => $client->getBody(),
-        'data3' => $client->getStatusCode(),
-        'data4' => $client->errCode
-    ]));
+    $response->setStatusCode($client->getStatusCode());
+    $response->header('content-type', 'application/json; charset=UTF-8');
+    $response->write($client->getBody());
+    $response->end();
 };
 
 $http->on('start', function () use ($redisPool) {
@@ -217,7 +230,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         call_user_func($run, $swooleRequest, $swooleResponse);
     } catch (\Throwable $th) {
         logError($th, "serverError");
-        $swooleResponse->setStatusCode(500);
+
         $output = [
             'message' => 'Error: ' . $th->getMessage(),
             'code' => 500,
@@ -225,7 +238,11 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             'line' => $th->getLine(),
             'trace' => $th->getTrace()
         ];
-        $swooleResponse->end(\json_encode($output));
+
+        $swooleResponse->setStatusCode(500);
+        $swooleResponse->header('content-type', 'application/json; charset=UTF-8');
+        $swooleResponse->write(\json_encode($output));
+        $swooleResponse->end();
     }
 });
 

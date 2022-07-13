@@ -68,7 +68,7 @@ class Executor
         $route = "/runtimes";
         $headers = [
             'content-type' => 'application/json',
-            'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
+            'x-appwrite-executor-key' => App::getEnv('_APP_FUNCTIONS_PROXY_SECRET', '')
         ];
         $params = [
             'runtimeId' => "$projectId-$deploymentId",
@@ -109,7 +109,7 @@ class Executor
         $route = "/runtimes/$runtimeId";
         $headers = [
             'content-type' =>  'application/json',
-            'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
+            'x-appwrite-executor-key' => App::getEnv('_APP_FUNCTIONS_PROXY_SECRET', '')
         ];
 
         $params = [];
@@ -153,7 +153,7 @@ class Executor
         $route = "/execution";
         $headers = [
             'content-type' =>  'application/json',
-            'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
+            'x-appwrite-executor-key' => App::getEnv('_APP_FUNCTIONS_PROXY_SECRET', '')
         ];
         $params = [
             'runtimeId' => "$projectId-$deploymentId",
