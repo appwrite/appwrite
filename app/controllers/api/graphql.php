@@ -27,9 +27,7 @@ App::get('/v1/graphql')
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new Text(2048), 'The query to execute. Max 2048 chars')
-    ->param('operationName', null, new Text(512), 'Name of the operation to execute. Required if multiple operations are provided', true)
-    ->param('variables', [], new JSON(), 'Map of variables to use as replacement values in the query', true)
+    ->param('query', '', new JSON(), 'The query or queries to execute.', body: true)
     ->inject('request')
     ->inject('response')
     ->inject('utopia')
@@ -52,11 +50,7 @@ App::post('/v1/graphql')
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new Text(2048), 'The query to execute. Max 1024 chars. Required if the request content type is "application/json"', true)
-    ->param('operationName', null, new Text(512), 'Name of the operation to execute. Required if multiple operations are provided', true)
-    ->param('variables', [], new JSON(), 'Map of variables to use as replacement values in the query', true)
-    ->param('operations', '', new Text(4096), 'JSON encoded query and variables with nulled file values. Required if the request content type "multipart/form-data"', true)
-    ->param('map', '', new Text(1024), 'Map of form-data filenames to the operations dot-path to inject the file to. For example: "variables.file"', true)
+    ->param('query', '', new JSON(), 'The query or queries to execute.', body: true)
     ->inject('request')
     ->inject('response')
     ->inject('promiseAdapter')
@@ -68,11 +62,7 @@ App::post('/v1/graphql')
  * @throws \Exception
  */
 function graphqlRequest(
-    string $query,
-    ?string $operationName,
-    ?array $variables,
-    ?string $operations,
-    ?string $map,
+    array $query,
     Appwrite\Utopia\Request $request,
     Appwrite\Utopia\Response $response,
     CoroutinePromiseAdapter $promiseAdapter,
@@ -81,17 +71,23 @@ function graphqlRequest(
     $contentType = $request->getHeader('content-type');
 
     if ($contentType === 'application/graphql') {
-        $query = $request->getSwoole()->rawContent();
+        $query = [ 'query' => $request->getSwoole()->rawContent() ];
+    }
+
+    $batch = true;
+    if (!isset($query[0])) {
+        $batch = false;
+        $query = [$query];
     }
 
     if (\str_starts_with($contentType, 'multipart/form-data')) {
-        $operations = \json_decode($operations, true);
-        $map = \json_decode($map, true);
+        $operations = \json_decode($query[0]['operations'], true);
+        $map = \json_decode($query[0]['map'], true);
         foreach ($map as $fileKey => $locations) {
             foreach ($locations as $location) {
                 $items = &$operations;
-                foreach (explode('.', $location) as $key) {
-                    if (!isset($items[$key]) || !is_array($items[$key])) {
+                foreach (\explode('.', $location) as $key) {
+                    if (!isset($items[$key]) || !\is_array($items[$key])) {
                         $items[$key] = [];
                     }
                     $items = &$items[$key];
@@ -99,14 +95,14 @@ function graphqlRequest(
                 $items = $request->getFiles($fileKey);
             }
         }
-        $query = $operations['query'];
-        $variables = $operations['variables'];
+        $query[0]['query'] = $operations['query'];
+        $query[0]['variables'] = $operations['variables'];
     }
 
     if (empty($query)) {
         throw new Exception('No query supplied.', 400, Exception::GRAPHQL_NO_QUERY);
     }
-
+    
     $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 200);
     $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_QUERY_DEPTH', 3);
 
@@ -120,22 +116,32 @@ function graphqlRequest(
     } else {
         $debugFlags = DebugFlag::NONE;
     }
-
-    $promise = GraphQL::promiseToExecute(
-        $promiseAdapter,
-        $gqlSchema,
-        $query,
-        variableValues: $variables,
-        operationName: $operationName,
-        validationRules: $validations
-    );
+    
+    $promises = [];
+    foreach($query as $indexed) {
+        $promises[] = GraphQL::promiseToExecute(
+            $promiseAdapter,
+            $gqlSchema,
+            $indexed['query'],
+            variableValues: $indexed['variables'],
+            operationName: $indexed['operationName'],
+            validationRules: $validations
+        );
+    }
 
     $output = [];
     $wg = new WaitGroup();
     $wg->add();
-    $promise->then(
+    $promiseAdapter->all($promises)->then(
         function ($result) use ($response, &$output, $wg, $debugFlags) {
-            $output = $result->toArray($debugFlags);
+            foreach ($result as $queryResponse) {
+                $output[] = $queryResponse->toArray($debugFlags);
+            }
+            if (isset($output[1])) {
+                $output = \array_merge_recursive(...$output);
+            } else {
+                $output = $output[0];
+            }
             $wg->done();
         },
         function ($error) use ($response, &$output, $wg) {

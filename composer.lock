@@ -4,46 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e47b45e70996f8046494cc0db6aeb761",
+    "content-hash": "b395a62241bc19cb1b7d845e3287808b",
     "packages": [
-        {
-            "name": "abnegate/framework",
-            "version": "dev-feat-graphql-helpers",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/abnegate/framework.git",
-                "reference": "a3bf64536f2d86728a06097717a5cc351d0a88d0"
-            },
-            "require": {
-                "php": ">=8.0.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.5.10",
-                "vimeo/psalm": "4.13.1"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\": "src/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
-            "description": "A simple, light and advanced PHP framework",
-            "keywords": [
-                "framework",
-                "php",
-                "upf"
-            ],
-            "time": "2022-07-12T00:06:19+00:00"
-        },
         {
             "name": "adhocore/jwt",
             "version": "1.1.2",
@@ -2204,6 +2166,56 @@
                 "source": "https://github.com/utopia-php/domains/tree/master"
             },
             "time": "2020-02-23T07:40:02+00:00"
+        },
+        {
+            "name": "utopia-php/framework",
+            "version": "dev-feat-graphql-helpers",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/framework.git",
+                "reference": "ab785d1605cf1a01cfb9d38f87a15235cdcdf2ca"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/ab785d1605cf1a01cfb9d38f87a15235cdcdf2ca",
+                "reference": "ab785d1605cf1a01cfb9d38f87a15235cdcdf2ca",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0.0"
+            },
+            "require-dev": {
+                "ext-curl": "*",
+                "phpunit/phpunit": "^9.5.10",
+                "vimeo/psalm": "4.13.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "A simple, light and advanced PHP framework",
+            "keywords": [
+                "framework",
+                "php",
+                "upf"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/framework/issues",
+                "source": "https://github.com/utopia-php/framework/tree/feat-graphql-helpers"
+            },
+            "time": "2022-07-13T03:41:04+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5401,10 +5413,17 @@
             "time": "2022-05-17T05:48:52+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-feat-graphql-helpers",
+            "alias": "0.19.2",
+            "alias_normalized": "0.19.2.0"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "abnegate/framework": 20,
+        "utopia-php/framework": 20,
         "utopia-php/registry": 20
     },
     "prefer-stable": false,
