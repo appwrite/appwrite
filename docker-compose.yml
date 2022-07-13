@@ -179,7 +179,6 @@ services:
       - _APP_PHONE_SECRET
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
-      - _APP_GRAPHQL_REQUEST_TIMEOUT
       - PHP_IDE_CONFIG=serverName=swoole-http
 
   appwrite-realtime:

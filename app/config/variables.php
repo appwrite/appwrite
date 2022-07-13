@@ -854,15 +854,6 @@ return [
                     'question' => '',
                     'filter' => ''
                 ],
-                [
-                    'name' => '_APP_GRAPHQL_REQUEST_TIMEOUT',
-                    'description' => 'Maximum time (in seconds) to wait for a GraphQL request to complete. The default value is 30.',
-                    'introduction' => '0.15.0',
-                    'default' => '30',
-                    'required' => false,
-                    'question' => '',
-                    'filter' => ''
-                ],
             ],
         ],
     ],
