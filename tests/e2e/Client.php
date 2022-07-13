@@ -181,6 +181,10 @@ class Client
                 $query = $this->flatten($params);
                 break;
 
+            case 'application/graphql':
+                $query = $params[0];
+                break;
+
             default:
                 $query = http_build_query($params);
                 break;
