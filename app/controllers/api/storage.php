@@ -1463,7 +1463,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             ->setPayload($response->output($file, Response::MODEL_FILE))
         ;
 
-        $response->dynamic(new Document(), Response::MODEL_NONE);
+        $response->noContent();
     });
 
 App::get('/v1/storage/usage')

@@ -392,7 +392,7 @@ App::get('/v1/mock/tests/general/empty')
     ->inject('response')
     ->action(function (Response $response) {
 
-        $response->dynamic(new Document(), Response::MODEL_NONE);
+        $response->noContent();
     });
 
 App::get('/v1/mock/tests/general/400-error')

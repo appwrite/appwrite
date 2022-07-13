@@ -264,7 +264,7 @@ App::delete('/v1/teams/:teamId')
             ->setParam('data', $team->getArrayCopy())
         ;
 
-        $response->dynamic(new Document(), Response::MODEL_NONE);
+        $response->noContent();
     });
 
 App::post('/v1/teams/:teamId/memberships')
@@ -820,7 +820,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP))
         ;
 
-        $response->dynamic(new Document(), Response::MODEL_NONE);
+        $response->noContent();
     });
 
 App::get('/v1/teams/:teamId/logs')

@@ -552,7 +552,7 @@ App::delete('/v1/projects/:projectId')
             throw new Exception('Failed to remove project from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $response->dynamic(new Document(), Response::MODEL_NONE);
+        $response->noContent();
     });
 
 // Webhooks
@@ -801,7 +801,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $response->dynamic(new Document(), Response::MODEL_NONE);
+        $response->noContent();
     });
 
 // Keys
@@ -996,7 +996,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $response->dynamic(new Document(), Response::MODEL_NONE);
+        $response->noContent();
     });
 
 // Platforms
@@ -1194,7 +1194,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $response->dynamic(new Document(), Response::MODEL_NONE);
+        $response->noContent();
     });
 
 // Domains
