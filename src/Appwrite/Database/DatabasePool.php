@@ -123,7 +123,6 @@ class DatabasePool {
 
         $pdo = $this->getPDO($this->consoleDB);
         $cache = new Cache(new RedisCache($redis));
-        
         $database = new Database(new MariaDB($pdo), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_console");
@@ -141,10 +140,10 @@ class DatabasePool {
      * 
      * @return ?Database
      */
-    public function getDB(string $projectID, \Redis $cache): ?Database
+    public function getDB(string $projectID, \Redis $redis): ?Database
     {
         /** Get DB name from the console database */
-        $name = $this->getName($projectID, $cache);
+        $name = $this->getName($projectID, $redis);
 
         if (empty($name)) {
             throw new Exception("Database with name : $name not found.", 500);
@@ -152,7 +151,7 @@ class DatabasePool {
 
         /** Get a PDO instance using the databse name */
         $pdo = $this->getPDO($name);
-        $cache = new Cache(new RedisCache($cache));
+        $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($pdo), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_{$projectID}");
