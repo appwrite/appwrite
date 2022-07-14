@@ -514,7 +514,12 @@ return [
     ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,
-        'description' => 'Query is required and can be provided via parameter or as the raw body if the content-type header is application/graphql.',
+        'description' => 'Query is required.',
+        'code' => 400,
+    ],
+    Exception::GRAPHQL_TOO_MANY_QUERIES => [
+        'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
+        'description' => 'Too many queries have been sent in the same request.',
         'code' => 400,
     ],
 ];

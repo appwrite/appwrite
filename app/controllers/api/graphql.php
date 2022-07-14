@@ -79,21 +79,22 @@ function graphqlRequest(
     if (\str_starts_with($contentType, 'multipart/form-data')) {
         $query = parseMultipartRequest($query, $request);
     }
-    if (!\isset($query[0])) {
+    if (!empty($query) && !isset($query[0])) {
         $query = [$query];
     }
-    if (\empty($query)) {
+    if (empty($query)) {
         throw new Exception('No query supplied.', 400, Exception::GRAPHQL_NO_QUERY);
     }
     if (\count($query) > $maxBatchSize) {
-        throw new Exception('Too many queries in batch.', 400, Exception::GRAPHQL_TOO_MANY_QUERIES);
+        throw new Exception('Too many queries.', 400, Exception::GRAPHQL_TOO_MANY_QUERIES);
+    }
     }
 
     $debugFlags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
     $validations[] = new QueryComplexity($maxComplexity);
     $validations[] = new QueryDepth($maxDepth);
-    
+
     if (App::isProduction()) {
         $validations[] = new DisableIntrospection();
         $debugFlags = DebugFlag::NONE;
