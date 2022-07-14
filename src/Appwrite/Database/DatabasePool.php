@@ -115,10 +115,10 @@ class DatabasePool {
      * 
      * Function to return the name of the database from the project ID
      */
-    private function getName(string $projectID, \Redis $redis): string
+    private function getName(string $projectID, \Redis $redis): array
     {
         if ($projectID === 'console') {
-            return $this->consoleDB;
+            return [$this->consoleDB, 'console'];
         }
 
         $pdo = $this->getPDO($this->consoleDB);
@@ -128,9 +128,10 @@ class DatabasePool {
         $database->setNamespace("_console");
         
         $project = Authorization::skip(fn() => $database->getDocument('projects', $projectID));
+        $internalID = $project->getInternalId();
         $database = $project->getAttribute('database', '');
         
-        return $database;
+        return [$database, $internalID];
     }
 
     /**
@@ -143,7 +144,7 @@ class DatabasePool {
     public function getDB(string $projectID, \Redis $redis): ?Database
     {
         /** Get DB name from the console database */
-        $name = $this->getName($projectID, $redis);
+        [$name, $internalID] = $this->getName($projectID, $redis);
 
         if (empty($name)) {
             throw new Exception("Database with name : $name not found.", 500);
@@ -154,7 +155,7 @@ class DatabasePool {
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($pdo), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_{$projectID}");
+        $database->setNamespace("_{$internalID}");
 
         return $database;
     }
@@ -175,10 +176,10 @@ class DatabasePool {
     public function getDBFromPool(string $projectID, \Redis $redis): array
     {
         /** Get DB name from the console database */
-        $name = $this->getName($projectID, $redis);
+        [$name, $internalID] = $this->getName($projectID, $redis);
         $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_PROJECT_DB in .env", 500);
         
-        $namespace = "_$projectID";
+        $namespace = "_$internalID";
         $attempts = 0;
         do {
             try {

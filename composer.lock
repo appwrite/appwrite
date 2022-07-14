@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eacaae6ec0973349a9b9f4ec78877b0a",
+    "content-hash": "dedc6a6328b4fdc5dfbd556a08534403",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2051,16 +2051,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-permissions-maxlength",
+            "version": "0.18.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "85c304075bb42b91e3cb98762921f15fa28af13c"
+                "reference": "d542ee433f1a545d926ffaf707bdf952dc18a52e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/85c304075bb42b91e3cb98762921f15fa28af13c",
-                "reference": "85c304075bb42b91e3cb98762921f15fa28af13c",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/d542ee433f1a545d926ffaf707bdf952dc18a52e",
+                "reference": "d542ee433f1a545d926ffaf707bdf952dc18a52e",
                 "shasum": ""
             },
             "require": {
@@ -2109,9 +2109,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-permissions-maxlength"
+                "source": "https://github.com/utopia-php/database/tree/0.18.7"
             },
-            "time": "2022-07-10T17:08:47+00:00"
+            "time": "2022-07-11T10:20:33+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5346,18 +5346,9 @@
             "time": "2022-05-17T05:48:52+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-permissions-maxlength",
-            "alias": "0.18.1",
-            "alias_normalized": "0.18.1.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
