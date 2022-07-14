@@ -538,7 +538,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $project = Authorization::skip(fn() => $database->getDocument('projects', $realtime->connections[$connection]['projectId']));
 
         if ($projectId != 'console') {
-            $filters = getFilters($database, $projectId);
+            $filters = getFilters($project);
             $database = new Database(new MariaDB($db), $cache, $filters);
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         }

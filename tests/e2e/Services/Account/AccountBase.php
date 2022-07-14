@@ -120,6 +120,17 @@ trait AccountBase
         $sessionId = $response['body']['$id'];
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
         /**
          * Test for FAILURE
          */
@@ -267,7 +278,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertCount(2, $response['body']);
-        $this->assertEquals(1, $response['body']['total']);
+        $this->assertEquals(2, $response['body']['total']);
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
 
         $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
@@ -325,30 +336,8 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
-        $this->assertCount(2, $response['body']['logs']);
+        $this->assertCount(3, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['total']);
-        $this->assertContains($response['body']['logs'][0]['event'], ["users.{$userId}.create", "users.{$userId}.sessions.{$sessionId}.create"]);
-        $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));
-        $this->assertIsNumeric($response['body']['logs'][0]['time']);
-
-        $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
-        $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
-        $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
-
-        $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
-        $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
-        $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']);
-        $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
-        $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
-
-        $this->assertEquals('desktop', $response['body']['logs'][0]['deviceName']);
-        $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
-        $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
-        $this->assertEquals($response['body']['logs'][0]['ip'], filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP));
-
-        $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
-        $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
-
         $this->assertContains($response['body']['logs'][1]['event'], ["users.{$userId}.create", "users.{$userId}.sessions.{$sessionId}.create"]);
         $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
         $this->assertIsNumeric($response['body']['logs'][1]['time']);
@@ -370,6 +359,28 @@ trait AccountBase
 
         $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
+
+        $this->assertContains($response['body']['logs'][2]['event'], ["users.{$userId}.create", "users.{$userId}.sessions.{$sessionId}.create"]);
+        $this->assertEquals($response['body']['logs'][2]['ip'], filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP));
+        $this->assertIsNumeric($response['body']['logs'][2]['time']);
+
+        $this->assertEquals('Windows', $response['body']['logs'][2]['osName']);
+        $this->assertEquals('WIN', $response['body']['logs'][2]['osCode']);
+        $this->assertEquals('10', $response['body']['logs'][2]['osVersion']);
+
+        $this->assertEquals('browser', $response['body']['logs'][2]['clientType']);
+        $this->assertEquals('Chrome', $response['body']['logs'][2]['clientName']);
+        $this->assertEquals('CH', $response['body']['logs'][2]['clientCode']);
+        $this->assertEquals('70.0', $response['body']['logs'][2]['clientVersion']);
+        $this->assertEquals('Blink', $response['body']['logs'][2]['clientEngine']);
+
+        $this->assertEquals('desktop', $response['body']['logs'][2]['deviceName']);
+        $this->assertEquals('', $response['body']['logs'][2]['deviceBrand']);
+        $this->assertEquals('', $response['body']['logs'][2]['deviceModel']);
+        $this->assertEquals($response['body']['logs'][2]['ip'], filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP));
+
+        $this->assertEquals('--', $response['body']['logs'][2]['countryCode']);
+        $this->assertEquals('Unknown', $response['body']['logs'][2]['countryName']);
 
         $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
             'origin' => 'http://localhost',
@@ -400,7 +411,7 @@ trait AccountBase
         $this->assertEquals($responseOffset['headers']['status-code'], 200);
         $this->assertIsArray($responseOffset['body']['logs']);
         $this->assertNotEmpty($responseOffset['body']['logs']);
-        $this->assertCount(1, $responseOffset['body']['logs']);
+        $this->assertCount(2, $responseOffset['body']['logs']);
         $this->assertIsNumeric($responseOffset['body']['total']);
 
         $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
