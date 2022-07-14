@@ -861,7 +861,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);
         $this->assertCount(2, $webhook['data']['roles']);
-        $this->assertEquals(false, DateTime::isValid($webhook['data']['invited'])); //isAppUser=1 not consistent
+        $this->assertEquals(false, DateTime::isValid($webhook['data']['invited']));
         $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
 
         /**
