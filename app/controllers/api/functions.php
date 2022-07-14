@@ -905,7 +905,7 @@ App::post('/v1/functions/:functionId/executions')
 
             $event->trigger();
 
-            $response->setStatusCode(Response::STATUS_CODE_CREATED);
+            $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
 
             return $response->dynamic($execution, Response::MODEL_EXECUTION);
         }
