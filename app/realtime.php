@@ -533,9 +533,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
         $projectId = $realtime->connections[$connection]['projectId'];
-
         $database->setNamespace("_console");
-        $project = Authorization::skip(fn() => $database->getDocument('projects', $realtime->connections[$connection]['projectId']));
+        $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
 
         if ($projectId != 'console') {
             $filters = getFilters($project);
