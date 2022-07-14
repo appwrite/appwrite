@@ -5,7 +5,7 @@ namespace Appwrite\Auth\Phone;
 use Appwrite\Auth\Phone;
 
 // Reference Material
-// https://www.twilio.com/docs/sms/api
+// https://developer.telesign.com/enterprise/docs/sms-api-send-an-sms
 
 class Telesign extends Phone
 {

@@ -8,40 +8,22 @@ use Appwrite\Utopia\Response\Model;
 
 abstract class Format
 {
-    /**
-     * @var App
-     */
-    protected $app;
-
-    /**
-     * @var array
-     */
-    protected $services;
+    protected App $app;
 
     /**
      * @var Route[]
      */
-    protected $routes;
+    protected array $routes;
 
     /**
      * @var Model[]
      */
-    protected $models;
+    protected array $models;
 
-    /**
-     * @var array
-     */
-    protected $keys;
-
-    /**
-     * @var int
-     */
-    protected $authCount;
-
-    /**
-     * @var array
-     */
-    protected $params = [
+    protected array $services;
+    protected array $keys;
+    protected int $authCount;
+    protected array $params = [
         'name' => '',
         'description' => '',
         'endpoint' => 'https://localhost',
@@ -56,14 +38,6 @@ abstract class Format
         'license.url' => '',
     ];
 
-    /**
-     * @param App $app
-     * @param array $services
-     * @param Route[] $routes
-     * @param Model[] $models
-     * @param array $keys
-     * @param int $authCount
-     */
     public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
     {
         $this->app = $app;
@@ -121,10 +95,6 @@ abstract class Format
      */
     public function getParam(string $key, string $default = ''): string
     {
-        if (!isset($this->params[$key])) {
-            return $default;
-        }
-
-        return $this->params[$key];
+        return $this->params[$key] ?? $default;
     }
 }

@@ -249,7 +249,6 @@ class Usage
 
             $time = (new \DateTime($time))->getTimestamp();  //todo: What about this timestamp?
             $this->latestTime[$metric][$period] = $time;
-
         } catch (\Exception $e) { // if projects are deleted this might fail
             if (is_callable($this->errorHandler)) {
                 call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");

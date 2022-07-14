@@ -92,7 +92,7 @@ $logs = $this->getParam('logs', null);
                                             </td>
                                             <template x-for="attr in attributes">
                                                 <td x-show="attr.status === 'available'" :data-title="attr.key + ':'">
-                                                    <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collection}&databaseId={{databaseId}}&project=${project}`">
+                                                    <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collection}&databaseId=${databaseId}&project=${project}`">
                                                         <span x-text="doc[attr.key] ?? 'n/a'"></span>
                                                     </a>
                                                 </td>
@@ -613,7 +613,7 @@ $logs = $this->getParam('logs', null);
                             data-success="alert,trigger,redirect"
                             data-success-param-alert-text="Collection deleted successfully"
                             data-success-param-trigger-events="databases.deleteCollection"
-                            data-success-param-redirect-url="/console/database?project={{router.params.project}}"
+                            data-success-param-redirect-url="/console/databases?project={{router.params.project}}"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to delete collection"
                             data-failure-param-alert-classname="error">
