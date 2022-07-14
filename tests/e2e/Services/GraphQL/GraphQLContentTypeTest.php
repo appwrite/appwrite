@@ -118,4 +118,26 @@ class GraphQLContentTypeTest extends Scope
         $this->assertArrayNotHasKey('errors', $file['body']);
         $this->assertIsArray($file['body']['data']['storageCreateFile']);
     }
+
+    public function testEmptyBody()
+    {
+        $projectId = $this->getProject()['$id'];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals('No query supplied.', $response['body']['message']);
+    }
+
+    public function testRandomBody()
+    {
+        $projectId = $this->getProject()['$id'];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), ['foo' => 'bar']);
+
+        $this->assertEquals('Invalid query.', $response['body']['message']);
+    }
 }
