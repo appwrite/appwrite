@@ -29,7 +29,7 @@ class Etsy extends OAuth2
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $scopes = [
         "address_r",
         "address_w",
         "billing_r",
@@ -164,6 +164,22 @@ class Etsy extends OAuth2
     }
 
     /**
+     * Check if the OAuth email is verified
+     *
+     * If present, the email is verified. This was verfied through a manual Stripe sign up process
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $email = $this->getUserEmail($accessToken);
+
+        return !empty($email);
+    }
+
+    /**
      * @param $accessToken
      *
      * @return string
@@ -193,4 +209,6 @@ class Etsy extends OAuth2
 
         return $this->user;
     }
+
+    
 }
