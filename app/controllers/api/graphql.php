@@ -34,7 +34,7 @@ App::get('/v1/graphql')
     ->inject('register')
     ->inject('dbForProject')
     ->inject('promiseAdapter')
-    ->inject('gqlSchema')
+    ->inject('schema')
     ->action(Closure::fromCallable('graphqlRequest'));
 
 App::post('/v1/graphql')
@@ -54,7 +54,7 @@ App::post('/v1/graphql')
     ->inject('request')
     ->inject('response')
     ->inject('promiseAdapter')
-    ->inject('gqlSchema')
+    ->inject('schema')
     ->action(Closure::fromCallable('graphqlRequest'));
 
 /**
@@ -66,7 +66,7 @@ function graphqlRequest(
     Appwrite\Utopia\Request $request,
     Appwrite\Utopia\Response $response,
     CoroutinePromiseAdapter $promiseAdapter,
-    Type\Schema $gqlSchema
+    Type\Schema $schema
 ): void {
     $contentType = $request->getHeader('content-type');
     $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 50);
@@ -108,7 +108,7 @@ function graphqlRequest(
     foreach ($query as $indexed) {
         $promises[] = GraphQL::promiseToExecute(
             $promiseAdapter,
-            $gqlSchema,
+            $schema,
             $indexed['query'],
             variableValues: $indexed['variables'] ?? null,
             operationName: $indexed['operationName'] ?? null,
@@ -121,12 +121,11 @@ function graphqlRequest(
     $wg->add();
     $promiseAdapter->all($promises)->then(
         function (array $results) use (&$output, &$wg, $debugFlags) {
-            processResult($results, $output, $debugFlags);
-            $wg->done();
-        },
-        function ($error) use (&$output, $wg) {
-            $output = ['errors' => [$error]];
-            $wg->done();
+            try {
+                processResult($results, $output, $debugFlags);
+            } finally {
+                $wg->done();
+            }
         }
     );
     $wg->wait();

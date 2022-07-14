@@ -174,6 +174,8 @@ trait GraphQLBase
     public static string $GET_QRCODE = 'get_qrcode';
     public static string $GET_USER_INITIALS = 'get_user_initials';
 
+    public static string $COMPLEX_QUERY = 'complex_query';
+
     public function getQuery(string $name): string
     {
         switch ($name) {
@@ -1344,6 +1346,18 @@ trait GraphQLBase
                     healthGetAntivirus {
                         version
                         status
+                    }
+                }';
+            case self::$COMPLEX_QUERY:
+                return 'mutation complex($databaseId: String!, $databaseName: String!, $collectionId: String!, $collectionName: String!, $collectionPermission: String!, $collectionRead: [String!]!, $collectionWrite: [String!]!) {
+                    databasesCreate(databaseId: $databaseId, name: $databaseName) {
+                        _id
+                        name
+                    }
+                    databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $collectionName, permission: $collectionPermission, read: $collectionRead, write: $collectionWrite) {
+                        _id
+                        name
+                        permission
                     }
                 }';
         }

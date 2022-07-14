@@ -46,7 +46,7 @@ class GraphQLContentTypeTest extends Scope
         $this->assertEquals(194, $response['total']);
     }
 
-    public function testBatchedJSONContentType()
+    public function testArrayBatchedJSONContentType()
     {
         $projectId = $this->getProject()['$id'];
         $query1 = 'query { localeGetCountries { total countries { code } } }';
@@ -54,6 +54,31 @@ class GraphQLContentTypeTest extends Scope
         $graphQLPayload = [
             ['query' => $query1],
             ['query' => $query2],
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertIsArray($response['body']['data']);
+        $this->assertArrayNotHasKey('errors', $response['body']);
+        $this->assertArrayHasKey('localeGetCountries', $response['body']['data']);
+        $this->assertArrayHasKey('localeGetContinents', $response['body']['data']);
+        $this->assertEquals(194, $response['body']['data']['localeGetCountries']['total']);
+        $this->assertEquals(7, $response['body']['data']['localeGetContinents']['total']);
+    }
+
+    public function testQueryBatchedJSONContentType()
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = '
+            query {
+                localeGetCountries { total countries { code } }
+                localeGetContinents { total continents { code } }
+            }
+        ';
+        $graphQLPayload = [
+            ['query' => $query],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
