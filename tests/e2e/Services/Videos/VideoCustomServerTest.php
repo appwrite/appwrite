@@ -148,10 +148,34 @@ class VideoCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['subtitles'][0]['$id']);
         $this->assertEquals('Eng', $response['body']['subtitles'][0]['code']);
 
-//
-////        $this->assertEquals(404, $response['headers']['status-code']);
-////        $this->assertNotEmpty($response['body']);
-////        $this->assertEquals('Video profile not found', $response['body']['message']);
+        $response = $this->client->call(Client::METHOD_PATCH, '/videos/' . $videoId . '/subtitles/' . $response['body']['subtitles'][0]['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => $this->getBucket()['$id'],
+            'fileId'   => $this->getSubtitle()['$id'],
+            'name'     => 'Polish',
+            'code'     => 'Pol',
+            'default'  => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/'. $videoId . '/subtitles' , [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['subtitles']);
+        $this->assertNotEmpty($response['body']['subtitles'][0]['$id']);
+        $this->assertEquals('Polish', $response['body']['subtitles'][0]['name']);
     }
 
 

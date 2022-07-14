@@ -159,7 +159,7 @@ App::patch('/v1/videos/profiles/:profileId')
     ->action(action: function (string $profileId, string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $stream, Response $response, Database $dbForProject) {
 
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('videos_profiles', $profileId));
-        var_dump($profile);
+        ;
         if ($profile->isEmpty()) {
             throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
@@ -342,6 +342,46 @@ App::get('/v1/videos/:videoId/subtitles')
             'total' => $dbForProject->count('videos_subtitles', [], APP_LIMIT_COUNT),
             'subtitles' => $subtitles,
         ]), Response::MODEL_VIDEO_SUBTITLE_LIST);
+    });
+
+App::patch('/v1/videos/:videoId/subtitles/:subtitleId')
+    ->desc('Update video subtitle')
+    ->groups(['api', 'video'])
+    ->label('scope', 'files.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'update')
+    ->label('sdk.description', '/docs/references/videos/update-subtitle.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VIDEO_SUBTITLE)
+    ->param('subtitleId', null, new UID(), 'Video subtitle unique ID.')
+    ->param('videoId', null, new UID(), 'Video unique ID.')
+    ->param('bucketId', '', new CustomId(), 'Subtitle bucket unique ID.')
+    ->param('fileId', '', new CustomId(), 'Subtitle file unique ID.')
+    ->param('name', '', new Text(128), 'Subtitle name.')
+    ->param('code', '', new Text(128), 'Subtitle code name.')
+    ->param('default', false, new Boolean(true), 'Default subtitle.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(action: function (string $subtitleId, string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Response $response, Database $dbForProject) {
+
+        $subtitle = Authorization::skip(fn() => $dbForProject->getDocument('videos_subtitles', $subtitleId));
+
+        if ($subtitle->isEmpty()) {
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+        }
+
+        $subtitle->setAttribute('videoId', $videoId)
+            ->setAttribute('bucketId', $bucketId)
+            ->setAttribute('fileId', $fileId)
+            ->setAttribute('name', $name)
+            ->setAttribute('code', $code)
+            ->setAttribute('default', $default);
+
+        $subtitle = Authorization::skip(fn() => $dbForProject->updateDocument('videos_subtitles', $subtitle->getId(), $subtitle));
+
+        $response->dynamic($subtitle, Response::MODEL_VIDEO_SUBTITLE);
     });
 
 App::post('/v1/video')
