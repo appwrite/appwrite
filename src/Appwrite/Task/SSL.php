@@ -1,4 +1,5 @@
 <?php
+
 namespace Appwrite\Task;
 
 use Utopia\Platform\Action;
@@ -8,10 +9,10 @@ use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Validator\Hostname;
 
-class SSL extends Action{
-
+class SSL extends Action
+{
     public const NAME = 'ssl';
-    
+
     public function __construct()
     {
         $this

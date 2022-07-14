@@ -1,9 +1,11 @@
 <?php
+
 namespace Appwrite\Task;
 
 use Utopia\Platform\Service;
 
-class Tasks extends Service {
+class Tasks extends Service
+{
     public function __construct()
     {
         $this->type = self::TYPE_CLI;

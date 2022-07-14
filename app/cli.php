@@ -13,4 +13,3 @@ $cliPlatform->init('CLI');
 
 $cli = $cliPlatform->getCli();
 $cli->run();
-

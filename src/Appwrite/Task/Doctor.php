@@ -11,7 +11,8 @@ use Utopia\Storage\Storage;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 
-class Doctor extends Action{
+class Doctor extends Action
+{
     public const NAME = 'doctor';
 
     public function __construct()

@@ -1,4 +1,5 @@
 <?php
+
 namespace Appwrite\Task;
 
 use Appwrite\Auth\Auth;
@@ -11,9 +12,10 @@ use Utopia\Config\Config;
 use Utopia\Validator\Text;
 use Utopia\Platform\Action;
 
-class Install extends Action{
+class Install extends Action
+{
     public const NAME = 'install';
-    
+
     public function __construct()
     {
         $this

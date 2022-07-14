@@ -1,4 +1,5 @@
 <?php
+
 namespace Appwrite\Task;
 
 use Utopia\Platform\Action;
@@ -24,10 +25,10 @@ use Appwrite\SDK\Language\SwiftClient;
 use Exception;
 use Throwable;
 
-class SDKs extends Action{
-
+class SDKs extends Action
+{
     public const NAME = 'sdks';
-    
+
     public function __construct()
     {
         $this

@@ -1,4 +1,5 @@
 <?php
+
 namespace Appwrite\Task;
 
 use Appwrite\Auth\Auth;
@@ -14,15 +15,16 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 
-class Maintenance extends Action {
+class Maintenance extends Action
+{
     public const NAME = 'maintenance';
 
     protected function getConsoleDB(): Database
     {
         global $register;
-    
+
         $attempts = 0;
-    
+
         do {
             try {
                 $attempts++;
@@ -30,11 +32,11 @@ class Maintenance extends Action {
                 $database = new Database(new MariaDB($register->get('db')), $cache);
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                 $database->setNamespace('_console'); // Main DB
-    
+
                 if (!$database->exists($database->getDefaultDatabase(), 'certificates')) {
                     throw new \Exception('Console project not ready');
                 }
-    
+
                 break; // leave loop if successful
             } catch (\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -44,10 +46,10 @@ class Maintenance extends Action {
                 sleep(DATABASE_RECONNECT_SLEEP);
             }
         } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-    
+
         return $database;
     }
-    
+
     public function __construct()
     {
         $this

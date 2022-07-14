@@ -1,4 +1,5 @@
 <?php
+
 namespace Appwrite\Task;
 
 use Utopia\Platform\Action;
@@ -15,10 +16,10 @@ use Utopia\Request;
 use Utopia\Validator\WhiteList;
 use Exception;
 
-class Specs extends Action{
-
+class Specs extends Action
+{
     public const NAME = 'specs';
-    
+
     public function __construct()
     {
         $this

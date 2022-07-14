@@ -1,4 +1,5 @@
 <?php
+
 namespace Appwrite\Task;
 
 use Utopia\Platform\Action;
@@ -13,10 +14,10 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Text;
 use Swoole\Event;
 
-class Migrate extends Action{
-
+class Migrate extends Action
+{
     public const NAME = 'migrate';
-    
+
     public function __construct()
     {
         $this
@@ -24,7 +25,8 @@ class Migrate extends Action{
             ->callback(fn ($version) => $this->action($version));
     }
 
-    public function action($version) {
+    public function action($version)
+    {
         global $register;
         Authorization::disable();
         if (!array_key_exists($version, Migration::$versions)) {
