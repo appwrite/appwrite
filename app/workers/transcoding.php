@@ -14,8 +14,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use FFMpeg\FFProbe\DataMapping\StreamCollection;
-use FFMpeg\FFProbe\DataMapping\AbstractData;
-use FFMpeg\FFProbe\DataMapping\Stream;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Captioning\Format\SubripFile;
 

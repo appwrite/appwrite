@@ -14,6 +14,90 @@ class VideoCustomServerTest extends Scope
     use VideoCustom;
     use SideServer;
 
+
+    public function testCreateVideoProfile()
+    {
+
+        $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name'          => 'My test profile',
+            'videoBitrate'  => 570,
+            'audioBitrate'  => 120,
+            'width'         => 600,
+            'height'        => 400,
+            'stream'        => 'hls',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/videos/profiles/' . $response['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name'          => 'My updated test profile',
+            'videoBitrate'  => 590,
+            'audioBitrate'  => 120,
+            'width'         => 300,
+            'height'        => 400,
+            'stream'        => 'hls',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles/' . $response['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' =>  $this->getProject()['apiKey'],
+        ]);
+
+        $profileId = $response['body']['$id'];
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('My updated test profile', $response['body']['name']);
+        $this->assertEquals(300, $response['body']['width']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $response['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' =>  $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles/' . $profileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' =>  $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('Video profile not found', $response['body']['message']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' =>  $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals(3, $response['body']['total']);
+    }
+
+
+
+
+
     public function testTranscodeWithSubs(): array
     {
 

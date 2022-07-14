@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
-
+use Appwrite\Auth\Validator\Password;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Event\Database as EventDatabase;
@@ -44,7 +44,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Swoole\Request;
-
 
 /**
  * Validate file Permissions
@@ -97,8 +96,112 @@ function validateFilePermissions(Database $dbForProject, string $bucketId, strin
     return $file;
 }
 
+App::post('/v1/videos/profiles')
+    ->desc('Create video profile')
+    ->groups(['api', 'video'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'create')
+    ->label('sdk.description', '/docs/references/videos/create-profile.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VIDEO_PROFILE)
+    ->param('name', null, new Text(128), 'Video profile name.')
+    ->param('videoBitrate', '', new Range(64, 4000), 'Video profile bitrate in Kbps.')
+    ->param('audioBitrate', '', new Range(64, 4000), 'Audio profile bit rate in Kbps.')
+    ->param('width', '', new Range(100, 2000), 'Video profile width.')
+    ->param('height', '', new Range(100, 2000), 'Video  profile height.')
+    ->param('stream', false, new WhiteList(['hls', 'mpeg-dash']), 'Video  profile stream protocol.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(action: function (string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $stream, Response $response, Database $dbForProject) {
+
+        try {
+            $profile = Authorization::skip(function () use ($dbForProject, $name, $videoBitrate, $audioBitrate, $width, $height, $stream) {
+                return $dbForProject->createDocument('videos_profiles', new Document([
+                    'name'          => $name,
+                    'videoBitrate'  => (int)$videoBitrate,
+                    'audioBitrate'  => (int)$audioBitrate,
+                    'width'         => (int)$width,
+                    'height'        => (int)$height,
+                    'stream'        => $stream,
+                ]));
+            });
+        } catch (StructureException $exception) {
+            throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
+        }
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($profile, Response::MODEL_VIDEO_PROFILE);
+    });
+
+App::patch('/v1/videos/profiles/:profileId')
+    ->desc('Update video  profile')
+    ->groups(['api', 'video'])
+    ->label('scope', 'files.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'update')
+    ->label('sdk.description', '/docs/references/videos/update-profile.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VIDEO_PROFILE)
+    ->param('profileId', '', new UID(), 'Video profile unique ID.')
+    ->param('name', null, new Text(128), 'Video profile name.')
+    ->param('videoBitrate', '', new Range(64, 4000), 'Video profile bitrate in Kbps.')
+    ->param('audioBitrate', '', new Range(64, 4000), 'Audio profile bit rate in Kbps.')
+    ->param('width', '', new Range(100, 2000), 'Video profile width.')
+    ->param('height', '', new Range(100, 2000), 'Video  profile height.')
+    ->param('stream', false, new WhiteList(['hls', 'mpeg-dash']), 'Video  profile stream protocol.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(action: function (string $profileId, string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $stream, Response $response, Database $dbForProject) {
+
+        $profile = Authorization::skip(fn() => $dbForProject->getDocument('videos_profiles', $profileId));
+        var_dump($profile);
+        if ($profile->isEmpty()) {
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+        }
+
+        $profile->setAttribute('name', $name)
+                 ->setAttribute('videoBitrate', (int)$videoBitrate)
+                ->setAttribute('audioBitrate', (int)$audioBitrate)
+                ->setAttribute('width', (int)$width)
+                ->setAttribute('height', (int)$height)
+                ->setAttribute('stream', $stream);
+
+        $profile = Authorization::skip(fn() => $dbForProject->updateDocument('videos_profiles', $profile->getId(), $profile));
+
+        $response->dynamic($profile, Response::MODEL_VIDEO_PROFILE);
+    });
+
+App::get('/v1/videos/profiles/:profileId')
+    ->desc('Get video profile')
+    ->groups(['api', 'video'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'getProfile')
+    ->label('sdk.description', '/docs/references/videos/get-profile.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VIDEO_PROFILE)
+    ->param('profileId', '', new UID(), 'Video profile unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $profileId, Response $response, Database $dbForProject) {
+
+        $profile = Authorization::skip(fn() => $dbForProject->getDocument('videos_profiles', $profileId));
+
+        if ($profile->isEmpty()) {
+            throw new Exception('Video profile not found', 404, Exception::PROFILES_NOT_FOUND);
+        }
+
+        $response->dynamic($profile, Response::MODEL_VIDEO_PROFILE);
+    });
+
 App::get('/v1/videos/profiles')
-    ->alias('/v1/videos/videos/profiles', [])
     ->desc('Get all video profiles')
     ->groups(['api', 'video'])
     ->label('scope', 'files.read')
@@ -125,6 +228,36 @@ App::get('/v1/videos/profiles')
         ]), Response::MODEL_VIDEO_PROFILE_LIST);
     });
 
+App::delete('/v1/videos/profiles/:profileId')
+    ->desc('Delete a video transcoding profile')
+    ->groups(['api', 'video'])
+    ->label('scope', 'files.write')
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.method', 'deleteProfile')
+    ->label('sdk.description', '/docs/references/videos/delete-profile.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('profileId', '', new UID(), 'Video profile unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $profileId, Response $response, Database $dbForProject) {
+
+        $profile = Authorization::skip(fn() => $dbForProject->getDocument('videos_profiles', $profileId));
+
+        if ($profile->isEmpty()) {
+            throw new Exception('Video profile not found', 404, Exception::PROFILES_NOT_FOUND);
+        }
+
+        $deleted = $dbForProject->deleteDocument('videos_profiles', $profileId);
+
+        if (!$deleted) {
+            throw new Exception('Failed to remove video profile from DB', 500, Exception::GENERAL_SERVER_ERROR);
+        }
+
+        $response->noContent();
+    });
+
 
 App::post('/v1/videos/:videoId/subtitles')
     ->alias('/v1/videos/:videoId/subtitles', [])
@@ -133,8 +266,8 @@ App::post('/v1/videos/:videoId/subtitles')
     ->label('scope', 'files.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'video')
-    ->label('sdk.method', 'addSubtitles')
-    ->label('sdk.description', '/docs/references/videos/add-subtitles.md') // TODO: Create markdown
+    ->label('sdk.method', 'addSubtitle')
+    ->label('sdk.description', '/docs/references/videos/add-subtitle.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
@@ -288,7 +421,7 @@ App::post('/v1/videos/:videoId/rendition')
 
 App::get('/v1/videos/:videoId/:stream/renditions')
     ->alias('/v1/videos/:videoId/renditions', [])
-    ->desc('Get File renditions')
+    ->desc('Get video renditions')
     ->groups(['api', 'video'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
