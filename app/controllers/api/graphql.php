@@ -88,6 +88,10 @@ function graphqlRequest(
     if (\count($query) > $maxBatchSize) {
         throw new Exception('Too many queries.', 400, Exception::GRAPHQL_TOO_MANY_QUERIES);
     }
+    foreach ($query as $item) {
+        if (!isset($item['query'])) {
+            throw new Exception('Invalid query.', 400, Exception::GRAPHQL_INVALID_QUERY);
+        }
     }
 
     $debugFlags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;

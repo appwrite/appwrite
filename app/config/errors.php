@@ -517,6 +517,11 @@ return [
         'description' => 'Query is required.',
         'code' => 400,
     ],
+    Exception::GRAPHQL_INVALID_QUERY => [
+        'name' => Exception::GRAPHQL_NO_QUERY,
+        'description' => 'Invalid query supplied.',
+        'code' => 400,
+    ],
     Exception::GRAPHQL_TOO_MANY_QUERIES => [
         'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
         'description' => 'Too many queries have been sent in the same request.',
