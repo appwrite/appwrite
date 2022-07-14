@@ -4,7 +4,7 @@ namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 
-class Notion extends OAuth2
+class Etsy extends OAuth2
 {
     /**
      * @var string
