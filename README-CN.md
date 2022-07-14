@@ -20,7 +20,7 @@
 
 Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面极简了从零编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
 
-Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存, 图像处理，云函数计算，[等多种服务]（https：/ /appwrite.io/docs）。
+Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存，图像处理，云函数计算，[等多种服务](https://appwrite.io/docs).
 
 ![Appwrite](public/images/github.png)
 
@@ -34,13 +34,13 @@ Appwrite 可以提供给开发者用户验证，外部授权，用户数据读�
     - [CMD](#cmd)
     - [PowerShell](#powershell)
   - [从旧版本升级](#从旧版本升级)
-- [快速入门](#入门)
+- [入门](#入门)
   - [软件服务](#软件服务)
   - [开发套件](#开发套件)
     - [客户端](#客户端)
     - [服务器](#服务器)
     - [开发者社区](#开发者社区)
-- [软件架构]](#软件架构)
+- [软件架构](#软件架构)
 - [贡献代码](#贡献代码)
 - [安全](#安全)
 - [订阅我们](#订阅我们)
@@ -59,7 +59,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:0.13.2
+    appwrite/appwrite:0.15.2
 ```
 
 ### Windows
@@ -71,7 +71,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:0.13.2
+    appwrite/appwrite:0.15.2
 ```
 
 #### PowerShell
@@ -81,13 +81,13 @@ docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
     --entrypoint="install" ,
-    appwrite/appwrite:0.13.2
+    appwrite/appwrite:0.15.2
 ```
 
 运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
 
 
-需要自定义容器构架，请查看我们的 Docker [环境变量](https://appwrite.io/docs/environment-variables) 文档。您还可以参考我们的 [docker-compose.yml](https://gist.github.com/eldadfux/977869ff6bdd7312adfd4e629ee15cc5#file-docker-compose-yml) 文件手动设置环境。
+需要自定义容器构架，请查看我们的 Docker [环境变量](https://appwrite.io/docs/environment-variables) 文档。您还可以参考我们的 [docker-compose.yml](https://appwrite.io/install/compose) 和 [.env](https://appwrite.io/install/env) 文件手动设置环境。
 
 ### 从旧版本升级
 
@@ -109,7 +109,7 @@ docker run -it --rm ,
 * [**帐户**](https://appwrite.io/docs/client/account) -管理当前用户的帐户和登录方式。跟踪和管理用户 Session，登录设备，登录方法和查看相关记录。
 * [**用户**](https://appwrite.io/docs/server/users) - 在以管理员模式登录时管理和列出所有用户。
 * [**团队**](https://appwrite.io/docs/client/teams) - 管理用户分组。邀请成员，管理团队中的用户权限和用户角色。
-* [**数据库**](https://appwrite.io/docs/client/database) - 管理数据库文档和文档集。用检索界面来对文档和文档集进行读取，创建，更新，和删除。
+* [**数据库**](https://appwrite.io/docs/client/databases) - 管理数据库文档和文档集。用检索界面来对文档和文档集进行读取，创建，更新，和删除。
 * [**贮存**](https://appwrite.io/docs/client/storage) - 管理文件的阅读、创建、删除和预览。设置文件的预览来满足程序的个性化需求。所有文件都由 ClamAV 扫描并安全存储和加密。
 * [**云函数**](https://appwrite.io/docs/server/functions) - 在安全，隔离的环境中运行自定义代码。这些代码可以被事件，CRON，或者手动操作触发。
 * [**语言适配**](https://appwrite.io/docs/client/locale) - 根据用户所在的的国家和地区做出合适的语言适配。
@@ -118,7 +118,7 @@ docker run -it --rm ,
 
 ### 开发套件
 
-以下是当前支持的平台和语言列表。如果您想帮助我们为您选择的平台添加支持，您可以访问我们的 [SDK 生成器](https://github.com/appwrite/sdk-generator) 项目并查看我们的 [贡献指南]( https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md）。
+以下是当前支持的平台和语言列表。如果您想帮助我们为您选择的平台添加支持，您可以访问我们的 [SDK 生成器](https://github.com/appwrite/sdk-generator) 项目并查看我们的 [贡献指南](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md)。
 
 #### 客户端
 * ✅  &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (由 Appwrite 团队维护)

@@ -298,60 +298,13 @@ class V12 extends Migration
     }
 
     /**
-     * Creates colletion from the config collection.
-     *
-     * @param string $id
-     * @param string|null $name
-     * @return void
-     * @throws \Throwable
-     */
-    protected function createCollection(string $id, string $name = null): void
-    {
-        $name ??= $id;
-
-        if (!$this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
-            $attributes = [];
-            $indexes = [];
-            $collection = $this->collections[$id];
-
-            foreach ($collection['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                ]);
-            }
-
-            foreach ($collection['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => $index['$id'],
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]);
-            }
-
-            try {
-                $this->projectDB->createCollection($name, $attributes, $indexes);
-            } catch (\Throwable $th) {
-                throw $th;
-            }
-        }
-    }
-
-    /**
      * Migrates permissions to dedicated table.
      *
-     * @param \Utopia\Database\Document $document 
-     * @param string $internalId 
-     * @return void 
-     * @throws \Exception 
-     * @throws \PDOException 
+     * @param \Utopia\Database\Document $document
+     * @param string $internalId
+     * @return void
+     * @throws \Exception
+     * @throws \PDOException
      */
     protected function migratePermissionsToDedicatedTable(string $collection, Document $document): void
     {
@@ -546,8 +499,8 @@ class V12 extends Migration
     /**
      * Fix run on each document
      *
-     * @param \Utopia\Database\Document $document 
-     * @return \Utopia\Database\Document 
+     * @param \Utopia\Database\Document $document
+     * @return \Utopia\Database\Document
      */
     protected function fixDocument(Document $document)
     {

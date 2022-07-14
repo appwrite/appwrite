@@ -16,6 +16,12 @@ class Token extends Model
                 'default' => '',
                 'example' => 'bb8ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Token creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User ID.',
@@ -42,7 +48,7 @@ class Token extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Token';
     }
@@ -52,7 +58,7 @@ class Token extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_TOKEN;
     }

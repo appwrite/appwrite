@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response;
 
 abstract class Filter
 {
-
     /**
      * Parse the content to another format.
      *

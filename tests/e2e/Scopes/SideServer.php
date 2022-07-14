@@ -9,7 +9,7 @@ trait SideServer
      */
     protected $key = [];
 
-    public function getHeaders():array
+    public function getHeaders(): array
     {
         return [
             'x-appwrite-key' => $this->getProject()['apiKey']

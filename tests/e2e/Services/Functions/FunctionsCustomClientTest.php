@@ -16,7 +16,7 @@ class FunctionsCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    public function testCreate():array
+    public function testCreate(): array
     {
         /**
          * Test for SUCCESS
@@ -33,8 +33,8 @@ class FunctionsCustomClientTest extends Scope
                 'funcKey3' => 'funcValue3',
             ],
             'events' => [
-                'account.create',
-                'account.delete',
+                'users.*.create',
+                'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
@@ -45,7 +45,7 @@ class FunctionsCustomClientTest extends Scope
         return [];
     }
 
-    public function testCreateExecution():array
+    public function testCreateExecution(): array
     {
         /**
          * Test for SUCCESS
@@ -57,7 +57,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'functionId' => 'unique()',
             'name' => 'Test',
-            'execute' => ['user:'.$this->getUser()['$id']],
+            'execute' => ['user:' . $this->getUser()['$id']],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
@@ -65,8 +65,8 @@ class FunctionsCustomClientTest extends Scope
                 'funcKey3' => 'funcValue3',
             ],
             'events' => [
-                'account.create',
-                'account.delete',
+                'users.*.create',
+                'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
@@ -75,10 +75,10 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
 
         $folder = 'php';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/deployments', [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -94,7 +94,7 @@ class FunctionsCustomClientTest extends Scope
         // Wait for deployment to be built.
         sleep(10);
 
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$function['body']['$id'].'/deployments/'.$deploymentId, [
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -102,7 +102,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(200, $function['headers']['status-code']);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', [
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -111,7 +111,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(401, $execution['headers']['status-code']);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -121,7 +121,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         // Cleanup : Delete function
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'.$function['body']['$id'], [
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -132,7 +132,7 @@ class FunctionsCustomClientTest extends Scope
         return [];
     }
 
-    public function testCreateCustomExecution():array
+    public function testCreateCustomExecution(): array
     {
         /**
          * Test for SUCCESS
@@ -162,10 +162,10 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
 
         $folder = 'php-fn';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -181,7 +181,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(201, $deployment['headers']['status-code']);
 
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployments/'.$deploymentId, [
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -189,7 +189,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(200, $function['headers']['status-code']);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
@@ -202,13 +202,13 @@ class FunctionsCustomClientTest extends Scope
 
         sleep(10);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, [
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ]);
 
-        $output = json_decode($executions['body']['stdout'], true);
+        $output = json_decode($executions['body']['response'], true);
         $this->assertEquals(200, $executions['headers']['status-code']);
         $this->assertEquals('completed', $executions['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
@@ -229,7 +229,7 @@ class FunctionsCustomClientTest extends Scope
         ];
     }
 
-    public function testCreateExecutionUnauthorized():array
+    public function testCreateExecutionUnauthorized(): array
     {
         $function = $this->client->call(Client::METHOD_POST, '/functions', [
             'content-type' => 'application/json',
@@ -243,7 +243,7 @@ class FunctionsCustomClientTest extends Scope
             'timeout' => 10,
         ]);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$function['body']['$id'].'/executions', [
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/executions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -264,7 +264,7 @@ class FunctionsCustomClientTest extends Scope
         $projectId = $this->getProject()['$id'];
         $apikey = $this->getProject()['apiKey'];
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
@@ -275,7 +275,7 @@ class FunctionsCustomClientTest extends Scope
 
         sleep(10);
 
-        $base = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
+        $base = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -286,7 +286,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals('completed', $base['body']['executions'][0]['status']);
         $this->assertEquals('completed', $base['body']['executions'][1]['status']);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -297,7 +297,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($base['body']['executions'][1]['$id'], $executions['body']['executions'][0]['$id']);
 
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', [
+        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -307,17 +307,16 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         // Cleanup : Delete function
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], []);
 
         $this->assertEquals(204, $response['headers']['status-code']);
-
     }
 
-    public function testSynchronousExecution():array
+    public function testSynchronousExecution(): array
     {
         /**
          * Test for SUCCESS
@@ -348,10 +347,10 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
 
         $folder = 'php-fn';
-        $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -367,7 +366,7 @@ class FunctionsCustomClientTest extends Scope
         // Wait for deployment to be built.
         sleep(10);
 
-        $function = $this->client->call(Client::METHOD_PATCH, '/functions/'.$functionId.'/deployments/'.$deploymentId, [
+        $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -375,7 +374,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(200, $function['headers']['status-code']);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
@@ -383,7 +382,7 @@ class FunctionsCustomClientTest extends Scope
             'async' => false
         ]);
 
-        $output = json_decode($execution['body']['stdout'], true);
+        $output = json_decode($execution['body']['response'], true);
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
@@ -399,8 +398,8 @@ class FunctionsCustomClientTest extends Scope
         $this->assertNotEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($projectId, $output['APPWRITE_FUNCTION_PROJECT_ID']);
 
-        // Cleanup : Delete function 
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],

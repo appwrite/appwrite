@@ -7,7 +7,6 @@ use Appwrite\Utopia\Response\Model;
 
 class Bucket extends Model
 {
-
     public function __construct()
     {
         $this
@@ -16,6 +15,18 @@ class Bucket extends Model
                 'description' => 'Bucket ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Bucket creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Bucket update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
             ])
             ->addRule('$read', [
                 'type' => self::TYPE_STRING,
@@ -36,18 +47,6 @@ class Bucket extends Model
                 'description' => 'Bucket permission model. Possible values: `bucket` or `file`',
                 'default' => '',
                 'example' => 'file',
-            ])
-            ->addRule('dateCreated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Bucket creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
-            ])
-            ->addRule('dateUpdated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Bucket update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,

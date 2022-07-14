@@ -20,63 +20,63 @@ class UsageBuckets extends Model
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for total number of files in this bucket.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('filesStorage', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for total storage of files in this bucket.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('filesCreate', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files created.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('filesRead', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files read.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('filesUpdate', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files updated.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('filesDelete', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files deleted.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
         ;
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'UsageBuckets';
     }
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_USAGE_BUCKETS;
     }

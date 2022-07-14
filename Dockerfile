@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM node:16.13.2-alpine3.15 as node
+FROM node:16.14.2-alpine3.15 as node
 
 WORKDIR /usr/local/src/
 
@@ -24,14 +24,14 @@ COPY public /usr/local/src/public
 RUN npm ci
 RUN npm run build
 
-FROM php:8.0.14-cli-alpine3.15 as compile
+FROM php:8.0.18-cli-alpine3.15 as compile
 
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
 ENV PHP_REDIS_VERSION=5.3.7 \
-    PHP_MONGODB_VERSION=1.9.1 \
-    PHP_SWOOLE_VERSION=v4.8.7 \
+    PHP_MONGODB_VERSION=1.13.0 \
+    PHP_SWOOLE_VERSION=v4.8.10 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0
@@ -123,13 +123,16 @@ RUN \
   ./configure && \
   make && make install
 
-FROM php:8.0.14-cli-alpine3.15 as final
+FROM php:8.0.18-cli-alpine3.15 as final
 
 LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
+
+ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+ENV DOCKER_COMPOSE_VERSION=v2.5.0
 
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
@@ -162,6 +165,18 @@ ENV _APP_SERVER=swoole \
     _APP_STORAGE_DO_SPACES_SECRET= \
     _APP_STORAGE_DO_SPACES_REGION= \
     _APP_STORAGE_DO_SPACES_BUCKET= \
+    _APP_STORAGE_BACKBLAZE_ACCESS_KEY= \
+    _APP_STORAGE_BACKBLAZE_SECRET= \
+    _APP_STORAGE_BACKBLAZE_REGION= \
+    _APP_STORAGE_BACKBLAZE_BUCKET= \
+    _APP_STORAGE_LINODE_ACCESS_KEY= \
+    _APP_STORAGE_LINODE_SECRET= \
+    _APP_STORAGE_LINODE_REGION= \
+    _APP_STORAGE_LINODE_BUCKET= \
+    _APP_STORAGE_WASABI_ACCESS_KEY= \
+    _APP_STORAGE_WASABI_SECRET= \
+    _APP_STORAGE_WASABI_REGION= \
+    _APP_STORAGE_WASABI_BUCKET= \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \
@@ -178,6 +193,8 @@ ENV _APP_SERVER=swoole \
     _APP_SMTP_SECURE= \
     _APP_SMTP_USERNAME= \
     _APP_SMTP_PASSWORD= \
+    _APP_PHONE_PROVIDER= \
+    _APP_PHONE_FROM= \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CONTAINERS=10 \
@@ -185,6 +202,7 @@ ENV _APP_SERVER=swoole \
     _APP_FUNCTIONS_MEMORY=128 \
     _APP_FUNCTIONS_MEMORY_SWAP=128 \
     _APP_EXECUTOR_SECRET=a-random-secret \
+    _APP_EXECUTOR_HOST=http://appwrite-executor/v1 \
     _APP_EXECUTOR_RUNTIME_NETWORK=appwrite_runtimes \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
@@ -219,11 +237,16 @@ RUN \
   libmaxminddb-dev \
   certbot \
   docker-cli \
-  docker-compose \
   libgomp \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
   && rm -rf /var/cache/apk/*
+
+RUN \
+  mkdir -p $DOCKER_CONFIG/cli-plugins \
+  && ARCH=$(uname -m) && if [ $ARCH == "armv7l" ]; then ARCH="armv7"; fi \
+  && curl -SL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-linux-$ARCH -o $DOCKER_CONFIG/cli-plugins/docker-compose \
+  && chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
 RUN \
   if [ "$DEBUG" == "true" ]; then \
@@ -279,11 +302,12 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-certificates && \
-    chmod +x /usr/local/bin/worker-database && \
+    chmod +x /usr/local/bin/worker-databases && \
     chmod +x /usr/local/bin/worker-deletes && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-mails && \
+    chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions

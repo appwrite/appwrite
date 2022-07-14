@@ -20,42 +20,42 @@ class UsageFunctions extends Model
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function executions.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('functionsFailures', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function execution failures.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
             ->addRule('functionsCompute', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function execution duration.',
                 'default' => [],
-                'example' => new \stdClass,
-                'array' => true 
+                'example' => new \stdClass(),
+                'array' => true
             ])
         ;
     }
 
     /**
      * Get Name
-     * 
+     *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'UsageFunctions';
     }
 
     /**
      * Get Type
-     * 
+     *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_USAGE_FUNCTIONS;
     }

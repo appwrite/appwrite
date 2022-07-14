@@ -7,7 +7,7 @@ use Utopia\Database\Database;
 
 trait TeamsBase
 {
-    public function testCreateTeam():array
+    public function testCreateTeam(): array
     {
         /**
          * Test for SUCCESS
@@ -25,7 +25,7 @@ trait TeamsBase
         $this->assertEquals('Arsenal', $response1['body']['name']);
         $this->assertGreaterThan(-1, $response1['body']['total']);
         $this->assertIsInt($response1['body']['total']);
-        $this->assertIsInt($response1['body']['dateCreated']);
+        $this->assertIsInt($response1['body']['$createdAt']);
 
         $teamUid = $response1['body']['$id'];
         $teamName = $response1['body']['name'];
@@ -45,7 +45,7 @@ trait TeamsBase
         $this->assertEquals('Manchester United', $response2['body']['name']);
         $this->assertGreaterThan(-1, $response2['body']['total']);
         $this->assertIsInt($response2['body']['total']);
-        $this->assertIsInt($response2['body']['dateCreated']);
+        $this->assertIsInt($response2['body']['$createdAt']);
 
         $response3 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -60,7 +60,7 @@ trait TeamsBase
         $this->assertEquals('Newcastle', $response3['body']['name']);
         $this->assertGreaterThan(-1, $response3['body']['total']);
         $this->assertIsInt($response3['body']['total']);
-        $this->assertIsInt($response3['body']['dateCreated']);
+        $this->assertIsInt($response3['body']['$createdAt']);
 
         /**
          * Test for FAILURE
@@ -79,14 +79,14 @@ trait TeamsBase
     /**
      * @depends testCreateTeam
      */
-    public function testGetTeam($data):array
+    public function testGetTeam($data): array
     {
         $id = $data['teamUid'] ?? '';
 
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$id, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -96,7 +96,7 @@ trait TeamsBase
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertIsInt($response['body']['dateCreated']);
+        $this->assertIsInt($response['body']['$createdAt']);
 
         /**
          * Test for FAILURE
@@ -108,7 +108,7 @@ trait TeamsBase
     /**
      * @depends testCreateTeam
      */
-    public function testListTeams($data):array
+    public function testListTeams($data): array
     {
         /**
          * Test for SUCCESS
@@ -242,7 +242,7 @@ trait TeamsBase
         return [];
     }
 
-    public function testUpdateTeam():array
+    public function testUpdateTeam(): array
     {
         /**
          * Test for SUCCESS
@@ -260,9 +260,9 @@ trait TeamsBase
         $this->assertEquals('Demo', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertIsInt($response['body']['dateCreated']);
+        $this->assertIsInt($response['body']['$createdAt']);
 
-        $response = $this->client->call(Client::METHOD_PUT, '/teams/'.$response['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/teams/' . $response['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -275,12 +275,12 @@ trait TeamsBase
         $this->assertEquals('Demo New', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertIsInt($response['body']['dateCreated']);
+        $this->assertIsInt($response['body']['$createdAt']);
 
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/teams/'.$response['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/teams/' . $response['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -291,7 +291,7 @@ trait TeamsBase
         return [];
     }
 
-    public function testDeleteTeam():array
+    public function testDeleteTeam(): array
     {
         /**
          * Test for SUCCESS
@@ -311,9 +311,9 @@ trait TeamsBase
         $this->assertEquals('Demo', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertIsInt($response['body']['dateCreated']);
+        $this->assertIsInt($response['body']['$createdAt']);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -324,7 +324,7 @@ trait TeamsBase
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

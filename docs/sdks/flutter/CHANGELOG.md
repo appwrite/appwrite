@@ -1,3 +1,26 @@
+## 6.0.0
+* Support for Appwrite 0.15
+* **NEW** Phone authentication `account.createPhoneSession()`
+* **BREAKING** `Database` -> `Databases`
+* **BREAKING** `account.createSession()` -> `account.createEmailSession()`
+* **BREAKING** `dateCreated` attribute removed from `Team`, `Execution`, `File` models
+* **BREAKING** `dateCreated` and `dateUpdated` attribute removed from `Func`, `Deployment`, `Bucket` models
+* **BREAKING** Realtime channels
+    * collections.[COLLECTION_ID] is now databases.[DATABASE_ID].collections.[COLLECTION_ID]
+    * collections.[COLLECTION_ID].documents is now databases.[DATABASE_ID].collections.[COLLECTION_ID].documents
+
+**Full Changelog for Appwrite 0.15 can be found here**: https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0150
+
+## 5.0.0
+* Support for Appwrite 0.14
+* **BREAKING** `account.delete()` -> `account.updateStatus()`
+* **BREAKING** Execution model `stdout` renamed to `response`
+* **BREAKING** Membership model `name` renamed to `userName` and `email` renamed to `userEmail`
+* Added `teamName` to Membership model
+
+## 4.0.2
+* Upgrade dependencies
+
 ## 4.0.1
 * Fix InputFile filename param
 * Fix examples

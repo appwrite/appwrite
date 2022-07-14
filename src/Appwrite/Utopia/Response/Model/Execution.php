@@ -16,6 +16,18 @@ class Execution extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Execution creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Execution update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('$read', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Execution read permissions.',
@@ -28,12 +40,6 @@ class Execution extends Model
                 'description' => 'Function ID.',
                 'default' => '',
                 'example' => '5e5ea6g16897e',
-            ])
-            ->addRule('dateCreated', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'The execution creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
             ])
             ->addRule('trigger', [
                 'type' => self::TYPE_STRING,
@@ -53,9 +59,9 @@ class Execution extends Model
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('stdout', [
+            ->addRule('response', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The script stdout output string. Logs the last 4,000 characters of the execution stdout output.',
+                'description' => 'The script response output string. Logs the last 4,000 characters of the execution response output.',
                 'default' => '',
                 'example' => '',
             ])
@@ -79,7 +85,7 @@ class Execution extends Model
      *
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'Execution';
     }
@@ -89,7 +95,7 @@ class Execution extends Model
      *
      * @return string
      */
-    public function getType():string
+    public function getType(): string
     {
         return Response::MODEL_EXECUTION;
     }

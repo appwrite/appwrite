@@ -10,16 +10,29 @@
       let providers = {
         "Microsoft": {
           "clientSecret": "oauth2MicrosoftClientSecret",
-          "tenantId": "oauth2MicrosoftTenantId"
+          "tenantID": "oauth2MicrosoftTenantId"
         },
         "Apple": {
-          "keyId": "oauth2AppleKeyId",
-          "teamId": "oauth2AppleTeamId",
+          "keyID": "oauth2AppleKeyId",
+          "teamID": "oauth2AppleTeamId",
           "p8": "oauth2AppleP8"
-        }
+        },
+        "Okta": {
+          "clientSecret": "oauth2OktaClientSecret",
+          "oktaDomain": "oauth2OktaDomain",
+          "authorizationServerId": "oauth2OktaAuthorizationServerId"
+        },
+        "Auth0": {
+          "clientSecret": "oauth2Auth0ClientSecret",
+          "auth0Domain": "oauth2Auth0Domain"
+        },
+        "Gitlab": {
+          "endpoint": "oauth2GitlabEndpoint",
+          "clientSecret": "oauth2GitlabClientSecret",
+        },
       }
       let provider = element.getAttribute("data-forms-oauth-custom");
-      if (!provider || !providers.hasOwnProperty(provider)) { console.error("Provider for custom form not set or unkown") }
+      if (!provider || !providers.hasOwnProperty(provider)) { console.error("Provider for custom form not set or unknown") }
       let config = providers[provider];
 
       // Add Change Listeners for element
