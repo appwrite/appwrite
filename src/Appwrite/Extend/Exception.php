@@ -171,8 +171,9 @@ class Exception extends \Exception
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
 
     /** Video */
-    public const PROFILES_NOT_FOUND                  = 'profiles_not_found';
-    public const VIDEO_NOT_FOUND                     = 'video_not_found';
+    public const VIDEO_PROFILE_NOT_FOUND            = 'profile_not_found';
+    public const VIDEO_NOT_FOUND                    = 'video_not_found';
+    public const VIDEO_SUBTITLE_NOT_FOUND           = 'subtitle_not_found';
 
 
     private $type = '';

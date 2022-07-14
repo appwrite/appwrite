@@ -195,7 +195,7 @@ App::get('/v1/videos/profiles/:profileId')
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('videos_profiles', $profileId));
 
         if ($profile->isEmpty()) {
-            throw new Exception('Video profile not found', 404, Exception::PROFILES_NOT_FOUND);
+            throw new Exception('Video profile not found', 404, Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
         $response->dynamic($profile, Response::MODEL_VIDEO_PROFILE);
@@ -219,7 +219,7 @@ App::get('/v1/videos/profiles')
         $profiles = Authorization::skip(fn () => $dbForProject->find('videos_profiles', [], 12, 0, [], ['ASC']));
 
         if (empty($profiles)) {
-            throw new Exception('Video profiles where not found', 404, Exception::PROFILES_NOT_FOUND);
+            throw new Exception('Video profiles where not found', 404, Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
         $response->dynamic(new Document([
@@ -246,7 +246,7 @@ App::delete('/v1/videos/profiles/:profileId')
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('videos_profiles', $profileId));
 
         if ($profile->isEmpty()) {
-            throw new Exception('Video profile not found', 404, Exception::PROFILES_NOT_FOUND);
+            throw new Exception('Video profile not found', 404, Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
         $deleted = $dbForProject->deleteDocument('videos_profiles', $profileId);
@@ -260,8 +260,7 @@ App::delete('/v1/videos/profiles/:profileId')
 
 
 App::post('/v1/videos/:videoId/subtitles')
-    ->alias('/v1/videos/:videoId/subtitles', [])
-    ->desc('Attach a subtitle file to a video')
+    ->desc('Add subtitle to video')
     ->groups(['api', 'video'])
     ->label('scope', 'files.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -299,7 +298,7 @@ App::post('/v1/videos/:videoId/subtitles')
         validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user);
 
         try {
-            Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $fileId, $name, $code, $default) {
+            $subtitle = Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $fileId, $name, $code, $default) {
                 return $dbForProject->createDocument('videos_subtitles', new Document([
                     'videoId'   => $videoId,
                     'bucketId'  => $bucketId,
@@ -313,9 +312,37 @@ App::post('/v1/videos/:videoId/subtitles')
             throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
-        $response->json(['result' => 'ok']);
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($subtitle, Response::MODEL_VIDEO_SUBTITLE);
     });
 
+App::get('/v1/videos/:videoId/subtitles')
+    ->desc('Get all video subtitles')
+    ->groups(['api', 'video'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'getSubtitles')
+    ->label('sdk.description', '/docs/references/videos/get-subtitles.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VIDEO_SUBTITLE_LIST)
+    ->param('videoId', null, new UID(), 'Video unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function ($videoId, Response $response, Database $dbForProject) {
+
+        $subtitles = Authorization::skip(fn () => $dbForProject->find('videos_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$videoId])], 12, 0, [], ['ASC']));
+
+        if (empty($subtitles)) {
+            throw new Exception('Video subtitles  not found', 404, Exception::VIDEO_SUBTITLE_NOT_FOUND);
+        }
+
+        $response->dynamic(new Document([
+            'total' => $dbForProject->count('videos_subtitles', [], APP_LIMIT_COUNT),
+            'subtitles' => $subtitles,
+        ]), Response::MODEL_VIDEO_SUBTITLE_LIST);
+    });
 
 App::post('/v1/video')
     ->desc('Create Video')
@@ -344,19 +371,15 @@ App::post('/v1/video')
         /** @var Utopia\Database\Document $project */
 
         $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user);
-
-        try {
-            $video = Authorization::skip(function () use ($dbForProject, $bucketId, $file) {
+        $video = Authorization::skip(function () use ($dbForProject, $bucketId, $file) {
                 return $dbForProject->createDocument('videos', new Document([
                     'bucketId'  => $bucketId,
                     'fileId'    => $file->getId(),
                     'size'      => $file->getAttribute('sizeOriginal'),
                 ]));
-            });
-        } catch (StructureException $exception) {
-            throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
-        }
+        });
 
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic(new Document([
             '$id'     =>  $video->getId(),
             'fileId'   => $video['fileId'],
@@ -404,7 +427,7 @@ App::post('/v1/videos/:videoId/rendition')
         $profile = Authorization::skip(fn() => $dbForProject->findOne('videos_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$profileId])]));
 
         if (!$profile) {
-            throw new Exception('Video profile not found', 400, Exception::PROFILES_NOT_FOUND);
+            throw new Exception('Video profile not found', 400, Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
         $transcoder = new Transcoding();
@@ -430,7 +453,7 @@ App::get('/v1/videos/:videoId/:stream/renditions')
     ->label('sdk.description', '/docs/references/videos/get-renditions.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VIDEO_RENDITIONS_LIST)
+    ->label('sdk.response.model', Response::MODEL_VIDEO_RENDITION_LIST)
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('stream', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
     ->inject('response')
@@ -460,7 +483,7 @@ App::get('/v1/videos/:videoId/:stream/renditions')
         $response->dynamic(new Document([
             'total'      => $dbForProject->count('videos_renditions', $queries, APP_LIMIT_COUNT),
             'renditions' => $renditions,
-        ]), Response::MODEL_VIDEO_RENDITIONS_LIST);
+        ]), Response::MODEL_VIDEO_RENDITION_LIST);
     });
 
 

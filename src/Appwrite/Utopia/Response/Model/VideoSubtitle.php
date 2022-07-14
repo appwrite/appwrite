@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class VideoRendition extends Model
+class VideoSubtitle extends Model
 {
     public function __construct()
     {
@@ -22,47 +22,47 @@ class VideoRendition extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('profileId', [
+            ->addRule('bucketId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'profile ID.',
+                'description' => 'Bucket ID.',
                 'default' => '',
                 'example' => 'd5fg5ehg1c168g7c',
             ])
+            ->addRule('fileId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'file ID.',
+                'default' => '',
+                'example' => 'c5fg5emg1c168grr',
+            ])
+            ->addRule('path', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Subtitle path.',
+                'default' => '',
+                'example' => '640x360@500',
+            ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rendition name.',
+                'description' => 'Subtitle name.',
                 'default' => '',
-                'example' => '720P',
+                'example' => 'English',
             ])
-            ->addRule('startedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Transcoding time started in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981220,
+            ->addRule('code', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Subtitle code.',
+                'default' => '',
+                'example' => 'Eng',
             ])
-            ->addRule('endedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Transcoding time ended in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981290,
+            ->addRule('default', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Subtitle default',
+                'default' => '',
+                'example' => false,
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rendition transcoding status',
+                'description' => 'Subtitle packaging status',
                 'default' => '',
                 'example' => 'ready',
-            ])
-            ->addRule('progress', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Rendition trascoding progress',
-                'default' => 0,
-                'example' => 88,
-            ])
-            ->addRule('stream', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Rendition trascoding stream protocol type',
-                'default' => 0,
-                'example' => 88,
             ])
         ;
     }
@@ -74,7 +74,7 @@ class VideoRendition extends Model
      */
     public function getName(): string
     {
-        return 'Video rendition';
+        return 'Video subtitle';
     }
 
     /**
@@ -84,6 +84,6 @@ class VideoRendition extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_VIDEO_RENDITION;
+        return Response::MODEL_VIDEO_SUBTITLE;
     }
 }

@@ -14,7 +14,6 @@ class VideoCustomServerTest extends Scope
     use VideoCustom;
     use SideServer;
 
-
     public function testCreateVideoProfile()
     {
 
@@ -95,9 +94,70 @@ class VideoCustomServerTest extends Scope
     }
 
 
+    public function testCreateVideo(): string
+    {
+
+        $response = $this->client->call(Client::METHOD_POST, '/videos', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => $this->getBucket()['$id'],
+            'fileId' => $this->getVideo()['$id']
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        return $response['body']['$id'];
+    }
+
+    /**
+     * @depends testCreateVideo
+     */
+    public function testCreateVideoSubtitle($videoId)
+    {
+
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => $this->getBucket()['$id'],
+            'fileId' => $this->getSubtitle()['$id'],
+            'name'   => 'English',
+            'code'   => 'Eng',
+            'default'   => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/'. $videoId . '/subtitles' , [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['subtitles']);
+        $this->assertNotEmpty($response['body']['subtitles'][0]['$id']);
+        $this->assertEquals('Eng', $response['body']['subtitles'][0]['code']);
+
+//
+////        $this->assertEquals(404, $response['headers']['status-code']);
+////        $this->assertNotEmpty($response['body']);
+////        $this->assertEquals('Video profile not found', $response['body']['message']);
+    }
 
 
-
+    /**
+     * @depends testCreateVideo
+     */
     public function testTranscodeWithSubs(): array
     {
 

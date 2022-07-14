@@ -70,9 +70,10 @@ use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
-use Appwrite\Utopia\Response\Model\VideoRendition;
 use Appwrite\Utopia\Response\Model\Video;
 use Appwrite\Utopia\Response\Model\VideoProfile;
+use Appwrite\Utopia\Response\Model\VideoRendition;
+use Appwrite\Utopia\Response\Model\VideoSubtitle;
 
 /**
  * @method Response setStatusCode(int $code = 200)
@@ -140,7 +141,9 @@ class Response extends SwooleResponse
     public const MODEL_VIDEO_PROFILE = 'videoProfile';
     public const MODEL_VIDEO_PROFILE_LIST = 'videoProfileList';
     public const MODEL_VIDEO_RENDITION = 'videoRendition';
-    public const MODEL_VIDEO_RENDITIONS_LIST = 'videoRenditionsList';
+    public const MODEL_VIDEO_RENDITION_LIST = 'videoRenditionList';
+    public const MODEL_VIDEO_SUBTITLE = 'videoSubtitle';
+    public const MODEL_VIDEO_SUBTITLE_LIST = 'videoSubtitleList';
 
     // Locale
     public const MODEL_LOCALE = 'locale';
@@ -252,9 +255,9 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
-            ->setModel(new BaseList('Video Renditions List', self::MODEL_VIDEO_RENDITIONS_LIST, 'renditions', self::MODEL_VIDEO_RENDITION))
             ->setModel(new BaseList('video profile List', self::MODEL_VIDEO_PROFILE_LIST, 'profiles', self::MODEL_VIDEO_PROFILE))
-
+            ->setModel(new BaseList('Video Rendition List', self::MODEL_VIDEO_RENDITION_LIST, 'renditions', self::MODEL_VIDEO_RENDITION))
+            ->setModel(new BaseList('Video Subtitle List', self::MODEL_VIDEO_SUBTITLE_LIST, 'subtitles', self::MODEL_VIDEO_SUBTITLE))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -310,9 +313,10 @@ class Response extends SwooleResponse
             ->setModel(new UsageBuckets())
             ->setModel(new UsageFunctions())
             ->setModel(new UsageProject())
-            ->setModel(new VideoRendition())
             ->setModel(new Video())
             ->setModel(new VideoProfile())
+            ->setModel(new VideoRendition())
+            ->setModel(new VideoSubtitle())
 
             // Verification
             // Recovery
