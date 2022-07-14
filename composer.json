@@ -9,6 +9,11 @@
             "email": "eldad@appwrite.io"
         }
     ],
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "lint": "vendor/bin/phpcs",
+        "format": "vendor/bin/phpcbf"
+    },
     "autoload": {
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
@@ -71,7 +76,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.19.3",
+        "appwrite/sdk-generator": "0.19.5",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",
         "swoole/ide-helper": "4.8.9",

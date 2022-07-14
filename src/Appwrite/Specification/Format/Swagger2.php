@@ -4,34 +4,39 @@ namespace Appwrite\Specification\Format;
 
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Response\Model;
 use Utopia\Validator;
 
 class Swagger2 extends Format
 {
-    /**
-     * Get Name.
-     *
-     * Get format name
-     *
-     * @return string
-     */
     public function getName(): string
     {
         return 'Swagger 2';
     }
 
-    /**
-     * Parse
-     *
-     * Parses Appwrite App to given format
-     *
-     * @return array
-     */
+    protected function getNestedModels(Model $model, array &$usedModels): void
+    {
+        foreach ($model->getRules() as $rule) {
+            if (
+                in_array($model->getType(), $usedModels)
+                && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float', 'double'])
+            ) {
+                $usedModels[] = $rule['type'];
+                foreach ($this->models as $m) {
+                    if ($m->getType() === $rule['type']) {
+                        $this->getNestedModels($m, $usedModels);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
     public function parse(): array
     {
         /*
-        * Specifications (v3.0.0):
-        * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md
+        * Specifications (v2.0):
+        * https://github.com/OAI/OpenAPI-Specification/blob/main/versions/2.0.md
         */
         $output = [
             'swagger' => '2.0',
@@ -87,7 +92,8 @@ class Swagger2 extends Format
 
         $usedModels = [];
 
-        foreach ($this->routes as $route) { /** @var \Utopia\Route $route */
+        foreach ($this->routes as $route) {
+            /** @var \Utopia\Route $route */
             $url = \str_replace('/v1', '', $route->getPath());
             $scope = $route->getLabel('scope', '');
             $hide = $route->getLabel('sdk.hide', false);
@@ -102,27 +108,27 @@ class Swagger2 extends Format
             $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none');
             $routeSecurity = $route->getLabel('sdk.auth', []);
-            $sdkPlatofrms = [];
+            $sdkPlatforms = [];
 
             foreach ($routeSecurity as $value) {
                 switch ($value) {
                     case APP_AUTH_TYPE_SESSION:
-                        $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+                        $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                         break;
                     case APP_AUTH_TYPE_KEY:
-                        $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                        $sdkPlatforms[] = APP_PLATFORM_SERVER;
                         break;
                     case APP_AUTH_TYPE_JWT:
-                        $sdkPlatofrms[] = APP_PLATFORM_SERVER;
+                        $sdkPlatforms[] = APP_PLATFORM_SERVER;
                         break;
                     case APP_AUTH_TYPE_ADMIN:
-                        $sdkPlatofrms[] = APP_PLATFORM_CONSOLE;
+                        $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
                         break;
                 }
             }
 
             if (empty($routeSecurity)) {
-                $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
+                $sdkPlatforms[] = APP_PLATFORM_CLIENT;
             }
 
             $temp = [
@@ -144,7 +150,7 @@ class Swagger2 extends Format
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
-                    'platforms' => $sdkPlatofrms,
+                    'platforms' => $sdkPlatforms,
                     'packaging' => $route->getLabel('sdk.packaging', false),
                 ],
             ];
@@ -153,14 +159,9 @@ class Swagger2 extends Format
                 $temp['produces'][] = $produces;
             }
 
-            foreach ($this->models as $key => $value) {
+            foreach ($this->models as $value) {
                 if (\is_array($model)) {
-                    $model = \array_map(function ($m) use ($value) {
-                        if ($m === $value->getType()) {
-                            return $value;
-                        }
-                        return $m;
-                    }, $model);
+                    $model = \array_map(fn ($m) => $m === $value->getType() ? $value : $m, $model);
                 } else {
                     if ($value->getType() === $model) {
                         $model = $value;
@@ -171,7 +172,7 @@ class Swagger2 extends Format
 
             if (!(\is_array($model)) &&  $model->isNone()) {
                 $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
-                    'description' => (in_array($produces, [
+                    'description' => in_array($produces, [
                         'image/*',
                         'image/jpeg',
                         'image/gif',
@@ -180,16 +181,14 @@ class Swagger2 extends Format
                         'image/svg-x',
                         'image/x-icon',
                         'image/bmp',
-                    ])) ? 'Image' : 'File',
+                    ]) ? 'Image' : 'File',
                     'schema' => [
                         'type' => 'file'
                     ],
                 ];
             } else {
                 if (\is_array($model)) {
-                    $modelDescription = \join(', or ', \array_map(function ($m) {
-                        return $m->getName();
-                    }, $model));
+                    $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
                     // model has multiple possible responses, we will use oneOf
                     foreach ($model as $m) {
                         $usedModels[] = $m->getType();
@@ -244,7 +243,8 @@ class Swagger2 extends Format
             $bodyRequired = [];
 
             foreach ($route->getParams() as $name => $param) { // Set params
-                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator']; /** @var \Utopia\Validator $validator */
+                /** @var \Utopia\Validator $validator */
+                $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator'];
 
                 $node = [
                     'name' => $name,
@@ -294,7 +294,6 @@ class Swagger2 extends Format
                         $node['type'] = 'object';
                         $node['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['x-example'] = '{}';
-                        //$node['format'] = 'json';
                         break;
                     case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
@@ -320,7 +319,8 @@ class Swagger2 extends Format
                         $node['format'] = 'password';
                         $node['x-example'] = 'password';
                         break;
-                    case 'Utopia\Validator\Range': /** @var \Utopia\Validator\Range $validator */
+                    case 'Utopia\Validator\Range':
+                        /** @var \Utopia\Validator\Range $validator */
                         $node['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
                         $node['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['x-example'] = $validator->getMin();
@@ -342,7 +342,8 @@ class Swagger2 extends Format
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
                         break;
-                    case 'Utopia\Validator\WhiteList': /** @var \Utopia\Validator\WhiteList $validator */
+                    case 'Utopia\Validator\WhiteList':
+                        /** @var \Utopia\Validator\WhiteList $validator */
                         $node['type'] = $validator->getType();
                         $node['x-example'] = $validator->getList()[0];
 
@@ -410,14 +411,7 @@ class Swagger2 extends Format
         }
 
         foreach ($this->models as $model) {
-            foreach ($model->getRules() as $rule) {
-                if (
-                    in_array($model->getType(), $usedModels)
-                    && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])
-                ) {
-                    $usedModels[] = $rule['type'];
-                }
-            }
+            $this->getNestedModels($model, $usedModels);
         }
 
         foreach ($this->models as $model) {
@@ -485,15 +479,11 @@ class Swagger2 extends Format
                         if (\is_array($rule['type'])) {
                             if ($rule['array']) {
                                 $items = [
-                                    'x-anyOf' => \array_map(function ($type) {
-                                        return ['$ref' => '#/definitions/' . $type];
-                                    }, $rule['type'])
+                                    'x-anyOf' => \array_map(fn ($type) =>  ['$ref' => '#/definitions/' . $type], $rule['type'])
                                 ];
                             } else {
                                 $items = [
-                                    'x-oneOf' => \array_map(function ($type) {
-                                        return ['$ref' => '#/definitions/' . $type];
-                                    }, $rule['type'])
+                                    'x-oneOf' => \array_map(fn ($type) => ['$ref' => '#/definitions/' . $type], $rule['type'])
                                 ];
                             }
                         } else {
