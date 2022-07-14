@@ -20,7 +20,7 @@ class Notion extends OAuth2
      * @var array
      */
     protected $user = [];
-    
+
     /**
      * @var array
      */
@@ -49,14 +49,14 @@ class Notion extends OAuth2
         "shops_r",
         "shops_w",
         "transactions_r",
-        "transactions_w",    
+        "transactions_w",
     ];
 
     private $pkce = '';
 
     private function getPKCE()
     {
-        if(empty($this->pkce)) {
+        if (empty($this->pkce)) {
             $this->pkce = \bin2hex(\random_bytes(rand(43, 128)));
         }
 
@@ -66,7 +66,7 @@ class Notion extends OAuth2
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'etsy';
     }
@@ -74,9 +74,9 @@ class Notion extends OAuth2
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return 'https://www.etsy.com/oauth/connect/oauth/authorize?'. \http_build_query([
+        return 'https://www.etsy.com/oauth/connect/oauth/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
@@ -94,7 +94,7 @@ class Notion extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
 
             $this->tokens = \json_decode($this->request(
@@ -119,7 +119,7 @@ class Notion extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
 
@@ -134,7 +134,7 @@ class Notion extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -146,7 +146,7 @@ class Notion extends OAuth2
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $components = explode('.', $accessToken);
 
@@ -158,7 +158,7 @@ class Notion extends OAuth2
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         return $this->getUser($accessToken)['primary_email'];
     }
@@ -168,7 +168,7 @@ class Notion extends OAuth2
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         return $this->getUser($accessToken)['login_name'];
     }
@@ -180,15 +180,15 @@ class Notion extends OAuth2
      */
     protected function getUser(string $accessToken)
     {
-        if(!empty($this->user)) {
-          return $this->user;
+        if (!empty($this->user)) {
+            return $this->user;
         }
 
         $headers = ['Authorization: Bearer ' . $accessToken];
-      
+
         $this->user = \json_decode($this->request(
-          'GET',
-          'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
+            'GET',
+            'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
         ), true);
 
         return $this->user;
