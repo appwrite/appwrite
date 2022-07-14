@@ -69,32 +69,34 @@ function graphqlRequest(
     Type\Schema $gqlSchema
 ): void {
     $contentType = $request->getHeader('content-type');
+    $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 50);
+    $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 200);
+    $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_QUERY_DEPTH', 3);
 
-    if ($contentType === 'application/graphql') {
+    if (\str_starts_with($contentType, 'application/graphql')) {
         $query = parseGraphqlRequest($request);
     }
     if (\str_starts_with($contentType, 'multipart/form-data')) {
         $query = parseMultipartRequest($query, $request);
     }
-    if (!isset($query[0])) {
+    if (!\isset($query[0])) {
         $query = [$query];
     }
-    if (empty($query)) {
+    if (\empty($query)) {
         throw new Exception('No query supplied.', 400, Exception::GRAPHQL_NO_QUERY);
     }
+    if (\count($query) > $maxBatchSize) {
+        throw new Exception('Too many queries in batch.', 400, Exception::GRAPHQL_TOO_MANY_QUERIES);
+    }
 
-    $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 200);
-    $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_QUERY_DEPTH', 3);
-
+    $debugFlags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
     $validations[] = new QueryComplexity($maxComplexity);
     $validations[] = new QueryDepth($maxDepth);
-
+    
     if (App::isProduction()) {
         $validations[] = new DisableIntrospection();
         $debugFlags = DebugFlag::NONE;
-    } else {
-        $debugFlags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     }
 
     $promises = [];
