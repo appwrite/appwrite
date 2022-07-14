@@ -166,9 +166,6 @@ class BuildsV1 extends Worker
             );
 
             /** Update the build document */
-
-            //$response['endTime'] = DateTime::format((new \DateTime())->setTimestamp($response['endTime'])); //todo: fix to datetime
-
             $build->setAttribute('endTime', $response['endTime']);
             $build->setAttribute('duration', $response['duration']);
             $build->setAttribute('status', $response['status']);

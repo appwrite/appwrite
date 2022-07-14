@@ -62,7 +62,6 @@ trait TeamsBaseServer
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
         $this->assertEquals(true, DateTime::isValid($response['body']['joined']));
-        $this->assertGreaterThan('2020-07-07 07:58:44', DateTime::now());
         $this->assertEquals(true, $response['body']['confirm']);
 
         $userUid = $response['body']['userId'];

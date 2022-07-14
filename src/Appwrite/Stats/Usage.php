@@ -191,12 +191,10 @@ class Usage
     protected array $periods = [
         [
             'key' => '30m',
-            //'multiplier' => 1800,
             'startTime' => '-24 hours',
         ],
         [
             'key' => '1d',
-            //'multiplier' => 86400,
             'startTime' => '-90 days',
         ],
     ];
