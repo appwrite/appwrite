@@ -806,7 +806,8 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events) {
+    ->inject('usage')
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -957,6 +958,12 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
+
+        $usage
+            ->setParam('functionId', $function->getId())
+            ->setParam('functionExecution', 1)
+            ->setParam('functionStatus', $execution->getAttribute('status', ''))
+            ->setParam('functionExecutionTime', $execution->getAttribute('time') * 1000); // ms
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
