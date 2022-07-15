@@ -68,7 +68,7 @@ return [
                 'default' => 'localhost',
                 'required' => true,
                 'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.' . PHP_EOL . 'You can use the same value as used for the Appwrite hostname.',
-                'filter' => ''
+                'filter' => 'domainTarget'
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
