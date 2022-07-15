@@ -130,7 +130,7 @@ class DatabasePool {
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($pdo), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $namespace = "_project_console";
+        $namespace = "_console";
         $database->setNamespace($namespace);
 
         $project = Authorization::skip(fn() => $database->getDocument('projects', $projectID));
@@ -161,7 +161,7 @@ class DatabasePool {
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($pdo), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $namespace = "_project_$internalID";
+        $namespace = "_$internalID";
         $database->setNamespace($namespace);
 
         return $database;
@@ -186,7 +186,7 @@ class DatabasePool {
         [$name, $internalID] = $this->getName($projectID, $redis);
         $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_PROJECT_DB in .env", 500);
         
-        $namespace = "_project_$internalID";
+        $namespace = "_$internalID";
         $attempts = 0;
         do {
             try {

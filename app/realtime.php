@@ -333,70 +333,48 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
 
-    /** @var PDO $db */
-    $dbPool = $register->get('dbPool');
-    $consoleDB = $dbPool->getConsoleDBFromPool();
-    
+    App::setResource('request', fn() => $request);
+    App::setResource('response', fn() => $response);
+
     /** @var Redis $redis */
     $redis = $register->get('redisPool')->get();
+    App::setResource('cache', fn() => $redis);
+
+    /** @var PDO $db */
+    $dbPool = $register->get('dbPool');
+    App::setResource('dbPool', fn() => $dbPool);
 
     Console::info("Connection open (user: {$connection})");
 
-    App::setResource('consoleDB', fn() => $consoleDB);
-    App::setResource('cache', fn () => $redis);
-    App::setResource('request', fn () => $request);
-    App::setResource('response', fn () => $response);
-
     try {
-        /** @var \Utopia\Database\Document $project */
-        $project = $app->getResource('project');
-
         /** @var \Utopia\Database\Document $console */
         $console = $app->getResource('console');
 
-        $cache = new Cache(new RedisCache($redis));
-        $database = new Database(new MariaDB($db), $cache);
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_{$project->getInternalId()}");
+        [$dbForConsole, $returnConsoleDB] = $dbPool->getDBFromPool('console', $redis);
+        App::setResource('dbForConsole', fn() => $dbForConsole);
+
+        /** @var \Utopia\Database\Document $project */
+        $project = $app->getResource('project');
 
         /*
          *  Project Check
          */
-        // var_dump($project);
         if (empty($project->getId())) {
             throw new Exception('Missing or unknown project ID', 1008);
         }
 
-        $projectId = $project->getId();
-        $projectDB = $consoleDB;
-        if ($projectId !== 'console') {
-            $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
-            $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
-            $dbName = $project->getAttribute('database', '');
-            if (!empty($dbName)) {
-                $projectDB = $dbPool->getDBFromPool($dbName);
-            }
-        }
-        
-        App::setResource('projectDB', fn() => $projectDB);
+        [$dbForProject, $returnProjectDB] = $dbPool->getDBFromPool($project->getId(), $redis);
+        App::setResource('dbForProject', fn() => $dbForProject);
 
         /** @var \Utopia\Database\Document $user */
         $user = $app->getResource('user');
-
-        /** @var \Utopia\Database\Document $console */
-        $console = $app->getResource('console');
-
-        $cache = new Cache(new RedisCache($redis));
-        $database = new Database(new MariaDB($projectDB), $cache);
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_{$project->getId()}");
 
         /*
          * Abuse Check
          *
          * Abuse limits are connecting 128 times per minute and ip address.
          */
-        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $database);
+        $timeLimit = new TimeLimit('url:{url},ip:{ip}', 128, 60, $dbForProject);
         $timeLimit
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getURI());
@@ -475,13 +453,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         /**
          * Put used PDO and Redis Connections back into their pools.
          */
-         /** @var PDOPool $consolePool */
-        $dbPool->putConsoleDb($consoleDB);
-
-        if (!empty($dbName) && !empty($projectDB)) {
-            $dbPool->put($projectDB, $dbName);
-        }
-
+        call_user_func($returnConsoleDB);
+        call_user_func($returnProjectDB);
         $register->get('redisPool')->put($redis);
     }
 });
@@ -489,43 +462,20 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 $server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
     try {
         $response = new Response(new SwooleResponse());
-        
-        $dbPool = $register->get('dbPool');
-        $consoleDB = $dbPool->getConsoleDBFromPool();
+
+        $projectId = $realtime->connections[$connection]['projectId'];
 
         $redis = $register->get('redisPool')->get();
-        $cache = new Cache(new RedisCache($redis));
 
-
-        $projectId = $realtime->connections[$connection]['projectId'];
-        $projectDB = $consoleDB;
-        if ($projectId !== 'console') {
-            $dbForConsole = new Database(new MariaDB($projectDB), $cache);
-            $dbForConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-            $dbForConsole->setNamespace("_console");
-            $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
-            $dbName = $project->getAttribute('database', '');
-            if (!empty($dbName)) {
-                $projectDB = $dbPool->getDBFromPool($dbName);
-            }
-        }
-        
-        $database = new Database(new MariaDB($projectDB), $cache);
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_console");
-        $projectId = $realtime->connections[$connection]['projectId'];
-
-        if ($projectId !== 'console') {
-            $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
-            $database->setNamespace("_{$project->getInternalId()}");
-        }
+        $dbPool = $register->get('dbPool');
+        [$dbForProject, $returnProjectDB] = $dbPool->getDBFromPool($projectId, $redis);
 
         /*
          * Abuse Check
          *
          * Abuse limits are sending 32 times per minute and connection.
          */
-        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $database);
+        $timeLimit = new TimeLimit('url:{url},connection:{connection}', 32, 60, $dbForProject);
 
         $timeLimit
             ->setParam('{connection}', $connection)
@@ -556,7 +506,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 Auth::$unique = $session['id'] ?? '';
                 Auth::$secret = $session['secret'] ?? '';
 
-                $user = $database->getDocument('users', Auth::$unique);
+                $user = $dbForProject->getDocument('users', Auth::$unique);
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
@@ -601,13 +551,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
             $server->close($connection, $th->getCode());
         }
     } finally {
-         /** @var PDOPool $consolePool */
-         $dbPool->putConsoleDb($consoleDB);
-
-         if (!empty($dbName) && !empty($projectDB)) {
-             $dbPool->put($projectDB, $dbName);
-         }
- 
+        call_user_func($returnProjectDB); 
         $register->get('redisPool')->put($redis);
     }
 });
