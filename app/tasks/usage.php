@@ -6,49 +6,13 @@ use Appwrite\Stats\Usage;
 use Appwrite\Stats\UsageDB;
 use InfluxDB\Database as InfluxDatabase;
 use Utopia\App;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
-
-function getDatabase(Registry &$register, string $namespace): Database
-{
-    $attempts = 0;
-
-    do {
-        try {
-            $attempts++;
-
-            $db = $register->get('db');
-            $redis = $register->get('cache');
-
-            $cache = new Cache(new RedisCache($redis));
-            $database = new Database(new MariaDB($db), $cache);
-            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-            $database->setNamespace($namespace);
-
-            if (!$database->exists($database->getDefaultDatabase(), 'projects')) {
-                throw new Exception('Projects collection not ready');
-            }
-            break; // leave loop if successful
-        } catch (\Exception$e) {
-            Console::warning("Database not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-            }
-            sleep(DATABASE_RECONNECT_SLEEP);
-        }
-    } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-
-    return $database;
-}
 
 function getInfluxDB(Registry &$register): InfluxDatabase
 {
@@ -119,7 +83,8 @@ $cli
 
         $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
 
-        $database = getDatabase($register, '_console');
+        $redis = $register->get('cache');
+        $database = $register->get('dbPool')->getDB('console', $redis);
         $influxDB = getInfluxDB($register);
 
         $usage = new Usage($database, $influxDB, $logError);

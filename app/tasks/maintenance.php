@@ -7,50 +7,16 @@ use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Database;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-
-function getConsoleDB(): Database
-{
-    global $register;
-
-    $attempts = 0;
-
-    do {
-        try {
-            $attempts++;
-            $cache = new Cache(new RedisCache($register->get('cache')));
-            $consoleDB = $register->get('dbPool')->getConsoleDB();
-            $database = new Database(new MariaDB($consoleDB), $cache);
-            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-            $database->setNamespace('_console'); // Main DB
-
-            if (!$database->exists($database->getDefaultDatabase(), 'certificates')) {
-                throw new \Exception('Console project not ready');
-            }
-
-            break; // leave loop if successful
-        } catch (\Exception $e) {
-            Console::warning("Database not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-            }
-            sleep(DATABASE_RECONNECT_SLEEP);
-        }
-    } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-
-    return $database;
-}
 
 $cli
     ->task('maintenance')
     ->desc('Schedules maintenance tasks and publishes them to resque')
     ->action(function () {
+        global $register;
+
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
@@ -136,8 +102,9 @@ $cli
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
-            $database = getConsoleDB();
+        Console::loop(function () use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
+            $redis = $register->get('cache');
+            $database = $register->get('dbPool')->getDB('console', $redis);
 
             $time = date('d-m-Y H:i:s', time());
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
