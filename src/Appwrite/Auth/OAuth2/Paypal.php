@@ -12,7 +12,7 @@ class Paypal extends OAuth2
     /**
      * @var array
      */
-    private $endpoint = [
+    private array $endpoint = [
         'sandbox' => 'https://www.sandbox.paypal.com/',
         'live' => 'https://www.paypal.com/',
     ];
@@ -20,7 +20,7 @@ class Paypal extends OAuth2
     /**
      * @var array
      */
-    private $resourceEndpoint = [
+    private array $resourceEndpoint = [
         'sandbox' => 'https://api.sandbox.paypal.com/v1/',
         'live' => 'https://api.paypal.com/v1/',
     ];
@@ -28,22 +28,22 @@ class Paypal extends OAuth2
     /**
      * @var string
      */
-    protected $environment = 'live';
+    protected string $environment = 'live';
 
     /**
      * @var array
      */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [
         'openid',
         'profile',
         'email'
@@ -62,7 +62,7 @@ class Paypal extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint[$this->environment] . 'connect/?'.
+        $url = $this->endpoint[$this->environment] . 'connect/?' .
             \http_build_query([
                 'flowEntry' => 'static',
                 'response_type' => 'code',
@@ -83,7 +83,7 @@ class Paypal extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
                 $this->resourceEndpoint[$this->environment] . 'oauth2/token',
@@ -103,7 +103,7 @@ class Paypal extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
@@ -115,7 +115,7 @@ class Paypal extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -131,11 +131,7 @@ class Paypal extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['payer_id'])) {
-            return $user['payer_id'];
-        }
-
-        return '';
+        return $user['payer_id'] ?? '';
     }
 
     /**
@@ -148,10 +144,36 @@ class Paypal extends OAuth2
         $user = $this->getUser($accessToken);
 
         if (isset($user['emails'])) {
-            return $user['emails'][0]['value'];
+            $email = array_filter($user['emails'], function ($email) {
+                return $email['primary'] === true;
+            });
+
+            if (!empty($email)) {
+                return $email[0]['value'];
+            }
         }
 
         return '';
+    }
+
+    /**
+     * Check if the OAuth email is verified
+     *
+     * @link https://developer.paypal.com/docs/api/identity/v1/#userinfo_get
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['verified_account'] ?? false) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -163,11 +185,7 @@ class Paypal extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
-        }
-
-        return '';
+        return $user['name'] ?? '';
     }
 
     /**
@@ -179,7 +197,7 @@ class Paypal extends OAuth2
     {
         $header = [
             'Content-Type: application/json',
-            'Authorization: Bearer '.\urlencode($accessToken),
+            'Authorization: Bearer ' . \urlencode($accessToken),
         ];
         if (empty($this->user)) {
             $user = $this->request(

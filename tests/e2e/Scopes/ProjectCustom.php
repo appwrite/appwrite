@@ -68,6 +68,8 @@ trait ProjectCustom
                 'users.write',
                 'teams.read',
                 'teams.write',
+                'databases.read',
+                'databases.write',
                 'collections.read',
                 'collections.write',
                 'documents.read',
@@ -90,7 +92,7 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
 
-        $webhook = $this->client->call(Client::METHOD_POST, '/projects/'.$project['body']['$id'].'/webhooks', [
+        $webhook = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/webhooks', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -98,54 +100,11 @@ trait ProjectCustom
         ], [
             'name' => 'Webhook Test',
             'events' => [
-                'account.create',
-                'account.update.email',
-                'account.update.name',
-                'account.update.password',
-                'account.update.prefs',
-                'account.recovery.create',
-                'account.recovery.update',
-                'account.verification.create',
-                'account.verification.update',
-                'account.delete',
-                'account.sessions.create',
-                'account.sessions.update',
-                'account.sessions.delete',
-                'database.collections.create',
-                'database.collections.update',
-                'database.collections.delete',
-                'database.attributes.create',
-                'database.attributes.delete',
-                'database.indexes.create',
-                'database.indexes.delete',
-                'database.documents.create',
-                'database.documents.update',
-                'database.documents.delete',
-                'functions.create',
-                'functions.update',
-                'functions.delete',
-                'functions.deployments.create',
-                'functions.deployments.update',
-                'functions.deployments.delete',
-                'functions.executions.create',
-                'functions.executions.update',
-                'storage.files.create',
-                'storage.files.update',
-                'storage.files.delete',
-                'storage.buckets.create',
-                'storage.buckets.update',
-                'storage.buckets.delete',
-                'users.create',
-                'users.update.prefs',
-                'users.update.status',
-                'users.delete',
-                'users.sessions.delete',
-                'teams.create',
-                'teams.update',
-                'teams.delete',
-                'teams.memberships.create',
-                'teams.memberships.update.status',
-                'teams.memberships.delete',
+                'databases.*',
+                'functions.*',
+                'buckets.*',
+                'teams.*',
+                'users.*'
             ],
             'url' => 'http://request-catcher:5000/webhook',
             'security' => false,
@@ -161,12 +120,14 @@ trait ProjectCustom
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
+            'signatureKey' => $webhook['body']['signatureKey'],
         ];
 
         return self::$project;
     }
 
-    public function getNewKey(array $scopes) {
+    public function getNewKey(array $scopes)
+    {
 
         $projectId = self::$project['$id'];
 

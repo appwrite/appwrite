@@ -13,17 +13,17 @@ class Dropbox extends OAuth2
     /**
      * @var array
      */
-    protected $user = [];
-    
-    /**
-     * @var array
-     */
-    protected $tokens = [];
+    protected array $user = [];
 
     /**
      * @var array
      */
-    protected $scopes = [];
+    protected array $tokens = [];
+
+    /**
+     * @var array
+     */
+    protected array $scopes = [];
 
     /**
      * @return string
@@ -32,17 +32,17 @@ class Dropbox extends OAuth2
     {
         return 'dropbox';
     }
-    
+
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://www.dropbox.com/oauth2/authorize?'.\http_build_query([
-                'client_id' => $this->appID,
-                'redirect_uri' => $this->callback,
-                'state' => \json_encode($this->state),
-                'response_type' => 'code'
+        return 'https://www.dropbox.com/oauth2/authorize?' . \http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'state' => \json_encode($this->state),
+            'response_type' => 'code'
         ]);
     }
 
@@ -53,7 +53,7 @@ class Dropbox extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-        if(empty($this->tokens)) {
+        if (empty($this->tokens)) {
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
@@ -77,7 +77,7 @@ class Dropbox extends OAuth2
      *
      * @return array
      */
-    public function refreshTokens(string $refreshToken):array
+    public function refreshTokens(string $refreshToken): array
     {
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
@@ -92,7 +92,7 @@ class Dropbox extends OAuth2
             ])
         ), true);
 
-        if(empty($this->tokens['refresh_token'])) {
+        if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
@@ -108,11 +108,7 @@ class Dropbox extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['account_id'])) {
-            return $user['account_id'];
-        }
-
-        return '';
+        return $user['account_id'] ?? '';
     }
 
     /**
@@ -124,11 +120,27 @@ class Dropbox extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
+        return $user['email'] ?? '';
+    }
+
+    /**
+     * Check if the OAuth email is verified
+     *
+     * @link https://www.dropbox.com/developers/documentation/http/documentation#users-get_current_account
+     *
+     * @param string $accessToken
+     *
+     * @return bool
+     */
+    public function isEmailVerified(string $accessToken): bool
+    {
+        $user = $this->getUser($accessToken);
+
+        if ($user['email_verified'] ?? false) {
+            return true;
         }
 
-        return '';
+        return false;
     }
 
     /**
@@ -140,11 +152,7 @@ class Dropbox extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name']['display_name'];
-        }
-
-        return '';
+        return $user['name']['display_name'] ?? '';
     }
 
     /**
@@ -155,7 +163,7 @@ class Dropbox extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers = ['Authorization: Bearer '. \urlencode($accessToken)];
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
             $user = $this->request('POST', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
             $this->user = \json_decode($user, true);
         }

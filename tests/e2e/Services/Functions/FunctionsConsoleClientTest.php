@@ -28,14 +28,26 @@ class FunctionsConsoleClientTest extends Scope
                 'funcKey3' => 'funcValue3',
             ],
             'events' => [
-                'account.create',
-                'account.delete',
+                'users.*.create',
+                'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
         ]);
 
         $this->assertEquals(201, $function['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => 'unique()',
+            'name' => 'Test Failure',
+            'execute' => ['some-random-string'],
+            'runtime' => 'php-8.0'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return [
             'functionId' => $function['body']['$id']

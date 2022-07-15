@@ -97,7 +97,7 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/database?project={{router.params.project}}"
+                    <a data-ls-attrs="href=/console/databases?project={{router.params.project}}"
                         data-analytics
                         data-analytics-event="click"
                         data-analytics-category="console/navigation"
@@ -211,7 +211,7 @@
             required
             maxlength="36"
             class=""
-            pattern="^[a-zA-Z0-9][a-zA-Z0-9_.-]{1,36}$"
+            pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$"
             name="projectId" />
 
         <label>Name</label>
