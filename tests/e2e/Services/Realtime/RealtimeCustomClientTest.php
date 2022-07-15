@@ -1162,149 +1162,149 @@ class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
-    public function testChannelExecutions()
-    {
-        $user = $this->getUser();
-        $session = $user['session'] ?? '';
-        $projectId = $this->getProject()['$id'];
+    // public function testChannelExecutions()
+    // {
+    //     $user = $this->getUser();
+    //     $session = $user['session'] ?? '';
+    //     $projectId = $this->getProject()['$id'];
 
-        $client = $this->getWebsocket(['executions'], [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $projectId . '=' . $session
-        ]);
+    //     $client = $this->getWebsocket(['executions'], [
+    //         'origin' => 'http://localhost',
+    //         'cookie' => 'a_session_' . $projectId . '=' . $session
+    //     ]);
 
-        $response = json_decode($client->receive(), true);
+    //     $response = json_decode($client->receive(), true);
 
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('connected', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertCount(1, $response['data']['channels']);
-        $this->assertContains('executions', $response['data']['channels']);
-        $this->assertNotEmpty($response['data']['user']);
-        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
+    //     $this->assertArrayHasKey('type', $response);
+    //     $this->assertArrayHasKey('data', $response);
+    //     $this->assertEquals('connected', $response['type']);
+    //     $this->assertNotEmpty($response['data']);
+    //     $this->assertCount(1, $response['data']['channels']);
+    //     $this->assertContains('executions', $response['data']['channels']);
+    //     $this->assertNotEmpty($response['data']['user']);
+    //     $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
-        /**
-         * Test Functions Create
-         */
-        $function = $this->client->call(Client::METHOD_POST, '/functions', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'functionId' => 'unique()',
-            'name' => 'Test',
-            'execute' => ['role:member'],
-            'runtime' => 'php-8.0',
-            'timeout' => 10,
-        ]);
+    //     /**
+    //      * Test Functions Create
+    //      */
+    //     $function = $this->client->call(Client::METHOD_POST, '/functions', [
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //         'x-appwrite-key' => $this->getProject()['apiKey']
+    //     ], [
+    //         'functionId' => 'unique()',
+    //         'name' => 'Test',
+    //         'execute' => ['role:member'],
+    //         'runtime' => 'php-8.0',
+    //         'timeout' => 10,
+    //     ]);
 
-        $functionId = $function['body']['$id'] ?? '';
+    //     $functionId = $function['body']['$id'] ?? '';
 
-        $this->assertEquals($function['headers']['status-code'], 201);
-        $this->assertNotEmpty($function['body']['$id']);
+    //     $this->assertEquals($function['headers']['status-code'], 201);
+    //     $this->assertNotEmpty($function['body']['$id']);
 
-        $folder = 'timeout';
-        $stderr = '';
-        $stdout = '';
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
+    //     $folder = 'timeout';
+    //     $stderr = '';
+    //     $stdout = '';
+    //     $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
 
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+    //     Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'entrypoint' => 'index.php',
-            'code' => new CURLFile($code, 'application/x-gzip', basename($code))
-        ]);
+    //     $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+    //         'content-type' => 'multipart/form-data',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //         'x-appwrite-key' => $this->getProject()['apiKey']
+    //     ]), [
+    //         'entrypoint' => 'index.php',
+    //         'code' => new CURLFile($code, 'application/x-gzip', basename($code))
+    //     ]);
 
-        $deploymentId = $deployment['body']['$id'] ?? '';
+    //     $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals($deployment['headers']['status-code'], 201);
-        $this->assertNotEmpty($deployment['body']['$id']);
+    //     $this->assertEquals($deployment['headers']['status-code'], 201);
+    //     $this->assertNotEmpty($deployment['body']['$id']);
 
-        // Wait for deployment to be built.
-        sleep(5);
+    //     // Wait for deployment to be built.
+    //     sleep(5);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []);
+    //     $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //         'x-appwrite-key' => $this->getProject()['apiKey']
+    //     ]), []);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertNotEmpty($response['body']['$id']);
+    //     $this->assertEquals($response['headers']['status-code'], 200);
+    //     $this->assertNotEmpty($response['body']['$id']);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), []);
+    //     $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id']
+    //     ], $this->getHeaders()), []);
 
-        $this->assertEquals($execution['headers']['status-code'], 201);
-        $this->assertNotEmpty($execution['body']['$id']);
+    //     $this->assertEquals($execution['headers']['status-code'], 201);
+    //     $this->assertNotEmpty($execution['body']['$id']);
 
-        $response = json_decode($client->receive(), true);
-        $responseUpdate = json_decode($client->receive(), true);
+    //     $response = json_decode($client->receive(), true);
+    //     $responseUpdate = json_decode($client->receive(), true);
 
-        $executionId = $execution['body']['$id'];
+    //     $executionId = $execution['body']['$id'];
 
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('event', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(4, $response['data']['channels']);
-        $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains('executions', $response['data']['channels']);
-        $this->assertContains("executions.{$executionId}", $response['data']['channels']);
-        $this->assertContains("functions.{$functionId}", $response['data']['channels']);
-        $this->assertContains("functions.{$functionId}.executions.{$executionId}.create", $response['data']['events']);
-        $this->assertContains("functions.{$functionId}.executions.{$executionId}", $response['data']['events']);
-        $this->assertContains("functions.{$functionId}.executions.*.create", $response['data']['events']);
-        $this->assertContains("functions.{$functionId}.executions.*", $response['data']['events']);
-        $this->assertContains("functions.{$functionId}", $response['data']['events']);
-        $this->assertContains("functions.*.executions.{$executionId}.create", $response['data']['events']);
-        $this->assertContains("functions.*.executions.{$executionId}", $response['data']['events']);
-        $this->assertContains("functions.*.executions.*.create", $response['data']['events']);
-        $this->assertContains("functions.*.executions.*", $response['data']['events']);
-        $this->assertContains("functions.*", $response['data']['events']);
-        $this->assertNotEmpty($response['data']['payload']);
+    //     $this->assertArrayHasKey('type', $response);
+    //     $this->assertArrayHasKey('data', $response);
+    //     $this->assertEquals('event', $response['type']);
+    //     $this->assertNotEmpty($response['data']);
+    //     $this->assertArrayHasKey('timestamp', $response['data']);
+    //     $this->assertCount(4, $response['data']['channels']);
+    //     $this->assertContains('console', $response['data']['channels']);
+    //     $this->assertContains('executions', $response['data']['channels']);
+    //     $this->assertContains("executions.{$executionId}", $response['data']['channels']);
+    //     $this->assertContains("functions.{$functionId}", $response['data']['channels']);
+    //     $this->assertContains("functions.{$functionId}.executions.{$executionId}.create", $response['data']['events']);
+    //     $this->assertContains("functions.{$functionId}.executions.{$executionId}", $response['data']['events']);
+    //     $this->assertContains("functions.{$functionId}.executions.*.create", $response['data']['events']);
+    //     $this->assertContains("functions.{$functionId}.executions.*", $response['data']['events']);
+    //     $this->assertContains("functions.{$functionId}", $response['data']['events']);
+    //     $this->assertContains("functions.*.executions.{$executionId}.create", $response['data']['events']);
+    //     $this->assertContains("functions.*.executions.{$executionId}", $response['data']['events']);
+    //     $this->assertContains("functions.*.executions.*.create", $response['data']['events']);
+    //     $this->assertContains("functions.*.executions.*", $response['data']['events']);
+    //     $this->assertContains("functions.*", $response['data']['events']);
+    //     $this->assertNotEmpty($response['data']['payload']);
 
-        $this->assertArrayHasKey('type', $responseUpdate);
-        $this->assertArrayHasKey('data', $responseUpdate);
-        $this->assertEquals('event', $responseUpdate['type']);
-        $this->assertNotEmpty($responseUpdate['data']);
-        $this->assertArrayHasKey('timestamp', $responseUpdate['data']);
-        $this->assertCount(4, $responseUpdate['data']['channels']);
-        $this->assertContains('console', $responseUpdate['data']['channels']);
-        $this->assertContains('executions', $responseUpdate['data']['channels']);
-        $this->assertContains("executions.{$executionId}", $responseUpdate['data']['channels']);
-        $this->assertContains("functions.{$functionId}", $responseUpdate['data']['channels']);
-        $this->assertContains("functions.{$functionId}.executions.{$executionId}.update", $responseUpdate['data']['events']);
-        $this->assertContains("functions.{$functionId}.executions.{$executionId}", $responseUpdate['data']['events']);
-        $this->assertContains("functions.{$functionId}.executions.*.update", $responseUpdate['data']['events']);
-        $this->assertContains("functions.{$functionId}.executions.*", $responseUpdate['data']['events']);
-        $this->assertContains("functions.{$functionId}", $responseUpdate['data']['events']);
-        $this->assertContains("functions.*.executions.{$executionId}.update", $responseUpdate['data']['events']);
-        $this->assertContains("functions.*.executions.{$executionId}", $responseUpdate['data']['events']);
-        $this->assertContains("functions.*.executions.*.update", $responseUpdate['data']['events']);
-        $this->assertContains("functions.*.executions.*", $responseUpdate['data']['events']);
-        $this->assertContains("functions.*", $responseUpdate['data']['events']);
-        $this->assertNotEmpty($responseUpdate['data']['payload']);
+    //     $this->assertArrayHasKey('type', $responseUpdate);
+    //     $this->assertArrayHasKey('data', $responseUpdate);
+    //     $this->assertEquals('event', $responseUpdate['type']);
+    //     $this->assertNotEmpty($responseUpdate['data']);
+    //     $this->assertArrayHasKey('timestamp', $responseUpdate['data']);
+    //     $this->assertCount(4, $responseUpdate['data']['channels']);
+    //     $this->assertContains('console', $responseUpdate['data']['channels']);
+    //     $this->assertContains('executions', $responseUpdate['data']['channels']);
+    //     $this->assertContains("executions.{$executionId}", $responseUpdate['data']['channels']);
+    //     $this->assertContains("functions.{$functionId}", $responseUpdate['data']['channels']);
+    //     $this->assertContains("functions.{$functionId}.executions.{$executionId}.update", $responseUpdate['data']['events']);
+    //     $this->assertContains("functions.{$functionId}.executions.{$executionId}", $responseUpdate['data']['events']);
+    //     $this->assertContains("functions.{$functionId}.executions.*.update", $responseUpdate['data']['events']);
+    //     $this->assertContains("functions.{$functionId}.executions.*", $responseUpdate['data']['events']);
+    //     $this->assertContains("functions.{$functionId}", $responseUpdate['data']['events']);
+    //     $this->assertContains("functions.*.executions.{$executionId}.update", $responseUpdate['data']['events']);
+    //     $this->assertContains("functions.*.executions.{$executionId}", $responseUpdate['data']['events']);
+    //     $this->assertContains("functions.*.executions.*.update", $responseUpdate['data']['events']);
+    //     $this->assertContains("functions.*.executions.*", $responseUpdate['data']['events']);
+    //     $this->assertContains("functions.*", $responseUpdate['data']['events']);
+    //     $this->assertNotEmpty($responseUpdate['data']['payload']);
 
-        $client->close();
+    //     $client->close();
 
-        // Cleanup : Delete function
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], []);
+    //     // Cleanup : Delete function
+    //     $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //         'x-appwrite-key' => $this->getProject()['apiKey'],
+    //     ], []);
 
-        $this->assertEquals(204, $response['headers']['status-code']);
-    }
+    //     $this->assertEquals(204, $response['headers']['status-code']);
+    // }
 
     public function testChannelTeams(): array
     {

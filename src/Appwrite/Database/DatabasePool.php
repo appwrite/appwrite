@@ -173,7 +173,7 @@ class DatabasePool {
      * 
      * @return Database
      */
-    private function getDatabase(PDO $pdo, \Redis $redis): Database 
+    private function getDatabase(PDO|PDOProxy $pdo, \Redis $redis): Database 
     {
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($pdo), $cache);
