@@ -127,8 +127,7 @@ class DatabasePool {
         }
 
         $pdo = $this->getPDO($this->consoleDB);
-        $cache = new Cache(new RedisCache($redis));
-        $database = new Database(new MariaDB($pdo), $cache);
+        $database = $this->getDatabase($pdo, $redis);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $namespace = "_console";
         $database->setNamespace($namespace);
@@ -158,8 +157,7 @@ class DatabasePool {
 
         /** Get a PDO instance using the databse name */
         $pdo = $this->getPDO($name);
-        $cache = new Cache(new RedisCache($redis));
-        $database = new Database(new MariaDB($pdo), $cache);
+        $database = $this->getDatabase($pdo, $redis);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $namespace = "_$internalID";
         $database->setNamespace($namespace);
@@ -167,6 +165,20 @@ class DatabasePool {
         return $database;
     }
 
+    /**
+     * Get a database instance from a PDO and cache 
+     * 
+     * @param PDO $pdo
+     * @param \Redis $redis
+     * 
+     * @return Database
+     */
+    private function getDatabase(PDO $pdo, \Redis $redis): Database 
+    {
+        $cache = new Cache(new RedisCache($redis));
+        $database = new Database(new MariaDB($pdo), $cache);
+        return $database;
+    }
 
     // private function attemptConnection(PDO|PDOProxy $pdo, ?string $namespace, \Redis $cache): Database 
     // {
@@ -192,8 +204,7 @@ class DatabasePool {
             try {
                 $attempts++;
                 $pdo = $pool->get();
-                $cache = new Cache(new RedisCache($redis));
-                $database = new Database(new MariaDB($pdo), $cache);
+                $database = $this->getDatabase($pdo, $redis);
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                 $database->setNamespace($namespace);
 
@@ -233,8 +244,7 @@ class DatabasePool {
             try {
                 $attempts++;
                 $pdo = $pool->get();
-                $cache = new Cache(new RedisCache($redis));
-                $database = new Database(new MariaDB($pdo), $cache);
+                $database = $this->getDatabase($pdo, $redis);
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
                 // if (!$database->exists($database->getDefaultDatabase(), 'metadata')) {
@@ -276,10 +286,6 @@ class DatabasePool {
         $pool->put($db);
     }
 
-    // /**
-    //  * Convenience methods for console DB
-    //  */
-
     /**
      * Function to get the name of the console DB
      * 
@@ -293,46 +299,4 @@ class DatabasePool {
 
         return $this->consoleDB;
     }
-
-    // /**
-    //  * Function to get an instance of the console DB from the database pool
-    //  * 
-    //  * @return ?PDOProxy
-    //  */
-    // public function getConsoleDBFromPool(): ?PDOProxy
-    // {
-    //     if (empty($this->consoleDB)) {
-    //         throw new Exception("Console DB not set", 500);
-    //     }
-
-    //     return $this->getDBFromPool($this->consoleDB);
-    // }
-
-    // /**
-    //  * Return the console DB back to the console database pool
-    //  *
-    //  * @param PDOProxy $db
-    //  * 
-    //  * @return void
-    //  */
-    // public function putConsoleDB(PDOProxy $db): void
-    // {
-    //    $this->put($db, $this->consoleDB);
-    // }
-
-    // /**
-    //  * Function to set the name of the console database
-    //  * 
-    //  * @param string $consoleDB
-    //  * 
-    //  * @return void
-    //  */
-    // public function setConsoleDB(string $consoleDB): void
-    // {
-    //     if(!isset($this->pools[$consoleDB])) {
-    //         throw new Exception("Console DB with name : $consoleDB not found. Add it using ", 500);
-    //     }
-        
-    //     $this->consoleDB = $consoleDB;
-    // }
 }
