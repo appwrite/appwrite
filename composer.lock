@@ -2446,7 +2446,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "7a4c9b48b3ad06fb850cf8394c671603223bc872"
+                "reference": "4327c4cbaafc39cd94ec4d977cbdc25c8e9df613"
             },
             "require": {
                 "ext-json": "*",
@@ -2495,7 +2495,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-07-14T02:00:12+00:00"
+            "time": "2022-07-14T07:30:15+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -5437,5 +5437,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
