@@ -24,20 +24,6 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            provider: 'GoogleAnalytics',
-            event: activity,
-            additionalData: null,
-            url: window.location.href
-          })
-        });
-
-        fetch('https://stats.appwrite.org/v1/analytics', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            provider: 'Plausible',
             event: activity,
             additionalData: null,
             url: window.location.href
