@@ -77,6 +77,8 @@ class DatabaseV1 extends Worker
          * Fetch attribute from the database, since with Resque float values are loosing informations.
          */
         $attribute = $dbForProject->getDocument('attributes', $attribute->getId());
+        var_dump($attribute);
+        var_dump($attribute->getId());
 
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
@@ -97,6 +99,8 @@ class DatabaseV1 extends Worker
             }
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (\Throwable $th) {
+            var_dump($th->getTraceAsString());
+            var_dump($attribute->getArrayCopy());
             Console::error($th->getMessage());
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
         } finally {

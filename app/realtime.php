@@ -93,63 +93,15 @@ $logError = function (Throwable $error, string $action) use ($register) {
 
 $server->error($logError);
 
-function getDatabase(Registry &$register, string $namespace)
+function getDatabase(Registry &$register, string $projectID)
 {
-
     $redis = $register->get('redisPool')->get();
-    $cache = new Cache(new RedisCache($redis));
-
-    $consoleDB = $register->get('dbPool')->getConsoleDBFromPool();
-    $db = $consoleDB;
-    $dbName = '';
-
-    if ($namespace != '_console') {
-        $cache = new Cache(new RedisCache($redis));
-        $database = new Database(new MariaDB($consoleDB), $cache);
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace('_console'); // Main DB
-
-        $project = $database->getDocument('projects', ltrim($namespace, '_'));
-        $dbName = $project->getAttribute('database', '');
-        if (!empty($dbName)) {
-            $projectDB = $register->get('dbPool')->getDBFromPool($dbName);
-            $db = $projectDB;
-        }
-    }
-
-    $attempts = 0;
-    
-    do {
-        try {
-            $attempts++;
-
-            $database = new Database(new MariaDB($db), $cache);
-            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-            $database->setNamespace($namespace);
-
-            if (!$database->exists($database->getDefaultDatabase(), 'realtime')) {
-                throw new Exception('Collection not ready');
-            }
-
-            break; // leave loop if successful
-        } catch (\Throwable $e) {
-            Console::warning("Database not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-            }
-            sleep(DATABASE_RECONNECT_SLEEP);
-        }
-    } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
+    [$database, $returnDatabase] = $register->get('dbPool')->getDBFromPool($projectID, $redis);
 
     return [
         $database,
-        function () use ($register, $db, $dbName, $redis) {
-            if (empty($dbName)) {
-                $register->get('dbPool')->putConsoleDb($db);
-            } else {
-                $register->get('dbPool')->put($db, $dbName);
-            }
-
+        function () use ($register, $returnDatabase, $redis) {
+            call_user_func($returnDatabase);
             $register->get('redisPool')->put($redis);
         }
     ];
@@ -164,7 +116,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     go(function () use ($register, $containerId, &$statsDocument) {
         $attempts = 0;
-        [$database, $returnDatabase] = getDatabase($register, '_console');
+        [$database, $returnDatabase] = getDatabase($register, 'console');
         do {
             try {
                 $attempts++;
@@ -201,7 +153,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
         }
 
         try {
-            [$database, $returnDatabase] = getDatabase($register, '_console');
+            [$database, $returnDatabase] = getDatabase($register, 'console');
 
             $statsDocument
                 ->setAttribute('timestamp', time())
@@ -227,7 +179,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
          * Sending current connections to project channels on the console project every 5 seconds.
          */
         if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
-            [$database, $returnDatabase] = getDatabase($register, '_console');
+            [$database, $returnDatabase] = getDatabase($register, 'console');
 
             $payload = [];
 
@@ -327,9 +279,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
-                        [$consoleDatabase, $returnConsoleDatabase] = getDatabase($register, '_console');
+                        [$consoleDatabase, $returnConsoleDatabase] = getDatabase($register, 'console');
                         $project = Authorization::skip(fn() => $consoleDatabase->getDocument('projects', $projectId));
-                        [$database, $returnDatabase] = getDatabase($register, "_{$project->getInternalId()}");
+                        [$database, $returnDatabase] = getDatabase($register, $project->getId());
 
                         $user = $database->getDocument('users', $userId);
 

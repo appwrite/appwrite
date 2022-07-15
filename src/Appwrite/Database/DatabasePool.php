@@ -72,6 +72,11 @@ class DatabasePool {
                 ->withPassword($dsn->getPassword())
                 ->withOptions([
                     PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+                    PDO::ATTR_TIMEOUT => 3, // Seconds
+                    PDO::ATTR_PERSISTENT => true,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => true,
+                    PDO::ATTR_STRINGIFY_FETCHES => true
                 ]),
                 64
             );
@@ -86,7 +91,7 @@ class DatabasePool {
      * @param string $name
      * @return ?PDO
      */
-    private function getPDO(string $name): ?PDO
+    public function getPDO(string $name): ?PDO
     {
         $dsn = $this->dsns[$name] ?? throw new Exception("Database with name : $name not found.", 500);
 
@@ -125,8 +130,9 @@ class DatabasePool {
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($pdo), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_console");
-        
+        $namespace = "_project_console";
+        $database->setNamespace($namespace);
+
         $project = Authorization::skip(fn() => $database->getDocument('projects', $projectID));
         $internalID = $project->getInternalId();
         $database = $project->getAttribute('database', '');
@@ -141,7 +147,7 @@ class DatabasePool {
      * 
      * @return ?Database
      */
-    public function getDB(string $projectID, \Redis $redis): ?Database
+    public function getDB(string $projectID, ?\Redis $redis): ?Database
     {
         /** Get DB name from the console database */
         [$name, $internalID] = $this->getName($projectID, $redis);
@@ -155,7 +161,8 @@ class DatabasePool {
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($pdo), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_{$internalID}");
+        $namespace = "_project_$internalID";
+        $database->setNamespace($namespace);
 
         return $database;
     }
@@ -179,7 +186,7 @@ class DatabasePool {
         [$name, $internalID] = $this->getName($projectID, $redis);
         $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_PROJECT_DB in .env", 500);
         
-        $namespace = "_$internalID";
+        $namespace = "_project_$internalID";
         $attempts = 0;
         do {
             try {
@@ -273,19 +280,19 @@ class DatabasePool {
     //  * Convenience methods for console DB
     //  */
 
-    // /**
-    //  * Function to get a single instace of the console DB
-    //  * 
-    //  * @return ?PDO
-    //  */
-    // public function getConsoleDB(): ?PDO
-    // {
-    //     if (empty($this->consoleDB)) {
-    //         throw new Exception('Console DB is not defined', 500);
-    //     };
+    /**
+     * Function to get the name of the console DB
+     * 
+     * @return ?string
+     */
+    public function getConsoleDB(): ?string
+    {
+        if (empty($this->consoleDB)) {
+            throw new Exception('Console DB is not defined', 500);
+        };
 
-    //     return $this->getDB($this->consoleDB);
-    // }
+        return $this->consoleDB;
+    }
 
     // /**
     //  * Function to get an instance of the console DB from the database pool

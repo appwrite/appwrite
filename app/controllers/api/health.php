@@ -64,7 +64,10 @@ App::get('/v1/health/db')
         $checkStart = \microtime(true);
 
         try {
-            $consoleDB = $utopia->getResource('consoleDB'); /* @var $db PDO */
+            $dbPool = $utopia->getResource('dbPool');
+            $name = $dbPool->getConsoleDB();
+            /* @var $consoleDB PDO */
+            $consoleDB = $dbPool->getPDO($name);
 
             // Run a small test to check the connection
             $statement = $consoleDB->prepare("SELECT 1;");
