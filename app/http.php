@@ -63,34 +63,34 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         App::setResource('cache', fn() => $redis);
 
         $dbPool = $register->get('dbPool');
-        [$dbForConsole, $returnDatabase] = $dbPool->getDBFromPool('console', $redis);
-        App::setResource('dbForConsole', fn() => $dbForConsole);
+        [$database, $returnDatabase] = $dbPool->getDBFromPool('console', $redis);
+        App::setResource('dbForConsole', fn() => $database);
 
         Console::success('[Setup] - Server database init started...');
         $collections = Config::getParam('collections', []); /** @var array $collections */
 
-        if (!$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
+        if (!$database->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
             $redis->flushAll();
 
             Console::success('[Setup] - Creating database: appwrite...');
 
-            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $database->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         }
 
         try {
             Console::success('[Setup] - Creating metadata table: appwrite...');
-            $dbForConsole->createMetadata();
+            $database->createMetadata();
         } catch (\Throwable $th) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }
 
-        if ($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
-            $audit = new Audit($dbForConsole);
+        if ($database->getCollection(Audit::COLLECTION)->isEmpty()) {
+            $audit = new Audit($database);
             $audit->setup();
         }
 
-        if ($dbForConsole->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
-            $adapter = new TimeLimit("", 0, 1, $dbForConsole);
+        if ($database->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
+            $adapter = new TimeLimit("", 0, 1, $database);
             $adapter->setup();
         }
 
@@ -98,7 +98,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
-            if (!$dbForConsole->getCollection($key)->isEmpty()) {
+            if (!$database->getCollection($key)->isEmpty()) {
                 continue;
             }
             Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
@@ -130,12 +130,12 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 ]);
             }
 
-            $dbForConsole->createCollection($key, $attributes, $indexes);
+            $database->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty()) {
+        if ($database->getDocument('buckets', 'default')->isEmpty()) {
             Console::success('[Setup] - Creating default bucket...');
-            $dbForConsole->createDocument('buckets', new Document([
+            $database->createDocument('buckets', new Document([
                 '$id' => 'default',
                 '$collection' => 'buckets',
                 'name' => 'Default',
@@ -150,7 +150,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 'search' => 'buckets Default',
             ]));
 
-            $bucket = $dbForConsole->getDocument('buckets', 'default');
+            $bucket = $database->getDocument('buckets', 'default');
 
             Console::success('[Setup] - Creating files collection for default bucket...');
             $files = $collections['files'] ?? [];
@@ -185,7 +185,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 ]);
             }
 
-            $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+            $database->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         }
 
         call_user_func($returnDatabase);
