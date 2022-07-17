@@ -15,8 +15,10 @@ use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
 use Throwable;
 
-abstract class Action extends PlatformAction {
-    protected function logError(Registry $register, Throwable $error, string $action = 'syncUsageStats') {
+abstract class Action extends PlatformAction
+{
+    protected function logError(Registry $register, Throwable $error, string $action = 'syncUsageStats')
+    {
         $logger = $register->get('logger');
 
         if ($logger) {
