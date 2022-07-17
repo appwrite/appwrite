@@ -465,6 +465,7 @@ class UsageTest extends Scope
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -474,9 +475,19 @@ class UsageTest extends Scope
         $this->assertIsInt($deployment['body']['$createdAt']);
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
-        
         // Wait for deployment to build.
         sleep(30);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsInt($response['body']['$createdAt']);
+        $this->assertIsInt($response['body']['$updatedAt']);
+        $this->assertEquals($deploymentId, $response['body']['deployment']);
         
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -488,11 +499,37 @@ class UsageTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertEquals($functionId, $execution['body']['functionId']);
-        $compute += $execution['time'];
+        $compute += $execution['body']['time'] * 1000;
+        $executions++;
+        
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => true,
+        ]);
+        
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+        $this->assertEquals($functionId, $execution['body']['functionId']);
+        $executionId = $execution['body']['$id'];
         $executions++;
 
-        sleep(35);
-        // TEST usage stats
+        //wait for execution to complete
+        sleep(10);
+        
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        
+        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals($executionId, $execution['body']['$id']);
+        $this->assertEquals($functionId, $execution['body']['functionId']);
+
+        $compute += $execution['body']['time'] * 1000;
+
+        sleep(45);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
             'content-type' => 'application/json',
@@ -507,9 +544,10 @@ class UsageTest extends Scope
         $this->assertIsArray($response['body']['functionsExecutions']);
         $this->assertIsArray($response['body']['functionsFailures']);
         $this->assertIsArray($response['body']['functionsCompute']);
+        $response = $response['body'];
 
         $this->assertEquals($executions, $response['functionsExecutions'][array_key_last($response['functionsExecutions'])]['value']);
-        $this->assertEquals($compute, $response['functionsCompute'][array_key_last($response['functionsCompute'])]['value']);
+        $this->assertGreaterThan($compute, $response['functionsCompute'][array_key_last($response['functionsCompute'])]['value']);
         $this->assertEquals($failures, $response['functionsFailures'][array_key_last($response['functionsFailures'])]['value']);
 
     }
