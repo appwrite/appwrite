@@ -291,12 +291,6 @@ App::get('/v1/functions/usage')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
-        $function = $dbForProject->getDocument('functions', $functionId);
-
-        if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
-        }
-
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
