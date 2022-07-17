@@ -234,7 +234,7 @@ class UsageDB extends Usage
         $executionTotal = $this->sum($projectId, 'executions', 'time', 'functions.executionTime');
         $buildTotal = $this->sum($projectId, 'builds', 'duration', 'functions.buildTime');
 
-        $this->createOrUpdateMetric($projectId, 'functions.compute', $executionTotal + $buildTotal);
+        $this->createOrUpdateMetric($projectId, 'functions.compute', ($executionTotal * 1000) + ($buildTotal * 1000)); //in ms
     }
 
     /**

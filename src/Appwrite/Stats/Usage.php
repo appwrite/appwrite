@@ -177,6 +177,18 @@ class Usage
         'users.sessions.delete' => [
             'table' => 'appwrite_usage_users_sessions_delete',
         ],
+        'functions.executions' => [
+            'table' => 'appwrite_usage_functions_executions_all',
+        ],
+        'functions.builds' => [
+            'table' => 'appwrite_usage_functions_builds_all',
+        ],
+        'functions.failures' => [
+            'table' => 'appwrite_usage_functions_executions_all',
+            'filters' => [
+                'functionStatus' => 'failed',
+            ],
+        ],
         'functions.functionId.executions' => [
             'table' => 'appwrite_usage_functions_executions_all',
             'groupBy' => ['functionId'],

@@ -184,7 +184,7 @@ App::get('/v1/functions/:functionId/usage')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getUsage')
+    ->label('sdk.method', 'getFunctionUsage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
@@ -270,6 +270,107 @@ App::get('/v1/functions/:functionId/usage')
                 'functionsExecutions' => $stats["functions.$functionId.executions"],
                 'functionsFailures' => $stats["functions.$functionId.failures"],
                 'functionsCompute' => $stats["functions.$functionId.compute"]
+            ]);
+        }
+
+        $response->dynamic($usage, Response::MODEL_USAGE_FUNCTION);
+    });
+
+App::get('/v1/functions/usage')
+    ->desc('Get Function Usage')
+    ->groups(['api', 'functions'])
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject) {
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $periods = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            $metrics = [
+                "functions.executions",
+                "functions.failures",
+                "functions.executionTime",
+                "functions.buildTime",
+                "functions.compute"
+            ];
+
+            $stats = [];
+
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
+                    $requestDocs = $dbForProject->find('stats', [
+                        new Query('period', Query::TYPE_EQUAL, [$period]),
+                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }
+            });
+
+            $usage = new Document([
+                'range' => $range,
+                'functionsExecutions' => $stats["functions.executions"],
+                'functionsFailures' => $stats["functions.failures"],
+                'functionsCompute' => $stats["functions.compute"],
+                'functionsExecutionTime' => $stats["functions.executionTime"],
+                'functionsBuildTime' => $stats["functions.buildTime"]
             ]);
         }
 
