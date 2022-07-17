@@ -6,6 +6,7 @@ use Appwrite\Auth\Phone\Telesign;
 use Appwrite\Auth\Phone\TextMagic;
 use Appwrite\Auth\Phone\Twilio;
 use Appwrite\Auth\Phone\Msg91;
+use Appwrite\Auth\Phone\Vonage;
 use Appwrite\DSN\DSN;
 use Appwrite\Resque\Worker;
 use Utopia\App;
@@ -38,6 +39,7 @@ class MessagingV1 extends Worker
             'text-magic' => new TextMagic($user, $secret),
             'telesign' => new Telesign($user, $secret),
             'msg91' => new Msg91($user, $secret),
+            'vonage' => new Vonage($user, $secret),
             default => null
         };
 
