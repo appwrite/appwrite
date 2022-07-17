@@ -113,7 +113,7 @@ App::post('/v1/projects')
         $collections = Config::getParam('collections', []);
 
         $dbForProject->setNamespace("_{$project->getInternalId()}");
-        $dbForProject->create('appwrite');
+        $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
         $audit = new Audit($dbForProject);
         $audit->setup();

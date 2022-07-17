@@ -83,7 +83,7 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $log = new Log();
-        $log->setNamespace("realtime");
+        $log->setNamespace("usage");
         $log->setServer(\gethostname());
         $log->setVersion($version);
         $log->setType(Log::TYPE_ERROR);

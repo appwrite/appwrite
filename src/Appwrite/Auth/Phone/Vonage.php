@@ -5,35 +5,37 @@ namespace Appwrite\Auth\Phone;
 use Appwrite\Auth\Phone;
 
 // Reference Material
-// https://developer.telesign.com/enterprise/docs/sms-api-send-an-sms
+// https://developer.vonage.com/api/sms
 
-class Telesign extends Phone
+class Vonage extends Phone
 {
     /**
      * @var string
      */
-    private string $endpoint = 'https://rest-api.telesign.com/v1/messaging';
+    private string $endpoint = 'https://rest.nexmo.com/sms/json';
 
     /**
      * @param string $from
      * @param string $to
      * @param string $message
      * @return void
-     * @throws \Appwrite\Extend\Exception
      */
     public function send(string $from, string $to, string $message): void
     {
         $to = ltrim($to, '+');
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
 
         $this->request(
             method: 'POST',
             url: $this->endpoint,
+            headers: $headers,
             payload: \http_build_query([
-                'message' => $message,
-                'message_type' => 'otp',
-                'phone_number' => $to
-            ]),
-            userpwd: "{$this->user}:{$this->secret}"
+                'text' => $message,
+                'from' => $from,
+                'to' => $to,
+                'api_key' => $this->user,
+                'api_secret' => $this->secret
+            ])
         );
     }
 }

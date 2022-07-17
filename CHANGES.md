@@ -1,3 +1,23 @@
+# Version 0.15.2
+## Bugs
+- Fixed Realtime Authentication for the Console by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3506
+- Fixed Collection Usage by @stnguyen90 in https://github.com/appwrite/appwrite/pull/3505
+- Fixed `$createdAt` after updating document by @Meldiron in https://github.com/appwrite/appwrite/pull/3498
+- Fixed Redirect after deleting Collection in Console @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3476
+- Fixed broken Link for Documents under Collections by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3469
+
+# Version 0.15.1
+## Bugs
+- Fixed SMS for `createVerification` by @christyjacob4 in https://github.com/appwrite/appwrite/pull/3454
+- Fixed missing Attributes when creating an Index by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3461
+- Fixed broken Link for Documents under Collections by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3461
+- Fixed all `$createdAt` and `$updatedAt` occurences in the UI by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3461
+- Fixed Delete Document from the UI by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3463
+- Fixed internal Attribute and Index key on Migration by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3455
+
+## Docs
+- Updated Phone Authentication by @christyjacob4 in https://github.com/appwrite/appwrite/pull/3456
+
 # Version 0.15.0
 
 ## BREAKING CHANGES
@@ -14,8 +34,8 @@
   - `collections.[COLLECTION_ID]` is now `databases.[DATABASE_ID].collections.[COLLECTION_ID]`
   - `collections.[COLLECTION_ID].documents.[DOCUMENT_ID]` is now `databases.[DATABASE_ID].collections.[COLLECTION_ID].documents.[DOCUMENT_ID]`
 - Following Realtime Channels are changed:
-  - `collections.[COLLECTION_ID]` is now `databases.[DATABASE_ID].ollections.[COLLECTION_ID]`
-  - `collections.[COLLECTION_ID].documents` is now `databases.[DATABASE_ID].ollections.[COLLECTION_ID].documents`
+  - `collections.[COLLECTION_ID]` is now `databases.[DATABASE_ID].collections.[COLLECTION_ID]`
+  - `collections.[COLLECTION_ID].documents` is now `databases.[DATABASE_ID].collections.[COLLECTION_ID].documents`
 - After Migration a Database called `default` is created for all your existing Database Collections
 
 ## Features
