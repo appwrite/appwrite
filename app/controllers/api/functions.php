@@ -289,7 +289,7 @@ App::get('/v1/functions/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject) {
+    ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
