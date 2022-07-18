@@ -22,7 +22,7 @@ class TypeRegistry
 
     /**
      * Initialize the type registry for the given set of models.
-     * 
+     *
      * @param array<Model> $models
      */
     public static function init(array $models): void
@@ -114,7 +114,7 @@ class TypeRegistry
             $fields['data'] = [
                 'type' => Type::string(),
                 'description' => 'Data field',
-                'resolve' => fn($object, $args, $context, $info) => \json_encode($object, JSON_FORCE_OBJECT),
+                'resolve' => static fn($object, $args, $context, $info) => \json_encode($object, JSON_FORCE_OBJECT),
             ];
         }
 
@@ -144,7 +144,7 @@ class TypeRegistry
                 $fields[$escapedKey] = [
                     'type' => $type,
                     'description' => $props['description'],
-                    'resolve' => fn($object, $args, $context, $info) => $object[$key],
+                    'resolve' => static fn($object, $args, $context, $info) => $object[$key],
                 ];
             }
         }

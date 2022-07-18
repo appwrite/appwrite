@@ -44,7 +44,7 @@ class GraphQLAbuseTest extends Scope
         ], $this->getHeaders()), $graphQLPayload);
 
         \var_dump($response);
-        
+
         $this->assertEquals('Too many queries.', $response['body']['message']);
     }
 

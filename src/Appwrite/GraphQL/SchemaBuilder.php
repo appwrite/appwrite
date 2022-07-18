@@ -24,7 +24,7 @@ class SchemaBuilder
         App $utopia,
         Database $dbForProject
     ): Schema {
-        App::setResource('current', fn() => $utopia);
+        App::setResource('current', static fn() => $utopia);
 
         $start = microtime(true);
         $register = $utopia->getResource('register');
@@ -49,7 +49,7 @@ class SchemaBuilder
 
         self::printBuildTimeFrom($start);
 
-        $register->set('fullSchema', fn() => $schema);
+        $register->set('fullSchema', static fn() => $schema);
 
         return $schema;
     }
@@ -81,7 +81,7 @@ class SchemaBuilder
                 }
                 $namespace = $route->getLabel('sdk.namespace', '');
                 $methodName = $namespace . \ucfirst($route->getLabel('sdk.method', ''));
-                $responseModelNames = $route->getLabel('sdk.response.model', "none");
+                $responseModelNames = $route->getLabel('sdk.response.model', 'none');
                 $responseModels = \is_array($responseModelNames)
                     ? \array_map(static fn($m) => $models[$m], $responseModelNames)
                     : [$models[$responseModelNames]];
@@ -275,8 +275,8 @@ class SchemaBuilder
             $apiSchema = $register->get('apiSchema');
         } else {
             $apiSchema = self::buildAPISchema($utopia);
-            $register->set('apiSchema', fn() => $apiSchema);
-            $register->set('apiSchemaVersion', fn() => $envVersion);
+            $register->set('apiSchema', static fn() => $apiSchema);
+            $register->set('apiSchemaVersion', static fn() => $envVersion);
         }
         return $apiSchema;
     }
@@ -291,8 +291,8 @@ class SchemaBuilder
             $collectionSchema = $register->get('collectionSchema');
         } else {
             $collectionSchema = self::buildCollectionSchema($utopia, $dbForProject);
-            $register->set('collectionSchema', fn() => $collectionSchema);
-            $register->set('schemaDirty', fn() => false);
+            $register->set('collectionSchema', static fn() => $collectionSchema);
+            $register->set('schemaDirty', static fn() => false);
         }
         return $collectionSchema;
     }

@@ -23,7 +23,7 @@ class Resolvers
         App $utopia,
         ?Route $route,
     ): callable {
-        return fn($type, $args, $context, $info) => new CoroutinePromise(
+        return static fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $route, $args, $context, $info) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
@@ -68,7 +68,7 @@ class Resolvers
         string $databaseId,
         string $collectionId
     ): callable {
-        return fn($type, $args, $context, $info) => new CoroutinePromise(
+        return static fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
@@ -103,7 +103,7 @@ class Resolvers
         string $databaseId,
         string $collectionId,
     ): callable {
-        return fn($type, $args, $context, $info) => new CoroutinePromise(
+        return static fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
@@ -145,7 +145,7 @@ class Resolvers
         string $collectionId,
         string $method,
     ): callable {
-        return fn($type, $args, $context, $info) => new CoroutinePromise(
+        return static fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $method, $type, $args) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
@@ -193,7 +193,7 @@ class Resolvers
         string $databaseId,
         string $collectionId
     ): callable {
-        return fn($type, $args, $context, $info) => new CoroutinePromise(
+        return static fn($type, $args, $context, $info) => new CoroutinePromise(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
@@ -235,7 +235,7 @@ class Resolvers
         }
 
         $request = new Request($request->getSwoole());
-        $utopia->setResource('request', fn() => $request);
+        $utopia->setResource('request', static fn() => $request);
         $response->setContentType(Response::CONTENT_TYPE_NULL);
 
         try {
