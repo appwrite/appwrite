@@ -161,7 +161,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
             <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
 
             <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
-                data-service="functions.getFunctionUsage"
+                data-service="functions.getUsage"
                 data-event="submit"
                 data-name="usage"
                 data-param-range="24h">
