@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2fd5f977b2e1f35e968a03dc9f0aefe8",
+    "content-hash": "46322a96c520e8b5c11040dec5f41620",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2169,22 +2169,23 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-feat-graphql-helpers",
+            "version": "dev-feat-unkeyed-full-body-params",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "5c1ef70c7134b4c1f3907143c78718173cf20bd1"
+                "reference": "f55faa8d4858844291d0b16788cd5b0c540eaef7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/5c1ef70c7134b4c1f3907143c78718173cf20bd1",
-                "reference": "5c1ef70c7134b4c1f3907143c78718173cf20bd1",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/f55faa8d4858844291d0b16788cd5b0c540eaef7",
+                "reference": "f55faa8d4858844291d0b16788cd5b0c540eaef7",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0.0"
             },
             "require-dev": {
+                "ext-curl": "*",
                 "phpunit/phpunit": "^9.5.10",
                 "vimeo/psalm": "4.13.1"
             },
@@ -2212,9 +2213,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/feat-graphql-helpers"
+                "source": "https://github.com/utopia-php/framework/tree/feat-unkeyed-full-body-params"
             },
-            "time": "2022-07-18T02:13:04+00:00"
+            "time": "2022-07-18T07:12:16+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5415,7 +5416,7 @@
     "aliases": [
         {
             "package": "utopia-php/framework",
-            "version": "dev-feat-graphql-helpers",
+            "version": "dev-feat-unkeyed-full-body-params",
             "alias": "0.19.2",
             "alias_normalized": "0.19.2.0"
         }
