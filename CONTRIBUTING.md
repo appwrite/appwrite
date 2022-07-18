@@ -317,8 +317,8 @@ The Runtimes for all supported cloud functions (multicore builds) can be found a
 
 For generating a new console SDK follow the next steps:
 
-1. Update the console spec file located at `app/config/specs/swagger2-<version-number>.console.json` using the Appwrite CLI tools. Run the `php app/cli.php specs <version-number> normal` command in a running `appwrite/appwrite` container..
-2. Generate a new SDK using the command `php app/cli.php sdks `
+1. Update the console spec file located at `app/config/specs/swagger2-<version-number>.console.json` using Appwrite Tasks. Run the `php app/cli.php specs <version-number> normal` command in a running `appwrite/appwrite` container.
+2. Generate a new SDK using the command `php app/cli.php sdks`
 3. Change your working dir using `cd app/sdks/console-web`
 4. Build the new SDK `npm run build`
 5. Copy `iife/sdk.js` to `appwrite.js`
