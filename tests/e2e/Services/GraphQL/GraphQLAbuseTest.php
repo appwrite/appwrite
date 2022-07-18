@@ -17,7 +17,7 @@ class GraphQLAbuseTest extends Scope
     public function testComplexQueryBlocked()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$COMPLEX_QUERY);
+        $query = $this->getQuery(self::$CREATE_DATABASE_STACK);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [

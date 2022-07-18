@@ -109,17 +109,17 @@ trait GraphQLBase
 
     // Functions
     public static string $CREATE_FUNCTION = 'create_function';
-    public static string $CREATE_DEPLOYMENT = 'create_deployment';
     public static string $GET_FUNCTIONS = 'list_functions';
     public static string $GET_FUNCTION = 'get_function';
-    public static string $GET_DEPLOYMENTS = 'list_deployments';
-    public static string $GET_DEPLOYMENT = 'get_deployment';
     public static string $GET_RUNTIMES = 'list_runtimes';
     public static string $UPDATE_FUNCTION = 'update_function';
-    public static string $UPDATE_FUNCTION_DEPLOYMENT = 'update_function_deployment';
     public static string $DELETE_FUNCTION = 'delete_function';
+    //Deployments
+    public static string $CREATE_DEPLOYMENT = 'create_deployment';
+    public static string $GET_DEPLOYMENTS = 'list_deployments';
+    public static string $GET_DEPLOYMENT = 'get_deployment';
+    public static string $UPDATE_DEPLOYMENT = 'update_deployment';
     public static string $DELETE_DEPLOYMENT = 'delete_deployment';
-
     // Executions
     public static string $GET_EXECUTIONS = 'list_executions';
     public static string $GET_EXECUTION = 'get_execution';
@@ -133,7 +133,6 @@ trait GraphQLBase
     public static string $GET_BUCKET = 'get_bucket';
     public static string $UPDATE_BUCKET = 'update_bucket';
     public static string $DELETE_BUCKET = 'delete_bucket';
-
     // Files
     public static string $CREATE_FILE = 'create_file';
     public static string $GET_FILES = 'list_files';
@@ -174,7 +173,8 @@ trait GraphQLBase
     public static string $GET_QRCODE = 'get_qrcode';
     public static string $GET_USER_INITIALS = 'get_user_initials';
 
-    public static string $COMPLEX_QUERY = 'complex_query';
+    // Complex queries
+    public static string $CREATE_DATABASE_STACK = 'complex_query';
 
     public function getQuery(string $name): string
     {
@@ -1130,7 +1130,7 @@ trait GraphQLBase
                         execute
                     }
                 }';
-            case self::$UPDATE_FUNCTION_DEPLOYMENT:
+            case self::$UPDATE_DEPLOYMENT:
                 return 'mutation updateFunctionDeployment($functionId: String!, $deploymentId: String!) {
                     functionsUpdateDeployment(functionId: $functionId, deploymentId: $deploymentId) {
                         _id
@@ -1348,7 +1348,7 @@ trait GraphQLBase
                         status
                     }
                 }';
-            case self::$COMPLEX_QUERY:
+            case self::$CREATE_DATABASE_STACK:
                 return 'mutation complex($databaseId: String!, $databaseName: String!, $collectionId: String!, $collectionName: String!, $collectionPermission: String!, $collectionRead: [String!]!, $collectionWrite: [String!]!) {
                     databasesCreate(databaseId: $databaseId, name: $databaseName) {
                         _id

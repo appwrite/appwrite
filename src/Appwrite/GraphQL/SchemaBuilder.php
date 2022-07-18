@@ -25,8 +25,7 @@ class SchemaBuilder
         Database $dbForProject
     ): Schema {
         App::setResource('current', static fn() => $utopia);
-
-        $start = microtime(true);
+        
         $register = $utopia->getResource('register');
         $envVersion = App::getEnv('_APP_VERSION');
         $schemaVersion = $register->has('apiSchemaVersion') ? $register->get('apiSchemaVersion') : '';
@@ -38,16 +37,12 @@ class SchemaBuilder
             && !$apiSchemaDirty
             && $register->has('fullSchema')
         ) {
-            self::printBuildTimeFrom($start);
-
             return $register->get('fullSchema');
         }
 
         $apiSchema = self::getApiSchema($utopia, $register, $apiSchemaDirty, $envVersion);
         $collectionSchema = self::getCollectionSchema($utopia, $register, $dbForProject, $collectionSchemaDirty);
         $schema = self::collateSchema($apiSchema, $collectionSchema);
-
-        self::printBuildTimeFrom($start);
 
         $register->set('fullSchema', static fn() => $schema);
 
@@ -128,8 +123,6 @@ class SchemaBuilder
                 }
             }
         }
-
-        self::printBuildTimeFrom($start, 'REST API');
 
         return [
             'query' => $queryFields,
@@ -258,8 +251,6 @@ class SchemaBuilder
         }
         $wg->wait();
 
-        self::printBuildTimeFrom($start, 'Project Collections');
-
         return [
             'query' => $queryFields,
             'mutation' => $mutationFields
@@ -318,16 +309,5 @@ class SchemaBuilder
                 'fields' => $mutationFields
             ])
         ]);
-    }
-
-    /**
-     * @param $start
-     * @return void
-     */
-    private static function printBuildTimeFrom($start, $type = ''): void
-    {
-        $timeElapsedMillis = (\microtime(true) - $start) * 1000;
-        $timeElapsedMillis = \number_format((float)$timeElapsedMillis, 3, '.', '');
-        Console::info('[INFO] Built GraphQL ' . $type . 'Schema in ' . $timeElapsedMillis . 'ms');
     }
 }
