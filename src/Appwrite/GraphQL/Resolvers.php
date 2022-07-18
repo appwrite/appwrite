@@ -32,7 +32,9 @@ class Resolvers
 
                 $path = $route->getPath();
                 foreach ($args as $key => $value) {
-                    $path = \str_replace(':' . $key, $value, $path);
+                    if (\str_contains($path, $key)) {
+                        $path = \str_replace(':' . $key, $value, $path);
+                    }
                 }
 
                 $swoole->server['request_method'] = $route->getMethod();
