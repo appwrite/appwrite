@@ -116,7 +116,7 @@ Choose from one of the providers below:
     </td>
     <td align="center" width="100" height="100">
       <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
-        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="DigitalOcean Logo" />
+        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
           <br /><sub><b>Gitpod</b></sub></a>    
       </a>
     </td>
