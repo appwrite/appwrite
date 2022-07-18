@@ -444,8 +444,8 @@ class GraphQLAccountTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
+        $this->assertIsNotArray($account['body']);
         $this->assertEquals(204, $account['headers']['status-code']);
-        $this->assertEmpty($account['body']);
 
         unset(self::$user[$this->getProject()['$id']]);
         $this->getUser();
@@ -469,6 +469,7 @@ class GraphQLAccountTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
+        $this->assertIsNotArray($account['body']);
         $this->assertEquals(204, $account['headers']['status-code']);
 
         unset(self::$user[$this->getProject()['$id']]);

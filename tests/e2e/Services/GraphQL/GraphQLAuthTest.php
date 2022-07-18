@@ -235,6 +235,7 @@ class GraphQLAuthTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
         ], $gqlPayload);
 
+        $this->assertIsNotArray($document['body']);
         $this->assertEquals(204, $document['headers']['status-code']);
     }
 }

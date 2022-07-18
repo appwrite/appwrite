@@ -32,7 +32,7 @@ class Resolvers
 
                 $path = $route->getPath();
                 foreach ($args as $key => $value) {
-                    if (\str_contains($path, $key)) {
+                    if (\str_contains($path, '/:' . $key)) {
                         $path = \str_replace(':' . $key, $value, $path);
                     }
                 }

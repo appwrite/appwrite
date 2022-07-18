@@ -838,7 +838,7 @@ return [
             'variables' => [
                 [
                     'name' => '_APP_GRAPHQL_MAX_BATCH_SIZE',
-                    'description' => 'Maximum number of batched queries per request. The default value is 50.',
+                    'description' => 'Maximum number of batched queries per request. The default value is 10.',
                     'introduction' => '0.17.0',
                     'default' => '10',
                     'required' => false,
@@ -847,7 +847,7 @@ return [
                 ],
                 [
                     'name' => '_APP_GRAPHQL_MAX_COMPLEXITY',
-                    'description' => 'Maximum complexity of a GraphQL query. The default value is 200.',
+                    'description' => 'Maximum complexity of a GraphQL query. The default value is 50.',
                     'introduction' => '0.17.0',
                     'default' => '50',
                     'required' => false,

@@ -1057,8 +1057,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$DELETE_TEAM_MEMBERSHIP:
-                return 'mutation deleteTeamMembership($teamId: String!, $userId: String!){
-                    teamsDeleteMembership(teamId: $teamId, userId: $userId)
+                return 'mutation deleteTeamMembership($teamId: String!, $membershipId: String!){
+                    teamsDeleteMembership(teamId: $teamId, membershipId: $membershipId)
                 }';
             case self::$GET_FUNCTION:
                 return 'query getFunction($functionId: String!) { 

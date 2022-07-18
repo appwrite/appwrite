@@ -358,7 +358,8 @@ class GraphQLStorageServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertIsNotArray($file['body']);
+        $this->assertEquals(204, $file['headers']['status-code']);
     }
 
     /**
@@ -383,6 +384,7 @@ class GraphQLStorageServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+        $this->assertIsNotArray($bucket['body']);
         $this->assertEquals(204, $bucket['headers']['status-code']);
     }
 }

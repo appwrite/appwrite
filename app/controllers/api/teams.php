@@ -70,7 +70,7 @@ App::post('/v1/teams')
             if (!\in_array('owner', $roles)) {
                 $roles[] = 'owner';
             }
-            
+
             $membershipId = $dbForProject->getId();
             $membership = new Document([
                 '$id' => $membershipId,

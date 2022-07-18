@@ -372,6 +372,7 @@ class GraphQLUsersTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
+        $this->assertIsNotArray($user['body']);
         $this->assertEquals(204, $user['headers']['status-code']);
 
         unset(self::$user[$this->getProject()['$id']]);
@@ -395,6 +396,7 @@ class GraphQLUsersTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
+        $this->assertIsNotArray($user['body']);
         $this->assertEquals(204, $user['headers']['status-code']);
 
         unset(self::$user[$this->getProject()['$id']]);
@@ -417,6 +419,7 @@ class GraphQLUsersTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
+        $this->assertIsNotArray($user['body']);
         $this->assertEquals(204, $user['headers']['status-code']);
     }
 }

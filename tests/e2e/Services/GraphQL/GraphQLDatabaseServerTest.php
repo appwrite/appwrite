@@ -843,6 +843,7 @@ class GraphQLDatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+        $this->assertIsNotArray($document['body']);
         $this->assertEquals(204, $document['headers']['status-code']);
     }
 
@@ -871,6 +872,7 @@ class GraphQLDatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+        $this->assertIsNotArray($attribute['body']);
         $this->assertEquals(204, $attribute['headers']['status-code']);
     }
 
@@ -895,6 +897,7 @@ class GraphQLDatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+        $this->assertIsNotArray($collection['body']);
         $this->assertEquals(204, $collection['headers']['status-code']);
     }
 
@@ -918,6 +921,7 @@ class GraphQLDatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+        $this->assertIsNotArray($database['body']);
         $this->assertEquals(204, $database['headers']['status-code']);
     }
 }

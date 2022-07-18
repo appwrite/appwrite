@@ -258,7 +258,6 @@ class GraphQLStorageClientTest extends Scope
     /**
      * @depends testCreateFile
      * @param $file
-     * @return array
      * @throws \Exception
      */
     public function testDeleteFile($file): void
@@ -278,6 +277,7 @@ class GraphQLStorageClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertIsNotArray($file['body']);
+        $this->assertEquals(204, $file['headers']['status-code']);
     }
 }

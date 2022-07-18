@@ -400,6 +400,7 @@ class GraphQLFunctionsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+        $this->assertIsNotArray($response['body']);
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
@@ -425,6 +426,7 @@ class GraphQLFunctionsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+        $this->assertIsNotArray($response['body']);
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 }
