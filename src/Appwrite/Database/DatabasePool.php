@@ -2,19 +2,19 @@
 
 namespace Appwrite\Database;
 
-use Appwrite\DSN\DSN;
-use Appwrite\Extend\Exception;
 use PDO;
-use Swoole\Database\PDOConfig;
+use Utopia\App;
+use Appwrite\DSN\DSN;
+use Utopia\CLI\Console;
+use Utopia\Cache\Cache;
 use Swoole\Database\PDOPool;
 use Swoole\Database\PDOProxy;
-use Utopia\App;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
+use Appwrite\Extend\Exception;
+use Swoole\Database\PDOConfig;
+use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Cache\Adapter\Redis as RedisCache;
 
 class DatabasePool {
 
@@ -86,7 +86,7 @@ class DatabasePool {
     }
 
     /**
-     * Get a PDO instance by database name
+     * Function to get a PDO instance by database name
      * 
      * @param string $name
      * @return ?PDO
@@ -114,11 +114,11 @@ class DatabasePool {
     }
 
     /**
+     * Function to return the name of the database from the project ID
+     * 
      * @param string $projectID
      * 
      * @return string 
-     * 
-     * Function to return the name of the database from the project ID
      */
     private function getName(string $projectID, \Redis $redis): array
     {
@@ -140,7 +140,7 @@ class DatabasePool {
     }
 
     /**
-     * Get a single PDO instance for a project
+     * Function to get a single PDO instance for a project
      * 
      * @param string $projectId
      * 
@@ -166,8 +166,8 @@ class DatabasePool {
     }
 
     /**
-     * Get a database instance from a PDO and cache 
-     * 
+     * Function to get a database instance from a PDO and cache 
+     *
      * @param PDO $pdo
      * @param \Redis $redis
      * 
@@ -180,13 +180,8 @@ class DatabasePool {
         return $database;
     }
 
-    // private function attemptConnection(PDO|PDOProxy $pdo, ?string $namespace, \Redis $cache): Database 
-    // {
-        
-    // }
-
     /**
-     * Get a PDO instance from the list of available database pools . Meant to be used in co-routines
+     * Function to get a PDO instance from the list of available database pools. Meant to be used in co-routines
      * 
      * @param string $projectId
      * 
@@ -270,7 +265,7 @@ class DatabasePool {
     }
 
     /**
-     * Return a PDO instance back to its database pool
+     * Function to return a PDO instance back to its database pool
      *
      * @param PDOProxy $db
      * @param string $name
