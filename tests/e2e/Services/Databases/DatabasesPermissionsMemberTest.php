@@ -77,7 +77,7 @@ class DatabasesPermissionsMemberTest extends Scope
             'size' => 256,
             'required' => true,
         ]);
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(202, $response['headers']['status-code']);
 
         $private = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => 'unique()',
@@ -95,7 +95,7 @@ class DatabasesPermissionsMemberTest extends Scope
             'size' => 256,
             'required' => true,
         ]);
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(202, $response['headers']['status-code']);
 
         sleep(2);
 
