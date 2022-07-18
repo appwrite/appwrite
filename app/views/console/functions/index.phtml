@@ -1,5 +1,6 @@
 <?php
 $runtimes = $this->getParam('runtimes', []);
+$usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
 ?>
 <div class="cover">
     <h1 class="zone xl margin-bottom-large">
@@ -169,7 +170,7 @@ $runtimes = $this->getParam('runtimes', []);
 
             <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
 
-            <h2>Monitors</h2>
+            <h2>Usage</h2>
 
             <div
                 data-service="functions.getUsage"
