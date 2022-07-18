@@ -16,43 +16,43 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 
-class DatabasePool {
-
+class DatabasePool
+{
     /**
      * @var array
-     * 
+     *
      * Array to store mappings from database names to PDOPool instances.
      */
     protected array $pools = [];
 
     /**
      * @var array
-     * 
+     *
      * Array to store mappings from database names to DSNs
      */
     protected array $dsns = [];
 
     /**
      * @var string
-     * 
+     *
      * The name of the console Database
      */
     protected string $consoleDB = '';
 
     /**
      * Constructor for Database pools
-     * 
+     *
      * @param array $consoleDB
      * @param array $projectDB
-     * 
+     *
      */
     public function __construct(array $consoleDB, array $projectDB)
     {
-        if(count($consoleDB) != 1) {
+        if (count($consoleDB) != 1) {
             throw new Exception('Console DB should contain only one entry', 500);
         }
 
-        if(empty($projectDB)) {
+        if (empty($projectDB)) {
             throw new Exception('Project DB is not defined', 500);
         }
 
@@ -87,7 +87,7 @@ class DatabasePool {
 
     /**
      * Function to get a PDO instance by database name
-     * 
+     *
      * @param string $name
      * @return ?PDO
      */
@@ -115,10 +115,10 @@ class DatabasePool {
 
     /**
      * Function to return the name of the database from the project ID
-     * 
+     *
      * @param string $projectID
-     * 
-     * @return string 
+     *
+     * @return string
      */
     private function getName(string $projectID, \Redis $redis): array
     {
@@ -135,15 +135,15 @@ class DatabasePool {
         $project = Authorization::skip(fn() => $database->getDocument('projects', $projectID));
         $internalID = $project->getInternalId();
         $database = $project->getAttribute('database', '');
-        
+
         return [$database, $internalID];
     }
 
     /**
      * Function to get a single PDO instance for a project
-     * 
+     *
      * @param string $projectId
-     * 
+     *
      * @return ?Database
      */
     public function getDB(string $projectID, ?\Redis $redis): ?Database
@@ -166,14 +166,14 @@ class DatabasePool {
     }
 
     /**
-     * Function to get a database instance from a PDO and cache 
+     * Function to get a database instance from a PDO and cache
      *
      * @param PDO $pdo
      * @param \Redis $redis
-     * 
+     *
      * @return Database
      */
-    private function getDatabase(PDO|PDOProxy $pdo, \Redis $redis): Database 
+    private function getDatabase(PDO|PDOProxy $pdo, \Redis $redis): Database
     {
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($pdo), $cache);
@@ -182,9 +182,9 @@ class DatabasePool {
 
     /**
      * Function to get a PDO instance from the list of available database pools. Meant to be used in co-routines
-     * 
+     *
      * @param string $projectId
-     * 
+     *
      * @return array
      */
     public function getDBFromPool(string $projectID, \Redis $redis): array
@@ -192,7 +192,7 @@ class DatabasePool {
         /** Get DB name from the console database */
         [$name, $internalID] = $this->getName($projectID, $redis);
         $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_PROJECT_DB in .env", 500);
-        
+
         $namespace = "_$internalID";
         $attempts = 0;
         do {
@@ -226,7 +226,7 @@ class DatabasePool {
 
      /**
      * Function to get a random PDO instance from the available database pools
-     * 
+     *
      * @return array [PDO, string]
      */
     public function getAnyFromPool(\Redis $redis): array
@@ -269,7 +269,7 @@ class DatabasePool {
      *
      * @param PDOProxy $db
      * @param string $name
-     * 
+     *
      * @return void
      */
     public function put(PDOProxy $db, string $name): void
@@ -283,7 +283,7 @@ class DatabasePool {
 
     /**
      * Function to get the name of the console DB
-     * 
+     *
      * @return ?string
      */
     public function getConsoleDB(): ?string
