@@ -3,6 +3,7 @@
 namespace Appwrite\GraphQL\Promises;
 
 use GraphQL\Error\InvariantViolation;
+use GraphQL\Executor\Promise\Promise;
 use GraphQL\Utils\Utils;
 use Swoole\Coroutine\Channel;
 
@@ -111,7 +112,7 @@ class CoroutinePromise
                 usleep(25000);
             }
             $callable = $this->isFulfilled() ? $onFulfilled : $onRejected;
-            if (!is_callable($callable)) {
+            if (!\is_callable($callable)) {
                 $resolve($this->result);
                 return;
             }
@@ -178,7 +179,7 @@ class CoroutinePromise
      */
     private function setResult(mixed $value): void
     {
-        if (!$value instanceof CoroutinePromise) {
+        if (!$value instanceof Promise) {
             $this->result = $value;
             return;
         }
