@@ -1633,7 +1633,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->setPayload($index->getArrayCopy())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($index, Response::MODEL_INDEX);
     });
 
