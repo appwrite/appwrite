@@ -26,7 +26,6 @@ use Appwrite\Auth\Phone\Msg91;
 use Appwrite\Auth\Phone\Telesign;
 use Appwrite\Auth\Phone\TextMagic;
 use Appwrite\Auth\Phone\Twilio;
-use Appwrite\Auth\Phone\Msg91;
 use Appwrite\Auth\Phone\Vonage;
 use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;

@@ -29,9 +29,15 @@ class Resolvers
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
+
+                $path = $route->getPath();
+                foreach ($args as $key => $value) {
+                    $path = \str_replace(':' . $key, $value, $path);
+                }
+
                 $swoole->server['request_method'] = $route->getMethod();
-                $swoole->server['request_uri'] = $route->getPath();
-                $swoole->server['path_info'] = $route->getPath();
+                $swoole->server['request_uri'] = $path;
+                $swoole->server['path_info'] = $path;
 
                 switch ($route->getMethod()) {
                     case 'GET':
@@ -233,9 +239,7 @@ class Resolvers
         $response->setContentType(Response::CONTENT_TYPE_NULL);
 
         try {
-            // Set route to null so match doesn't early return the GraphQL route
-            // Then get the inner route by matching the mutated request
-            $route = $utopia->setRoute(null)->match($request);
+            $route = $utopia->match($request, fresh: true);
 
             $utopia->execute($route, $request);
         } catch (\Throwable $e) {

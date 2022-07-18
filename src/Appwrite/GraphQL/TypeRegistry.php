@@ -20,7 +20,12 @@ class TypeRegistry
     private static array $defaultDocumentArgs = [];
     private static array $models = [];
 
-    public static function init($models): void
+    /**
+     * Initialize the type registry for the given set of models.
+     * 
+     * @param array<Model> $models
+     */
+    public static function init(array $models): void
     {
         self::$typeMapping = [
             Model::TYPE_BOOLEAN => Type::boolean(),
@@ -66,11 +71,11 @@ class TypeRegistry
             'mutate' => [
                 'read' => [
                     'type' => Type::listOf(Type::string()),
-                    'defaultValue' => ["role:member"],
+                    'defaultValue' => ['role:member'],
                 ],
                 'write' => [
                     'type' => Type::listOf(Type::string()),
-                    'defaultValue' => ["role:member"],
+                    'defaultValue' => ['role:member'],
                 ],
             ],
         ];

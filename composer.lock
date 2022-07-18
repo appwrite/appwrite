@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "36bc44ae9252dbac0dea90c7a9f5c391",
+    "content-hash": "2fd5f977b2e1f35e968a03dc9f0aefe8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2173,19 +2173,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "ab785d1605cf1a01cfb9d38f87a15235cdcdf2ca"
+                "reference": "5c1ef70c7134b4c1f3907143c78718173cf20bd1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/ab785d1605cf1a01cfb9d38f87a15235cdcdf2ca",
-                "reference": "ab785d1605cf1a01cfb9d38f87a15235cdcdf2ca",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/5c1ef70c7134b4c1f3907143c78718173cf20bd1",
+                "reference": "5c1ef70c7134b4c1f3907143c78718173cf20bd1",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0.0"
             },
             "require-dev": {
-                "ext-curl": "*",
                 "phpunit/phpunit": "^9.5.10",
                 "vimeo/psalm": "4.13.1"
             },
@@ -2215,7 +2214,7 @@
                 "issues": "https://github.com/utopia-php/framework/issues",
                 "source": "https://github.com/utopia-php/framework/tree/feat-graphql-helpers"
             },
-            "time": "2022-07-13T03:41:04+00:00"
+            "time": "2022-07-18T02:13:04+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2496,16 +2495,16 @@
         },
         {
             "name": "utopia-php/registry",
-            "version": "dev-feat-allow-querying",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/registry.git",
-                "reference": "3cd3c13ba906af820b02dd717d92e2a1bad3eb7b"
+                "reference": "9c183312e48c926135085f34ac2e73dadb83e0c8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/registry/zipball/3cd3c13ba906af820b02dd717d92e2a1bad3eb7b",
-                "reference": "3cd3c13ba906af820b02dd717d92e2a1bad3eb7b",
+                "url": "https://api.github.com/repos/utopia-php/registry/zipball/9c183312e48c926135085f34ac2e73dadb83e0c8",
+                "reference": "9c183312e48c926135085f34ac2e73dadb83e0c8",
                 "shasum": ""
             },
             "require": {
@@ -2542,9 +2541,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/registry/issues",
-                "source": "https://github.com/utopia-php/registry/tree/feat-allow-querying"
+                "source": "https://github.com/utopia-php/registry/tree/0.6.0"
             },
-            "time": "2022-04-06T03:43:58+00:00"
+            "time": "2022-07-17T15:26:57+00:00"
         },
         {
             "name": "utopia-php/storage",
@@ -5423,8 +5422,7 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/framework": 20,
-        "utopia-php/registry": 20
+        "utopia-php/framework": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

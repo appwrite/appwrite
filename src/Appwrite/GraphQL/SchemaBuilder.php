@@ -129,9 +129,7 @@ class SchemaBuilder
             }
         }
 
-        $timeElapsedMillis = (microtime(true) - $start) * 1000;
-        $timeElapsedMillis = \number_format((float)$timeElapsedMillis, 3, '.', '');
-        Console::info("[INFO] Built GraphQL REST API Schema in ${timeElapsedMillis}ms");
+        self::printBuildTimeFrom($start, 'REST API');
 
         return [
             'query' => $queryFields,
@@ -259,9 +257,7 @@ class SchemaBuilder
         }
         $wg->wait();
 
-        $timeElapsedMillis = (microtime(true) - $start) * 1000;
-        $timeElapsedMillis = \number_format((float)$timeElapsedMillis, 3, '.', '');
-        Console::info('[INFO] Built GraphQL Project Collection Schema in ' . $timeElapsedMillis . 'ms (' . $count . ' attributes)');
+        self::printBuildTimeFrom($start, 'Project Collections');
 
         return [
             'query' => $queryFields,
@@ -327,10 +323,10 @@ class SchemaBuilder
      * @param $start
      * @return void
      */
-    private static function printBuildTimeFrom($start): void
+    private static function printBuildTimeFrom($start, $type = ''): void
     {
         $timeElapsedMillis = (\microtime(true) - $start) * 1000;
         $timeElapsedMillis = \number_format((float)$timeElapsedMillis, 3, '.', '');
-        Console::info('[INFO] Built GraphQL Schema in ' . $timeElapsedMillis . 'ms');
+        Console::info('[INFO] Built GraphQL ' . $type . 'Schema in ' . $timeElapsedMillis . 'ms');
     }
 }
