@@ -216,7 +216,8 @@ class SchemaBuilder
                             $dbForProject,
                             $databaseId,
                             $collectionId
-                        )
+                        ),
+                        'complexity' => fn (int $complexity, array $args) => $complexity * $args['limit'],
                     ];
                     $mutationFields[$collectionId . 'Create'] = [
                         'type' => $objectType,

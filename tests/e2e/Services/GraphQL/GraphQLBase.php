@@ -1356,8 +1356,58 @@ trait GraphQLBase
                     }
                     databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $collectionName, permission: $collectionPermission, read: $collectionRead, write: $collectionWrite) {
                         _id
+                        _createdAt
+                        _updatedAt
+                        _read
+                        _write
+                        databaseId
                         name
                         permission
+                        attributes {
+                            key
+                            type
+                            status
+                        }
+                        indexes {
+                            key
+                            type
+                            status
+                        }
+                    }
+                    databasesCreateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: "name", size: 255, required: true) {
+                        key
+                        type
+                        status
+                        size
+                        required
+                        default
+                        array
+                    }
+                    databasesCreateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: "age", min: 0, max: 150, required: true) {
+                        key
+                        type
+                        status
+                        required
+                        min
+                        max
+                        default
+                        array
+                    }
+                    usersCreate(userId: "unique()", email: "test1@appwrite.io", password: "password", name: "Tester 1") {
+                        _id
+                        _createdAt
+                        _updatedAt
+                        name
+                        registration
+                        status
+                        passwordUpdate
+                        email
+                        emailVerification
+                        phone
+                        phoneVerification
+                        prefs {
+                            data
+                        }
                     }
                 }';
         }

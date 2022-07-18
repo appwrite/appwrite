@@ -43,9 +43,9 @@ class GraphQLAbuseTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        \var_dump($response);
+        $max = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 50);
 
-        $this->assertEquals('Too many queries.', $response['body']['message']);
+        $this->assertEquals('Max query complexity should be ' . $max . ' but got 51.', $response['body']['errors'][0]['message']);
     }
 
     public function testTooManyQueriesBlocked()
