@@ -95,7 +95,7 @@ class Usage
         ],
         'databases.databaseId.collections.collectionId.documents.create' => [
             'table' => 'appwrite_usage_databases_documents_create',
-            'groupBy' => ['collectionId'],
+            'groupBy' => ['databaseId', 'collectionId'],
         ],
         'databases.databaseId.collections.collectionId.documents.read' => [
             'table' => 'appwrite_usage_databases_documents_read',
@@ -292,36 +292,43 @@ class Usage
         $query .= "GROUP BY time({$period['key']}), \"projectId\" {$groupBy} ";
         $query .= "FILL(null)";
 
-        $result = $this->influxDB->query($query);
+        try {
+            $result = $this->influxDB->query($query);
+            $points = $result->getPoints();
+            foreach ($points as $point) {
+                $projectId = $point['projectId'];
 
-        $points = $result->getPoints();
-        foreach ($points as $point) {
-            $projectId = $point['projectId'];
+                if (!empty($projectId) && $projectId !== 'console') {
+                    $metricUpdated = $metric;
 
-            if (!empty($projectId) && $projectId !== 'console') {
-                $metricUpdated = $metric;
-
-                if (!empty($groupBy)) {
-                    foreach ($options['groupBy'] as $groupBy) {
-                        $groupedBy = $point[$groupBy] ?? '';
-                        if (empty($groupedBy)) {
-                            continue;
+                    if (!empty($groupBy)) {
+                        foreach ($options['groupBy'] as $groupBy) {
+                            $groupedBy = $point[$groupBy] ?? '';
+                            if (empty($groupedBy)) {
+                                continue;
+                            }
+                            $metricUpdated = str_replace($groupBy, $groupedBy, $metricUpdated);
                         }
-                        $metricUpdated = str_replace($groupBy, $groupedBy, $metric);
                     }
+
+                    $time = \strtotime($point['time']);
+                    $value = (!empty($point['value'])) ? $point['value'] : 0;
+
+                    $this->createOrUpdateMetric(
+                        $projectId,
+                        $time,
+                        $period['key'],
+                        $metricUpdated,
+                        $value,
+                        0
+                    );
                 }
-
-                $time = \strtotime($point['time']);
-                $value = (!empty($point['value'])) ? $point['value'] : 0;
-
-                $this->createOrUpdateMetric(
-                    $projectId,
-                    $time,
-                    $period['key'],
-                    $metricUpdated,
-                    $value,
-                    0
-                );
+            }
+        } catch (\Exception $e) { // if projects are deleted this might fail
+            if (is_callable($this->errorHandler)) {
+                call_user_func($this->errorHandler, $e, "sync_metric_{$metric}_influxdb");
+            } else {
+                throw $e;
             }
         }
     }
