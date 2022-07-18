@@ -471,7 +471,7 @@ $register->set('dbPool', function () {
         $dsn = $db[1];
         $projectDBs[$name] = $dsn;
     }
-    
+
     $pool = new DatabasePool($consoleDBs, $projectDBs);
     return $pool;
 });
