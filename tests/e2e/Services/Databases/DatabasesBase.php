@@ -727,6 +727,24 @@ trait DatabasesBase
         $this->assertCount(1, $releaseYearIndex['body']['attributes']);
         $this->assertEquals('releaseYear', $releaseYearIndex['body']['attributes'][0]);
 
+        $releaseWithDate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'releaseYearDated',
+            'type' => 'key',
+            'attributes' => ['releaseYear', '$createdAt', '$updatedAt'],
+        ]);
+
+        $this->assertEquals(201, $releaseWithDate['headers']['status-code']);
+        $this->assertEquals('releaseYearDated', $releaseWithDate['body']['key']);
+        $this->assertEquals('key', $releaseWithDate['body']['type']);
+        $this->assertCount(3, $releaseWithDate['body']['attributes']);
+        $this->assertEquals('releaseYear', $releaseWithDate['body']['attributes'][0]);
+        $this->assertEquals('$createdAt', $releaseWithDate['body']['attributes'][1]);
+        $this->assertEquals('$updatedAt', $releaseWithDate['body']['attributes'][2]);
+
         // wait for database worker to create index
         sleep(2);
 
@@ -737,11 +755,13 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['indexes']);
-        $this->assertCount(2, $movies['body']['indexes']);
+        $this->assertCount(3, $movies['body']['indexes']);
         $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
+        $this->assertEquals($releaseWithDate['body']['key'], $movies['body']['indexes'][2]['key']);
         $this->assertEquals('available', $movies['body']['indexes'][0]['status']);
         $this->assertEquals('available', $movies['body']['indexes'][1]['status']);
+        $this->assertEquals('available', $movies['body']['indexes'][2]['status']);
 
         return $data;
     }
@@ -900,6 +920,63 @@ trait DatabasesBase
         $this->assertCount(3, $documents['body']['documents']);
 
         return ['documents' => $documents['body']['documents'], 'databaseId' => $databaseId];
+    }
+
+    public function testCreateCollectionAlias(): array
+    {
+        // Create default database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => 'default',
+            'name' => 'Default'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+
+        $movies = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'unique()',
+            'name' => 'Movies',
+            'read' => [],
+            'write' => [],
+            'permission' => 'document',
+        ]);
+
+        $this->assertEquals($movies['headers']['status-code'], 201);
+        $this->assertEquals($movies['body']['name'], 'Movies');
+
+        return ['moviesId' => $movies['body']['$id']];
+    }
+
+    /**
+     * @depends testCreateCollectionAlias
+     */
+    public function testListDocumentsAlias(array $data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals($documents['body']['total'], 0);
+
+        return [];
     }
 
     /**
@@ -1259,6 +1336,24 @@ trait DatabasesBase
         $this->assertCount(2, $documents['body']['documents']);
         $this->assertEquals('Spider-Man: Far From Home', $documents['body']['documents'][0]['title']);
         $this->assertEquals('Spider-Man: Homecoming', $documents['body']['documents'][1]['title']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['$createdAt.greater(132)'],
+        ]);
+
+        $this->assertCount(3, $documents['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['$createdAt.lesser(132)'],
+        ]);
+
+        $this->assertCount(0, $documents['body']['documents']);
 
         /**
          * Test for Failure
@@ -2264,6 +2359,67 @@ trait DatabasesBase
         return $data;
     }
 
+    /**
+     * @depends testUniqueIndexDuplicate
+     */
+    public function testPersistantCreatedAt(array $data): array
+    {
+        $headers = $this->getSide() === 'client' ? array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()) : [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ];
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', $headers, [
+            'documentId' => 'unique()',
+            'data' => [
+                'title' => 'Creation Date Test',
+                'releaseYear' => 2000
+            ]
+        ]);
+
+        $this->assertEquals($document['body']['title'], 'Creation Date Test');
+
+        $documentId = $document['body']['$id'];
+        $createdAt = $document['body']['$createdAt'];
+        $updatedAt = $document['body']['$updatedAt'];
+
+        \sleep(1);
+
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
+            'data' => [
+                'title' => 'Updated Date Test',
+            ]
+        ]);
+
+        $updatedAtSecond = $document['body']['$updatedAt'];
+
+        $this->assertEquals($document['body']['title'], 'Updated Date Test');
+        $this->assertEquals($document['body']['$createdAt'], $createdAt);
+        $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
+
+        \sleep(1);
+
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
+            'data' => [
+                'title' => 'Again Updated Date Test',
+                '$createdAt' => 1657271810, // Try to update it, should not work
+                '$updatedAt' => 1657271810 // Try to update it, should not work
+            ]
+        ]);
+
+        $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
+        $this->assertEquals($document['body']['$createdAt'], $createdAt);
+        $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
+        $this->assertNotEquals($document['body']['$updatedAt'], $updatedAtSecond);
+        $this->assertNotEquals($document['body']['$updatedAt'], 1657271810);
+
+        return $data;
+    }
+
     public function testUpdatePermissionsWithEmptyPayload(): array
     {
         // Create Database
@@ -2338,7 +2494,7 @@ trait DatabasesBase
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-         ], $this->getHeaders()), [
+        ], $this->getHeaders()), [
             'read' => ['user:' . $this->getUser()['$id']],
         ]);
 

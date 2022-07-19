@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
             val response = storage.createFile(
                 bucketId = "[BUCKET_ID]",
                 fileId = "[FILE_ID]",
-                file = File("file.png"),
+                file = InputFile.fromPath("file.png"),
             )
             val json = response.body?.string()        
         }

@@ -11,6 +11,6 @@ $client
     ->setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-$databases = new Databases($client);
+$databases = new Databases($client, '[DATABASE_ID]');
 
-$result = $databases->createFloatAttribute('[DATABASE_ID]', '[COLLECTION_ID]', '', false);
+$result = $databases->createFloatAttribute('[COLLECTION_ID]', '', false);

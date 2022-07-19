@@ -31,6 +31,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'autodesk' => [
+        'name' => 'Autodesk',
+        'developers' => 'https://forge.autodesk.com/en/docs/oauth/v2/developers_guide/overview/',
+        'icon' => 'icon-autodesk',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'bitbucket' => [
         'name' => 'BitBucket',
         'developers' => 'https://developer.atlassian.com/bitbucket',

@@ -7,8 +7,8 @@ client
     .set_project('5df5acd0d48c2') # Your project ID
     .set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 
-databases = Appwrite::Databases.new(client)
+databases = Appwrite::Databases.new(client, '[DATABASE_ID]')
 
-response = databases.update(database_id: '[DATABASE_ID]', name: '[NAME]')
+response = databases.update(name: '[NAME]')
 
 puts response.inspect

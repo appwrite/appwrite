@@ -118,6 +118,13 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             if (!$dbForConsole->getCollection($key)->isEmpty()) {
                 continue;
             }
+            /**
+             * Skip to prevent 0.15 migration issues.
+             */
+            if ($key === 'databases' && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'collections')) {
+                continue;
+            }
+
             Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
 
             $attributes = [];

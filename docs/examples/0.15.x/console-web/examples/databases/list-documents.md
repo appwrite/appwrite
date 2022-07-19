@@ -2,14 +2,14 @@ import { Client, Databases } from "appwrite";
 
 const client = new Client();
 
-const databases = new Databases(client);
+const databases = new Databases(client, '[DATABASE_ID]');
 
 client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-const promise = databases.listDocuments('[DATABASE_ID]', '[COLLECTION_ID]');
+const promise = databases.listDocuments('[COLLECTION_ID]');
 
 promise.then(function (response) {
     console.log(response); // Success

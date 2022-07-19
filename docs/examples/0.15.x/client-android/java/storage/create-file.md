@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
         storage.createFile(
             "[BUCKET_ID]", 
             "[FILE_ID]", 
-            File("file.png"), 
+            InputFile.fromPath("file.png"), 
             new Continuation<Object>() {
                 @NotNull
                 @Override

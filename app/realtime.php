@@ -112,6 +112,7 @@ function getDatabase(Registry &$register, string $namespace)
             if (!$database->exists($database->getDefaultDatabase(), 'realtime')) {
                 throw new Exception('Collection not ready');
             }
+
             break; // leave loop if successful
         } catch (\Throwable $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -490,8 +491,12 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_console");
-        $project = Authorization::skip(fn() => $database->getDocument('projects', $realtime->connections[$connection]['projectId']));
-        $database->setNamespace("_{$project->getInternalId()}");
+        $projectId = $realtime->connections[$connection]['projectId'];
+
+        if ($projectId !== 'console') {
+            $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
+            $database->setNamespace("_{$project->getInternalId()}");
+        }
 
         /*
          * Abuse Check

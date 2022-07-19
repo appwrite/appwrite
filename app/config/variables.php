@@ -68,7 +68,7 @@ return [
                 'default' => 'localhost',
                 'required' => true,
                 'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.' . PHP_EOL . 'You can use the same value as used for the Appwrite hostname.',
-                'filter' => ''
+                'filter' => 'domainTarget'
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
@@ -98,7 +98,7 @@ return [
             // ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_IPS',
-                'description' => 'This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.',
+                'description' => "This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.",
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
@@ -340,7 +340,7 @@ return [
     ],
     [
         'category' => 'SMTP',
-        'description' => 'Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user\'s SPAM folder.',
+        'description' => "Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user\'s SPAM folder.",
         'variables' => [
             [
                 'name' => '_APP_SMTP_HOST',
@@ -395,7 +395,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_PHONE_PROVIDER',
-                'description' => 'Provider used for delivering SMS for Phone authentication. Use the following format: \'phone://[USER]:[SECRET]@[PROVIDER]\'. \n\nAvailable providers are twilio, text-magic and telesign.',
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'phone://[USER]:[SECRET]@[PROVIDER]'. \n\nAvailable providers are twilio, text-magic and telesign.",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
@@ -647,7 +647,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.json.',
                 'introduction' => '0.7.0',
                 'default' => '900',
                 'required' => false,
@@ -701,7 +701,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_RUNTIMES',
-                'description' => "This option allows you to limit the available environments for cloud functions. This option is very useful for low-cost servers to safe disk space.\n\nTo enable/activate this option, pass a list of allowed environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
+                'description' => "This option allows you to enable or disable runtime environments for cloud functions. Disable unused runtimes to save disk space.\n\nTo enable cloud function runtimes, pass a list of enabled environments separated by a comma.\n\nCurrently, supported environments are: " . \implode(', ', \array_keys(Config::getParam('runtimes'))),
                 'introduction' => '0.8.0',
                 'default' => 'node-16.0,php-8.0,python-3.9,ruby-3.0',
                 'required' => false,

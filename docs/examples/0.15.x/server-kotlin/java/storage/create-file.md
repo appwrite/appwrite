@@ -11,7 +11,7 @@ public void main() {
     storage.createFile(
         bucketId = "[BUCKET_ID]",
         fileId = "[FILE_ID]",
-        file = File("file.png"),
+        file = InputFile.fromPath("file.png"),
         new Continuation<Response>() {
             @NotNull
             @Override

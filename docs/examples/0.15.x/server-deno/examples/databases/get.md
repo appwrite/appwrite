@@ -3,7 +3,7 @@ import * as sdk from "https://deno.land/x/appwrite/mod.ts";
 // Init SDK
 let client = new sdk.Client();
 
-let databases = new sdk.Databases(client);
+let databases = new sdk.Databases(client, '[DATABASE_ID]');
 
 client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = databases.get('[DATABASE_ID]');
+let promise = databases.get();
 
 promise.then(function (response) {
     console.log(response);

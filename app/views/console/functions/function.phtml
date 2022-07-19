@@ -4,7 +4,12 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 $events = $this->getParam('events', []);
 $timeout = $this->getParam('timeout', 900);
 $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
-$patterns = [];
+$patterns = [
+    'documents',
+    'documents.create',
+    'documents.update',
+    'documents.delete',
+];
 
 foreach ($events as $name => $event) {
     $patterns[] = $name;
@@ -660,6 +665,11 @@ sort($patterns);
                             <div x-show="hasSubResource">
                                 <label x-text="subResourceName + ' (optional)'" for="subResource"></label>
                                 <input id="subResource" type="text" :placeholder="subResourceName" x-model="subResource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
+                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
+                            </div>
+                            <div x-show="hasSubSubResource">
+                                <label x-text="subSubResourceName + ' (optional)'" for="subSubResource"></label>
+                                <input id="subSubResource" type="text" :placeholder="subSubResourceName" x-model="subSubResource" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9_-]{0,35}$">
                                 <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Leave empty for wildcard</div>
                             </div>
                             <div x-show="hasAttribute">

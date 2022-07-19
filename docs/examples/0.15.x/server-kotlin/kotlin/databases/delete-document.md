@@ -7,9 +7,8 @@ suspend fun main() {
       .setProject("5df5acd0d48c2") // Your project ID
       .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
 
-    val databases = Databases(client)
+    val databases = Databases(client, "[DATABASE_ID]")
     val response = databases.deleteDocument(
-        databaseId = "[DATABASE_ID]",
         collectionId = "[COLLECTION_ID]",
         documentId = "[DOCUMENT_ID]"
     )

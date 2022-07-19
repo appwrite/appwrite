@@ -38,15 +38,4 @@ class MigrationV13Test extends MigrationTest
 
         $this->assertEquals($document->getAttribute('events'), ['users.*.create']);
     }
-
-    // This fails due to event validator update
-    // public function testEventsConversion()
-    // {
-    //     $migration = new V13();
-    //     $events = $migration->migrateEvents($migration->events);
-    //     foreach ($events as $event) {
-    //         $this->assertTrue((new Event())->isValid($event), $event);
-    //     }
-    //     $this->assertCount(44, $events);
-    // }
 }
