@@ -25,7 +25,7 @@ class SchemaBuilder
         Database $dbForProject
     ): Schema {
         App::setResource('current', static fn() => $utopia);
-        
+
         $register = $utopia->getResource('register');
         $envVersion = App::getEnv('_APP_VERSION');
         $schemaVersion = $register->has('apiSchemaVersion') ? $register->get('apiSchemaVersion') : '';
