@@ -156,10 +156,21 @@ class Executor
             'x-appwrite-executor-key' => App::getEnv('_APP_FUNCTIONS_PROXY_SECRET', '')
         ];
         $params = [
+            // execution-related
             'runtimeId' => "$projectId-$deploymentId",
             'vars' => $vars,
             'data' => $data,
             'timeout' => $timeout,
+
+            // runtime-related
+            'deploymentId' => $deploymentId,
+            'projectId' => $projectId,
+            'source' => $path,
+            'runtime' => $runtime,
+            'baseImage' => $baseImage,
+            'vars' => $vars,
+            'entrypoint' => $entrypoint,
+            'commands' => []
         ];
 
         /* Add 2 seconds as a buffer to the actual timeout value since there can be a slight variance*/
@@ -168,44 +179,11 @@ class Executor
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
         $status = $response['headers']['status-code'];
 
-        for ($attempts = 0; $attempts < 10; $attempts++) {
-            try {
-                switch (true) {
-                    case $status < 400:
-                        return $response['body'];
-                    case $status === 404:
-                        $response = $this->createRuntime(
-                            deploymentId: $deploymentId,
-                            projectId: $projectId,
-                            source: $path,
-                            runtime: $runtime,
-                            baseImage: $baseImage,
-                            vars: $vars,
-                            entrypoint: $entrypoint,
-                            commands: []
-                        );
-                        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
-                        $status = $response['headers']['status-code'];
-
-                        if ($status < 400) {
-                            return $response['body'];
-                        }
-                        break;
-                    case $status === 406:
-                        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
-                        $status = $response['headers']['status-code'];
-
-                        if ($status < 400) {
-                            return $response['body'];
-                        }
-                        break;
-                    default:
-                        throw new \Exception($response['body']['message'], $status);
-                }
-            } catch (\Exception $e) {
-                throw new \Exception($e->getMessage(), $e->getCode());
-            }
-            sleep(2);
+        switch (true) {
+            case $status < 400:
+                return $response['body'];
+            default:
+                throw new \Exception($response['body']['message'], $status);
         }
 
         throw new Exception($response['body']['message'], 503);

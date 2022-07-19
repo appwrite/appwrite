@@ -95,6 +95,10 @@ function fetchExecutorsState(RedisPool $redisPool, bool $forceShowError = false)
 
                 \curl_close($ch);
 
+                \var_dump($executorResponse);
+                \var_dump($statusCode);
+                \var_dump($error);
+
                 if ($statusCode === 200) {
                     markOnline($cache, $id, $forceShowError);
                 } else {

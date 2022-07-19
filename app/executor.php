@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Appwrite\Runtimes\Runtimes;
+use Executor\Executor;
 use Swoole\ConnectionPool;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
@@ -451,18 +452,42 @@ App::delete('/v1/runtimes/:runtimeId')
 
 App::post('/v1/execution')
     ->desc('Create an execution')
+    // execution-related
     ->param('runtimeId', '', new Text(64), 'The runtimeID to execute.')
-    ->param('vars', [], new Assoc(), 'Environment variables required for the build.')
+    ->param('vars', [], new Assoc(), 'Environment variables required for the build.') // TODO: Possibly introduce build-vars and execution-vars in future
     ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
+    // runtime-related
+    ->param('projectId', '', new Text(64), 'The project ID of function.')
+    ->param('deploymentId', '', new Text(64), 'The deployment ID of function.')
+    ->param('source', '', new Text(0), 'Path to source files.')
+    ->param('destination', '', new Text(0), 'Destination folder to store build files into.', true)
+    ->param('commands', [], new ArrayList(new Text(1024), 100), 'Commands required to build the container. Maximum of 100 commands are allowed, each 1024 characters long.')
+    ->param('runtime', '', new Text(128), 'Runtime for the cloud function.')
+    ->param('baseImage', '', new Text(128), 'Base image name of the runtime.')
+    ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file.', true)
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(
-        function (string $runtimeId, array $vars, string $data, $timeout, $activeRuntimes, Response $response) {
+        function (string $runtimeId, array $vars, string $data, $timeout, string $projectId, string $deploymentId, string $source, string $destination, array $commands, string $runtime, string $baseImage, string $entrypoint, $activeRuntimes, Response $response) {
+            // Prepare runtime
             if (!$activeRuntimes->exists($runtimeId)) {
-                throw new Exception('Runtime not found. Please create the runtime.', 404);
+                // TODO: Try multiple times?
+                $executor = new Executor('http://localhost:3000/v1');
+                $response = $executor->createRuntime(
+                    deploymentId: $deploymentId,
+                    projectId: $projectId,
+                    source: $source,
+                    runtime: $runtime,
+                    baseImage: $baseImage,
+                    vars: $vars,
+                    entrypoint: $entrypoint,
+                    commands: []
+                );
+                \var_dump($response);
             }
 
+            // Ensure runtime started
             for ($i = 0; $i < 5; $i++) {
                 if ($activeRuntimes->get($runtimeId)['status'] === 'pending') {
                     Console::info('Waiting for runtime to be ready...');
@@ -523,6 +548,8 @@ App::post('/v1/execution')
             $errNo = \curl_errno($ch);
 
             \curl_close($ch);
+
+            // TODO: Re-run in case of 406
 
             switch (true) {
                 /** No Error. */
