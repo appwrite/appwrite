@@ -144,7 +144,7 @@ class GraphQLContentTypeTest extends Scope
         $this->assertIsArray($file['body']['data']['storageCreateFile']);
     }
 
-    public function testEmptyBody()
+    public function testPostNoBody()
     {
         $projectId = $this->getProject()['$id'];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -155,7 +155,18 @@ class GraphQLContentTypeTest extends Scope
         $this->assertEquals('No query supplied.', $response['body']['message']);
     }
 
-    public function testRandomBody()
+    public function testPostEmptyBody()
+    {
+        $projectId = $this->getProject()['$id'];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals('No query supplied.', $response['body']['message']);
+    }
+
+    public function testPostRandomBody()
     {
         $projectId = $this->getProject()['$id'];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -164,5 +175,38 @@ class GraphQLContentTypeTest extends Scope
         ], $this->getHeaders()), ['foo' => 'bar']);
 
         $this->assertEquals('Invalid query.', $response['body']['message']);
+    }
+
+    public function testGetNoQuery()
+    {
+        $projectId = $this->getProject()['$id'];
+        $response = $this->client->call(Client::METHOD_GET, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+        
+        $this->assertEquals('No query supplied.', $response['body']['message']);
+    }
+
+    public function testGetEmptyQuery()
+    {
+        $projectId = $this->getProject()['$id'];
+        $response = $this->client->call(Client::METHOD_GET, '/graphql?query=', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals('Invalid query.', $response['body']['message']);
+    }
+
+    public function testGetRandomParameters()
+    {
+        $projectId = $this->getProject()['$id'];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql?random=random', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+
+        $this->assertEquals('No query supplied.', $response['body']['message']);
     }
 }

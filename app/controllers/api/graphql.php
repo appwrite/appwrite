@@ -32,7 +32,7 @@ App::get('/v1/graphql')
     ->inject('response')
     ->inject('promiseAdapter')
     ->inject('schema')
-    ->action(Closure::fromCallable('graphqlRequest'));
+    ->action(Closure::fromCallable('executeRequest'));
 
 App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
@@ -52,7 +52,7 @@ App::post('/v1/graphql')
     ->inject('response')
     ->inject('promiseAdapter')
     ->inject('schema')
-    ->action(Closure::fromCallable('graphqlRequest'));
+    ->action(Closure::fromCallable('executeRequest'));
 
 App::post('/v1/graphql/upload')
     ->desc('GraphQL Upload Endpoint')
@@ -74,7 +74,7 @@ App::post('/v1/graphql/upload')
     ->inject('response')
     ->inject('promiseAdapter')
     ->inject('schema')
-    ->action(Closure::fromCallable('graphqlRequest'));
+    ->action(Closure::fromCallable('executeRequest'));
 
 
 /**
@@ -88,7 +88,7 @@ App::post('/v1/graphql/upload')
  * @return void
  * @throws Exception
  */
-function graphqlRequest(
+function executeRequest(
     array $query,
     Appwrite\Utopia\Request $request,
     Appwrite\Utopia\Response $response,
@@ -116,7 +116,7 @@ function graphqlRequest(
         throw new Exception('Too many queries.', 400, Exception::GRAPHQL_TOO_MANY_QUERIES);
     }
     foreach ($query as $item) {
-        if (!isset($item['query'])) {
+        if (empty($item['query'])) {
             throw new Exception('Invalid query.', 400, Exception::GRAPHQL_INVALID_QUERY);
         }
     }
