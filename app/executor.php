@@ -458,33 +458,40 @@ App::post('/v1/execution')
     ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
     // runtime-related
-    ->param('projectId', '', new Text(64), 'The project ID of function.')
-    ->param('deploymentId', '', new Text(64), 'The deployment ID of function.')
     ->param('source', '', new Text(0), 'Path to source files.')
-    ->param('destination', '', new Text(0), 'Destination folder to store build files into.', true)
-    ->param('commands', [], new ArrayList(new Text(1024), 100), 'Commands required to build the container. Maximum of 100 commands are allowed, each 1024 characters long.')
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function.')
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime.')
     ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file.', true)
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(
-        function (string $runtimeId, array $vars, string $data, $timeout, string $projectId, string $deploymentId, string $source, string $destination, array $commands, string $runtime, string $baseImage, string $entrypoint, $activeRuntimes, Response $response) {
+        function (string $runtimeId, array $vars, string $data, $timeout, string $source, string $runtime, string $baseImage, string $entrypoint, $activeRuntimes, Response $response) {
             // Prepare runtime
             if (!$activeRuntimes->exists($runtimeId)) {
-                // TODO: Try multiple times? Try/catch?
                 $executor = new Executor('http://localhost/v1');
-                $runtimeResponse = $executor->createRuntime(
-                    deploymentId: $deploymentId,
-                    projectId: $projectId,
-                    source: $source,
-                    runtime: $runtime,
-                    baseImage: $baseImage,
-                    vars: $vars,
-                    entrypoint: $entrypoint,
-                    commands: [],
-                    key: App::getEnv('_APP_EXECUTOR_SECRET', '')
-                );
+
+                for ($i = 0; $i < 5; $i++) {
+                    try {
+                        $runtimeResponse = $executor->createRuntime(
+                            runtimeId: $runtimeId,
+                            source: $source,
+                            runtime: $runtime,
+                            baseImage: $baseImage,
+                            vars: $vars,
+                            entrypoint: $entrypoint,
+                            commands: [],
+                            key: App::getEnv('_APP_EXECUTOR_SECRET', '')
+                        );
+
+                        break;
+                    } catch (\Exception $error) {
+                        if ($i === 4) {
+                            throw new Exception('Runtime could not be created in allocated time: ' . $error->getMessage(), 500);
+                        }
+                    }
+
+                    \sleep(1);
+                }            
             }
 
             // Ensure runtime started
@@ -513,7 +520,7 @@ App::post('/v1/execution')
             $executionStart = \microtime(true);
 
             // Prepare request to executor
-            $sendExecuteRequest = function() use ($vars, $data, $runtimeId, $secret, &$executionStart) {
+            $sendExecuteRequest = function() use ($vars, $data, $runtimeId, $secret, &$executionStart, &$timeout) {
                 // Restart execution timer to not could failed attempts
                 $executionStart = \microtime(true);
 

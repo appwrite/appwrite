@@ -9,7 +9,7 @@ class RoundRobin extends Adapter
 {
     private $currentIndex = 0; // TODO: Put into redis to share across proxies
 
-    public function getNextExecutor(): string
+    public function getNextExecutor(): array
     {
         $executors = $this->getExecutors();
         $executor = $executors[$this->currentIndex] ?? null;
@@ -21,6 +21,6 @@ class RoundRobin extends Adapter
             $this->currentIndex++;
         }
 
-        return $executor['hostname'] ?? null;
+        return $executor ?? null;
     }
 }

@@ -60,5 +60,5 @@ abstract class Adapter
         return $responseExecutors;
     }
 
-    abstract public function getNextExecutor(): string;
+    abstract public function getNextExecutor(): array;
 }

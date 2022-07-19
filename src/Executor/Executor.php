@@ -39,8 +39,7 @@ class Executor
      *
      * Launches a runtime container for a deployment ready for execution
      *
-     * @param string $deploymentId
-     * @param string $projectId
+     * @param string $runtimeId (projectId-deploymentId)
      * @param string $source
      * @param string $runtime
      * @param string $baseImage
@@ -53,8 +52,7 @@ class Executor
      * @param array $commands
      */
     public function createRuntime(
-        string $deploymentId,
-        string $projectId,
+        string $runtimeId,
         string $source,
         string $runtime,
         string $baseImage,
@@ -72,7 +70,7 @@ class Executor
             'x-appwrite-executor-key' => $key ?? App::getEnv('_APP_FUNCTIONS_PROXY_SECRET', '')
         ];
         $params = [
-            'runtimeId' => "$projectId-$deploymentId",
+            'runtimeId' => $runtimeId,
             'source' => $source,
             'destination' => $destination,
             'runtime' => $runtime,

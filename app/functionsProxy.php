@@ -66,13 +66,10 @@ function markOnline(cache $cache, string $executorId, bool $forceShowError = fal
 // Fetch info about executors
 function fetchExecutorsState(RedisPool $redisPool, bool $forceShowError = false)
 {
-    \var_dump("Now");
     $executors = \explode(',', App::getEnv('_APP_EXECUTORS', ''));
 
     foreach ($executors as $executor) {
-        \var_dump("Now2");
         go(function () use ($redisPool, $executor, $forceShowError) {
-            \var_dump("Now3");
             $redis = $redisPool->get();
             $cache = new Cache(new Redis($redis));
 
@@ -98,10 +95,6 @@ function fetchExecutorsState(RedisPool $redisPool, bool $forceShowError = false)
 
                 \curl_close($ch);
 
-                \var_dump($executorResponse);
-                \var_dump($statusCode);
-                \var_dump($error);
-
                 if ($statusCode === 200) {
                     markOnline($cache, $id, $forceShowError);
                 } else {
@@ -115,8 +108,6 @@ function fetchExecutorsState(RedisPool $redisPool, bool $forceShowError = false)
             }
         });
     }
-
-    Swoole\Event::wait();
 }
 
 /**
@@ -209,16 +200,20 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
         throw new Exception('Missing proxy key');
     }
 
-    $executorHostname = $adapter->getNextExecutor();
+    $executor = $adapter->getNextExecutor();
 
-    Console::success("Executing on " . $executorHostname);
+    Console::success("Executing on " . $executor['hostname']);
 
-    $client = new Client($executorHostname, 80);
+    $client = new Client($executor['hostname'], 80);
     $client->setMethod($request->server['request_method'] ?? 'GET');
     $client->setHeaders(\array_merge($request->header, [
         'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
     ]));
     $client->setData($request->getContent());
+
+    $body = \json_decode($client->requestBody, true);
+    $body['runtimeId'] =  $executor['id'] . '-' . $body['runtimeId'];
+    $client->requestBody = \json_encode($body);
 
     $status = $client->execute($request->server['request_uri'] ?? '/');
 
@@ -229,9 +224,9 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
 };
 
 $http->on('start', function () use ($redisPool) {
-    Timer::tick(3000, function (int $timerId) use ($redisPool) {
-        \var_dump("OK");
-        // fetchExecutorsState($redisPool, false);
+    // Keep updating executors state
+    Timer::tick(30000, function (int $timerId) use ($redisPool) {
+        fetchExecutorsState($redisPool, false);
     });
 });
 

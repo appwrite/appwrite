@@ -148,8 +148,7 @@ class BuildsV1 extends Worker
 
         try {
             $response = $this->executor->createRuntime(
-                projectId: $project->getId(),
-                deploymentId: $deployment->getId(),
+                runtimeId: $project->getId() . '-' . $deployment->getId(),
                 entrypoint: $deployment->getAttribute('entrypoint'),
                 source: $source,
                 destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
