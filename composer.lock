@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "46322a96c520e8b5c11040dec5f41620",
+    "content-hash": "3bd843912eaf4c576c1d7ad83a748090",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2169,23 +2169,22 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-feat-unkeyed-full-body-params",
+            "version": "dev-feat-allow-fresh-match",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "f55faa8d4858844291d0b16788cd5b0c540eaef7"
+                "reference": "ca68515d4675b1d09babf7984a608e1d82f63f27"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/f55faa8d4858844291d0b16788cd5b0c540eaef7",
-                "reference": "f55faa8d4858844291d0b16788cd5b0c540eaef7",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/ca68515d4675b1d09babf7984a608e1d82f63f27",
+                "reference": "ca68515d4675b1d09babf7984a608e1d82f63f27",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0.0"
             },
             "require-dev": {
-                "ext-curl": "*",
                 "phpunit/phpunit": "^9.5.10",
                 "vimeo/psalm": "4.13.1"
             },
@@ -2213,9 +2212,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/feat-unkeyed-full-body-params"
+                "source": "https://github.com/utopia-php/framework/tree/feat-allow-fresh-match"
             },
-            "time": "2022-07-18T07:12:16+00:00"
+            "time": "2022-07-18T07:10:10+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5416,7 +5415,7 @@
     "aliases": [
         {
             "package": "utopia-php/framework",
-            "version": "dev-feat-unkeyed-full-body-params",
+            "version": "dev-feat-allow-fresh-match",
             "alias": "0.19.2",
             "alias_normalized": "0.19.2.0"
         }

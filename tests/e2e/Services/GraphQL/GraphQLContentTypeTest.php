@@ -184,7 +184,7 @@ class GraphQLContentTypeTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
-        
+
         $this->assertEquals('No query supplied.', $response['body']['message']);
     }
 
