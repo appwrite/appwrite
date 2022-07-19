@@ -66,10 +66,13 @@ function markOnline(cache $cache, string $executorId, bool $forceShowError = fal
 // Fetch info about executors
 function fetchExecutorsState(RedisPool $redisPool, bool $forceShowError = false)
 {
+    \var_dump("Now");
     $executors = \explode(',', App::getEnv('_APP_EXECUTORS', ''));
 
     foreach ($executors as $executor) {
+        \var_dump("Now2");
         go(function () use ($redisPool, $executor, $forceShowError) {
+            \var_dump("Now3");
             $redis = $redisPool->get();
             $cache = new Cache(new Redis($redis));
 
@@ -226,7 +229,10 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
 };
 
 $http->on('start', function () use ($redisPool) {
-    Timer::tick(30000, fn (int $timerId, array $params) => fetchExecutorsState($params[0]), [$redisPool]);
+    Timer::tick(3000, function (int $timerId) use ($redisPool) {
+        \var_dump("OK");
+        // fetchExecutorsState($redisPool, false);
+    });
 });
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($run) {

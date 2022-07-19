@@ -472,9 +472,9 @@ App::post('/v1/execution')
         function (string $runtimeId, array $vars, string $data, $timeout, string $projectId, string $deploymentId, string $source, string $destination, array $commands, string $runtime, string $baseImage, string $entrypoint, $activeRuntimes, Response $response) {
             // Prepare runtime
             if (!$activeRuntimes->exists($runtimeId)) {
-                // TODO: Try multiple times?
-                $executor = new Executor('http://localhost:3000/v1');
-                $response = $executor->createRuntime(
+                // TODO: Try multiple times? Try/catch?
+                $executor = new Executor('http://localhost/v1');
+                $runtimeResponse = $executor->createRuntime(
                     deploymentId: $deploymentId,
                     projectId: $projectId,
                     source: $source,
@@ -482,16 +482,16 @@ App::post('/v1/execution')
                     baseImage: $baseImage,
                     vars: $vars,
                     entrypoint: $entrypoint,
-                    commands: []
+                    commands: [],
+                    key: App::getEnv('_APP_EXECUTOR_SECRET', '')
                 );
-                \var_dump($response);
             }
 
             // Ensure runtime started
             for ($i = 0; $i < 5; $i++) {
                 if ($activeRuntimes->get($runtimeId)['status'] === 'pending') {
                     Console::info('Waiting for runtime to be ready...');
-                    sleep(1);
+                    \sleep(1);
                 } else {
                     break;
                 }
@@ -501,6 +501,7 @@ App::post('/v1/execution')
                 }
             }
 
+            // Ensure we have secret
             $runtime = $activeRuntimes->get($runtimeId);
             $secret = $runtime['key'];
             if (empty($secret)) {
@@ -509,59 +510,76 @@ App::post('/v1/execution')
 
             Console::info('Executing Runtime: ' . $runtimeId);
 
-            $execution = [];
             $executionStart = \microtime(true);
+
+            // Prepare request to executor
+            $sendExecuteRequest = function() use ($vars, $data, $runtimeId, $secret) {
+                $statusCode = 0;
+                $errNo = -1;
+                $executorResponse = '';
+    
+                $timeout ??= (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900);
+    
+                $ch = \curl_init();
+                $body = \json_encode([
+                    'env' => $vars,
+                    'payload' => $data,
+                    'timeout' => $timeout
+                ]);
+                \curl_setopt($ch, CURLOPT_URL, "http://" . $runtimeId . ":3000/");
+                \curl_setopt($ch, CURLOPT_POST, true);
+                \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+                \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+                \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . \strlen($body),
+                    'x-internal-challenge: ' . $secret,
+                    'host: null'
+                ]);
+    
+                $executorResponse = \curl_exec($ch);
+    
+                $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
+                $error = \curl_error($ch);
+    
+                $errNo = \curl_errno($ch);
+    
+                \curl_close($ch);
+
+                return [
+                    'errNo' => $errNo,
+                    'error' => $error,
+                    'statusCode' => $statusCode,
+                    'executorResponse' => $executorResponse
+                ];
+            };
+
+            // Execute function
+            for ($i = 0; $i < 5; $i++) {
+                [ $errNo, $error, $statusCode, $executorResponse ] = \call_user_func($sendExecuteRequest);
+
+                // No error
+                if($errNo === 0) {
+                    break;
+                }
+
+                Console::info('Waiting for runtime to respond...');
+
+                \sleep(1);
+
+                if ($i === 4) {
+                    throw new Exception('Runtime failed to respond in allocated time: ' . $error, 500);
+                }
+            }
+
+            // Extract response
+            $execution = [];
             $stdout = '';
             $stderr = '';
-            $statusCode = 0;
-            $errNo = -1;
-            $executorResponse = '';
-
-            $timeout ??= (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900);
-
-            $ch = \curl_init();
-            $body = \json_encode([
-                'env' => $vars,
-                'payload' => $data,
-                'timeout' => $timeout
-            ]);
-            \curl_setopt($ch, CURLOPT_URL, "http://" . $runtimeId . ":3000/");
-            \curl_setopt($ch, CURLOPT_POST, true);
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-            \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-
-            \curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                'Content-Length: ' . \strlen($body),
-                'x-internal-challenge: ' . $secret,
-                'host: null'
-            ]);
-
-            $executorResponse = \curl_exec($ch);
-
-            $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-            $error = \curl_error($ch);
-
-            $errNo = \curl_errno($ch);
-
-            \curl_close($ch);
-
-            // TODO: Re-run in case of 406
-
-            switch (true) {
-                /** No Error. */
-                case $errNo === 0:
-                    break;
-                /** Runtime not ready for requests yet. 111 is the swoole error code for Connection Refused - see https://openswoole.com/docs/swoole-error-code */
-                case $errNo === 111:
-                    throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 406);
-                /** Any other CURL error */
-                default:
-                    throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 500);
-            }
 
             switch (true) {
                 case $statusCode >= 500:
@@ -589,10 +607,11 @@ App::post('/v1/execution')
                 'time' => $executionTime,
             ];
 
-            /** Update swoole table */
+            // Update swoole table
             $runtime['updated'] = \time();
             $activeRuntimes->set($runtimeId, $runtime);
 
+            // Finish request
             $response
                 ->setStatusCode(Response::STATUS_CODE_OK)
                 ->json($execution);

@@ -63,12 +63,13 @@ class Executor
         string $workdir = '',
         string $destination = '',
         array $vars = [],
-        array $commands = []
+        array $commands = [],
+        string $key = null
     ) {
         $route = "/runtimes";
         $headers = [
             'content-type' => 'application/json',
-            'x-appwrite-executor-key' => App::getEnv('_APP_FUNCTIONS_PROXY_SECRET', '')
+            'x-appwrite-executor-key' => $key ?? App::getEnv('_APP_FUNCTIONS_PROXY_SECRET', '')
         ];
         $params = [
             'runtimeId' => "$projectId-$deploymentId",
