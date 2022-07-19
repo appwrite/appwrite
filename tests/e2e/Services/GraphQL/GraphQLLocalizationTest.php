@@ -17,14 +17,11 @@ class GraphQLLocalizationTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$GET_LOCALE);
-        $graphQLPayload = [
-            'query' => $query,
-        ];
 
-        $locale = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $locale = $this->client->call(Client::METHOD_GET, '/graphql?query=' . $query, \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
+        ], $this->getHeaders()));
 
         $this->assertIsArray($locale['body']['data']);
         $this->assertArrayNotHasKey('errors', $locale['body']);
