@@ -57,6 +57,28 @@ App::post('/v1/graphql')
     ->inject('schema')
     ->action(Closure::fromCallable('graphqlRequest'));
 
+App::post('/v1/graphql/upload')
+    ->desc('GraphQL Upload Endpoint')
+    ->groups(['graphql'])
+    ->label('scope', 'graphql')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'graphql')
+    ->label('sdk.description', '/docs/references/graphql/upload.md')
+    ->label('sdk.method', 'upload')
+    ->label('sdk.methodType', 'upload')
+    ->label('sdk.request.type', 'multipart/form-data')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('abuse-limit', 60)
+    ->label('abuse-time', 60)
+    ->param('query', '', new JSON(), 'The query or queries to execute.', fullBody: true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('promiseAdapter')
+    ->inject('schema')
+    ->action(Closure::fromCallable('graphqlRequest'));
+
 /**
  * @throws Exception
  * @throws \Exception
@@ -187,7 +209,7 @@ function processResult($result, &$output, $debugFlags): void
         $output = $result[0]->toArray($debugFlags);
     } else {
         $output = \array_merge_recursive(...\array_map(
-            fn ($item) => $item->toArray($debugFlags),
+            static fn ($item) => $item->toArray($debugFlags),
             $result
         ));
     }
