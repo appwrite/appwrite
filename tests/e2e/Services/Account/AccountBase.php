@@ -341,7 +341,7 @@ trait AccountBase
         $this->assertIsNumeric($response['body']['total']);
         $this->assertContains($response['body']['logs'][1]['event'], ["users.{$userId}.create", "users.{$userId}.sessions.{$sessionId}.create"]);
         $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
-        $this->assertIsNumeric($response['body']['logs'][1]['time']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['logs'][1]['time']));
 
         $this->assertEquals('Windows', $response['body']['logs'][1]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][1]['osCode']);
@@ -363,7 +363,7 @@ trait AccountBase
 
         $this->assertContains($response['body']['logs'][2]['event'], ["users.{$userId}.create", "users.{$userId}.sessions.{$sessionId}.create"]);
         $this->assertEquals($response['body']['logs'][2]['ip'], filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP));
-        $this->assertIsNumeric($response['body']['logs'][2]['time']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['logs'][2]['time']));
 
         $this->assertEquals('Windows', $response['body']['logs'][2]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][2]['osCode']);
