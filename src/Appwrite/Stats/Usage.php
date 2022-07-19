@@ -334,9 +334,21 @@ class Usage
             foreach ($points as $point) {
                 $projectId = $point['projectId'];
 
+<<<<<<< HEAD
                 if (!empty($projectId) && $projectId !== 'console') {
                     $metricUpdated = $metric;
 
+=======
+        try {
+            $result = $this->influxDB->query($query);
+            $points = $result->getPoints();
+            foreach ($points as $point) {
+                $projectId = $point['projectId'];
+
+                if (!empty($projectId) && $projectId !== 'console') {
+                    $metricUpdated = $metric;
+
+>>>>>>> 8eef613d4bd4268c9f9fca8056bf939c45833432
                     if (!empty($groupBy)) {
                         foreach ($options['groupBy'] as $groupBy) {
                             $groupedBy = $point[$groupBy] ?? '';
