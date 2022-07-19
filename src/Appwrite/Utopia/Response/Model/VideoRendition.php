@@ -13,25 +13,25 @@ class VideoRendition extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'ID.',
-                'default' => '',
+                'default' => null,
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('videoId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Video ID.',
-                'default' => '',
+                'default' => null,
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('profileId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'profile ID.',
-                'default' => '',
+                'default' => null,
                 'example' => 'd5fg5ehg1c168g7c',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Rendition name.',
-                'default' => '',
+                'default' => null,
                 'example' => '720P',
             ])
             ->addRule('startedAt', [
@@ -49,7 +49,7 @@ class VideoRendition extends Model
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Rendition transcoding status',
-                'default' => '',
+                'default' => null,
                 'example' => 'ready',
             ])
             ->addRule('progress', [
@@ -61,9 +61,64 @@ class VideoRendition extends Model
             ->addRule('stream', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Rendition trascoding stream protocol type',
-                'default' => 0,
-                'example' => 88,
+                'default' => null,
+                'example' => 'hls',
             ])
+            ->addRule('duration', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Video duration.',
+                'default' => 0,
+                'example' => '92.739989',
+            ])
+            ->addRule('width', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Video width.',
+                'default' => 0,
+                'example' => 300,
+            ])
+            ->addRule('height', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Video height.',
+                'default' => 0,
+                'example' => 400,
+            ])
+            ->addRule('videoCodec', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Video codec.',
+                'default' => null,
+                'example' => 'h264,avc1',
+            ])
+            ->addRule('videoBitrate', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Video bitrate.',
+                'default' => 0,
+                'example' => 564790,
+            ])
+            ->addRule('videoFramerate', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Video frame rate.',
+                'default' => 0,
+                'example' => '231947377/4638947',
+            ])
+            ->addRule('audioCodec', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Audio codec.',
+                'default' => null,
+                'example' => 'aac,mp4a',
+            ])
+            ->addRule('audioBitrate', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Audio bitrate.',
+                'default' => 0,
+                'example' => 127999,
+            ])
+            ->addRule('audioSamplerate', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Audio sample rate.',
+                'default' => 0,
+                'example' => 44100,
+            ])
+
         ;
     }
 

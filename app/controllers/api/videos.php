@@ -1,45 +1,22 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Validator\Password;
-use Appwrite\Event\Audit;
-use Appwrite\Event\Audit as EventAudit;
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Delete;
-use Appwrite\Event\Event;
 use Appwrite\Event\Transcoding;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Utopia\App;
-use Utopia\Cache\Adapter\Filesystem;
-use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Appwrite\Extend\Exception;
-use Utopia\Image\Image;
-use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Device;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
-use Utopia\Storage\Validator\File;
-use Utopia\Storage\Validator\FileExt;
-use Utopia\Storage\Validator\FileSize;
-use Utopia\Storage\Validator\Upload;
-use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\HexColor;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -96,13 +73,14 @@ function validateFilePermissions(Database $dbForProject, string $bucketId, strin
     return $file;
 }
 
+
 App::post('/v1/videos/profiles')
     ->desc('Create video profile')
     ->groups(['api', 'video'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'video')
-    ->label('sdk.method', 'create')
+    ->label('sdk.method', 'createProfile')
     ->label('sdk.description', '/docs/references/videos/create-profile.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -116,7 +94,6 @@ App::post('/v1/videos/profiles')
     ->inject('response')
     ->inject('dbForProject')
     ->action(action: function (string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $stream, Response $response, Database $dbForProject) {
-
         try {
             $profile = Authorization::skip(function () use ($dbForProject, $name, $videoBitrate, $audioBitrate, $width, $height, $stream) {
                 return $dbForProject->createDocument('videos_profiles', new Document([
@@ -128,13 +105,14 @@ App::post('/v1/videos/profiles')
                     'stream'        => $stream,
                 ]));
             });
-        } catch (StructureException $exception) {
-            throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
+        } catch (DuplicateException $exception) {
+            throw new Exception('Profile already exists', 409, Exception::VIDEO_PROFILE_ALREADY_EXISTS);
         }
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($profile, Response::MODEL_VIDEO_PROFILE);
     });
+
 
 App::patch('/v1/videos/profiles/:profileId')
     ->desc('Update video  profile')
@@ -142,7 +120,7 @@ App::patch('/v1/videos/profiles/:profileId')
     ->label('scope', 'files.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'video')
-    ->label('sdk.method', 'update')
+    ->label('sdk.method', 'updateProfile')
     ->label('sdk.description', '/docs/references/videos/update-profile.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -176,6 +154,7 @@ App::patch('/v1/videos/profiles/:profileId')
         $response->dynamic($profile, Response::MODEL_VIDEO_PROFILE);
     });
 
+
 App::get('/v1/videos/profiles/:profileId')
     ->desc('Get video profile')
     ->groups(['api', 'video'])
@@ -200,6 +179,7 @@ App::get('/v1/videos/profiles/:profileId')
 
         $response->dynamic($profile, Response::MODEL_VIDEO_PROFILE);
     });
+
 
 App::get('/v1/videos/profiles')
     ->desc('Get all video profiles')
@@ -228,8 +208,9 @@ App::get('/v1/videos/profiles')
         ]), Response::MODEL_VIDEO_PROFILE_LIST);
     });
 
+
 App::delete('/v1/videos/profiles/:profileId')
-    ->desc('Delete a video transcoding profile')
+    ->desc('Delete video profile')
     ->groups(['api', 'video'])
     ->label('scope', 'files.write')
     ->label('sdk.namespace', 'video')
@@ -280,13 +261,8 @@ App::post('/v1/videos/:videoId/subtitles')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
-    ->inject('audits')
-    ->inject('usage')
-    ->inject('events')
     ->inject('mode')
-    ->inject('deviceFiles')
-    ->inject('deviceLocal')
-    ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Request $request, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Request $request, Response $response, Database $dbForProject, Document $user, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
@@ -297,8 +273,7 @@ App::post('/v1/videos/:videoId/subtitles')
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
         validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user);
 
-        try {
-            $subtitle = Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $fileId, $name, $code, $default) {
+        $subtitle = Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $fileId, $name, $code, $default) {
                 return $dbForProject->createDocument('videos_subtitles', new Document([
                     'videoId'   => $videoId,
                     'bucketId'  => $bucketId,
@@ -307,14 +282,12 @@ App::post('/v1/videos/:videoId/subtitles')
                     'code'      => $code,
                     'default'   => $default,
                 ]));
-            });
-        } catch (StructureException $exception) {
-            throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
-        }
+        });
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($subtitle, Response::MODEL_VIDEO_SUBTITLE);
     });
+
 
 App::get('/v1/videos/:videoId/subtitles')
     ->desc('Get all video subtitles')
@@ -344,13 +317,14 @@ App::get('/v1/videos/:videoId/subtitles')
         ]), Response::MODEL_VIDEO_SUBTITLE_LIST);
     });
 
+
 App::patch('/v1/videos/:videoId/subtitles/:subtitleId')
     ->desc('Update video subtitle')
     ->groups(['api', 'video'])
     ->label('scope', 'files.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'video')
-    ->label('sdk.method', 'update')
+    ->label('sdk.method', 'updateSubtitle')
     ->label('sdk.description', '/docs/references/videos/update-subtitle.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -384,6 +358,78 @@ App::patch('/v1/videos/:videoId/subtitles/:subtitleId')
         $response->dynamic($subtitle, Response::MODEL_VIDEO_SUBTITLE);
     });
 
+
+App::delete('/v1/videos/:videoId/subtitles/:subtitleId')
+    ->desc('Delete video subtitle')
+    ->groups(['api', 'video'])
+    ->label('scope', 'files.write')
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.method', 'deleteSubtitle')
+    ->label('sdk.description', '/docs/references/videos/delete-subtitle.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('videoId', '', new UID(), 'Video  unique ID.')
+    ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('user')
+    ->inject('mode')
+    ->action(function (string $videoId, string $subtitleId, Response $response, Database $dbForProject, Document $user, string $mode) {
+
+        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
+
+        if ($video->isEmpty()) {
+            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+        }
+
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+
+
+        $subtitle = Authorization::skip(fn() => $dbForProject->getDocument('videos_subtitles', $subtitleId));
+
+        if ($subtitle->isEmpty()) {
+            throw new Exception('Video subtitle not found', 404, Exception::VIDEO_PROFILE_NOT_FOUND);
+        }
+
+        $deleted = $dbForProject->deleteDocument('videos_subtitles', $subtitleId);
+
+        if (!$deleted) {
+            throw new Exception('Failed to remove video subtitle from DB', 500, Exception::GENERAL_SERVER_ERROR);
+        }
+
+        $response->noContent();
+    });
+
+App::get('/v1/videos/buckets/:bucketId')
+    ->desc('Get all backet\'s videos')
+    ->groups(['api', 'video'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'getVideos')
+    ->label('sdk.description', '/docs/references/videos/get-videos.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VIDEO_SUBTITLE_LIST)
+    ->param('bucketId', null, new UID(), 'bucket unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function ($videoId, Response $response, Database $dbForProject) {
+
+        $subtitles = Authorization::skip(fn () => $dbForProject->find('videos_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$videoId])], 12, 0, [], ['ASC']));
+
+        if (empty($subtitles)) {
+            throw new Exception('Video subtitles  not found', 404, Exception::VIDEO_SUBTITLE_NOT_FOUND);
+        }
+
+        $response->dynamic(new Document([
+            'total' => $dbForProject->count('videos_subtitles', [], APP_LIMIT_COUNT),
+            'subtitles' => $subtitles,
+        ]), Response::MODEL_VIDEO_SUBTITLE_LIST);
+    });
+
+
 App::post('/v1/video')
     ->desc('Create Video')
     ->groups(['api', 'video'])
@@ -401,14 +447,8 @@ App::post('/v1/video')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
-    ->inject('audits')
-    ->inject('usage')
-    ->inject('events')
     ->inject('mode')
-    ->inject('deviceFiles')
-    ->inject('deviceLocal')
-    ->action(action: function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
-        /** @var Utopia\Database\Document $project */
+    ->action(action: function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, Document $user, string $mode) {
 
         $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user);
         $video = Authorization::skip(function () use ($dbForProject, $bucketId, $file) {
@@ -420,27 +460,80 @@ App::post('/v1/video')
         });
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic(new Document([
-            '$id'     =>  $video->getId(),
-            'fileId'   => $video['fileId'],
-            'bucketId' => $video['bucketId'],
-            'size'     => $video['size'],
-        ]), Response::MODEL_VIDEO);
+        $response->dynamic($video, Response::MODEL_VIDEO);
+    });
+
+App::delete('/v1/videos/:videoId')
+    ->desc('Delete video')
+    ->groups(['api', 'video'])
+    ->label('scope', 'files.write')
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.method', 'delete')
+    ->label('sdk.description', '/docs/references/videos/delete.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('videoId', '', new UID(), 'Video unique ID.')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('mode')
+    ->inject('user')
+    ->inject('deviceVideos')
+    ->action(function (string $videoId, string $renditionId, Response $response, Document $project, Database $dbForProject, string $mode, Document $user, Device $deviceVideos) {
+
+        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
+
+        if ($video->isEmpty()) {
+            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+        }
+
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+
+        $deleted = $dbForProject->deleteDocument('videos', $videoId);
+
+        if (!$deleted) {
+            throw new Exception('Failed to remove video from DB', 500, Exception::GENERAL_SERVER_ERROR);
+        }
+
+        $renditions = Authorization::skip(fn() => $dbForProject->find('videos_renditions', [
+            new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
+        ], 12, 0, [], ['ASC']));
+
+        foreach ($renditions as $rendition) {
+            Authorization::skip(fn() => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
+        }
+
+        $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [
+            new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
+        ], 12, 0, [], ['ASC']));
+
+        foreach ($subtitles as $subtitle) {
+            Authorization::skip(fn() => $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId()));
+        }
+
+        foreach ($renditions as $rendition) {
+            Authorization::skip(fn() => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
+        }
+
+        $videoPath  = $this->getVideoDevice($project->getId())->getPath($this->args['videoId']);
+        $deviceVideos->deletePath($videoPath);
+
+        $response->noContent();
     });
 
 
 App::post('/v1/videos/:videoId/rendition')
     ->alias('/v1/videos/:videoId/rendition', [])
-    ->desc('Start transcoding video rendition')
+    ->desc('Create video rendition')
     ->groups(['api', 'video'])
     ->label('scope', 'files.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'video')
-    ->label('sdk.method', 'createTranscoding')
-    ->label('sdk.description', '/docs/references/videos/create-transcoding.md') // TODO: Create markdown
+    ->label('sdk.method', 'createRendition')
+    ->label('sdk.description', '/docs/references/videos/create-rendition.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-//    ->label('event', 'buckets.[bucketId].files.[fileId].create')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('profileId', '', new CustomId(), 'Profile unique ID.')
     ->inject('request')
@@ -448,13 +541,8 @@ App::post('/v1/videos/:videoId/rendition')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('audits')
-    ->inject('usage')
-    ->inject('events')
     ->inject('mode')
-    ->inject('deviceFiles')
-    ->inject('deviceLocal')
-    ->action(action: function (string $videoId, string $profileId, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->action(action: function (string $videoId, string $profileId, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
@@ -482,8 +570,45 @@ App::post('/v1/videos/:videoId/rendition')
     });
 
 
-App::get('/v1/videos/:videoId/:stream/renditions')
-    ->alias('/v1/videos/:videoId/renditions', [])
+App::get('/v1/videos/:videoId/rendition/:renditionId')
+    ->desc('Get all backet\'s videos')
+    ->groups(['api', 'video'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'getRendition')
+    ->label('sdk.description', '/docs/references/videos/get-rendition.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VIDEO_RENDITION)
+    ->param('videoId', null, new UID(), 'Video unique ID.')
+    ->param('renditionId', null, new UID(), 'Rendition unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('mode')
+    ->inject('user')
+    ->action(function ($videoId, $renditionId, Response $response, Database $dbForProject, string $mode, Document $user) {
+
+        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
+
+        if ($video->isEmpty()) {
+            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+        }
+
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+
+
+        $rendition = Authorization::skip(fn () => $dbForProject->findOne('videos_renditions', [new Query('_uid', Query::TYPE_EQUAL, [$renditionId])]));
+
+        if ($rendition->isEmpty()) {
+            throw new Exception('Video rendition not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
+        }
+
+        $response->dynamic($rendition, Response::MODEL_VIDEO_RENDITION);
+    });
+
+
+App::get('/v1/videos/:videoId/renditions')
     ->desc('Get video renditions')
     ->groups(['api', 'video'])
     ->label('scope', 'files.read')
@@ -495,13 +620,11 @@ App::get('/v1/videos/:videoId/:stream/renditions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VIDEO_RENDITION_LIST)
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('stream', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $stream, Response $response, Database $dbForProject, Stats $usage, string $mode, Document $user) {
+    ->action(function (string $videoId, Response $response, Database $dbForProject, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
@@ -515,10 +638,9 @@ App::get('/v1/videos/:videoId/:stream/renditions')
             new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
             new Query('endedAt', Query::TYPE_GREATER, [0]),
             new Query('status', Query::TYPE_EQUAL, ['ready']),
-            new Query('stream', Query::TYPE_EQUAL, [$stream]),
         ];
 
-        $renditions = Authorization::skip(fn () => $dbForProject->find('videos_renditions', $queries, 12, 0, [], ['ASC']));
+        $renditions = Authorization::skip(fn () => $dbForProject->find('videos_renditions', $queries, 18, 0, [], ['ASC']));
 
         $response->dynamic(new Document([
             'total'      => $dbForProject->count('videos_renditions', $queries, APP_LIMIT_COUNT),
@@ -527,35 +649,77 @@ App::get('/v1/videos/:videoId/:stream/renditions')
     });
 
 
-App::get('/v1/videos/:videoId/:stream/:profile/:fileName')
-    ->alias('/v1/videos/:videoId/:stream/:profile/:fileName', [])
-    ->desc('Get video playlist manifests')
+App::delete('/v1/videos/:videoId/renditions/:renditionId')
+    ->desc('Delete video subtitle')
+    ->groups(['api', 'video'])
+    ->label('scope', 'files.write')
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.method', 'deleteRendition')
+    ->label('sdk.description', '/docs/references/videos/delete-rendition.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('videoId', '', new UID(), 'Video unique ID.')
+    ->param('renditionId', '', new UID(), 'Video rendition unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('mode')
+    ->inject('user')
+    ->inject('deviceVideos')
+    ->action(function (string $videoId, string $renditionId, Response $response, Database $dbForProject, string $mode, Document $user, Device $deviceVideos) {
+
+        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
+
+        if ($video->isEmpty()) {
+            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+        }
+
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+
+        $rendition = Authorization::skip(fn() => $dbForProject->getDocument('videos_renditions', $renditionId));
+
+        if ($rendition->isEmpty()) {
+            throw new Exception('Video rendition not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
+        }
+
+        $deleted = $dbForProject->deleteDocument('videos_renditions', $renditionId);
+
+        if (!$deleted) {
+            throw new Exception('Failed to remove video rendition from DB', 500, Exception::GENERAL_SERVER_ERROR);
+        }
+
+        Authorization::skip(fn() => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
+        if (!empty($rendition['path'])) {
+            $deviceVideos->deletePath($rendition['path']);
+        }
+
+        $response->noContent();
+    });
+
+
+App::get('/v1/videos/:videoId/streams/:streamId')
+    ->desc('Get video master renditions manifest')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'video')
-    ->label('sdk.method', 'getPlaylist')
-    ->label('sdk.description', '/docs/references/videos/get-playlist.md') // TODO: Create markdown
+    ->label('sdk.method', 'getMasterManifest')
+    ->label('sdk.description', '/docs/references/videos/get-master-manifest.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    // TODO: Response model
     ->label('scope', 'files.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('stream', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
-    ->param('profile', '', new Text(18), 'folder name')
-    ->param('fileName', '', new Text(128), 'playlist file name')
+    ->param('streamId', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('videosDevice')
-    ->inject('usage')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $stream, string $profile, string $fileName, Response $response, Database $dbForProject, Device $videosDevice, Stats $usage, string $mode, Document $user) {
+    ->action(function (string $videoId, string $streamId, Response $response, Database $dbForProject, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
         ]));
 
-        if (empty($video)) {
+        if ($video->isEmpty()) {
             throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
         }
 
@@ -565,70 +729,294 @@ App::get('/v1/videos/:videoId/:stream/:profile/:fileName')
             new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
             new Query('endedAt', Query::TYPE_GREATER, [0]),
             new Query('status', Query::TYPE_EQUAL, ['ready']),
-            new Query('stream', Query::TYPE_EQUAL, [$stream]),
+            new Query('stream', Query::TYPE_EQUAL, [$streamId]),
         ], 12, 0, [], ['ASC']));
 
         if (empty($renditions)) {
-            throw new Exception('Renditions not found'); // TODO: Proper error code
+            throw new Exception('Rendition  not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        $contentType['m3u8'] = 'application/x-mpegurl';
-        $contentType['mpd']  = 'application/dash+xml';
-        $contentType['ts']   = 'video/MP2T';
-        $contentType['m4s']   = 'video/iso.segment';
-        $contentType['vtt']   = 'text/vtt';
-        $ext = pathinfo($fileName, PATHINFO_EXTENSION);
-        $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/' . $stream . '/' ;
+        $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/streams/' . $streamId;
 
-        if ($profile === 'master') {
-            if ($stream === 'hls') {
-                $subtitles = Authorization::skip(fn () => $dbForProject->find('videos_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$video->getId()])], 12, 0, [], ['ASC']));
-                $paramsSubtitles = [];
-                foreach ($subtitles as $subtitle) {
-                        $paramsSubtitles[] = [
-                            'name' => $subtitle->getAttribute('name'),
-                            'code' => $subtitle->getAttribute('code'),
-                            'default' => !empty($subtitle->getAttribute('default')) ? 'YES' : 'NO',
-                            'uri'  => $baseUrl  . $subtitle->getAttribute('path') . '/' . $videoId . '_subtitles_' . $subtitle->getAttribute('code') . '.m3u8',
-                        ];
-                }
-                $paramsRenditions = [];
-                foreach ($renditions as $rendition) {
-                    $paramsRenditions[] = [
-                        'bandwidth'  => ($rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate')),
-                        'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
-                        'name' => $rendition->getAttribute('name'),
-                        'uri'  => $baseUrl . $rendition->getAttribute('name') . '/' . $rendition->getAttribute('videoId') . '_' . $rendition->getAttribute('height') . 'p.m3u8',
-                        'subs' => !empty($paramsSubtitles) ? ' SUBTITLES="subs"' : '',
-                        ];
-                }
-
-                $template = new View(__DIR__ . '/../../views/videos/hls.phtml');
-                $template->setParam('paramsSubtitles', $paramsSubtitles);
-                $template->setParam('paramsRenditions', $paramsRenditions);
-                $output = $template->render(false);
-            } else {
-                $adaptations = [];
-                foreach ($renditions as $rendition) {
-                    $metadata = $rendition->getAttribute('metadata');
-                    foreach ($metadata['mpeg-dash']['Period']['AdaptationSet'] as $set) {
-                        $adaption = $set['@attributes'];
-                        $adaption['baseUrl'] = $baseUrl . $rendition->getAttribute('name') . '/';
-                        $adaption['representation'] = $set['Representation']['@attributes'];
-                        $adaption['representation']['SegmentTemplate'] = $set['Representation']['SegmentTemplate']['@attributes'];
-                        $adaption['representation']['segmentTemplate']['segmentTimeline'] = $set['Representation']['SegmentTemplate']['SegmentTimeline'];
-                        $adaptations[] = $adaption;
-                    }
-                }
-
-                $template = new View(__DIR__ . '/../../views/videos/dash.phtml');
-                $template->setParam('params', $adaptations);
-                $response->setContentType($contentType[$ext]);
-                $output = $template->render(false);
+        if ($streamId === 'hls') {
+            $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$video->getId()])], 12, 0, [], ['ASC']));
+            $paramsSubtitles = [];
+            foreach ($subtitles as $subtitle) {
+                $paramsSubtitles[] = [
+                    'name' => $subtitle->getAttribute('name'),
+                    'code' => $subtitle->getAttribute('code'),
+                    'default' => !empty($subtitle->getAttribute('default')) ? 'YES' : 'NO',
+                    'uri' => $baseUrl . '/subtitles/' . $subtitle->getId(),
+                ];
             }
+
+            $paramsRenditions = [];
+            foreach ($renditions as $rendition) {
+                $paramsRenditions[] = [
+                    'bandwidth' => ($rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate')),
+                    'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
+                    'name' => $rendition->getAttribute('name'),
+                    'uri' => $baseUrl . '/renditions/' . $rendition->getId(),
+                    'subs' => !empty($paramsSubtitles) ? ' SUBTITLES="subs"' : '',
+                ];
+            }
+
+            $template = new View(__DIR__ . '/../../views/videos/hls-master.phtml');
+            $template->setParam('paramsSubtitles', $paramsSubtitles);
+            $template->setParam('paramsRenditions', $paramsRenditions);
+            $response->setContentType('application/x-mpegurl')->send($template->render(false));
         } else {
-            $output = $videosDevice->read($videosDevice->getRoot() . '/' . $videoId . '/' . $profile . '/' . $fileName);
+            $adaptations = [];
+            foreach ($renditions as $rendition) {
+                $metadata = $rendition->getAttribute('metadata');
+                foreach ($metadata['mpeg-dash']['Period']['AdaptationSet'] as $set) {
+                    $adaption = $set['@attributes'];
+                    $adaption['baseUrl'] = $baseUrl . '/renditions/' . $rendition->getId();
+                    $adaption['representation'] = $set['Representation']['@attributes'];
+                    $adaption['representation']['SegmentTemplate'] = $set['Representation']['SegmentTemplate']['@attributes'];
+                    $adaption['representation']['segmentTemplate']['segmentTimeline'] = $set['Representation']['SegmentTemplate']['SegmentTimeline'];
+                    $adaptations[] = $adaption;
+                }
+            }
+
+            $template = new View(__DIR__ . '/../../views/videos/dash.phtml');
+            $template->setParam('params', $adaptations);
+            $response->setContentType('application/dash+xml')->send($template->render(false));
+        }
+    });
+
+
+App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId')
+    ->desc('Get video rendition manifest')
+    ->groups(['api', 'video'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'getManifest')
+    ->label('sdk.description', '/docs/references/videos/get-manifest.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    // TODO: Response model
+    ->label('scope', 'files.read')
+    ->param('videoId', null, new UID(), 'Video unique ID.')
+    ->param('streamId', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
+    ->param('renditionId', '', new UID(), 'Rendition unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('mode')
+    ->inject('user')
+    ->action(function (string $videoId, string $streamId, string $renditionId, Response $response, Database $dbForProject, string $mode, Document $user) {
+
+        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
+            new Query('_uid', Query::TYPE_EQUAL, [$videoId])
+        ]));
+
+        if (empty($video)) {
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
         }
 
-        $response->setContentType($contentType[$ext])->send($output);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+
+        $rendition = Authorization::skip(fn () => $dbForProject->findOne('videos_renditions', [
+            new Query('_uid', Query::TYPE_EQUAL, [$renditionId]),
+            new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
+            new Query('endedAt', Query::TYPE_GREATER, [0]),
+            new Query('status', Query::TYPE_EQUAL, ['ready']),
+            new Query('stream', Query::TYPE_EQUAL, [$streamId]),
+        ]));
+
+        if (empty($rendition)) {
+            throw new Exception('Rendition  not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
+        }
+
+        $segments = Authorization::skip(fn () => $dbForProject->find('videos_renditions_segments', [
+            new Query('renditionId', Query::TYPE_EQUAL, [$renditionId]),
+        ], 4000, 0, [], ['ASC']));
+
+        if (empty($segments)) {
+            throw new Exception('Rendition segments not found', 404, Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
+        }
+
+        $paramsSegments = [];
+        foreach ($segments as $segment) {
+            $paramsSegments[] = [
+                      'duration' => $segment->getAttribute('duration'),
+                      'url'  => 'http://127.0.0.1/v1/videos/' . $videoId . '/streams/' . $streamId . '/renditions/' . $renditionId . '/segments/' . $segment->getId() ,
+                    ];
+        }
+
+        $template = new View(__DIR__ . '/../../views/videos/hls.phtml');
+        $template->setParam('targetDuration', $rendition->getAttribute('targetDuration'));
+        $template->setParam('paramsSegments', $paramsSegments);
+        $response->setContentType('application/x-mpegurl')->send($template->render(false));
+    });
+
+
+App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/segments/:segmentId')
+    ->desc('Get video rendition segment')
+    ->groups(['api', 'video'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'getRenditionSegment')
+    ->label('sdk.description', '/docs/references/videos/get-rendition-segment.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    // TODO: Response model
+    ->label('scope', 'files.read')
+    ->param('videoId', null, new UID(), 'Video unique ID.')
+    ->param('streamId', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
+    ->param('renditionId', '', new UID(), 'Rendition unique ID.')
+    ->param('segmentId', '', new UID(), 'Segment unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('videosDevice')
+    ->inject('mode')
+    ->inject('user')
+    ->action(function (string $videoId, string $streamId, string $renditionId, string $segmentId, Response $response, Database $dbForProject, Device $videosDevice, string $mode, Document $user) {
+
+        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
+            new Query('_uid', Query::TYPE_EQUAL, [$videoId])
+        ]));
+
+        if (empty($video)) {
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
+        }
+
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+
+        $rendition = Authorization::skip(fn() => $dbForProject->findOne('videos_renditions', [
+            new Query('_uid', Query::TYPE_EQUAL, [$renditionId]),
+            new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
+            new Query('endedAt', Query::TYPE_GREATER, [0]),
+            new Query('status', Query::TYPE_EQUAL, ['ready']),
+            new Query('stream', Query::TYPE_EQUAL, [$streamId]),
+        ]));
+
+        if (empty($rendition)) {
+            throw new Exception('Rendition not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
+        }
+
+        $segment = Authorization::skip(fn () => $dbForProject->findOne('videos_renditions_segments', [
+            new Query('_uid', Query::TYPE_EQUAL, [$segmentId])]));
+
+        if (empty($segment)) {
+            throw new Exception('Rendition segments not found', 404, Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
+        }
+
+        $output = $videosDevice->read($segment->getAttribute('path') .  $segment->getAttribute('fileName'));
+        $response->setContentType('video/MP2T')->send($output);
+    });
+
+
+App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId')
+    ->desc('Get video subtitle')
+    ->groups(['api', 'video'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'getSubtitle')
+    ->label('sdk.description', '/docs/references/videos/get-subtitle.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    // TODO: Response model
+    ->label('scope', 'files.read')
+    ->param('videoId', null, new UID(), 'Video unique ID.')
+    ->param('streamId', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
+    ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('mode')
+    ->inject('user')
+    ->action(function (string $videoId, string $streamId, string $subtitleId, Response $response, Database $dbForProject, string $mode, Document $user) {
+
+        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
+            new Query('_uid', Query::TYPE_EQUAL, [$videoId])
+        ]));
+
+        if (empty($video)) {
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
+        }
+
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+
+        $subtitle = Authorization::skip(fn() => $dbForProject->findOne('videos_subtitles', [
+            new Query('_uid', Query::TYPE_EQUAL, [$subtitleId]),
+            new Query('status', Query::TYPE_EQUAL, ['ready'])
+        ]));
+
+        if (empty($subtitle)) {
+            throw new Exception('subtitle not found', 404, Exception::VIDEO_SUBTITLE_NOT_FOUND);
+        }
+
+        $segments = Authorization::skip(fn () => $dbForProject->find('videos_subtitles_segments', [
+            new Query('subtitleId', Query::TYPE_EQUAL, [$subtitleId]),
+        ], 4000));
+
+        if (empty($segments)) {
+            throw new Exception('Subtitle segments not found', 404, Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
+        }
+
+        $paramsSegments = [];
+        foreach ($segments as $segment) {
+            $paramsSegments[] = [
+                'duration' => $segment->getAttribute('duration'),
+                'url'  => 'http://127.0.0.1/v1/videos/' . $videoId . '/streams/' . $streamId . '/subtitles/' . $subtitleId . '/segments/' . $segment->getId() ,
+            ];
+        }
+
+        $template = new View(__DIR__ . '/../../views/videos/hls-subtitles.phtml');
+        $template->setParam('targetDuration', $subtitle->getAttribute('targetDuration'));
+        $template->setParam('paramsSegments', $paramsSegments);
+        $response->setContentType('application/x-mpegurl')->send($template->render(false));
+    });
+
+
+App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId/segments/:segmentId')
+    ->desc('Get video subtitle segment')
+    ->groups(['api', 'video'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'video')
+    ->label('sdk.method', 'getSubtitleSegment')
+    ->label('sdk.description', '/docs/references/videos/get-subtitle-segment.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    // TODO: Response model
+    ->label('scope', 'files.read')
+    ->param('videoId', null, new UID(), 'Video unique ID.')
+    ->param('streamId', '', new WhiteList(['hls', 'mpeg-dash']), 'stream protocol name')
+    ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
+    ->param('segmentId', '', new UID(), 'Segment unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('videosDevice')
+    ->inject('mode')
+    ->inject('user')
+    ->action(function (string $videoId, string $streamId, string $subtitleId, string $segmentId, Response $response, Database $dbForProject, Device $videosDevice, string $mode, Document $user) {
+
+        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
+            new Query('_uid', Query::TYPE_EQUAL, [$videoId])
+        ]));
+
+        if (empty($video)) {
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
+        }
+
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+
+        $subtitle = Authorization::skip(fn() => $dbForProject->findOne('videos_subtitles', [
+            new Query('_uid', Query::TYPE_EQUAL, [$subtitleId]),
+            new Query('status', Query::TYPE_EQUAL, ['ready'])
+        ]));
+
+        if (empty($subtitle)) {
+            throw new Exception('subtitle not found', 404, Exception::VIDEO_SUBTITLE_NOT_FOUND);
+        }
+
+        $segment = Authorization::skip(fn () => $dbForProject->findOne('videos_subtitles_segments', [
+            new Query('_uid', Query::TYPE_EQUAL, [$segmentId])]));
+
+        if (empty($segment)) {
+            throw new Exception('Subtitle segments not found', 404, Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
+        }
+
+        $output = $videosDevice->read($segment->getAttribute('path') .  $segment->getAttribute('fileName'));
+        $response->setContentType('text/vtt')->send($output);
     });

@@ -22,12 +22,12 @@ class VideoCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'name'          => 'My test profile',
-            'videoBitrate'  => 570,
-            'audioBitrate'  => 120,
-            'width'         => 600,
-            'height'        => 400,
-            'stream'        => 'hls',
+            'name' => 'My test profile',
+            'videoBitrate' => 570,
+            'audioBitrate' => 120,
+            'width' => 600,
+            'height' => 400,
+            'stream' => 'hls',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -39,12 +39,12 @@ class VideoCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'name'          => 'My updated test profile',
-            'videoBitrate'  => 590,
-            'audioBitrate'  => 120,
-            'width'         => 300,
-            'height'        => 400,
-            'stream'        => 'hls',
+            'name' => 'My updated test profile',
+            'videoBitrate' => 590,
+            'audioBitrate' => 120,
+            'width' => 300,
+            'height' => 400,
+            'stream' => 'hls',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -54,7 +54,7 @@ class VideoCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/videos/profiles/' . $response['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' =>  $this->getProject()['apiKey'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
         $profileId = $response['body']['$id'];
@@ -67,7 +67,7 @@ class VideoCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_DELETE, '/videos/profiles/' . $response['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' =>  $this->getProject()['apiKey'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -75,7 +75,7 @@ class VideoCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/videos/profiles/' . $profileId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' =>  $this->getProject()['apiKey'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -85,7 +85,7 @@ class VideoCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' =>  $this->getProject()['apiKey'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -126,16 +126,16 @@ class VideoCustomServerTest extends Scope
         ], [
             'bucketId' => $this->getBucket()['$id'],
             'fileId' => $this->getSubtitle()['$id'],
-            'name'   => 'English',
-            'code'   => 'Eng',
-            'default'   => true,
+            'name' => 'English',
+            'code' => 'Eng',
+            'default' => true,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/'. $videoId . '/subtitles' , [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -154,21 +154,22 @@ class VideoCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => $this->getBucket()['$id'],
-            'fileId'   => $this->getSubtitle()['$id'],
-            'name'     => 'Polish',
-            'code'     => 'Pol',
-            'default'  => false,
+            'fileId' => $this->getSubtitle()['$id'],
+            'name' => 'Polish',
+            'code' => 'Pol',
+            'default' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/'. $videoId . '/subtitles' , [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
+
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
@@ -176,6 +177,22 @@ class VideoCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['subtitles']);
         $this->assertNotEmpty($response['body']['subtitles'][0]['$id']);
         $this->assertEquals('Polish', $response['body']['subtitles'][0]['name']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId . '/subtitles/' . $response['body']['subtitles'][0]['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/subtitles', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
     }
 
 
@@ -203,8 +220,8 @@ class VideoCustomServerTest extends Scope
         ], [
             'bucketId' => $this->getBucket()['$id'],
             'fileId' => $this->getSubtitle()['$id'],
-            'name'   => 'hebrew',
-            'code'   => 'heb',
+            'name' => 'hebrew',
+            'code' => 'heb',
         ]);
 
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', [
@@ -214,15 +231,17 @@ class VideoCustomServerTest extends Scope
         ], [
             'bucketId' => $this->getBucket()['$id'],
             'fileId' => $this->getSubtitle()['$id'],
-            'name'   => 'english',
-            'code'   => 'eng',
-            'default'   => true,
+            'name' => 'english',
+            'code' => 'eng',
+            'default' => true,
         ]);
+
+         $subtitleId = $response['body']['$id'];
 
         $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' =>  $this->getProject()['apiKey'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
 
@@ -235,11 +254,12 @@ class VideoCustomServerTest extends Scope
             'profileId' => $profileId,
         ]);
 
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         return [
-                'videoId' => $videoId,
-                'stream' => ''
-                ];
+            'videoId' => $videoId,
+            'subtitleId' => $subtitleId
+        ];
     }
 
 
@@ -264,7 +284,6 @@ class VideoCustomServerTest extends Scope
 
 
         foreach ($response['body']['profiles'] as $profile) {
-
             $profileId = $profile['$id'];
             $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/rendition', [
                 'content-type' => 'application/json',
@@ -273,7 +292,7 @@ class VideoCustomServerTest extends Scope
             ], [
                 'profileId' => $profileId,
             ]);
-          }
+        }
 
         return [
             'videoId' => $videoId,
@@ -283,12 +302,12 @@ class VideoCustomServerTest extends Scope
     /**
      * @depends testTranscodeWithSubs
      */
-    public function testGetRendition(array $data): array
+    public function testGetRenditions(array $data): array
     {
 
         sleep(30);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/hls/renditions', [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/renditions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -297,16 +316,29 @@ class VideoCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['renditions']);
 
         $videoId = $response['body']['renditions'][0]['videoId'];
+        $renditionId = $response['body']['renditions'][0]['$id'];
         $profileId = $response['body']['renditions'][0]['profileId'];
         $profileName = $response['body']['renditions'][0]['name'];
         $stream = $response['body']['renditions'][0]['stream'];
 
-        var_dump($response['body']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/rendition/' . $renditionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($renditionId, $response['body']['$id']);
+        var_dump($response);
 
         return [
+            'renditionId' => $renditionId,
             'videoId' => $videoId,
             'profileId' => $profileId,
             'profileName' => $profileName,
+            'subtitleId' => $data['subtitleId'],
             'stream' => $stream
         ];
     }
@@ -318,7 +350,7 @@ class VideoCustomServerTest extends Scope
     {
         sleep(20);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/' . $data['stream'] . '/master/' . $data['videoId'] . '.m3u8', [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/streams/' . $data['stream'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -326,7 +358,7 @@ class VideoCustomServerTest extends Scope
 
         var_dump($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/' . $data['stream'] . '/' . $data['profileName'] . '/' . $data['videoId'] . '_360p.m3u8', [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId']  . $data['stream'] . '/renditions/' . $data['renditionId'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -334,7 +366,32 @@ class VideoCustomServerTest extends Scope
 
         var_dump($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/' . $data['stream'] . '/' . $data['profileName'] . '/' .  $data['videoId'] . '_360p_0000.ts', [
+        preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
+
+        $segmentUrl = $match[0][0];
+        $response = $this->client->call(Client::METHOD_GET, $segmentUrl, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        //var_dump($response['body']);
+
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/streams/' . $data['stream'] . '/subtitles/' . $data['subtitleId'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        var_dump($response['body']);
+
+        preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
+
+        $segmentUrl = $match[0][0];
+
+        var_dump($segmentUrl);
+        $response = $this->client->call(Client::METHOD_GET, $segmentUrl, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -342,20 +399,4 @@ class VideoCustomServerTest extends Scope
 
         var_dump($response['body']);
     }
-
-//    /**
-//     * @depends testTranscodingRendition
-//     */
-//    public function testDashStreamRender($data): void
-//    {
-//        sleep(20);
-//
-//        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/mpeg-dash/master/' . $data['videoId'] . '.mpd', [
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $this->getProject()['$id'],
-//            'x-appwrite-key' => $this->getProject()['apiKey'],
-//        ]);
-//
-//        var_dump($response['body']);
-//    }
 }

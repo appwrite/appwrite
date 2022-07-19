@@ -30,9 +30,72 @@ class Video extends Model
             ])
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'File SIZE.',
+                'description' => 'File size.',
                 'default' => '',
-                'example' => 3567790,
+                'example' => 23647142,
+            ])
+            ->addRule('duration', [
+                'type' => self::TYPE_STRING,
+                'require' => false,
+                'description' => 'Video duration.',
+                'default' => 0,
+                'example' => 92.739989,
+            ])
+            ->addRule('width', [
+                'type' => self::TYPE_INTEGER,
+                'require' => false,
+                'description' => 'Video width.',
+                'default' => 0,
+                'example' => 960,
+            ])
+            ->addRule('height', [
+                'type' => self::TYPE_INTEGER,
+                'require' => false,
+                'description' => 'Video height.',
+                'default' => 0,
+                'example' => 544,
+            ])
+            ->addRule('videoCodec', [
+                'type' => self::TYPE_STRING,
+                'require' => false,
+                'description' => 'Video codec.',
+                'default' => null,
+                'example' => 'h264,avc1',
+            ])
+             ->addRule('videoBitrate', [
+            'type' => self::TYPE_INTEGER,
+              'require' => false,
+            'description' => 'Video bitrate.',
+            'default' => 0,
+            'example' => 564790,
+             ])
+            ->addRule('videoFramerate', [
+                'type' => self::TYPE_STRING,
+                'require' => false,
+                'description' => 'Video frame rate.',
+                'default' => 0,
+                'example' => '231947377/4638947',
+            ])
+            ->addRule('audioCodec', [
+                'type' => self::TYPE_STRING,
+                'require' => false,
+                'description' => 'Audio codec.',
+                'default' => null,
+                'example' => 'aac,mp4a',
+            ])
+            ->addRule('audioBitrate', [
+                'type' => self::TYPE_INTEGER,
+                'require' => false,
+                'description' => 'Audio bitrate.',
+                'default' => 0,
+                'example' => 127999,
+            ])
+            ->addRule('audioSamplerate', [
+                'type' => self::TYPE_INTEGER,
+                'require' => false,
+                'description' => 'Audio sample rate.',
+                'default' => '0',
+                'example' => '',
             ])
         ;
     }
@@ -44,7 +107,7 @@ class Video extends Model
      */
     public function getName(): string
     {
-        return 'Video entity';
+        return 'Video';
     }
 
     /**

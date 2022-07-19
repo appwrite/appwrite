@@ -13,44 +13,44 @@ class VideoProfile extends Model
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
                 'description' => 'ID.',
-                'default' => '',
+                'default' => null,
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Video profile name.',
-                'default' => '',
+                'default' => null,
                 'example' => '360P',
             ])
             ->addRule('videoBitrate', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Video bitrate.',
-                'default' => '',
+                'default' => 0,
                 'example' => 3,
             ])
             ->addRule('audioBitrate', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Audio bitrate.',
-                'default' => '',
+                'default' => 0,
                 'example' => 3,
             ])
             ->addRule('width', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Video width.',
-                'default' => '',
+                'default' => 0,
                 'example' => 300,
             ])
             ->addRule('height', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Video height.',
-                'default' => '',
+                'default' => 0,
                 'example' => 400,
             ])
 
             ->addRule('stream', [
                 'type' => self::TYPE_STRING,
                 'description' => 'http video stream type.',
-                'default' => '',
+                'default' => null,
                 'example' => 'mpeg-dash',
             ])
         ;
