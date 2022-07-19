@@ -1,0 +1,1 @@
+Execute a GraphQL query.
