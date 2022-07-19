@@ -76,9 +76,17 @@ App::post('/v1/graphql/upload')
     ->inject('schema')
     ->action(Closure::fromCallable('graphqlRequest'));
 
+
 /**
+ * Execute a GraphQL request
+ *
+ * @param array $query
+ * @param Request $request
+ * @param Response $response
+ * @param CoroutinePromiseAdapter $promiseAdapter
+ * @param Type\Schema $schema
+ * @return void
  * @throws Exception
- * @throws \Exception
  */
 function graphqlRequest(
     array $query,
@@ -141,7 +149,7 @@ function graphqlRequest(
     $promiseAdapter->all($promises)->then(
         function (array $results) use (&$output, &$wg, $debugFlags) {
             try {
-                processResult($results, $output, $debugFlags);
+                $output = processResult($results, $debugFlags);
             } finally {
                 $wg->done();
             }
@@ -196,16 +204,15 @@ function parseMultipartRequest(array $query, Request $request): array
  * Process an array of results for output
  *
  * @param $result
- * @param $output
  * @param $debugFlags
- * @return void
+ * @return array
  */
-function processResult($result, &$output, $debugFlags): void
+function processResult($result, $debugFlags): array
 {
     if (!isset($result[1])) {
-        $output = $result[0]->toArray($debugFlags);
+        return $result[0]->toArray($debugFlags);
     } else {
-        $output = \array_merge_recursive(...\array_map(
+        return \array_merge_recursive(...\array_map(
             static fn ($item) => $item->toArray($debugFlags),
             $result
         ));

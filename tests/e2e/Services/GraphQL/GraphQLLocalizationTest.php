@@ -16,7 +16,7 @@ class GraphQLLocalizationTest extends Scope
     public function testGetLocale(): array
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_LOCALE);
+        $query = \urlencode($this->getQuery(self::$GET_LOCALE));
 
         $locale = $this->client->call(Client::METHOD_GET, '/graphql?query=' . $query, \array_merge([
             'content-type' => 'application/json',
