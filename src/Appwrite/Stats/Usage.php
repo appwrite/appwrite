@@ -269,12 +269,12 @@ class Usage
             $document = $this->database->getDocument('stats', $id);
             if ($document->isEmpty()) {
                 $this->database->createDocument('stats', new Document([
-                    '$id' => $id,
-                    'period' => $period,
-                    'time' => $time,
-                    'metric' => $metric,
-                    'value' => $value,
-                    'type' => $type,
+                '$id' => $id,
+                'period' => $period,
+                'time' => $time,
+                'metric' => $metric,
+                'value' => $value,
+                'type' => $type,
                 ]));
             } else {
                 $this->database->updateDocument(
@@ -328,17 +328,7 @@ class Usage
         $query .= "AND \"metric_type\"='counter' {$filters} ";
         $query .= "GROUP BY time({$period['key']}), \"projectId\" {$groupBy} ";
         $query .= "FILL(null)";
-        try {
-            $result = $this->influxDB->query($query);
-            $points = $result->getPoints();
-            foreach ($points as $point) {
-                $projectId = $point['projectId'];
 
-<<<<<<< HEAD
-                if (!empty($projectId) && $projectId !== 'console') {
-                    $metricUpdated = $metric;
-
-=======
         try {
             $result = $this->influxDB->query($query);
             $points = $result->getPoints();
@@ -347,8 +337,6 @@ class Usage
 
                 if (!empty($projectId) && $projectId !== 'console') {
                     $metricUpdated = $metric;
-
->>>>>>> 8eef613d4bd4268c9f9fca8056bf939c45833432
                     if (!empty($groupBy)) {
                         foreach ($options['groupBy'] as $groupBy) {
                             $groupedBy = $point[$groupBy] ?? '';
