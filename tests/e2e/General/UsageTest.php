@@ -565,8 +565,8 @@ class UsageTest extends Scope
 
         $this->assertEquals($executions, $response['functionsExecutions'][array_key_last($response['functionsExecutions'])]['value']);
         $this->assertGreaterThan($compute, $response['functionsCompute'][array_key_last($response['functionsCompute'])]['value']);
-        $this->assertEquals($executionTime, $response['functionsExecutionTime'][array_key_last($response['functionsCompute'])]['value']);
-        $this->assertGreaterThan(0, $response['functionsBuildTime'][array_key_last($response['functionsCompute'])]['value']);
+        $this->assertEquals($executionTime, $response['functionsExecutionTime'][array_key_last($response['functionsExecutionTime'])]['value']);
+        $this->assertGreaterThan(0, $response['functionsBuildTime'][array_key_last($response['functionsBuildTime'])]['value']);
         $this->assertEquals($failures, $response['functionsFailures'][array_key_last($response['functionsFailures'])]['value']);
     }
 
