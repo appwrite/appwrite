@@ -22,12 +22,12 @@ App::get('/v1/graphql')
     ->label('sdk.namespace', 'graphql')
     ->label('sdk.method', 'query')
     ->label('sdk.description', '/docs/references/graphql/query.md')
+    ->label('sdk.parameters', ['query' => ['default' => '', 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false]])
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new JSON(), 'The query or queries to execute.', fullBody: true)
     ->inject('request')
     ->inject('response')
     ->inject('promiseAdapter')
@@ -42,12 +42,12 @@ App::post('/v1/graphql')
     ->label('sdk.namespace', 'graphql')
     ->label('sdk.method', 'mutate')
     ->label('sdk.description', '/docs/references/graphql/mutate.md')
+    ->label('sdk.parameters', ['query' => ['default' => '', 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false]])
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new JSON(), 'The query or queries to execute.', fullBody: true)
     ->inject('request')
     ->inject('response')
     ->inject('promiseAdapter')
@@ -60,16 +60,16 @@ App::post('/v1/graphql/upload')
     ->label('scope', 'graphql')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'graphql')
-    ->label('sdk.description', '/docs/references/graphql/upload.md')
     ->label('sdk.method', 'upload')
+    ->label('sdk.description', '/docs/references/graphql/upload.md')
     ->label('sdk.methodType', 'upload')
+    ->label('sdk.parameters', ['query' => ['default' => '', 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false]])
     ->label('sdk.request.type', 'multipart/form-data')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new JSON(), 'The query or queries to execute.', fullBody: true)
     ->inject('request')
     ->inject('response')
     ->inject('promiseAdapter')
@@ -80,7 +80,6 @@ App::post('/v1/graphql/upload')
 /**
  * Execute a GraphQL request
  *
- * @param array $query
  * @param Request $request
  * @param Response $response
  * @param CoroutinePromiseAdapter $promiseAdapter
@@ -89,13 +88,14 @@ App::post('/v1/graphql/upload')
  * @throws Exception
  */
 function executeRequest(
-    array $query,
     Appwrite\Utopia\Request $request,
     Appwrite\Utopia\Response $response,
     CoroutinePromiseAdapter $promiseAdapter,
     Type\Schema $schema
 ): void {
+    $query = $request->getParams();
     $contentType = $request->getHeader('content-type');
+
     $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
     $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 50);
     $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_QUERY_DEPTH', 3);
@@ -121,14 +121,14 @@ function executeRequest(
         }
     }
 
-    $debugFlags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
+    $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
     $validations[] = new QueryComplexity($maxComplexity);
     $validations[] = new QueryDepth($maxDepth);
 
     if (App::isProduction()) {
         $validations[] = new DisableIntrospection();
-        $debugFlags = DebugFlag::NONE;
+        $flags = DebugFlag::NONE;
     }
 
     $promises = [];
@@ -147,9 +147,9 @@ function executeRequest(
     $wg = new WaitGroup();
     $wg->add();
     $promiseAdapter->all($promises)->then(
-        function (array $results) use (&$output, &$wg, $debugFlags) {
+        function (array $results) use (&$output, &$wg, $flags) {
             try {
-                $output = processResult($results, $debugFlags);
+                $output = processResult($results, $flags);
             } finally {
                 $wg->done();
             }
