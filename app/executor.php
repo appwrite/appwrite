@@ -513,7 +513,10 @@ App::post('/v1/execution')
             $executionStart = \microtime(true);
 
             // Prepare request to executor
-            $sendExecuteRequest = function() use ($vars, $data, $runtimeId, $secret) {
+            $sendExecuteRequest = function() use ($vars, $data, $runtimeId, $secret, &$executionStart) {
+                // Restart execution timer to not could failed attempts
+                $executionStart = \microtime(true);
+
                 $statusCode = 0;
                 $errNo = -1;
                 $executorResponse = '';
@@ -560,7 +563,7 @@ App::post('/v1/execution')
 
             // Execute function
             for ($i = 0; $i < 5; $i++) {
-                [ $errNo, $error, $statusCode, $executorResponse ] = \call_user_func($sendExecuteRequest);
+                [ 'errNo' => $errNo, 'error' => $error, 'statusCode' => $statusCode, 'executorResponse' => $executorResponse ] = \call_user_func($sendExecuteRequest);
 
                 // No error
                 if($errNo === 0) {
@@ -572,7 +575,7 @@ App::post('/v1/execution')
                 \sleep(1);
 
                 if ($i === 4) {
-                    throw new Exception('Runtime failed to respond in allocated time: ' . $error, 500);
+                    throw new Exception('Runtime failed to respond in allocated time: ' . $error . '(' . $errNo . ',' . $statusCode . ')', 500);
                 }
             }
 
