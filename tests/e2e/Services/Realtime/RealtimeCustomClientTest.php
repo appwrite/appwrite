@@ -1242,7 +1242,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), []);
 
-        $this->assertEquals($execution['headers']['status-code'], 201);
+        $this->assertEquals($execution['headers']['status-code'], 202);
         $this->assertNotEmpty($execution['body']['$id']);
 
         $response = json_decode($client->receive(), true);
