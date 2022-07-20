@@ -111,15 +111,17 @@ class UsageDB extends Usage
      * @param string $collection
      * @param string $attribute
      * @param string $metric
+     * @param int $multiplier
      *
      * @return int
      */
-    private function sum(string $projectId, string $collection, string $attribute, string $metric): int
+    private function sum(string $projectId, string $collection, string $attribute, string $metric, int $multiplier = 1): int
     {
         $this->database->setNamespace('_' . $projectId);
 
         try {
-            $sum = (int) $this->database->sum($collection, $attribute);
+            $sum = $this->database->sum($collection, $attribute);
+            $sum = (int) ($sum * $multiplier);
             $this->createOrUpdateMetric($projectId, $metric, $sum);
             return $sum;
         } catch (\Exception $e) {
@@ -231,10 +233,10 @@ class UsageDB extends Usage
      */
     private function computeStats(string $projectId): void
     {
-        $executionTotal = $this->sum($projectId, 'executions', 'time', 'functions.executionTime');
-        $buildTotal = $this->sum($projectId, 'builds', 'duration', 'functions.buildTime');
+        $executionTotal = $this->sum($projectId, 'executions', 'time', 'functions.executionTime', 1000); // in ms
+        $buildTotal = $this->sum($projectId, 'builds', 'duration', 'functions.buildTime', 1000); // in ms
 
-        $this->createOrUpdateMetric($projectId, 'functions.compute', ($executionTotal * 1000) + ($buildTotal * 1000)); //in ms
+        $this->createOrUpdateMetric($projectId, 'functions.compute', $executionTotal + $buildTotal); //in ms
     }
 
     /**
