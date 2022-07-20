@@ -493,8 +493,8 @@ class UsageTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertEquals($functionId, $execution['body']['functionId']);
-        $compute += $execution['body']['time'] * 1000;
-        $executionTime += $execution['body']['time'] * 1000;
+        $compute += (int) ($execution['body']['time'] * 1000);
+        $executionTime += (int) ($execution['body']['time'] * 1000);
         $executions++;
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
@@ -522,8 +522,8 @@ class UsageTest extends Scope
         $this->assertEquals($executionId, $execution['body']['$id']);
         $this->assertEquals($functionId, $execution['body']['functionId']);
 
-        $compute += $execution['body']['time'] * 1000;
-        $executionTime += $execution['body']['time'] * 1000;
+        $compute += (int) ($execution['body']['time'] * 1000);
+        $executionTime += (int) ($execution['body']['time'] * 1000);
 
         sleep(45);
 
