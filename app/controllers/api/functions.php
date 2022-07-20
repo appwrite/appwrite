@@ -54,14 +54,13 @@ App::post('/v1/functions')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
-    ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Event $eventsInstance) {
 
         $functionId = ($functionId == 'unique()') ? $dbForProject->getId() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -71,7 +70,7 @@ App::post('/v1/functions')
             'name' => $name,
             'runtime' => $runtime,
             'deployment' => '',
-            'vars' => $vars,
+            'vars' => null,
             'events' => $events,
             'schedule' => $schedule,
             'schedulePrevious' => 0,
@@ -291,7 +290,6 @@ App::put('/v1/functions/:functionId')
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
-    ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
@@ -300,7 +298,7 @@ App::put('/v1/functions/:functionId')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -315,7 +313,6 @@ App::put('/v1/functions/:functionId')
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
-            'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
             'scheduleNext' => (int)$next,

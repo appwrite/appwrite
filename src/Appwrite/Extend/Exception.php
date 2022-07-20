@@ -162,6 +162,11 @@ class Exception extends \Exception
     /** Keys */
     public const KEY_NOT_FOUND                     = 'key_not_found';
 
+    /** Variables */
+    public const VARIABLE_NOT_FOUND                = 'variable_not_found';
+    public const VARIABLE_ALREADY_EXISTS           = 'variable_already_exists';
+    public const VARIABLE_MISSING_PAYLOAD          = 'variable_missing_payload';
+
     /** Platform */
     public const PLATFORM_NOT_FOUND                = 'platform_not_found';
 

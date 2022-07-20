@@ -1940,12 +1940,12 @@ $collections = [
                 '$id' => 'vars',
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 8192,
+                'size' => 16384,
                 'signed' => true,
                 'required' => false,
-                'default' => [],
+                'default' => null,
                 'array' => false,
-                'filters' => ['json', 'encrypt'],
+                'filters' => ['subQueryVariables'],
             ],
             [
                 '$id' => 'events',
@@ -2973,6 +2973,74 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
         ]
+    ],
+
+    'variables' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'variables',
+        'name' => 'variables',
+        'attributes' => [
+            [
+                '$id' => 'functionInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'functionId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'key',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'value',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => []
+            ]
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_function',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['functionInternalId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_uniqueKey',
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['functionInternalId', 'key'],
+                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
+            ],
+        ],
     ],
 ];
 

@@ -20,6 +20,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
@@ -32,7 +33,6 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 App::init(function (Document $project) {
-
     if ($project->getId() !== 'console') {
         throw new Exception('Access to this API is forbidden.', 401, Exception::GENERAL_ACCESS_FORBIDDEN);
     }
@@ -1423,6 +1423,249 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         $deletes
             ->setType(DELETE_TYPE_CERTIFICATES)
             ->setDocument($domain);
+
+        $response->noContent();
+    });
+
+
+// Variables
+
+App::post('/v1/projects/:projectId/variables/:functionId')
+    ->desc('Create Variable')
+    ->groups(['api', 'projectsScoped'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'createVariable')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('functionId', null, new UID(), 'Function unique ID.', true)
+    ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.')
+    ->param('value', null, new Text(16384), 'Variable value. Max length: 16384 chars.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->inject('dbForProject')
+    ->action(function (string $projectId, string $functionId, string $key, string $value, Response $response, Database $dbForConsole, Database $dbForProject) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+        }
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $variable = new Document([
+            '$id' => $dbForProject->getId(),
+            '$read' => ['role:all'],
+            '$write' => ['role:all'],
+            'functionInternalId' => $function->getInternalId(),
+            'functionId' => $function->getId(),
+            'key' => $key,
+            'value' => $value,
+        ]);
+
+        try {
+            $variable = $dbForProject->createDocument('variables', $variable);
+        } catch (DuplicateException $th) {
+            throw new Exception('Variable name already used.', 409, Exception::VARIABLE_ALREADY_EXISTS);
+        }
+
+        $dbForProject->deleteCachedDocument('functions', $function->getId());
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($variable, Response::MODEL_VARIABLE);
+    });
+
+App::get('/v1/projects/:projectId/variables/:functionId')
+    ->desc('List Variables')
+    ->groups(['api', 'projectsScoped'])
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'listVariables')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VARIABLE_LIST)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('functionId', null, new UID(), 'Function unique ID.', true)
+    // TODO: Pagination
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->inject('dbForProject')
+    ->action(function (string $projectId, string $functionId, Response $response, Database $dbForConsole, Database $dbForProject) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+        }
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $variables = $dbForProject->find('variables', [
+            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()]),
+        ], 5000);
+
+        $response->dynamic(new Document([
+            'variables' => $variables,
+            'total' => count($variables),
+        ]), Response::MODEL_VARIABLE_LIST);
+    });
+
+App::get('/v1/projects/:projectId/variables/:functionId/:variableId')
+    ->desc('Get Variable')
+    ->groups(['api', 'projectsScoped'])
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getVariable')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('functionId', null, new UID(), 'Function unique ID.')
+    ->param('variableId', null, new UID(), 'Variable unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->inject('dbForProject')
+    ->action(function (string $projectId, string $functionId, string $variableId, Response $response, Database $dbForConsole, Database $dbForProject) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+        }
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $variable = $dbForProject->findOne('variables', [
+            new Query('_uid', Query::TYPE_EQUAL, [$variableId]),
+            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()])
+        ]);
+
+        if ($variable === false || $variable->isEmpty()) {
+            throw new Exception('Variable not found', 404, Exception::VARIABLE_NOT_FOUND);
+        }
+
+        $response->dynamic($variable, Response::MODEL_VARIABLE);
+    });
+
+App::put('/v1/projects/:projectId/variables/:functionId/:variableId')
+    ->desc('Update Variable')
+    ->groups(['api', 'projectsScoped'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateVariable')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('functionId', null, new UID(), 'Function unique ID.')
+    ->param('variableId', null, new UID(), 'Variable unique ID.')
+    ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', true)
+    ->param('value', null, new Text(16384), 'Variable value. Max length: 16384 chars.', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->inject('dbForProject')
+    ->action(function (string $projectId, string $functionId, string $variableId, ?string $key, ?string $value, Response $response, Database $dbForConsole, Database $dbForProject) {
+        if(empty($key) && empty($value)) {
+            throw new Exception('Missing key or value. Define at least one.', 400, Exception::VARIABLE_MISSING_PAYLOAD);
+        }
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+        }
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $variable = $dbForProject->findOne('variables', [
+            new Query('_uid', Query::TYPE_EQUAL, [$variableId]),
+            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()])
+        ]);
+
+        if ($variable === false || $variable->isEmpty()) {
+            throw new Exception('Variable not found', 404, Exception::VARIABLE_NOT_FOUND);
+        }
+
+        $variable
+            ->setAttribute('key', $key ?? $variable->getAttribute('key'))
+            ->setAttribute('value', $value ?? $variable->getAttribute('value'))
+        ;
+
+        try {
+            $dbForProject->updateDocument('variables', $variable->getId(), $variable);
+        } catch (DuplicateException $th) {
+            throw new Exception('Variable name already used.', 409, Exception::VARIABLE_ALREADY_EXISTS);
+        }
+
+        $dbForProject->deleteCachedDocument('functions', $function->getId());
+
+        $response->dynamic($variable, Response::MODEL_VARIABLE);
+    });
+
+App::delete('/v1/projects/:projectId/variables/:functionId/:variableId')
+    ->desc('Delete Variable')
+    ->groups(['api', 'projectsScoped'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'deleteVariable')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('functionId', null, new UID(), 'Function unique ID.')
+    ->param('variableId', null, new UID(), 'Variable unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->inject('dbForProject')
+    ->action(function (string $projectId, string $functionId, string $variableId, Response $response, Database $dbForConsole, Database $dbForProject) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+        }
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $variable = $dbForProject->findOne('variables', [
+            new Query('_uid', Query::TYPE_EQUAL, [$variableId]),
+            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()])
+        ]);
+
+        if ($variable === false || $variable->isEmpty()) {
+            throw new Exception('Variable not found', 404, Exception::VARIABLE_NOT_FOUND);
+        }
+
+        $dbForProject->deleteDocument('variables', $variable->getId());
+
+        $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $response->noContent();
     });
