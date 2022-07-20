@@ -253,21 +253,15 @@ class V14 extends Migration
                         /**
                          * Add Internal ID 'collectionInternalId' for Subqueries.
                          */
-                        if (!empty($document->getAttribute('collectionId')) && is_null($document->getAttribute('collectionInternalId'))) {
-                            $document->setAttribute('collectionInternalId', $internalId);
-                        }
+                        $document->setAttribute('collectionInternalId', $internalId);
                         /**
                          * Add Internal ID 'databaseInternalId' for Subqueries.
                          */
-                        if (is_null($document->getAttribute('databaseInternalId'))) {
-                            $document->setAttribute('databaseInternalId', '1');
-                        }
+                        $document->setAttribute('databaseInternalId', '1');
                         /**
                          * Add Internal ID 'databaseId'.
                          */
-                        if (is_null($document->getAttribute('databaseId'))) {
-                            $document->setAttribute('databaseId', 'default');
-                        }
+                        $document->setAttribute('databaseId', 'default');
 
                         /**
                          * Re-create Attribute.
