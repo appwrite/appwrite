@@ -49,6 +49,7 @@ use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
+use Swoole\ConnectionPool;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
@@ -62,6 +63,9 @@ use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
+use Utopia\Database\Adapter\Mongo\MongoClient;
+use Utopia\Database\Adapter\Mongo\MongoClientOptions;
+use Utopia\Database\Adapter\Mongo\MongoDBAdapter;
 use Utopia\Database\Query;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
@@ -463,24 +467,15 @@ $register->set('dbPool', function () {
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $pool = new PDOPool(
-        (new PDOConfig())
-        ->withHost($dbHost)
-        ->withPort($dbPort)
-        ->withDbName($dbScheme)
-        ->withCharset('utf8mb4')
-        ->withUsername($dbUser)
-        ->withPassword($dbPass)
-        ->withOptions([
-            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-            PDO::ATTR_TIMEOUT => 3, // Seconds
-            PDO::ATTR_PERSISTENT => true,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => true,
-            PDO::ATTR_STRINGIFY_FETCHES => true,
-        ]),
-        64
+    $options = new MongoClientOptions(
+        name: $dbScheme,
+        host: $dbHost,
+        port: (int) $dbPort,
+        username: $dbUser,
+        password: $dbPass
     );
+
+    $pool = new ConnectionPool(constructor: fn () => new MongoClient($options, true), size: 64);
 
     return $pool;
 });
@@ -569,16 +564,17 @@ $register->set('db', function () {
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDO::ATTR_TIMEOUT => 3, // Seconds
-        PDO::ATTR_PERSISTENT => true,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_EMULATE_PREPARES => true,
-        PDO::ATTR_STRINGIFY_FETCHES => true,
-    ));
+    $options = new MongoClientOptions(
+        name: $dbScheme,
+        host: $dbHost,
+        port: (int) $dbPort,
+        username: $dbUser,
+        password: $dbPass
+    );
 
-    return $pdo;
+    $client = new MongoClient($options, false);
+
+    return $client;
 });
 $register->set('cache', function () {
  // This is usually for our workers or CLI commands scope
@@ -888,7 +884,7 @@ App::setResource('console', function () {
 App::setResource('dbForProject', function ($db, $cache, Document $project) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database(new MariaDB($db), $cache);
+    $database = new Database(new MongoDBAdapter($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getInternalId()}");
 
@@ -898,7 +894,7 @@ App::setResource('dbForProject', function ($db, $cache, Document $project) {
 App::setResource('dbForConsole', function ($db, $cache) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database(new MariaDB($db), $cache);
+    $database = new Database(new MongoDBAdapter($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace('_console');
 

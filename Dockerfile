@@ -30,7 +30,7 @@ ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
 ENV PHP_REDIS_VERSION=5.3.7 \
-    PHP_MONGODB_VERSION=1.13.0 \
+    PHP_MONGODB_VERSION=1.14.0 \
     PHP_SWOOLE_VERSION=v4.8.10 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
@@ -319,6 +319,7 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
 RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
+RUN echo extension=mongodb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
 RUN if [ "$DEBUG" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.init_file=/usr/local/dev/yasd_init.php \nyasd.remote_port=9005 \nyasd.log_level=-1" >> /usr/local/etc/php/conf.d/yasd.ini; fi
 
 RUN if [ "$DEBUG" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/appwrite.ini; fi

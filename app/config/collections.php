@@ -2613,19 +2613,12 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_fulltext_name',
+                '$id' => '_fulltext_name_search',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['name'],
-                'lengths' => [1024],
+                'lengths' => [4096],
                 'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_search',
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['search'],
-                'lengths' => [2048],
-                'orders' => [Database::ORDER_ASC],
-            ],
+            ]
         ]
     ],
 
