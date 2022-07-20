@@ -516,7 +516,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         ->setClass(Event::FUNCTIONS_CLASS_NAME)
                         ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
                         ->trigger();
-                    
+
                     /** Trigger realtime event */
                     $allEvents = Event::generateEvents('users.[userId].create', [
                         'userId' => $userId
@@ -553,7 +553,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                             ->setParam('users.create', 1)
                             ->submit();
                     }
-
                 } catch (Duplicate $th) {
                     throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
                 }
