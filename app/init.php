@@ -378,6 +378,43 @@ Database::addFilter(
 );
 
 Database::addFilter(
+    'masterEncrypt',
+    function(mixed $value, Document $document, Database $database) {
+        $keyId = $document->getAttribute('masterKeyId', '');
+        $database->setNamespace('_console');
+        $key = $database->getDocument('secrets', $keyId);
+        if($key->isEmpty()) {
+            throw new Exception("Unable to find master key with ID ($keyId} to encrypt.");
+        }
+
+        $secret = $key->getAttribute('secret');
+        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
+        return json_encode([
+            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $secret, 0, $iv, $tag),
+            'method' => OpenSSL::CIPHER_AES_128_GCM,
+            'iv' => \bin2hex($iv),
+            'tag' => \bin2hex($tag ?? ''),
+            'version' => $keyId,
+        ]);
+    },
+    function(mixed $value, Document $document, Database $database) {
+        if(is_null($value)) {
+            return null;
+        }
+        $value = json_decode($value, true);
+        $keyId = $value['version'];
+        $database->setNamespace('_console');
+        $key = $database->getDocument('secrets', $keyId);
+        if($key->isEmpty()) {
+            throw new Exception("Unable to find master key with ID {$keyId} to decrypt.");
+        }
+        $secret = $key->getAttribute('secret');
+        return OpenSSL::decrypt($value['data'], $value['method'], $secret, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+
+Database::addFilter(
     'encrypt',
     function (mixed $value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
