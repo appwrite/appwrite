@@ -77,20 +77,6 @@ return [
             '$model' => Response::MODEL_COLLECTION,
             '$resource' => true,
             '$description' => 'This event triggers on any collection event.',
-            'documents' => [
-                '$model' => Response::MODEL_DOCUMENT,
-                '$resource' => true,
-                '$description' => 'This event triggers on any documents event.',
-                'create' => [
-                    '$description' => 'This event triggers when a document is created.',
-                ],
-                'delete' => [
-                    '$description' => 'This event triggers when a document is deleted.'
-                ],
-                'update' => [
-                    '$description' => 'This event triggers when a document is updated.'
-                ],
-            ],
             'indexes' => [
                 '$model' => Response::MODEL_INDEX,
                 '$resource' => true,
@@ -122,6 +108,20 @@ return [
             'update' => [
                 '$description' => 'This event triggers when a collection is updated.',
             ]
+        ],
+        'documents' => [
+            '$model' => Response::MODEL_DOCUMENT,
+            '$resource' => true,
+            '$description' => 'This event triggers on any documents event.',
+            'create' => [
+                '$description' => 'This event triggers when a document is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a document is deleted.'
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a document is updated.'
+            ],
         ],
         'create' => [
             '$description' => 'This event triggers when a database is created.'
