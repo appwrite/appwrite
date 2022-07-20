@@ -741,29 +741,7 @@ $collections = [
         'name' => 'Secrets',
         'attributes' => [
             [
-                '$id' => 'projectInternalId',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'projectId',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => 0,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'secrets',
+                '$id' => 'secret',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -774,15 +752,7 @@ $collections = [
                 'filters' => [],
             ],
         ],
-        'indexes' => [
-            [
-                '$id' => '_key_project',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['projectInternalId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-        ],
+        'indexes' => [],
     ],
 
     'platforms' => [

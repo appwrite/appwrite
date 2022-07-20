@@ -84,6 +84,23 @@ App::post('/v1/projects')
             throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
         }
 
+        $secret = Authorization::skip(fn() => $dbForConsole->createDocument('secrets', new Document([
+            '$id' => $dbForConsole->getId(),
+            '$read' => [],
+            '$write' => [],
+            '$collection' => 'secrets',
+            'secret' => OpenSSL::secretString(),
+        ])));
+
+        // create new secret for the project
+        // project should save keyId
+        // need setFilter to set instance level filter in dbforconsole
+        // saving keyId in project doesn't make sense, as we only need the secret to
+        // read and write the project document
+
+        // The problem is we need to know the projectId to set the filter
+        // but when we get dbForConsole we will never know the project id to work with
+
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
             '$read' => ['team:' . $teamId],
@@ -92,6 +109,7 @@ App::post('/v1/projects')
             'teamInternalId' => $team->getInternalId(),
             'teamId' => $team->getId(),
             'description' => $description,
+            'keyId' => $secret->getId(),
             'logo' => $logo,
             'url' => $url,
             'version' => APP_VERSION_STABLE,

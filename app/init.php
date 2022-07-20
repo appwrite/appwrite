@@ -380,9 +380,9 @@ Database::addFilter(
 Database::addFilter(
     'masterEncrypt',
     function(mixed $value, Document $document, Database $database) {
-        $keyId = $document->getAttribute('masterKeyId', '');
+        $keyId = $document->getAttribute('keyId', '');
         $database->setNamespace('_console');
-        $key = $database->getDocument('secrets', $keyId);
+        $key = Authorization::skip(fn() => $database->getDocument('secrets', $keyId));
         if($key->isEmpty()) {
             throw new Exception("Unable to find master key with ID ($keyId} to encrypt.");
         }
@@ -405,7 +405,7 @@ Database::addFilter(
         $value = json_decode($value, true);
         $keyId = $value['version'];
         $database->setNamespace('_console');
-        $key = $database->getDocument('secrets', $keyId);
+        $key = Authorization::skip(fn() => $database->getDocument('secrets', $keyId));
         if($key->isEmpty()) {
             throw new Exception("Unable to find master key with ID {$keyId} to decrypt.");
         }
