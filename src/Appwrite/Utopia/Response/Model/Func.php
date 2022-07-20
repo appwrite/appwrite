@@ -61,7 +61,7 @@ class Func extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('vars', [ // TODO: Refactor response model to array (of Variables)
+            ->addRule('vars', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Function environment variables.',
                 'default' => new \stdClass(),
