@@ -131,6 +131,7 @@ class UsageDB extends Usage
                 throw $e;
             }
         }
+        return 0;
     }
 
     /**
@@ -158,6 +159,7 @@ class UsageDB extends Usage
                 throw $e;
             }
         }
+        return 0;
     }
 
     /**
