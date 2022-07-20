@@ -266,7 +266,7 @@ class RealtimeConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($index['headers']['status-code'], 201);
+        $this->assertEquals($index['headers']['status-code'], 202);
         $indexKey = $index['body']['key'];
 
         $response = json_decode($client->receive(), true);

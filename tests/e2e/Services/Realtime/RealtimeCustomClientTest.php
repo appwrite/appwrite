@@ -1222,7 +1222,7 @@ class RealtimeCustomClientTest extends Scope
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals($deployment['headers']['status-code'], 201);
+        $this->assertEquals($deployment['headers']['status-code'], 202);
         $this->assertNotEmpty($deployment['body']['$id']);
 
         // Wait for deployment to be built.
