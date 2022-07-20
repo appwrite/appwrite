@@ -34,6 +34,7 @@ use Utopia\Locale\Locale;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\User;
+use Utopia\Registry\Registry;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Range;
@@ -373,7 +374,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function (string $provider, string $code, string $state, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Audit $audits, Event $events, Stats $usage) use ($oauthDefaultSuccess) {
+    ->inject('register')
+    ->action(function (string $provider, string $code, string $state, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Audit $audits, Event $events, Stats $usage, Registry $register) use ($oauthDefaultSuccess) {
 
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
@@ -542,7 +544,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     );
 
                     /** Update usage stats */
-                    global $register;
                     if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
                         $statsd = $register->get('statsd');
                         $usage = new Stats($statsd);
