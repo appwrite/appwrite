@@ -308,6 +308,11 @@
             element.classList.add("load-service-end");
             element.$lsSkip = false;
             running = false;
+            // Do not change checkbox status if confirm box is cancelled 
+            var childInput = element.querySelectorAll('[type=checkbox]');
+            if (childInput.length === 1) {
+              childInput[0].checked = childInput[0].checked? false: true;
+            }
             return false;
           }
         }
