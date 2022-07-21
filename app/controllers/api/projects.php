@@ -23,10 +23,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
-use Utopia\Cache\Adapter\Redis;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -129,15 +126,7 @@ App::post('/v1/projects')
         $time = \microtime(true);
 
         foreach ($collections as $key => $collection) {
-            go(function () use ($collection, $register, $key, $project) {
-                $db = $register->get('dbPool')->get();
-                $redis = $register->get('redisPool')->get();
-                $cache = new Cache(new Redis($redis));
-
-                $projectDB = new Database(new MariaDB($db), $cache);
-                $projectDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                $projectDB->setNamespace("_{$project->getInternalId()}");
-
+            go(function () use ($collection, $dbForProject, $key) {
                 if (($collection['$collection'] ?? '') !== Database::METADATA) {
                     return;
                 }
@@ -168,9 +157,7 @@ App::post('/v1/projects')
                     ]);
                 }
 
-                $projectDB->createCollection($key, $attributes, $indexes);
-                $register->get('dbPool')->put($db);
-                $register->get('redisPool')->put($redis);
+                $dbForProject->createCollection($key, $attributes, $indexes);
             });
         }
 
