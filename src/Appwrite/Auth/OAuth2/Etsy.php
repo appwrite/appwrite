@@ -9,7 +9,7 @@ class Etsy extends OAuth2
     /**
      * @var string
      */
-    private $endpoint = 'https://api.etsy.com/v3/public';
+    private string $endpoint = 'https://api.etsy.com/v3/public';
 
     /**
      * @var string
