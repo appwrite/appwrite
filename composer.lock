@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dedc6a6328b4fdc5dfbd556a08534403",
+    "content-hash": "5d621e24338e5443752594fd8b37266d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2051,16 +2051,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.18.6",
+            "version": "0.18.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "e9e163642546343267c2fe0ee90016a4a0230b4a"
+                "reference": "227b3ca919149b7b0d6556c8effe9ee46ed081e6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/e9e163642546343267c2fe0ee90016a4a0230b4a",
-                "reference": "e9e163642546343267c2fe0ee90016a4a0230b4a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/227b3ca919149b7b0d6556c8effe9ee46ed081e6",
+                "reference": "227b3ca919149b7b0d6556c8effe9ee46ed081e6",
                 "shasum": ""
             },
             "require": {
@@ -2109,9 +2109,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.18.6"
+                "source": "https://github.com/utopia-php/database/tree/0.18.9"
             },
-            "time": "2022-06-27T17:28:05+00:00"
+            "time": "2022-07-19T09:42:53+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2828,16 +2828,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.19.5",
+            "version": "0.19.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "04de540cf683e2b08b3192c137dde7f2c37003d9"
+                "reference": "a28185edc7e042eea01e9000df88c2de4c750dde"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/04de540cf683e2b08b3192c137dde7f2c37003d9",
-                "reference": "04de540cf683e2b08b3192c137dde7f2c37003d9",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a28185edc7e042eea01e9000df88c2de4c750dde",
+                "reference": "a28185edc7e042eea01e9000df88c2de4c750dde",
                 "shasum": ""
             },
             "require": {
@@ -2872,9 +2872,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.19.5"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.19.6"
             },
-            "time": "2022-07-06T11:05:57+00:00"
+            "time": "2022-07-14T10:37:35+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5370,5 +5370,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.1.0"
 }
