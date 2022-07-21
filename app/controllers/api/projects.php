@@ -23,6 +23,10 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
+use Utopia\Cache\Adapter\Redis;
+use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
+use Utopia\Database\Adapter\MariaDB;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -63,7 +67,8 @@ App::post('/v1/projects')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
+    ->inject('register')
+    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -121,39 +126,55 @@ App::post('/v1/projects')
         $adapter = new TimeLimit('', 0, 1, $dbForProject);
         $adapter->setup();
 
+        $time = \microtime(true);
+
         foreach ($collections as $key => $collection) {
-            if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                continue;
-            }
-            $attributes = [];
-            $indexes = [];
+            go(function () use ($collection, $register, $key, $project) {
+                $db = $register->get('dbPool')->get();
+                $redis = $register->get('redisPool')->get();
+                $cache = new Cache(new Redis($redis));
 
-            foreach ($collection['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                    'default' => $attribute['default'] ?? null,
-                    'format' => $attribute['format'] ?? ''
-                ]);
-            }
+                $projectDB = new Database(new MariaDB($db), $cache);
+                $projectDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                $projectDB->setNamespace("_{$project->getInternalId()}");
 
-            foreach ($collection['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => $index['$id'],
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]);
-            }
+                if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                    return;
+                }
+                $attributes = [];
+                $indexes = [];
 
-            $dbForProject->createCollection($key, $attributes, $indexes);
+                foreach ($collection['attributes'] as $attribute) {
+                    $attributes[] = new Document([
+                        '$id' => $attribute['$id'],
+                        'type' => $attribute['type'],
+                        'size' => $attribute['size'],
+                        'required' => $attribute['required'],
+                        'signed' => $attribute['signed'],
+                        'array' => $attribute['array'],
+                        'filters' => $attribute['filters'],
+                        'default' => $attribute['default'] ?? null,
+                        'format' => $attribute['format'] ?? ''
+                    ]);
+                }
+
+                foreach ($collection['indexes'] as $index) {
+                    $indexes[] = new Document([
+                        '$id' => $index['$id'],
+                        'type' => $index['type'],
+                        'attributes' => $index['attributes'],
+                        'lengths' => $index['lengths'],
+                        'orders' => $index['orders'],
+                    ]);
+                }
+
+                $projectDB->createCollection($key, $attributes, $indexes);
+                $register->get('dbPool')->put($db);
+                $register->get('redisPool')->put($redis);
+            });
         }
+
+        Console::info('Project Successfully created, Generated in ' . (\microtime(true) - $time) * 1000 . 'ms');
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($project, Response::MODEL_PROJECT);
