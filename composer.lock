@@ -1737,12 +1737,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "8fc98103195ad014a66388e0986da78fbd65a8fd"
+                "reference": "24fea23637e08267c2f35ae7704b249566d8333f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8fc98103195ad014a66388e0986da78fbd65a8fd",
-                "reference": "8fc98103195ad014a66388e0986da78fbd65a8fd",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/24fea23637e08267c2f35ae7704b249566d8333f",
+                "reference": "24fea23637e08267c2f35ae7704b249566d8333f",
                 "shasum": ""
             },
             "require": {
@@ -1783,7 +1783,7 @@
                 "issues": "https://github.com/utopia-php/abuse/issues",
                 "source": "https://github.com/utopia-php/abuse/tree/origin/timestamp-to-datetime"
             },
-            "time": "2022-07-19T10:31:15+00:00"
+            "time": "2022-07-21T08:08:35+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1846,12 +1846,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "eb77d1d12f06c4faa8b5e19812dbebbbe59248fa"
+                "reference": "5ac8411ad876b1e2fd81a70aacc8342266b40776"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/eb77d1d12f06c4faa8b5e19812dbebbbe59248fa",
-                "reference": "eb77d1d12f06c4faa8b5e19812dbebbbe59248fa",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/5ac8411ad876b1e2fd81a70aacc8342266b40776",
+                "reference": "5ac8411ad876b1e2fd81a70aacc8342266b40776",
                 "shasum": ""
             },
             "require": {
@@ -1891,7 +1891,7 @@
                 "issues": "https://github.com/utopia-php/audit/issues",
                 "source": "https://github.com/utopia-php/audit/tree/origin/unix-to-datetime"
             },
-            "time": "2022-07-19T10:12:18+00:00"
+            "time": "2022-07-20T16:51:33+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2056,12 +2056,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "407c0e95a4f5cf9b8932dc5b314a93b634339c09"
+                "reference": "6bcbf8d5a55f9da6d955f6428eff4724d04f60d8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/407c0e95a4f5cf9b8932dc5b314a93b634339c09",
-                "reference": "407c0e95a4f5cf9b8932dc5b314a93b634339c09",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/6bcbf8d5a55f9da6d955f6428eff4724d04f60d8",
+                "reference": "6bcbf8d5a55f9da6d955f6428eff4724d04f60d8",
                 "shasum": ""
             },
             "require": {
@@ -2112,7 +2112,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-attr-datetime"
             },
-            "time": "2022-07-19T10:06:50+00:00"
+            "time": "2022-07-20T17:14:33+00:00"
         },
         {
             "name": "utopia-php/domains",
