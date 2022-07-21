@@ -414,32 +414,6 @@ Database::addFilter(
     }
 );
 
-Database::addFilter(
-    'encrypt',
-    function (mixed $value) {
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $tag = null;
-
-        return json_encode([
-            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-            'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => \bin2hex($iv),
-            'tag' => \bin2hex($tag ?? ''),
-            'version' => 'v1',
-        ]);
-    },
-    function (mixed $value) {
-        if (is_null($value)) {
-            return null;
-        }
-        $value = json_decode($value, true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
-
-        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
-    }
-);
-
 /**
  * DB Formats
  */
