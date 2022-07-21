@@ -63,7 +63,7 @@ class TypeRegistry
                     'type' => Type::listOf(Type::string()),
                     'defaultValue' => [],
                 ],
-                'orderType' => [
+                'orderTypes' => [
                     'type' => Type::listOf(Type::string()),
                     'defaultValue' => [],
                 ],
