@@ -528,14 +528,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     );
 
                     Realtime::send(
-                        projectId: 'console',
-                        payload: $user->getArrayCopy(),
-                        events: $allEvents,
-                        channels: $target['channels'],
-                        roles: $target['roles']
-                    );
-
-                    Realtime::send(
                         projectId: $project->getId(),
                         payload: $user->getArrayCopy(),
                         events: $allEvents,
