@@ -97,6 +97,12 @@ function executeRequest(
     Type\Schema $schema
 ): void {
     $query = $request->getParams();
+
+    // SDK support
+    if ($request->getHeader('x-appwrite-graphql-packed') == 'true') {
+        $query = $query['query'];
+    }
+
     $contentType = $request->getHeader('content-type');
 
     $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
