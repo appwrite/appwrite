@@ -89,6 +89,13 @@ return [
         'code' => 500,
     ],
 
+    /** Account Errors */
+    Exception::ACCOUNT_OAUTH_FAILED_TO_OBTAIN_TOKEN => [
+        'name' => Exception::ACCOUNT_OAUTH_FAILED_TO_OBTAIN_TOKEN,
+        'description' => 'Failed to obtain access token.',
+        'code' => 500,
+    ],
+
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
         'name' => Exception::USER_COUNT_EXCEEDED,
@@ -511,5 +518,99 @@ return [
         'name' => Exception::DOMAIN_VERIFICATION_FAILED,
         'description' => 'Domain verification for the requested domain has failed.',
         'code' => 401,
-    ]
+    ],
+
+    /* Registry Errors */
+    Exception::LOGGER_NOT_SUPPORTED => [
+        'name' => Exception::LOGGER_NOT_SUPPORTED,
+        'description' => 'Logging provider not supported. Logging disabled.',
+        'code' => 500,
+    ],
+
+    /** Mocks */
+    Exception::MOCK_INVALID_CONTENT_RANGE_HEADER => [
+        'name' => Exception::MOCK_INVALID_CONTENT_RANGE_HEADER,
+        'description' => 'Invalid content-range header',
+        'code' => 400,
+    ],
+    Exception::MOCK_FIRST_CHUNK_CANNOT_HAVE_ID => [
+        'name' => Exception::MOCK_FIRST_CHUNK_CANNOT_HAVE_ID,
+        'description' => 'First chunked request cannot have id header',
+        'code' => 400,
+    ],
+    Exception::MOCK_CHUNK_MISSING_ID => [
+        'name' => Exception::MOCK_CHUNK_MISSING_ID,
+        'description' => 'All chunked request must have id header (except first)',
+        'code' => 400,
+    ],
+    Exception::MOCK_CHUNK_INVALID_SIZE => [
+        'name' => Exception::MOCK_CHUNK_INVALID_SIZE,
+        'description' => 'Chunk size must be 5MB (except last chunk)',
+        'code' => 400,
+    ],
+    Exception::MOCK_INVALID_FILE_NAME => [
+        'name' => Exception::MOCK_INVALID_FILE_NAME,
+        'description' => 'Wrong file name',
+        'code' => 400,
+    ],
+    Exception::MOCK_INVALID_FILE_SIZE => [
+        'name' => Exception::MOCK_INVALID_FILE_SIZE,
+        'description' => 'Wrong file size',
+        'code' => 400,
+    ],
+    Exception::MOCK_WRONG_FILE_UPLOADED => [
+        'name' => Exception::MOCK_WRONG_FILE_UPLOADED,
+        'description' => 'Wrong file uploaded',
+        'code' => 400,
+    ],
+    Exception::MOCK_MISSING_COOKIE => [
+        'name' => Exception::MOCK_MISSING_COOKIE,
+        'description' => 'Missing cookie value',
+        'code' => 400,
+    ],
+    Exception::MOCK_INVALID_CLIENT_ID => [
+        'name' => Exception::MOCK_INVALID_CLIENT_ID,
+        'description' => 'Invalid client ID',
+        'code' => 400,
+    ],
+    Exception::MOCK_INVALID_CLIENT_SECRET => [
+        'name' => Exception::MOCK_INVALID_CLIENT_SECRET,
+        'description' => 'Invalid client secret',
+        'code' => 400,
+    ],
+    Exception::MOCK_INVALID_TOKEN => [
+        'name' => Exception::MOCK_INVALID_TOKEN,
+        'description' => 'Invalid token',
+        'code' => 400,
+    ],
+    Exception::MOCK_INVALID_REFRESH_TOKEN => [
+        'name' => Exception::MOCK_INVALID_REFRESH_TOKEN,
+        'description' => 'Invalid refresh token',
+        'code' => 400,
+    ],
+    Exception::MOCK_INVALID_GRANT_TYPE => [
+        'name' => Exception::MOCK_INVALID_GRANT_TYPE,
+        'description' => 'Invalid grant type',
+        'code' => 400,
+    ],
+    Exception::MOCK_FAILED_TO_READ_RESULTS => [
+        'name' => Exception::MOCK_FAILED_TO_READ_RESULTS,
+        'description' => 'Failed to read results',
+        'code' => 500,
+    ],
+    Exception::MOCK_FAILED_TO_SAVE_RESULTS => [
+        'name' => Exception::MOCK_FAILED_TO_SAVE_RESULTS,
+        'description' => 'Failed to save results',
+        'code' => 500,
+    ],
+    Exception::MOCK_400 => [
+        'name' => Exception::MOCK_400,
+        'description' => 'Mock 400 error',
+        'code' => 400,
+    ],
+    Exception::MOCK_500 => [
+        'name' => Exception::MOCK_500,
+        'description' => 'Mock 500 error',
+        'code' => 500,
+    ],
 ];

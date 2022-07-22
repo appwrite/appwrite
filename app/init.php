@@ -448,7 +448,7 @@ $register->set('logger', function () {
     }
 
     if (!Logger::hasProvider($providerName)) {
-        throw new Exception("Logging provider not supported. Logging disabled.", 500, Exception::GENERAL_SERVER_ERROR);
+        throw new Exception(Exception::LOGGER_NOT_SUPPORTED);
     }
 
     $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
@@ -818,7 +818,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         try {
             $payload = $jwt->decode($authJWT);
         } catch (JWTException $error) {
-            throw new Exception('Failed to verify JWT. ' . $error->getMessage(), 401, Exception::USER_JWT_INVALID);
+            throw new Exception(Exception::USER_JWT_INVALID);
         }
 
         $jwtUserId = $payload['userId'] ?? '';

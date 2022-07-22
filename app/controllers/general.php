@@ -352,6 +352,19 @@ App::error(function (Throwable $error, App $utopia, Request $request, Response $
         throw $error;
     }
 
+    if ($error instanceof Appwrite\Extend\Exception) {
+        // Find error code and error message
+
+        $errors = Config::getParam('errors', []);
+        $errorData = $errors[$error->getType()];
+
+        $error = new Appwrite\Extend\Exception(
+            $errorData['description'] ?? $error->getMessage(),
+            $errorData['code'] ?? $error->getCode(),
+            $errorData['name'] ?? $error->getType()
+        );
+    }
+
     if ($logger) {
         if ($error->getCode() >= 500 || $error->getCode() === 0) {
             try {

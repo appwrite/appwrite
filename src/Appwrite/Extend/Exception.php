@@ -12,6 +12,7 @@ class Exception extends \Exception
      *
      * Appwrite has the follwing entities:
      * - General
+     * - Account
      * - Users
      * - Teams
      * - Memberships
@@ -29,6 +30,8 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
+     * - Logger
+     * - Mocks
      */
 
     /** General */
@@ -47,7 +50,11 @@ class Exception extends \Exception
     public const GENERAL_ROUTE_NOT_FOUND           = 'general_route_not_found';
     public const GENERAL_CURSOR_NOT_FOUND          = 'general_cursor_not_found';
     public const GENERAL_SERVER_ERROR              = 'general_server_error';
-    public const GENERAL_PROTOCOL_UNSUPPORTED       = 'general_protocol_unsupported';
+    public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
+
+    /** Account */
+    public const ACCOUNT_OAUTH_FAILED_TO_OBTAIN_TOKEN = 'account_oauth_failed_to_obtain_token';
+    public const ACCOUNT_OAUTH_MISSING_ID            = 'account_oauth_missing_id';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -170,10 +177,32 @@ class Exception extends \Exception
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
 
+    /** Logger */
+    public const LOGGER_NOT_SUPPORTED = 'logger_not_supported';
+
+    /** Mocks */
+    public const MOCK_INVALID_CONTENT_RANGE_HEADER = 'mock_invalid_content_range_header';
+    public const MOCK_FIRST_CHUNK_CANNOT_HAVE_ID = 'mock_first_chunk_cannot_have_id';
+    public const MOCK_CHUNK_MISSING_ID = 'mock_chunk_missing_id';
+    public const MOCK_CHUNK_INVALID_SIZE = 'mock_chunk_invalid_size';
+    public const MOCK_INVALID_FILE_NAME = 'mock_invalid_file_name';
+    public const MOCK_INVALID_FILE_SIZE = 'mock_invalid_file_size';
+    public const MOCK_WRONG_FILE_UPLOADED = 'mock_wrong_file_uploaded';
+    public const MOCK_MISSING_COOKIE = 'mock_missing_cookie';
+    public const MOCK_INVALID_CLIENT_ID = 'mock_invalid_client_id';
+    public const MOCK_INVALID_CLIENT_SECRET = 'mock_invalid_client_secret';
+    public const MOCK_INVALID_TOKEN = 'mock_invalid_token';
+    public const MOCK_INVALID_REFRESH_TOKEN = 'mock_invalid_refresh_token';
+    public const MOCK_INVALID_GRANT_TYPE = 'mock_invalid_grant_type';
+    public const MOCK_FAILED_TO_READ_RESULTS = 'mock_failed_to_read_results';
+    public const MOCK_FAILED_TO_SAVE_RESULTS = 'mock_failed_to_save_results';
+    public const MOCK_400 = 'mock_400';
+    public const MOCK_500 = 'mock_500';
+
 
     private $type = '';
 
-    public function __construct(string $message, int $code = 0, string $type = Exception::GENERAL_UNKNOWN, \Throwable $previous = null)
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = '', int $code = 0, \Throwable $previous = null)
     {
         $this->type = $type;
 
