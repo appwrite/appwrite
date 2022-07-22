@@ -1,3 +1,7 @@
+# Version 0.15.3
+## Bugs
+- Fixed Migration for Attributes and Indexes by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3568
+
 # Version 0.15.2
 ## Bugs
 - Fixed Realtime Authentication for the Console by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3506
