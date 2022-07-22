@@ -45,7 +45,6 @@ App::init()
     ->inject('user')
     ->inject('locale')
     ->inject('clients')
-    ->groups([''])
     ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients) {
         /*
         * Request format
