@@ -89,7 +89,7 @@ class DatabasePool
      * Get a PDO instance by database name
      *
      * @param string $name
-     * 
+     *
      * @return ?PDO
      */
     public function getPDO(string $name): ?PDO
