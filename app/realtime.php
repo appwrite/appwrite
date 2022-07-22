@@ -546,7 +546,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
             $server->close($connection, $th->getCode());
         }
     } finally {
-        call_user_func($returnProjectDB); 
+        call_user_func($returnProjectDB);
         $register->get('redisPool')->put($redis);
     }
 });
