@@ -86,9 +86,10 @@ class DatabasePool
     }
 
     /**
-     * Function to get a PDO instance by database name
+     * Get a PDO instance by database name
      *
      * @param string $name
+     * 
      * @return ?PDO
      */
     public function getPDO(string $name): ?PDO
@@ -103,22 +104,23 @@ class DatabasePool
         $dbScheme = $dsn->getDatabase();
 
         $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
             PDO::ATTR_TIMEOUT => 3, // Seconds
             PDO::ATTR_PERSISTENT => true,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+            PDO::ATTR_EMULATE_PREPARES => true,
+            PDO::ATTR_STRINGIFY_FETCHES => true
         ));
 
         return $pdo;
     }
 
     /**
-     * Function to return the name of the database from the project ID
+     * Get the name of the database from the project ID
      *
      * @param string $projectID
      *
-     * @return string
+     * @return array
      */
     private function getName(string $projectID, \Redis $redis): array
     {
@@ -128,8 +130,9 @@ class DatabasePool
 
         $pdo = $this->getPDO($this->consoleDB);
         $database = $this->getDatabase($pdo, $redis);
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+
         $namespace = "_console";
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace($namespace);
 
         $project = Authorization::skip(fn() => $database->getDocument('projects', $projectID));
@@ -158,17 +161,18 @@ class DatabasePool
         /** Get a PDO instance using the databse name */
         $pdo = $this->getPDO($name);
         $database = $this->getDatabase($pdo, $redis);
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+
         $namespace = "_$internalID";
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace($namespace);
 
         return $database;
     }
 
     /**
-     * Function to get a database instance from a PDO and cache
+     * Get a database instance from a PDO and cache
      *
-     * @param PDO $pdo
+     * @param PDO|PDOProxy $pdo
      * @param \Redis $redis
      *
      * @return Database
@@ -181,7 +185,7 @@ class DatabasePool
     }
 
     /**
-     * Function to get a PDO instance from the list of available database pools. Meant to be used in co-routines
+     * Get a PDO instance from the list of available database pools. Meant to be used in co-routines
      *
      * @param string $projectId
      *
@@ -225,7 +229,7 @@ class DatabasePool
     }
 
      /**
-     * Function to get a random PDO instance from the available database pools
+     * Get a random PDO instance from the available database pools
      *
      * @return array [PDO, string]
      */
@@ -265,7 +269,7 @@ class DatabasePool
     }
 
     /**
-     * Function to return a PDO instance back to its database pool
+     * Return a PDO instance back to its database pool
      *
      * @param PDOProxy $db
      * @param string $name
@@ -282,7 +286,7 @@ class DatabasePool
     }
 
     /**
-     * Function to get the name of the console DB
+     * Get the name of the console DB
      *
      * @return ?string
      */

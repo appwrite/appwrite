@@ -288,6 +288,24 @@ return [
                 'question' => '',
                 'filter' => 'password'
             ],
+            [
+                'name' => '_APP_PROJECT_DB',
+                'description' => 'A list of comma separated key value pairs for Project DBs where key is the database name and value is the DSN connection string.',
+                'introduction' => '',
+                'default' => 'db_fra1_02=mysql://user:password@mariadb:3306/appwrite',
+                'required' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_DB',
+                'introduction' => '',
+                'description' => 'A key value pair representing the console DB where key is the database name and value is the DSN connection string.',
+                'default' => 'db_fra1_01=mysql://user:password@mariadb:3306/appwrite',
+                'required' => true,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
