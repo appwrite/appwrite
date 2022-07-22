@@ -71,7 +71,7 @@ class SchemaBuilder
             foreach ($routes as $route) {
                 /** @var Route $route */
 
-                if (str_starts_with($route->getPath(), '/v1/mock/')) {
+                if (\str_starts_with($route->getPath(), '/v1/mock/')) {
                     continue;
                 }
                 $namespace = $route->getLabel('sdk.namespace', '');
