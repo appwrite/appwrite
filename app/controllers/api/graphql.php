@@ -98,9 +98,8 @@ function executeRequest(
 ): void {
     $query = $request->getParams();
 
-    // SDK support
-    if ($request->getHeader('x-appwrite-graphql-packed') == 'true') {
-        $query = $query['query'];
+    if ($request->getHeader('x-sdk-graphql') == 'true') {
+        $query = \json_decode($query['query'], true);
     }
 
     $contentType = $request->getHeader('content-type');
