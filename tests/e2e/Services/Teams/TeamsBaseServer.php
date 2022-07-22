@@ -57,6 +57,8 @@ trait TeamsBaseServer
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
+        $this->assertEquals('Friend User', $response['body']['userName']);
+        $this->assertEquals($email, $response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
         $this->assertIsInt($response['body']['joined']);
