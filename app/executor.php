@@ -622,16 +622,19 @@ App::error(function ($utopia, $error, $request, $response) {
     $response->json($output);
 }, ['utopia', 'error', 'request', 'response']);
 
-App::init(function ($request, $response) {
-     $secretKey = $request->getHeader('x-appwrite-executor-key', '');
-    if (empty($secretKey)) {
-        throw new Exception('Missing executor key', 401);
-    }
+App::init()
+    ->inject('request')
+    ->inject('response')
+    ->action(function ($request, $response) {
+        $secretKey = $request->getHeader('x-appwrite-executor-key', '');
+        if (empty($secretKey)) {
+            throw new Exception('Missing executor key', 401);
+        }
 
-    if ($secretKey !== App::getEnv('_APP_EXECUTOR_SECRET', '')) {
-        throw new Exception('Missing executor key', 401);
-    }
-}, ['request', 'response']);
+        if ($secretKey !== App::getEnv('_APP_EXECUTOR_SECRET', '')) {
+            throw new Exception('Missing executor key', 401);
+        }
+    });
 
 
 $http->on('start', function ($http) {
