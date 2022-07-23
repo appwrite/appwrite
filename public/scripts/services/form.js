@@ -20,7 +20,7 @@
                     value = parseFloat(value);
                     break;
                 case 'string':
-                    value = value.toString();
+                    value = (typeof value === 'undefined' || value === null) ? "": value.toString();
                     if (value.length === 0) {
                         value = null;
                     }
