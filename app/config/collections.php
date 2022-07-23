@@ -2780,18 +2780,6 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
-            [
-                    'array' => false,
-                    '$id' => 'path',
-                    'type' => Database::VAR_STRING,
-                    'format' => '',
-                    'size' => 100,
-                    'signed' => true,
-                    'required' => true,
-                    'default' => null,
-                    'filters' => [],
-            ],
-
          ],
         'indexes' => [
             [

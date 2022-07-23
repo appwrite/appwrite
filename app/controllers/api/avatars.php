@@ -38,7 +38,6 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
 
     $output = 'png';
     $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-    $key = \md5('/v1/avatars/' . $type . '/:code-' . $code . $width . $height . $quality . $output);
     $path = $set[$code];
     $type = 'png';
 
@@ -46,40 +45,11 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
         throw new Exception('File not readable in ' . $path, 500, Exception::GENERAL_SERVER_ERROR);
     }
 
-    $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
-    $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
-    if ($data) {
-        //$output = (empty($output)) ? $type : $output;
-        App::setResource('cacheKey', fn () => $key);
-        App::setResource('cachePath', fn () => 'app-0');
-
-        return $response
-            ->setContentType('image/png')
-            ->addHeader('Expires', $date)
-            ->addHeader('X-Appwrite-Cache', 'hit')
-            ->send($data);
-    }
-
     $image = new Image(\file_get_contents($path));
-
     $image->crop((int) $width, (int) $height);
-
     $output = (empty($output)) ? $type : $output;
-
     $data = $image->output($output, $quality);
-
-    $cache->save($key, $data);
-
-    App::setResource('cacheKey', fn () => $key);
-    App::setResource('cachePath', fn () => 'app-0');
-
-
-    $response
-        ->setContentType('image/png')
-        ->addHeader('Expires', $date)
-        ->addHeader('X-Appwrite-Cache', 'miss')
-        ->send($data, null);
-
+    $response->file($data, 'image/png', $date, 'miss');
     unset($image);
 };
 
@@ -157,21 +127,8 @@ App::get('/v1/avatars/image')
         $quality = 80;
         $output = 'png';
         $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-        $key = \md5('/v2/avatars/images-' . $url . '-' . $width . '/' . $height . '/' . $quality);
         $type = 'png';
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
-        $data = $cache->load($key, 60 * 60 * 24 * 7/* 1 week */);
 
-        if ($data) {
-            App::setResource('cacheKey', fn () => $key);
-            App::setResource('cachePath', fn () => 'app-0');
-
-            return $response
-                ->setContentType('image/png')
-                ->addHeader('Expires', $date)
-                ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data);
-        }
 
         if (!\extension_loaded('imagick')) {
             throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
@@ -190,22 +147,10 @@ App::get('/v1/avatars/image')
         }
 
         $image->crop((int) $width, (int) $height);
-
         $output = (empty($output)) ? $type : $output;
-
         $data = $image->output($output, $quality);
 
-        $cache->save($key, $data);
-
-        App::setResource('cacheKey', fn () => $key);
-        App::setResource('cachePath', fn () => 'app-0');
-
-        $response
-            ->setContentType('image/png')
-            ->addHeader('Expires', $date)
-            ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send($data);
-
+        $response->file($data, 'image/png', $date, 'miss');
         unset($image);
     });
 
@@ -229,20 +174,7 @@ App::get('/v1/avatars/favicon')
         $quality = 80;
         $output = 'png';
         $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-        $key = \md5('/v2/avatars/favicon-' . $url);
         $type = 'png';
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
-        $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
-        if ($data) {
-            App::setResource('cacheKey', fn () => $key);
-            App::setResource('cachePath', fn () => 'app-0');
-
-            return $response
-                ->setContentType('image/png')
-                ->addHeader('Expires', $date)
-                ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data);
-        }
 
         if (!\extension_loaded('imagick')) {
             throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
@@ -328,16 +260,7 @@ App::get('/v1/avatars/favicon')
                 throw new Exception('Favicon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
             }
 
-            $cache->save($key, $data);
-
-            App::setResource('cacheKey', fn () => $key);
-            App::setResource('cachePath', fn () => 'app-0');
-
-            return $response
-                ->setContentType('image/x-icon')
-                ->addHeader('Expires', $date)
-                ->addHeader('X-Appwrite-Cache', 'miss')
-                ->send($data);
+            $response->file($data, 'image/png', $date, 'miss');
         }
 
         $fetch = @\file_get_contents($outputHref, false);
@@ -347,24 +270,11 @@ App::get('/v1/avatars/favicon')
         }
 
         $image = new Image($fetch);
-
         $image->crop((int) $width, (int) $height);
-
         $output = (empty($output)) ? $type : $output;
-
         $data = $image->output($output, $quality);
 
-        $cache->save($key, $data);
-
-        App::setResource('cacheKey', fn () => $key);
-        App::setResource('cachePath', fn () => 'app-0');
-
-        $response
-            ->setContentType('image/png')
-            ->addHeader('Expires', $date)
-            ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send($data);
-
+        $response->file($data, 'image/png', $date, 'miss');
         unset($image);
     });
 

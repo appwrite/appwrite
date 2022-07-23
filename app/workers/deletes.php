@@ -1,6 +1,8 @@
 <?php
 
 use Utopia\App;
+use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -136,17 +138,20 @@ class DeletesV1 extends Worker
         $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
 
             $dbForProject = $this->getProjectDB($projectId);
-            $cache = new Local(APP_STORAGE_CACHE);
+            $cache = new Cache(
+                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
+            );
 
             $this->deleteByGroup(
-                'cache',
-                [
+                'cache', [
                 new Query('accessedAt', Query::TYPE_LESSER, [$timestamp])
                 ],
                 $dbForProject,
-                function (Document $document) use ($cache) {
-                    $path = $cache->getRoot() . '/' . $document->getAttribute('path') . '/' .  $document->getId();
-                    if ($cache->delete($path)) {
+                function (Document $document) use ($cache, $projectId) {
+
+                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+
+                    if ($cache->purge($document->getId())) {
                         Console::success('Deleting cache file: ' . $path);
                     } else {
                         Console::error('Failed to delete cache file: ' . $path);

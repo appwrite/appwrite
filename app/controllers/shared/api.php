@@ -14,10 +14,11 @@ use Utopia\App;
 use Appwrite\Extend\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Registry\Registry;
 
 App::init(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) {
 
@@ -114,6 +115,27 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
 
     $deletes->setProject($project);
     $database->setProject($project);
+
+    $useCache = $route->getLabel('useCache', false);
+    if ($useCache) {
+            $key = md5($request->getURI() . $request->getServer('query_string'));
+            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
+            $data = $cache->load($key, 60 * 60 * 24 * 30 * 1);
+        if (!empty($data)) {
+            $cacheLog = $dbForProject->getDocument('cache', $key);
+            if ($cacheLog->isEmpty()) {
+                Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
+                        '$id' => $key,
+                        'accessedAt' => time(),
+                    ])));
+            } else {
+                $cacheLog->setAttribute('accessedAt', time());
+                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+            }
+            $data = json_decode($data, true);
+            $response->file(base64_decode($data['payload']), $data['content-type'], $data['date'], 'hit');
+        }
+    }
 }, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'mails', 'usage', 'deletes', 'database', 'dbForProject', 'mode'], 'api');
 
 App::init(function (App $utopia, Request $request, Document $project) {
@@ -238,6 +260,28 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
     }
 
     $route = $utopia->match($request);
+
+    $useCache = $route->getLabel('useCache', false);
+    if ($useCache) {
+            $key = md5($request->getURI() . $request->getServer('query_string'));
+            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
+            $data = $response->getPayload();
+        if (!empty($data)) {
+            $cacheLog = $dbForProject->getDocument('cache', $key);
+            if ($cacheLog->isEmpty()) {
+                Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
+                        '$id' => $key,
+                        'accessedAt' => time(),
+                    ])));
+            } else {
+                $cacheLog->setAttribute('accessedAt', time());
+                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+            }
+            $data['payload'] = base64_encode($data['payload']);
+            $cache->save($key, json_encode($data));
+        }
+    }
+
     if (
         App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
         && $project->getId()

@@ -801,6 +801,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->alias('/v1/storage/files/:fileId/preview', ['bucketId' => 'default'])
     ->desc('Get File Preview')
     ->groups(['api', 'storage', 'cache'])
+    ->label('useCache', true)
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
@@ -860,9 +861,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $inputs = Config::getParam('storage-inputs');
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
-
         $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-        $key = \md5('preview' . $fileId . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
 
         if ($bucket->getAttribute('permission') === 'bucket') {
             // skip authorization
@@ -893,7 +892,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-            $key = \md5('preview' . $path . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
             $deviceFiles = $deviceLocal;
         }
 
@@ -904,26 +902,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())); // Limit file number or size
-        $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
-
         if (empty($output)) {
             // when file extension is not provided and the mime type is not one of our supported outputs
             // we fallback to `jpg` output format
             $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
         }
 
-        if ($data) {
-            App::setResource('cacheKey', fn () => $key);
-            App::setResource('cachePath', fn () => 'app-' . $project->getId());
-
-            return $response
-                ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
-                ->addHeader('Expires', $date)
-                ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data)
-            ;
-        }
 
         $source = $deviceFiles->read($path);
 
@@ -968,24 +952,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $data = $image->output($output, $quality);
 
-        $cache->save($key, $data);
-
-        App::setResource('cacheKey', fn () => $key);
-        App::setResource('cachePath', fn () => 'app-' . $project->getId());
-
-
         $usage
             ->setParam('storage.files.read', 1)
             ->setParam('bucketId', $bucketId)
         ;
 
-        $response
-            ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
-            ->addHeader('Expires', $date)
-            ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send($data)
-        ;
-
+        $response->file($data, (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'], $date, 'miss');
         unset($image);
     });
 
