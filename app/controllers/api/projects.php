@@ -1584,7 +1584,7 @@ App::put('/v1/projects/:projectId/variables/:functionId/:variableId')
     ->inject('dbForConsole')
     ->inject('dbForProject')
     ->action(function (string $projectId, string $functionId, string $variableId, ?string $key, ?string $value, Response $response, Database $dbForConsole, Database $dbForProject) {
-        if(empty($key) && empty($value)) {
+        if (empty($key) && empty($value)) {
             throw new Exception('Missing key or value. Define at least one.', 400, Exception::VARIABLE_MISSING_PAYLOAD);
         }
 
