@@ -143,13 +143,11 @@ class DeletesV1 extends Worker
             );
 
             $this->deleteByGroup(
-                'cache', [
-                new Query('accessedAt', Query::TYPE_LESSER, [$timestamp])
-                ],
+                'cache',
+                [new Query('accessedAt', Query::TYPE_LESSER, [$timestamp])],
                 $dbForProject,
                 function (Document $document) use ($cache, $projectId) {
-
-                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+                        $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
 
                     if ($cache->purge($document->getId())) {
                         Console::success('Deleting cache file: ' . $path);
