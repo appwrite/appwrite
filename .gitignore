@@ -10,6 +10,4 @@
 debug/
 app/sdks
 dev/yasd_init.php
-test/tmp/
-tests/resources/disk-a/video-srt.srt
-tests/resources/disk-a/video-srt.mp4
+

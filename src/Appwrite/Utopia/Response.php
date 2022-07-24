@@ -381,7 +381,7 @@ class Response extends SwooleResponse
      *
      * return array
      */
-    public function output(Document $document, string $model): string | array
+    public function output(Document $document, string $model): array
     {
         $data       = $document;
         $model      = $this->getModel($model);
@@ -453,10 +453,7 @@ class Response extends SwooleResponse
                           'payload'  =>  $data
                          ];
 
-        $this->setContentType($contentType)
-         ->addHeader('Expires', $date)
-         ->addHeader('X-Appwrite-Cache', $state)
-         ->send($data);
+        $this->send($data);
     }
 
     /**

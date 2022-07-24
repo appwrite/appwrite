@@ -612,7 +612,6 @@ App::get('/.well-known/acme-challenge')
     });
 
 include_once __DIR__ . '/shared/api.php';
-include_once __DIR__ . '/shared/cache.php';
 include_once __DIR__ . '/shared/web.php';
 
 foreach (Config::getParam('services', []) as $service) {

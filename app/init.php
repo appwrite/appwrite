@@ -695,8 +695,6 @@ App::setResource('layout', function ($locale) {
     return $layout;
 }, ['locale']);
 
-App::setResource('cacheKey', fn () => '');
-App::setResource('cachePath', fn () => '');
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues

@@ -47,7 +47,6 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
     }
 
     $closestLimit = null;
-
     $roles = Authorization::getRoles();
     $isPrivilegedUser = Auth::isPrivilegedUser($roles);
     $isAppUser = Auth::isAppUser($roles);
@@ -116,7 +115,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
     $deletes->setProject($project);
     $database->setProject($project);
 
-    $useCache = $route->getLabel('useCache', false);
+    $useCache = $route->getLabel('cache', false);
     if ($useCache) {
             $key = md5($request->getURI() . $request->getServer('query_string'));
             $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
@@ -133,7 +132,11 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
                 Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
             }
             $data = json_decode($data, true);
-            $response->file(base64_decode($data['payload']), $data['content-type'], $data['date'], 'hit');
+            $response->setContentType($data['content-type'])
+                      ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+                      ->addHeader('Expires', $data['date'])
+                      ->addHeader('X-Appwrite-Cache', 'hit')
+                      ->file(base64_decode($data['payload']));
         }
     }
 }, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'mails', 'usage', 'deletes', 'database', 'dbForProject', 'mode'], 'api');
@@ -261,7 +264,7 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
 
     $route = $utopia->match($request);
 
-    $useCache = $route->getLabel('useCache', false);
+    $useCache = $route->getLabel('cache', false);
     if ($useCache) {
             $key = md5($request->getURI() . $request->getServer('query_string'));
             $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
