@@ -4,7 +4,6 @@ namespace FunctionsProxy\Adapter;
 
 use FunctionsProxy\Adapter;
 
-
 class RoundRobin extends Adapter
 {
     private $currentIndex = 0; // TODO: Put into redis to share across proxies

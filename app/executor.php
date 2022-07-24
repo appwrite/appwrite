@@ -491,7 +491,7 @@ App::post('/v1/execution')
                     }
 
                     \sleep(1);
-                }            
+                }
             }
 
             // Ensure runtime started
@@ -520,16 +520,16 @@ App::post('/v1/execution')
             $executionStart = \microtime(true);
 
             // Prepare request to executor
-            $sendExecuteRequest = function() use ($vars, $data, $runtimeId, $secret, &$executionStart, &$timeout) {
+            $sendExecuteRequest = function () use ($vars, $data, $runtimeId, $secret, &$executionStart, &$timeout) {
                 // Restart execution timer to not could failed attempts
                 $executionStart = \microtime(true);
 
                 $statusCode = 0;
                 $errNo = -1;
                 $executorResponse = '';
-    
+
                 $timeout ??= (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900);
-    
+
                 $ch = \curl_init();
                 $body = \json_encode([
                     'env' => $vars,
@@ -542,22 +542,22 @@ App::post('/v1/execution')
                 \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
                 \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-    
+
                 \curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Content-Type: application/json',
                     'Content-Length: ' . \strlen($body),
                     'x-internal-challenge: ' . $secret,
                     'host: null'
                 ]);
-    
+
                 $executorResponse = \curl_exec($ch);
-    
+
                 $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    
+
                 $error = \curl_error($ch);
-    
+
                 $errNo = \curl_errno($ch);
-    
+
                 \curl_close($ch);
 
                 return [
@@ -573,7 +573,7 @@ App::post('/v1/execution')
                 [ 'errNo' => $errNo, 'error' => $error, 'statusCode' => $statusCode, 'executorResponse' => $executorResponse ] = \call_user_func($sendExecuteRequest);
 
                 // No error
-                if($errNo === 0) {
+                if ($errNo === 0) {
                     break;
                 }
 
