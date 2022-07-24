@@ -2786,6 +2786,8 @@ $collections = [
                 '$id' => '_key_accessedAt',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
             ],
         ],
     ],

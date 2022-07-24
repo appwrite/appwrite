@@ -131,12 +131,13 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
                 $cacheLog->setAttribute('accessedAt', time());
                 Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
             }
+
             $data = json_decode($data, true);
-            $response->setContentType($data['content-type'])
-                      ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
-                      ->addHeader('Expires', $data['date'])
-                      ->addHeader('X-Appwrite-Cache', 'hit')
-                      ->file(base64_decode($data['payload']));
+            $response
+                ->addHeader('Expires', $data['date'])
+                ->addHeader('X-Appwrite-Cache', 'hit')
+                ->setContentType($data['content-type'])
+                ->file(base64_decode($data['payload']), $data['content-type'], $data['date']);
         }
     }
 }, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'mails', 'usage', 'deletes', 'database', 'dbForProject', 'mode'], 'api');

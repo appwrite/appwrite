@@ -861,7 +861,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $inputs = Config::getParam('storage-inputs');
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
+        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT'; // 30 days cache
 
         if ($bucket->getAttribute('permission') === 'bucket') {
             // skip authorization
@@ -957,7 +957,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             ->setParam('bucketId', $bucketId)
         ;
 
-        $response->file($data, (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'], $date, 'miss');
+        $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
+        $response
+            ->addHeader('Expires', $date)
+            ->addHeader('X-Appwrite-Cache', 'miss')
+            ->setContentType($contentType)
+            ->file($data, $contentType, $date);
+
         unset($image);
     });
 

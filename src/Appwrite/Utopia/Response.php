@@ -445,7 +445,17 @@ class Response extends SwooleResponse
         return $this->payload;
     }
 
-    public function file($data, $contentType, $date, $state): void
+
+    /**
+     * Set $payload for cache usage and sending file HTTP response.
+     *
+     * @param string $data
+     * @param string $contentType
+     * @param string $date
+     *
+     * @return void
+     */
+    public function file(string $data, string $contentType, string $date): void
     {
         $this->payload = [
                           'content-type' => $contentType,
