@@ -212,7 +212,11 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
     $client->setData($request->getContent());
 
     $body = \json_decode($client->requestBody, true);
-    $body['runtimeId'] =  $executor['id'] . '-' . $body['runtimeId'];
+
+    if (\array_key_exists('runtimeId', $body)) {
+        $body['runtimeId'] =  $executor['id'] . '-' . $body['runtimeId'];
+    }
+
     $client->requestBody = \json_encode($body);
 
     $status = $client->execute($request->server['request_uri'] ?? '/');
