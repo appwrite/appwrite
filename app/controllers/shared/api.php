@@ -121,7 +121,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
             $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
             $data = $cache->load($key, 60 * 60 * 24 * 30 * 1);
         if (!empty($data)) {
-            $cacheLog = $dbForProject->getDocument('cache', $key);
+            $cacheLog = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             if ($cacheLog->isEmpty()) {
                 Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                         '$id' => $key,
