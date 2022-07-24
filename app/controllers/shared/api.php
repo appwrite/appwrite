@@ -133,8 +133,9 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
             }
 
             $data = json_decode($data, true);
+
             $response
-                ->addHeader('Expires', $data['date'])
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT')
                 ->addHeader('X-Appwrite-Cache', 'hit')
                 ->setContentType($data['content-type'])
                 ->file(base64_decode($data['payload']), $data['content-type'], $data['date']);

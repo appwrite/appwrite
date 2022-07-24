@@ -35,7 +35,6 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     }
 
     $output = 'png';
-    $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT'; // 30 days cache
     $path = $set[$code];
     $type = 'png';
 
@@ -48,10 +47,10 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $output = (empty($output)) ? $type : $output;
     $data = $image->output($output, $quality);
     $response
-        ->addHeader('Expires', $date)
+        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT')
         ->addHeader('X-Appwrite-Cache', 'miss')
         ->setContentType('image/png')
-        ->file($data, 'image/png', $date);
+        ->file($data, 'image/png');
 
     unset($image);
 };
@@ -133,9 +132,7 @@ App::get('/v1/avatars/image')
 
         $quality = 80;
         $output = 'png';
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT'; // 30 days cache
         $type = 'png';
-
 
         if (!\extension_loaded('imagick')) {
             throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
@@ -158,10 +155,10 @@ App::get('/v1/avatars/image')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', $date)
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT')
             ->addHeader('X-Appwrite-Cache', 'miss')
             ->setContentType('image/png')
-            ->file($data, 'image/png', $date);
+            ->file($data, 'image/png');
 
         unset($image);
     });
@@ -186,7 +183,6 @@ App::get('/v1/avatars/favicon')
         $height = 56;
         $quality = 80;
         $output = 'png';
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT'; // 30 days cache
         $type = 'png';
 
         if (!\extension_loaded('imagick')) {
@@ -272,9 +268,9 @@ App::get('/v1/avatars/favicon')
             if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
                 throw new Exception('Favicon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
             }
-            $response->addHeader('Expires', $date)
+            $response->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT')
                 ->addHeader('X-Appwrite-Cache', 'miss')
-                ->file($data, 'image/png', $date);
+                ->file($data, 'image/png');
         }
 
         $fetch = @\file_get_contents($outputHref, false);
@@ -289,10 +285,10 @@ App::get('/v1/avatars/favicon')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', $date)
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT')
             ->addHeader('X-Appwrite-Cache', 'miss')
             ->setContentType('image/png')
-            ->file($data, 'image/png', $date);
+            ->file($data, 'image/png');
 
         unset($image);
     });
