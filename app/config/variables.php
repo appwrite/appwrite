@@ -290,8 +290,8 @@ return [
             ],
             [
                 'name' => '_APP_PROJECT_DB',
-                'description' => 'A list of comma separated key value pairs for Project DBs where key is the database name and value is the DSN connection string.',
-                'introduction' => '',
+                'description' => 'A list of comma separated key value pairs for Project DBs where key is the database name and value is the DSN connection string. Example: db_fra1_01=mysql://user:password@112.145.123.1:3306/appwrite, db_fra1_02=mysql://user:password@112.145.123.5:3306/appwrite',
+                'introduction' => '0.16.0',
                 'default' => 'db_fra1_02=mysql://user:password@mariadb:3306/appwrite',
                 'required' => true,
                 'question' => '',
@@ -299,8 +299,8 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_DB',
-                'introduction' => '',
-                'description' => 'A key value pair representing the console DB where key is the database name and value is the DSN connection string.',
+                'introduction' => '0.16.0',
+                'description' => 'A key value pair representing the console DB where key is the database name and value is the DSN connection string. Example: db_fra1_01=mysql://user:password@112.145.123.1:3306/appwrite',
                 'default' => 'db_fra1_01=mysql://user:password@mariadb:3306/appwrite',
                 'required' => true,
                 'question' => '',

@@ -63,34 +63,34 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         App::setResource('cache', fn() => $redis);
 
         $dbPool = $register->get('dbPool');
-        [$database, $returnDatabase] = $dbPool->getDBFromPool('console', $redis);
-        App::setResource('dbForConsole', fn() => $database);
+        [$dbForConsole, $returnDatabase] = $dbPool->getDBFromPool('console', $redis);
+        App::setResource('dbForConsole', fn() => $dbForConsole);
 
         Console::success('[Setup] - Server database init started...');
         $collections = Config::getParam('collections', []); /** @var array $collections */
 
-        if (!$database->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
+        if (!$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
             $redis->flushAll();
 
             Console::success('[Setup] - Creating database: appwrite...');
 
-            $database->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         }
 
         try {
             Console::success('[Setup] - Creating metadata table: appwrite...');
-            $database->createMetadata();
+            $dbForConsole->createMetadata();
         } catch (\Throwable $th) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }
 
-        if ($database->getCollection(Audit::COLLECTION)->isEmpty()) {
-            $audit = new Audit($database);
+        if ($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
+            $audit = new Audit($dbForConsole);
             $audit->setup();
         }
 
-        if ($database->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
-            $adapter = new TimeLimit("", 0, 1, $database);
+        if ($dbForConsole->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
+            $adapter = new TimeLimit("", 0, 1, $dbForConsole);
             $adapter->setup();
         }
 
@@ -98,9 +98,17 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
-            if (!$database->getCollection($key)->isEmpty()) {
+            if (!$dbForConsole->getCollection($key)->isEmpty()) {
                 continue;
             }
+            
+            /**
+             * Skip to prevent 0.15 migration issues.
+             */
+            if ($key === 'databases' && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'collections')) {
+                continue;
+            }
+
             Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
 
             $attributes = [];
@@ -130,12 +138,12 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 ]);
             }
 
-            $database->createCollection($key, $attributes, $indexes);
+            $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
-        if ($database->getDocument('buckets', 'default')->isEmpty()) {
+        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty()) {
             Console::success('[Setup] - Creating default bucket...');
-            $database->createDocument('buckets', new Document([
+            $dbForConsole->createDocument('buckets', new Document([
                 '$id' => 'default',
                 '$collection' => 'buckets',
                 'name' => 'Default',
@@ -150,7 +158,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 'search' => 'buckets Default',
             ]));
 
-            $bucket = $database->getDocument('buckets', 'default');
+            $bucket = $dbForConsole->getDocument('buckets', 'default');
 
             Console::success('[Setup] - Creating files collection for default bucket...');
             $files = $collections['files'] ?? [];
@@ -185,7 +193,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 ]);
             }
 
-            $database->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+            $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         }
 
         call_user_func($returnDatabase);
