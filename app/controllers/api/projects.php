@@ -92,15 +92,6 @@ App::post('/v1/projects')
             'secret' => OpenSSL::secretString(),
         ])));
 
-        // create new secret for the project
-        // project should save keyId
-        // need setFilter to set instance level filter in dbforconsole
-        // saving keyId in project doesn't make sense, as we only need the secret to
-        // read and write the project document
-
-        // The problem is we need to know the projectId to set the filter
-        // but when we get dbForConsole we will never know the project id to work with
-
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
             '$read' => ['team:' . $teamId],
@@ -110,6 +101,7 @@ App::post('/v1/projects')
             'teamId' => $team->getId(),
             'description' => $description,
             'keyId' => $secret->getId(),
+            'keyRotationDate' => time() + App::getEnv('_APP_KEY_ROTATION_INTERVAL', 60 * 60 * 24 * 90),
             'logo' => $logo,
             'url' => $url,
             'version' => APP_VERSION_STABLE,

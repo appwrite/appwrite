@@ -723,6 +723,17 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => 'keyRotationDate',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ]
         ],
         'indexes' => [
             [
