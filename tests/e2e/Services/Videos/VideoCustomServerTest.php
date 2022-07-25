@@ -397,6 +397,24 @@ class VideoCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
-        var_dump($response['body']);
+        //var_dump($response['body']);
+    }
+
+
+    /**
+     * @depends testGetRenditions
+     */
+    public function testDashStreamRender($data): void
+    {
+
+        sleep(20);
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/streams/mpeg-dash', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        var_dump($response);
     }
 }

@@ -29,9 +29,6 @@ trait ProjectCustom
             'teamId' => 'unique()',
             'name' => 'Demo Project Team',
         ]);
-
-
-
         $this->assertEquals(201, $team['headers']['status-code']);
         $this->assertEquals('Demo Project Team', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
@@ -71,8 +68,6 @@ trait ProjectCustom
                 'users.write',
                 'teams.read',
                 'teams.write',
-                'databases.read',
-                'databases.write',
                 'collections.read',
                 'collections.write',
                 'documents.read',
@@ -103,7 +98,7 @@ trait ProjectCustom
         ], [
             'name' => 'Webhook Test',
             'events' => [
-                'databases.*',
+                'collections.*',
                 'functions.*',
                 'buckets.*',
                 'teams.*',

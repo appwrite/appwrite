@@ -380,7 +380,7 @@ class TranscodingV1 extends Worker
         foreach ($subtitles as $subtitle) {
             $sub = new HLSSubtitle($subtitle['path'], $subtitle['name'], $subtitle['code']);
             $sub->default();
-            $sub->setM3u8Uri($this->getHlsBaseUri() .  $this->args['videoId'] . '_subtitles_' . $subtitle['code'] . '.m3u8');
+            ///$sub->setM3u8Uri($this->getHlsBaseUri() .  $this->args['videoId'] . '_subtitles_' . $subtitle['code'] . '.m3u8');
             $hls->subtitle($sub);
         }
 
