@@ -22,6 +22,7 @@ trait DatabasesBase
             'name' => 'Test Database'
         ]);
 
+
         $this->assertNotEmpty($database['body']['$id']);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('Test Database', $database['body']['name']);
