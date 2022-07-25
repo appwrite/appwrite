@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "56475668bc34a9a3f03524cdb9aa9047",
+    "content-hash": "ba7b34fde01f0df8d38d795caf6f6b7f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2169,16 +2169,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-master",
+            "version": "dev-fix-options-hook",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "1819d6a43ccf23610c906a536bc51534b48d0870"
+                "reference": "756b55f313a3a8bb9d9a2ec387c13871f5103d45"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/1819d6a43ccf23610c906a536bc51534b48d0870",
-                "reference": "1819d6a43ccf23610c906a536bc51534b48d0870",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/756b55f313a3a8bb9d9a2ec387c13871f5103d45",
+                "reference": "756b55f313a3a8bb9d9a2ec387c13871f5103d45",
                 "shasum": ""
             },
             "require": {
@@ -2188,7 +2188,6 @@
                 "phpunit/phpunit": "^9.5.10",
                 "vimeo/psalm": "4.13.1"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2213,9 +2212,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/master"
+                "source": "https://github.com/utopia-php/framework/tree/fix-options-hook"
             },
-            "time": "2022-07-25T08:03:18+00:00"
+            "time": "2022-07-25T11:24:20+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5350,7 +5349,7 @@
     "aliases": [
         {
             "package": "utopia-php/framework",
-            "version": "9999999-dev",
+            "version": "dev-fix-options-hook",
             "alias": "0.19.21",
             "alias_normalized": "0.19.21.0"
         }
