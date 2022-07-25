@@ -427,8 +427,8 @@ App::post('/v1/teams/:teamId/memberships')
         $response->dynamic(
             $membership
             ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $name)
-            ->setAttribute('userEmail', $email),
+            ->setAttribute('userName', $invitee->getAttribute('name'))
+            ->setAttribute('userEmail', $invitee->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });
