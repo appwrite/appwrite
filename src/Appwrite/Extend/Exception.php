@@ -2,6 +2,8 @@
 
 namespace Appwrite\Extend;
 
+use Utopia\Config\Config;
+
 class Exception extends \Exception
 {
     /**
@@ -202,11 +204,24 @@ class Exception extends \Exception
 
     private $type = '';
 
-    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = '', int $code = 0, \Throwable $previous = null)
+    private string $message = '';
+
+    private int $code = 0;
+
+    protected array $errors = Config::getParam('errors');
+
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = '', \Throwable $previous = null)
     {
         $this->type = $type;
 
-        parent::__construct($message, $code, $previous);
+        if (isset($this->errors[$type])) {
+            $this->message = $this->errors[$type]['description'];
+            $this->code = $this->errors[$type]['code'];
+        }
+
+        $this->message = $message ?? $this->message;
+
+        parent::__construct($this->message, $this->code, $previous);
     }
 
     /**
