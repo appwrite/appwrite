@@ -101,6 +101,7 @@ const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
+const APP_STORAGE_VIDEOS = '/storage/videos';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
 const APP_STORAGE_READ_BUFFER = 20 * (1000 * 1000); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
@@ -189,6 +190,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+Config::load('videos-profiles', __DIR__ . '/config/videos-profiles.php');
 
 $user = App::getEnv('_APP_REDIS_USER', '');
 $pass = App::getEnv('_APP_REDIS_PASS', '');

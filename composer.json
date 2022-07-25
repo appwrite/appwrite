@@ -50,7 +50,7 @@
         "utopia-php/cache": "0.6.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.17.*",
+        "utopia-php/database": "0.18.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
@@ -68,7 +68,7 @@
         "chillerlan/php-qrcode": "4.3.3",
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0",
-        "aminyazdanpanah/php-ffmpeg-video-streaming": "^1.2",
+        "aminyazdanpanah/php-ffmpeg-video-streaming": "1.2.15",
         "captioning/captioning": "2.*",
         "squizlabs/php_codesniffer": "^3.6",
         "ext-simplexml": "*"

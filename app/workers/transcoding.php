@@ -232,11 +232,7 @@ class TranscodingV1 extends Worker
                 }
             });
 
-            list($general, $metadata) = $this->transcode($profile['stream'], $video, $format, $representation, $subs);
-            if (!empty($metadata)) {
-                $query->setAttribute('metadata', json_encode($metadata));
-            }
-
+            $general = $this->transcode($profile['stream'], $video, $format, $representation, $subs);
             if (!empty($general)) {
                 foreach ($general as $key => $value) {
                     $query->setAttribute($key, $value);
@@ -245,17 +241,40 @@ class TranscodingV1 extends Worker
 
             if ($profile['stream'] === 'hls') {
                 $m3u8 = $this->parseM3u8($this->outPath . '_' . $representation->getHeight() . 'p.m3u8');
-                foreach ($m3u8['segments'] as $segment) {
-                    Authorization::skip(function () use ($segment, $project, $query) {
-                        return $this->database->createDocument('videos_renditions_segments', new Document([
-                            'renditionId'   => $query->getId(),
-                            'fileName'      => $segment['fileName'],
-                            'path'          => $this->getVideoDevice($project->getId())->getPath($this->args['videoId']) . '/' . $this->getRenditionName() . '/',
-                            'duration'      => $segment['duration'],
-                        ]));
-                    });
+                if (!empty($m3u8['segments'])) {
+                    foreach ($m3u8['segments'] as $segment) {
+                        Authorization::skip(function () use ($segment, $project, $query) {
+                            return $this->database->createDocument('videos_renditions_segments', new Document([
+                                'renditionId' => $query->getId(),
+                                'type' => 0,
+                                'fileName' => $segment['fileName'],
+                                'path' => $this->getVideoDevice($project->getId())->getPath($this->args['videoId']) . '/' . $this->getRenditionName() . '/',
+                                'duration' => $segment['duration'],
+                            ]));
+                        });
+                    }
                 }
                 $query->setAttribute('targetDuration', $m3u8['targetDuration']);
+
+            } else {
+
+                $mpd = $this->parseMpd($this->outPath . '.mpd');
+                if (!empty($mpd['segments'])) {
+                    foreach ($mpd['segments'] as $segment) {
+                        Authorization::skip(function () use ($segment, $project, $query) {
+                            return $this->database->createDocument('videos_renditions_segments', new Document([
+                                'renditionId' => $query->getId(),
+                                'representationId' => $segment['representationId'],
+                                'fileName' => $segment['fileName'],
+                                'path' => $this->getVideoDevice($project->getId())->getPath($this->args['videoId']) . '/' . $this->getRenditionName() . '/',
+                                'isInit' => $segment['isInit'],
+                                ]));
+                        });
+                    }
+                }
+                if (!empty($mpd['metadata'])) {
+                    $query->setAttribute('metadata', json_encode($mpd['metadata']));
+                }
             }
 
             $query->setAttribute('status', self::STATUS_END);
@@ -363,16 +382,8 @@ class TranscodingV1 extends Worker
                 ->setAdditionalParams($additionalParams)
                 ->save($this->outPath);
 
-                    $xml = simplexml_load_string(
-                        file_get_contents($this->outDir . $this->args['videoId'] . '.mpd')
-                    );
-
-                $general = $this->getVideoStreamInfo($dash->metadata()->export(), $representation);
-
-                return [
-                         $general,
-                        ['mpeg-dash'   => !empty($xml) ? json_decode(json_encode((array)$xml), true) : []],
-                      ];
+                return $this->getVideoStreamInfo($dash->metadata()->export(), $representation);
+            ;
         }
 
         $hls = $video->hls();
@@ -380,7 +391,6 @@ class TranscodingV1 extends Worker
         foreach ($subtitles as $subtitle) {
             $sub = new HLSSubtitle($subtitle['path'], $subtitle['name'], $subtitle['code']);
             $sub->default();
-            ///$sub->setM3u8Uri($this->getHlsBaseUri() .  $this->args['videoId'] . '_subtitles_' . $subtitle['code'] . '.m3u8');
             $hls->subtitle($sub);
         }
 
@@ -389,32 +399,53 @@ class TranscodingV1 extends Worker
             ->setHlsAllowCache(false)
             ->addRepresentation($representation)
             ->setAdditionalParams($additionalParams)
-            //->setHlsBaseUrl()
             ->save($this->outPath);
 
-        $general = $this->getVideoStreamInfo($hls->metadata()->export(), $representation);
+        return $this->getVideoStreamInfo($hls->metadata()->export(), $representation);
+    }
+    /**
+     * @param string $path
+     * @return array
+     */
+    private function parseMpd(string $path): array
+    {
+        $segments = [];
+        $metadata = null;
+        $representationId = 0;
+        $handle = fopen($path, "r");
+        if ($handle) {
+            while (($line = fgets($handle)) !== false) {
+                $line =  str_replace([",","\r","\n"], "", $line);
+                if (str_contains($line, "contentType=\"audio\"")) {
+                    $representationId++;
+                }
+
+                if (!str_contains($line, "SegmentURL") && !str_contains($line, "Initialization")) {
+                    $metadata .= $line . PHP_EOL;
+                } else {
+                    $segments[] = [
+                        'isInit' => str_contains($line, "Initialization") ? 1 : 0,
+                        'representationId' => $representationId,
+                        'fileName' => str_replace(["<SegmentURL media=\"","<Initialization sourceURL=\"", "\"/>", " "], "", $line),
+                    ];
+                }
+            }
+            var_dump($segments);
+            fclose($handle);
+        }
+
+        $xml = simplexml_load_string($metadata);
 
         return [
-            $general, []
+            'metadata' =>  json_decode(json_encode((array)$xml), true),
+            'segments' => $segments
         ];
     }
 
     /**
-     * @param bool $nest
-     * @return string
+     * @param string $path
+     * @return array
      */
-    private function getHlsBaseUri(bool $nest = true): string
-    {
-
-        $uri = self::BASE_URL_ENDPOINT . '/' . $this->args['videoId'] . '/' . self::STREAM_HLS . '/';
-
-        if (empty($nest)) {
-            return $uri;
-        }
-
-        return $uri . $this->getRenditionName() . '/';
-    }
-
     private function parseM3u8(string $path): array
     {
         $segments = [];

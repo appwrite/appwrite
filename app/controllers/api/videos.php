@@ -767,21 +767,38 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             $response->setContentType('application/x-mpegurl')->send($template->render(false));
         } else {
             $adaptations = [];
+
             foreach ($renditions as $rendition) {
                 $metadata = $rendition->getAttribute('metadata');
-                foreach ($metadata['mpeg-dash']['Period']['AdaptationSet'] as $set) {
-                    $adaption = $set['@attributes'];
-                    $adaption['baseUrl'] = $baseUrl . '/renditions/' . $rendition->getId();
-                    $adaption['representation'] = $set['Representation']['@attributes'];
-                    $adaption['representation']['SegmentTemplate'] = $set['Representation']['SegmentTemplate']['@attributes'];
-                    $adaption['representation']['segmentTemplate']['segmentTimeline'] = $set['Representation']['SegmentTemplate']['SegmentTimeline'];
-                    $adaptations[] = $adaption;
-                }
-            }
+                if (!empty($metadata['Period']['AdaptationSet'])) {
+                    foreach ($metadata['Period']['AdaptationSet'] as $set) {
+                        $adaption = $set['@attributes'];
+                        $adaption['representation'] = $set['Representation']['@attributes'];
 
-            $template = new View(__DIR__ . '/../../views/videos/dash.phtml');
-            $template->setParam('params', $adaptations);
-            $response->setContentType('application/dash+xml')->send($template->render(false));
+                        $adaption['representation']['baseUrl'] = $baseUrl . '/renditions/' . $rendition->getId();
+                        $adaption['representation']['SegmentList'] = $set['Representation']['SegmentList']['@attributes'];
+                        $representationId = 0;
+                        $segments = Authorization::skip(fn() => $dbForProject->find('videos_renditions_segments', [
+                            new Query('renditionId', Query::TYPE_EQUAL, [$rendition->getId()]),
+                            new Query('representationId', Query::TYPE_EQUAL, [$representationId]),
+                        ], 1000, 0, ['representationId'], ['ASC']));
+
+                        foreach ($segments as $segment) {
+                            if ($segment->getAttribute('isInit') === 1) {
+                                $adaption['representation']['SegmentList']['Initialization'] = $baseUrl . '/renditions/' . $segment->getId() . '/';
+                                continue;
+                            }
+                            $adaption['representation']['SegmentList']['media'][] = $segment->getId();
+                        }
+                        $adaptations[] = $adaption;
+                        $representationId++;
+                    }
+                }
+
+                $template = new View(__DIR__ . '/../../views/videos/dash.phtml');
+                $template->setParam('params', $adaptations);
+                $response->setContentType('application/dash+xml')->send($template->render(false));
+            }
         }
     });
 
