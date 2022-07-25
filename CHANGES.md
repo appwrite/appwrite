@@ -1,6 +1,12 @@
 # Version 0.15.3
+## Features
+- Added hint during Installation for DNS Configuration by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/2450
 ## Bugs
 - Fixed Migration for Attributes and Indexes by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3568
+- Fixed Closed Icon in the alerts to be centered by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3594
+- Fixed Response Model for Get and Update Database Endpoint by @ishanvyas22 in https://github.com/appwrite/appwrite/pull/3553
+- Fixed Missing Usage on Functions exection by @Meldiron in https://github.com/appwrite/appwrite/pull/3543
+- Fixed Validation for Permissions to only accept a maximum of 100 Permissions for all endpoints by @Meldiron in https://github.com/appwrite/appwrite/pull/3532
 
 # Version 0.15.2
 ## Bugs
