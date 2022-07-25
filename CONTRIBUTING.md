@@ -51,19 +51,19 @@ $ git checkout -b [name_of_your_new_branch]
 4. Before you push your changes, make sure your code follows the `PSR12` coding standards , which is the standard Appwrite follows currently. You can easily do this by running the formatter.
 
 ```bash
-./vendor/bin/phpcbf <your file path>
+composer format <your file path>
 ```
 
 Now, go a step further by running the linter by the following command to manually fix the issues the formatter wasn't able to fix.
 
 ```bash
-./vendor/bin/phpcs <your file path>
+composer lint <your file path>
 ```
 
 This will give you a list of errors for you to rectify , if there is an instance you need more information on the errors being displayed you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
 
 ```bash
-./vendor/bin/phpcs --report=diff <your file path>
+composer lint --report=diff <your file path>
 ```
 
 5. Push changes to GitHub
@@ -413,18 +413,18 @@ We use some automation tools to help us keep a healthy codebase.
 
 ```bash
 # Run on all files
-./vendor/bin/phpcbf
+composer format
 # Run on single file or folder
-./vendor/bin/phpcbf <your file path>
+composer format <your file path>
 ```
 
 **Run Linter:**
 
 ```bash
 # Run on all files
-./vendor/bin/phpcs
+composer lint
 # Run on single file or folder
-./vendor/bin/phpcs <your file path>
+composer lint <your file path>
 ```
 
 ## Tutorials
