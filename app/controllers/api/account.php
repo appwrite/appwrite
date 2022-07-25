@@ -540,7 +540,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         Authorization::setRole('user:' . $user->getId());
 
-        $dbForProject->updateDocument('users', $user->getId(), $user);
+        try {
+            $dbForProject->updateDocument('users', $user->getId(), $user);
+        } catch (Duplicate $th) {
+            throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
+        }
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$read', ['user:' . $user->getId()])
