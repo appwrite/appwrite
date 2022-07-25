@@ -31,7 +31,7 @@ ENV DEBUG=$DEBUG
 
 ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_MONGODB_VERSION=1.13.0 \
-    PHP_SWOOLE_VERSION=v4.8.9 \
+    PHP_SWOOLE_VERSION=v4.8.10 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0
@@ -221,8 +221,6 @@ ENV _APP_SERVER=swoole \
     _APP_SMTP_USERNAME= \
     _APP_SMTP_PASSWORD= \
     _APP_PHONE_PROVIDER= \
-    _APP_PHONE_USER= \
-    _APP_PHONE_KEY= \
     _APP_PHONE_FROM= \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
@@ -274,7 +272,7 @@ RUN \
 
 RUN \
   mkdir -p $DOCKER_CONFIG/cli-plugins \
-  && ARCH=$(uname -m) && if [ $ARCH == "armv7l" ]; then $ARCH="armv7"; fi \
+  && ARCH=$(uname -m) && if [ $ARCH == "armv7l" ]; then ARCH="armv7"; fi \
   && curl -SL https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-linux-$ARCH -o $DOCKER_CONFIG/cli-plugins/docker-compose \
   && chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
@@ -333,7 +331,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-certificates && \
-    chmod +x /usr/local/bin/worker-database && \
+    chmod +x /usr/local/bin/worker-databases && \
     chmod +x /usr/local/bin/worker-deletes && \
     chmod +x /usr/local/bin/worker-functions && \
     chmod +x /usr/local/bin/worker-builds && \

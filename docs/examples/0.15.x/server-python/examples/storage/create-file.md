@@ -11,4 +11,4 @@ client = Client()
 
 storage = Storage(client)
 
-result = storage.create_file('[BUCKET_ID]', '[FILE_ID]', 'file.png')
+result = storage.create_file('[BUCKET_ID]', '[FILE_ID]', InputFile.from_path('file.png'))

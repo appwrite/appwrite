@@ -113,7 +113,7 @@ App::post('/v1/projects')
         $collections = Config::getParam('collections', []);
 
         $dbForProject->setNamespace("_{$project->getInternalId()}");
-        $dbForProject->create('appwrite');
+        $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
         $audit = new Audit($dbForProject);
         $audit->setup();
@@ -173,7 +173,7 @@ App::get('/v1/projects')
     ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the project used as the starting point for the query, excluding the project itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor.', true)
+    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForConsole')
@@ -278,8 +278,8 @@ App::get('/v1/projects/:projectId/usage')
                 'network',
                 'executions',
                 'users.count',
-                'database.documents.count',
-                'database.collections.count',
+                'databases.documents.count',
+                'databases.collections.count',
                 'storage.total'
             ];
 
@@ -326,8 +326,8 @@ App::get('/v1/projects/:projectId/usage')
                 'requests' => $stats['requests'],
                 'network' => $stats['network'],
                 'functions' => $stats['executions'],
-                'documents' => $stats['database.documents.count'],
-                'collections' => $stats['database.collections.count'],
+                'documents' => $stats['databases.documents.count'],
+                'collections' => $stats['databases.collections.count'],
                 'users' => $stats['users.count'],
                 'storage' => $stats['storage.total']
             ]);

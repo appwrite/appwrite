@@ -124,6 +124,37 @@ class EventTest extends TestCase
         $this->assertContains('collections.*.documents.*', $event);
         $this->assertContains('collections.*', $event);
 
+        $event = Event::generateEvents('databases.[databaseId].collections.[collectionId].documents.[documentId].create', [
+            'databaseId' => 'chaptersDB',
+            'collectionId' => 'chapters',
+            'documentId' => 'prolog',
+        ]);
+
+        $this->assertCount(22, $event);
+        $this->assertContains('databases.chaptersDB.collections.chapters.documents.prolog.create', $event);
+        $this->assertContains('databases.chaptersDB.collections.chapters.documents.prolog', $event);
+        $this->assertContains('databases.chaptersDB.collections.chapters.documents.*.create', $event);
+        $this->assertContains('databases.chaptersDB.collections.chapters.documents.*', $event);
+        $this->assertContains('databases.chaptersDB.collections.chapters', $event);
+        $this->assertContains('databases.chaptersDB.collections.*.documents.prolog.create', $event);
+        $this->assertContains('databases.chaptersDB.collections.*.documents.prolog', $event);
+        $this->assertContains('databases.chaptersDB.collections.*', $event);
+        $this->assertContains('databases.chaptersDB', $event);
+        $this->assertContains('databases.*.collections.chapters.documents.prolog.create', $event);
+        $this->assertContains('databases.*.collections.chapters.documents.prolog', $event);
+        $this->assertContains('databases.*.collections.chapters', $event);
+        $this->assertContains('databases.*.collections.*.documents.*.create', $event);
+        $this->assertContains('databases.*.collections.*.documents.*', $event);
+        $this->assertContains('databases.*.collections.*', $event);
+        $this->assertContains('databases.*', $event);
+        $this->assertContains('databases.*.collections.*.documents.prolog', $event);
+        $this->assertContains('databases.*.collections.*.documents.prolog.create', $event);
+        $this->assertContains('databases.*.collections.chapters.documents.*', $event);
+        $this->assertContains('databases.*.collections.chapters.documents.*.create', $event);
+        $this->assertContains('databases.chaptersDB.collections.*.documents.*', $event);
+        $this->assertContains('databases.chaptersDB.collections.*.documents.*.create', $event);
+
+
         try {
             $event = Event::generateEvents('collections.[collectionId].documents.[documentId].create', [
                 'collectionId' => 'chapters'

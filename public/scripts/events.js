@@ -6,12 +6,16 @@
             action: null,
             type: null,
             subType: null,
+            subSubType: null,
             resource: null,
             resourceName: '',
             subResource: null,
             subResourceName: '',
+            subSubResource: null,
+            subSubResourceName: '',
             hasResource: false,
             hasSubResource: false,
+            hasSubSubResource: false,
             attribute: null,
             hasAttribute: false,
             attributes: [],
@@ -19,11 +23,11 @@
                 this.events = new Set(events);
             },
             reset() {
-                this.hasResource = this.hasSubResource = this.hasAttribute = false;
+                this.hasResource = this.hasSubResource = this.hasSubSubResource = this.hasAttribute = false;
                 this.type = this.subType = this.subResource = this.resource = this.attribute = this.selected = this.action = null;
             },
             setEvent() {
-                this.hasResource = this.hasSubResource = this.hasAttribute = this.action = false;
+                this.hasResource = this.hasSubResource = this.hasSubSubResource = this.hasAttribute = this.action = false;
 
                 if (!this.selected) {
                     this.reset();
@@ -44,9 +48,17 @@
                         break;
 
                     case 'collections':
+                        this.hasResource = this.hasSubResource = true;
+                        this.type = 'databases';
+                        this.subType = type;
+                        this.resourceName = 'Database ID';
+                        this.subResourceName = 'Collection ID';
+                        break;
+
+                    case 'databases':
                         this.hasResource = true;
                         this.type = type;
-                        this.resourceName = 'Collection ID';
+                        this.resourceName = 'Database ID';
                         break;
 
                     case 'teams':
@@ -92,11 +104,13 @@
                         break;
 
                     case 'documents':
-                        this.hasResource = this.hasSubResource = true;
-                        this.type = 'collections';
-                        this.subType = type;
-                        this.resourceName = 'Collection ID';
-                        this.subResourceName = 'Document ID';
+                        this.hasResource = this.hasSubResource = this.hasSubSubResource = true;
+                        this.type = 'databases';
+                        this.subType = 'collections';
+                        this.subSubType = type;
+                        this.resourceName = 'Database ID';
+                        this.subResourceName = 'Collection ID';
+                        this.subSubResourceName = 'Document ID';
                         break;
 
                     case 'attributes':
@@ -154,6 +168,7 @@
                     default:
                         this.hasResource = true;
                         this.hasSubResource = true;
+                        this.hasSubSubResource = true;
 
                         break;
                 }
@@ -176,6 +191,10 @@
 
                 if (this.hasSubResource) {
                     event += `.${this.subType}.${this.subResource ? this.subResource : '*'}`;
+                }
+
+                if (this.hasSubSubResource) {
+                    event += `.${this.subSubType}.${this.subSubResource ? this.subSubResource : '*'}`;
                 }
 
                 if (this.action) {

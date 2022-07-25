@@ -134,6 +134,7 @@ App::post('/v1/account')
     });
 
 App::post('/v1/account/sessions/email')
+    ->alias('/v1/account/sessions')
     ->desc('Create Account Session with Email')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -268,7 +269,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), fn($node) => (!$node['mock'])))) . '.')
     ->param('success', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('failure', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('scopes', [], new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 128 characters long.', true)
+    ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -873,7 +874,7 @@ App::post('/v1/account/sessions/phone')
     ->inject('phone')
     ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging, Phone $phone) {
         if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
-            throw new Exception('Phone Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
+            throw new Exception('Phone provider not configured', 503, Exception::GENERAL_PHONE_DISABLED);
         }
 
         $roles = Authorization::getRoles();
@@ -1608,7 +1609,7 @@ App::patch('/v1/account/phone')
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         } catch (Duplicate $th) {
-            throw new Exception('Phone number already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception('Phone number already exists', 409, Exception::USER_PHONE_ALREADY_EXISTS);
         }
 
         $audits
@@ -2276,12 +2277,12 @@ App::post('/v1/account/verification/phone')
     ->inject('messaging')
     ->action(function (Request $request, Response $response, Phone $phone, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
+        if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
+            throw new Exception('Phone provider not configured', 503, Exception::GENERAL_PHONE_DISABLED);
         }
 
         if (empty($user->getAttribute('phone'))) {
-            throw new Exception('User has no phone number.', 400);
+            throw new Exception('User has no phone number.', 400, Exception::USER_PHONE_NOT_FOUND);
         }
 
         $roles = Authorization::getRoles();
@@ -2314,7 +2315,9 @@ App::post('/v1/account/verification/phone')
 
         $messaging
             ->setRecipient($user->getAttribute('phone'))
-            ->setMessage($secret);
+            ->setMessage($secret)
+            ->trigger()
+        ;
 
         $events
             ->setParam('userId', $user->getId())

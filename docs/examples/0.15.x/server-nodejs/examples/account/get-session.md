@@ -1,9 +1,9 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new sdk.Client();
+const client = new sdk.Client();
 
-let account = new sdk.Account(client);
+const account = new sdk.Account(client);
 
 client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
@@ -11,7 +11,7 @@ client
     .setJWT('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...') // Your secret JSON Web Token
 ;
 
-let promise = account.getSession('[SESSION_ID]');
+const promise = account.getSession('[SESSION_ID]');
 
 promise.then(function (response) {
     console.log(response);

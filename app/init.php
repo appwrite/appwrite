@@ -27,6 +27,8 @@ use Appwrite\Auth\Phone\Mock;
 use Appwrite\Auth\Phone\Telesign;
 use Appwrite\Auth\Phone\TextMagic;
 use Appwrite\Auth\Phone\Twilio;
+use Appwrite\Auth\Phone\Msg91;
+use Appwrite\Auth\Phone\Vonage;
 use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
@@ -84,9 +86,10 @@ const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
+const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
-const APP_CACHE_BUSTER = 400;
-const APP_VERSION_STABLE = '0.15.0';
+const APP_CACHE_BUSTER = 402;
+const APP_VERSION_STABLE = '0.15.2';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -124,6 +127,7 @@ const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
 // Deletion Types
+const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
 const DELETE_TYPE_PROJECTS = 'projects';
@@ -263,8 +267,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('attributes', [
-                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], $database->getAttributeLimit());
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
+                new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
+            ], $database->getAttributeLimit(), 0, []);
     }
 );
 
@@ -276,7 +281,8 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('indexes', [
-                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
+                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
+                new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
             ], 64);
     }
 );
@@ -433,7 +439,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
  * Registry
  */
 $register->set('logger', function () {
- // Register error logger
+    // Register error logger
     $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
     $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 
@@ -553,7 +559,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/db/DBIP/dbip-country-lite-2022-03.mmdb');
+    return new Reader(__DIR__ . '/db/DBIP/dbip-country-lite-2022-06.mmdb');
 });
 $register->set('db', function () {
  // This is usually for our workers or CLI commands scope
@@ -986,6 +992,8 @@ App::setResource('phone', function () {
         'twilio' => new Twilio($user, $secret),
         'text-magic' => new TextMagic($user, $secret),
         'telesign' => new Telesign($user, $secret),
+        'msg91' => new Msg91($user, $secret),
+        'vonage' => new Vonage($user, $secret),
         default => null
     };
 });

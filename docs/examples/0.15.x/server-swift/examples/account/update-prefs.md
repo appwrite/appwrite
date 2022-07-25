@@ -7,7 +7,7 @@ func main() async throws {
       .setJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...") // Your secret JSON Web Token
     let account = Account(client)
     let user = try await account.updatePrefs(
-        prefs: 
+        prefs: [:]
     )
 
     print(String(describing: user)

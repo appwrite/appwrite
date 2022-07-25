@@ -8,6 +8,7 @@ use Utopia\Database\Document;
 class Database extends Event
 {
     protected string $type = '';
+    protected ?Document $database = null;
     protected ?Document $collection = null;
     protected ?Document $document = null;
 
@@ -36,6 +37,18 @@ class Database extends Event
     public function getType(): string
     {
         return $this->type;
+    }
+
+    /**
+     * Set the database for this event
+     *
+     * @param Document $database
+     * @return self
+     */
+    public function setDatabase(Document $database): self
+    {
+        $this->database = $database;
+        return $this;
     }
 
     /**
@@ -97,6 +110,7 @@ class Database extends Event
             'type' => $this->type,
             'collection' => $this->collection,
             'document' => $this->document,
+            'database' => $this->database,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }

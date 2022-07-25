@@ -1,9 +1,9 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new sdk.Client();
+const client = new sdk.Client();
 
-let users = new sdk.Users(client);
+const users = new sdk.Users(client);
 
 client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
@@ -11,7 +11,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = users.deleteSessions('[USER_ID]');
+const promise = users.deleteSessions('[USER_ID]');
 
 promise.then(function (response) {
     console.log(response);

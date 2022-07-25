@@ -286,7 +286,16 @@
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-email" class="link text-size-small">Update Email</button></li>
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-phone" class="link text-size-small">Update Phone</button></li>
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-update-password" class="link text-size-small">Update Password</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i>
+                                <button data-ls-ui-trigger="open-json" 
+                                    class="link text-size-small"
+                                    data-analytics
+                                    data-analytics-event="click"
+                                    data-analytics-category="console"
+                                    data-analytics-label="View as JSON (User)">
+                                    View as JSON
+                                </button>
+                            </li>
                         </ul>
 
                         <div data-ls-if="{{user.email}} && {{user.emailVerification}} === false" style="display: none">

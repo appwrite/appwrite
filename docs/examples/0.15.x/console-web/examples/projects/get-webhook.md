@@ -1,11 +1,15 @@
-const sdk = new Appwrite();
+import { Client, Projects } from "appwrite";
 
-sdk
+const client = new Client();
+
+const projects = new Projects(client);
+
+client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.projects.getWebhook('[PROJECT_ID]', '[WEBHOOK_ID]');
+const promise = projects.getWebhook('[PROJECT_ID]', '[WEBHOOK_ID]');
 
 promise.then(function (response) {
     console.log(response); // Success

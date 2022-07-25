@@ -2,9 +2,9 @@ const sdk = require('node-appwrite');
 const fs = require('fs');
 
 // Init SDK
-let client = new sdk.Client();
+const client = new sdk.Client();
 
-let storage = new sdk.Storage(client);
+const storage = new sdk.Storage(client);
 
 client
     .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
@@ -12,7 +12,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = storage.createFile('[BUCKET_ID]', '[FILE_ID]', 'file.png');
+const promise = storage.createFile('[BUCKET_ID]', '[FILE_ID]', 'file.png');
 
 promise.then(function (response) {
     console.log(response);

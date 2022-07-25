@@ -9,7 +9,7 @@ func main() async throws {
     let deployment = try await functions.createDeployment(
         functionId: "[FUNCTION_ID]",
         entrypoint: "[ENTRYPOINT]",
-        code: File(name: "image.jpg", buffer: yourByteBuffer),
+        code: InputFile.fromPath("file.png"),
         activate: xfalse
     )
 
