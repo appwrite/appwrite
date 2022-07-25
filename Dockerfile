@@ -145,10 +145,10 @@ FROM rust_compile as scrypt
 WORKDIR /usr/local/lib/php/extensions/
 
 RUN \
-  git clone --depth 1 https://github.com/PineappleIOnic/scrypt-php.git && \
-  cd scrypt-php && \
+  git clone --depth 1 https://github.com/appwrite/php-scrypt.git && \
+  cd php-scrypt && \
   cargo zigbuild --workspace --all-targets --target $(uname -m)-unknown-linux-musl --release && \
-  mv target/$(uname -m)-unknown-linux-musl/release/libscrypt_php.so target/libscrypt_php.so
+  mv target/$(uname -m)-unknown-linux-musl/release/libphp_scrypt.so target/libphp_scrypt.so
 
 FROM php:8.0.18-cli-alpine3.15 as final
 
@@ -291,7 +291,7 @@ COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imag
 COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
-COPY --from=scrypt  /usr/local/lib/php/extensions/scrypt-php/target/libscrypt_php.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=scrypt  /usr/local/lib/php/extensions/php-scrypt/target/libphp_scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -348,7 +348,7 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
 RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
-RUN echo extension=libscrypt_php.so >> /usr/local/etc/php/conf.d/libscrypt_php.ini
+RUN echo extension=libphp_scrypt.so >> /usr/local/etc/php/conf.d/libphp_scrypt.ini
 RUN if [ "$DEBUG" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.init_file=/usr/local/dev/yasd_init.php \nyasd.remote_port=9005 \nyasd.log_level=-1" >> /usr/local/etc/php/conf.d/yasd.ini; fi
 
 RUN if [ "$DEBUG" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/appwrite.ini; fi
