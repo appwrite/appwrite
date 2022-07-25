@@ -9,7 +9,6 @@ use GraphQL\Type\Schema;
 use Swoole\Coroutine\WaitGroup;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
@@ -24,12 +23,13 @@ class SchemaBuilder
         App $utopia,
         string $projectId,
         Database $dbForProject
-    ): Schema {
+    ): Schema
+    {
         App::setResource('current', static fn() => $utopia);
 
         /** @var Registry $register */
         $register = $utopia->getResource('register');
-        $envVersion = App::getEnv('_APP_VERSION');
+        $appVersion = App::getEnv('_APP_VERSION');
 
         $apiSchemaKey = 'apiSchema';
         $apiVersionKey = 'apiSchemaVersion';
@@ -39,7 +39,7 @@ class SchemaBuilder
 
         $schemaVersion = $register->has($apiVersionKey) ? $register->get($apiVersionKey) : '';
         $collectionSchemaDirty = $register->has($collectionsDirtyKey) ? $register->get($collectionsDirtyKey) : true;
-        $apiSchemaDirty = \version_compare($envVersion, $schemaVersion, "!=");
+        $apiSchemaDirty = \version_compare($appVersion, $schemaVersion, "!=");
 
         if (
             !$collectionSchemaDirty
@@ -52,33 +52,37 @@ class SchemaBuilder
         if ($register->has($apiSchemaKey) && !$apiSchemaDirty) {
             $apiSchema = $register->get($apiSchemaKey);
         } else {
-            $apiSchema = self::buildAPISchema($utopia);
-            $register->set($apiSchemaKey, static fn() => $apiSchema);
-            $register->set($apiVersionKey, static fn() => $envVersion);
+            $apiSchema = &self::buildAPISchema($utopia);
+            $register->set($apiSchemaKey, static function&() use (&$apiSchema) {
+                return $apiSchema;
+            });
+            $register->set($apiVersionKey, static fn() => $appVersion);
         }
 
         if ($register->has($collectionSchemaKey) && !$collectionSchemaDirty) {
             $collectionSchema = $register->get($collectionSchemaKey);
         } else {
-            $collectionSchema = self::buildCollectionSchema($utopia, $dbForProject);
-            $register->set($collectionSchemaKey, static fn() => $collectionSchema);
+            $collectionSchema = &self::buildCollectionSchema($utopia, $dbForProject);
+            $register->set($collectionSchemaKey, static function&() use (&$collectionSchema) {
+                return $collectionSchema;
+            });
             $register->set($collectionsDirtyKey, static fn() => false);
         }
-
-        $queryFields = \array_merge_recursive($apiSchema['query'], $collectionSchema['query']);
-        $mutationFields = \array_merge_recursive($apiSchema['mutation'], $collectionSchema['mutation']);
-
-        \ksort($queryFields);
-        \ksort($mutationFields);
 
         $schema = new Schema([
             'query' => new ObjectType([
                 'name' => 'Query',
-                'fields' => $queryFields
+                'fields' => \array_merge_recursive(
+                    $apiSchema['query'],
+                    $collectionSchema['query']
+                )
             ]),
             'mutation' => new ObjectType([
                 'name' => 'Mutation',
-                'fields' => $mutationFields
+                'fields' => \array_merge_recursive(
+                    $apiSchema['mutation'],
+                    $collectionSchema['mutation']
+                )
             ])
         ]);
 
@@ -95,7 +99,7 @@ class SchemaBuilder
      * @return array
      * @throws \Exception
      */
-    public static function buildAPISchema(App $utopia): array
+    public static function &buildAPISchema(App $utopia): array
     {
         $queryFields = [];
         $mutationFields = [];
@@ -161,10 +165,12 @@ class SchemaBuilder
             }
         }
 
-        return [
+        $schema = [
             'query' => $queryFields,
             'mutation' => $mutationFields
         ];
+
+        return $schema;
     }
 
     /**
@@ -176,10 +182,11 @@ class SchemaBuilder
      * @return array
      * @throws \Exception
      */
-    public static function buildCollectionSchema(
+    public static function &buildCollectionSchema(
         App $utopia,
         Database $dbForProject
-    ): array {
+    ): array
+    {
         $collections = [];
         $queryFields = [];
         $mutationFields = [];
@@ -190,11 +197,11 @@ class SchemaBuilder
         $wg = new WaitGroup();
 
         while (
-            !empty($attrs = Authorization::skip(fn() => $dbForProject->find(
-                'attributes',
-                limit: $limit,
-                offset: $offset
-            )))
+        !empty($attrs = Authorization::skip(fn() => $dbForProject->find(
+            'attributes',
+            limit: $limit,
+            offset: $offset
+        )))
         ) {
             $wg->add();
             $count += count($attrs);
@@ -246,7 +253,7 @@ class SchemaBuilder
                             $databaseId,
                             $collectionId
                         ),
-                        'complexity' => fn (int $complexity, array $args) => $complexity * $args['limit'],
+                        'complexity' => fn(int $complexity, array $args) => $complexity * $args['limit'],
                     ];
                     $mutationFields[$collectionId . 'Create'] = [
                         'type' => $objectType,
@@ -287,9 +294,11 @@ class SchemaBuilder
         }
         $wg->wait();
 
-        return [
+        $schema = [
             'query' => $queryFields,
             'mutation' => $mutationFields
         ];
+
+        return $schema;
     }
 }
