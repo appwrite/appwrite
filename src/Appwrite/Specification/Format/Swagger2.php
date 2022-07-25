@@ -29,7 +29,7 @@ class Swagger2 extends Format
                         foreach ($this->models as $m) {
                             if ($m->getType() === $ruleType) {
                                 $this->getNestedModels($m, $usedModels);
-                                return;
+                                continue;
                             }
                         }
                     }
@@ -41,7 +41,7 @@ class Swagger2 extends Format
                     foreach ($this->models as $m) {
                         if ($m->getType() === $rule['type']) {
                             $this->getNestedModels($m, $usedModels);
-                            return;
+                            continue;
                         }
                     }
                 }
