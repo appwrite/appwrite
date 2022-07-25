@@ -37,7 +37,7 @@ class Swagger2 extends Format
             } else {
                 if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
                     $usedModels[] = $rule['type'];
-                    
+
                     foreach ($this->models as $m) {
                         if ($m->getType() === $rule['type']) {
                             $this->getNestedModels($m, $usedModels);
