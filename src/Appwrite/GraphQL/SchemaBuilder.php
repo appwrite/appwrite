@@ -22,36 +22,74 @@ class SchemaBuilder
      */
     public static function buildSchema(
         App $utopia,
+        string $projectId,
         Database $dbForProject
     ): Schema {
         App::setResource('current', static fn() => $utopia);
 
+        /** @var Registry $register */
         $register = $utopia->getResource('register');
         $envVersion = App::getEnv('_APP_VERSION');
-        $schemaVersion = $register->has('apiSchemaVersion') ? $register->get('apiSchemaVersion') : '';
-        $collectionSchemaDirty = $register->has('schemaDirty') && $register->get('schemaDirty');
+
+        $apiSchemaKey = 'apiSchema';
+        $apiVersionKey = 'apiSchemaVersion';
+        $collectionSchemaKey = $projectId . 'CollectionSchema';
+        $collectionsDirtyKey = $projectId . 'SchemaDirty';
+        $fullSchemaKey = $projectId . 'FullSchema';
+
+        $schemaVersion = $register->has($apiVersionKey) ? $register->get($apiVersionKey) : '';
+        $collectionSchemaDirty = $register->has($collectionsDirtyKey) ? $register->get($collectionsDirtyKey) : true;
         $apiSchemaDirty = \version_compare($envVersion, $schemaVersion, "!=");
 
         if (
             !$collectionSchemaDirty
             && !$apiSchemaDirty
-            && $register->has('fullSchema')
+            && $register->has($fullSchemaKey)
         ) {
-            return $register->get('fullSchema');
+            return $register->get($fullSchemaKey);
         }
 
-        $apiSchema = self::getApiSchema($utopia, $register, $apiSchemaDirty, $envVersion);
-        $collectionSchema = self::getCollectionSchema($utopia, $register, $dbForProject, $collectionSchemaDirty);
-        $schema = self::collateSchema($apiSchema, $collectionSchema);
+        if ($register->has($apiSchemaKey) && !$apiSchemaDirty) {
+            $apiSchema = $register->get($apiSchemaKey);
+        } else {
+            $apiSchema = self::buildAPISchema($utopia);
+            $register->set($apiSchemaKey, static fn() => $apiSchema);
+            $register->set($apiVersionKey, static fn() => $envVersion);
+        }
 
-        $register->set('fullSchema', static fn() => $schema);
+        if ($register->has($collectionSchemaKey) && !$collectionSchemaDirty) {
+            $collectionSchema = $register->get($collectionSchemaKey);
+        } else {
+            $collectionSchema = self::buildCollectionSchema($utopia, $dbForProject);
+            $register->set($collectionSchemaKey, static fn() => $collectionSchema);
+            $register->set($collectionsDirtyKey, static fn() => false);
+        }
+
+        $queryFields = \array_merge_recursive($apiSchema['query'], $collectionSchema['query']);
+        $mutationFields = \array_merge_recursive($apiSchema['mutation'], $collectionSchema['mutation']);
+
+        \ksort($queryFields);
+        \ksort($mutationFields);
+
+        $schema = new Schema([
+            'query' => new ObjectType([
+                'name' => 'Query',
+                'fields' => $queryFields
+            ]),
+            'mutation' => new ObjectType([
+                'name' => 'Mutation',
+                'fields' => $mutationFields
+            ])
+        ]);
+
+        $register->set($fullSchemaKey, static fn() => $schema);
 
         return $schema;
     }
 
     /**
      * This function iterates all API routes and builds a GraphQL
-     * schema defining types and resolvers for all response models
+     * schema defining types and resolvers for all response models.
      *
      * @param App $utopia
      * @return array
@@ -59,7 +97,6 @@ class SchemaBuilder
      */
     public static function buildAPISchema(App $utopia): array
     {
-        $start = microtime(true);
         $queryFields = [];
         $mutationFields = [];
         $response = new Response(new SwooleResponse());
@@ -131,7 +168,8 @@ class SchemaBuilder
     }
 
     /**
-     * Iterates all a projects attributes and builds GraphQL queries and mutations for the collections they make up.
+     * Iterates all a projects attributes and builds GraphQL
+     * queries and mutations for the collections they make up.
      *
      * @param App $utopia
      * @param Database $dbForProject
@@ -142,8 +180,6 @@ class SchemaBuilder
         App $utopia,
         Database $dbForProject
     ): array {
-        $start = microtime(true);
-
         $collections = [];
         $queryFields = [];
         $mutationFields = [];
@@ -255,59 +291,5 @@ class SchemaBuilder
             'query' => $queryFields,
             'mutation' => $mutationFields
         ];
-    }
-
-    private static function getApiSchema(
-        App $utopia,
-        Registry $register,
-        bool $apiSchemaDirty,
-        string $envVersion
-    ): array {
-        if ($register->has('apiSchema') && !$apiSchemaDirty) {
-            $apiSchema = $register->get('apiSchema');
-        } else {
-            $apiSchema = self::buildAPISchema($utopia);
-            $register->set('apiSchema', static fn() => $apiSchema);
-            $register->set('apiSchemaVersion', static fn() => $envVersion);
-        }
-        return $apiSchema;
-    }
-
-    private static function getCollectionSchema(
-        App $utopia,
-        Registry $register,
-        Database $dbForProject,
-        bool $collectionSchemaDirty
-    ): array {
-        if ($register->has('collectionSchema') && !$collectionSchemaDirty) {
-            $collectionSchema = $register->get('collectionSchema');
-        } else {
-            $collectionSchema = self::buildCollectionSchema($utopia, $dbForProject);
-            $register->set('collectionSchema', static fn() => $collectionSchema);
-            $register->set('schemaDirty', static fn() => false);
-        }
-        return $collectionSchema;
-    }
-
-    private static function collateSchema(
-        array $apiSchema,
-        array $collectionSchema
-    ): Schema {
-        $queryFields = \array_merge_recursive($apiSchema['query'], $collectionSchema['query']);
-        $mutationFields = \array_merge_recursive($apiSchema['mutation'], $collectionSchema['mutation']);
-
-        \ksort($queryFields);
-        \ksort($mutationFields);
-
-        return new Schema([
-            'query' => new ObjectType([
-                'name' => 'Query',
-                'fields' => $queryFields
-            ]),
-            'mutation' => new ObjectType([
-                'name' => 'Mutation',
-                'fields' => $mutationFields
-            ])
-        ]);
     }
 }

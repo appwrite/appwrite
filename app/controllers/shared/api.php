@@ -253,6 +253,7 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
     }
 }, ['utopia', 'request', 'response', 'project', 'events', 'audits', 'usage', 'deletes', 'database', 'mode', 'dbForProject'], 'api');
 
-App::shutdown(function (Registry $register) {
-    $register->set('schemaDirty', fn() => true);
-}, ['register'], 'schema');
+App::shutdown(function (Registry $register, Document $project) {
+    $projectId = $project->getId();
+    $register->set($projectId . 'SchemaDirty', fn() => true);
+}, ['register', 'project'], 'schema');

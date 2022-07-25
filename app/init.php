@@ -1008,6 +1008,6 @@ App::setResource('promiseAdapter', function ($register) {
     return $register->get('promiseAdapter');
 }, ['register']);
 
-App::setResource('schema', function ($utopia, $dbForProject) {
-    return SchemaBuilder::buildSchema($utopia, $dbForProject);
-}, ['utopia', 'dbForProject']);
+App::setResource('schema', function ($utopia, $project, $dbForProject) {
+    return SchemaBuilder::buildSchema($utopia, $project->getId(), $dbForProject);
+}, ['utopia', 'project', 'dbForProject']);
