@@ -7,6 +7,7 @@
 - Fixed Response Model for Get and Update Database Endpoint by @ishanvyas22 in https://github.com/appwrite/appwrite/pull/3553
 - Fixed Missing Usage on Functions exection by @Meldiron in https://github.com/appwrite/appwrite/pull/3543
 - Fixed Validation for Permissions to only accept a maximum of 100 Permissions for all endpoints by @Meldiron in https://github.com/appwrite/appwrite/pull/3532
+- Fixed backwards compatibility for Create Email Session Endpoint by @stnguyen90 in https://github.com/appwrite/appwrite/pull/3517
 
 # Version 0.15.2
 ## Bugs
