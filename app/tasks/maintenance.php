@@ -148,7 +148,6 @@ $cli
             } else {
                 Console::info("[{$time}] No projects for key rotation.");
             }
- 
         }
 
         // # of days in seconds (1 day = 86400s)

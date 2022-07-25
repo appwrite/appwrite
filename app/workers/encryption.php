@@ -28,7 +28,7 @@ class EncryptionV1 extends Worker
     {
         $type = $this->args['type'] ?? '';
 
-        switch($type) {
+        switch ($type) {
             case APP_ENCRYPTION_TYPE_PROJECT_MASTER_KEY:
                 $project = new Document($this->args['project'] ?? []);
                 $this->rotateMasterKeyForProject($project);
@@ -50,10 +50,12 @@ class EncryptionV1 extends Worker
             '$collection' => 'secrets',
             'secret' => OpenSSL::secretString(),
         ])));
-        $dbForConsole->updateDocument('projects', $projectId, 
+        $dbForConsole->updateDocument(
+            'projects',
+            $projectId,
             $project
                 ->setAttribute('keyId', $secret->getId())
                 ->setAttribute('keyRotationDate', time() + App::getEnv('_APP_KEY_ROTATION_INTERVAL', 60 * 60 * 24 * 90))
-            );
+        );
     }
 }
