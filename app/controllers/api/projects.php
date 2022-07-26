@@ -23,6 +23,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
+use Swoole\Coroutine\WaitGroup;
 use Utopia\CLI\Console;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -125,8 +126,12 @@ App::post('/v1/projects')
 
         $time = \microtime(true);
 
+        $wg = new WaitGroup();
+
         foreach ($collections as $key => $collection) {
-            go(function () use ($collection, $dbForProject, $key) {
+            go(function () use ($collection, $dbForProject, $key, $wg) {
+                $wg->add();
+
                 if (($collection['$collection'] ?? '') !== Database::METADATA) {
                     return;
                 }
@@ -158,8 +163,11 @@ App::post('/v1/projects')
                 }
 
                 $dbForProject->createCollection($key, $attributes, $indexes);
+                $wg->done();
             });
         }
+
+        $wg->wait(5);
 
         Console::info('Project Successfully created, Generated in ' . (\microtime(true) - $time) * 1000 . 'ms');
 
