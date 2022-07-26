@@ -457,10 +457,9 @@ class Response extends SwooleResponse
     public function file(string $data, string $contentType): void
     {
         $this->payload = [
-                          'content-type' => $contentType,
-                          'payload'  =>  $data
-                         ];
-
+            'content-type' => $contentType,
+            'payload'  =>  $data
+        ];
         $this->send($data);
     }
 
@@ -491,7 +490,7 @@ class Response extends SwooleResponse
     /**
      * @return array
      */
-    public function getPayload(): string | array
+    public function getPayload(): array
     {
         return $this->payload;
     }

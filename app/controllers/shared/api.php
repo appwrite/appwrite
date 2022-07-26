@@ -117,28 +117,29 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
 
     $useCache = $route->getLabel('cache', false);
     if ($useCache) {
-            $key = md5($request->getURI() . $request->getServer('query_string'));
-            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
-            $data = $cache->load($key, 60 * 60 * 24 * 30 * 1);
+        $key = md5($request->getURI() . implode('*', $request->getParams()));
+        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
+        $timestamp = 60 * 60 * 24 * 30;
+        $data = $cache->load($key, $timestamp);
         if (!empty($data)) {
             $cacheLog = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             if ($cacheLog->isEmpty()) {
                 Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
-                        '$id' => $key,
-                        'accessedAt' => time(),
-                    ])));
+                '$id' => $key,
+                'accessedAt' => time(),
+                ])));
             } else {
                 $cacheLog->setAttribute('accessedAt', time());
                 Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
             }
 
             $data = json_decode($data, true);
-
+            $expire = \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT';
             $response
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT')
-                ->addHeader('X-Appwrite-Cache', 'hit')
-                ->setContentType($data['content-type'])
-                ->file(base64_decode($data['payload']), $data['content-type'], $data['date']);
+              ->addHeader('Expires', $expire)
+              ->addHeader('X-Appwrite-Cache', 'hit')
+              ->setContentType($data['content-type'])
+              ->file(base64_decode($data['payload']), $data['content-type']);
         }
     }
 }, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'mails', 'usage', 'deletes', 'database', 'dbForProject', 'mode'], 'api');
@@ -268,22 +269,28 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
 
     $useCache = $route->getLabel('cache', false);
     if ($useCache) {
-            $key = md5($request->getURI() . $request->getServer('query_string'));
-            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
-            $data = $response->getPayload();
+        $key = md5($request->getURI() . implode('*', $request->getParams()));
+        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
+        $data = $response->getPayload();
+        $timestamp = 60 * 60 * 24 * 30;
         if (!empty($data)) {
             $cacheLog = $dbForProject->getDocument('cache', $key);
             if ($cacheLog->isEmpty()) {
                 Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
-                        '$id' => $key,
-                        'accessedAt' => time(),
-                    ])));
+                '$id' => $key,
+                'accessedAt' => time(),
+                ])));
             } else {
                 $cacheLog->setAttribute('accessedAt', time());
                 Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
             }
-            $data['payload'] = base64_encode($data['payload']);
-            $cache->save($key, json_encode($data));
+            if (!empty($data['payload'])) {
+                $data['payload'] = base64_encode($data['payload']);
+                $cache->save($key, json_encode($data));
+            }
+            $response
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
+                ->addHeader('X-Appwrite-Cache', 'miss');
         }
     }
 

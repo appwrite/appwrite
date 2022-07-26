@@ -47,8 +47,6 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $output = (empty($output)) ? $type : $output;
     $data = $image->output($output, $quality);
     $response
-        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT')
-        ->addHeader('X-Appwrite-Cache', 'miss')
         ->setContentType('image/png')
         ->file($data, 'image/png');
 
@@ -155,8 +153,6 @@ App::get('/v1/avatars/image')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT')
-            ->addHeader('X-Appwrite-Cache', 'miss')
             ->setContentType('image/png')
             ->file($data, 'image/png');
 
@@ -268,9 +264,10 @@ App::get('/v1/avatars/favicon')
             if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
                 throw new Exception('Favicon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
             }
-            $response->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT')
-                ->addHeader('X-Appwrite-Cache', 'miss')
-                ->file($data, 'image/png');
+            $response
+                ->setContentType('image/x-icon')
+                ->file($data, 'image/x-icon')
+            ;
         }
 
         $fetch = @\file_get_contents($outputHref, false);
@@ -285,8 +282,6 @@ App::get('/v1/avatars/favicon')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT')
-            ->addHeader('X-Appwrite-Cache', 'miss')
             ->setContentType('image/png')
             ->file($data, 'image/png');
 
@@ -329,8 +324,7 @@ App::get('/v1/avatars/qr')
         $image->crop((int) $size, (int) $size);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT') // 30 days cache
-            ->addHeader('X-Appwrite-Cache', 'miss')
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
             ->send($image->output('png', 9));
     });
