@@ -111,7 +111,7 @@ App::get('/v1/functions')
             $cursorFunction = $dbForProject->getDocument('functions', $cursor);
 
             if ($cursorFunction->isEmpty()) {
-                throw new Exception("Function '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Function '{$cursor}' for the 'cursor' value not found.");
             }
         }
 
@@ -658,7 +658,7 @@ App::get('/v1/functions/:functionId/deployments')
             $cursorDeployment = $dbForProject->getDocument('deployments', $cursor);
 
             if ($cursorDeployment->isEmpty()) {
-                throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Tag '{$cursor}' for the 'cursor' value not found.");
             }
         }
 
@@ -846,7 +846,7 @@ App::post('/v1/functions/:functionId/executions')
         $validator = new Authorization('execute');
 
         if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
-            throw new Exception($validator->getDescription(), 401, Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
         }
 
         $executionId = $dbForProject->getId();
@@ -1001,7 +1001,7 @@ App::get('/v1/functions/:functionId/executions')
             $cursorExecution = $dbForProject->getDocument('executions', $cursor);
 
             if ($cursorExecution->isEmpty()) {
-                throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Execution '{$cursor}' for the 'cursor' value not found.");
             }
         }
 

@@ -115,7 +115,7 @@ App::get('/v1/users')
             $cursorUser = $dbForProject->getDocument('users', $cursor);
 
             if ($cursorUser->isEmpty()) {
-                throw new Exception("User '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "User '{$cursor}' for the 'cursor' value not found.");
             }
         }
 

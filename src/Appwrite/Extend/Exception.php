@@ -204,16 +204,13 @@ class Exception extends \Exception
     public const MOCK_500 = 'mock_500';
 
 
-    private $type = '';
+    protected $type = '';
 
-    private string $message = '';
+    protected array $errors;
 
-    private int $code = 0;
-
-    protected array $errors = Config::getParam('errors');
-
-    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = '', \Throwable $previous = null)
+    public function __construct(string $type, string $message = null, \Throwable $previous = null)
     {
+        $this->errors = Config::getParam('errors');
         $this->type = $type;
 
         if (isset($this->errors[$type])) {

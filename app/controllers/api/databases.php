@@ -588,7 +588,7 @@ App::get('/v1/databases/:databaseId/collections')
             $cursorCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $cursor);
 
             if ($cursorCollection->isEmpty()) {
-                throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Collection '{$cursor}' for the 'cursor' value not found.");
             }
         }
 
@@ -903,7 +903,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
         // Ensure attribute default is within required size
         $validator = new Text($size);
         if (!is_null($default) && !$validator->isValid($default)) {
-            throw new Exception($validator->getDescription(), 400, Exception::ATTRIBUTE_VALUE_INVALID);
+            throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
         }
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
@@ -1985,7 +1985,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $query = Query::parse($query);
 
             if (\count($query->getValues()) > 100) {
-                throw new Exception("You cannot use more than 100 query values on attribute '{$query->getAttribute()}'", 400, Exception::GENERAL_QUERY_LIMIT_EXCEEDED);
+                throw new Exception(Exception::GENERAL_QUERY_LIMIT_EXCEEDED, "You cannot use more than 100 query values on attribute '{$query->getAttribute()}'");
             }
 
             return $query;
@@ -1994,14 +1994,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         if (!empty($orderAttributes)) {
             $validator = new OrderAttributes($collection->getAttribute('attributes', []), $collection->getAttribute('indexes', []), true);
             if (!$validator->isValid($orderAttributes)) {
-                throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
         }
 
         if (!empty($queries)) {
             $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
             if (!$validator->isValid($queries)) {
-                throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
         }
 
@@ -2012,7 +2012,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 : $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Document '{$cursor}' for the 'cursor' value not found.");
             }
         }
 

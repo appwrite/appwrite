@@ -169,7 +169,7 @@ App::get('/v1/storage/buckets')
             $cursorBucket = $dbForProject->getDocument('buckets', $cursor);
 
             if ($cursorBucket->isEmpty()) {
-                throw new Exception("Bucket '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Bucket '{$cursor}' for the 'cursor' value not found.");
             }
         }
 
@@ -715,7 +715,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
             }
 
             if ($cursorFile->isEmpty()) {
-                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "File '{$cursor}' for the 'cursor' value not found.");
             }
         }
 

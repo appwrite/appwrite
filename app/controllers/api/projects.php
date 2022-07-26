@@ -80,7 +80,7 @@ App::post('/v1/projects')
         $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
 
         if ($projectId === 'console') {
-            throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
+            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
         $project = $dbForConsole->createDocument('projects', new Document([
@@ -183,7 +183,7 @@ App::get('/v1/projects')
             $cursorProject = $dbForConsole->getDocument('projects', $cursor);
 
             if ($cursorProject->isEmpty()) {
-                throw new Exception("Project '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$cursor}' for the 'cursor' value not found.",);
             }
         }
 
