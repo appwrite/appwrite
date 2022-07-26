@@ -51,7 +51,7 @@ class VideoProfile extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'http video stream type.',
                 'default' => null,
-                'example' => 'mpeg-dash',
+                'example' => 'dash',
             ])
         ;
     }

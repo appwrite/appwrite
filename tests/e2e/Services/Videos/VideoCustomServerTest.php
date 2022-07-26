@@ -331,7 +331,7 @@ class VideoCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($renditionId, $response['body']['$id']);
-        var_dump($response);
+        //var_dump($response['body']);
 
         return [
             'renditionId' => $renditionId,
@@ -384,7 +384,7 @@ class VideoCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
-        var_dump($response['body']);
+        //var_dump($response['body']);
 
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
 
@@ -415,6 +415,20 @@ class VideoCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
-        var_dump($response);
+        var_dump($response['body']);
     }
+
+        public function testBla(){
+        $response = $this->client->call(Client::METHOD_GET, '/videos/62dfaeb69c97ea81c58c/streams/dash/renditions/62dfaeb83bc30e827719/segments/62dfaed714324026902c', [
+        'content-type' => 'application/json',
+        'x-appwrite-project' => $this->getProject()['$id'],
+        'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        var_dump($response['body']);
+        }
+
+
+
+
 }

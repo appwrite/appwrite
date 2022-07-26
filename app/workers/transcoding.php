@@ -36,7 +36,7 @@ class TranscodingV1 extends Worker
     const STATUS_ERROR     = 'error';
 
     const STREAM_HLS = 'hls';
-    const STREAM_MPEG_DASH = 'mpeg-dash';
+    const STREAM_MPEG_DASH = 'dash';
 
     const BASE_URL_ENDPOINT = 'http://127.0.0.1/v1/videos';
 
@@ -246,7 +246,7 @@ class TranscodingV1 extends Worker
                         Authorization::skip(function () use ($segment, $project, $query) {
                             return $this->database->createDocument('videos_renditions_segments', new Document([
                                 'renditionId' => $query->getId(),
-                                'type' => 0,
+                                'representationId' => 0,
                                 'fileName' => $segment['fileName'],
                                 'path' => $this->getVideoDevice($project->getId())->getPath($this->args['videoId']) . '/' . $this->getRenditionName() . '/',
                                 'duration' => $segment['duration'],
@@ -374,7 +374,7 @@ class TranscodingV1 extends Worker
 
         $segmentSize = 10;
 
-        if ($stream === 'mpeg-dash') {
+        if ($stream === 'dash') {
                 $dash = $video->dash()
                 ->setFormat($format)
                 ->setSegDuration($segmentSize)
@@ -430,7 +430,6 @@ class TranscodingV1 extends Worker
                     ];
                 }
             }
-            var_dump($segments);
             fclose($handle);
         }
 
