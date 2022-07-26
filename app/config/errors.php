@@ -129,12 +129,12 @@ return [
     ],
     Exception::USER_EMAIL_NOT_WHITELISTED => [
         'name' => Exception::USER_EMAIL_NOT_WHITELISTED,
-        'description' => 'The user\'s email is not part of the whitelist. Please check the _APP_CONSOLE_WHITELIST_EMAILS environment variable of your Appwrite server.',
+        'description' => 'Console registration is restricted to specific emails. Contact your administrator for more information.',
         'code' => 401,
     ],
     Exception::USER_IP_NOT_WHITELISTED => [
         'name' => Exception::USER_IP_NOT_WHITELISTED,
-        'description' => 'The user\'s IP address is not part of the whitelist. Please check the _APP_CONSOLE_WHITELIST_IPS environment variable of your Appwrite server.',
+        'description' => 'Console registration is restricted to specific IPs. Contact your administrator for more information.',
         'code' => 401,
     ],
     Exception::USER_INVALID_CREDENTIALS => [
@@ -201,7 +201,7 @@ return [
     ],
     Exception::TEAM_INVITE_ALREADY_EXISTS => [
         'name' => Exception::TEAM_INVITE_ALREADY_EXISTS,
-        'description' => 'The current user has already received an invitation to join the team.',
+        'description' => 'User has already been invited or is already a member of this team',
         'code' => 409,
     ],
     Exception::TEAM_INVITE_NOT_FOUND => [
@@ -224,6 +224,12 @@ return [
         'description' => 'The invite does not belong to the current user.',
         'code' => 401,
     ],
+    Exception::TEAM_ID_MISMATCH => [
+        'name' => Exception::TEAM_ID_MISMATCH,
+        'description' => 'Team IDs don\'t match',
+        'code' => 404,
+    ],
+
 
 
     /** Membership */
@@ -231,6 +237,11 @@ return [
         'name' => Exception::MEMBERSHIP_NOT_FOUND,
         'description' => 'Membership with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::MEMBERSHIP_ALREADY_CONFIRMED => [
+        'name' => Exception::MEMBERSHIP_ALREADY_CONFIRMED,
+        'description' => 'Membership already confirmed',
+        'code' => 409,
     ],
 
     /** Avatars */

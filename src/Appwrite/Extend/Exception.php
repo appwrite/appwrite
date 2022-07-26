@@ -86,9 +86,11 @@ class Exception extends \Exception
     public const TEAM_INVALID_SECRET               = 'team_invalid_secret';
     public const TEAM_MEMBERSHIP_MISMATCH          = 'team_membership_mismatch';
     public const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch';
+    public const TEAM_ID_MISMATCH                  = 'team_id_mismatch';
 
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
+    public const MEMBERSHIP_ALREADY_CONFIRMED              = 'membership_already_confirmed';
 
     /** Avatars */
     public const AVATAR_SET_NOT_FOUND              = 'avatar_set_not_found';
