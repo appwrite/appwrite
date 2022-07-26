@@ -4745,7 +4745,7 @@
                  *
                  * Create a new file. Before using this route, you should create a new bucket
                  * resource using either a [server
-                 * integration](/docs/server/database#storageCreateBucket) API or directly
+                 * integration](/docs/server/storage#storageCreateBucket) API or directly
                  * from your Appwrite console.
                  *
                  * Larger files should be uploaded using multiple requests with the
