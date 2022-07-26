@@ -140,6 +140,10 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
               ->addHeader('X-Appwrite-Cache', 'hit')
               ->setContentType($data['content-type'])
               ->file(base64_decode($data['payload']), $data['content-type']);
+        } else {
+            $response
+              ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
+              ->addHeader('X-Appwrite-Cache', 'miss');
         }
     }
 }, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'mails', 'usage', 'deletes', 'database', 'dbForProject', 'mode'], 'api');
@@ -269,11 +273,12 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
 
     $useCache = $route->getLabel('cache', false);
     if ($useCache) {
-        $key = md5($request->getURI() . implode('*', $request->getParams()));
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
         $data = $response->getPayload();
-        $timestamp = 60 * 60 * 24 * 30;
         if (!empty($data)) {
+            $timestamp = 60 * 60 * 24 * 30;
+            $key = md5($request->getURI() . implode('*', $request->getParams()));
+            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
+
             $cacheLog = $dbForProject->getDocument('cache', $key);
             if ($cacheLog->isEmpty()) {
                 Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
@@ -288,9 +293,6 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
                 $data['payload'] = base64_encode($data['payload']);
                 $cache->save($key, json_encode($data));
             }
-            $response
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
-                ->addHeader('X-Appwrite-Cache', 'miss');
         }
     }
 
