@@ -791,9 +791,9 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTORS',
-                'description' => 'The host used by Appwrite to communicate with the functions proxy.',
+                'description' => 'List of Appwrite executors to use for executing functions separated by comma.',
                 'introduction' => '0.16.0',
-                'default' => 'main=http://appwrite-executor/v1',
+                'default' => 'exc1=appwrite-executor',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

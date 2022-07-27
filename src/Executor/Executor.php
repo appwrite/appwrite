@@ -278,7 +278,16 @@ class Executor
         }
 
         if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {
-            throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
+            $errorCode = $responseStatus > 0 ? $responseStatus : 500;
+            $errorMessage = curl_error($ch) . ' with status code ' . $errorCode;
+
+
+            if(curl_errno($ch) === 28) {
+                $errorCode = 500;
+                $errorMessage = 'Execution timed out after ' . $timeout . ' seconds.';
+            }
+
+            throw new Exception($errorMessage, $errorCode);
         }
 
         curl_close($ch);

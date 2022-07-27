@@ -454,7 +454,7 @@ App::post('/v1/execution')
     ->desc('Create an execution')
     // execution-related
     ->param('runtimeId', '', new Text(64), 'The runtimeID to execute.')
-    ->param('vars', [], new Assoc(), 'Environment variables required for the build.') // TODO: Possibly introduce build-vars and execution-vars in future
+    ->param('vars', [], new Assoc(), 'Environment variables required for the build and execution.')
     ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
     // runtime-related
@@ -582,7 +582,7 @@ App::post('/v1/execution')
                 \sleep(1);
 
                 if ($i === 4) {
-                    throw new Exception('Runtime failed to respond in allocated time: ' . $error . '(' . $errNo . ',' . $statusCode . ')', 500);
+                    throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 500);
                 }
             }
 

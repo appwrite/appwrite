@@ -768,7 +768,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertLessThan(6, $executions['body']['executions'][0]['time']);
         $this->assertGreaterThan(4, $executions['body']['executions'][0]['time']);
         $this->assertEquals($executions['body']['executions'][0]['response'], '');
-        $this->assertEquals($executions['body']['executions'][0]['stderr'], 'An internal curl error has occurred within the executor! Error Msg: Operation timed out');
+        $this->assertEquals($executions['body']['executions'][0]['stderr'], 'Execution timed out after 4 seconds.');
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
