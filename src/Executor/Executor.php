@@ -282,7 +282,7 @@ class Executor
             $errorMessage = curl_error($ch) . ' with status code ' . $errorCode;
 
 
-            if(curl_errno($ch) === 28) {
+            if (curl_errno($ch) === 28) {
                 $errorCode = 500;
                 $errorMessage = 'Execution timed out after ' . $timeout . ' seconds.';
             }
