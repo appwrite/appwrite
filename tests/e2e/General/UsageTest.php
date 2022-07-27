@@ -571,12 +571,4 @@ class UsageTest extends Scope
         $this->assertGreaterThan(0, $response['functionsBuildTime'][array_key_last($response['functionsBuildTime'])]['value']);
         $this->assertEquals($failures, $response['functionsFailures'][array_key_last($response['functionsFailures'])]['value']);
     }
-
-    protected function tearDown(): void
-    {
-        $this->usersCount = 0;
-        $this->requestsCount = 0;
-        $this->projectId = '';
-        $this->headers = [];
-    }
 }
