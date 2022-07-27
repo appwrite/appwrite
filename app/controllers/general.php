@@ -424,7 +424,7 @@ App::error(function (Throwable $error, App $utopia, Request $request, Response $
 
     /** Handle Utopia Errors */
     if ($error instanceof Utopia\Exception) {
-        $error = new AppwriteException($message, $code, AppwriteException::GENERAL_UNKNOWN, $error);
+        $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
         switch ($code) {
             case 400:
                 $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
@@ -437,7 +437,7 @@ App::error(function (Throwable $error, App $utopia, Request $request, Response $
 
     /** Wrap all exceptions inside Appwrite\Extend\Exception */
     if (!($error instanceof AppwriteException)) {
-        $error = new AppwriteException($message, $code, AppwriteException::GENERAL_UNKNOWN, $error);
+        $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
     }
 
     switch ($code) { // Don't show 500 errors!

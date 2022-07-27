@@ -1880,7 +1880,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($data['$read'] as $read) {
                 if (!Authorization::isRole($read)) {
-                    // TODO: Isn't this a 401: Unauthorized Error ?
                     throw new Exception(Exception::USER_UNAUTHORIZED, 'Read permissions must be one of: (' . \implode(', ', $roles) . ')');
                 }
             }

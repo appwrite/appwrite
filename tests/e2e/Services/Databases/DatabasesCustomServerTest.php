@@ -996,7 +996,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $tooWide['headers']['status-code']);
-        $this->assertEquals('Attribute limit exceeded', $tooWide['body']['message']);
+        $this->assertEquals('The maximum number of attributes has been reached.', $tooWide['body']['message']);
     }
 
     public function testIndexLimitException()
@@ -1110,7 +1110,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $tooMany['headers']['status-code']);
-        $this->assertEquals('Index limit exceeded', $tooMany['body']['message']);
+        $this->assertEquals('The maximum number of indexes has been reached.', $tooMany['body']['message']);
 
         $collection = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',

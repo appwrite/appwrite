@@ -185,7 +185,7 @@ trait StorageBase
         ]);
 
         $this->assertEquals(400, $res['headers']['status-code']);
-        $this->assertEquals('File extension not allowed', $res['body']['message']);
+        $this->assertEquals('The file type is not supported.', $res['body']['message']);
 
         return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
 

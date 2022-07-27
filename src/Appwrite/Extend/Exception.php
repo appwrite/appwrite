@@ -208,7 +208,7 @@ class Exception extends \Exception
 
     protected array $errors;
 
-    public function __construct(string $type, string $message = null, \Throwable $previous = null)
+    public function __construct(string $type, string $message = null, int $code = null, \Throwable $previous = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
@@ -219,6 +219,7 @@ class Exception extends \Exception
         }
 
         $this->message = $message ?? $this->message;
+        $this->code = $code ?? $this->code;
 
         parent::__construct($this->message, $this->code, $previous);
     }

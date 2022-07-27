@@ -96,6 +96,12 @@ return [
         'code' => 500,
     ],
 
+    Exception::ACCOUNT_OAUTH_MISSING_ID => [
+        'name' => Exception::ACCOUNT_OAUTH_MISSING_ID,
+        'description' => 'Missing ID in the request.',
+        'code' => 400,
+    ],
+
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
         'name' => Exception::USER_COUNT_EXCEEDED,
@@ -294,7 +300,7 @@ return [
     ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
         'name' => Exception::STORAGE_INVALID_FILE_SIZE,
-        'description' => 'The file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_STORAGE_LIMIT environment variable.',
+        'description' => 'File size not allowed',
         'code' => 400,
     ],
     Exception::STORAGE_INVALID_FILE => [
@@ -343,7 +349,7 @@ return [
     ],
     Exception::BUILD_NOT_READY => [
         'name' => Exception::BUILD_NOT_READY,
-        'description' => 'Build with the requested ID is builing and not ready for execution.',
+        'description' => 'Build with the requested ID is building and not ready for execution.',
         'code' => 400,
     ],
     Exception::BUILD_IN_PROGRESS => [
@@ -364,6 +370,18 @@ return [
         'name' => Exception::EXECUTION_NOT_FOUND,
         'description' => 'Execution with the requested ID could not be found.',
         'code' => 404,
+    ],
+
+    Exception::DATABASE_NOT_FOUND => [
+        'name' => Exception::DATABASE_NOT_FOUND,
+        'description' => 'Database not found',
+        'code' => 404
+    ],
+
+    Exception::DATABASE_ALREADY_EXISTS => [
+        'name' => Exception::DATABASE_ALREADY_EXISTS,
+        'description' => 'Database already exists',
+        'code' => 409
     ],
 
     /** Collections */
@@ -428,7 +446,7 @@ return [
     ],
     Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED => [
         'name' => Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED,
-        'description' => 'Default values cannot be set for <span class="tag">array</span> and <span class="tag">required</span> attributes.',
+        'description' => 'Cannot set default value for array attributes',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
@@ -499,6 +517,11 @@ return [
         'name' => Exception::PROJECT_MISSING_USER_ID,
         'description' => 'Failed to obtain user ID from the OAuth provider.',
         'code' => 400,
+    ],
+    Exception::PROJECT_KEY_EXPIRED => [
+        'name' => Exception::PROJECT_KEY_EXPIRED,
+        'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
+        'code' => 401,
     ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
