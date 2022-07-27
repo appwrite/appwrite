@@ -183,7 +183,7 @@ App::get('/v1/projects')
             $cursorProject = $dbForConsole->getDocument('projects', $cursor);
 
             if ($cursorProject->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$cursor}' for the 'cursor' value not found.",);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$cursor}' for the 'cursor' value not found.");
             }
         }
 
