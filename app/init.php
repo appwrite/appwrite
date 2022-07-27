@@ -53,10 +53,13 @@ use Appwrite\Database\DatabasePool;
 use Appwrite\Event\Delete;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Cache\Cache;
+use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
+use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Query;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
@@ -857,6 +860,26 @@ App::setResource('console', function () {
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
     ]);
 }, []);
+
+// App::setResource('dbForProject', function ($db, $cache, Document $project) {
+//     $cache = new Cache(new RedisCache($cache));
+
+//     $database = new Database(new MariaDB($db), $cache);
+//     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+//     $database->setNamespace("_{$project->getInternalId()}");
+
+//     return $database;
+// }, ['db', 'cache', 'project']);
+
+// App::setResource('dbForConsole', function ($dbPool, $cache) {
+//     $cache = new Cache(new RedisCache($cache));
+
+//     $database = new Database(new MariaDB($db), $cache);
+//     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+//     $database->setNamespace('_console');
+
+//     return $database;
+// }, ['dbPool', 'cache']);
 
 App::setResource('deviceLocal', function () {
     return new Local();
