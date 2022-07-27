@@ -99,6 +99,30 @@ For advanced production and custom installation, check out our Docker [environme
 
 If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
 
+
+## One-Click Setups
+
+In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to get up and running with Appwrite quickly without installing Docker on your local machine.
+
+Choose from one of the providers below:
+
+<table border="0">
+  <tr>
+    <td align="center" width="100" height="100">
+      <a href="https://marketplace.digitalocean.com/apps/appwrite">
+        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
+          <br /><sub><b>DigitalOcean</b></sub></a>
+        </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
+        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
+          <br /><sub><b>Gitpod</b></sub></a>    
+      </a>
+    </td>
+  </tr>
+</table>
+
 ## Getting Started
 
 Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
