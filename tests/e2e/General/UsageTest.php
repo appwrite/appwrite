@@ -18,14 +18,18 @@ class UsageTest extends Scope
     protected array $headers = [];
     protected string $projectId;
 
-    public function testUsersStats(): void
+    protected function setUp(): void
     {
+        parent::setUp();
         $project = $this->getProject(true);
         $this->projectId = $project['$id'];
         $this->headers['x-appwrite-project'] = $project['$id'];
         $this->headers['x-appwrite-key'] = $project['apiKey'];
         $this->headers['content-type'] = 'application/json';
+    }
 
+    public function testUsersStats(): void
+    {
         $usersCount = 0;
         $requestsCount = 0;
         for ($i = 0; $i < 10; $i++) {
@@ -83,9 +87,6 @@ class UsageTest extends Scope
         $this->assertEquals(5, $res['usersDelete'][array_key_last($res['usersDelete'])]['value']);
     }
 
-    /**
-     * @depends testUsersStats
-     */
     public function testStorageStats(): void
     {
         $bucketId = '';
@@ -223,7 +224,6 @@ class UsageTest extends Scope
         $this->assertEquals($filesDelete, $res['filesDelete'][array_key_last($res['filesDelete'])]['value']);
     }
 
-    /** @depends testStorageStats */
     public function testDatabaseStats(): void
     {
         $databaseId = '';
@@ -412,7 +412,6 @@ class UsageTest extends Scope
         $this->assertEquals($documentsDelete, $res['documentsDelete'][array_key_last($res['documentsDelete'])]['value']);
     }
 
-    /** @depends testDatabaseStats */
     public function testFunctionsStats(): void
     {
         $functionId = '';
@@ -522,7 +521,7 @@ class UsageTest extends Scope
         $this->assertEquals(200, $execution['headers']['status-code']);
         $this->assertEquals($executionId, $execution['body']['$id']);
         $this->assertEquals($functionId, $execution['body']['functionId']);
-        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals('completed', $execution['body']['status'])
 
         $compute += (int) ($execution['body']['time'] * 1000);
         $executionTime += (int) ($execution['body']['time'] * 1000);
@@ -570,5 +569,13 @@ class UsageTest extends Scope
         $this->assertEquals($executionTime, $response['functionsExecutionTime'][array_key_last($response['functionsExecutionTime'])]['value']);
         $this->assertGreaterThan(0, $response['functionsBuildTime'][array_key_last($response['functionsBuildTime'])]['value']);
         $this->assertEquals($failures, $response['functionsFailures'][array_key_last($response['functionsFailures'])]['value']);
+    }
+
+    protected function tearDown(): void
+    {
+        $this->usersCount = 0;
+        $this->requestsCount = 0;
+        $this->projectId = '';
+        $this->headers = [];
     }
 }
