@@ -22,6 +22,7 @@ trait UsersBase
             'name' => 'Cristiano Ronaldo',
         ], false);
 
+
         // Test empty prefs is object not array
         $bodyString = $user['body'];
         $prefs = substr($bodyString, strpos($bodyString, '"prefs":') + 8, 2);
