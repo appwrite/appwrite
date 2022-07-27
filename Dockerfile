@@ -264,7 +264,6 @@ RUN \
   libmaxminddb-dev \
   certbot \
   docker-cli \
-  docker-compose \
   libgomp \
   && docker-php-ext-install sockets opcache pdo_mysql \
   && apk del .deps \
