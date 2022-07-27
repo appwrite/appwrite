@@ -87,6 +87,9 @@ class UsageTest extends Scope
         $this->assertEquals(5, $res['usersDelete'][array_key_last($res['usersDelete'])]['value']);
     }
 
+    /**
+     * @depends testUsersStats
+     */
     public function testStorageStats(): void
     {
         $bucketId = '';
@@ -224,6 +227,7 @@ class UsageTest extends Scope
         $this->assertEquals($filesDelete, $res['filesDelete'][array_key_last($res['filesDelete'])]['value']);
     }
 
+    /** @depends testStorageStats */
     public function testDatabaseStats(): void
     {
         $databaseId = '';
@@ -412,6 +416,7 @@ class UsageTest extends Scope
         $this->assertEquals($documentsDelete, $res['documentsDelete'][array_key_last($res['documentsDelete'])]['value']);
     }
 
+    /** @depends testDatabaseStats */
     public function testFunctionsStats(): void
     {
         $functionId = '';
