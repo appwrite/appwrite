@@ -521,7 +521,7 @@ class UsageTest extends Scope
         $this->assertEquals(200, $execution['headers']['status-code']);
         $this->assertEquals($executionId, $execution['body']['$id']);
         $this->assertEquals($functionId, $execution['body']['functionId']);
-        $this->assertEquals('completed', $execution['body']['status'])
+        $this->assertEquals('completed', $execution['body']['status']);
 
         $compute += (int) ($execution['body']['time'] * 1000);
         $executionTime += (int) ($execution['body']['time'] * 1000);
