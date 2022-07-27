@@ -195,7 +195,7 @@ class DatabasePool
     {
         /** Get DB name from the console database */
         [$name, $internalID] = $this->getName($projectID, $redis);
-        $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_PROJECT_DB in .env", 500);
+        $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_DB_PROJECT in .env", 500);
 
         $namespace = "_$internalID";
         $attempts = 0;
@@ -236,7 +236,7 @@ class DatabasePool
     public function getAnyFromPool(\Redis $redis): array
     {
         $name = array_rand($this->pools);
-        $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_PROJECT_DB in .env", 500);
+        $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_DB_PROJECT in .env", 500);
 
         $attempts = 0;
         do {

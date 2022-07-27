@@ -454,7 +454,7 @@ $register->set('logger', function () {
 
 $register->set('dbPool', function () {
     /** Parse the console databases */
-    $consoleDB = App::getEnv('_APP_CONSOLE_DB', '');
+    $consoleDB = App::getEnv('_APP_DB_CONSOLE', '');
     $consoleDB = explode(',', $consoleDB)[0];
     $consoleDB = explode('=', $consoleDB);
     $name = $consoleDB[0];
@@ -463,7 +463,7 @@ $register->set('dbPool', function () {
 
     /** Parse the project databases */
     $projectDBs = [];
-    $projectDB = App::getEnv('_APP_PROJECT_DB', '');
+    $projectDB = App::getEnv('_APP_DB_PROJECT', '');
     $projectDB = explode(',', $projectDB);
     foreach ($projectDB as $db) {
         $db = explode('=', $db);
