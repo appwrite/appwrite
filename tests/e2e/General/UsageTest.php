@@ -18,18 +18,14 @@ class UsageTest extends Scope
     protected array $headers = [];
     protected string $projectId;
 
-    protected function setUp(): void
+    public function testUsersStats(): void
     {
-        parent::setUp();
         $project = $this->getProject(true);
         $this->projectId = $project['$id'];
         $this->headers['x-appwrite-project'] = $project['$id'];
         $this->headers['x-appwrite-key'] = $project['apiKey'];
         $this->headers['content-type'] = 'application/json';
-    }
 
-    public function testUsersStats(): void
-    {
         $usersCount = 0;
         $requestsCount = 0;
         for ($i = 0; $i < 10; $i++) {
