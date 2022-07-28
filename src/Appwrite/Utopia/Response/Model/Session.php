@@ -18,7 +18,7 @@ class Session extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => get_class() . ' creation date in Datetime',
+                'description' => 'Session creation date in Datetime',
                 'default' => '',
                 'example' => '1975-12-06 13:30:59',
             ])
@@ -30,7 +30,7 @@ class Session extends Model
             ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
-                'description' => get_class() . ' expiration date in Datetime',
+                'description' => 'Session expiration date in Datetime',
                 'default' => '',
                 'example' => '1975-12-06 13:30:59',
             ])
