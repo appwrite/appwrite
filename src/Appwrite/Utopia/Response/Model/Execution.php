@@ -18,13 +18,13 @@ class Execution extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => get_class() . ' creation date in Datetime',
+                'description' => 'Execution creation date in Datetime',
                 'default' => '',
                 'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => get_class() . ' upate date in Datetime',
+                'description' => 'Execution upate date in Datetime',
                 'default' => '',
                 'example' => '1975-12-06 13:30:59',
             ])

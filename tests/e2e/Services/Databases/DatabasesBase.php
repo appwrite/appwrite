@@ -335,6 +335,16 @@ trait DatabasesBase
             'default' => true,
         ]);
 
+        $datetime = $this->client->call(Client::METHOD_POST, $attributesPath . '/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'datetime',
+            'required' => false,
+            'default' => null,
+        ]);
+
         $this->assertEquals(201, $string['headers']['status-code']);
         $this->assertEquals('string', $string['body']['key']);
         $this->assertEquals('string', $string['body']['type']);
@@ -402,6 +412,13 @@ trait DatabasesBase
         $this->assertEquals(false, $boolean['body']['array']);
         $this->assertEquals(true, $boolean['body']['default']);
 
+        $this->assertEquals(201, $datetime['headers']['status-code']);
+        $this->assertEquals('datetime', $datetime['body']['key']);
+        $this->assertEquals('datetime', $datetime['body']['type']);
+        $this->assertEquals(false, $datetime['body']['required']);
+        $this->assertEquals(false, $datetime['body']['array']);
+        $this->assertEquals(null, $datetime['body']['default']);
+
         // wait for database worker to create attributes
         sleep(30);
 
@@ -448,6 +465,12 @@ trait DatabasesBase
         ]));
 
         $booleanResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $boolean['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+var_dump($attributesPath . '/' . $datetime['body']['key']);
+        $datetimeResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $datetime['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -527,6 +550,14 @@ trait DatabasesBase
         $this->assertEquals($boolean['body']['array'], $booleanResponse['body']['array']);
         $this->assertEquals($boolean['body']['default'], $booleanResponse['body']['default']);
 
+        $this->assertEquals(200, $datetimeResponse['headers']['status-code']);
+        $this->assertEquals($datetime['body']['key'], $datetimeResponse['body']['key']);
+        $this->assertEquals($datetime['body']['type'], $datetimeResponse['body']['type']);
+        $this->assertEquals('available', $datetimeResponse['body']['status']);
+        $this->assertEquals($datetime['body']['required'], $datetimeResponse['body']['required']);
+        $this->assertEquals($datetime['body']['array'], $datetimeResponse['body']['array']);
+        $this->assertEquals($datetime['body']['default'], $datetimeResponse['body']['default']);
+
         $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -534,12 +565,12 @@ trait DatabasesBase
         ]));
 
         $this->assertEquals(200, $attributes['headers']['status-code']);
-        $this->assertEquals(8, $attributes['body']['total']);
+        $this->assertEquals(9, $attributes['body']['total']);
 
         $attributes = $attributes['body']['attributes'];
 
         $this->assertIsArray($attributes);
-        $this->assertCount(8, $attributes);
+        $this->assertCount(9, $attributes);
 
         $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
@@ -607,6 +638,13 @@ trait DatabasesBase
         $this->assertEquals($booleanResponse['body']['array'], $attributes[7]['array']);
         $this->assertEquals($booleanResponse['body']['default'], $attributes[7]['default']);
 
+        $this->assertEquals($datetimeResponse['body']['key'], $attributes[8]['key']);
+        $this->assertEquals($datetimeResponse['body']['type'], $attributes[8]['type']);
+        $this->assertEquals($datetimeResponse['body']['status'], $attributes[8]['status']);
+        $this->assertEquals($datetimeResponse['body']['required'], $attributes[8]['required']);
+        $this->assertEquals($datetimeResponse['body']['array'], $attributes[8]['array']);
+        $this->assertEquals($datetimeResponse['body']['default'], $attributes[8]['default']);
+
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -618,7 +656,7 @@ trait DatabasesBase
         $attributes = $collection['body']['attributes'];
 
         $this->assertIsArray($attributes);
-        $this->assertCount(8, $attributes);
+        $this->assertCount(9, $attributes);
 
         $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
@@ -798,7 +836,7 @@ trait DatabasesBase
             'data' => [
                 'title' => 'Captain America',
                 'releaseYear' => 1944,
-                'birthDay' => '1975-06-12 14:12:55',
+                'birthDay' => '1975-06-12 14:12:55+02:00',
                 'actors' => [
                     'Chris Evans',
                     'Samuel Jackson',
@@ -807,6 +845,10 @@ trait DatabasesBase
             'read' => ['user:' . $this->getUser()['$id']],
             'write' => ['user:' . $this->getUser()['$id']],
         ]);
+
+        var_dump("++++++++++");
+        var_dump('/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents');
+        var_dump("++++++++++");
 
         $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',

@@ -1311,6 +1311,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             'required' => $required,
             'default' => $default,
             'array' => $array,
+            'filters' => ['datetime']
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
@@ -1371,6 +1372,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', [
+        Response::MODEL_ATTRIBUTE_DATETIME,
         Response::MODEL_ATTRIBUTE_BOOLEAN,
         Response::MODEL_ATTRIBUTE_INTEGER,
         Response::MODEL_ATTRIBUTE_FLOAT,
@@ -1411,6 +1413,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $format = $attribute->getAttribute('format');
 
         $model = match ($type) {
+            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
@@ -1496,6 +1499,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         $format = $attribute->getAttribute('format');
 
         $model = match ($type) {
+            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,

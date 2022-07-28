@@ -18,7 +18,7 @@ class Token extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => get_class() . ' creation date in Datetime',
+                'description' => 'Token creation date in Datetime',
                 'default' => '',
                 'example' => '1975-12-06 13:30:59',
             ])
