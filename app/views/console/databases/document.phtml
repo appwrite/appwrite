@@ -140,6 +140,16 @@ $logs = $this->getParam('logs', null);
                                                                     :name="attr.key"
                                                                     :checked="doc[attr.key]" />
                                                             </template>
+                                                            <template x-if="attr.type === 'datetime'">
+                                                                <input
+                                                                    type="datetime-local"
+                                                                    step=".001"
+                                                                    :placeholder="attr.default"
+                                                                    :name="attr.key"
+                                                                    :required="attr.required"
+                                                                    x-model="doc[attr.key]"
+                                                                    data-cast-to="string" />
+                                                            </template>
                                                             <template x-if="attr.type === 'string' && !attr.format">
                                                                 <textarea 
                                                                     data-forms-text-resize
@@ -239,6 +249,16 @@ $logs = $this->getParam('logs', null);
                                                                                 :name="attr.key"
                                                                                 :value="attr.key"
                                                                                 :checked="doc[attr.key][index]" />
+                                                                        </template>
+                                                                        <template x-if="attr.type === 'datetime'">
+                                                                            <input
+                                                                                type="datetime-local"
+                                                                                step=".001"
+                                                                                :placeholder="attr.default"
+                                                                                :name="attr.key"
+                                                                                :required="attr.required"
+                                                                                x-model="doc[attr.key][index]"
+                                                                                data-cast-to="string" />
                                                                         </template>
                                                                         <template x-if="attr.type === 'string' && !attr.format">
                                                                             <textarea 

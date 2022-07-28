@@ -3,6 +3,7 @@
 
     window.ls.container.set('date', function () {
         function format (format, timestamp) {
+            return timestamp; // TODO: implement DateTime Formatter
             //  discuss at: http://locutus.io/php/date/
             // original by: Carlos R. L. Rodrigues (http://www.jsfromhell.com)
             // original by: gettimeofday
@@ -329,6 +330,7 @@
         }
 
         function strtotime (text, now) {
+            return text; // TODO: implement DateTime Formatter
             //  discuss at: http://locutus.io/php/strtotime/
             // original by: Caio Ariede (http://caioariede.com)
             // improved by: Kevin van Zonneveld (http://kvz.io)

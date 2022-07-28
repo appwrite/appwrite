@@ -48,7 +48,7 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:5.0.0',
+                'x-sdk-version': 'appwrite:web:6.0.0',
                 'X-Appwrite-Response-Format': '0.15.0',
             };
             this.realtime = {
@@ -378,10 +378,11 @@
                 /**
                  * Update Account Phone
                  *
-                 * Update currently logged in user account phone number. After changing phone
-                 * number, the user confirmation status will get reset. A new confirmation SMS
-                 * is not sent automatically however you can use the phone confirmation
-                 * endpoint again to send the confirmation SMS.
+                 * Update the currently logged in user's phone number. After updating the
+                 * phone number, the phone verification status will be reset. A confirmation
+                 * SMS is not sent automatically, however you can use the [POST
+                 * /account/verification/phone](/docs/client/account#accountCreatePhoneVerification)
+                 * endpoint to send a confirmation SMS.
                  *
                  * @param {string} number
                  * @param {string} password
@@ -627,9 +628,10 @@
                 /**
                  * Create Magic URL session
                  *
-                 * Sends the user an email with a secret key for creating a session. When the
-                 * user clicks the link in the email, the user is redirected back to the URL
-                 * you provided with the secret key and userId values attached to the URL
+                 * Sends the user an email with a secret key for creating a session. If the
+                 * provided user ID has not be registered, a new user will be created. When
+                 * the user clicks the link in the email, the user is redirected back to the
+                 * URL you provided with the secret key and userId values attached to the URL
                  * query string. Use the query string parameters to submit a request to the
                  * [PUT
                  * /account/sessions/magic-url](/docs/client/account#accountUpdateMagicURLSession)
@@ -760,8 +762,9 @@
                 /**
                  * Create Phone session
                  *
-                 * Sends the user a SMS with a secret key for creating a session. Use the
-                 * returned user ID and the secret to submit a request to the [PUT
+                 * Sends the user an SMS with a secret key for creating a session. If the
+                 * provided user ID has not be registered, a new user will be created. Use the
+                 * returned user ID and secret and submit a request to the [PUT
                  * /account/sessions/phone](/docs/client/account#accountUpdatePhoneSession)
                  * endpoint to complete the login process. The secret sent to the user's phone
                  * is valid for 15 minutes.
@@ -794,17 +797,11 @@
                 /**
                  * Create Phone session (confirmation)
                  *
-                 * Use this endpoint to complete creating the session with the Magic URL. Both
-                 * the **userId** and **secret** arguments will be passed as query parameters
-                 * to the redirect URL you have provided when sending your request to the
-                 * [POST
-                 * /account/sessions/magic-url](/docs/client/account#accountCreateMagicURLSession)
-                 * endpoint.
-                 *
-                 * Please note that in order to avoid a [Redirect
-                 * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-                 * the only valid redirect URLs are the ones from domains you have set when
-                 * adding your platforms in the console interface.
+                 * Use this endpoint to complete creating a session with SMS. Use the
+                 * **userId** from the
+                 * [createPhoneSession](/docs/client/account#accountCreatePhoneSession)
+                 * endpoint and the **secret** received via SMS to successfully update and
+                 * confirm the phone session.
                  *
                  * @param {string} userId
                  * @param {string} secret
@@ -988,13 +985,12 @@
                 /**
                  * Create Phone Verification
                  *
-                 * Use this endpoint to send a verification message to your user's phone
-                 * number to confirm they are the valid owners of that address. The provided
-                 * secret should allow you to complete the verification process by verifying
-                 * both the **userId** and **secret** parameters. Learn more about how to
-                 * [complete the verification
+                 * Use this endpoint to send a verification SMS to the currently logged in
+                 * user. This endpoint is meant for use after updating a user's phone number
+                 * using the [accountUpdatePhone](/docs/client/account#accountUpdatePhone)
+                 * endpoint. Learn more about how to [complete the verification
                  * process](/docs/client/account#accountUpdatePhoneVerification). The
-                 * verification link sent to the user's phone number is valid for 15 minutes.
+                 * verification code sent to the user's phone number is valid for 15 minutes.
                  *
                  * @throws {AppwriteException}
                  * @returns {Promise}
@@ -1485,10 +1481,6 @@
                 /**
                  * List Collections
                  *
-                 * Get a list of all the user collections. You can use the query params to
-                 * filter your results. On admin mode, this endpoint will return a list of all
-                 * of the project's collections. [Learn more about different API
-                 * modes](/docs/admin).
                  *
                  * @param {string} databaseId
                  * @param {string} search
@@ -1532,7 +1524,6 @@
                 /**
                  * Create Collection
                  *
-                 * Create a new Collection.
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -1587,8 +1578,6 @@
                 /**
                  * Get Collection
                  *
-                 * Get a collection by its unique ID. This endpoint response returns a JSON
-                 * object with the collection metadata.
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -1612,7 +1601,6 @@
                 /**
                  * Update Collection
                  *
-                 * Update a collection by its unique ID.
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -1662,8 +1650,6 @@
                 /**
                  * Delete Collection
                  *
-                 * Delete a collection by its unique ID. Only users with write permissions
-                 * have access to delete this resource.
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -1710,8 +1696,6 @@
                 /**
                  * Create Boolean Attribute
                  *
-                 * Create a boolean attribute.
-                 *
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -1755,9 +1739,52 @@
                     }, payload);
                 }),
                 /**
-                 * Create Email Attribute
+                 * Create DateTime Attribute
                  *
-                 * Create an email attribute.
+                 *
+                 * @param {string} databaseId
+                 * @param {string} collectionId
+                 * @param {string} key
+                 * @param {boolean} required
+                 * @param {string} xdefault
+                 * @param {boolean} array
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createDatetimeAttribute: (databaseId, collectionId, key, required, xdefault, array) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof databaseId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "databaseId"');
+                    }
+                    if (typeof collectionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "collectionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof required === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "required"');
+                    }
+                    let path = '/databases/{databaseId}/collections/{collectionId}/attributes/datetime'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof required !== 'undefined') {
+                        payload['required'] = required;
+                    }
+                    if (typeof xdefault !== 'undefined') {
+                        payload['default'] = xdefault;
+                    }
+                    if (typeof array !== 'undefined') {
+                        payload['array'] = array;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Email Attribute
                  *
                  *
                  * @param {string} databaseId
@@ -1856,9 +1883,6 @@
                 /**
                  * Create Float Attribute
                  *
-                 * Create a float attribute. Optionally, minimum and maximum values can be
-                 * provided.
-                 *
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -1911,9 +1935,6 @@
                 }),
                 /**
                  * Create Integer Attribute
-                 *
-                 * Create an integer attribute. Optionally, minimum and maximum values can be
-                 * provided.
                  *
                  *
                  * @param {string} databaseId
@@ -1968,8 +1989,6 @@
                 /**
                  * Create IP Address Attribute
                  *
-                 * Create IP address attribute.
-                 *
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -2014,8 +2033,6 @@
                 }),
                 /**
                  * Create String Attribute
-                 *
-                 * Create a string attribute.
                  *
                  *
                  * @param {string} databaseId
@@ -2068,8 +2085,6 @@
                 }),
                 /**
                  * Create URL Attribute
-                 *
-                 * Create a URL attribute.
                  *
                  *
                  * @param {string} databaseId
@@ -2170,10 +2185,6 @@
                 /**
                  * List Documents
                  *
-                 * Get a list of all the user documents. You can use the query params to
-                 * filter your results. On admin mode, this endpoint will return a list of all
-                 * of the project's documents. [Learn more about different API
-                 * modes](/docs/admin).
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -2225,10 +2236,6 @@
                 /**
                  * Create Document
                  *
-                 * Create a new Document. Before using this route, you should create a new
-                 * collection resource using either a [server
-                 * integration](/docs/server/database#databaseCreateCollection) API or
-                 * directly from your database console.
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -2274,8 +2281,6 @@
                 /**
                  * Get Document
                  *
-                 * Get a document by its unique ID. This endpoint response returns a JSON
-                 * object with the document data.
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -2303,8 +2308,6 @@
                 /**
                  * Update Document
                  *
-                 * Update a document by its unique ID. Using the patch method you can pass
-                 * only specific fields that will get updated.
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -2325,9 +2328,6 @@
                     if (typeof documentId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "documentId"');
                     }
-                    if (typeof data === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "data"');
-                    }
                     let path = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
                     let payload = {};
                     if (typeof data !== 'undefined') {
@@ -2347,7 +2347,6 @@
                 /**
                  * Delete Document
                  *
-                 * Delete a document by its unique ID.
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -2375,7 +2374,6 @@
                 /**
                  * List Document Logs
                  *
-                 * Get the document activity logs list by its unique ID.
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -2536,7 +2534,6 @@
                 /**
                  * List Collection Logs
                  *
-                 * Get the collection activity logs list by its unique ID.
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -2595,7 +2592,6 @@
                 /**
                  * List Collection Logs
                  *
-                 * Get the collection activity logs list by its unique ID.
                  *
                  * @param {string} databaseId
                  * @param {number} limit
@@ -3922,7 +3918,7 @@
                  * @param {string} projectId
                  * @param {string} name
                  * @param {string[]} scopes
-                 * @param {number} expire
+                 * @param {string} expire
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
@@ -3983,7 +3979,7 @@
                  * @param {string} keyId
                  * @param {string} name
                  * @param {string[]} scopes
-                 * @param {number} expire
+                 * @param {string} expire
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
