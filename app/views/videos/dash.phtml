@@ -1,25 +1,29 @@
-<?php echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
+<?php
+
+echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
 <MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:xlink="http://www.w3.org/1999/xlink"
      xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
      profiles="urn:mpeg:dash:profile:isoff-live:2011" type="static" mediaPresentationDuration="PT13.2S" maxSegmentDuration="PT6.0S" minBufferTime="PT16.6S">
     <ProgramInformation></ProgramInformation>
     <ServiceDescription id="0"></ServiceDescription>
     <Period id="0" start="PT0.0S">
-    <?php foreach ($this->getParam('params', []) as $param): ?>
-        <BaseURL><?php if (isset($param['baseUrl'])): echo $param['baseUrl'];  endif;?></BaseURL>
-    <AdaptationSet <?php if (isset($param['id'])):?> id="<?php echo $param['id']; ?>"<?php endif;?><?php if (isset($param['contentType'])): ?> contentType="<?php echo $param['contentType']; ?>"<?php endif;?><?php if (isset($param['startWithSAP'])): ?> startWithSAP="<?php echo $param['startWithSAP']; ?>"<?php endif;?><?php if (isset($param['segmentAlignment'])): ?> segmentAlignment="<?php echo $param['segmentAlignment']; ?>"<?php endif;?><?php if (isset($param['bitstreamSwitching'])): ?> bitstreamSwitching="<?php echo $param['bitstreamSwitching']; ?>"<?php endif;?><?php if (isset($param['frameRate'])): ?> frameRate="<?php echo $param['frameRate']; ?>"<?php endif;?><?php if (isset($param['maxWidth'])): ?> maxWidth="<?php echo $param['maxWidth']; ?>"<?php endif;?><?php if (isset($param['par'])): ?> par="<?php echo $param['par']; ?>"<?php endif;?><?php if (isset($param['lang'])): ?> lang="<?php echo $param['lang']; ?>"<?php endif;?>>
-        <Representation <?php if (isset($param['representation']['id'])):?> id="<?php echo $param['representation']['id']; ?>"<?php endif;?><?php if (isset($param['representation']['mimeType'])):?> mimeType="<?php echo $param['representation']['mimeType']; ?>"<?php endif;?><?php if (isset($param['representation']['codecs'])):?> codecs="<?php echo $param['representation']['codecs']; ?>"<?php endif;?><?php if (isset($param['representation']['width'])):?> width="<?php echo $param['representation']['width']; ?>"<?php endif;?><?php if (isset($param['representation']['height'])):?> height="<?php echo $param['representation']['height']; ?>"<?php endif;?><?php if (isset($param['representation']['sar'])):?> sar="<?php echo $param['representation']['sar']; ?>"<?php endif;?><?php if (isset($param['representation']['audioSamplingRate'])):?> audioSamplingRate="<?php echo $param['representation']['audioSamplingRate']; ?>"<?php endif;?>>
-            <?php if ($param['contentType'] === 'audio'):?>
+    <?php foreach ($this->getParam('params', []) as $param):
+        $representation = $param['Representation'];
+    ?>
+    <AdaptationSet <?php if (isset($param['id'])):?> id="<?php echo $param['id']; ?>"<?php endif;?><?php if (isset($param['attributes']['contentType'])): ?> contentType="<?php echo $param['attributes']['contentType']; ?>"<?php endif;?><?php if (isset($param['attributes']['startWithSAP'])): ?> startWithSAP="<?php echo $param['attributes']['startWithSAP']; ?>"<?php endif;?><?php if (isset($param['attributes']['segmentAlignment'])): ?> segmentAlignment="<?php echo $param['attributes']['segmentAlignment']; ?>"<?php endif;?><?php if (isset($param['attributes']['bitstreamSwitching'])): ?> bitstreamSwitching="<?php echo $param['attributes']['bitstreamSwitching']; ?>"<?php endif;?><?php if (isset($param['attributes']['frameRate'])): ?> frameRate="<?php echo $param['attributes']['frameRate']; ?>"<?php endif;?><?php if (isset($param['attributes']['maxWidth'])): ?> maxWidth="<?php echo $param['attributes']['maxWidth']; ?>"<?php endif;?><?php if (isset($param['attributes']['par'])): ?> par="<?php echo $param['attributes']['par']; ?>"<?php endif;?><?php if (isset($param['attributes']['lang'])): ?> lang="<?php echo $param['attributes']['lang']; ?>"<?php endif;?>>
+        <Representation <?php if (isset($representation['attributes']['id'])):?> id="<?php echo $representation['attributes']['id']; ?>"<?php endif;?><?php if (isset($representation['attributes']['mimeType'])):?> mimeType="<?php echo $representation['attributes']['mimeType']; ?>"<?php endif;?><?php if (isset($representation['attributes']['codecs'])):?> codecs="<?php echo $representation['attributes']['codecs']; ?>"<?php endif;?><?php if (isset($representation['attributes']['width'])):?> width="<?php echo $representation['attributes']['width']; ?>"<?php endif;?><?php if (isset($representation['attributes']['height'])):?> height="<?php echo $representation['attributes']['height']; ?>"<?php endif;?><?php if (isset($representation['attributes']['sar'])):?> sar="<?php echo $representation['attributes']['sar']; ?>"<?php endif;?><?php if (isset($representation['attributes']['audioSamplingRate'])):?> audioSamplingRate="<?php echo $representation['attributes']['audioSamplingRate']; ?>"<?php endif;?>>
+            <BaseURL><?php if (isset($param['baseUrl'])): echo $param['baseUrl'];  endif;?></BaseURL>
+            <?php if (isset($param['attributes']['contentType']) && $param['attributes']['contentType'] === 'audio' ):?>
                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
              <?php endif;?>
-
-            <Initialization sourceURL="<?php if (isset($param['representation']['SegmentList']['Initialization'])):?><?php echo $param['representation']['SegmentList']['Initialization']; ?><?php endif;?>"/>
-
-            <?php if (isset($param['representation']['SegmentList']['media'])):?>
-                <?php foreach ($param['representation']['SegmentList']['media'] as $segment): ?>
+            <SegmentList<?php if (isset($representation['SegmentList']['attributes']['timescale'])): ?> timescale="<?php echo $representation['SegmentList']['attributes']['timescale']; ?>"<?php endif;?><?php if (isset($representation['SegmentList']['attributes']['duration'])): ?> duration="<?php echo $representation['SegmentList']['attributes']['duration']; ?>"<?php endif;?><?php if (isset($representation['SegmentList']['attributes']['startNumber'])): ?> startNumber="<?php echo $representation['SegmentList']['attributes']['startNumber']; ?>"<?php endif;?>>
+            <Initialization sourceURL="<?php if (isset($representation['SegmentList']['Initialization'])):?><?php echo $representation['SegmentList']['Initialization']; ?><?php endif;?>"/>
+            <?php if (isset($representation['SegmentList']['media'])):?>
+                <?php foreach ($representation['SegmentList']['media'] as $segment): ?>
                     <SegmentURL media="<?php if (isset($segment)):?><?php echo $segment; ?><?php endif;?>"/>
                 <?php endforeach; ?>
             <?php endif;?>
+            </SegmentList>
         </Representation>
     </AdaptationSet>
     <?php endforeach; ?>

@@ -409,7 +409,7 @@ class VideoCustomServerTest extends Scope
 
         sleep(20);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/streams/mpeg-dash', [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $data['videoId'] . '/streams/dash', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -417,18 +417,6 @@ class VideoCustomServerTest extends Scope
 
         var_dump($response['body']);
     }
-
-        public function testBla(){
-        $response = $this->client->call(Client::METHOD_GET, '/videos/62dfaeb69c97ea81c58c/streams/dash/renditions/62dfaeb83bc30e827719/segments/62dfaed714324026902c', [
-        'content-type' => 'application/json',
-        'x-appwrite-project' => $this->getProject()['$id'],
-        'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        var_dump($response['body']);
-        }
-
-
 
 
 }

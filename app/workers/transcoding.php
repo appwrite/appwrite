@@ -132,7 +132,7 @@ class TranscodingV1 extends Worker
             }
         }
 
-            $general = $this->getVideoSourceInfo($ffprobe->streams($inPath));
+        $general = $this->getVideoSourceInfo($ffprobe->streams($inPath));
         if (!empty($general)) {
             foreach ($general as $key => $value) {
                 $sourceVideo->setAttribute($key, $value);
@@ -255,7 +255,6 @@ class TranscodingV1 extends Worker
                     }
                 }
                 $query->setAttribute('targetDuration', $m3u8['targetDuration']);
-
             } else {
 
                 $mpd = $this->parseMpd($this->outPath . '.mpd');
@@ -272,8 +271,9 @@ class TranscodingV1 extends Worker
                         });
                     }
                 }
+
                 if (!empty($mpd['metadata'])) {
-                    $query->setAttribute('metadata', json_encode($mpd['metadata']));
+                    $query->setAttribute('metadata', json_encode(['xml' => $mpd['metadata']]));
                 }
             }
 
@@ -411,12 +411,12 @@ class TranscodingV1 extends Worker
     {
         $segments = [];
         $metadata = null;
-        $representationId = 0;
         $handle = fopen($path, "r");
         if ($handle) {
+            $representationId = -1;
             while (($line = fgets($handle)) !== false) {
                 $line =  str_replace([",","\r","\n"], "", $line);
-                if (str_contains($line, "contentType=\"audio\"")) {
+                if (str_contains($line, "<AdaptationSet")) {
                     $representationId++;
                 }
 
@@ -426,17 +426,15 @@ class TranscodingV1 extends Worker
                     $segments[] = [
                         'isInit' => str_contains($line, "Initialization") ? 1 : 0,
                         'representationId' => $representationId,
-                        'fileName' => str_replace(["<SegmentURL media=\"","<Initialization sourceURL=\"", "\"/>", " "], "", $line),
+                        'fileName' => trim(str_replace(["<SegmentURL media=\"", "<Initialization sourceURL=\"", "\"/>", "\" />"], "", $line)),
                     ];
                 }
             }
             fclose($handle);
         }
 
-        $xml = simplexml_load_string($metadata);
-
         return [
-            'metadata' =>  json_decode(json_encode((array)$xml), true),
+            'metadata' => $metadata,
             'segments' => $segments
         ];
     }
@@ -483,17 +481,18 @@ class TranscodingV1 extends Worker
      */
     private function getVideoSourceInfo(StreamCollection $streams): array
     {
+
             return [
-                'duration' => !empty($streams->videos()) ? $streams->videos()->first()->get('duration') : '0',
-                'height' => !empty($streams->videos()) ? $streams->videos()->first()->get('height') : 0,
-                'width' => !empty($streams->videos()) ? $streams->videos()->first()->get('width') : 0,
-                'videoCodec'   => !empty($streams->videos()) ? $streams->videos()->first()->get('codec_name') . ',' . $streams->videos()->first()->get('codec_tag_string') : '',
-                'videoFramerate' => !empty($streams->videos()) ? $streams->videos()->first()->get('avg_frame_rate') : '',
-                'videoBitrate' =>  !empty($streams->videos()) ? (int)$streams->videos()->first()->get('bit_rate') : 0,
-                'audioCodec' =>  !empty($streams->audios()) ? $streams->audios()->first()->get('codec_name') . ',' . $streams->audios()->first()->get('codec_tag_string') : '',
-                'audioSamplerate' => !empty($streams->audios()) ? (int)$streams->audios()->first()->get('sample_rate') : 0,
-                'audioBitrate'   =>  !empty($streams->audios()) ? (int)$streams->audios()->first()->get('bit_rate') : 0,
-                ];
+                'duration' => $streams->videos()->count() ? $streams->videos()->first()->get('duration') : '0',
+                'height' => $streams->videos()->count()  ? $streams->videos()->first()->get('height') : 0,
+                'width' => $streams->videos()->count()  ? $streams->videos()->first()->get('width') : 0,
+                'videoCodec'   => $streams->videos()->count()  ? $streams->videos()->first()->get('codec_name') . ',' . $streams->videos()->first()->get('codec_tag_string') : '',
+                'videoFramerate' => $streams->videos()->count()  ? $streams->videos()->first()->get('avg_frame_rate') : '',
+                'videoBitrate' =>  $streams->videos()->count() > 0 ? (int)$streams->videos()->first()->get('bit_rate') : 0,
+                 'audioCodec' =>   $streams->audios()->count() > 0 ? $streams->audios()->first()->get('codec_name') . ',' . $streams->audios()->first()->get('codec_tag_string') : '',
+                'audioSamplerate' => $streams->audios()->count() > 0 ? (int)$streams->audios()->first()->get('sample_rate') : 0,
+                'audioBitrate'   =>  $streams->audios()->count() > 0 ? (int)$streams->audios()->first()->get('bit_rate') : 0,
+             ];
     }
 
     /**

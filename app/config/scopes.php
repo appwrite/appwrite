@@ -76,4 +76,10 @@ return [ // List of publicly visible scopes
     'health.read' => [
         'description' => 'Access to read your project\'s health status',
     ],
+    'videos.read' => [
+        'description' => 'Access to read your project\'s video content',
+    ],
+     'videos.write' => [
+        'description' => 'Access to create, update, and delete your project\'s video content',
+    ]
 ];

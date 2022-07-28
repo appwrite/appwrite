@@ -767,38 +767,44 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             $response->setContentType('application/x-mpegurl')->send($template->render(false));
         } else {
             $adaptations = [];
-            foreach ($renditions as  $rendition) {
+            $adaptationId = 0;
+            foreach ($renditions as $rendition) {
                 $metadata = $rendition->getAttribute('metadata');
-                if (!empty($metadata['Period']['AdaptationSet'])) {
-                    foreach ($metadata['Period']['AdaptationSet'] as $adaptationId => $set) {
-                        $adaption = $set['@attributes'];
-                        $adaption['id'] = $adaptationId;
-                        //$adaption['baseUrl'] = $baseUrl . '/renditions/' . $rendition->getId() . '/' . 'segments/';
-                        $adaption['representation'] = $set['Representation']['@attributes'];
-                        $adaption['representation']['SegmentList'] = $set['Representation']['SegmentList']['@attributes'];
-
-                        $representationId = 0;
-                        $segments = Authorization::skip(fn() => $dbForProject->find('videos_renditions_segments', [
-                            new Query('renditionId', Query::TYPE_EQUAL, [$rendition->getId()]),
-                            new Query('representationId', Query::TYPE_EQUAL, [$representationId]),
+                $xml = simplexml_load_string($metadata['xml']);
+                $representationId = 0;
+                foreach ($xml->Period->AdaptationSet as $adaptation) {
+                    $representation = [];
+                    $representation['id'] = $representationId;
+                    $attributes = (array)$adaptation->Representation->attributes();
+                    $representation['attributes'] = $attributes['@attributes'] ?? [];
+                    $attributes = (array)$adaptation->Representation->SegmentList->attributes();
+                    $representation['SegmentList']['attributes'] = $attributes['@attributes'] ?? [];
+                    $segments = Authorization::skip(fn() => $dbForProject->find('videos_renditions_segments', [
+                        new Query('renditionId', Query::TYPE_EQUAL, [$rendition->getId()]),
+                        new Query('representationId', Query::TYPE_EQUAL, [$representationId]),
                         ], 1000, 0, ['representationId'], ['ASC']));
 
-                        foreach ($segments as $segment) {
-                            if ($segment->getAttribute('isInit')) {
-                                $adaption['representation']['SegmentList']['Initialization'] = $baseUrl . '/renditions/' . $rendition->getId() . '/' . 'segments/' . $segment->getId();
-                                continue;
-                            }
-                            $adaption['representation']['SegmentList']['media'][] = $baseUrl . '/renditions/' . $rendition->getId() . '/' . 'segments/' . $segment->getId();
+                    foreach ($segments ?? [] as $segment) {
+                        if ($segment->getAttribute('isInit')) {
+                            $representation['SegmentList']['Initialization'] = $segment->getId();
+                            continue;
                         }
-                        $adaptations[] = $adaption;
-                        $representationId++;
+                        $representation['SegmentList']['media'][] = $segment->getId();
                     }
+                     $attributes = (array)$adaptation->attributes();
+                     $adaptations[] =  ['attributes' => $attributes['@attributes'] ?? [],
+                        'id' => $adaptationId,
+                        'baseUrl' => $baseUrl . '/renditions/' . $rendition->getId() . '/' . 'segments/',
+                        'Representation' => $representation,
+                     ];
+                     $adaptationId++;
+                     $representationId++;
                 }
-
-                $template = new View(__DIR__ . '/../../views/videos/dash.phtml');
-                $template->setParam('params', $adaptations);
-                $response->setContentType('application/dash+xml')->send($template->render(false));
             }
+
+            $template = new View(__DIR__ . '/../../views/videos/dash.phtml');
+            $template->setParam('params', $adaptations);
+            $response->setContentType('application/dash+xml')->send($template->render(false));
         }
     });
 
@@ -945,9 +951,10 @@ App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId')
     ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('deviceVideos')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $streamId, string $subtitleId, Response $response, Database $dbForProject, string $mode, Document $user) {
+    ->action(function (string $videoId, string $streamId, string $subtitleId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
@@ -968,26 +975,31 @@ App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId')
             throw new Exception('subtitle not found', 404, Exception::VIDEO_SUBTITLE_NOT_FOUND);
         }
 
-        $segments = Authorization::skip(fn () => $dbForProject->find('videos_subtitles_segments', [
-            new Query('subtitleId', Query::TYPE_EQUAL, [$subtitleId]),
-        ], 4000));
+        if ($streamId == 'hls') {
+            $segments = Authorization::skip(fn() => $dbForProject->find('videos_subtitles_segments', [
+                new Query('subtitleId', Query::TYPE_EQUAL, [$subtitleId]),
+            ], 4000));
 
-        if (empty($segments)) {
-            throw new Exception('Subtitle segments not found', 404, Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
+            if (empty($segments)) {
+                throw new Exception('Subtitle segments not found', 404, Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
+            }
+
+            $paramsSegments = [];
+            foreach ($segments as $segment) {
+                $paramsSegments[] = [
+                    'duration' => $segment->getAttribute('duration'),
+                    'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/streams/' . $streamId . '/subtitles/' . $subtitleId . '/segments/' . $segment->getId(),
+                ];
+            }
+
+            $template = new View(__DIR__ . '/../../views/videos/hls-subtitles.phtml');
+            $template->setParam('targetDuration', $subtitle->getAttribute('targetDuration'));
+            $template->setParam('paramsSegments', $paramsSegments);
+            $response->setContentType('application/x-mpegurl')->send($template->render(false));
+        } else {
+            $output = $deviceVideos->read($deviceVideos->getPath($subtitle->getAttribute('videoId') .  $subtitle->getAttribute('fileId') . '.vtt'));
+            $response->setContentType('text/vtt')->send($output);
         }
-
-        $paramsSegments = [];
-        foreach ($segments as $segment) {
-            $paramsSegments[] = [
-                'duration' => $segment->getAttribute('duration'),
-                'url'  => 'http://127.0.0.1/v1/videos/' . $videoId . '/streams/' . $streamId . '/subtitles/' . $subtitleId . '/segments/' . $segment->getId() ,
-            ];
-        }
-
-        $template = new View(__DIR__ . '/../../views/videos/hls-subtitles.phtml');
-        $template->setParam('targetDuration', $subtitle->getAttribute('targetDuration'));
-        $template->setParam('paramsSegments', $paramsSegments);
-        $response->setContentType('application/x-mpegurl')->send($template->render(false));
     });
 
 
