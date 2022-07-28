@@ -277,7 +277,7 @@ App::get('/v1/functions/:functionId/usage')
     });
 
 App::get('/v1/functions/usage')
-    ->desc('Get Function Usage')
+    ->desc('Get Functions Usage')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
