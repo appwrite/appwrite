@@ -460,6 +460,7 @@ class Response extends SwooleResponse
             'content-type' => $contentType,
             'payload'  =>  $data
         ];
+
         $this->send($data);
     }
 

@@ -47,9 +47,10 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $output = (empty($output)) ? $type : $output;
     $data = $image->output($output, $quality);
     $response
+        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
         ->setContentType('image/png')
-        ->file($data, 'image/png');
-
+        ->file($data, 'image/png')
+    ;
     unset($image);
 };
 
@@ -153,9 +154,10 @@ App::get('/v1/avatars/image')
         $data = $image->output($output, $quality);
 
         $response
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType('image/png')
-            ->file($data, 'image/png');
-
+            ->file($data, 'image/png')
+        ;
         unset($image);
     });
 
@@ -282,9 +284,10 @@ App::get('/v1/avatars/favicon')
         $data = $image->output($output, $quality);
 
         $response
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType('image/png')
-            ->file($data, 'image/png');
-
+            ->file($data, 'image/png')
+        ;
         unset($image);
     });
 
@@ -320,13 +323,13 @@ App::get('/v1/avatars/qr')
         }
 
         $image = new Image($qrcode->render($text));
-
         $image->crop((int) $size, (int) $size);
 
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->output('png', 9));
+            ->file($image->output('png', 9), 'image/png')
+        ;
     });
 
 App::get('/v1/avatars/initials')
@@ -407,5 +410,6 @@ App::get('/v1/avatars/initials')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->getImageBlob());
+            ->file($image->getImageBlob(), 'image/png')
+        ;
     });

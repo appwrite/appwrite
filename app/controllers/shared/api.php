@@ -134,16 +134,14 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
             }
 
             $data = json_decode($data, true);
-            $expire = \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT';
-            $response
-              ->addHeader('Expires', $expire)
-              ->addHeader('X-Appwrite-Cache', 'hit')
-              ->setContentType($data['content-type'])
-              ->file(base64_decode($data['payload']), $data['content-type']);
-        } else {
             $response
               ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
-              ->addHeader('X-Appwrite-Cache', 'miss');
+              ->addHeader('X-Appwrite-Cache', 'hit')
+              ->setContentType($data['content-type'])
+              ->file(base64_decode($data['payload']), $data['content-type'])
+            ;
+        } else {
+            $response->addHeader('X-Appwrite-Cache', 'miss');
         }
     }
 }, ['utopia', 'request', 'response', 'project', 'user', 'events', 'audits', 'mails', 'usage', 'deletes', 'database', 'dbForProject', 'mode'], 'api');
