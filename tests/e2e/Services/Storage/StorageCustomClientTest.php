@@ -197,7 +197,7 @@ class StorageCustomClientTest extends Scope
             'write' => ['user:notme']
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 400);
+        $this->assertEquals($file['headers']['status-code'], 401);
         $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
         $this->assertStringContainsString('role:all', $file['body']['message']);
         $this->assertStringContainsString('role:member', $file['body']['message']);
@@ -219,7 +219,7 @@ class StorageCustomClientTest extends Scope
             'read' => ['user:notme']
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 400);
+        $this->assertEquals($file['headers']['status-code'], 401);
         $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
         $this->assertStringContainsString('role:all', $file['body']['message']);
         $this->assertStringContainsString('role:member', $file['body']['message']);
@@ -232,7 +232,7 @@ class StorageCustomClientTest extends Scope
             'write' => ['user:notme']
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 400);
+        $this->assertEquals($file['headers']['status-code'], 401);
         $this->assertStringStartsWith('Write permissions must be one of:', $file['body']['message']);
         $this->assertStringContainsString('role:all', $file['body']['message']);
         $this->assertStringContainsString('role:member', $file['body']['message']);
@@ -246,7 +246,7 @@ class StorageCustomClientTest extends Scope
             'write' => ['user:notme']
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 400);
+        $this->assertEquals($file['headers']['status-code'], 401);
         $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
         $this->assertStringContainsString('role:all', $file['body']['message']);
         $this->assertStringContainsString('role:member', $file['body']['message']);
