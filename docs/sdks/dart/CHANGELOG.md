@@ -1,3 +1,6 @@
+## 6.0.1
+* Fix incorrect response model (https://github.com/appwrite/sdk-for-dart/issues/23)
+
 ## 6.0.0
 * Support for Appwrite 0.15
 * **BREAKING** `Database` -> `Databases`
