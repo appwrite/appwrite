@@ -586,7 +586,7 @@ App::error()
     ->inject('error')
     ->inject('request')
     ->inject('response')
-    ->action(function ($utopia, $error, $request, $response) {
+    ->action(function (App $utopia, throwable $error, Request $request, Response $response) {
         $route = $utopia->match($request);
         logError($error, "httpError", $route);
 
@@ -629,8 +629,7 @@ App::error()
 
 App::init()
     ->inject('request')
-    ->inject('response')
-    ->action(function ($request, $response) {
+    ->action(function (Request $request) {
         $secretKey = $request->getHeader('x-appwrite-executor-key', '');
         if (empty($secretKey)) {
             throw new Exception('Missing executor key', 401);
