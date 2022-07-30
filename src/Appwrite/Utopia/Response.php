@@ -447,22 +447,61 @@ class Response extends SwooleResponse
 
 
     /**
-     * Set $payload for cache usage and sending file HTTP response.
+     * Output response
      *
-     * @param string $data
-     * @param string $contentType
+     * Generate HTTP response output including the response header (+cookies) and body and prints them.
+     *
+     * @param string $body
      *
      * @return void
      */
-    public function file(string $data, string $contentType): void
+    public function send(string $body = ''): void
     {
+        if ($this->sent) {
+            return;
+        }
+
+        $this->sent = true;
+
+        $this->addHeader('X-Debug-Speed', (string)(\microtime(true) - $this->startTime));
+
         $this->payload = [
-            'content-type' => $contentType,
-            'payload'  =>  $data
+            'content-type' => $this->getContentType(),
+            'payload'  =>  $body
         ];
 
-        $this->send($data);
+        $this
+            ->appendCookies()
+            ->appendHeaders()
+        ;
+
+        if (!$this->disablePayload) {
+            $length = strlen($body);
+
+            $this->size = $this->size + strlen(implode("\n", $this->headers)) + $length;
+
+            if (
+                array_key_exists(
+                    $this->contentType,
+                    $this->compressed
+                ) && ($length <= self::CHUNK_SIZE)
+            ) { // Dont compress with GZIP / Brotli if header is not listed and size is bigger than 2mb
+                $this->end($body);
+            } else {
+                for ($i = 0; $i < ceil($length / self::CHUNK_SIZE); $i++) {
+                    $this->write(substr($body, ($i * self::CHUNK_SIZE), min(self::CHUNK_SIZE, $length - ($i * self::CHUNK_SIZE))));
+                }
+
+                $this->end();
+            }
+
+            $this->disablePayload();
+        } else {
+            $this->end();
+        }
     }
+
+
 
     /**
      * YAML
