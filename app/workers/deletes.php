@@ -319,7 +319,7 @@ class DeletesV1 extends Worker
         $this->deleteForProjectIds(
             function (string $projectId) use ($timestamp) {
                 $dbForProject = $this->getProjectDB($projectId);
-            // Delete Sessions
+                // Delete Sessions
                 $this->deleteByGroup('sessions', [
                 new Query('expire', Query::TYPE_LESSER, [$timestamp])
                 ], $dbForProject);
