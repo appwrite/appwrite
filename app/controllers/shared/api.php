@@ -126,10 +126,10 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
             if ($cacheLog->isEmpty()) {
                 Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                 '$id' => $key,
-                'accessedAt' => time(),
+                'accessedAt' => \time(),
                 ])));
-            } else {
-                $cacheLog->setAttribute('accessedAt', time());
+            } elseif (date('Y/m/d', time()) > date('Y/m/d', $cacheLog->getAttribute('accessedAt'))) {
+                $cacheLog->setAttribute('accessedAt', \time());
                 Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
             }
 
@@ -273,22 +273,20 @@ App::shutdown(function (App $utopia, Request $request, Response $response, Docum
     if ($useCache) {
         $data = $response->getPayload();
         if (!empty($data)) {
-            $timestamp = 60 * 60 * 24 * 30;
             $key = md5($request->getURI() . implode('*', $request->getParams()));
-            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
-
             $cacheLog = $dbForProject->getDocument('cache', $key);
             if ($cacheLog->isEmpty()) {
                 Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                 '$id' => $key,
-                'accessedAt' => time(),
+                'accessedAt' => \time(),
                 ])));
-            } else {
-                $cacheLog->setAttribute('accessedAt', time());
+            } elseif (date('Y/m/d', \time()) > date('Y/m/d', $cacheLog->getAttribute('accessedAt'))) {
+                $cacheLog->setAttribute('accessedAt', \time());
                 Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
             }
             if (!empty($data['payload'])) {
                 $data['payload'] = base64_encode($data['payload']);
+                $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
                 $cache->save($key, json_encode($data));
             }
         }
