@@ -126,7 +126,6 @@ App::post('/v1/projects')
                 continue;
             }
 
-
             $attributes = [];
             $indexes = [];
 

@@ -316,9 +316,8 @@ class DeletesV1 extends Worker
      */
     protected function deleteExpiredSessions(int $timestamp): void
     {
-        $this->deleteForProjectIds(
-            function (string $projectId) use ($timestamp) {
-                $dbForProject = $this->getProjectDB($projectId);
+        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+            $dbForProject = $this->getProjectDB($projectId);
                 // Delete Sessions
                 $this->deleteByGroup('sessions', [
                 new Query('expire', Query::TYPE_LESSER, [$timestamp])
