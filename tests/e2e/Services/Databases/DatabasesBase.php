@@ -823,6 +823,23 @@ trait DatabasesBase
         $this->assertEquals('available', $movies['body']['indexes'][1]['status']);
         $this->assertEquals('available', $movies['body']['indexes'][2]['status']);
 
+
+        $releaseWithDate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'birthDay',
+            'type' => 'key',
+            'attributes' => ['birthDay'],
+        ]);
+
+        $this->assertEquals(201, $releaseWithDate['headers']['status-code']);
+        $this->assertEquals('birthDay', $releaseWithDate['body']['key']);
+        $this->assertEquals('key', $releaseWithDate['body']['type']);
+        $this->assertCount(1, $releaseWithDate['body']['attributes']);
+        $this->assertEquals('birthDay', $releaseWithDate['body']['attributes'][0]);
+
         return $data;
     }
 
@@ -1408,7 +1425,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$createdAt.greater(132)'],
+            'queries' => ['$createdAt.greater("1976-06-12")'],
         ]);
 
         $this->assertCount(3, $documents['body']['documents']);
@@ -1417,7 +1434,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$createdAt.lesser(132)'],
+            'queries' => ['$createdAt.lesser("1976-06-12")'],
         ]);
 
         $this->assertCount(0, $documents['body']['documents']);
@@ -1471,10 +1488,10 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => ['birthDay.greater("1960-01-01 10:10:10")'],
         ]);
-var_dump($documents);
+
         $this->assertEquals($documents['headers']['status-code'], 200);
-        $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
-        $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
+        $this->assertEquals('1975-06-12 12:12:55.000', $documents['body']['documents'][0]['birthDay']);
+        $this->assertEquals('1975-06-12 18:12:55.000', $documents['body']['documents'][1]['birthDay']);
         $this->assertCount(2, $documents['body']['documents']);
 
         return [];
