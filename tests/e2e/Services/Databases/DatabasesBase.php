@@ -1486,7 +1486,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['birthDay.greater("1960-01-01 10:10:10")'],
+            'queries' => ['birthDay.greater("1960-01-01 10:10:10+02:30")'],
         ]);
 
         $this->assertEquals($documents['headers']['status-code'], 200);
@@ -1789,6 +1789,26 @@ trait DatabasesBase
             'default' => 'NORTH'
         ]);
 
+        $goodDatetime = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'birthDay',
+            'required' => false,
+            'default' => null
+        ]);
+
+        $datetimeDefault = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'badBirthDay',
+            'required' => false,
+            'default' => 'bad'
+        ]);
+
         $this->assertEquals(201, $email['headers']['status-code']);
         $this->assertEquals(201, $ip['headers']['status-code']);
         $this->assertEquals(201, $url['headers']['status-code']);
@@ -1798,6 +1818,7 @@ trait DatabasesBase
         $this->assertEquals(201, $upperBound['headers']['status-code']);
         $this->assertEquals(201, $lowerBound['headers']['status-code']);
         $this->assertEquals(201, $enum['headers']['status-code']);
+        $this->assertEquals(201, $goodDatetime['headers']['status-code']);
         $this->assertEquals(400, $invalidRange['headers']['status-code']);
         $this->assertEquals(400, $defaultArray['headers']['status-code']);
         $this->assertEquals(400, $defaultRequired['headers']['status-code']);
@@ -1805,7 +1826,7 @@ trait DatabasesBase
         $this->assertEquals(400, $enumDefaultStrict['headers']['status-code']);
         $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
         $this->assertEquals('Cannot set default value for array attributes', $defaultArray['body']['message']);
-
+        $this->assertEquals(400, $datetimeDefault['headers']['status-code']);
         // wait for worker to add attributes
         sleep(3);
 
@@ -1815,7 +1836,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), []);
 
-        $this->assertCount(9, $collection['body']['attributes']);
+        $this->assertCount(10, $collection['body']['attributes']);
 
         /**
          * Test for successful validation
@@ -2051,6 +2072,18 @@ trait DatabasesBase
             'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
+        $badTime = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'birthDay' => '2020-10-10 27:30:10+01:00',
+            ],
+            'read' => ['user:' . $this->getUser()['$id']],
+            'write' => ['user:' . $this->getUser()['$id']],
+        ]);
+
         $this->assertEquals(400, $badEmail['headers']['status-code']);
         $this->assertEquals(400, $badEnum['headers']['status-code']);
         $this->assertEquals(400, $badIp['headers']['status-code']);
@@ -2060,6 +2093,7 @@ trait DatabasesBase
         $this->assertEquals(400, $badProbability['headers']['status-code']);
         $this->assertEquals(400, $tooHigh['headers']['status-code']);
         $this->assertEquals(400, $tooLow['headers']['status-code']);
+        $this->assertEquals(400, $badTime['headers']['status-code']);
         $this->assertEquals('Invalid document structure: Attribute "email" has invalid format. Value must be a valid email address', $badEmail['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "enum" has invalid format. Value must be one of (yes, no, maybe)', $badEnum['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "ip" has invalid format. Value must be a valid IP address', $badIp['body']['message']);
