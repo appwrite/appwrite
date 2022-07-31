@@ -138,8 +138,9 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
               ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
               ->addHeader('X-Appwrite-Cache', 'hit')
               ->setContentType($data['content-type'])
-              ->file(base64_decode($data['payload']), $data['content-type'])
+              ->send(base64_decode($data['payload']))
             ;
+
         } else {
             $response->addHeader('X-Appwrite-Cache', 'miss');
         }
