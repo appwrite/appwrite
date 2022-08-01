@@ -174,13 +174,6 @@ trait DatabasesBase
             'key' => 'birthDay',
             'required' => false,
         ]);
-        var_dump($this->getProject());
-        var_dump('/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/datetime');
-        $this->assertEquals($datetime['headers']['status-code'], 201);
-        $this->assertEquals($datetime['body']['key'], 'birthDay');
-        $this->assertEquals($datetime['body']['type'], 'datetime');
-        $this->assertEquals($datetime['body']['required'], false);
-
         $this->assertEquals($title['headers']['status-code'], 201);
         $this->assertEquals($title['body']['key'], 'title');
         $this->assertEquals($title['body']['type'], 'string');
@@ -203,6 +196,11 @@ trait DatabasesBase
         $this->assertEquals($actors['body']['size'], 256);
         $this->assertEquals($actors['body']['required'], false);
         $this->assertEquals($actors['body']['array'], true);
+
+        $this->assertEquals($datetime['headers']['status-code'], 201);
+        $this->assertEquals($datetime['body']['key'], 'birthDay');
+        $this->assertEquals($datetime['body']['type'], 'datetime');
+        $this->assertEquals($datetime['body']['required'], false);
 
         // wait for database worker to create attributes
         sleep(2);
@@ -469,7 +467,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
-var_dump($attributesPath . '/' . $datetime['body']['key']);
+
         $datetimeResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $datetime['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -724,6 +722,13 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
         $this->assertEquals($booleanResponse['body']['array'], $attributes[7]['array']);
         $this->assertEquals($booleanResponse['body']['default'], $attributes[7]['default']);
 
+        $this->assertEquals($datetimeResponse['body']['key'], $attributes[8]['key']);
+        $this->assertEquals($datetimeResponse['body']['type'], $attributes[8]['type']);
+        $this->assertEquals($datetimeResponse['body']['status'], $attributes[8]['status']);
+        $this->assertEquals($datetimeResponse['body']['required'], $attributes[8]['required']);
+        $this->assertEquals($datetimeResponse['body']['array'], $attributes[8]['array']);
+        $this->assertEquals($datetimeResponse['body']['default'], $attributes[8]['default']);
+
         /**
          * Test for FAILURE
          */
@@ -818,6 +823,23 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
         $this->assertEquals('available', $movies['body']['indexes'][1]['status']);
         $this->assertEquals('available', $movies['body']['indexes'][2]['status']);
 
+
+        $releaseWithDate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'birthDay',
+            'type' => 'key',
+            'attributes' => ['birthDay'],
+        ]);
+
+        $this->assertEquals(201, $releaseWithDate['headers']['status-code']);
+        $this->assertEquals('birthDay', $releaseWithDate['body']['key']);
+        $this->assertEquals('key', $releaseWithDate['body']['type']);
+        $this->assertCount(1, $releaseWithDate['body']['attributes']);
+        $this->assertEquals('birthDay', $releaseWithDate['body']['attributes'][0]);
+
         return $data;
     }
 
@@ -826,7 +848,6 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
      */
     public function testCreateDocument(array $data): array
     {
-        var_dump($data);
         $databaseId = $data['databaseId'];
         $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -846,10 +867,6 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
             'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
-        var_dump("++++++++++");
-        var_dump('/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents');
-        var_dump("++++++++++");
-
         $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -858,6 +875,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
             'data' => [
                 'title' => 'Spider-Man: Far From Home',
                 'releaseYear' => 2019,
+                'birthDay' => null,
                 'actors' => [
                     'Tom Holland',
                     'Zendaya Maree Stoermer',
@@ -876,6 +894,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
             'data' => [
                 'title' => 'Spider-Man: Homecoming',
                 'releaseYear' => 2017,
+                'birthDay' => '1975-06-12 14:12:55 America/New_York',
                 'duration' => 0,
                 'actors' => [
                     'Tom Holland',
@@ -908,6 +927,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
         $this->assertCount(2, $document1['body']['actors']);
         $this->assertEquals($document1['body']['actors'][0], 'Chris Evans');
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
+        $this->assertEquals($document1['body']['birthDay'], '1975-06-12 12:12:55.000');
 
         $this->assertEquals($document2['headers']['status-code'], 201);
         $this->assertEquals($document2['body']['title'], 'Spider-Man: Far From Home');
@@ -921,6 +941,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
         $this->assertEquals($document2['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document2['body']['actors'][1], 'Zendaya Maree Stoermer');
         $this->assertEquals($document2['body']['actors'][2], 'Samuel Jackson');
+        $this->assertEquals($document2['body']['birthDay'], null);
 
         $this->assertEquals($document3['headers']['status-code'], 201);
         $this->assertEquals($document3['body']['title'], 'Spider-Man: Homecoming');
@@ -933,6 +954,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
         $this->assertCount(2, $document3['body']['actors']);
         $this->assertEquals($document3['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document3['body']['actors'][1], 'Zendaya Maree Stoermer');
+        $this->assertEquals($document3['body']['birthDay'], '1975-06-12 18:12:55.000');// UTC for NY
 
         $this->assertEquals($document4['headers']['status-code'], 400);
 
@@ -1059,6 +1081,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
             $this->assertEquals($response['body']['releaseYear'], $document['releaseYear']);
             $this->assertEquals($response['body']['$read'], $document['$read']);
             $this->assertEquals($response['body']['$write'], $document['$write']);
+            $this->assertEquals($response['body']['birthDay'], $document['birthDay']);
             $this->assertFalse(array_key_exists('$internalId', $response['body']));
         }
     }
@@ -1402,7 +1425,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$createdAt.greater(132)'],
+            'queries' => ['$createdAt.greater("1976-06-12")'],
         ]);
 
         $this->assertCount(3, $documents['body']['documents']);
@@ -1411,7 +1434,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$createdAt.lesser(132)'],
+            'queries' => ['$createdAt.lesser("1976-06-12")'],
         ]);
 
         $this->assertCount(0, $documents['body']['documents']);
@@ -1457,6 +1480,19 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
         ]);
 
         $this->assertEquals(400, $documents['headers']['status-code']);
+
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['birthDay.greater("1960-01-01 10:10:10+02:30")'],
+        ]);
+
+        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals('1975-06-12 12:12:55.000', $documents['body']['documents'][0]['birthDay']);
+        $this->assertEquals('1975-06-12 18:12:55.000', $documents['body']['documents'][1]['birthDay']);
+        $this->assertCount(2, $documents['body']['documents']);
 
         return [];
     }
@@ -1753,6 +1789,26 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
             'default' => 'NORTH'
         ]);
 
+        $goodDatetime = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'birthDay',
+            'required' => false,
+            'default' => null
+        ]);
+
+        $datetimeDefault = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'badBirthDay',
+            'required' => false,
+            'default' => 'bad'
+        ]);
+
         $this->assertEquals(201, $email['headers']['status-code']);
         $this->assertEquals(201, $ip['headers']['status-code']);
         $this->assertEquals(201, $url['headers']['status-code']);
@@ -1762,6 +1818,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
         $this->assertEquals(201, $upperBound['headers']['status-code']);
         $this->assertEquals(201, $lowerBound['headers']['status-code']);
         $this->assertEquals(201, $enum['headers']['status-code']);
+        $this->assertEquals(201, $goodDatetime['headers']['status-code']);
         $this->assertEquals(400, $invalidRange['headers']['status-code']);
         $this->assertEquals(400, $defaultArray['headers']['status-code']);
         $this->assertEquals(400, $defaultRequired['headers']['status-code']);
@@ -1769,7 +1826,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
         $this->assertEquals(400, $enumDefaultStrict['headers']['status-code']);
         $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
         $this->assertEquals('Cannot set default value for array attributes', $defaultArray['body']['message']);
-
+        $this->assertEquals(400, $datetimeDefault['headers']['status-code']);
         // wait for worker to add attributes
         sleep(3);
 
@@ -1779,7 +1836,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), []);
 
-        $this->assertCount(9, $collection['body']['attributes']);
+        $this->assertCount(10, $collection['body']['attributes']);
 
         /**
          * Test for successful validation
@@ -2015,6 +2072,18 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
             'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
+        $badTime = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'birthDay' => '2020-10-10 27:30:10+01:00',
+            ],
+            'read' => ['user:' . $this->getUser()['$id']],
+            'write' => ['user:' . $this->getUser()['$id']],
+        ]);
+
         $this->assertEquals(400, $badEmail['headers']['status-code']);
         $this->assertEquals(400, $badEnum['headers']['status-code']);
         $this->assertEquals(400, $badIp['headers']['status-code']);
@@ -2024,6 +2093,7 @@ var_dump($attributesPath . '/' . $datetime['body']['key']);
         $this->assertEquals(400, $badProbability['headers']['status-code']);
         $this->assertEquals(400, $tooHigh['headers']['status-code']);
         $this->assertEquals(400, $tooLow['headers']['status-code']);
+        $this->assertEquals(400, $badTime['headers']['status-code']);
         $this->assertEquals('Invalid document structure: Attribute "email" has invalid format. Value must be a valid email address', $badEmail['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "enum" has invalid format. Value must be one of (yes, no, maybe)', $badEnum['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "ip" has invalid format. Value must be a valid IP address', $badIp['body']['message']);
