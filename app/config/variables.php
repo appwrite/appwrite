@@ -68,7 +68,7 @@ return [
                 'default' => 'localhost',
                 'required' => true,
                 'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.' . PHP_EOL . 'You can use the same value as used for the Appwrite hostname.',
-                'filter' => ''
+                'filter' => 'domainTarget'
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
@@ -647,7 +647,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.json.',
                 'introduction' => '0.7.0',
                 'default' => '900',
                 'required' => false,

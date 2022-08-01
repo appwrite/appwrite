@@ -123,105 +123,94 @@ $cli
             ],
         ];
 
-        foreach (['swagger2', 'open-api3'] as $format) {
-            foreach ($platforms as $platform) {
-                $routes = [];
-                $models = [];
-                $services = [];
+        foreach ($platforms as $platform) {
+            $routes = [];
+            $models = [];
+            $services = [];
 
-                foreach ($appRoutes as $key => $method) {
-                    foreach ($method as $route) {
-                        /** @var \Utopia\Route $route */
-                        $routeSecurity = $route->getLabel('sdk.auth', []);
-                        $sdkPlatofrms = [];
+            foreach ($appRoutes as $key => $method) {
+                foreach ($method as $route) {
+                    /** @var \Utopia\Route $route */
+                    $routeSecurity = $route->getLabel('sdk.auth', []);
+                    $sdkPlaforms = [];
 
-                        foreach ($routeSecurity as $value) {
-                            switch ($value) {
-                                case APP_AUTH_TYPE_SESSION:
-                                    $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
-                                    break;
-                                case APP_AUTH_TYPE_KEY:
-                                    $sdkPlatofrms[] = APP_PLATFORM_SERVER;
-                                    break;
-                                case APP_AUTH_TYPE_JWT:
-                                    $sdkPlatofrms[] = APP_PLATFORM_SERVER;
-                                    break;
-                                case APP_AUTH_TYPE_ADMIN:
-                                    $sdkPlatofrms[] = APP_PLATFORM_CONSOLE;
-                                    break;
-                            }
+                    foreach ($routeSecurity as $value) {
+                        switch ($value) {
+                            case APP_AUTH_TYPE_SESSION:
+                                $sdkPlaforms[] = APP_PLATFORM_CLIENT;
+                                break;
+                            case APP_AUTH_TYPE_KEY:
+                                $sdkPlaforms[] = APP_PLATFORM_SERVER;
+                                break;
+                            case APP_AUTH_TYPE_JWT:
+                                $sdkPlaforms[] = APP_PLATFORM_SERVER;
+                                break;
+                            case APP_AUTH_TYPE_ADMIN:
+                                $sdkPlaforms[] = APP_PLATFORM_CONSOLE;
+                                break;
                         }
-
-                        if (empty($routeSecurity)) {
-                            $sdkPlatofrms[] = APP_PLATFORM_CLIENT;
-                        }
-
-                        if (!$route->getLabel('docs', true)) {
-                            continue;
-                        }
-
-                        if ($route->getLabel('sdk.mock', false) && !$mocks) {
-                            continue;
-                        }
-
-                        if (!$route->getLabel('sdk.mock', false) && $mocks) {
-                            continue;
-                        }
-
-                        if (empty($route->getLabel('sdk.namespace', null))) {
-                            continue;
-                        }
-
-                        if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatofrms)) {
-                            continue;
-                        }
-
-                        $routes[] = $route;
-                        $modelLabel = $route->getLabel('sdk.response.model', 'none');
-                        \is_array($modelLabel) ? \array_map(function ($m) use ($response) {
-                            return $response->getModel($m);
-                        }, $modelLabel) : $response->getModel($modelLabel);
                     }
-                }
 
-                foreach (Config::getParam('services', []) as $service) {
-                    if (
-                        !isset($service['docs']) // Skip service if not part of the public API
-                        || !isset($service['sdk'])
-                        || !$service['docs']
-                        || !$service['sdk']
-                    ) {
+                    if (empty($routeSecurity)) {
+                        $sdkPlaforms[] = APP_PLATFORM_CLIENT;
+                    }
+
+                    if (!$route->getLabel('docs', true)) {
                         continue;
                     }
 
-                    $services[] = [
-                        'name' => $service['key'] ?? '',
-                        'description' => $service['subtitle'] ?? '',
-                        'x-globalAttributes' => $service['globalAttributes'] ?? [],
-                    ];
-                }
-
-                $models = $response->getModels();
-
-                foreach ($models as $key => $value) {
-                    if ($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
-                        unset($models[$key]);
+                    if ($route->getLabel('sdk.mock', false) && !$mocks) {
+                        continue;
                     }
+
+                    if (!$route->getLabel('sdk.mock', false) && $mocks) {
+                        continue;
+                    }
+
+                    if (empty($route->getLabel('sdk.namespace', null))) {
+                        continue;
+                    }
+
+                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlaforms)) {
+                        continue;
+                    }
+
+                    $routes[] = $route;
+                }
+            }
+
+            foreach (Config::getParam('services', []) as $service) {
+                if (
+                    !isset($service['docs']) // Skip service if not part of the public API
+                    || !isset($service['sdk'])
+                    || !$service['docs']
+                    || !$service['sdk']
+                ) {
+                    continue;
                 }
 
-                switch ($format) {
-                    case 'swagger2':
-                        $formatInstance = new Swagger2(new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0);
-                        break;
+                $services[] = [
+                    'name' => $service['key'] ?? '',
+                    'description' => $service['subtitle'] ?? '',
+                    'x-globalAttributes' => $service['globalAttributes'] ?? [],
+                ];
+            }
 
-                    case 'open-api3':
-                        $formatInstance = new OpenAPI3(new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0);
-                        break;
+            $models = $response->getModels();
 
-                    default:
-                        throw new Exception('Format not found: ' . $format);
-                        break;
+            foreach ($models as $key => $value) {
+                if ($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
+                    unset($models[$key]);
                 }
+            }
+            // var_dump($models);
+            $arguments = [new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
+            foreach (['swagger2', 'open-api3'] as $format) {
+                $formatInstance = match ($format) {
+                    'swagger2' => new Swagger2(...$arguments),
+                    'open-api3' => new OpenAPI3(...$arguments),
+                    default => throw new Exception('Format not found: ' . $format)
+                };
 
                 $specs = new Specification($formatInstance);
                 $endpoint = App::getEnv('_APP_HOME', '[HOSTNAME]');

@@ -922,6 +922,63 @@ trait DatabasesBase
         return ['documents' => $documents['body']['documents'], 'databaseId' => $databaseId];
     }
 
+    public function testCreateCollectionAlias(): array
+    {
+        // Create default database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => 'default',
+            'name' => 'Default'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+
+        $movies = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'unique()',
+            'name' => 'Movies',
+            'read' => [],
+            'write' => [],
+            'permission' => 'document',
+        ]);
+
+        $this->assertEquals($movies['headers']['status-code'], 201);
+        $this->assertEquals($movies['body']['name'], 'Movies');
+
+        return ['moviesId' => $movies['body']['$id']];
+    }
+
+    /**
+     * @depends testCreateCollectionAlias
+     */
+    public function testListDocumentsAlias(array $data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals($documents['body']['total'], 0);
+
+        return [];
+    }
+
     /**
      * @depends testListDocuments
      */
@@ -2376,7 +2433,7 @@ trait DatabasesBase
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-         ], $this->getHeaders()), [
+        ], $this->getHeaders()), [
             'read' => ['user:' . $this->getUser()['$id']],
         ]);
 
