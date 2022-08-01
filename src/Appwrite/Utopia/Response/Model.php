@@ -15,22 +15,28 @@ abstract class Model
     /**
      * @var bool
      */
-    protected $none = false;
+    protected bool $none = false;
 
     /**
      * @var bool
      */
-    protected $any = false;
+    protected bool $any = false;
 
     /**
      * @var bool
      */
-    protected $public = true;
+    protected bool $public = true;
 
     /**
      * @var array
      */
-    protected $rules = [];
+    protected array $rules = [];
+
+    /**
+     * @var array
+     */
+    public array $conditions = [];
+
 
     /**
      * Filter Document Structure
@@ -76,7 +82,7 @@ abstract class Model
     protected function addRule(string $key, array $options): self
     {
         $this->rules[$key] = array_merge([
-            'require' => true,
+            'required' => true,
             'type' => '',
             'description' => '',
             'default' => null,
@@ -92,7 +98,7 @@ abstract class Model
         $list = [];
 
         foreach ($this->rules as $key => $rule) {
-            if ($rule['require'] ?? false) {
+            if ($rule['required'] ?? false) {
                 $list[] = $key;
             }
         }
