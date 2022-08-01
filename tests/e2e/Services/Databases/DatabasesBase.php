@@ -2540,16 +2540,17 @@ trait DatabasesBase
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
             'data' => [
                 'title' => 'Again Updated Date Test',
-                '$createdAt' => 1657271810, // Try to update it, should not work
-                '$updatedAt' => 1657271810 // Try to update it, should not work
+                '$createdAt' => '2022-08-01 13:09:23.040', // $createdAt is not updatable
+                '$updatedAt' => '2022-08-01 13:09:23.050' // system will update it not api
             ]
         ]);
 
         $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
         $this->assertEquals($document['body']['$createdAt'], $createdAt);
+        $this->assertNotEquals($document['body']['$createdAt'], '2022-08-01 13:09:23.040');
         $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
         $this->assertNotEquals($document['body']['$updatedAt'], $updatedAtSecond);
-        $this->assertNotEquals($document['body']['$updatedAt'], 1657271810);
+        $this->assertNotEquals($document['body']['$updatedAt'], '2022-08-01 13:09:23.050');
 
         return $data;
     }
