@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0568e4057b8c49ea008ce2e3a1c83e94",
+    "content-hash": "39572e8195342eb83dd40d12314f2e6c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2051,16 +2051,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.18.7",
+            "version": "0.18.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "d542ee433f1a545d926ffaf707bdf952dc18a52e"
+                "reference": "227b3ca919149b7b0d6556c8effe9ee46ed081e6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/d542ee433f1a545d926ffaf707bdf952dc18a52e",
-                "reference": "d542ee433f1a545d926ffaf707bdf952dc18a52e",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/227b3ca919149b7b0d6556c8effe9ee46ed081e6",
+                "reference": "227b3ca919149b7b0d6556c8effe9ee46ed081e6",
                 "shasum": ""
             },
             "require": {
@@ -2109,9 +2109,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.18.7"
+                "source": "https://github.com/utopia-php/database/tree/0.18.9"
             },
-            "time": "2022-07-11T10:20:33+00:00"
+            "time": "2022-07-19T09:42:53+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2169,16 +2169,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-feat-public-add-route",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "d16f3d44375beb1e880600957ac65e97699d6e23"
+                "reference": "beb5e861c7d0a6256a1272e6b9d70b060ca8629a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/d16f3d44375beb1e880600957ac65e97699d6e23",
-                "reference": "d16f3d44375beb1e880600957ac65e97699d6e23",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/beb5e861c7d0a6256a1272e6b9d70b060ca8629a",
+                "reference": "beb5e861c7d0a6256a1272e6b9d70b060ca8629a",
                 "shasum": ""
             },
             "require": {
@@ -2188,6 +2188,7 @@
                 "phpunit/phpunit": "^9.5.10",
                 "vimeo/psalm": "4.13.1"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2212,9 +2213,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/feat-public-add-route"
+                "source": "https://github.com/utopia-php/framework/tree/master"
             },
-            "time": "2022-07-10T08:39:49+00:00"
+            "time": "2022-07-30T09:55:28+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2446,14 +2447,14 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "c187abd39d134287c1d71585083e4e99bf63ebb3"
+                "reference": "9d5fd12dfa1b3932313362a90ffafd5467525be0"
             },
             "require": {
                 "ext-json": "*",
                 "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/cli": "0.13.*",
-                "utopia-php/framework": "dev-feat-public-add-route as 0.19.21"
+                "utopia-php/framework": "dev-master as 0.19.21"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -2498,7 +2499,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-07-17T01:28:06+00:00"
+            "time": "2022-08-01T06:39:29+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -5409,7 +5410,7 @@
     "aliases": [
         {
             "package": "utopia-php/framework",
-            "version": "dev-feat-public-add-route",
+            "version": "9999999-dev",
             "alias": "0.19.21",
             "alias_normalized": "0.19.21.0"
         }
