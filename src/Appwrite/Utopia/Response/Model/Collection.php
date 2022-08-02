@@ -28,18 +28,11 @@ class Collection extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
-            ->addRule('$read', [
+            ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Collection read permissions.',
+                'description' => 'Collection permissions.',
                 'default' => '',
-                'example' => 'role:all',
-                'array' => true
-            ])
-            ->addRule('$write', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Collection write permissions.',
-                'default' => '',
-                'example' => 'user:608f9da25e7e1',
+                'example' => 'read(any)',
                 'array' => true
             ])
             ->addRule('databaseId', [
@@ -60,11 +53,11 @@ class Collection extends Model
                 'default' => true,
                 'example' => false,
             ])
-            ->addRule('permission', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Collection permission model. Possible values: `document` or `collection`',
+            ->addRule('documentSecurity', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether document-level permissions are enabled.',
                 'default' => '',
-                'example' => 'document',
+                'example' => true,
             ])
             ->addRule('attributes', [
                 'type' => [

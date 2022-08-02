@@ -849,18 +849,14 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals($document1['headers']['status-code'], 201);
-        $this->assertIsArray($document1['body']['$read']);
-        $this->assertIsArray($document1['body']['$write']);
-        $this->assertCount(1, $document1['body']['$read']);
-        $this->assertCount(1, $document1['body']['$write']);
+        $this->assertIsArray($document1['body']['$permissions']);
+        $this->assertCount(2, $document1['body']['$permissions']);
         $this->assertEquals($document1['body']['firstName'], 'Tom');
         $this->assertEquals($document1['body']['lastName'], 'Holland');
 
         $this->assertEquals($document2['headers']['status-code'], 201);
-        $this->assertIsArray($document2['body']['$read']);
-        $this->assertIsArray($document2['body']['$write']);
-        $this->assertCount(1, $document2['body']['$read']);
-        $this->assertCount(1, $document2['body']['$write']);
+        $this->assertIsArray($document2['body']['$permissions']);
+        $this->assertCount(1, $document2['body']['$permissions']);
         $this->assertEquals($document2['body']['firstName'], 'Samuel');
         $this->assertEquals($document2['body']['lastName'], 'Jackson');
 

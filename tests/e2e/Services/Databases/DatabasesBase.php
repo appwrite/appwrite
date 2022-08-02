@@ -840,10 +840,8 @@ trait DatabasesBase
         $this->assertEquals($document1['headers']['status-code'], 201);
         $this->assertEquals($document1['body']['title'], 'Captain America');
         $this->assertEquals($document1['body']['releaseYear'], 1944);
-        $this->assertIsArray($document1['body']['$read']);
-        $this->assertIsArray($document1['body']['$write']);
-        $this->assertCount(1, $document1['body']['$read']);
-        $this->assertCount(1, $document1['body']['$write']);
+        $this->assertIsArray($document1['body']['$permissions']);
+        $this->assertCount(2, $document1['body']['$permissions']);
         $this->assertCount(2, $document1['body']['actors']);
         $this->assertEquals($document1['body']['actors'][0], 'Chris Evans');
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
@@ -852,10 +850,8 @@ trait DatabasesBase
         $this->assertEquals($document2['body']['title'], 'Spider-Man: Far From Home');
         $this->assertEquals($document2['body']['releaseYear'], 2019);
         $this->assertEquals($document2['body']['duration'], null);
-        $this->assertIsArray($document2['body']['$read']);
-        $this->assertIsArray($document2['body']['$write']);
-        $this->assertCount(1, $document2['body']['$read']);
-        $this->assertCount(1, $document2['body']['$write']);
+        $this->assertIsArray($document2['body']['$permissions']);
+        $this->assertCount(2, $document2['body']['$permissions']);
         $this->assertCount(3, $document2['body']['actors']);
         $this->assertEquals($document2['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document2['body']['actors'][1], 'Zendaya Maree Stoermer');
@@ -865,10 +861,8 @@ trait DatabasesBase
         $this->assertEquals($document3['body']['title'], 'Spider-Man: Homecoming');
         $this->assertEquals($document3['body']['releaseYear'], 2017);
         $this->assertEquals($document3['body']['duration'], 0);
-        $this->assertIsArray($document3['body']['$read']);
-        $this->assertIsArray($document3['body']['$write']);
-        $this->assertCount(1, $document3['body']['$read']);
-        $this->assertCount(1, $document3['body']['$write']);
+        $this->assertIsArray($document3['body']['$permissions']);
+        $this->assertCount(2, $document3['body']['$permisisons']);
         $this->assertCount(2, $document3['body']['actors']);
         $this->assertEquals($document3['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document3['body']['actors'][1], 'Zendaya Maree Stoermer');
@@ -996,8 +990,7 @@ trait DatabasesBase
             $this->assertEquals($response['body']['$collection'], $document['$collection']);
             $this->assertEquals($response['body']['title'], $document['title']);
             $this->assertEquals($response['body']['releaseYear'], $document['releaseYear']);
-            $this->assertEquals($response['body']['$read'], $document['$read']);
-            $this->assertEquals($response['body']['$write'], $document['$write']);
+            $this->assertEquals($response['body']['$permissions'], $document['$permissions']);
             $this->assertFalse(array_key_exists('$internalId', $response['body']));
         }
     }
@@ -1417,8 +1410,10 @@ trait DatabasesBase
                 'actors' => [],
                 '$createdAt' => 5 // Should be ignored
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ],
         ]);
 
         $id = $document['body']['$id'];
@@ -1427,8 +1422,8 @@ trait DatabasesBase
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
         $this->assertNotEquals($document['body']['$createdAt'], 5);
-        $this->assertEquals('user:' . $this->getUser()['$id'], $document['body']['$read'][0]);
-        $this->assertEquals('user:' . $this->getUser()['$id'], $document['body']['$write'][0]);
+        $this->assertEquals('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions'][0]);
+        $this->assertEquals('write(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions'][1]);
 
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -1437,8 +1432,10 @@ trait DatabasesBase
             'data' => [
                 'title' => 'Thor: Ragnarok',
             ],
-            'read' => ['role:member'],
-            'write' => ['role:member'],
+            'permissions' => [
+                'read(users)',
+                'write(users)',
+            ],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);
@@ -1446,8 +1443,8 @@ trait DatabasesBase
         $this->assertEquals($document['body']['$collection'], $data['moviesId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertEquals('role:member', $document['body']['$read'][0]);
-        $this->assertEquals('role:member', $document['body']['$write'][0]);
+        $this->assertEquals('read(users)', $document['body']['$permissions'][0]);
+        $this->assertEquals('write(users)', $document['body']['$permissions'][1]);
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -1994,21 +1991,17 @@ trait DatabasesBase
         $this->assertEquals($document['headers']['status-code'], 201);
         $this->assertEquals($document['body']['title'], 'Captain America');
         $this->assertEquals($document['body']['releaseYear'], 1944);
-        $this->assertIsArray($document['body']['$read']);
-        $this->assertIsArray($document['body']['$write']);
+        $this->assertIsArray($document['body']['$permissions']);
 
         if ($this->getSide() == 'client') {
-            $this->assertCount(1, $document['body']['$read']);
-            $this->assertCount(1, $document['body']['$write']);
-            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$read']);
-            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
+            $this->assertCount(2, $document['body']['$permissions']);
+            $this->assertEquals(['read(user:' . $this->getUser()['$id'] . ')'], $document['body']['$permissions']);
+            $this->assertEquals(['write(user:' . $this->getUser()['$id'] . ')'], $document['body']['$permissions']);
         }
 
         if ($this->getSide() == 'server') {
-            $this->assertCount(0, $document['body']['$read']);
-            $this->assertCount(0, $document['body']['$write']);
-            $this->assertEquals([], $document['body']['$read']);
-            $this->assertEquals([], $document['body']['$write']);
+            $this->assertCount(0, $document['body']['$permissions']);
+            $this->assertEquals([], $document['body']['$permissions']);
         }
 
         // Updated and Inherit Permissions
@@ -2022,7 +2015,9 @@ trait DatabasesBase
                 'releaseYear' => 1945,
                 'actors' => [],
             ],
-            'read' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+            ],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);
@@ -2030,17 +2025,14 @@ trait DatabasesBase
         $this->assertEquals($document['body']['releaseYear'], 1945);
 
         if ($this->getSide() == 'client') {
-            $this->assertCount(1, $document['body']['$read']);
-            $this->assertCount(1, $document['body']['$write']);
-            $this->assertEquals(['role:all'], $document['body']['$read']);
-            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
+            $this->assertCount(2, $document['body']['$permissions']);
+            $this->assertContains('read(any)', $document['body']['$permissions']);
+            $this->assertContains('write(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
         }
 
         if ($this->getSide() == 'server') {
-            $this->assertCount(1, $document['body']['$read']);
-            $this->assertCount(0, $document['body']['$write']);
-            $this->assertEquals(['role:all'], $document['body']['$read']);
-            $this->assertEquals([], $document['body']['$write']);
+            $this->assertCount(1, $document['body']['$permissions']);
+            $this->assertEquals(['read(any)'], $document['body']['$permissions']);
         }
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
@@ -2053,17 +2045,14 @@ trait DatabasesBase
         $this->assertEquals($document['body']['releaseYear'], 1945);
 
         if ($this->getSide() == 'client') {
-            $this->assertCount(1, $document['body']['$read']);
-            $this->assertCount(1, $document['body']['$write']);
-            $this->assertEquals(['role:all'], $document['body']['$read']);
+            $this->assertCount(2, $document['body']['$permissions']);
+            $this->assertEquals(['read(any)'], $document['body']['$permissions']);
             $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
         }
 
         if ($this->getSide() == 'server') {
-            $this->assertCount(1, $document['body']['$read']);
-            $this->assertCount(0, $document['body']['$write']);
-            $this->assertEquals(['role:all'], $document['body']['$read']);
-            $this->assertEquals([], $document['body']['$write']);
+            $this->assertCount(1, $document['body']['$permissions']);
+            $this->assertEquals(['read(any)'], $document['body']['$permissions']);
         }
 
         // Reset Permissions
@@ -2089,10 +2078,8 @@ trait DatabasesBase
             $this->assertEquals($document['headers']['status-code'], 200);
             $this->assertEquals($document['body']['title'], 'Captain America 3');
             $this->assertEquals($document['body']['releaseYear'], 1946);
-            $this->assertCount(0, $document['body']['$read']);
-            $this->assertCount(0, $document['body']['$write']);
-            $this->assertEquals([], $document['body']['$read']);
-            $this->assertEquals([], $document['body']['$write']);
+            $this->assertCount(0, $document['body']['$permissions']);
+            $this->assertEquals([], $document['body']['$permissions']);
         }
 
         return $data;
@@ -2478,24 +2465,27 @@ trait DatabasesBase
             'data' => [
                 'title' => 'Captain America',
             ],
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $id = $document['body']['$id'];
 
         $this->assertEquals($document['headers']['status-code'], 201);
-        $this->assertCount(1, $document['body']['$read']);
-        $this->assertCount(1, $document['body']['$write']);
-        $this->assertEquals(['role:all'], $document['body']['$read']);
-        $this->assertEquals(['role:all'], $document['body']['$write']);
+        $this->assertCount(2, $document['body']['$permissions']);
+        $this->assertContains('read(any)', $document['body']['$permissions']);
+        $this->assertContains('write(any)', $document['body']['$permissions']);
 
         // Send only read permission
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         if ($this->getSide() == 'client') {
@@ -2504,10 +2494,9 @@ trait DatabasesBase
 
         if ($this->getSide() == 'server') {
             $this->assertEquals($document['headers']['status-code'], 200);
-            $this->assertCount(1, $document['body']['$read']);
-            $this->assertCount(1, $document['body']['$write']);
-            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$read']);
-            $this->assertEquals(['role:all'], $document['body']['$write']);
+            $this->assertCount(2, $document['body']['$permissions']);
+            $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
+            $this->assertContains('write(any)', $document['body']['$permissions']);
         }
 
         // send only write permission
@@ -2515,15 +2504,16 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ],
         ]);
 
         if ($this->getSide() == 'server') {
             $this->assertEquals($document['headers']['status-code'], 200);
-            $this->assertCount(1, $document['body']['$read']);
-            $this->assertCount(1, $document['body']['$write']);
-            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$read']);
-            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
+            $this->assertCount(2, $document['body']['$permissions']);
+            $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
+            $this->assertContains('write(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
         }
 
         // remove collection

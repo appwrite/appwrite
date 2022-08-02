@@ -66,7 +66,7 @@ class DatabasesPermissionsGuestTest extends Scope
     /**
      * @dataProvider readDocumentsProvider
      */
-    public function testReadDocuments($read, $write)
+    public function testReadDocuments($permissions)
     {
         $data = $this->createCollection();
         $collectionId = $data['collectionId'];
@@ -76,8 +76,7 @@ class DatabasesPermissionsGuestTest extends Scope
             'data' => [
                 'title' => 'Lorem',
             ],
-            'read' => $read,
-            'write' => $write,
+            'permissions' => $permissions,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
@@ -87,7 +86,7 @@ class DatabasesPermissionsGuestTest extends Scope
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $this->assertContains('role:all', $document['$read']);
+            $this->assertContains('role:all', $document['$permissions']);
         }
     }
 }

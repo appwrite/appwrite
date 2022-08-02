@@ -148,8 +148,9 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $hasPermissions = \array_reduce(['role:all', 'role:member', 'user:' . $users['user1']['$id']], function ($carry, $item) use ($document) {
-                return $carry ? true : \in_array($item, $document['$read']);
+            $hasPermissions = \array_reduce(['any', 'users', 'user:' . $users['user1']['$id']], function ($carry, $item) use ($document) {
+                // TODO: Fix this
+                return $carry ? true : \in_array($item, $document['$permissions']);
             }, false);
             $this->assertTrue($hasPermissions);
         }
@@ -165,8 +166,9 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $hasPermissions = \array_reduce(['role:all', 'role:member', 'user:' . $users['user1']['$id']], function ($carry, $item) use ($document) {
-                return $carry ? true : \in_array($item, $document['$read']);
+            $hasPermissions = \array_reduce(['any', 'users', 'user:' . $users['user1']['$id']], function ($carry, $item) use ($document) {
+                // TODO: Fix this
+                return $carry ? true : \in_array($item, $document['$permissions']);
             }, false);
             $this->assertTrue($hasPermissions);
         }
