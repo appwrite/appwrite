@@ -35,6 +35,7 @@ use Executor\Executor;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Validator\Boolean;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 
 include_once __DIR__ . '/../shared/api.php';
 
