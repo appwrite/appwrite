@@ -16,7 +16,7 @@ class Doctor extends Action
     public static function getName(): string
     {
         return 'doctor';
-    } 
+    }
 
     public function __construct()
     {
