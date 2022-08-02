@@ -3,7 +3,7 @@
 namespace Appwrite\Platform;
 
 use Utopia\Database\Database;
-use Utopia\Platform\Action as PlatformAction;
+use Utopia\Platform\Action;
 use Exception;
 use InfluxDB\Database as InfluxDatabase;
 use Utopia\App;
@@ -15,7 +15,7 @@ use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
 use Throwable;
 
-abstract class Action extends PlatformAction
+abstract class Task extends Action
 {
     protected function logError(Registry $register, Throwable $error, string $action = 'syncUsageStats')
     {

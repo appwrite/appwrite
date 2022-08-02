@@ -2,7 +2,7 @@
 
 namespace Appwrite\CLI\Tasks;
 
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Task;
 use Throwable;
 use Exception;
 use Appwrite\Stats\Usage as InfluxUsage;
@@ -11,7 +11,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Authorization;
 
-class Usage extends Action
+class Usage extends Task
 {
     public const NAME = 'usage';
 
