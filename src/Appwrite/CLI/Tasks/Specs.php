@@ -1,7 +1,8 @@
 <?php
 
-global $cli;
+namespace Appwrite\CLI\Tasks;
 
+use Utopia\Platform\Action;
 use Utopia\Validator\Text;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
@@ -13,12 +14,24 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Request;
 use Utopia\Validator\WhiteList;
+use Exception;
 
-$cli
-    ->task('specs')
-    ->param('version', 'latest', new Text(8), 'Spec version', true)
-    ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
-    ->action(function ($version, $mode) use ($register) {
+class Specs extends Action
+{
+    public const NAME = 'specs';
+
+    public function __construct()
+    {
+        $this
+            ->param('version', 'latest', new Text(8), 'Spec version', true)
+            ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
+            ->callback(fn ($version, $mode) => $this->action($version, $mode));
+    }
+
+    public function action(string $version, string $mode): void
+    {
+        global $register;
+
         $db = $register->get('db');
         $redis = $register->get('cache');
         $appRoutes = App::getRoutes();
@@ -244,7 +257,7 @@ $cli
                     continue;
                 }
 
-                $path = __DIR__ . '/../config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
+                $path = __DIR__ . '/../../../app/config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
 
                 if (!file_put_contents($path, json_encode($specs->parse()))) {
                     throw new Exception('Failed to save spec file: ' . $path);
@@ -253,4 +266,5 @@ $cli
                 Console::success('Saved spec file: ' . realpath($path));
             }
         }
-    });
+    }
+}

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Task;
+namespace Appwrite\CLI\Tasks;
 
 use Utopia\App;
 use Utopia\CLI\Console;

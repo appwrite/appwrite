@@ -1,6 +1,6 @@
 <?php
 
-global $cli;
+namespace Appwrite\CLI\Tasks;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
@@ -10,16 +10,26 @@ use Utopia\Analytics\GoogleAnalytics;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Validator\Text;
+use Utopia\Platform\Action;
 
-$cli
-    ->task('install')
-    ->desc('Install Appwrite')
-    ->param('httpPort', '', new Text(4), 'Server HTTP port', true)
-    ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
-    ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
-    ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
-    ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
-    ->action(function ($httpPort, $httpsPort, $organization, $image, $interactive) {
+class Install extends Action
+{
+    public const NAME = 'install';
+
+    public function __construct()
+    {
+        $this
+            ->desc('Install Appwrite')
+            ->param('httpPort', '', new Text(4), 'Server HTTP port', true)
+            ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
+            ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
+            ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
+            ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
+            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive));
+    }
+
+    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive): void
+    {
         /**
          * 1. Start - DONE
          * 2. Check for older setup and get older version - DONE
@@ -173,16 +183,6 @@ $cli
             if (empty($input[$var['name']])) {
                 $input[$var['name']] = $var['default'];
             }
-
-            if ($var['filter'] === 'domainTarget') {
-                if ($input[$var['name']] !== 'localhost') {
-                    Console::warning("\nIf you haven't already done so, set the following record for {$input[$var['name']]} on your DNS provider:\n");
-                    $mask = "%-15.15s %-10.10s %-30.30s\n";
-                    printf($mask, "Type", "Name", "Value");
-                    printf($mask, "A or AAAA", "@", "<YOUR PUBLIC IP>");
-                    Console::warning("\nUse 'AAAA' if you're using an IPv6 address and 'A' if you're using an IPv4 address.\n");
-                }
-            }
         }
 
         $templateForCompose = new View(__DIR__ . '/../views/install/compose.phtml');
@@ -239,4 +239,5 @@ $cli
             $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
             Console::success($message);
         }
-    });
+    }
+}

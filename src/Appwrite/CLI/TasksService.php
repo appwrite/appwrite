@@ -1,10 +1,20 @@
 <?php
 
-namespace Appwrite\Task;
+namespace Appwrite\CLI;
 
 use Utopia\Platform\Service;
+use Appwrite\CLI\Tasks\Doctor;
+use Appwrite\CLI\Tasks\Install;
+use Appwrite\CLI\Tasks\Maintenance;
+use Appwrite\CLI\Tasks\Migrate;
+use Appwrite\CLI\Tasks\SDKs;
+use Appwrite\CLI\Tasks\Specs;
+use Appwrite\CLI\Tasks\SSL;
+use Appwrite\CLI\Tasks\Usage;
+use Appwrite\CLI\Tasks\Vars;
+use Appwrite\CLI\Tasks\Version;
 
-class Tasks extends Service
+class TasksService extends Service
 {
     public function __construct()
     {

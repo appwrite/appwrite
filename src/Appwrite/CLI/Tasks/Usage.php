@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Task;
+namespace Appwrite\CLI\Tasks;
 
 use Appwrite\Platform\Action;
 use Throwable;

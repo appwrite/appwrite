@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Task;
+namespace Appwrite\CLI\Tasks;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
