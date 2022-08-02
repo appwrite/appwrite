@@ -81,8 +81,7 @@ class BuildsV1 extends Worker
             $buildId = $dbForProject->getId();
             $build = $dbForProject->createDocument('builds', new Document([
                 '$id' => $buildId,
-                '$read' => [],
-                '$write' => [],
+                '$permissions' => [],
                 'startTime' => $startTime,
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',

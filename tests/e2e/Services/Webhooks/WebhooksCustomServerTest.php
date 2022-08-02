@@ -54,10 +54,8 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'Actors1');
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
-        $this->assertCount(1, $webhook['data']['$read']);
-        $this->assertCount(1, $webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertCount(2, $webhook['data']['$permissions']);
 
         return array_merge(['actorsId' => $actors['body']['$id']]);
     }
@@ -193,10 +191,8 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'Demo');
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
-        $this->assertCount(1, $webhook['data']['$read']);
-        $this->assertCount(1, $webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertCount(2, $webhook['data']['$permissions']);
 
         return [];
     }

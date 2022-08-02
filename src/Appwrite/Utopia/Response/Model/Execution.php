@@ -28,9 +28,9 @@ class Execution extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
-            ->addRule('$read', [
+            ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Execution read permissions.',
+                'description' => 'Execution permissions.',
                 'default' => '',
                 'example' => 'role:all',
                 'array' => true,

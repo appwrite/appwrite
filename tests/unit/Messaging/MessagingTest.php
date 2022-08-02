@@ -206,14 +206,17 @@ class MessagingTest extends TestCase
             payload: new Document([
                 '$id' => 'test',
                 '$collection' => 'collection',
-                '$read' => ['role:admin'],
-                '$write' => ['role:admin']
+                '$permissions' => [
+                    'read(admin)',
+                    'write(admin)',
+                ],
             ]),
             collection: new Document([
                 '$id' => 'collection',
-                '$read' => ['role:all'],
-                '$write' => ['role:all'],
-                'permission' => 'collection'
+                '$permissions' => [
+                    'read(any)',
+                    'write(any)',
+                ],
             ]),
             database: new Document([
                 '$id' => 'database',
@@ -231,14 +234,18 @@ class MessagingTest extends TestCase
             payload: new Document([
                 '$id' => 'test',
                 '$collection' => 'collection',
-                '$read' => ['role:all'],
-                '$write' => ['role:all']
+                '$permissions' => [
+                    'read(any)',
+                    'write(any)',
+                ],
             ]),
             collection: new Document([
                 '$id' => 'collection',
-                '$read' => ['role:admin'],
-                '$write' => ['role:admin'],
-                'permission' => 'document'
+                '$permissions' => [
+                    'read(admin)',
+                    'write(admin)',
+                ],
+                'documentSecurity' => true,
             ]),
             database: new Document([
                 '$id' => 'database',
@@ -259,14 +266,17 @@ class MessagingTest extends TestCase
             payload: new Document([
                 '$id' => 'test',
                 '$collection' => 'bucket',
-                '$read' => ['role:admin'],
-                '$write' => ['role:admin']
+                '$permissions' => [
+                    'read(admin)',
+                    'write(admin)',
+                ],
             ]),
             bucket: new Document([
                 '$id' => 'bucket',
-                '$read' => ['role:all'],
-                '$write' => ['role:all'],
-                'permission' => 'bucket'
+                '$permissions' => [
+                    'read(any)',
+                    'write(any)',
+                ],
             ])
         );
 
@@ -281,14 +291,18 @@ class MessagingTest extends TestCase
             payload: new Document([
                 '$id' => 'test',
                 '$collection' => 'bucket',
-                '$read' => ['role:all'],
-                '$write' => ['role:all']
+                '$permissions' => [
+                    'read(any)',
+                    'write(any)',
+                ],
             ]),
             bucket: new Document([
                 '$id' => 'bucket',
-                '$read' => ['role:admin'],
-                '$write' => ['role:admin'],
-                'permission' => 'file'
+                '$permissions' => [
+                    'read(admin)',
+                    'write(admin)',
+                ],
+                'documentSecurity' => 'true'
             ])
         );
 

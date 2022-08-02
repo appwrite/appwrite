@@ -569,8 +569,10 @@ App::post('/v1/functions/:functionId/deployments')
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
-                    '$read' => ['role:all'],
-                    '$write' => ['role:all'],
+                    '$permissions' => [
+                        'read(any)',
+                        'write(any)'
+                    ],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -598,8 +600,10 @@ App::post('/v1/functions/:functionId/deployments')
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
-                    '$read' => ['role:all'],
-                    '$write' => ['role:all'],
+                    '$permissions' => [
+                        'read(any)',
+                        'write(any)'
+                    ],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -854,8 +858,7 @@ App::post('/v1/functions/:functionId/executions')
         /** @var Document $execution */
         $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
-            '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
-            '$write' => [],
+            '$permissions' => !$user->isEmpty() ? ['read(user:' . $user->getId() . ')'] : [],
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event

@@ -59,8 +59,10 @@ App::post('/v1/teams')
         $teamId = $teamId == 'unique()' ? $dbForProject->getId() : $teamId;
         $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
             '$id' => $teamId ,
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner'],
+            '$permissions' => [
+                "read(team:{$teamId}",
+                "write(team:{$teamId}/owner)",
+            ],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'search' => implode(' ', [$teamId, $name]),
@@ -70,8 +72,10 @@ App::post('/v1/teams')
             $membershipId = $dbForProject->getId();
             $membership = new Document([
                 '$id' => $membershipId,
-                '$read' => ['user:' . $user->getId(), 'team:' . $team->getId()],
-                '$write' => ['user:' . $user->getId(), 'team:' . $team->getId() . '/owner'],
+                '$permissions' => [
+                    "read(user:{$user->getId()}, team:{$team->getId()})",
+                    "write(user:{$user->getId()}, team:{$team->getId()}/owner)",
+                ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'teamId' => $team->getId(),
@@ -328,8 +332,10 @@ App::post('/v1/teams/:teamId/memberships')
                 $userId = $dbForProject->getId();
                 $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
-                    '$read' => ['user:' . $userId, 'role:all'],
-                    '$write' => ['user:' . $userId],
+                    '$permissions' => [
+                        'read(any, user:' . $userId . ')',
+                        'write(user:' . $userId . ')',
+                    ],
                     'email' => $email,
                     'emailVerification' => false,
                     'status' => true,
@@ -365,8 +371,10 @@ App::post('/v1/teams/:teamId/memberships')
         $membershipId = $dbForProject->getId();
         $membership = new Document([
             '$id' => $membershipId,
-            '$read' => ['role:all'],
-            '$write' => ['user:' . $invitee->getId(), 'team:' . $team->getId() . '/owner'],
+            '$permissions' => [
+                'read(any)',
+                'write(user: ' . $invitee->getId() . ', team:' . $team->getId() . '/owner)',
+            ],
             'userId' => $invitee->getId(),
             'userInternalId' => $invitee->getInternalId(),
             'teamId' => $team->getId(),
@@ -716,8 +724,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $session = $dbForProject->createDocument('sessions', $session
-            ->setAttribute('$read', ['user:' . $user->getId()])
-            ->setAttribute('$write', ['user:' . $user->getId()]));
+            ->setAttribute('$permissions', [
+                'read(user: ' . $user->getId() . ')',
+                'write(user: ' . $user->getId() . ')',
+            ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 

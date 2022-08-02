@@ -85,8 +85,10 @@ App::post('/v1/projects')
 
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            '$permissions' => [
+                'read(team:' . $teamId . ')',
+                'write(team:' . $teamId . '/owner, team:' . $teamId . '/developer)',
+            ],
             'name' => $name,
             'teamInternalId' => $team->getInternalId(),
             'teamId' => $team->getId(),
@@ -588,8 +590,10 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $webhook = new Document([
             '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'name' => $name,
@@ -832,8 +836,10 @@ App::post('/v1/projects/:projectId/keys')
 
         $key = new Document([
             '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'name' => $name,
@@ -1028,8 +1034,10 @@ App::post('/v1/projects/:projectId/platforms')
 
         $platform = new Document([
             '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'type' => $type,
@@ -1240,8 +1248,10 @@ App::post('/v1/projects/:projectId/domains')
 
         $domain = new Document([
             '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'updated' => \time(),

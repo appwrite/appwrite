@@ -67,10 +67,8 @@ trait WebhooksBase
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'Actors');
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
-        $this->assertCount(1, $webhook['data']['$read']);
-        $this->assertCount(1, $webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertCount(2, $webhook['data']['$permissions']);
 
         return array_merge(['actorsId' => $actorsId, 'databaseId' => $databaseId]);
     }
@@ -224,10 +222,8 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['firstName'], 'Chris');
         $this->assertEquals($webhook['data']['lastName'], 'Evans');
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
-        $this->assertCount(1, $webhook['data']['$read']);
-        $this->assertCount(1, $webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertCount(2, $webhook['data']['$permissions']);
 
         $data['documentId'] = $document['body']['$id'];
 
@@ -285,10 +281,8 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['firstName'], 'Chris1');
         $this->assertEquals($webhook['data']['lastName'], 'Evans2');
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
-        $this->assertCount(1, $webhook['data']['$read']);
-        $this->assertCount(1, $webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertCount(2, $webhook['data']['$permissions']);
 
         return $data;
     }
@@ -353,10 +347,8 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['firstName'], 'Bradly');
         $this->assertEquals($webhook['data']['lastName'], 'Cooper');
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
-        $this->assertCount(1, $webhook['data']['$read']);
-        $this->assertCount(1, $webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
+        $this->assertCount(2, $webhook['data']['$permissions']);
 
         return $data;
     }
@@ -401,8 +393,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Test Bucket', $webhook['data']['name']);
         $this->assertEquals(true, $webhook['data']['enabled']);
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
 
         return array_merge(['bucketId' => $bucketId]);
     }
@@ -447,8 +438,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Test Bucket Updated', $webhook['data']['name']);
         $this->assertEquals(false, $webhook['data']['enabled']);
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
 
         return array_merge(['bucketId' => $bucket['body']['$id']]);
     }
@@ -512,8 +502,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
         $this->assertIsInt($webhook['data']['$createdAt']);
         $this->assertNotEmpty($webhook['data']['signature']);
@@ -568,8 +557,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
         $this->assertIsInt($webhook['data']['$createdAt']);
         $this->assertNotEmpty($webhook['data']['signature']);
@@ -619,8 +607,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
         $this->assertIsInt($webhook['data']['$createdAt']);
         $this->assertNotEmpty($webhook['data']['signature']);
@@ -665,8 +652,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals('Test Bucket Updated', $webhook['data']['name']);
         $this->assertEquals(true, $webhook['data']['enabled']);
-        $this->assertIsArray($webhook['data']['$read']);
-        $this->assertIsArray($webhook['data']['$write']);
+        $this->assertIsArray($webhook['data']['$permissions']);
     }
 
     public function testCreateTeam(): array

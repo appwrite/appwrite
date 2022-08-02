@@ -57,8 +57,10 @@ App::post('/v1/users')
             $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
             $user = $dbForProject->createDocument('users', new Document([
                 '$id' => $userId,
-                '$read' => ['role:all'],
-                '$write' => ['user:' . $userId],
+                '$permissions' => [
+                    'read(any)',
+                    'write(user:' . $userId . ')',
+                ],
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
