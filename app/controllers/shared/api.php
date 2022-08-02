@@ -20,6 +20,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 
 App::init()
+    ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
     ->inject('response')
@@ -33,7 +34,6 @@ App::init()
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->groups(['api'])
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) {
 
         $route = $utopia->match($request);
@@ -132,10 +132,10 @@ App::init()
     });
 
 App::init()
+    ->groups(['auth'])
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
-    ->groups(['auth'])
     ->action(function (App $utopia, Request $request, Document $project) {
 
         $route = $utopia->match($request);
@@ -186,6 +186,7 @@ App::init()
     });
 
 App::shutdown()
+    ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
     ->inject('response')
@@ -197,7 +198,6 @@ App::shutdown()
     ->inject('database')
     ->inject('mode')
     ->inject('dbForProject')
-    ->groups(['api'])
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) {
 
         if (!empty($events->getEvent())) {

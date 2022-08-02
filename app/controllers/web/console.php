@@ -10,8 +10,8 @@ use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 
 App::init()
-    ->inject('layout')
     ->groups(['console'])
+    ->inject('layout')
     ->action(function (View $layout) {
         $layout
             ->setParam('description', 'Appwrite Console allows you to easily manage, monitor, and control your entire backend API and tools.')
@@ -20,9 +20,9 @@ App::init()
     });
 
 App::shutdown()
+    ->groups(['console'])
     ->inject('response')
     ->inject('layout')
-    ->groups(['console'])
     ->action(function (Response $response, View $layout) {
         $header = new View(__DIR__ . '/../../views/console/comps/header.phtml');
         $footer = new View(__DIR__ . '/../../views/console/comps/footer.phtml');

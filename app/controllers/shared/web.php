@@ -7,11 +7,11 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\View;
 
 App::init()
+    ->groups(['web'])
     ->inject('utopia')
     ->inject('request')
     ->inject('response')
     ->inject('layout')
-    ->groups(['web'])
     ->action(function (App $utopia, Request $request, Response $response, View $layout) {
         /* AJAX check  */
         if (!empty($request->getQuery('version', ''))) {

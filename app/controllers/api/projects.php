@@ -32,8 +32,8 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 App::init()
-    ->inject('project')
     ->groups(['projects'])
+    ->inject('project')
     ->action(function (Document $project) {
         if ($project->getId() !== 'console') {
             throw new Exception('Access to this API is forbidden.', 401, Exception::GENERAL_ACCESS_FORBIDDEN);

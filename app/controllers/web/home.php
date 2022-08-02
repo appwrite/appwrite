@@ -8,8 +8,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 
 App::init()
-    ->inject('layout')
     ->groups(['home'])
+    ->inject('layout')
     ->action(function (View $layout) {
         $header = new View(__DIR__ . '/../../views/home/comps/header.phtml');
         $footer = new View(__DIR__ . '/../../views/home/comps/footer.phtml');
@@ -29,9 +29,9 @@ App::init()
     });
 
 App::shutdown()
+    ->groups(['home'])
     ->inject('response')
     ->inject('layout')
-    ->groups(['home'])
     ->action(function (Response $response, View $layout) {
         $response->html($layout->render());
     });

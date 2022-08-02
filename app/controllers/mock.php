@@ -559,10 +559,10 @@ App::get('/v1/mock/tests/general/oauth2/failure')
     });
 
 App::shutdown()
+    ->groups(['mock'])
     ->inject('utopia')
     ->inject('response')
     ->inject('request')
-    ->groups(['mock'])
     ->action(function (App $utopia, Response $response, Request $request) {
 
         $result = [];
