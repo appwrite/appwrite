@@ -28,25 +28,18 @@ class Bucket extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
-            ->addRule('$read', [
+            ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'File read permissions.',
+                'description' => 'File permissions.',
                 'default' => [],
-                'example' => ['role:all'],
+                'example' => ['read(any)'],
                 'array' => true,
             ])
-            ->addRule('$write', [
+            ->addRule('fileSecurity', [
                 'type' => self::TYPE_STRING,
-                'description' => 'File write permissions.',
-                'default' => [],
-                'example' => ['user:608f9da25e7e1'],
-                'array' => true,
-            ])
-            ->addRule('permission', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Bucket permission model. Possible values: `bucket` or `file`',
+                'description' => 'Whether file-level security is enabled.',
                 'default' => '',
-                'example' => 'file',
+                'example' => true,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,

@@ -55,9 +55,8 @@ App::post('/v1/storage/buckets')
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('bucketId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Bucket name')
-    ->param('permission', null, new WhiteList(['file', 'bucket']), 'Permissions type model to use for reading files in this bucket. You can use bucket-level permission set once on the bucket using the `read` and `write` params, or you can set file-level permission where each file read and write params will decide who has access to read and write to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('read', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('fileSecurity', false, new Boolean(), 'Whether to enable file-level permission where each files permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
     ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
@@ -68,7 +67,7 @@ App::post('/v1/storage/buckets')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
+    ->action(function (string $bucketId, string $name, string $fileSecurity, ?array $permissions, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         $bucketId = $bucketId === 'unique()' ? $dbForProject->getId() : $bucketId;
         try {
@@ -108,14 +107,13 @@ App::post('/v1/storage/buckets')
                 '$id' => $bucketId,
                 '$collection' => 'buckets',
                 'name' => $name,
-                'permission' => $permission,
+                'documentSecurity' => $fileSecurity,
                 'maximumFileSize' => $maximumFileSize,
                 'allowedFileExtensions' => $allowedFileExtensions,
                 'enabled' => (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN),
                 'encryption' => (bool) filter_var($encryption, FILTER_VALIDATE_BOOLEAN),
                 'antivirus' => (bool) filter_var($antivirus, FILTER_VALIDATE_BOOLEAN),
-                '$read' => $read ?? [],
-                '$write' => $write ?? [],
+                '$permissions' => $permissions,
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
 
@@ -223,9 +221,8 @@ App::put('/v1/storage/buckets/:bucketId')
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->param('name', null, new Text(128), 'Bucket name', false)
-    ->param('permission', null, new WhiteList(['file', 'bucket']), 'Permissions type model to use for reading files in this bucket. You can use bucket-level permission set once on the bucket using the `read` and `write` params, or you can set file-level permission where each file read and write params will decide who has access to read and write to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('read', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('fileSecurity', false, new Boolean(), 'Whether to enable file-level permission where each files permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
     ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
@@ -236,15 +233,14 @@ App::put('/v1/storage/buckets/:bucketId')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
+    ->action(function (string $bucketId, string $name, string $fileSecurity, ?array $permissions, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
             throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $read ??= $bucket->getAttribute('$read', []); // By default inherit read permissions
-        $write ??= $bucket->getAttribute('$write', []); // By default inherit write permissions
+        $permissions ??= $bucket->getPermissions();
         $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0));
         $allowedFileExtensions ??= $bucket->getAttribute('allowedFileExtensions', []);
         $enabled ??= $bucket->getAttribute('enabled', true);
@@ -253,13 +249,12 @@ App::put('/v1/storage/buckets/:bucketId')
 
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
                 ->setAttribute('name', $name)
-                ->setAttribute('$read', $read)
-                ->setAttribute('$write', $write)
+                ->setAttribute('$permissions', $permissions)
                 ->setAttribute('maximumFileSize', $maximumFileSize)
                 ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
                 ->setAttribute('enabled', (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN))
                 ->setAttribute('encryption', (bool) filter_var($encryption, FILTER_VALIDATE_BOOLEAN))
-                ->setAttribute('permission', $permission)
+                ->setAttribute('documentSecurity', $fileSecurity)
                 ->setAttribute('antivirus', (bool) filter_var($antivirus, FILTER_VALIDATE_BOOLEAN)));
 
         $audits
@@ -342,8 +337,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new CustomId(), 'File ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file.', false)
-    ->param('read', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -354,7 +348,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if (
@@ -373,21 +367,37 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
         }
 
-        $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
-        $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
+        if (\is_null($permissions)) {
+            $permissions = [];
+            if (!$user->isEmpty()) {
+                $permissions = [
+                    'read(user:' . $user->getId() . ') ',
+                    'write(user:' . $user->getId() . ') ',
+                ];
+            }
+        } elseif (empty(\preg_grep('#^read\(.+\)$#', $permissions))) {
+            if (!$user->isEmpty()) {
+                $permissions[] = 'read(user:' . $user->getId() . ')';
+            }
+        } elseif (empty(\preg_grep('#^write\(.+\)$#', $permissions))) {
+            if (!$user->isEmpty()) {
+                $permissions[] = 'write(user:' . $user->getId() . ')';
+            }
+        }
 
         // Users can only add their roles to files, API keys and Admin users can add any
         $roles = Authorization::getRoles();
 
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            foreach ($read as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-                }
-            }
-            foreach ($write as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
+            foreach ($permissions as $permission) {
+                $matches = [];
+                if (\preg_match('/^(create|write)\((.+)(?:,(.+))*\)$/', $permission, $matches)) {
+                    \array_shift($matches);
+                    foreach ($matches as $match) {
+                        if (!Authorization::isRole($match)) {
+                            throw new Exception('Permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
+                        }
+                    }
                 }
             }
         }
@@ -542,8 +552,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 if ($file->isEmpty()) {
                     $doc = new Document([
                         '$id' => $fileId,
-                        '$read' => $read,
-                        '$write' => $write,
+                        '$permissions' => $permissions,
                         'bucketId' => $bucket->getId(),
                         'name' => $fileName,
                         'path' => $path,
@@ -569,8 +578,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     }
                 } else {
                     $file = $file
-                        ->setAttribute('$read', $read)
-                        ->setAttribute('$write', $write)
+                        ->setAttribute('$permissions', $permissions)
                         ->setAttribute('signature', $fileHash)
                         ->setAttribute('mimeType', $mimeType)
                         ->setAttribute('sizeActual', $sizeActual)
@@ -608,8 +616,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 if ($file->isEmpty()) {
                     $doc = new Document([
                         '$id' => $fileId,
-                        '$read' => $read,
-                        '$write' => $write,
+                        '$permissions' => $permissions,
                         'bucketId' => $bucket->getId(),
                         'name' => $fileName,
                         'path' => $path,
@@ -1288,8 +1295,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
-    ->param('read', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -1297,23 +1303,40 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('usage')
     ->inject('mode')
     ->inject('events')
-    ->action(function (string $bucketId, string $fileId, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, string $mode, Event $events) {
+    ->action(function (string $bucketId, string $fileId, ?array $permissions, Response $response, Database $dbForProject, Document $user, Audit $audits, Stats $usage, string $mode, Event $events) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
-        $read = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; // By default set read permissions for user
-        $write = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? [];
+
+        if (\is_null($permissions)) {
+            $permissions = [];
+            if (!$user->isEmpty()) {
+                $permissions = [
+                    'read(user:' . $user->getId() . ') ',
+                    'write(user:' . $user->getId() . ') ',
+                ];
+            }
+        } elseif (empty(\preg_grep('#^read\(.+\)$#', $permissions))) {
+            if (!$user->isEmpty()) {
+                $permissions[] = 'read(user:' . $user->getId() . ')';
+            }
+        } elseif (empty(\preg_grep('#^write\(.+\)$#', $permissions))) {
+            if (!$user->isEmpty()) {
+                $permissions[] = 'write(user:' . $user->getId() . ')';
+            }
+        }
 
         // Users can only add their roles to files, API keys and Admin users can add any
         $roles = Authorization::getRoles();
 
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            foreach ($read as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-                }
-            }
-            foreach ($write as $role) {
-                if (!Authorization::isRole($role)) {
-                    throw new Exception('Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
+            foreach ($permissions as $permission) {
+                $matches = [];
+                if (\preg_match('/^(update|write)\((.+)(?:,(.+))*\)$/', $permission, $matches)) {
+                    \array_shift($matches);
+                    foreach ($matches as $match) {
+                        if (!Authorization::isRole($match)) {
+                            throw new Exception('Permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
+                        }
+                    }
                 }
             }
         }
@@ -1343,10 +1366,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $file
-            ->setAttribute('$read', $read)
-            ->setAttribute('$write', $write)
-        ;
+        $file->setAttribute('$permissions', $permissions);
 
         if ($bucket->getAttribute('permission') === 'bucket') {
             $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));

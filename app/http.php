@@ -169,8 +169,10 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 'enabled' => true,
                 'encryption' => true,
                 'antivirus' => true,
-                '$read' => ['role:all'],
-                '$write' => ['role:all'],
+                '$permissions' => [
+                    'read(any)',
+                    'write(any)',
+                ],
                 'search' => 'buckets Default',
             ]));
 

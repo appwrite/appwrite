@@ -29,8 +29,7 @@ class StorageCustomServerTest extends Scope
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
         $this->assertIsInt($bucket['body']['$createdAt']);
-        $this->assertIsArray($bucket['body']['$read']);
-        $this->assertIsArray($bucket['body']['$write']);
+        $this->assertIsArray($bucket['body']['$permissions']);
         $this->assertIsArray($bucket['body']['allowedFileExtensions']);
         $this->assertEquals('Test Bucket', $bucket['body']['name']);
         $this->assertEquals(true, $bucket['body']['enabled']);
@@ -188,8 +187,8 @@ class StorageCustomServerTest extends Scope
         $this->assertEquals(200, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
         $this->assertIsInt($bucket['body']['$createdAt']);
-        $this->assertIsArray($bucket['body']['$read']);
-        $this->assertIsArray($bucket['body']['$write']);
+        $this->assertIsArray($bucket['body']['$permissions']);
+        
         $this->assertIsArray($bucket['body']['allowedFileExtensions']);
         $this->assertEquals('Test Bucket Updated', $bucket['body']['name']);
         $this->assertEquals(false, $bucket['body']['enabled']);

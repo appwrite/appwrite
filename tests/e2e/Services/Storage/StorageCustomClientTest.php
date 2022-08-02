@@ -119,9 +119,11 @@ class StorageCustomClientTest extends Scope
         ], [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
-            'permission' => 'file',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'fileSecurity' => true,
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
@@ -136,8 +138,7 @@ class StorageCustomClientTest extends Scope
 
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertContains('user:' . $this->getUser()['$id'], $file['body']['$read']);
-        $this->assertContains('user:' . $this->getUser()['$id'], $file['body']['$write']);
+        $this->assertContains('user:' . $this->getUser()['$id'], $file['body']['$permissions']);
         $this->assertIsInt($file['body']['$createdAt']);
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);

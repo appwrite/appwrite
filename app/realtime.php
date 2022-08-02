@@ -148,8 +148,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                 $document = new Document([
                     '$id' => $database->getId(),
                     '$collection' => 'realtime',
-                    '$read' => [],
-                    '$write' => [],
+                    '$permissions' => [],
                     'container' => $containerId,
                     'timestamp' => time(),
                     'value' => '{}'

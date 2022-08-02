@@ -263,10 +263,8 @@ trait StorageBase
         //$this->assertEquals('aes-128-gcm', $file1['body']['fileOpenSSLCipher']);
         //$this->assertNotEmpty($file1['body']['fileOpenSSLTag']);
         //$this->assertNotEmpty($file1['body']['fileOpenSSLIV']);
-        $this->assertIsArray($file1['body']['$read']);
-        $this->assertIsArray($file1['body']['$write']);
-        $this->assertCount(1, $file1['body']['$read']);
-        $this->assertCount(1, $file1['body']['$write']);
+        $this->assertIsArray($file1['body']['$permissions']);
+        $this->assertCount(2, $file1['body']['$permissions']);
 
         $file2 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -557,10 +555,8 @@ trait StorageBase
         //$this->assertEquals('aes-128-gcm', $file['body']['fileOpenSSLCipher']);
         //$this->assertNotEmpty($file['body']['fileOpenSSLTag']);
         //$this->assertNotEmpty($file['body']['fileOpenSSLIV']);
-        $this->assertIsArray($file['body']['$read']);
-        $this->assertIsArray($file['body']['$write']);
-        $this->assertCount(1, $file['body']['$read']);
-        $this->assertCount(1, $file['body']['$write']);
+        $this->assertIsArray($file['body']['$permissions']);
+        $this->assertCount(2, $file['body']['$permissions']);
 
         /**
          * Test for FAILURE unknown Bucket

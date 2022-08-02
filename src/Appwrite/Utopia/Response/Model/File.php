@@ -34,18 +34,11 @@ class File extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
-            ->addRule('$read', [
+            ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'File read permissions.',
+                'description' => 'File permissions.',
                 'default' => [],
-                'example' => 'role:all',
-                'array' => true,
-            ])
-            ->addRule('$write', [
-                'type' => self::TYPE_STRING,
-                'description' => 'File write permissions.',
-                'default' => [],
-                'example' => 'user:608f9da25e7e1',
+                'example' => 'read(role:all)',
                 'array' => true,
             ])
             ->addRule('name', [
