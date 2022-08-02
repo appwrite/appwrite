@@ -4,7 +4,6 @@ namespace Appwrite\CLI\Tasks;
 
 use Appwrite\Platform\Task;
 use Throwable;
-use Exception;
 use Appwrite\Stats\Usage as InfluxUsage;
 use Appwrite\Stats\UsageDB;
 use Utopia\App;
