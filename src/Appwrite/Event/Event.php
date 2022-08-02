@@ -439,9 +439,9 @@ class Event
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
                             }
-                            $filtered1 = \array_filter($paramKeys, fn(string $k) => $k === $subCurrent);
+                            $filtered1 = \array_filter($paramKeys, fn (string $k) => $k === $subCurrent);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
-                            $filtered2 = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                            $filtered2 = \array_filter($paramKeys, fn (string $k) => $k === $current);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
                         }
@@ -449,7 +449,7 @@ class Event
                         if ($current === $key) {
                             continue;
                         }
-                        $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                        $filtered = \array_filter($paramKeys, fn (string $k) => $k === $current);
                         $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                     }
                 }
@@ -466,5 +466,67 @@ class Event
          * Force a non-assoc array.
          */
         return \array_values($events);
+    }
+
+    /**
+     * Create a regex pattern that can be used to match against an event.
+     *
+     * @param string $triggerPattern
+     * @return string
+     */
+    public static function createRegexPattern(string $triggerPattern): string
+    {
+        // Replace . with literal
+        $regexpPattern = \str_replace('.', '\.', $triggerPattern);
+
+        // Replace * with regex that matches everything except .
+        $regexpPattern = \str_replace('\.*', '\.[^.]*', $regexpPattern);
+
+        // If pattern ended with .*, replace with \..* to match everything
+        if (\str_ends_with($regexpPattern, '\.[^.]*')) {
+            $regexpPattern = \substr($regexpPattern, 0, \strlen($regexpPattern) - 7) . '\..*';
+        }
+
+        return $regexpPattern;
+    }
+
+    /**
+     * Check if event pattern matches event
+     *
+     * @param string $eventPattern
+     * @param string $event
+     * @return bool
+     * @throws \InvalidArgumentException
+     */
+    public static function matchEvent(string $eventPattern, string $event): bool
+    {
+        $regexpPattern = self::createRegexPattern($eventPattern);
+
+        $result = \preg_match("/$regexpPattern/", $event);
+
+        if ($result === false) {
+            throw new InvalidArgumentException("$eventPattern is invalid");
+        }
+
+        return $result === 1;
+    }
+
+    /**
+     * Checks if at least 1 event pattern matches the event
+     *
+     * @param array $eventPatterns
+     * @param string $event
+     * @return bool
+     * @throws \InvalidArgumentException
+     */
+    public static function matchEvents(array $eventPatterns, string $event): bool
+    {
+        foreach ($eventPatterns as $eventPattern) {
+            if (self::matchEvent($eventPattern, $event)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
