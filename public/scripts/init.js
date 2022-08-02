@@ -57,7 +57,7 @@ window.addEventListener("load", async () => {
   const realtime = window.ls.container.get('realtime');
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   let current = {};
-  window.ls.container.get('console').subscribe(['project', 'console'], response => {
+  window.ls.container.get('console').client.subscribe(['project', 'console'], response => {
     if (response.events.includes('stats.connections')) {
       for (let project in response.payload) {
         current[project] = response.payload[project] ?? 0;
