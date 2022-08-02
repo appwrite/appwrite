@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Appwrite\Database\DatabasePool;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
@@ -63,8 +64,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         App::setResource('cache', fn() => $redis);
 
         $dbPool = $register->get('dbPool');
-        [$dbForConsole, $returnDatabase] = $dbPool->getDBFromPool('console', $redis);
-        App::setResource('dbForConsole', fn() => $dbForConsole);
+        App::setResource('dbPool', fn() => $dbPool);
+
+        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
 
         Console::success('[Setup] - Server database init started...');
         $collections = Config::getParam('collections', []); /** @var array $collections */
@@ -196,7 +198,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         }
 
-        call_user_func($returnDatabase);
+        $dbPool->reset();
 
         Console::success('[Setup] - Server database init completed...');
     });
@@ -235,13 +237,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     $dbPool = $register->get('dbPool');
     App::setResource('dbPool', fn() => $dbPool);
-
-    [$dbForConsole, $returnConsoleDB] = $dbPool->getDBFromPool('console', $redis);
-    App::setResource('dbForConsole', fn() => $dbForConsole);
-
-    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
-    [$dbForProject, $returnProjectDB] = $dbPool->getDBFromPool($projectId, $redis);
-    App::setResource('dbForProject', fn() => $dbForProject);
 
     try {
         Authorization::cleanRoles();
@@ -332,9 +327,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $swooleResponse->end(\json_encode($output));
     } finally {
-        call_user_func($returnConsoleDB);
-        call_user_func($returnProjectDB);
-
+        $dbPool->reset();
+        
         /** @var RedisPool $redisPool */
         $redisPool = $register->get('redisPool');
         $redisPool->put($redis);

@@ -7,10 +7,10 @@ use Utopia\App;
 use Appwrite\DSN\DSN;
 use Utopia\CLI\Console;
 use Utopia\Cache\Cache;
-use Swoole\Database\PDOPool;
 use Swoole\Database\PDOProxy;
 use Utopia\Database\Database;
 use Appwrite\Extend\Exception;
+use Appwrite\Database\PDOPool;
 use Swoole\Database\PDOConfig;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Validator\Authorization;
@@ -62,24 +62,23 @@ class DatabasePool
         /** Create PDO pool instances for all the dsns */
         foreach ($this->dsns as $name => $dsn) {
             $dsn = new DSN($dsn);
-            $pool = new PDOPool(
-                (new PDOConfig())
-                ->withHost($dsn->getHost())
-                ->withPort($dsn->getPort())
-                ->withDbName($dsn->getDatabase())
-                ->withCharset('utf8mb4')
-                ->withUsername($dsn->getUser())
-                ->withPassword($dsn->getPassword())
-                ->withOptions([
-                    PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-                    PDO::ATTR_TIMEOUT => 3, // Seconds
-                    PDO::ATTR_PERSISTENT => true,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_EMULATE_PREPARES => true,
-                    PDO::ATTR_STRINGIFY_FETCHES => true
-                ]),
-                64
-            );
+            $pdoConfig = (new PDOConfig())
+            ->withHost($dsn->getHost())
+            ->withPort($dsn->getPort())
+            ->withDbName($dsn->getDatabase())
+            ->withCharset('utf8mb4')
+            ->withUsername($dsn->getUser())
+            ->withPassword($dsn->getPassword())
+            ->withOptions([
+                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+                PDO::ATTR_TIMEOUT => 3, // Seconds
+                PDO::ATTR_PERSISTENT => true,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => true,
+                PDO::ATTR_STRINGIFY_FETCHES => true
+            ]);
+
+            $pool = new PDOPool($pdoConfig, 64);
 
             $this->pools[$name] = $pool;
         }
@@ -191,41 +190,37 @@ class DatabasePool
      *
      * @return array
      */
-    public function getDBFromPool(string $projectID, \Redis $redis): array
+    public function getDBFromPool(string $name): PDO|PDOProxy
     {
         /** Get DB name from the console database */
-        [$name, $internalID] = $this->getName($projectID, $redis);
+        // [$name, $internalID] = $this->getName($projectID, $redis);
         $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_DB_PROJECT in .env", 500);
+        $pdo = $pool->get();
 
-        $namespace = "_$internalID";
-        $attempts = 0;
-        do {
-            try {
-                $attempts++;
-                $pdo = $pool->get();
-                $database = $this->getDatabase($pdo, $redis);
-                $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                $database->setNamespace($namespace);
+        // $namespace = "_$internalID";
+        // $attempts = 0;
+        // do {
+        //     try {
+        //         $attempts++;
+        //         $pdo = $pool->get();
+        //         $database = $this->getDatabase($pdo, $redis);
+        //         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        //         $database->setNamespace($namespace);
 
-                // if (!$database->exists($database->getDefaultDatabase(), 'metadata')) {
-                //     throw new Exception('Collection not ready');
-                // }
-                break; // leave loop if successful
-            } catch (\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-                }
-                sleep(DATABASE_RECONNECT_SLEEP);
-            }
-        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
+        //         // if (!$database->exists($database->getDefaultDatabase(), 'metadata')) {
+        //         //     throw new Exception('Collection not ready');
+        //         // }
+        //         break; // leave loop if successful
+        //     } catch (\Exception $e) {
+        //         Console::warning("Database not ready. Retrying connection ({$attempts})...");
+        //         if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
+        //             throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+        //         }
+        //         sleep(DATABASE_RECONNECT_SLEEP);
+        //     }
+        // } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
 
-        return [
-            $database,
-            function () use ($pdo, $name) {
-                $this->put($pdo, $name);
-            }
-        ];
+        return $pdo;
     }
 
      /**
@@ -261,11 +256,15 @@ class DatabasePool
 
         return [
             $database,
-            function () use ($pdo, $name) {
-                $this->put($pdo, $name);
-            },
             $name
         ];
+    }
+
+    public function reset(): void
+    {
+        foreach ($this->pools as $pool) {
+            $pool->reset();
+        }
     }
 
     /**

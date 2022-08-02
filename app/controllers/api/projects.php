@@ -85,7 +85,7 @@ App::post('/v1/projects')
             throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
         }
 
-        [$dbForProject, $returnDB, $dbName] = $dbPool->getAnyFromPool($cache);
+        [$dbForProject, $dbName] = $dbPool->getAnyFromPool($cache);
 
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
@@ -160,8 +160,6 @@ App::post('/v1/projects')
 
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
-
-        call_user_func($returnDB);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($project, Response::MODEL_PROJECT);

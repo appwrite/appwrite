@@ -91,12 +91,12 @@ $server->error($logError);
 function getDatabase(Registry &$register, string $projectID)
 {
     $redis = $register->get('redisPool')->get();
-    [$database, $returnDatabase] = $register->get('dbPool')->getDBFromPool($projectID, $redis);
+    $database = $register->get('dbPool')->getDBFromPool($projectID, $redis);
 
     return [
         $database,
-        function () use ($register, $returnDatabase, $redis) {
-            call_user_func($returnDatabase);
+        function () use ($register, $redis) {
+            $register->get('dbPool')->reset();
             $register->get('redisPool')->put($redis);
         }
     ];
@@ -345,7 +345,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         /** @var \Utopia\Database\Document $console */
         $console = $app->getResource('console');
 
-        [$dbForConsole, $returnConsoleDB] = $dbPool->getDBFromPool('console', $redis);
+        $dbForConsole = $dbPool->getDBFromPool('console', $redis);
         App::setResource('dbForConsole', fn() => $dbForConsole);
 
         /** @var \Utopia\Database\Document $project */
@@ -358,7 +358,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception('Missing or unknown project ID', 1008);
         }
 
-        [$dbForProject, $returnProjectDB] = $dbPool->getDBFromPool($project->getId(), $redis);
+        $dbForProject = $dbPool->getDBFromPool($project->getId(), $redis);
         App::setResource('dbForProject', fn() => $dbForProject);
 
         /** @var \Utopia\Database\Document $user */
@@ -448,8 +448,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         /**
          * Put used PDO and Redis Connections back into their pools.
          */
-        call_user_func($returnConsoleDB);
-        call_user_func($returnProjectDB);
+        $dbPool->reset();
         $register->get('redisPool')->put($redis);
     }
 });
@@ -463,7 +462,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $redis = $register->get('redisPool')->get();
 
         $dbPool = $register->get('dbPool');
-        [$dbForProject, $returnProjectDB] = $dbPool->getDBFromPool($projectId, $redis);
+        $dbForProject = $dbPool->getDBFromPool($projectId, $redis);
 
         /*
          * Abuse Check

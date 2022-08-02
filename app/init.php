@@ -861,25 +861,30 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-// App::setResource('dbForProject', function ($db, $cache, Document $project) {
-//     $cache = new Cache(new RedisCache($cache));
+App::setResource('dbForProject', function ($dbPool, $cache, Document $project) {
+    $database = $project->getAttribute('database', '');
+    if (empty($database)) {
+        $database = $dbPool->getConsoleDB();
+    }
+    $pdo = $dbPool->getDBFromPool($database);
+    $cache = new Cache(new RedisCache($cache));
+    $database = new Database(new MariaDB($pdo), $cache);
+    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+    $database->setNamespace("_{$project->getInternalId()}");
 
-//     $database = new Database(new MariaDB($db), $cache);
-//     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-//     $database->setNamespace("_{$project->getInternalId()}");
+    return $database;
+}, ['dbPool', 'cache', 'project']);
 
-//     return $database;
-// }, ['db', 'cache', 'project']);
+App::setResource('dbForConsole', function ($dbPool, $cache) {
+    $database = $dbPool->getConsoleDB();
+    $pdo = $dbPool->getDBFromPool($database);
+    $cache = new Cache(new RedisCache($cache));
+    $database = new Database(new MariaDB($pdo), $cache);
+    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+    $database->setNamespace('_console');
 
-// App::setResource('dbForConsole', function ($dbPool, $cache) {
-//     $cache = new Cache(new RedisCache($cache));
-
-//     $database = new Database(new MariaDB($db), $cache);
-//     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-//     $database->setNamespace('_console');
-
-//     return $database;
-// }, ['dbPool', 'cache']);
+    return $database;
+}, ['dbPool', 'cache']);
 
 App::setResource('deviceLocal', function () {
     return new Local();
