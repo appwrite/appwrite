@@ -20,15 +20,15 @@ class TasksService extends Service
     {
         $this->type = self::TYPE_CLI;
         $this
-            ->addAction(Version::NAME, new Version())
-            ->addAction(Usage::NAME, new Usage())
-            ->addAction(Vars::NAME, new Vars())
-            ->addAction(SSL::NAME, new SSL())
-            ->addAction(Doctor::NAME, new Doctor())
-            ->addAction(Install::NAME, new Install())
-            ->addAction(Maintenance::NAME, new Maintenance())
-            ->addAction(Migrate::NAME, new Migrate())
-            ->addAction(SDKs::NAME, new SDKs())
-            ->addAction(Specs::NAME, new Specs());
+            ->addAction(Version::getName(), new Version())
+            ->addAction(Usage::getName(), new Usage())
+            ->addAction(Vars::getName(), new Vars())
+            ->addAction(SSL::getName(), new SSL())
+            ->addAction(Doctor::getName(), new Doctor())
+            ->addAction(Install::getName(), new Install())
+            ->addAction(Maintenance::getName(), new Maintenance())
+            ->addAction(Migrate::getName(), new Migrate())
+            ->addAction(SDKs::getName(), new SDKs())
+            ->addAction(Specs::getName(), new Specs());
     }
 }

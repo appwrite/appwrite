@@ -16,11 +16,15 @@ use Swoole\Event;
 
 class Migrate extends Action
 {
-    public const NAME = 'migrate';
+    public static function getName(): string
+    {
+        return 'migrate';
+    }
 
     public function __construct()
     {
         $this
+            ->desc('Migrate Appwrite to new version')
             ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
             ->callback(fn ($version) => $this->action($version));
     }

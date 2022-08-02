@@ -17,7 +17,10 @@ use Utopia\Platform\Action;
 
 class Maintenance extends Action
 {
-    public const NAME = 'maintenance';
+    public static function getName(): string
+    {
+        return 'maintenance';
+    }
 
     protected function getConsoleDB(): Database
     {

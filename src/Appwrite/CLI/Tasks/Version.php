@@ -8,7 +8,10 @@ use Utopia\Platform\Action;
 
 class Version extends Action
 {
-    public const NAME = 'version';
+    public static function getName(): string
+    {
+        return 'version';
+    }
 
     public function __construct()
     {

@@ -14,7 +14,10 @@ use Utopia\Platform\Action;
 
 class Install extends Action
 {
-    public const NAME = 'install';
+    public static function getName(): string
+    {
+        return 'install';
+    }
 
     public function __construct()
     {

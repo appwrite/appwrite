@@ -11,7 +11,10 @@ use Utopia\Validator\Hostname;
 
 class SSL extends Action
 {
-    public const NAME = 'ssl';
+    public static function getName(): string
+    {
+        return 'ssl';
+    }
 
     public function __construct()
     {

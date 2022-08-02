@@ -13,7 +13,10 @@ use Utopia\Platform\Action;
 
 class Doctor extends Action
 {
-    public const NAME = 'doctor';
+    public static function getName(): string
+    {
+        return 'doctor';
+    } 
 
     public function __construct()
     {

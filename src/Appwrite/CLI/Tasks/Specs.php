@@ -18,11 +18,15 @@ use Exception;
 
 class Specs extends Action
 {
-    public const NAME = 'specs';
+    public static function getName(): string
+    {
+        return 'specs';
+    }
 
     public function __construct()
     {
         $this
+            ->desc('Generate Appwrite API specifications')
             ->param('version', 'latest', new Text(8), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
             ->callback(fn ($version, $mode) => $this->action($version, $mode));

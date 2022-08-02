@@ -9,7 +9,10 @@ use Utopia\Platform\Action;
 
 class Vars extends Action
 {
-    public const NAME = 'vars';
+    public static function getName(): string
+    {
+        return 'vars';
+    }
 
     public function __construct()
     {

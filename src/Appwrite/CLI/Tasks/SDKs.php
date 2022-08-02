@@ -27,11 +27,15 @@ use Throwable;
 
 class SDKs extends Action
 {
-    public const NAME = 'sdks';
+    public static function getName(): string
+    {
+        return 'sdks';
+    }
 
     public function __construct()
     {
         $this
+            ->desc('Generate Appwrite SDKs')
             ->callback(fn () => $this->action());
     }
 

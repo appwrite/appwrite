@@ -12,7 +12,10 @@ use Utopia\Database\Validator\Authorization;
 
 class Usage extends Task
 {
-    public const NAME = 'usage';
+    public static function getName(): string
+    {
+        return 'usage';
+    }
 
     public function __construct()
     {
