@@ -1128,17 +1128,8 @@ App::post('/v1/functions/variables/:functionId')
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(16384), 'Variable value. Max length: 16384 chars.', false)
     ->inject('response')
-    ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->inject('projectId')
-    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForConsole, Database $dbForProject, string $projectId) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
-        }
-
+    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1180,17 +1171,8 @@ App::get('/v1/functions/variables/:functionId')
     ->param('functionId', null, new UID(), 'Function unique ID.', false)
     // TODO: Pagination
     ->inject('response')
-    ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->inject('projectId')
-    ->action(function (string $functionId, Response $response, Database $dbForConsole, Database $dbForProject, string $projectId) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
-        }
-
+    ->action(function (string $functionId, Response $response, Database $dbForProject) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1220,17 +1202,8 @@ App::get('/v1/functions/variables/:functionId/:variableId')
     ->param('functionId', null, new UID(), 'Function unique ID.', false)
     ->param('variableId', null, new UID(), 'Variable unique ID.', false)
     ->inject('response')
-    ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->inject('projectId')
-    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForConsole, Database $dbForProject, string $projectId) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
-        }
-
+    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1264,17 +1237,10 @@ App::put('/v1/functions/variables/:functionId/:variableId')
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', true)
     ->param('value', null, new Text(16384), 'Variable value. Max length: 16384 chars.', true)
     ->inject('response')
-    ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function (string $projectId, string $functionId, string $variableId, ?string $key, ?string $value, Response $response, Database $dbForConsole, Database $dbForProject) {
+    ->action(function (string $functionId, string $variableId, ?string $key, ?string $value, Response $response, Database $dbForProject) {
         if (empty($key) && empty($value)) {
             throw new Exception('Missing key or value. Define at least one.', 400, Exception::VARIABLE_MISSING_PAYLOAD);
-        }
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
         }
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -1320,16 +1286,8 @@ App::delete('/v1/functions/variables/:functionId/:variableId')
     ->param('functionId', null, new UID(), 'Function unique ID.', false)
     ->param('variableId', null, new UID(), 'Variable unique ID.', false)
     ->inject('response')
-    ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function (string $projectId, string $functionId, string $variableId, Response $response, Database $dbForConsole, Database $dbForProject) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
-        }
-
+    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {

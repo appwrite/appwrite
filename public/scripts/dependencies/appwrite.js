@@ -48,7 +48,7 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:5.0.0',
+                'x-sdk-version': 'appwrite:web:6.0.0',
                 'X-Appwrite-Response-Format': '0.15.0',
             };
             this.realtime = {
@@ -378,10 +378,11 @@
                 /**
                  * Update Account Phone
                  *
-                 * Update currently logged in user account phone number. After changing phone
-                 * number, the user confirmation status will get reset. A new confirmation SMS
-                 * is not sent automatically however you can use the phone confirmation
-                 * endpoint again to send the confirmation SMS.
+                 * Update the currently logged in user's phone number. After updating the
+                 * phone number, the phone verification status will be reset. A confirmation
+                 * SMS is not sent automatically, however you can use the [POST
+                 * /account/verification/phone](/docs/client/account#accountCreatePhoneVerification)
+                 * endpoint to send a confirmation SMS.
                  *
                  * @param {string} number
                  * @param {string} password
@@ -627,9 +628,10 @@
                 /**
                  * Create Magic URL session
                  *
-                 * Sends the user an email with a secret key for creating a session. When the
-                 * user clicks the link in the email, the user is redirected back to the URL
-                 * you provided with the secret key and userId values attached to the URL
+                 * Sends the user an email with a secret key for creating a session. If the
+                 * provided user ID has not be registered, a new user will be created. When
+                 * the user clicks the link in the email, the user is redirected back to the
+                 * URL you provided with the secret key and userId values attached to the URL
                  * query string. Use the query string parameters to submit a request to the
                  * [PUT
                  * /account/sessions/magic-url](/docs/client/account#accountUpdateMagicURLSession)
@@ -760,8 +762,9 @@
                 /**
                  * Create Phone session
                  *
-                 * Sends the user a SMS with a secret key for creating a session. Use the
-                 * returned user ID and the secret to submit a request to the [PUT
+                 * Sends the user an SMS with a secret key for creating a session. If the
+                 * provided user ID has not be registered, a new user will be created. Use the
+                 * returned user ID and secret and submit a request to the [PUT
                  * /account/sessions/phone](/docs/client/account#accountUpdatePhoneSession)
                  * endpoint to complete the login process. The secret sent to the user's phone
                  * is valid for 15 minutes.
@@ -794,17 +797,11 @@
                 /**
                  * Create Phone session (confirmation)
                  *
-                 * Use this endpoint to complete creating the session with the Magic URL. Both
-                 * the **userId** and **secret** arguments will be passed as query parameters
-                 * to the redirect URL you have provided when sending your request to the
-                 * [POST
-                 * /account/sessions/magic-url](/docs/client/account#accountCreateMagicURLSession)
-                 * endpoint.
-                 *
-                 * Please note that in order to avoid a [Redirect
-                 * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-                 * the only valid redirect URLs are the ones from domains you have set when
-                 * adding your platforms in the console interface.
+                 * Use this endpoint to complete creating a session with SMS. Use the
+                 * **userId** from the
+                 * [createPhoneSession](/docs/client/account#accountCreatePhoneSession)
+                 * endpoint and the **secret** received via SMS to successfully update and
+                 * confirm the phone session.
                  *
                  * @param {string} userId
                  * @param {string} secret
@@ -988,13 +985,12 @@
                 /**
                  * Create Phone Verification
                  *
-                 * Use this endpoint to send a verification message to your user's phone
-                 * number to confirm they are the valid owners of that address. The provided
-                 * secret should allow you to complete the verification process by verifying
-                 * both the **userId** and **secret** parameters. Learn more about how to
-                 * [complete the verification
+                 * Use this endpoint to send a verification SMS to the currently logged in
+                 * user. This endpoint is meant for use after updating a user's phone number
+                 * using the [accountUpdatePhone](/docs/client/account#accountUpdatePhone)
+                 * endpoint. Learn more about how to [complete the verification
                  * process](/docs/client/account#accountUpdatePhoneVerification). The
-                 * verification link sent to the user's phone number is valid for 15 minutes.
+                 * verification code sent to the user's phone number is valid for 15 minutes.
                  *
                  * @throws {AppwriteException}
                  * @returns {Promise}
@@ -1334,6 +1330,8 @@
                 /**
                  * List Databases
                  *
+                 * Get a list of all databases from the current Appwrite project. You can use
+                 * the search parameter to filter your results.
                  *
                  * @param {string} search
                  * @param {number} limit
@@ -1372,6 +1370,8 @@
                 }),
                 /**
                  * Create Database
+                 *
+                 * Create a new Database.
                  *
                  *
                  * @param {string} databaseId
@@ -1421,6 +1421,8 @@
                 /**
                  * Get Database
                  *
+                 * Get a database by its unique ID. This endpoint response returns a JSON
+                 * object with the database metadata.
                  *
                  * @param {string} databaseId
                  * @throws {AppwriteException}
@@ -1440,6 +1442,7 @@
                 /**
                  * Update Database
                  *
+                 * Update a database by its unique ID.
                  *
                  * @param {string} databaseId
                  * @param {string} name
@@ -1466,6 +1469,8 @@
                 /**
                  * Delete Database
                  *
+                 * Delete a database by its unique ID. Only API keys with with databases.write
+                 * scope can delete a database.
                  *
                  * @param {string} databaseId
                  * @throws {AppwriteException}
@@ -1485,10 +1490,8 @@
                 /**
                  * List Collections
                  *
-                 * Get a list of all the user collections. You can use the query params to
-                 * filter your results. On admin mode, this endpoint will return a list of all
-                 * of the project's collections. [Learn more about different API
-                 * modes](/docs/admin).
+                 * Get a list of all collections that belong to the provided databaseId. You
+                 * can use the search parameter to filter your results.
                  *
                  * @param {string} databaseId
                  * @param {string} search
@@ -1532,7 +1535,10 @@
                 /**
                  * Create Collection
                  *
-                 * Create a new Collection.
+                 * Create a new Collection. Before using this route, you should create a new
+                 * database resource using either a [server
+                 * integration](/docs/server/database#databaseCreateCollection) API or
+                 * directly from your database console.
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -2170,10 +2176,10 @@
                 /**
                  * List Documents
                  *
-                 * Get a list of all the user documents. You can use the query params to
-                 * filter your results. On admin mode, this endpoint will return a list of all
-                 * of the project's documents. [Learn more about different API
-                 * modes](/docs/admin).
+                 * Get a list of all the user's documents in a given collection. You can use
+                 * the query params to filter your results. On admin mode, this endpoint will
+                 * return a list of all of documents belonging to the provided collectionId.
+                 * [Learn more about different API modes](/docs/admin).
                  *
                  * @param {string} databaseId
                  * @param {string} collectionId
@@ -2324,9 +2330,6 @@
                     }
                     if (typeof documentId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "documentId"');
-                    }
-                    if (typeof data === 'undefined') {
-                        throw new AppwriteException('Missing required parameter: "data"');
                     }
                     let path = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
                     let payload = {};
@@ -2697,14 +2700,13 @@
                  * @param {string} name
                  * @param {string[]} execute
                  * @param {string} runtime
-                 * @param {object} vars
                  * @param {string[]} events
                  * @param {string} schedule
                  * @param {number} timeout
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                create: (functionId, name, execute, runtime, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
+                create: (functionId, name, execute, runtime, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2730,9 +2732,6 @@
                     }
                     if (typeof runtime !== 'undefined') {
                         payload['runtime'] = runtime;
-                    }
-                    if (typeof vars !== 'undefined') {
-                        payload['vars'] = vars;
                     }
                     if (typeof events !== 'undefined') {
                         payload['events'] = events;
@@ -2765,6 +2764,135 @@
                     }, payload);
                 }),
                 /**
+                 * List Variables
+                 *
+                 *
+                 * @param {string} functionId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                listVariables: (functionId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    let path = '/functions/variables/{functionId}'.replace('{functionId}', functionId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Create Variable
+                 *
+                 *
+                 * @param {string} functionId
+                 * @param {string} key
+                 * @param {string} value
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                createVariable: (functionId, key, value) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof key === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "key"');
+                    }
+                    if (typeof value === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "value"');
+                    }
+                    let path = '/functions/variables/{functionId}'.replace('{functionId}', functionId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof value !== 'undefined') {
+                        payload['value'] = value;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('post', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get Variable
+                 *
+                 *
+                 * @param {string} functionId
+                 * @param {string} variableId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getVariable: (functionId, variableId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof variableId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "variableId"');
+                    }
+                    let path = '/functions/variables/{functionId}/{variableId}'.replace('{functionId}', functionId).replace('{variableId}', variableId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Update Variable
+                 *
+                 *
+                 * @param {string} functionId
+                 * @param {string} variableId
+                 * @param {string} key
+                 * @param {string} value
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                updateVariable: (functionId, variableId, key, value) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof variableId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "variableId"');
+                    }
+                    let path = '/functions/variables/{functionId}/{variableId}'.replace('{functionId}', functionId).replace('{variableId}', variableId);
+                    let payload = {};
+                    if (typeof key !== 'undefined') {
+                        payload['key'] = key;
+                    }
+                    if (typeof value !== 'undefined') {
+                        payload['value'] = value;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('put', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Delete Variable
+                 *
+                 *
+                 * @param {string} functionId
+                 * @param {string} variableId
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                deleteVariable: (functionId, variableId) => __awaiter(this, void 0, void 0, function* () {
+                    if (typeof functionId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "functionId"');
+                    }
+                    if (typeof variableId === 'undefined') {
+                        throw new AppwriteException('Missing required parameter: "variableId"');
+                    }
+                    let path = '/functions/variables/{functionId}/{variableId}'.replace('{functionId}', functionId).replace('{variableId}', variableId);
+                    let payload = {};
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('delete', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
                  * Get Function
                  *
                  * Get a function by its unique ID.
@@ -2792,14 +2920,13 @@
                  * @param {string} functionId
                  * @param {string} name
                  * @param {string[]} execute
-                 * @param {object} vars
                  * @param {string[]} events
                  * @param {string} schedule
                  * @param {number} timeout
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                update: (functionId, name, execute, vars, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
+                update: (functionId, name, execute, events, schedule, timeout) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
@@ -2816,9 +2943,6 @@
                     }
                     if (typeof execute !== 'undefined') {
                         payload['execute'] = execute;
-                    }
-                    if (typeof vars !== 'undefined') {
-                        payload['vars'] = vars;
                     }
                     if (typeof events !== 'undefined') {
                         payload['events'] = events;
