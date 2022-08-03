@@ -23,13 +23,13 @@ class MessagingTest extends TestCase
         $realtime->subscribe(
             '1',
             1,
-            ['user:123', 'role:member', 'team:abc', 'team:abc/administrator', 'team:abc/moderator', 'team:def', 'team:def/guest'],
+            ['user:123', 'users', 'team:abc', 'team:abc/administrator', 'team:abc/moderator', 'team:def', 'team:def/guest'],
             ['files' => 0, 'documents' => 0, 'documents.789' => 0, 'account.123' => 0]
         );
 
         $event = [
             'project' => '1',
-            'roles' => ['role:all'],
+            'roles' => ['any'],
             'data' => [
                 'channels' => [
                     0 => 'account.123',
@@ -42,7 +42,7 @@ class MessagingTest extends TestCase
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['role:member'];
+        $event['roles'] = ['users'];
 
         $receivers = $realtime->getSubscribers($event);
 
@@ -103,7 +103,7 @@ class MessagingTest extends TestCase
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['role:all'];
+        $event['roles'] = ['any'];
         $event['data']['channels'] = ['documents.123'];
 
         $receivers = $realtime->getSubscribers($event);
@@ -223,7 +223,9 @@ class MessagingTest extends TestCase
             ])
         );
 
-        $this->assertContains('role:all', $result['roles']);
+        \var_dump($result);
+
+        $this->assertContains('any', $result['roles']);
         $this->assertNotContains('role:admin', $result['roles']);
 
         /**
@@ -252,7 +254,7 @@ class MessagingTest extends TestCase
             ])
         );
 
-        $this->assertContains('role:all', $result['roles']);
+        $this->assertContains('any', $result['roles']);
         $this->assertNotContains('role:admin', $result['roles']);
     }
 
@@ -280,7 +282,7 @@ class MessagingTest extends TestCase
             ])
         );
 
-        $this->assertContains('role:all', $result['roles']);
+        $this->assertContains('any', $result['roles']);
         $this->assertNotContains('role:admin', $result['roles']);
 
         /**
@@ -302,11 +304,11 @@ class MessagingTest extends TestCase
                     'read(admin)',
                     'write(admin)',
                 ],
-                'documentSecurity' => 'true'
+                'documentSecurity' => true
             ])
         );
 
-        $this->assertContains('role:all', $result['roles']);
+        $this->assertContains('any', $result['roles']);
         $this->assertNotContains('role:admin', $result['roles']);
     }
 }

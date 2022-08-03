@@ -211,7 +211,7 @@ class AuthTest extends TestCase
 
         $roles = Auth::getRoles($user);
         $this->assertCount(1, $roles);
-        $this->assertContains('role:guest', $roles);
+        $this->assertContains('guests', $roles);
     }
 
     public function testUserRoles()
@@ -238,7 +238,7 @@ class AuthTest extends TestCase
         $roles = Auth::getRoles($user);
 
         $this->assertCount(7, $roles);
-        $this->assertContains('role:member', $roles);
+        $this->assertContains('users', $roles);
         $this->assertContains('user:123', $roles);
         $this->assertContains('team:abc', $roles);
         $this->assertContains('team:abc/administrator', $roles);
@@ -272,7 +272,7 @@ class AuthTest extends TestCase
         $roles = Auth::getRoles($user);
 
         $this->assertCount(5, $roles);
-        $this->assertNotContains('role:member', $roles);
+        $this->assertNotContains('users', $roles);
         $this->assertNotContains('user:123', $roles);
         $this->assertContains('team:abc', $roles);
         $this->assertContains('team:abc/administrator', $roles);
@@ -306,7 +306,7 @@ class AuthTest extends TestCase
         $roles = Auth::getRoles($user);
 
         $this->assertCount(5, $roles);
-        $this->assertNotContains('role:member', $roles);
+        $this->assertNotContains('users', $roles);
         $this->assertNotContains('user:123', $roles);
         $this->assertContains('team:abc', $roles);
         $this->assertContains('team:abc/administrator', $roles);

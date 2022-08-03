@@ -202,7 +202,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
-        if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
+        if ($realtime->hasSubscriber('console', 'users', 'project')) {
             [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $payload = [];
@@ -253,12 +253,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
          */
-        if ($realtime->hasSubscriber('console', 'role:guest', 'tests')) {
+        if ($realtime->hasSubscriber('console', 'guests', 'tests')) {
             $payload = ['response' => 'WS:/v1/realtime:passed'];
 
             $event = [
                 'project' => 'console',
-                'roles' => ['role:guest'],
+                'roles' => ['guests'],
                 'data' => [
                     'events' => ['test.event'],
                     'channels' => ['tests'],

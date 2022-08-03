@@ -24,7 +24,7 @@ class StorageCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
-            'permission' => 'file',
+            'fileSecurity' => true,
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
@@ -46,7 +46,7 @@ class StorageCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'bucketId' => 'bucket1',
             'name' => 'Test Bucket',
-            'permission' => 'file',
+            'fileSecurity' => true,
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertEquals('bucket1', $bucket['body']['$id']);
@@ -60,7 +60,7 @@ class StorageCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'bucketId' => 'unique()',
             'name' => '',
-            'permission' => 'file',
+            'fileSecurity' => true,
         ]);
         $this->assertEquals(400, $bucket['headers']['status-code']);
 
@@ -182,13 +182,13 @@ class StorageCustomServerTest extends Scope
             'bucketId' => 'unique()',
             'name' => 'Test Bucket Updated',
             'enabled' => false,
-            'permission' => 'file',
+            'fileSecurity' => true,
         ]);
         $this->assertEquals(200, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
         $this->assertIsInt($bucket['body']['$createdAt']);
         $this->assertIsArray($bucket['body']['$permissions']);
-        
+
         $this->assertIsArray($bucket['body']['allowedFileExtensions']);
         $this->assertEquals('Test Bucket Updated', $bucket['body']['name']);
         $this->assertEquals(false, $bucket['body']['enabled']);

@@ -288,13 +288,15 @@ class Realtime extends Adapter
                     $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getCollection() . '.documents';
                     $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getCollection() . '.documents.' . $payload->getId();
 
-                    $roles = ($collection->getAttribute('permission') === 'collection') ? $collection->getRead() : $payload->getRead();
+                    $roles = ($collection->getAttribute('documentSecurity', false))
+                        ? \array_merge($collection->getRead(), $payload->getRead())
+                        : $collection->getRead();
                 }
                 break;
             case 'buckets':
                 if ($parts[2] === 'files') {
                     if ($bucket->isEmpty()) {
-                        throw new \Exception('Bucket needs to be pased to Realtime for File events in the Storage.');
+                        throw new \Exception('Bucket needs to be passed to Realtime for File events in the Storage.');
                     }
                     $channels[] = 'files';
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files';

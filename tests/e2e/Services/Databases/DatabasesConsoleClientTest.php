@@ -35,9 +35,11 @@ class DatabasesConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'collectionId' => 'unique()',
             'name' => 'Movies',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document',
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($movies['headers']['status-code'], 201);

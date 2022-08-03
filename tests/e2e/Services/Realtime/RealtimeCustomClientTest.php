@@ -644,9 +644,8 @@ class RealtimeCustomClientTest extends Scope
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Actors',
-            'read' => [],
-            'write' => [],
-            'permission' => 'document'
+            'permissions' => [],
+            'documentSecurity' => true,
         ]);
 
         $actorsId = $actors['body']['$id'];
@@ -680,8 +679,10 @@ class RealtimeCustomClientTest extends Scope
             'data' => [
                 'name' => 'Chris Evans'
             ],
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -723,8 +724,10 @@ class RealtimeCustomClientTest extends Scope
             'data' => [
                 'name' => 'Chris Evans 2'
             ],
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -765,8 +768,10 @@ class RealtimeCustomClientTest extends Scope
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $client->receive();
@@ -854,9 +859,10 @@ class RealtimeCustomClientTest extends Scope
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Actors',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'collection'
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ]
         ]);
 
         $actorsId = $actors['body']['$id'];
@@ -890,8 +896,7 @@ class RealtimeCustomClientTest extends Scope
             'data' => [
                 'name' => 'Chris Evans'
             ],
-            'read' => [],
-            'write' => [],
+            'permissions' => [],
         ]);
 
         $documentId = $document['body']['$id'];
@@ -932,8 +937,7 @@ class RealtimeCustomClientTest extends Scope
             'data' => [
                 'name' => 'Chris Evans 2'
             ],
-            'read' => [],
-            'write' => [],
+            'permissions' => [],
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -974,8 +978,7 @@ class RealtimeCustomClientTest extends Scope
             'data' => [
                 'name' => 'Bradley Cooper'
             ],
-            'read' => [],
-            'write' => [],
+            'permissions' => [],
         ]);
 
         $documentId = $document['body']['$id'];
@@ -1047,9 +1050,10 @@ class RealtimeCustomClientTest extends Scope
         ]), [
             'bucketId' => 'unique()',
             'name' => 'Bucket 1',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'bucket'
+            'permissions' => [
+                'read(any)',
+                'write(any)'
+            ]
         ]);
 
         $bucketId = $bucket1['body']['$id'];
@@ -1063,8 +1067,10 @@ class RealtimeCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $fileId = $file['body']['$id'];
@@ -1101,8 +1107,10 @@ class RealtimeCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $response = json_decode($client->receive(), true);
@@ -1194,7 +1202,7 @@ class RealtimeCustomClientTest extends Scope
         ], [
             'functionId' => 'unique()',
             'name' => 'Test',
-            'execute' => ['role:member'],
+            'execute' => ['users'],
             'runtime' => 'php-8.0',
             'timeout' => 10,
         ]);

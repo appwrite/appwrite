@@ -30,9 +30,11 @@ class DatabasesPermissionsGuestTest extends Scope
         $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => 'unique()',
             'name' => 'Movies',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document',
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
 
         $collection = ['id' => $movies['body']['$id']];
@@ -54,12 +56,12 @@ class DatabasesPermissionsGuestTest extends Scope
     public function readDocumentsProvider()
     {
         return [
-            [['role:all'], []],
-            [['role:member'], []],
-            [[] ,['role:all']],
-            [['role:all'], ['role:all']],
-            [['role:member'], ['role:member']],
-            [['role:all'], ['role:member']],
+            [['any'], []],
+            [['users'], []],
+            [[] ,['any']],
+            [['any'], ['any']],
+            [['users'], ['users']],
+            [['any'], ['users']],
         ];
     }
 
@@ -86,7 +88,7 @@ class DatabasesPermissionsGuestTest extends Scope
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $this->assertContains('role:all', $document['$permissions']);
+            $this->assertContains('any', $document['$permissions']);
         }
     }
 }

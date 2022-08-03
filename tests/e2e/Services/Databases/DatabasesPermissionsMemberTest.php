@@ -29,16 +29,16 @@ class DatabasesPermissionsMemberTest extends Scope
     public function readDocumentsProvider()
     {
         return [
-            [['role:all'], []],
-            [['role:member'], []],
+            [['any'], []],
+            [['users'], []],
             [['user:random'], []],
             [['user:lorem'] ,['user:lorem']],
             [['user:dolor'] ,['user:dolor']],
             [['user:dolor', 'user:lorem'] ,['user:dolor']],
-            [[], ['role:all']],
-            [['role:all'], ['role:all']],
-            [['role:member'], ['role:member']],
-            [['role:all'], ['role:member']],
+            [[], ['any']],
+            [['any'], ['any']],
+            [['users'], ['users']],
+            [['any'], ['users']],
         ];
     }
 
@@ -64,9 +64,11 @@ class DatabasesPermissionsMemberTest extends Scope
         $public = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => 'unique()',
             'name' => 'Movies',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document',
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
         $this->assertEquals(201, $public['headers']['status-code']);
 
@@ -82,9 +84,11 @@ class DatabasesPermissionsMemberTest extends Scope
         $private = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => 'unique()',
             'name' => 'Private Movies',
-            'read' => ['role:member'],
-            'write' => ['role:member'],
-            'permission' => 'document',
+            'permissions' => [
+                'read(users)',
+                'write(users)',
+            ],
+            'documentSecurity' => true,
         ]);
         $this->assertEquals(201, $private['headers']['status-code']);
 
@@ -122,8 +126,10 @@ class DatabasesPermissionsMemberTest extends Scope
             'data' => [
                 'title' => 'Lorem',
             ],
-            'read' => $read,
-            'write' => $write,
+            'permissions' => [
+                'read(' . $read . ')',
+                'write(' . $write . ')',
+            ],
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
@@ -132,8 +138,10 @@ class DatabasesPermissionsMemberTest extends Scope
             'data' => [
                 'title' => 'Lorem',
             ],
-            'read' => $read,
-            'write' => $write,
+            'permissions' => [
+                'read(' . $read . ')',
+                'write(' . $write . ')',
+            ],
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
@@ -149,8 +157,16 @@ class DatabasesPermissionsMemberTest extends Scope
 
         foreach ($documents['body']['documents'] as $document) {
             $hasPermissions = \array_reduce(['any', 'users', 'user:' . $users['user1']['$id']], function ($carry, $item) use ($document) {
-                // TODO: Fix this
-                return $carry ? true : \in_array($item, $document['$permissions']);
+                if ($carry) {
+                    return $carry;
+                }
+                foreach ($document['$permissions'] as $permission) {
+                    if (\stripos($permission, $item) !== false 
+                        && \str_starts_with('read', $permission)) {
+                        return true;
+                    }
+                }
+                return false;
             }, false);
             $this->assertTrue($hasPermissions);
         }
@@ -167,8 +183,16 @@ class DatabasesPermissionsMemberTest extends Scope
 
         foreach ($documents['body']['documents'] as $document) {
             $hasPermissions = \array_reduce(['any', 'users', 'user:' . $users['user1']['$id']], function ($carry, $item) use ($document) {
-                // TODO: Fix this
-                return $carry ? true : \in_array($item, $document['$permissions']);
+                if ($carry) {
+                    return $carry;
+                }
+                foreach ($document['$permissions'] as $permission) {
+                    if (\stripos($permission, $item) !== false
+                        && \str_starts_with('read', $permission)) {
+                        return true;
+                    }
+                }
+                return false;
             }, false);
             $this->assertTrue($hasPermissions);
         }

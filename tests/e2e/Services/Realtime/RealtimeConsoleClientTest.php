@@ -159,9 +159,10 @@ class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'collectionId' => 'unique()',
             'name' => 'Actors',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'collection'
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $actorsId = $actors['body']['$id'];

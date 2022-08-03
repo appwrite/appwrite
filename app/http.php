@@ -163,7 +163,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 '$id' => 'default',
                 '$collection' => 'buckets',
                 'name' => 'Default',
-                'permission' => 'file',
                 'maximumFileSize' => (int) App::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
                 'allowedFileExtensions' => [],
                 'enabled' => true,
@@ -254,7 +253,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     try {
         Authorization::cleanRoles();
-        Authorization::setRole('role:all');
+        Authorization::setRole('any');
 
         $app->run($request, $response);
     } catch (\Throwable $th) {

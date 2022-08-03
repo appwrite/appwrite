@@ -44,9 +44,10 @@ class DatabasesPermissionsTeamTest extends Scope
         $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => 'collection1',
             'name' => 'Collection 1',
-            'read' => ['team:' . $teams['team1']['$id']],
-            'write' => ['team:' . $teams['team1']['$id'] . '/admin'],
-            'permission' => 'collection',
+            'permissions' => [
+                'read(team: ' . $teams['team1']['$id'] . ')',
+                'write(team: ' . $teams['team1']['$id'] . '/admin)',
+            ],
         ]);
 
         $this->collections['collection1'] = $collection1['body']['$id'];
@@ -60,9 +61,10 @@ class DatabasesPermissionsTeamTest extends Scope
         $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => 'collection2',
             'name' => 'Collection 2',
-            'read' => ['team:' . $teams['team2']['$id']],
-            'write' => ['team:' . $teams['team2']['$id'] . '/owner'],
-            'permission' => 'collection',
+            'permissions' => [
+                'read(team: ' . $teams['team2']['$id'] . ')',
+                'write(team: ' . $teams['team2']['$id'] . '/owner)',
+            ]
         ]);
 
         $this->collections['collection2'] = $collection2['body']['$id'];

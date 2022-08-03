@@ -32,7 +32,7 @@ class Execution extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Execution permissions.',
                 'default' => '',
-                'example' => 'role:all',
+                'example' => 'any',
                 'array' => true,
             ])
             ->addRule('functionId', [

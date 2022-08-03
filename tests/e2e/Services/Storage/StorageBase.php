@@ -19,11 +19,13 @@ trait StorageBase
         ], [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
-            'permission' => 'file',
+            'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
             'allowedFileExtensions' => ["jpg", "png"],
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
@@ -36,8 +38,10 @@ trait StorageBase
         ], $this->getHeaders()), [
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
@@ -59,9 +63,11 @@ trait StorageBase
         ], [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket 2',
-            'permission' => 'file',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'fileSecurity' => true,
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
         $this->assertEquals(201, $bucket2['headers']['status-code']);
         $this->assertNotEmpty($bucket2['body']['$id']);
@@ -92,8 +98,10 @@ trait StorageBase
             $largeFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
                 'fileId' => $fileId,
                 'file' => $curlFile,
-                'read' => ['role:all'],
-                'write' => ['role:all'],
+                'permissions' => [
+                    'read(any)',
+                    'write(any)',
+                ],
             ]);
             $counter++;
             $id = $largeFile['body']['$id'];
@@ -130,8 +138,10 @@ trait StorageBase
         $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', $this->getHeaders(), [
             'fileId' => $fileId,
             'file' => $curlFile,
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
         @fclose($handle);
 
@@ -148,8 +158,10 @@ trait StorageBase
         ], $this->getHeaders()), [
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
         $this->assertEquals(404, $res['headers']['status-code']);
 
@@ -163,8 +175,10 @@ trait StorageBase
         ], $this->getHeaders()), [
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-1.png'), 'image/png', 'kitten-1.png'),
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $this->assertEquals(400, $res['headers']['status-code']);
@@ -180,8 +194,10 @@ trait StorageBase
         ], $this->getHeaders()), [
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-3.gif'), 'image/gif', 'kitten-3.gif'),
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $this->assertEquals(400, $res['headers']['status-code']);
@@ -199,11 +215,13 @@ trait StorageBase
         ], [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket 2',
-            'permission' => 'file',
+            'fileSecurity' => true,
             'maximumFileSize' => 200000000, //200MB
             'allowedFileExtensions' => ["jpg", "png"],
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
         $this->assertEquals(400, $failedBucket['headers']['status-code']);
     }
@@ -453,8 +471,10 @@ trait StorageBase
         ], $this->getHeaders()), [
             'fileId' => 'testcache',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
@@ -496,8 +516,10 @@ trait StorageBase
         ], $this->getHeaders()), [
             'fileId' => 'testcache',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-2.png'), 'image/png', 'logo.png'),
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
@@ -539,8 +561,10 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $this->assertEquals(200, $file['headers']['status-code']);
@@ -566,8 +590,10 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $this->assertEquals(404, $file['headers']['status-code']);

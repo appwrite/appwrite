@@ -133,11 +133,11 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                                                                 <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
                                                                 <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions}}" placeholder="User ID, Team ID or Role" />
-                                                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
 
                                                                 <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
                                                                 <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions}}" placeholder="User ID, Team ID or Role" />
-                                                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
                                                             </form>
 
                                                             <form class="strip"
@@ -291,12 +291,12 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
                             <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                            <input type="hidden" id="file-read" name="read" data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['role:all'])); ?>" placeholder="User ID, Team ID or Role" />
-                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                            <input type="hidden" id="file-read" name="read" data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['any'])); ?>" placeholder="User ID, Team ID or Role" />
+                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
 
                             <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
                             <input type="hidden" id="file-write" name="write" data-forms-tags data-cast-to="json" value="" placeholder="User ID, Team ID or Role" />
-                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
 
                             <footer>
                                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -440,11 +440,11 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                                             <label for="bucket-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
                                             <input type="hidden" id="bucket-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$permissions}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
 
                                             <label for="bucket-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
                                             <input type="hidden" id="bucket-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$permissions}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
                                         </div>
                                     </div>
                                 </div>

@@ -32,7 +32,7 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Actors1',
-            'permission' => 'document',
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($actors['headers']['status-code'], 200);
@@ -157,9 +157,11 @@ class WebhooksCustomServerTest extends Scope
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Demo',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document'
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
 
         $id = $actors['body']['$id'];

@@ -29,9 +29,10 @@ class StorageCustomClientTest extends Scope
         ], [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
-            'permission' => 'bucket',
-            'read' => ['role:all'],
-            'write' => ['role:member'],
+            'permissions' => [
+                'read(any)',
+                'write(users)',
+            ],
         ]);
 
         $bucketId = $bucket['body']['$id'];
@@ -162,13 +163,15 @@ class StorageCustomClientTest extends Scope
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'folderId' => 'xyz',
-            'read' => ['user:notme']
+            'permissions' => [
+                'read(user:notme)',
+            ],
         ]);
 
         $this->assertEquals(400, $file['headers']['status-code']);
         $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
@@ -183,8 +186,8 @@ class StorageCustomClientTest extends Scope
 
         $this->assertEquals($file['headers']['status-code'], 400);
         $this->assertStringStartsWith('Write permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
@@ -194,14 +197,16 @@ class StorageCustomClientTest extends Scope
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'folderId' => 'xyz',
-            'read' => ['user:notme'],
-            'write' => ['user:notme']
+            'permissions' => [
+                'read(user:notme)',
+                'write(user:notme)',
+            ],
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 400);
         $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
     }
 
@@ -217,13 +222,15 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['user:notme']
+                        'permissions' => [
+        'read(user:notme)',
+                        ],
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 400);
         $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
 
         $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
@@ -235,22 +242,24 @@ class StorageCustomClientTest extends Scope
 
         $this->assertEquals($file['headers']['status-code'], 400);
         $this->assertStringStartsWith('Write permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
 
         $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['user:notme'],
-            'write' => ['user:notme']
+            'permissions' => [
+                'read(user:notme)',
+                'write(user:notme)',
+            ],
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 400);
         $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
     }
 }

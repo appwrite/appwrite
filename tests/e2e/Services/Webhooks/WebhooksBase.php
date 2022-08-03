@@ -41,9 +41,11 @@ trait WebhooksBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Actors',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document',
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
 
         $actorsId = $actors['body']['$id'];
@@ -190,8 +192,10 @@ trait WebhooksBase
                 'firstName' => 'Chris',
                 'lastName' => 'Evans',
             ],
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $documentId = $document['body']['$id'];
@@ -249,8 +253,10 @@ trait WebhooksBase
                 'firstName' => 'Chris1',
                 'lastName' => 'Evans2',
             ],
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $documentId = $document['body']['$id'];
@@ -308,8 +314,10 @@ trait WebhooksBase
                 'lastName' => 'Cooper',
 
             ],
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $documentId = $document['body']['$id'];
@@ -366,9 +374,10 @@ trait WebhooksBase
         ]), [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
-            'permission' => 'bucket',
-            'read' => ['role:all'],
-            'write' => ['role:all']
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $bucketId = $bucket['body']['$id'];
@@ -414,7 +423,7 @@ trait WebhooksBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test Bucket Updated',
-            'permission' => 'file',
+            'fileSecurity' => true,
             'enabled' => false,
         ]);
 
@@ -457,7 +466,7 @@ trait WebhooksBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test Bucket Updated',
-            'permission' => 'file',
+            'fileSecurity' => true,
             'enabled' => true,
         ]);
 
@@ -471,8 +480,10 @@ trait WebhooksBase
         ], $this->getHeaders()), [
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
             'folderId' => 'xyz',
         ]);
 
@@ -529,8 +540,10 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 200);

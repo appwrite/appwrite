@@ -553,11 +553,11 @@ $logs = $this->getParam('logs', null);
                                         <div data-ls-if="{{project-collection.permission}} === 'collection'">
                                             <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
                                             <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$read}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
 
                                             <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
                                             <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$write}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
                                         </div>
                                     </div>
                                 </div>

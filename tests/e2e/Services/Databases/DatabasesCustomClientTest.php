@@ -47,9 +47,8 @@ class DatabasesCustomClientTest extends Scope
         ]), [
             'collectionId' => 'permissionCheck',
             'name' => 'permissionCheck',
-            'read' => [],
-            'write' => [],
-            'permission' => 'document'
+            'permissions' => [],
+            'documentSecurity' => true,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
@@ -78,8 +77,10 @@ class DatabasesCustomClientTest extends Scope
             'data' => [
                 'name' => 'AppwriteBeginner',
             ],
-            'read' => ['user:' . $userId, 'user:user2'],
-            'write' => ['user:' . $userId],
+            'permissions' => [
+                'read(user:' . $userId . ', user:user2)',
+                'write(user:' . $userId . ')',
+            ],
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 

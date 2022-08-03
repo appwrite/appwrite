@@ -250,9 +250,11 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'name' => 'Test 1',
             'collectionId' => 'first',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document'
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
 
         $test2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
@@ -262,9 +264,11 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'name' => 'Test 2',
             'collectionId' => 'second',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document'
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
 
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
@@ -402,9 +406,11 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'name' => 'Test 1',
             'collectionId' => 'first',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document'
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 409);
@@ -436,9 +442,11 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Actors',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document'
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($actors['headers']['status-code'], 201);
@@ -489,8 +497,10 @@ class DatabasesCustomServerTest extends Scope
                 'lastName' => 'ipsum',
                 'unneeded' =>  'dolor'
             ],
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
         ]);
 
         $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/indexes', array_merge([
@@ -712,9 +722,11 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'collectionId' => 'unique()',
             'name' => 'TestCleanupDuplicateIndexOnDeleteAttribute',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document',
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals(201, $collection['headers']['status-code']);
@@ -831,8 +843,10 @@ class DatabasesCustomServerTest extends Scope
                 'firstName' => 'Tom',
                 'lastName' => 'Holland',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ],
         ]);
 
         $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -844,8 +858,10 @@ class DatabasesCustomServerTest extends Scope
                 'firstName' => 'Samuel',
                 'lastName' => 'Jackson',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ],
         ]);
 
         $this->assertEquals($document1['headers']['status-code'], 201);
@@ -897,9 +913,9 @@ class DatabasesCustomServerTest extends Scope
     //     ]), [
     //         'collectionId' => 'unique()',
     //         'name' => 'attributeCountLimit',
-    //         'read' => ['role:all'],
-    //         'write' => ['role:all'],
-    //         'permission' => 'document',
+    //         'read' => ['any'],
+    //         'write' => ['any'],
+    //         'documentSecurity' => true,
     //     ]);
 
     //     $collectionId = $collection['body']['$id'];
@@ -954,9 +970,11 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'collectionId' => 'attributeRowWidthLimit',
             'name' => 'attributeRowWidthLimit',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document',
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($collection['headers']['status-code'], 201);
@@ -1016,9 +1034,11 @@ class DatabasesCustomServerTest extends Scope
         ]), [
             'collectionId' => 'testLimitException',
             'name' => 'testLimitException',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document',
+            'permissions' => [
+                'read(any)',
+                'write(any)',
+            ],
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($collection['headers']['status-code'], 201);

@@ -34,7 +34,7 @@ class Func extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Execution permissions.',
                 'default' => [],
-                'example' => 'role:member',
+                'example' => 'users',
                 'array' => true,
             ])
             ->addRule('name', [

@@ -44,9 +44,8 @@ trait DatabasesBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Movies',
-            'read' => [],
-            'write' => [],
-            'permission' => 'document',
+            'permissions' => [],
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($movies['headers']['status-code'], 201);
@@ -71,7 +70,7 @@ trait DatabasesBase
         ]), [
             'name' => 'Movies',
             'enabled' => false,
-            'permission' => 'document',
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -86,8 +85,10 @@ trait DatabasesBase
                 'data' => [
                     'title' => 'Captain America',
                 ],
-                'read' => ['user:' . $this->getUser()['$id']],
-                'write' => ['user:' . $this->getUser()['$id']],
+                'permissions' => [
+                    'read(user:' . $this->getUser()['$id'] . ')',
+                    'write(user:' . $this->getUser()['$id'] . ')',
+                ],
             ]);
 
             $responseListDocument = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -112,7 +113,7 @@ trait DatabasesBase
         ]), [
             'name' => 'Movies',
             'enabled' => true,
-            'permission' => 'document',
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -220,9 +221,8 @@ trait DatabasesBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Response Models',
-            'read' => [],
-            'write' => [],
-            'permission' => 'document',
+            'permissions' => [],
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($collection['headers']['status-code'], 201);
@@ -785,8 +785,10 @@ trait DatabasesBase
                     'Samuel Jackson',
                 ]
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -803,8 +805,10 @@ trait DatabasesBase
                     'Samuel Jackson',
                 ]
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $document3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -821,8 +825,10 @@ trait DatabasesBase
                     'Zendaya Maree Stoermer',
                 ],
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $document4 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -833,8 +839,10 @@ trait DatabasesBase
             'data' => [
                 'releaseYear' => 2020, // Missing title, expect an 400 error
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $this->assertEquals($document1['headers']['status-code'], 201);
@@ -942,9 +950,8 @@ trait DatabasesBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Movies',
-            'read' => [],
-            'write' => [],
-            'permission' => 'document',
+            'permissions' => [],
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($movies['headers']['status-code'], 201);
@@ -1476,8 +1483,10 @@ trait DatabasesBase
                 'releaseYear' => 2017,
                 'actors' => [],
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $id = $document['body']['$id'];
@@ -1529,9 +1538,8 @@ trait DatabasesBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'invalidDocumentStructure',
-            'read' => [],
-            'write' => [],
-            'permission' => 'document',
+            'permissions' => [],
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals(201, $collection['headers']['status-code']);
@@ -1726,8 +1734,10 @@ trait DatabasesBase
             'data' => [
                 'email' => 'user@example.com',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $goodEnum = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1738,8 +1748,10 @@ trait DatabasesBase
             'data' => [
                 'enum' => 'yes',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $goodIp = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1750,8 +1762,10 @@ trait DatabasesBase
             'data' => [
                 'ip' => '1.1.1.1',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $goodUrl = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1762,8 +1776,10 @@ trait DatabasesBase
             'data' => [
                 'url' => 'http://www.example.com',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $goodRange = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1774,8 +1790,10 @@ trait DatabasesBase
             'data' => [
                 'range' => 3,
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $goodFloatRange = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1786,8 +1804,10 @@ trait DatabasesBase
             'data' => [
                 'floatRange' => 1.4,
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $goodProbability = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1798,8 +1818,10 @@ trait DatabasesBase
             'data' => [
                 'probability' => 0.99999,
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $notTooHigh = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1810,8 +1832,10 @@ trait DatabasesBase
             'data' => [
                 'upperBound' => 8,
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $notTooLow = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1822,8 +1846,10 @@ trait DatabasesBase
             'data' => [
                 'lowerBound' => 8,
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $this->assertEquals(201, $goodEmail['headers']['status-code']);
@@ -1848,8 +1874,10 @@ trait DatabasesBase
             'data' => [
                 'email' => 'user@@example.com',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $badEnum = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1860,8 +1888,10 @@ trait DatabasesBase
             'data' => [
                 'enum' => 'badEnum',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $badIp = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1872,8 +1902,10 @@ trait DatabasesBase
             'data' => [
                 'ip' => '1.1.1.1.1',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $badUrl = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1884,8 +1916,10 @@ trait DatabasesBase
             'data' => [
                 'url' => 'example...com',
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $badRange = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1896,8 +1930,10 @@ trait DatabasesBase
             'data' => [
                 'range' => 11,
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $badFloatRange = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1908,8 +1944,10 @@ trait DatabasesBase
             'data' => [
                 'floatRange' => 2.5,
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $badProbability = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1920,8 +1958,10 @@ trait DatabasesBase
             'data' => [
                 'probability' => 1.1,
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $tooHigh = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1932,8 +1972,10 @@ trait DatabasesBase
             'data' => [
                 'upperBound' => 11,
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $tooLow = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
@@ -1944,8 +1986,10 @@ trait DatabasesBase
             'data' => [
                 'lowerBound' => 3,
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $this->assertEquals(400, $badEmail['headers']['status-code']);
@@ -2066,8 +2110,7 @@ trait DatabasesBase
                 'releaseYear' => 1946,
                 'actors' => [],
             ],
-            'read' => [],
-            'write' => [],
+            'permissions' => [],
         ]);
 
         if ($this->getSide() == 'client') {
@@ -2108,9 +2151,10 @@ trait DatabasesBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'enforceCollectionPermissions',
-            'permission' => 'collection',
-            'read' => [$user],
-            'write' => [$user]
+            'permissions' => [
+                'read(' . $user . ')',
+                'write(' . $user . ')',
+            ],
         ]);
 
         $this->assertEquals($collection['headers']['status-code'], 201);
@@ -2161,8 +2205,10 @@ trait DatabasesBase
             'data' => [
                 'attribute' => 'one',
             ],
-            'read' => [$user],
-            'write' => [$user],
+            'permissions' => [
+                'read(' . $user . ')',
+                'write(' . $user . ')',
+            ]
         ]);
 
         $this->assertEquals(201, $document1['headers']['status-code']);
@@ -2175,8 +2221,9 @@ trait DatabasesBase
             'data' => [
                 'attribute' => 'one',
             ],
-            'read' => [],
-            'write' => [$user],
+            'permissions' => [
+                'write(' . $user . ')',
+            ]
         ]);
 
         $this->assertEquals(201, $document2['headers']['status-code']);
@@ -2189,8 +2236,7 @@ trait DatabasesBase
             'data' => [
                 'attribute' => 'one',
             ],
-            'read' => [],
-            'write' => [],
+            'permissions' => [],
         ]);
 
         $this->assertEquals(201, $document3['headers']['status-code']);
@@ -2214,9 +2260,9 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'enforceCollectionPermissions',
-            'permission' => 'collection',
-            'read' => [$user],
-            'write' => []
+            'permissions' => [
+                'read(' . $user . ')'
+            ],
         ]);
 
         $this->assertEquals(200, $collection['headers']['status-code']);
@@ -2229,8 +2275,10 @@ trait DatabasesBase
             'data' => [
                 'attribute' => 'bad',
             ],
-            'read' => [$user],
-            'write' => [$user],
+            'permissions' => [
+                'read(' . $user . ')',
+                'write(' . $user . ')',
+            ],
         ]);
 
         if ($this->getSide() == 'client') {
@@ -2248,9 +2296,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'enforceCollectionPermissions',
-            'permission' => 'collection',
-            'read' => [],
-            'write' => []
+            'permissions' => [],
         ]);
 
         $this->assertEquals(200, $collection['headers']['status-code']);
@@ -2297,8 +2343,10 @@ trait DatabasesBase
                     'Samuel Jackson',
                 ]
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
@@ -2317,8 +2365,10 @@ trait DatabasesBase
                     'Samuel Jackson',
                 ]
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $this->assertEquals(201, $document['headers']['status-code']);
@@ -2337,8 +2387,10 @@ trait DatabasesBase
                     'Samuel Jackson',
                 ]
             ],
-            'read' => ['user:' . $this->getUser()['$id']],
-            'write' => ['user:' . $this->getUser()['$id']],
+            'permissions' => [
+                'read(user: ' . $this->getUser()['$id'] . ')',
+                'write(user: ' . $this->getUser()['$id'] . ')',
+            ]
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
@@ -2430,9 +2482,8 @@ trait DatabasesBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Movies',
-            'read' => [],
-            'write' => [],
-            'permission' => 'document',
+            'permissions' => [],
+            'documentSecurity' => true,
         ]);
 
         $this->assertEquals($movies['headers']['status-code'], 201);

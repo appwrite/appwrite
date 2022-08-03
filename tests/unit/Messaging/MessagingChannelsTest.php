@@ -118,8 +118,8 @@ class MessagingChannelsTest extends TestCase
          *  - XXX users
          *  - XXX teams
          *  - XXX team roles (2 roles per team)
-         *  - 1 role:guest
-         *  - 1 role:member
+         *  - 1 guests
+         *  - 1 users
          */
         $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 2), $this->realtime->subscriptions['1']);
 
@@ -179,7 +179,7 @@ class MessagingChannelsTest extends TestCase
 
     public function testRolePermissions()
     {
-        $roles = ['role:guest', 'role:member'];
+        $roles = ['guests', 'users'];
         foreach ($this->allChannels as $index => $channel) {
             foreach ($roles as $role) {
                 $permissions = [$role];

@@ -757,7 +757,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $name,  ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
