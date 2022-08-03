@@ -42,8 +42,8 @@ foreach (
     }
 }
 
-//$preloader
-    //->paths(realpath(__DIR__ . '/../app/config'))
-    //->paths(realpath(__DIR__ . '/../app/controllers'))
-    //->paths(realpath(__DIR__ . '/../src'))
-    //->load();
+$preloader
+    ->paths(realpath(__DIR__ . '/../app/config'))
+    ->paths(realpath(__DIR__ . '/../app/controllers'))
+    ->paths(realpath(__DIR__ . '/../src'))
+    ->load();

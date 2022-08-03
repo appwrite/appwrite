@@ -3312,7 +3312,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                //'filters' => ['json'],
+                'filters' => ['json'],
             ],
             [
                 '$id' => 'status',
@@ -3351,7 +3351,7 @@ $collections = [
         'indexes' => [
             [
                 '$id' => '_key_video_stream_profile',
-                'type' => Database::INDEX_UNIQUE,
+                'type' => Database::INDEX_KEY,
                 'attributes' => ['videoId', 'stream', 'profileId'],
                 'lengths' => [],
                 'orders' => [],
@@ -3433,8 +3433,8 @@ $collections = [
                 '$id' => '_key_renditionId',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['renditionId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
+                'lengths' => [],
+                'orders' => [],
             ],
         ]
     ],
@@ -3513,7 +3513,7 @@ $collections = [
         'indexes' => [
             [
                 '$id' => '_key_unique',
-                'type' => Database::INDEX_UNIQUE,
+                'type' => Database::INDEX_KEY,
                 'attributes' => ['stream', 'width', 'height', 'videoBitrate', 'audioBitrate' ],
                 'lengths' => [],
                 'orders' => [],

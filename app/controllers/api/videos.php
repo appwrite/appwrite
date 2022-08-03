@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Transcoding;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Stats\Stats;
@@ -86,10 +87,10 @@ App::post('/v1/videos/profiles')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VIDEO_PROFILE)
     ->param('name', null, new Text(128), 'Video profile name.')
-    ->param('videoBitrate', '', new Range(64, 4000), 'Video profile bitrate in Kbps.')
-    ->param('audioBitrate', '', new Range(64, 4000), 'Audio profile bit rate in Kbps.')
-    ->param('width', '', new Range(100, 2000), 'Video profile width.')
-    ->param('height', '', new Range(100, 2000), 'Video  profile height.')
+    ->param('videoBitrate', '', new Range(32, 5000), 'Video profile bitrate in Kbps.')
+    ->param('audioBitrate', '', new Range(32, 5000), 'Audio profile bit rate in Kbps.')
+    ->param('width', '', new Range(6, 3000), 'Video profile width.')
+    ->param('height', '', new Range(6, 3000), 'Video  profile height.')
     ->param('stream', false, new WhiteList(['hls', 'dash']), 'Video  profile stream protocol.')
     ->inject('response')
     ->inject('dbForProject')
@@ -267,7 +268,7 @@ App::post('/v1/videos/:videoId/subtitles')
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
         if (empty($video)) {
-            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
         }
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
@@ -380,7 +381,7 @@ App::delete('/v1/videos/:videoId/subtitles/:subtitleId')
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
         if ($video->isEmpty()) {
-            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
         }
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
@@ -479,16 +480,14 @@ App::delete('/v1/videos/:videoId')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('user')
-    ->inject('deviceVideos')
-    ->action(function (string $videoId, string $renditionId, Response $response, Document $project, Database $dbForProject, string $mode, Document $user, Device $deviceVideos) {
+    ->inject('deletes')
+    ->action(function (string $videoId, string $renditionId, Response $response, Document $project, Database $dbForProject, string $mode, Document $user, Delete $deletes) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
         if ($video->isEmpty()) {
-            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
         }
-
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
 
         $deleted = $dbForProject->deleteDocument('videos', $videoId);
 
@@ -496,28 +495,9 @@ App::delete('/v1/videos/:videoId')
             throw new Exception('Failed to remove video from DB', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
-        $renditions = Authorization::skip(fn() => $dbForProject->find('videos_renditions', [
-            new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
-        ], 12, 0, [], ['ASC']));
-
-        foreach ($renditions as $rendition) {
-            Authorization::skip(fn() => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
-        }
-
-        $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [
-            new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
-        ], 12, 0, [], ['ASC']));
-
-        foreach ($subtitles as $subtitle) {
-            Authorization::skip(fn() => $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId()));
-        }
-
-        foreach ($renditions as $rendition) {
-            Authorization::skip(fn() => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
-        }
-
-        $videoPath  = $this->getVideoDevice($project->getId())->getPath($this->args['videoId']);
-        $deviceVideos->deletePath($videoPath);
+        $deletes
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($video);
 
         $response->noContent();
     });
@@ -546,16 +526,16 @@ App::post('/v1/videos/:videoId/rendition')
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
-        if ($video->isEmpty()) {
-            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+        if (empty($video)) {
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
         }
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
 
         $profile = Authorization::skip(fn() => $dbForProject->findOne('videos_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$profileId])]));
 
-        if (!$profile) {
-            throw new Exception('Video profile not found', 400, Exception::VIDEO_PROFILE_NOT_FOUND);
+        if (empty($profile)) {
+            throw new Exception('Video profile not found', 404, Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
         $transcoder = new Transcoding();
@@ -592,7 +572,7 @@ App::get('/v1/videos/:videoId/rendition/:renditionId')
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
         if ($video->isEmpty()) {
-            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
         }
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
@@ -629,7 +609,7 @@ App::get('/v1/videos/:videoId/renditions')
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
         if ($video->isEmpty()) {
-            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
         }
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
@@ -640,7 +620,7 @@ App::get('/v1/videos/:videoId/renditions')
             new Query('status', Query::TYPE_EQUAL, ['ready']),
         ];
 
-        $renditions = Authorization::skip(fn () => $dbForProject->find('videos_renditions', $queries, 18, 0, [], ['ASC']));
+        $renditions = Authorization::skip(fn () => $dbForProject->find('videos_renditions', $queries));
 
         $response->dynamic(new Document([
             'total'      => $dbForProject->count('videos_renditions', $queries, APP_LIMIT_COUNT),
@@ -671,7 +651,7 @@ App::delete('/v1/videos/:videoId/renditions/:renditionId')
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
         if ($video->isEmpty()) {
-            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
         }
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
@@ -730,10 +710,10 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             new Query('endedAt', Query::TYPE_GREATER, [0]),
             new Query('status', Query::TYPE_EQUAL, ['ready']),
             new Query('stream', Query::TYPE_EQUAL, [$streamId]),
-        ], 12, 0, [], ['ASC']));
+        ]));
 
         if (empty($renditions)) {
-            throw new Exception('Rendition  not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
+            throw new Exception('Renditions  not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
         $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/streams/' . $streamId;
@@ -770,7 +750,10 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             $adaptationId = 0;
             foreach ($renditions as $rendition) {
                 $metadata = $rendition->getAttribute('metadata');
-                $xml = simplexml_load_string($metadata['xml']);
+                $xml = simplexml_load_string($metadata['mpd']);
+                if (empty($xml)) {
+                    continue;
+                }
                 $representationId = 0;
                 foreach ($xml->Period->AdaptationSet as $adaptation) {
                     $representation = [];
@@ -782,8 +765,10 @@ App::get('/v1/videos/:videoId/streams/:streamId')
                     $segments = Authorization::skip(fn() => $dbForProject->find('videos_renditions_segments', [
                         new Query('renditionId', Query::TYPE_EQUAL, [$rendition->getId()]),
                         new Query('representationId', Query::TYPE_EQUAL, [$representationId]),
-                        ], 1000, 0, ['representationId'], ['ASC']));
-
+                        ], 1000, 0, ['representationId']));
+                    if (count($segments) === 0) {
+                        continue;
+                    }
                     foreach ($segments ?? [] as $segment) {
                         if ($segment->getAttribute('isInit')) {
                             $representation['SegmentList']['Initialization'] = $segment->getId();

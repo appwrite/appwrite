@@ -68,6 +68,9 @@ class DeletesV1 extends Worker
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($document, $project->getId());
                         break;
+                    case DELETE_TYPE_VIDEOS:
+                        $this->deleteVideo($document, $project->getId());
+                        break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
                         break;
@@ -620,5 +623,44 @@ class DeletesV1 extends Worker
         $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
 
         $device->deletePath($document->getId());
+    }
+
+    /**
+     * @param Document $document database document
+     * @param string $projectId
+     */
+    protected function deleteVideo(Document $document, string $projectId): void
+    {
+
+        $videoId = $document->getId();
+        $dbForProject = $this->getProjectDB($projectId);
+        $renditions = Authorization::skip(fn() => $dbForProject->find('videos_renditions', [
+            new Query('videoId', Query::TYPE_EQUAL, [$videoId])]));
+        foreach ($renditions as $rendition) {
+            $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [
+                new Query('videoId', Query::TYPE_EQUAL, [$videoId])]));
+            foreach ($subtitles as $subtitle) {
+                $segments = Authorization::skip(fn() => $dbForProject->find('videos_subtitles_segments', [
+                    new Query('subtitleId', Query::TYPE_EQUAL, [$subtitle->getId()])]));
+                foreach ($segments as $segment) {
+                    Authorization::skip(fn() => $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId()));
+                }
+                Authorization::skip(fn() => $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId()));
+            }
+
+            $this->deleteByGroup('videos_renditions_segments', [
+                new Query('renditionId', Query::TYPE_EQUAL, [$rendition->getId()])
+            ], $dbForProject);
+
+            Authorization::skip(fn() => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
+        }
+
+        $videosDevice = $this->getVideoDevice($projectId);
+        $videosPath = $videosDevice->getPath($videoId);
+        if ($videosDevice->deletePath($videosPath)) {
+            Console::success('Deleted video directory: ' . $videosPath);
+        } else {
+            Console::error('Failed to delete video directory: ' . $videosPath);
+        }
     }
 }

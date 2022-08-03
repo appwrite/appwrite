@@ -12,12 +12,12 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use FFMpeg\FFProbe\DataMapping\StreamCollection;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Captioning\Format\SubripFile;
+use Utopia\Storage\Device;
 
 require_once __DIR__ . '/../init.php';
 
@@ -87,49 +87,44 @@ class TranscodingV1 extends Worker
 
         $bucket = Authorization::skip(fn() => $this->database->getDocument('buckets', $sourceVideo['bucketId']));
         $file = Authorization::skip(fn() => $this->database->getDocument('bucket_' . $bucket->getInternalId(), $sourceVideo['fileId']));
-        $data = $this->getFilesDevice($project->getId())->read($file->getAttribute('path'));
         $fileName = basename($file->getAttribute('path'));
         $inPath = $this->inDir . $fileName;
         $collection = 'videos_renditions';
 
-        if (!empty($file->getAttribute('openSSLCipher'))) {
-            $data = OpenSSL::decrypt(
-                $data,
-                $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
+        if (
+            !empty($file->getAttribute('openSSLCipher')) ||
+            !empty($file->getAttribute('algorithm', ''))
+        ) {
+            $data = $this->getFilesDevice($project->getId())->read($file->getAttribute('path'));
+            if (!empty($file->getAttribute('openSSLCipher'))) {
+                $data = OpenSSL::decrypt(
+                    $data,
+                    $file->getAttribute('openSSLCipher'),
+                    App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                    0,
+                    \hex2bin($file->getAttribute('openSSLIV')),
+                    \hex2bin($file->getAttribute('openSSLTag'))
+                );
+            }
+
+            if (!empty($file->getAttribute('algorithm', ''))) {
+                $compressor = new GZIP();
+                $data = $compressor->decompress($data);
+            }
+
+            $this->getFilesDevice($project->getId())->write($this->inDir . $fileName, $data, $file->getAttribute('mimeType'));
+        } else {
+            $this->getFilesDevice($project->getId())->transfer($file->getAttribute('path'), $this->inDir . $fileName, $this->getFilesDevice($project->getId()));
         }
 
-        if (!empty($file->getAttribute('algorithm', ''))) {
-            $compressor = new GZIP();
-            $data = $compressor->decompress($data);
-        }
-
-        $this->getFilesDevice($project->getId())->write($this->inDir . $fileName, $data, $file->getAttribute('mimeType'));
-
-        $ffprobe = FFMpeg\FFProbe::create([]);
-        $ffmpeg = Streaming\FFMpeg::create([]);
+        $ffprobe = FFMpeg\FFProbe::create();
+        $ffmpeg = Streaming\FFMpeg::create([
+            'timeout' => 0,
+            'ffmpeg.threads'  => 12
+        ]);
 
         if (!$ffprobe->isValid($inPath)) {
             throw new Exception('Not an valid FFMpeg file "' . $inPath . '"');
-        }
-
-        //Delete prev rendition
-        $queries = [
-            new Query('videoId', Query::TYPE_EQUAL, [$sourceVideo->getId()]),
-            new Query('profileId', Query::TYPE_EQUAL, [$profile->getId()])
-        ];
-
-        $rendition = Authorization::skip(fn() => $this->database->findOne($collection, $queries));
-        if (!empty($rendition)) {
-            Authorization::skip(fn() => $this->database->deleteDocument($collection, $rendition->getId()));
-            $deviceFiles = $this->getVideoDevice($project->getId());
-            if (!empty($rendition['path'])) {
-                $deviceFiles->deletePath($rendition['path']);
-            }
         }
 
         $general = $this->getVideoSourceInfo($ffprobe->streams($inPath));
@@ -152,11 +147,10 @@ class TranscodingV1 extends Worker
         $subtitles = Authorization::skip(fn () => $this->database->find('videos_subtitles', [
             new Query('status', Query::TYPE_EQUAL, ['']),
             new Query('videoId', Query::TYPE_EQUAL, [$this->args['videoId']])
-        ], 12, 0, [], ['ASC']));
+        ]));
 
         foreach ($subtitles as $subtitle) {
             $subtitle->setAttribute('status', self::STATUS_START);
-            $subtitle->setAttribute('path', $this->getRenditionName());
             Authorization::skip(fn() => $this->database->updateDocument(
                 'videos_subtitles',
                 $subtitle->getId(),
@@ -165,26 +159,35 @@ class TranscodingV1 extends Worker
 
             $subtitleBucket = Authorization::skip(fn() => $this->database->getDocument('buckets', $subtitle->getAttribute('bucketId')));
             $subtitleFile = Authorization::skip(fn() => $this->database->getDocument('bucket_' . $subtitleBucket->getInternalId(), $subtitle->getAttribute('fileId')));
-            $subtitleData = $this->getFilesDevice($project->getId())->read($subtitleFile->getAttribute('path'));
             $subtitleFileName = basename($subtitleFile->getAttribute('path'));
 
-            if (!empty($subtitleFile->getAttribute('openSSLCipher'))) {
-                $subtitleData = OpenSSL::decrypt(
-                    $subtitleData,
-                    $subtitleFile->getAttribute('openSSLCipher'),
-                    App::getEnv('_APP_OPENSSL_KEY_V' . $subtitleFile->getAttribute('openSSLVersion')),
-                    0,
-                    \hex2bin($subtitleFile->getAttribute('openSSLIV')),
-                    \hex2bin($subtitleFile->getAttribute('openSSLTag'))
-                );
+            if (
+                !empty($subtitleFile->getAttribute('openSSLCipher')) ||
+                !empty($subtitleFile->getAttribute('algorithm', ''))
+            ) {
+                $subtitleData = $this->getFilesDevice($project->getId())->read($subtitleFile->getAttribute('path'));
+
+                if (!empty($subtitleFile->getAttribute('openSSLCipher'))) {
+                    $subtitleData = OpenSSL::decrypt(
+                        $subtitleData,
+                        $subtitleFile->getAttribute('openSSLCipher'),
+                        App::getEnv('_APP_OPENSSL_KEY_V' . $subtitleFile->getAttribute('openSSLVersion')),
+                        0,
+                        \hex2bin($subtitleFile->getAttribute('openSSLIV')),
+                        \hex2bin($subtitleFile->getAttribute('openSSLTag'))
+                    );
+                }
+
+                if (!empty($subtitleFile->getAttribute('algorithm', ''))) {
+                    $compressor = new GZIP();
+                    $subtitleData = $compressor->decompress($subtitleData);
+                }
+
+                $this->getFilesDevice($project->getId())->write($this->inDir . $subtitleFileName, $subtitleData, $subtitleFile->getAttribute('mimeType'));
+            } else {
+                $this->getFilesDevice($project->getId())->transfer($subtitleFile->getAttribute('path'), $this->inDir . $subtitleFileName, $this->getFilesDevice($project->getId()));
             }
 
-            if (!empty($subtitleFile->getAttribute('algorithm', ''))) {
-                $compressor = new GZIP();
-                $subtitleData = $compressor->decompress($subtitleData);
-            }
-
-            $this->getFilesDevice($project->getId())->write($this->inDir . $subtitleFileName, $subtitleData, $subtitleFile->getAttribute('mimeType'));
             $ext = pathinfo($subtitleFileName, PATHINFO_EXTENSION);
 
             if ($ext === 'srt') {
@@ -198,7 +201,7 @@ class TranscodingV1 extends Worker
                  'path' => $this->inDir . $this->args['videoId'] . '.vtt',
             ];
         }
-        try {
+
             $query = Authorization::skip(function () use ($collection, $profile) {
                     return $this->database->createDocument($collection, new Document([
                         'videoId'  => $this->args['videoId'],
@@ -209,10 +212,9 @@ class TranscodingV1 extends Worker
                         'stream'    => $profile['stream'],
                     ]));
             });
-        } catch (DuplicateException $exception) {
-            throw new Exception('Video  rendition already exists', 409, Exception::VIDEO_RENDITION_ALREADY_EXISTS);
-        }
 
+        $renditionRootPath = $this->getVideoDevice($project->getId())->getPath($this->args['videoId']) . '/';
+        $renditionPath = $renditionRootPath . $this->getRenditionName() . '-' . $query->getId() .  '/';
 
         try {
             $representation = (new Representation())->
@@ -243,12 +245,12 @@ class TranscodingV1 extends Worker
                 $m3u8 = $this->parseM3u8($this->outPath . '_' . $representation->getHeight() . 'p.m3u8');
                 if (!empty($m3u8['segments'])) {
                     foreach ($m3u8['segments'] as $segment) {
-                        Authorization::skip(function () use ($segment, $project, $query) {
+                        Authorization::skip(function () use ($segment, $project, $query, $renditionPath) {
                             return $this->database->createDocument('videos_renditions_segments', new Document([
                                 'renditionId' => $query->getId(),
                                 'representationId' => 0,
                                 'fileName' => $segment['fileName'],
-                                'path' => $this->getVideoDevice($project->getId())->getPath($this->args['videoId']) . '/' . $this->getRenditionName() . '/',
+                                'path' => $renditionPath,
                                 'duration' => $segment['duration'],
                             ]));
                         });
@@ -256,16 +258,15 @@ class TranscodingV1 extends Worker
                 }
                 $query->setAttribute('targetDuration', $m3u8['targetDuration']);
             } else {
-
                 $mpd = $this->parseMpd($this->outPath . '.mpd');
                 if (!empty($mpd['segments'])) {
                     foreach ($mpd['segments'] as $segment) {
-                        Authorization::skip(function () use ($segment, $project, $query) {
+                        Authorization::skip(function () use ($segment, $project, $query, $renditionPath) {
                             return $this->database->createDocument('videos_renditions_segments', new Document([
                                 'renditionId' => $query->getId(),
                                 'representationId' => $segment['representationId'],
                                 'fileName' => $segment['fileName'],
-                                'path' => $this->getVideoDevice($project->getId())->getPath($this->args['videoId']) . '/' . $this->getRenditionName() . '/',
+                                'path' => $renditionPath,
                                 'isInit' => $segment['isInit'],
                                 ]));
                         });
@@ -273,7 +274,7 @@ class TranscodingV1 extends Worker
                 }
 
                 if (!empty($mpd['metadata'])) {
-                    $query->setAttribute('metadata', json_encode(['xml' => $mpd['metadata']]));
+                    $query->setAttribute('metadata', json_encode(['mpd' => $mpd['metadata']]));
                 }
             }
 
@@ -286,11 +287,11 @@ class TranscodingV1 extends Worker
                     if ($profile['stream'] === 'hls') {
                         $m3u8 = $this->parseM3u8($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
                         foreach ($m3u8['segments'] as $segment) {
-                            Authorization::skip(function () use ($segment, $project, $subtitle) {
+                            Authorization::skip(function () use ($segment, $project, $subtitle, $renditionRootPath) {
                                 return $this->database->createDocument('videos_subtitles_segments', new Document([
                                     'subtitleId'  =>  $subtitle->getId(),
                                     'fileName'  => $segment['fileName'],
-                                    'path'  => $this->getVideoDevice($project->getId())->getPath($this->args['videoId']) . '/' ,
+                                    'path'  => $renditionRootPath ,
                                     'duration' => $segment['duration'],
                                 ]));
                             });
@@ -299,6 +300,7 @@ class TranscodingV1 extends Worker
                     }
 
                     $subtitle->setAttribute('status', self::STATUS_READY);
+                    $subtitle->setAttribute('path', $renditionRootPath);
                     Authorization::skip(fn() => $this->database->updateDocument(
                         'videos_subtitles',
                         $subtitle->getId(),
@@ -306,7 +308,7 @@ class TranscodingV1 extends Worker
                     ));
                 }
             }
-         /** Upload & remove files **/
+         /** Upload & cleanup **/
             $start = 0;
             $fileNames = scandir($this->outDir);
 
@@ -316,28 +318,19 @@ class TranscodingV1 extends Worker
                     continue;
                 }
 
-                $devicePath  = $this->getVideoDevice($project->getId())->getPath($this->args['videoId']);
                 $data = $this->getFilesDevice($project->getId())->read($this->outDir . $fileName);
-                $to = $devicePath . '/' . $this->getRenditionName() . '/';
+                $to = $renditionPath;
                 if (str_contains($fileName, "_subtitles_") || str_contains($fileName, ".vtt")) {
-                    $to = $devicePath . '/';
+                    $to = $renditionRootPath;
                 }
 
                 $this->getVideoDevice($project->getId())->write($to .  $fileName, $data, \mime_content_type($this->outDir . $fileName));
                 if ($start === 0) {
                     $query->setAttribute('status', self::STATUS_UPLOADING);
-                    $query->setAttribute('path', $devicePath . '/' . $this->getRenditionName());
+                    $query->setAttribute('path', $renditionPath);
                     Authorization::skip(fn() => $this->database->updateDocument($collection, $query->getId(), $query));
                     $start = 1;
                 }
-
-                //$metadata=[];
-                //$chunksUploaded = $deviceFiles->upload($file, $path, -1, 1, $metadata);
-                //var_dump($chunksUploaded);
-                // if (empty($chunksUploaded)) {
-                //  throw new Exception('Failed uploading file', 500, Exception::GENERAL_SERVER_ERROR);
-                //}
-                // }
 
                 //@unlink($this->outDir . $fileName);
             }
@@ -345,9 +338,11 @@ class TranscodingV1 extends Worker
             $query->setAttribute('status', self::STATUS_READY);
             Authorization::skip(fn() => $this->database->updateDocument($collection, $query->getId(), $query));
         } catch (\Throwable $th) {
+            var_dump($th->getCode());
+            var_dump($th->getMessage());
             $query->setAttribute('metadata', json_encode([
             'code' => $th->getCode(),
-            'message' => substr($th->getMessage(), 0, 2048),
+            'message' => substr($th->getMessage(), 0, 3800),
             ]));
 
             $query->setAttribute('status', self::STATUS_ERROR);
@@ -365,14 +360,13 @@ class TranscodingV1 extends Worker
      */
     private function transcode(string $stream, Media $video, StreamFormat $format, Representation $representation, array $subtitles): string | array
     {
-
         $additionalParams = [
             '-dn',
             '-sn',
-            '-vf', 'scale=iw:-2:force_original_aspect_ratio=increase,setsar=1:1'
+            '-vf', 'scale=iw:-2:force_original_aspect_ratio=increase,setsar=1:1',
         ];
 
-        $segmentSize = 10;
+        $segmentSize = 8;
 
         if ($stream === 'dash') {
                 $dash = $video->dash()
@@ -481,15 +475,14 @@ class TranscodingV1 extends Worker
      */
     private function getVideoSourceInfo(StreamCollection $streams): array
     {
-
             return [
-                'duration' => $streams->videos()->count() ? $streams->videos()->first()->get('duration') : '0',
-                'height' => $streams->videos()->count()  ? $streams->videos()->first()->get('height') : 0,
-                'width' => $streams->videos()->count()  ? $streams->videos()->first()->get('width') : 0,
-                'videoCodec'   => $streams->videos()->count()  ? $streams->videos()->first()->get('codec_name') . ',' . $streams->videos()->first()->get('codec_tag_string') : '',
-                'videoFramerate' => $streams->videos()->count()  ? $streams->videos()->first()->get('avg_frame_rate') : '',
+                'duration' => $streams->videos()->count()> 0 ? $streams->videos()->first()->get('duration') : '0',
+                'height' => $streams->videos()->count()> 0 ? $streams->videos()->first()->get('height') : 0,
+                'width' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('width') : 0,
+                'videoCodec'   => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('codec_name') : '',
+                'videoFramerate' => $streams->videos()->count() > 0  ? $streams->videos()->first()->get('avg_frame_rate') : '',
                 'videoBitrate' =>  $streams->videos()->count() > 0 ? (int)$streams->videos()->first()->get('bit_rate') : 0,
-                 'audioCodec' =>   $streams->audios()->count() > 0 ? $streams->audios()->first()->get('codec_name') . ',' . $streams->audios()->first()->get('codec_tag_string') : '',
+                 'audioCodec' =>   $streams->audios()->count() > 0 ? $streams->audios()->first()->get('codec_name')  : '',
                 'audioSamplerate' => $streams->audios()->count() > 0 ? (int)$streams->audios()->first()->get('sample_rate') : 0,
                 'audioBitrate'   =>  $streams->audios()->count() > 0 ? (int)$streams->audios()->first()->get('bit_rate') : 0,
              ];
@@ -508,19 +501,18 @@ class TranscodingV1 extends Worker
 //        }
         $info['width'] =  $representation->getWidth();
         $info['height'] = $representation->getHeight();
-        if (!empty($metadata['video']['streams'])) {
-            foreach ($metadata['video']['streams'] as $streams) {
+
+            foreach ($metadata['video']['streams'] ?? [] as $streams) {
                 if ($streams['codec_type'] === 'video') {
                     $info['duration'] = !empty($streams['duration']) ? $streams['duration'] : '0';
-                    $info['videoCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] . ',' . $streams['codec_tag_string'] : '';
-                    $info['videoBitrate'] = !empty($streams['bit_rate']) ? (int)$streams['bit_rate'] : $representation->getKiloBitrate() * 1024;
+                    $info['videoCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] : '';
+                    $info['videoBitrate'] = !empty($streams['bit_rate']) ? (int)$streams['bit_rate'] : $representation->getKiloBitrate();
                     $info['videoFramerate'] = !empty($streams['avg_frame_rate']) ? $streams['avg_frame_rate'] : '';
                 } elseif ($streams['codec_type'] === 'audio') {
-                    $info['audioCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] . ',' . $streams['codec_tag_string'] : '' ;
+                    $info['audioCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] : '' ;
                     $info['audioSamplerate'] = !empty($streams['sample_rate']) ? (int)$streams['sample_rate'] : 0;
-                    $info['audioBitrate'] = !empty($streams['bit_rate']) ? (int)$streams['bit_rate'] : $representation->getAudioKiloBitrate() * 1024;
+                    $info['audioBitrate'] = !empty($streams['bit_rate']) ? (int)$streams['bit_rate'] : $representation->getAudioKiloBitrate();
                 }
-            }
         }
         return $info;
     }
