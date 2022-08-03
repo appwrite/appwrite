@@ -100,16 +100,6 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => 'permission',
-                'type' => Database::VAR_STRING,
-                'size' => 64,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => 'attributes',
                 'type' => Database::VAR_STRING,
                 'size' => 1000000,
@@ -2528,6 +2518,7 @@ $collections = [
         '$collection' => Database::METADATA,
         '$id' => 'buckets',
         'name' => 'Buckets',
+        'documentSecurity' => true,
         'attributes' => [
             [
                 '$id' => 'enabled',
@@ -2548,16 +2539,6 @@ $collections = [
                 'filters' => [],
                 'required' => true,
                 'array' => false,
-            ],
-            [
-                '$id' => 'permission',
-                'type' => Database::VAR_STRING,
-                'size' => 64,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
             ],
             [
                 '$id' => 'maximumFileSize',

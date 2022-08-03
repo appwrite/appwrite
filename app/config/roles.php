@@ -52,8 +52,8 @@ $admins = [
 ];
 
 return [
-    Auth::USER_ROLE_GUEST => [
-        'label' => 'Guest',
+    Auth::USER_ROLE_GUESTS => [
+        'label' => 'Guests',
         'scopes' => [
             'public',
             'home',
@@ -64,8 +64,8 @@ return [
             'avatars.read',
         ],
     ],
-    Auth::USER_ROLE_MEMBER => [
-        'label' => 'Member',
+    Auth::USER_ROLE_USERS => [
+        'label' => 'Users',
         'scopes' => \array_merge($member, []),
     ],
     Auth::USER_ROLE_ADMIN => [
