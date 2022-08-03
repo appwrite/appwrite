@@ -28,11 +28,6 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => 'unique()',
             'name' => 'Test',
             'runtime' => 'php-8.0',
-            'vars' => [
-                'funcKey1' => 'funcValue1',
-                'funcKey2' => 'funcValue2',
-                'funcKey3' => 'funcValue3',
-            ],
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -51,16 +46,40 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsInt($response1['body']['$updatedAt']);
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
-            'funcKey1' => 'funcValue1',
-            'funcKey2' => 'funcValue2',
-            'funcKey3' => 'funcValue3',
-        ], $response1['body']['vars']);
-        $this->assertEquals([
             'users.*.create',
             'users.*.delete',
         ], $response1['body']['events']);
         $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(10, $response1['body']['timeout']);
+
+        /** Create Variables */
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'funcKey1',
+            'value' => 'funcValue1',
+        ]);
+
+        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'funcKey2',
+            'value' => 'funcValue2',
+        ]);
+
+        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'funcKey3',
+            'value' => 'funcValue3',
+        ]);
+        
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertEquals(201, $variable3['headers']['status-code']);
 
         /**
          * Test for FAILURE
@@ -126,11 +145,6 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => 'unique()',
             'name' => 'Test 2',
             'runtime' => 'php-8.0',
-            'vars' => [
-                'funcKey1' => 'funcValue1',
-                'funcKey2' => 'funcValue2',
-                'funcKey3' => 'funcValue3',
-            ],
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -139,6 +153,35 @@ class FunctionsCustomServerTest extends Scope
             'timeout' => 10,
         ]);
         $this->assertNotEmpty($response['body']['$id']);
+
+        /** Create Variables */
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $response['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'funcKey1',
+            'value' => 'funcValue1',
+        ]);
+        
+        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $response['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'funcKey2',
+            'value' => 'funcValue2',
+        ]);
+        
+        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $response['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'funcKey3',
+            'value' => 'funcValue3',
+        ]);
+        
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertEquals(201, $variable3['headers']['status-code']);
 
         $functions = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
             'content-type' => 'application/json',
@@ -232,11 +275,6 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test1',
-            'vars' => [
-                'key4' => 'value4',
-                'key5' => 'value5',
-                'key6' => 'value6',
-            ],
             'events' => [
                 'users.*.update.name',
                 'users.*.update.email',
@@ -251,11 +289,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsInt($response1['body']['$createdAt']);
         $this->assertIsInt($response1['body']['$updatedAt']);
         $this->assertEquals('', $response1['body']['deployment']);
-        $this->assertEquals([
-            'key4' => 'value4',
-            'key5' => 'value5',
-            'key6' => 'value6',
-        ], $response1['body']['vars']);
         $this->assertEquals([
             'users.*.update.name',
             'users.*.update.email',
@@ -714,7 +747,6 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => 'unique()',
             'name' => 'Test ' . $name,
             'runtime' => $name,
-            'vars' => [],
             'events' => [],
             'schedule' => '',
             'timeout' => $timeout,
@@ -799,7 +831,6 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => 'unique()',
             'name' => 'Test ' . $name,
             'runtime' => $name,
-            'vars' => [],
             'events' => [],
             'schedule' => '',
             'timeout' => $timeout,
@@ -908,9 +939,6 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => 'unique()',
             'name' => 'Test ' . $name,
             'runtime' => $name,
-            'vars' => [
-                'CUSTOM_VARIABLE' => 'variable',
-            ],
             'events' => [],
             'schedule' => '',
             'timeout' => $timeout,
@@ -919,6 +947,17 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $function['body']['$id'] ?? '';
 
         $this->assertEquals(201, $function['headers']['status-code']);
+
+        // Create variable
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'CUSTOM_VARIABLE',
+            'value' => 'variable',
+        ]);
+        
+        $this->assertEquals(201, $variable['headers']['status-code']);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
@@ -1013,9 +1052,6 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => 'unique()',
             'name' => 'Test ' . $name,
             'runtime' => $name,
-            'vars' => [
-                'CUSTOM_VARIABLE' => 'variable',
-            ],
             'events' => [],
             'schedule' => '',
             'timeout' => $timeout,
@@ -1024,6 +1060,17 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $function['body']['$id'] ?? '';
 
         $this->assertEquals(201, $function['headers']['status-code']);
+
+        /** Create Variables */
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'CUSTOM_VARIABLE',
+            'value' => 'variable',
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
@@ -1118,9 +1165,6 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => 'unique()',
             'name' => 'Test ' . $name,
             'runtime' => $name,
-            'vars' => [
-                'CUSTOM_VARIABLE' => 'variable',
-            ],
             'events' => [],
             'schedule' => '',
             'timeout' => $timeout,
@@ -1129,6 +1173,17 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $function['body']['$id'] ?? '';
 
         $this->assertEquals(201, $function['headers']['status-code']);
+
+        /** Create Variables */
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'CUSTOM_VARIABLE',
+            'value' => 'variable',
+        ]);
+    
+        $this->assertEquals(201, $variable['headers']['status-code']);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
@@ -1223,9 +1278,6 @@ class FunctionsCustomServerTest extends Scope
             'functionId' => 'unique()',
             'name' => 'Test ' . $name,
             'runtime' => $name,
-            'vars' => [
-                'CUSTOM_VARIABLE' => 'variable',
-            ],
             'events' => [],
             'schedule' => '',
             'timeout' => $timeout,
@@ -1234,6 +1286,17 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $function['body']['$id'] ?? '';
 
         $this->assertEquals(201, $function['headers']['status-code']);
+
+        /** Create Variables */
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'CUSTOM_VARIABLE',
+            'value' => 'variable',
+        ]);
+        
+        $this->assertEquals(201, $variable['headers']['status-code']);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',

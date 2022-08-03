@@ -71,7 +71,6 @@ App::post('/v1/functions')
             'name' => $name,
             'runtime' => $runtime,
             'deployment' => '',
-            'vars' => null,
             'events' => $events,
             'schedule' => $schedule,
             'schedulePrevious' => 0,
@@ -909,8 +908,11 @@ App::post('/v1/functions/:functionId/executions')
             return $response->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
-        /** Collect environment variables */
-        $vars = \array_merge($function->getAttribute('vars', []), [
+        $variables = $dbForProject->find('variables', [
+            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()]),
+        ], 5000);
+
+        $vars = \array_merge($variables, [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
@@ -1119,7 +1121,7 @@ App::post('/v1/functions/variables/:functionId')
     ->desc('Create Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createVariable')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
@@ -1163,7 +1165,7 @@ App::get('/v1/functions/variables/:functionId')
     ->desc('List Variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listVariables')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -1194,7 +1196,7 @@ App::get('/v1/functions/variables/:functionId/:variableId')
     ->desc('Get Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getVariable')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -1227,7 +1229,7 @@ App::put('/v1/functions/variables/:functionId/:variableId')
     ->desc('Update Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'updateVariable')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -1279,7 +1281,7 @@ App::delete('/v1/functions/variables/:functionId/:variableId')
     ->desc('Delete Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'deleteVariable')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)

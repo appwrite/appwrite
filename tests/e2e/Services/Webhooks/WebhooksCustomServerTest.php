@@ -443,15 +443,22 @@ class WebhooksCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Test',
             'runtime' => 'php-8.0',
-            'execute' => ['role:all'],
-            'vars' => [
-                'key1' => 'value1',
-            ]
+            'execute' => ['role:all']
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
         $this->assertEquals($function['body']['$id'], $data['functionId']);
-        $this->assertEquals($function['body']['vars'], ['key1' => 'value1']);
+
+        // Create variable
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'key1',
+            'value' => 'value1',
+        ]);
+        
+        $this->assertEquals(201, $variable['headers']['status-code']);
 
         $webhook = $this->getLastRequest();
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);

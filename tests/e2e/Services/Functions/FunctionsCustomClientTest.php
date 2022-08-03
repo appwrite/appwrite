@@ -27,11 +27,6 @@ class FunctionsCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'functionId' => 'unique()',
             'name' => 'Test',
-            'vars' => [
-                'funcKey1' => 'funcValue1',
-                'funcKey2' => 'funcValue2',
-                'funcKey3' => 'funcValue3',
-            ],
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -59,11 +54,6 @@ class FunctionsCustomClientTest extends Scope
             'name' => 'Test',
             'execute' => ['user:' . $this->getUser()['$id']],
             'runtime' => 'php-8.0',
-            'vars' => [
-                'funcKey1' => 'funcValue1',
-                'funcKey2' => 'funcValue2',
-                'funcKey3' => 'funcValue3',
-            ],
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -73,6 +63,38 @@ class FunctionsCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $function['headers']['status-code']);
+
+        /** Create Variables */
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $function['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'key' => 'funcKey1',
+            'value' => 'funcValue1',
+        ]);
+
+        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $function['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'key' => 'funcKey2',
+            'value' => 'funcValue2',
+        ]);
+
+        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $function['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'key' => 'funcKey3',
+            'value' => 'funcValue3',
+        ]);
+        
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertEquals(201, $variable3['headers']['status-code']);
 
         $folder = 'php';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
@@ -149,17 +171,44 @@ class FunctionsCustomClientTest extends Scope
             'name' => 'Test',
             'execute' => ['role:all'],
             'runtime' => 'php-8.0',
-            'vars' => [
-                'funcKey1' => 'funcValue1',
-                'funcKey2' => 'funcValue2',
-                'funcKey3' => 'funcValue3',
-            ],
             'timeout' => 10,
         ]);
 
         $functionId = $function['body']['$id'] ?? '';
 
         $this->assertEquals(201, $function['headers']['status-code']);
+        
+        /** Create Variables */
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
+        ], [
+            'key' => 'funcKey1',
+            'value' => 'funcValue1',
+        ]);
+    
+        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
+        ], [
+            'key' => 'funcKey2',
+            'value' => 'funcValue2',
+        ]);
+    
+        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
+        ], [
+            'key' => 'funcKey3',
+            'value' => 'funcValue3',
+        ]);
+        
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertEquals(201, $variable3['headers']['status-code']);
 
         $folder = 'php-fn';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
@@ -334,17 +383,44 @@ class FunctionsCustomClientTest extends Scope
             'name' => 'Test',
             'execute' => ['role:all'],
             'runtime' => 'php-8.0',
-            'vars' => [
-                'funcKey1' => 'funcValue1',
-                'funcKey2' => 'funcValue2',
-                'funcKey3' => 'funcValue3',
-            ],
             'timeout' => 10,
         ]);
 
         $functionId = $function['body']['$id'] ?? '';
 
         $this->assertEquals(201, $function['headers']['status-code']);
+
+        /** Create Variables */
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
+        ], [
+            'key' => 'funcKey1',
+            'value' => 'funcValue1',
+        ]);
+    
+        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
+        ], [
+            'key' => 'funcKey2',
+            'value' => 'funcValue2',
+        ]);
+    
+        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apikey,
+        ], [
+            'key' => 'funcKey3',
+            'value' => 'funcValue3',
+        ]);
+        
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertEquals(201, $variable2['headers']['status-code']);
+        $this->assertEquals(201, $variable3['headers']['status-code']);
 
         $folder = 'php-fn';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";

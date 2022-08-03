@@ -22,11 +22,6 @@ class FunctionsConsoleClientTest extends Scope
             'name' => 'Test',
             'execute' => ['user:' . $this->getUser()['$id']],
             'runtime' => 'php-8.0',
-            'vars' => [
-                'funcKey1' => 'funcValue1',
-                'funcKey2' => 'funcValue2',
-                'funcKey3' => 'funcValue3',
-            ],
             'events' => [
                 'users.*.create',
                 'users.*.delete',
