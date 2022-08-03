@@ -103,8 +103,9 @@ class FunctionsConsoleClientTest extends Scope
     /**
      * @depends testCreateFunction
      */
-    public function testCreateFunctionVariable(array $data) {
-        $response = $this->client->call(Client::METHOD_POST, '/functions/variables/'.$data['functionId'], array_merge([
+    public function testCreateFunctionVariable(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -126,8 +127,9 @@ class FunctionsConsoleClientTest extends Scope
      * Test for FAILURE
      * @depends testCreateFunctionVariable
      */
-    public function testCreateDuplicateVariable(array $data) {
-        $response = $this->client->call(Client::METHOD_POST, '/functions/variables/'.$data['functionId'], array_merge([
+    public function testCreateDuplicateVariable(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -143,8 +145,9 @@ class FunctionsConsoleClientTest extends Scope
     /**
      * @depends testCreateDuplicateVariable
      */
-    public function testListVariables(array $data) {
-        $response = $this->client->call(Client::METHOD_GET, '/functions/variables/'.$data['functionId'], array_merge([
+    public function testListVariables(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/functions/variables/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -153,15 +156,16 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(1, sizeof($response['body']['variables']));
         $this->assertEquals("APP_TEST", $response['body']['variables'][0]['key']);
         $this->assertEquals("TESTINGVALUE", $response['body']['variables'][0]['value']);
-    
+
         return $data;
     }
 
     /**
      * @depends testListVariables
      */
-    public function testGetVariable(array $data) {
-        $response = $this->client->call(Client::METHOD_GET, '/functions/variables/'.$data['functionId'].'/'.$data['variableId'], array_merge([
+    public function testGetVariable(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/functions/variables/' . $data['functionId'] . '/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -176,8 +180,9 @@ class FunctionsConsoleClientTest extends Scope
     /**
      * @depends testGetVariable
      */
-    public function testUpdateVariable(array $data) {
-        $response = $this->client->call(Client::METHOD_PUT, '/functions/variables/'.$data['functionId'].'/'.$data['variableId'], array_merge([
+    public function testUpdateVariable(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/variables/' . $data['functionId'] . '/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -187,7 +192,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $variable = $this->client->call(Client::METHOD_GET, '/functions/variables/'.$data['functionId'].'/'.$data['variableId'], array_merge([
+        $variable = $this->client->call(Client::METHOD_GET, '/functions/variables/' . $data['functionId'] . '/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -202,15 +207,16 @@ class FunctionsConsoleClientTest extends Scope
     /**
      * @depends testUpdateVariable
      */
-    public function testDeleteVariable(array $data) {
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/variables/'.$data['functionId'].'/'.$data['variableId'], array_merge([
+    public function testDeleteVariable(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/variables/' . $data['functionId'] . '/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/functions/variables/'.$data['functionId'], array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/functions/variables/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
