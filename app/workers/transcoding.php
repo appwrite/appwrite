@@ -38,8 +38,6 @@ class TranscodingV1 extends Worker
     const STREAM_HLS = 'hls';
     const STREAM_MPEG_DASH = 'dash';
 
-    const BASE_URL_ENDPOINT = 'http://127.0.0.1/v1/videos';
-
     //protected string $basePath = '/tmp/';
     protected string $basePath = '/usr/src/code/tests/tmp/';
 
@@ -217,10 +215,11 @@ class TranscodingV1 extends Worker
         $renditionPath = $renditionRootPath . $this->getRenditionName() . '-' . $query->getId() .  '/';
 
         try {
-            $representation = (new Representation())->
-            setKiloBitrate($profile->getAttribute('videoBitrate'))->
-            setAudioKiloBitrate($profile->getAttribute('audioBitrate'))->
-            setResize($profile->getAttribute('width'), $profile->getAttribute('height'));
+            $representation = (new Representation())
+                ->setKiloBitrate($profile->getAttribute('videoBitrate'))
+                ->setAudioKiloBitrate($profile->getAttribute('audioBitrate'))
+                ->setResize($profile->getAttribute('width'), $profile->getAttribute('height'))
+            ;
 
             $format = new Streaming\Format\X264();
             $format->on('progress', function ($video, $format, $percentage) use ($query, $collection) {
@@ -360,6 +359,10 @@ class TranscodingV1 extends Worker
      */
     private function transcode(string $stream, Media $video, StreamFormat $format, Representation $representation, array $subtitles): string | array
     {
+        $video->filters()
+            ->framerate(new FFMpeg\Coordinate\FrameRate(24), 2)
+            ;
+
         $additionalParams = [
             '-dn',
             '-sn',
@@ -374,10 +377,10 @@ class TranscodingV1 extends Worker
                 ->setSegDuration($segmentSize)
                 ->addRepresentation($representation)
                 ->setAdditionalParams($additionalParams)
-                ->save($this->outPath);
+                ->save($this->outPath)
+                ;
 
                 return $this->getVideoStreamInfo($dash->metadata()->export(), $representation);
-            ;
         }
 
         $hls = $video->hls();
@@ -393,7 +396,8 @@ class TranscodingV1 extends Worker
             ->setHlsAllowCache(false)
             ->addRepresentation($representation)
             ->setAdditionalParams($additionalParams)
-            ->save($this->outPath);
+            ->save($this->outPath)
+        ;
 
         return $this->getVideoStreamInfo($hls->metadata()->export(), $representation);
     }
