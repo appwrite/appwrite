@@ -236,7 +236,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
     /*
      * ACL Check
      */
-    $role = ($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER;
+    $role = ($user->isEmpty()) ? Auth::USER_ROLE_GUESTS : Auth::USER_ROLE_USERS;
 
     // Add user roles
     $memberships = $user->find('teamId', $project->getAttribute('teamId', null), 'memberships');
@@ -289,12 +289,12 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
                 throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
             }
 
-            Authorization::setRole('role:' . Auth::USER_ROLE_APP);
+            Authorization::setRole(Auth::USER_ROLE_APP);
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
         }
     }
 
-    Authorization::setRole('role:' . $role);
+    Authorization::setRole($role);
 
     foreach (Auth::getRoles($user) as $authRole) {
         Authorization::setRole($authRole);

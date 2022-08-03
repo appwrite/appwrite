@@ -10,9 +10,9 @@ class Auth
     /**
      * User Roles.
      */
-    public const USER_ROLE_ALL = 'all';
-    public const USER_ROLE_GUEST = 'guest';
-    public const USER_ROLE_MEMBER = 'member';
+    public const USER_ROLE_ANY = 'any';
+    public const USER_ROLE_GUESTS = 'guests';
+    public const USER_ROLE_USERS = 'users';
     public const USER_ROLE_ADMIN = 'admin';
     public const USER_ROLE_DEVELOPER = 'developer';
     public const USER_ROLE_OWNER = 'owner';
@@ -270,9 +270,9 @@ class Auth
     public static function isPrivilegedUser(array $roles): bool
     {
         if (
-            in_array('role:' . self::USER_ROLE_OWNER, $roles) ||
-            in_array('role:' . self::USER_ROLE_DEVELOPER, $roles) ||
-            in_array('role:' . self::USER_ROLE_ADMIN, $roles)
+            in_array(self::USER_ROLE_OWNER, $roles) ||
+            in_array(self::USER_ROLE_DEVELOPER, $roles) ||
+            in_array(self::USER_ROLE_ADMIN, $roles)
         ) {
             return true;
         }
@@ -289,7 +289,7 @@ class Auth
      */
     public static function isAppUser(array $roles): bool
     {
-        if (in_array('role:' . self::USER_ROLE_APP, $roles)) {
+        if (in_array(self::USER_ROLE_APP, $roles)) {
             return true;
         }
 
@@ -309,9 +309,9 @@ class Auth
         if (!self::isPrivilegedUser(Authorization::getRoles()) && !self::isAppUser(Authorization::getRoles())) {
             if ($user->getId()) {
                 $roles[] = 'user:' . $user->getId();
-                $roles[] = 'role:' . Auth::USER_ROLE_MEMBER;
+                $roles[] = Auth::USER_ROLE_USERS;
             } else {
-                return ['role:' . Auth::USER_ROLE_GUEST];
+                return [Auth::USER_ROLE_GUESTS];
             }
         }
 

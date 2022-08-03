@@ -118,9 +118,9 @@ App::post('/v1/account')
             throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
         }
 
-        Authorization::unsetRole('role:' . Auth::USER_ROLE_GUEST);
+        Authorization::unsetRole(Auth::USER_ROLE_GUESTS);
         Authorization::setRole('user:' . $user->getId());
-        Authorization::setRole('role:' . Auth::USER_ROLE_MEMBER);
+        Authorization::setRole(Auth::USER_ROLE_USERS);
 
         $audits
             ->setResource('user/' . $user->getId())
