@@ -76,7 +76,7 @@ class FunctionsCustomServerTest extends Scope
             'key' => 'funcKey3',
             'value' => 'funcValue3',
         ]);
-        
+
         $this->assertEquals(201, $variable['headers']['status-code']);
         $this->assertEquals(201, $variable2['headers']['status-code']);
         $this->assertEquals(201, $variable3['headers']['status-code']);
@@ -162,7 +162,7 @@ class FunctionsCustomServerTest extends Scope
             'key' => 'funcKey1',
             'value' => 'funcValue1',
         ]);
-        
+
         $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $response['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -170,7 +170,7 @@ class FunctionsCustomServerTest extends Scope
             'key' => 'funcKey2',
             'value' => 'funcValue2',
         ]);
-        
+
         $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $response['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -178,7 +178,7 @@ class FunctionsCustomServerTest extends Scope
             'key' => 'funcKey3',
             'value' => 'funcValue3',
         ]);
-        
+
         $this->assertEquals(201, $variable['headers']['status-code']);
         $this->assertEquals(201, $variable2['headers']['status-code']);
         $this->assertEquals(201, $variable3['headers']['status-code']);
@@ -956,7 +956,7 @@ class FunctionsCustomServerTest extends Scope
             'key' => 'CUSTOM_VARIABLE',
             'value' => 'variable',
         ]);
-        
+
         $this->assertEquals(201, $variable['headers']['status-code']);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
@@ -1182,7 +1182,7 @@ class FunctionsCustomServerTest extends Scope
             'key' => 'CUSTOM_VARIABLE',
             'value' => 'variable',
         ]);
-    
+
         $this->assertEquals(201, $variable['headers']['status-code']);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
@@ -1295,7 +1295,7 @@ class FunctionsCustomServerTest extends Scope
             'key' => 'CUSTOM_VARIABLE',
             'value' => 'variable',
         ]);
-        
+
         $this->assertEquals(201, $variable['headers']['status-code']);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([

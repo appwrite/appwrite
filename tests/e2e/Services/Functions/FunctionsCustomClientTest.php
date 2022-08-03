@@ -91,7 +91,7 @@ class FunctionsCustomClientTest extends Scope
             'key' => 'funcKey3',
             'value' => 'funcValue3',
         ]);
-        
+
         $this->assertEquals(201, $variable['headers']['status-code']);
         $this->assertEquals(201, $variable2['headers']['status-code']);
         $this->assertEquals(201, $variable3['headers']['status-code']);
@@ -177,7 +177,7 @@ class FunctionsCustomClientTest extends Scope
         $functionId = $function['body']['$id'] ?? '';
 
         $this->assertEquals(201, $function['headers']['status-code']);
-        
+
         /** Create Variables */
         $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
             'content-type' => 'application/json',
@@ -187,7 +187,7 @@ class FunctionsCustomClientTest extends Scope
             'key' => 'funcKey1',
             'value' => 'funcValue1',
         ]);
-    
+
         $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -196,7 +196,7 @@ class FunctionsCustomClientTest extends Scope
             'key' => 'funcKey2',
             'value' => 'funcValue2',
         ]);
-    
+
         $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -205,7 +205,7 @@ class FunctionsCustomClientTest extends Scope
             'key' => 'funcKey3',
             'value' => 'funcValue3',
         ]);
-        
+
         $this->assertEquals(201, $variable['headers']['status-code']);
         $this->assertEquals(201, $variable2['headers']['status-code']);
         $this->assertEquals(201, $variable3['headers']['status-code']);
@@ -399,7 +399,7 @@ class FunctionsCustomClientTest extends Scope
             'key' => 'funcKey1',
             'value' => 'funcValue1',
         ]);
-    
+
         $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -408,7 +408,7 @@ class FunctionsCustomClientTest extends Scope
             'key' => 'funcKey2',
             'value' => 'funcValue2',
         ]);
-    
+
         $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -417,7 +417,7 @@ class FunctionsCustomClientTest extends Scope
             'key' => 'funcKey3',
             'value' => 'funcValue3',
         ]);
-        
+
         $this->assertEquals(201, $variable['headers']['status-code']);
         $this->assertEquals(201, $variable2['headers']['status-code']);
         $this->assertEquals(201, $variable3['headers']['status-code']);

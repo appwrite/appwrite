@@ -457,7 +457,7 @@ class WebhooksCustomServerTest extends Scope
             'key' => 'key1',
             'value' => 'value1',
         ]);
-        
+
         $this->assertEquals(201, $variable['headers']['status-code']);
 
         $webhook = $this->getLastRequest();
