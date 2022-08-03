@@ -1174,7 +1174,7 @@ App::post('/v1/account/sessions/anonymous')
 
         Authorization::setRole('user:' . $user->getId());
 
-        $session = $dbForProject->createDocument('sessions', $session-- > setAttribute('$permissions', [
+        $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
                 'read(user: ' . $user->getId() . ')',
                 'write(user:' . $user->getId() . ')'
             ]));
