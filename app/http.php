@@ -129,6 +129,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
             $attributes = [];
             $indexes = [];
+            $permissions = $collection['$permissions'] ?? ['read(any)', 'write(any)'];
+            $documentSecurity = $collection['documentSecurity'] ?? false;
 
             foreach ($collection['attributes'] as $attribute) {
                 $attributes[] = new Document([
@@ -154,7 +156,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 ]);
             }
 
-            $dbForConsole->createCollection($key, $attributes, $indexes);
+            $dbForConsole->createCollection($key, $attributes, $indexes, $permissions, $documentSecurity);
         }
 
         if ($dbForConsole->getDocument('buckets', 'default')->isEmpty()) {
