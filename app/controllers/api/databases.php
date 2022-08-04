@@ -498,7 +498,7 @@ App::post('/v1/databases/:databaseId/collections')
     ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
-    ->param('documentSecurity', false, new Boolean(), 'Specifies the permissions model used in this collection, which accepts either \'collection\' or \'document\'. For \'collection\' level permission, the permissions specified in read and write params are applied to all documents in the collection. For \'document\' level permissions, read and write permissions are specified in each document. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
+    ->param('documentSecurity', false, new Boolean(true), 'Specifies the permissions model used in this collection, which accepts either \'collection\' or \'document\'. For \'collection\' level permission, the permissions specified in read and write params are applied to all documents in the collection. For \'document\' level permissions, read and write permissions are specified in each document. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('audits')
@@ -517,9 +517,10 @@ App::post('/v1/databases/:databaseId/collections')
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
                 '$id' => $collectionId,
+                '$permissions' => $permissions ?? [],
                 'databaseInternalId' => $database->getInternalId(),
                 'databaseId' => $databaseId,
-                '$permissions' => $permissions ?? [],
+                'documentSecurity' => $documentSecurity,
                 'enabled' => true,
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
@@ -749,7 +750,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('documentSecurity', false, new Boolean(), 'Whether to enable document-level permission where each document\'s permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('documentSecurity', false, new Boolean(true), 'Whether to enable document-level permission where each document\'s permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('enabled', true, new Boolean(), 'Is collection enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -774,8 +775,8 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         try {
             $collection = $dbForProject->updateDocument('database_' . $database->getInternalId(), $collectionId, $collection
-                ->setAttribute('$permissions', $permissions)
                 ->setAttribute('name', $name)
+                ->setAttribute('$permissions', $permissions)
                 ->setAttribute('documentSecurity', $documentSecurity)
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', implode(' ', [$collectionId, $name])));

@@ -55,8 +55,8 @@ App::post('/v1/storage/buckets')
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('bucketId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Bucket name')
-    ->param('fileSecurity', false, new Boolean(), 'Whether to enable file-level permission where each files permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('fileSecurity', false, new Boolean(true), 'Whether to enable file-level permission where each files permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
     ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
@@ -106,13 +106,14 @@ App::post('/v1/storage/buckets')
             $bucket = $dbForProject->createDocument('buckets', new Document([
                 '$id' => $bucketId,
                 '$collection' => 'buckets',
+                '$permissions' => $permissions,
                 'name' => $name,
                 'maximumFileSize' => $maximumFileSize,
                 'allowedFileExtensions' => $allowedFileExtensions,
+                'fileSecurity' => (bool) filter_var($fileSecurity, FILTER_VALIDATE_BOOLEAN),
                 'enabled' => (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN),
                 'encryption' => (bool) filter_var($encryption, FILTER_VALIDATE_BOOLEAN),
                 'antivirus' => (bool) filter_var($antivirus, FILTER_VALIDATE_BOOLEAN),
-                '$permissions' => $permissions,
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
 
@@ -220,8 +221,8 @@ App::put('/v1/storage/buckets/:bucketId')
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->param('name', null, new Text(128), 'Bucket name', false)
-    ->param('fileSecurity', false, new Boolean(), 'Whether to enable file-level permission where each files permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('fileSecurity', false, new Boolean(true), 'Whether to enable file-level permission where each files permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
     ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
@@ -251,6 +252,7 @@ App::put('/v1/storage/buckets/:bucketId')
                 ->setAttribute('$permissions', $permissions)
                 ->setAttribute('maximumFileSize', $maximumFileSize)
                 ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
+                ->setAttribute('fileSecurity', (bool) filter_var($fileSecurity, FILTER_VALIDATE_BOOLEAN))
                 ->setAttribute('enabled', (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN))
                 ->setAttribute('encryption', (bool) filter_var($encryption, FILTER_VALIDATE_BOOLEAN))
                 ->setAttribute('antivirus', (bool) filter_var($antivirus, FILTER_VALIDATE_BOOLEAN)));

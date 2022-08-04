@@ -10,7 +10,7 @@ $auth = Config::getParam('auth', []);
  * $collection => id of the parent collection where this will be inserted
  * $id => id of this collection
  * name => name of this collection
- * project => whether or not this collection should be created per project
+ * project => whether this collection should be created per project
  * attributes => list of attributes
  * indexes => list of indexes
  */
@@ -90,6 +90,17 @@ $collections = [
             ],
             [
                 '$id' => 'enabled',
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'default' => null,
+                'array' => false,
+            ],
+            [
+                '$id' => 'documentSecurity',
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
                 'size' => 0,
