@@ -520,7 +520,6 @@ App::post('/v1/databases/:databaseId/collections')
                 'databaseInternalId' => $database->getInternalId(),
                 'databaseId' => $databaseId,
                 '$permissions' => $permissions ?? [],
-                'documentSecurity' => $documentSecurity,
                 'enabled' => true,
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
@@ -770,8 +769,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception('Collection not found', 404, Exception::COLLECTION_NOT_FOUND);
         }
 
-        $read ??= $collection->getRead() ?? []; // By default inherit read permissions
-        $write ??= $collection->getWrite() ?? []; // By default inherit write permissions
+        $permissions ??= $collection->getPermissions() ?? [];
         $enabled ??= $collection->getAttribute('enabled', true);
 
         try {

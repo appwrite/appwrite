@@ -2518,7 +2518,6 @@ $collections = [
         '$collection' => Database::METADATA,
         '$id' => 'buckets',
         'name' => 'Buckets',
-        'documentSecurity' => true,
         'attributes' => [
             [
                 '$id' => 'enabled',
@@ -2538,6 +2537,16 @@ $collections = [
                 'format' => '',
                 'filters' => [],
                 'required' => true,
+                'array' => false,
+            ],
+            [
+                '$id' => 'fileSecurity',
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 1,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
                 'array' => false,
             ],
             [

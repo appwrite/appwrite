@@ -25,7 +25,7 @@ trait TeamsBase
         $this->assertEquals('Arsenal', $response1['body']['name']);
         $this->assertGreaterThan(-1, $response1['body']['total']);
         $this->assertIsInt($response1['body']['total']);
-        $this->assertIsInt($response1['body']['$createdAt']);
+        $this->assertIsString($response1['body']['$createdAt']);
 
         $teamUid = $response1['body']['$id'];
         $teamName = $response1['body']['name'];

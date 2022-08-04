@@ -47,8 +47,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test', $response1['body']['name']);
         $this->assertEquals('php-8.0', $response1['body']['runtime']);
-        $this->assertIsInt($response1['body']['$createdAt']);
-        $this->assertIsInt($response1['body']['$updatedAt']);
+        $this->assertIsString($response1['body']['$createdAt']);
+        $this->assertIsString($response1['body']['$updatedAt']);
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
             'funcKey1' => 'funcValue1',
@@ -248,8 +248,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test1', $response1['body']['name']);
-        $this->assertIsInt($response1['body']['$createdAt']);
-        $this->assertIsInt($response1['body']['$updatedAt']);
+        $this->assertIsString($response1['body']['$createdAt']);
+        $this->assertIsString($response1['body']['$updatedAt']);
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
             'key4' => 'value4',
@@ -365,8 +365,8 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsInt($response['body']['$createdAt']);
-        $this->assertIsInt($response['body']['$updatedAt']);
+        $this->assertIsString($response['body']['$createdAt']);
+        $this->assertIsString($response['body']['$updatedAt']);
         $this->assertEquals($data['deploymentId'], $response['body']['deployment']);
 
         /**

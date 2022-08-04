@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "677b1b47c8567f0b7b05645e2bbc7bc7",
+    "content-hash": "20238d621c3fb8e86859c07a47ea22ad",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2051,16 +2051,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.18.9",
+            "version": "dev-refactor-permissions",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "227b3ca919149b7b0d6556c8effe9ee46ed081e6"
+                "reference": "ea890cc8bf53bd379f74f6f9a444a18d817ec67d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/227b3ca919149b7b0d6556c8effe9ee46ed081e6",
-                "reference": "227b3ca919149b7b0d6556c8effe9ee46ed081e6",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ea890cc8bf53bd379f74f6f9a444a18d817ec67d",
+                "reference": "ea890cc8bf53bd379f74f6f9a444a18d817ec67d",
                 "shasum": ""
             },
             "require": {
@@ -2109,9 +2109,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.18.9"
+                "source": "https://github.com/utopia-php/database/tree/refactor-permissions"
             },
-            "time": "2022-07-19T09:42:53+00:00"
+            "time": "2022-08-02T06:51:50+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2828,29 +2828,29 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.19.5",
+            "version": "dev-feat-nested-array-types",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "04de540cf683e2b08b3192c137dde7f2c37003d9"
+                "reference": "60f742e50d92cc89b5cf529edee98d8b5b4896b3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/04de540cf683e2b08b3192c137dde7f2c37003d9",
-                "reference": "04de540cf683e2b08b3192c137dde7f2c37003d9",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/60f742e50d92cc89b5cf529edee98d8b5b4896b3",
+                "reference": "60f742e50d92cc89b5cf529edee98d8b5b4896b3",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-json": "*",
                 "ext-mbstring": "*",
-                "matthiasmullie/minify": "^1.3",
+                "matthiasmullie/minify": "^1.3.68",
                 "php": ">=7.0.0",
-                "twig/twig": "^3.3"
+                "twig/twig": "^3.4.1"
             },
             "require-dev": {
                 "brianium/paratest": "^6.4",
-                "phpunit/phpunit": "^9.5.13"
+                "phpunit/phpunit": "^9.5.21"
             },
             "type": "library",
             "autoload": {
@@ -2872,9 +2872,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.19.5"
+                "source": "https://github.com/appwrite/sdk-generator/tree/feat-nested-array-types"
             },
-            "time": "2022-07-06T11:05:57+00:00"
+            "time": "2022-08-03T03:46:31+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5346,9 +5346,25 @@
             "time": "2022-05-17T05:48:52+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "appwrite/sdk-generator",
+            "version": "dev-feat-nested-array-types",
+            "alias": "0.19.5",
+            "alias_normalized": "0.19.5.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "dev-refactor-permissions",
+            "alias": "0.18.9",
+            "alias_normalized": "0.18.9.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20,
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

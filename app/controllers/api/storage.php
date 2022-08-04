@@ -107,7 +107,6 @@ App::post('/v1/storage/buckets')
                 '$id' => $bucketId,
                 '$collection' => 'buckets',
                 'name' => $name,
-                'documentSecurity' => $fileSecurity,
                 'maximumFileSize' => $maximumFileSize,
                 'allowedFileExtensions' => $allowedFileExtensions,
                 'enabled' => (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN),
@@ -254,7 +253,6 @@ App::put('/v1/storage/buckets/:bucketId')
                 ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
                 ->setAttribute('enabled', (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN))
                 ->setAttribute('encryption', (bool) filter_var($encryption, FILTER_VALIDATE_BOOLEAN))
-                ->setAttribute('documentSecurity', $fileSecurity)
                 ->setAttribute('antivirus', (bool) filter_var($antivirus, FILTER_VALIDATE_BOOLEAN)));
 
         $audits
