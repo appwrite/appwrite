@@ -8,7 +8,7 @@ echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
     <ServiceDescription id="0"></ServiceDescription>
     <Period id="0" start="PT0.0S">
     <?php foreach ($this->getParam('params', []) as $param):
-        $representation = $param['Representation'];
+        $representation = $param['representation'];
     ?>
     <AdaptationSet <?php if (isset($param['id'])):?> id="<?php echo $param['id']; ?>"<?php endif;?><?php if (isset($param['attributes']['contentType'])): ?> contentType="<?php echo $param['attributes']['contentType']; ?>"<?php endif;?><?php if (isset($param['attributes']['startWithSAP'])): ?> startWithSAP="<?php echo $param['attributes']['startWithSAP']; ?>"<?php endif;?><?php if (isset($param['attributes']['segmentAlignment'])): ?> segmentAlignment="<?php echo $param['attributes']['segmentAlignment']; ?>"<?php endif;?><?php if (isset($param['attributes']['bitstreamSwitching'])): ?> bitstreamSwitching="<?php echo $param['attributes']['bitstreamSwitching']; ?>"<?php endif;?><?php if (isset($param['attributes']['frameRate'])): ?> frameRate="<?php echo $param['attributes']['frameRate']; ?>"<?php endif;?><?php if (isset($param['attributes']['maxWidth'])): ?> maxWidth="<?php echo $param['attributes']['maxWidth']; ?>"<?php endif;?><?php if (isset($param['attributes']['par'])): ?> par="<?php echo $param['attributes']['par']; ?>"<?php endif;?><?php if (isset($param['attributes']['lang'])): ?> lang="<?php echo $param['attributes']['lang']; ?>"<?php endif;?>>
         <Representation <?php if (isset($representation['attributes']['id'])):?> id="<?php echo $representation['attributes']['id']; ?>"<?php endif;?><?php if (isset($representation['attributes']['mimeType'])):?> mimeType="<?php echo $representation['attributes']['mimeType']; ?>"<?php endif;?><?php if (isset($representation['attributes']['codecs'])):?> codecs="<?php echo $representation['attributes']['codecs']; ?>"<?php endif;?><?php if (isset($representation['attributes']['width'])):?> width="<?php echo $representation['attributes']['width']; ?>"<?php endif;?><?php if (isset($representation['attributes']['height'])):?> height="<?php echo $representation['attributes']['height']; ?>"<?php endif;?><?php if (isset($representation['attributes']['sar'])):?> sar="<?php echo $representation['attributes']['sar']; ?>"<?php endif;?><?php if (isset($representation['attributes']['audioSamplingRate'])):?> audioSamplingRate="<?php echo $representation['attributes']['audioSamplingRate']; ?>"<?php endif;?>>
@@ -16,10 +16,10 @@ echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
             <?php if (isset($param['attributes']['contentType']) && $param['attributes']['contentType'] === 'audio' ):?>
                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
              <?php endif;?>
-            <SegmentList<?php if (isset($representation['SegmentList']['attributes']['timescale'])): ?> timescale="<?php echo $representation['SegmentList']['attributes']['timescale']; ?>"<?php endif;?><?php if (isset($representation['SegmentList']['attributes']['duration'])): ?> duration="<?php echo $representation['SegmentList']['attributes']['duration']; ?>"<?php endif;?><?php if (isset($representation['SegmentList']['attributes']['startNumber'])): ?> startNumber="<?php echo $representation['SegmentList']['attributes']['startNumber']; ?>"<?php endif;?>>
-            <Initialization sourceURL="<?php if (isset($representation['SegmentList']['Initialization'])):?><?php echo $representation['SegmentList']['Initialization']; ?><?php endif;?>"/>
-            <?php if (isset($representation['SegmentList']['media'])):?>
-                <?php foreach ($representation['SegmentList']['media'] as $segment): ?>
+            <SegmentList<?php if (isset($representation['segmentList']['attributes']['timescale'])): ?> timescale="<?php echo $representation['segmentList']['attributes']['timescale']; ?>"<?php endif;?><?php if (isset($representation['segmentList']['attributes']['duration'])): ?> duration="<?php echo $representation['segmentList']['attributes']['duration']; ?>"<?php endif;?><?php if (isset($representation['segmentList']['attributes']['startNumber'])): ?> startNumber="<?php echo $representation['segmentList']['attributes']['startNumber']; ?>"<?php endif;?>>
+            <Initialization sourceURL="<?php if (isset($representation['segmentList']['init'])):?><?php echo $representation['segmentList']['init']; ?><?php endif;?>"/>
+            <?php if (isset($representation['segmentList']['media'])):?>
+                <?php foreach ($representation['segmentList']['media'] as $segment): ?>
                     <SegmentURL media="<?php if (isset($segment)):?><?php echo $segment; ?><?php endif;?>"/>
                 <?php endforeach; ?>
             <?php endif;?>
@@ -27,5 +27,13 @@ echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
         </Representation>
     </AdaptationSet>
     <?php endforeach; ?>
+     <?php foreach ($this->getParam('subtitles', []) as $subtitle):?>
+         <AdaptationSet id="<?php if (isset($subtitle['id'])): echo $subtitle['id'];  endif;?>" contentType="text" lang="<?php if (isset($subtitle['code'])): echo $subtitle['code'];  endif;?>" mimeType="text/vtt">
+            <Role value="main" />
+            <Representation id="<?php if (isset($subtitle['id'])): echo $subtitle['id'];  endif;?>" bandwidth="1000">
+                <BaseURL><?php if (isset($subtitle['baseUrl'])): echo $subtitle['baseUrl'];  endif;?></BaseURL>
+            </Representation>
+        </AdaptationSet>
+        <?php endforeach; ?>
     </Period>
 </MPD>

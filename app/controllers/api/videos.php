@@ -717,11 +717,11 @@ App::get('/v1/videos/:videoId/streams/:streamId')
         }
 
         $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/streams/' . $streamId;
+        $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$video->getId()])]));
 
         if ($streamId === 'hls') {
-            $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$video->getId()])], 12, 0, [], ['ASC']));
             $paramsSubtitles = [];
-            foreach ($subtitles as $subtitle) {
+            foreach ($subtitles ?? [] as $subtitle) {
                 $paramsSubtitles[] = [
                     'name' => $subtitle->getAttribute('name'),
                     'code' => $subtitle->getAttribute('code'),
@@ -731,7 +731,7 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             }
 
             $paramsRenditions = [];
-            foreach ($renditions as $rendition) {
+            foreach ($renditions ?? [] as $rendition) {
                 $paramsRenditions[] = [
                     'bandwidth' => ($rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate')),
                     'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
@@ -746,22 +746,24 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             $template->setParam('paramsRenditions', $paramsRenditions);
             $response->setContentType('application/x-mpegurl')->send($template->render(false));
         } else {
+            $adaptationsSubs = [];
             $adaptations = [];
             $adaptationId = 0;
-            foreach ($renditions as $rendition) {
+            foreach ($renditions ?? [] as $rendition) {
                 $metadata = $rendition->getAttribute('metadata');
                 $xml = simplexml_load_string($metadata['mpd']);
                 if (empty($xml)) {
                     continue;
                 }
                 $representationId = 0;
-                foreach ($xml->Period->AdaptationSet as $adaptation) {
+                foreach ($xml->Period->AdaptationSet ?? [] as $adaptation) {
                     $representation = [];
                     $representation['id'] = $representationId;
                     $attributes = (array)$adaptation->Representation->attributes();
                     $representation['attributes'] = $attributes['@attributes'] ?? [];
                     $attributes = (array)$adaptation->Representation->SegmentList->attributes();
-                    $representation['SegmentList']['attributes'] = $attributes['@attributes'] ?? [];
+                    $representation['segmentList']['attributes'] = $attributes['@attributes'] ?? [];
+
                     $segments = Authorization::skip(fn() => $dbForProject->find('videos_renditions_segments', [
                         new Query('renditionId', Query::TYPE_EQUAL, [$rendition->getId()]),
                         new Query('representationId', Query::TYPE_EQUAL, [$representationId]),
@@ -771,23 +773,33 @@ App::get('/v1/videos/:videoId/streams/:streamId')
                     }
                     foreach ($segments ?? [] as $segment) {
                         if ($segment->getAttribute('isInit')) {
-                            $representation['SegmentList']['Initialization'] = $segment->getId();
+                            $representation['segmentList']['init'] = $segment->getId();
                             continue;
                         }
-                        $representation['SegmentList']['media'][] = $segment->getId();
+                        $representation['segmentList']['media'][] = $segment->getId();
                     }
                      $attributes = (array)$adaptation->attributes();
                      $adaptations[] =  ['attributes' => $attributes['@attributes'] ?? [],
                         'id' => $adaptationId,
                         'baseUrl' => $baseUrl . '/renditions/' . $rendition->getId() . '/' . 'segments/',
-                        'Representation' => $representation,
+                        'representation' => $representation,
                      ];
                      $adaptationId++;
                      $representationId++;
                 }
+
+                foreach ($subtitles ?? [] as $subtitle) {
+                    $adaptationsSubs[] = [
+                        'id' => $adaptationId,
+                        'baseUrl' => $baseUrl . '/subtitles/' . $subtitle->getId(),
+                        'code' => $subtitle->getAttribute('code'),
+                    ];
+                    $adaptationId++;
+                }
             }
 
             $template = new View(__DIR__ . '/../../views/videos/dash.phtml');
+            $template->setParam('subtitles', $adaptationsSubs);
             $template->setParam('params', $adaptations);
             $response->setContentType('application/dash+xml')->send($template->render(false));
         }
@@ -982,7 +994,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId')
             $template->setParam('paramsSegments', $paramsSegments);
             $response->setContentType('application/x-mpegurl')->send($template->render(false));
         } else {
-            $output = $deviceVideos->read($deviceVideos->getPath($subtitle->getAttribute('videoId') .  $subtitle->getAttribute('fileId') . '.vtt'));
+            $output = $deviceVideos->read($deviceVideos->getPath($subtitle->getAttribute('videoId')) . '/'  . $subtitle->getId() . '.vtt');
             $response->setContentType('text/vtt')->send($output);
         }
     });

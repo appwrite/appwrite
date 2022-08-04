@@ -187,16 +187,17 @@ class TranscodingV1 extends Worker
             }
 
             $ext = pathinfo($subtitleFileName, PATHINFO_EXTENSION);
+            $subtitlePath = $this->inDir . $subtitle->getId() . '.vtt';
 
             if ($ext === 'srt') {
                 $srt = new SubripFile($this->inDir . $subtitleFileName);
-                $srt->convertTo('webvtt')->save($this->inDir . $this->args['videoId'] . '.vtt');
+                $srt->convertTo('webvtt')->save($subtitlePath);
             }
 
             $subs[] = [
                  'name' => $subtitle->getAttribute('name'),
                  'code' => $subtitle->getAttribute('code'),
-                 'path' => $this->inDir . $this->args['videoId'] . '.vtt',
+                 'path' => $subtitlePath,
             ];
         }
 
@@ -281,36 +282,36 @@ class TranscodingV1 extends Worker
             $query->setAttribute('endedAt', time());
             Authorization::skip(fn() => $this->database->updateDocument($collection, $query->getId(), $query));
 
-            if (!empty($subtitles)) {
-                foreach ($subtitles as $subtitle) {
-                    if ($profile['stream'] === 'hls') {
-                        $m3u8 = $this->parseM3u8($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
-                        foreach ($m3u8['segments'] as $segment) {
-                            Authorization::skip(function () use ($segment, $project, $subtitle, $renditionRootPath) {
-                                return $this->database->createDocument('videos_subtitles_segments', new Document([
-                                    'subtitleId'  =>  $subtitle->getId(),
-                                    'fileName'  => $segment['fileName'],
-                                    'path'  => $renditionRootPath ,
-                                    'duration' => $segment['duration'],
-                                ]));
-                            });
-                        }
-                        $subtitle->setAttribute('targetDuration', $m3u8['targetDuration']);
+            foreach ($subtitles ?? [] as $subtitle) {
+                if ($profile['stream'] === 'hls') {
+                    $m3u8 = $this->parseM3u8($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
+                    foreach ($m3u8['segments'] ?? [] as $segment) {
+                        Authorization::skip(function () use ($segment, $project, $subtitle, $renditionRootPath) {
+                            return $this->database->createDocument('videos_subtitles_segments', new Document([
+                                'subtitleId'  =>  $subtitle->getId(),
+                                'fileName'  => $segment['fileName'],
+                                'path'  => $renditionRootPath ,
+                                'duration' => $segment['duration'],
+                            ]));
+                        });
                     }
-
-                    $subtitle->setAttribute('status', self::STATUS_READY);
-                    $subtitle->setAttribute('path', $renditionRootPath);
-                    Authorization::skip(fn() => $this->database->updateDocument(
-                        'videos_subtitles',
-                        $subtitle->getId(),
-                        $subtitle
-                    ));
+                    $subtitle->setAttribute('targetDuration', $m3u8['targetDuration']);
+                } else {
+                    $this->getFilesDevice($project->getId())->transfer($this->inDir . $subtitle->getId() . '.vtt', $this->outDir . $subtitle->getId() . '.vtt', $this->getFilesDevice($project->getId()));
                 }
+
+                $subtitle->setAttribute('status', self::STATUS_READY);
+                $subtitle->setAttribute('path', $renditionRootPath);
+                Authorization::skip(fn() => $this->database->updateDocument(
+                    'videos_subtitles',
+                    $subtitle->getId(),
+                    $subtitle
+                ));
             }
+
          /** Upload & cleanup **/
             $start = 0;
             $fileNames = scandir($this->outDir);
-
             foreach ($fileNames as $fileName) {
                 if ($fileName === '.' || $fileName === '..') {
                     //str_contains($fileName, '.json')) {
@@ -330,7 +331,6 @@ class TranscodingV1 extends Worker
                     Authorization::skip(fn() => $this->database->updateDocument($collection, $query->getId(), $query));
                     $start = 1;
                 }
-
                 //@unlink($this->outDir . $fileName);
             }
 
@@ -341,7 +341,7 @@ class TranscodingV1 extends Worker
             var_dump($th->getMessage());
             $query->setAttribute('metadata', json_encode([
             'code' => $th->getCode(),
-            'message' => substr($th->getMessage(), 0, 3800),
+            'message' => substr($th->getMessage(), 0, 3600),
             ]));
 
             $query->setAttribute('status', self::STATUS_ERROR);
@@ -359,14 +359,18 @@ class TranscodingV1 extends Worker
      */
     private function transcode(string $stream, Media $video, StreamFormat $format, Representation $representation, array $subtitles): string | array
     {
-        $video->filters()
-            ->framerate(new FFMpeg\Coordinate\FrameRate(24), 2)
-            ;
+//        $video->filters()
+//            ->framerate(new FFMpeg\Coordinate\FrameRate(24), 2)
+//            ;
 
         $additionalParams = [
             '-dn',
             '-sn',
             '-vf', 'scale=iw:-2:force_original_aspect_ratio=increase,setsar=1:1',
+            '-r', '24',
+            '-b_strategy', '1',
+            '-bf', '3',
+            '-g', '2'
         ];
 
         $segmentSize = 8;
@@ -480,8 +484,8 @@ class TranscodingV1 extends Worker
     private function getVideoSourceInfo(StreamCollection $streams): array
     {
             return [
-                'duration' => $streams->videos()->count()> 0 ? $streams->videos()->first()->get('duration') : '0',
-                'height' => $streams->videos()->count()> 0 ? $streams->videos()->first()->get('height') : 0,
+                'duration' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('duration') : '0',
+                'height' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('height') : 0,
                 'width' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('width') : 0,
                 'videoCodec'   => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('codec_name') : '',
                 'videoFramerate' => $streams->videos()->count() > 0  ? $streams->videos()->first()->get('avg_frame_rate') : '',
@@ -506,17 +510,17 @@ class TranscodingV1 extends Worker
         $info['width'] =  $representation->getWidth();
         $info['height'] = $representation->getHeight();
 
-            foreach ($metadata['video']['streams'] ?? [] as $streams) {
-                if ($streams['codec_type'] === 'video') {
-                    $info['duration'] = !empty($streams['duration']) ? $streams['duration'] : '0';
-                    $info['videoCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] : '';
-                    $info['videoBitrate'] = !empty($streams['bit_rate']) ? (int)$streams['bit_rate'] : $representation->getKiloBitrate();
-                    $info['videoFramerate'] = !empty($streams['avg_frame_rate']) ? $streams['avg_frame_rate'] : '';
-                } elseif ($streams['codec_type'] === 'audio') {
-                    $info['audioCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] : '' ;
-                    $info['audioSamplerate'] = !empty($streams['sample_rate']) ? (int)$streams['sample_rate'] : 0;
-                    $info['audioBitrate'] = !empty($streams['bit_rate']) ? (int)$streams['bit_rate'] : $representation->getAudioKiloBitrate();
-                }
+        foreach ($metadata['video']['streams'] ?? [] as $streams) {
+            if ($streams['codec_type'] === 'video') {
+                $info['duration'] = !empty($streams['duration']) ? $streams['duration'] : '0';
+                $info['videoCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] : '';
+                $info['videoBitrate'] = !empty($streams['bit_rate']) ? (int)$streams['bit_rate'] : $representation->getKiloBitrate();
+                $info['videoFramerate'] = !empty($streams['avg_frame_rate']) ? $streams['avg_frame_rate'] : '';
+            } elseif ($streams['codec_type'] === 'audio') {
+                $info['audioCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] : '' ;
+                $info['audioSamplerate'] = !empty($streams['sample_rate']) ? (int)$streams['sample_rate'] : 0;
+                $info['audioBitrate'] = !empty($streams['bit_rate']) ? (int)$streams['bit_rate'] : $representation->getAudioKiloBitrate();
+            }
         }
         return $info;
     }
