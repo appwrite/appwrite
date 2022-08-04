@@ -3,10 +3,11 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
-use Utopia\App;
+use Exception;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 
 class V14 extends Migration
 {
@@ -208,6 +209,14 @@ class V14 extends Migration
                         } catch (\Throwable $th) {
                             Console::warning($th->getMessage());
                         }
+                        /**
+                         * Migrate Attributes
+                         */
+                        $this->migrateAttributesAndCollections('attributes', $collection);
+                        /**
+                         * Migrate Indexes
+                         */
+                        $this->migrateAttributesAndCollections('indexes', $collection);
                     }, $document);
                 }
             }, $documents);
@@ -218,6 +227,53 @@ class V14 extends Migration
                 $nextCollection = end($documents);
             }
         } while (!is_null($nextCollection));
+    }
+
+    protected function migrateAttributesAndCollections(string $type, Document $collection): void
+    {
+        /**
+         * Offset pagination instead of cursor, since documents are re-created!
+         */
+        $offset = 0;
+        $attributesCount = $this->projectDB->count($type, queries: [new Query('collectionId', Query::TYPE_EQUAL, [$collection->getId()])]);
+
+        do {
+            $documents = $this->projectDB->find($type, limit: $this->limit, offset: $offset, queries: [new Query('collectionId', Query::TYPE_EQUAL, [$collection->getId()])]);
+            $offset += $this->limit;
+
+            foreach ($documents as $document) {
+                go(function (Document $document, string $internalId, string $type) {
+                    try {
+                        /**
+                         * Skip already migrated Documents.
+                         */
+                        if (!is_null($document->getAttribute('databaseId'))) {
+                            return;
+                        }
+                        /**
+                         * Add Internal ID 'collectionInternalId' for Subqueries.
+                         */
+                        $document->setAttribute('collectionInternalId', $internalId);
+                        /**
+                         * Add Internal ID 'databaseInternalId' for Subqueries.
+                         */
+                        $document->setAttribute('databaseInternalId', '1');
+                        /**
+                         * Add Internal ID 'databaseId'.
+                         */
+                        $document->setAttribute('databaseId', 'default');
+
+                        /**
+                         * Re-create Attribute.
+                         */
+                        $this->projectDB->deleteDocument($document->getCollection(), $document->getId());
+                        $this->projectDB->createDocument($document->getCollection(), $document->setAttribute('$id', "1_{$internalId}_{$document->getAttribute('key')}"));
+                    } catch (\Throwable $th) {
+                        Console::error("Failed to {$type} document: " . $th->getMessage());
+                    }
+                }, $document, $collection->getInternalId(), $type);
+            }
+        } while ($offset < $attributesCount);
     }
 
     /**
@@ -580,40 +636,6 @@ class V14 extends Migration
                     $document->setAttribute('teamInternalId', $internalId);
                 }
 
-                break;
-            case 'attributes':
-            case 'indexes':
-                /**
-                 * Add Internal ID 'collectionId' for Subqueries.
-                 */
-                if (!empty($document->getAttribute('collectionId')) && is_null($document->getAttribute('collectionInternalId'))) {
-                    $internalId = $this->projectDB->getDocument('database_1', $document->getAttribute('collectionId'))->getInternalId();
-                    $document->setAttribute('collectionInternalId', $internalId);
-                }
-                /**
-                 * Add Internal ID 'databaseInternalId' for Subqueries.
-                 */
-                if (is_null($document->getAttribute('databaseInternalId'))) {
-                    $document->setAttribute('databaseInternalId', '1');
-                }
-                /**
-                 * Add Internal ID 'databaseInternalId' for Subqueries.
-                 */
-                if (is_null($document->getAttribute('databaseId'))) {
-                    $document->setAttribute('databaseId', 'default');
-                }
-
-                try {
-                    /**
-                     * Re-create Collection Document
-                     */
-                    $internalId = $this->projectDB->getDocument('database_1', $document->getAttribute('collectionId'))->getInternalId();
-                    $this->projectDB->deleteDocument($document->getCollection(), $document->getId());
-                    $this->projectDB->createDocument($document->getCollection(), $document->setAttribute('$id', "1_{$internalId}_{$document->getAttribute('key')}"));
-                } catch (\Throwable $th) {
-                    Console::warning("Create Collection Document - {$th->getMessage()}");
-                }
-                $document = null;
                 break;
             case 'platforms':
                 /**
