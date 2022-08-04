@@ -269,12 +269,12 @@ class Usage
             $document = $this->database->getDocument('stats', $id);
             if ($document->isEmpty()) {
                 $this->database->createDocument('stats', new Document([
-                '$id' => $id,
-                'period' => $period,
-                'time' => $time,
-                'metric' => $metric,
-                'value' => $value,
-                'type' => $type,
+                    '$id' => $id,
+                    'period' => $period,
+                    'time' => $time,
+                    'metric' => $metric,
+                    'value' => $value,
+                    'type' => $type,
                 ]));
             } else {
                 $this->database->updateDocument(
