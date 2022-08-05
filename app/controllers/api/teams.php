@@ -334,7 +334,9 @@ App::post('/v1/teams/:teamId/memberships')
                     '$id' => $userId,
                     '$permissions' => [
                         'read(any, user:' . $userId . ')',
-                        'write(user:' . $userId . ')',
+                        'create(user:' . $userId . ')',
+                        'update(user:' . $userId . ')',
+                        'delete(user:' . $userId . ')',
                     ],
                     'email' => $email,
                     'emailVerification' => false,
@@ -373,7 +375,9 @@ App::post('/v1/teams/:teamId/memberships')
             '$id' => $membershipId,
             '$permissions' => [
                 'read(any)',
-                'write(user: ' . $invitee->getId() . ', team:' . $team->getId() . '/owner)',
+                'create(user: ' . $invitee->getId() . ', team:' . $team->getId() . '/owner)',
+                'update(user: ' . $invitee->getId() . ', team:' . $team->getId() . '/owner)',
+                'delete(user: ' . $invitee->getId() . ', team:' . $team->getId() . '/owner)',
             ],
             'userId' => $invitee->getId(),
             'userInternalId' => $invitee->getInternalId(),
@@ -726,7 +730,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
                 'read(user: ' . $user->getId() . ')',
-                'write(user: ' . $user->getId() . ')',
+                'create(user: ' . $user->getId() . ')',
+                'update(user: ' . $user->getId() . ')',
+                'delete(user: ' . $user->getId() . ')',
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
