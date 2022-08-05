@@ -22,6 +22,9 @@ class Disqus extends OAuth2
         return 'disqus';
     }
 
+    /**
+     * @return string
+     */
     public function getLoginURL(): string
     {
         $url = $this->endpoint . 'oauth/2.0/authorize/?' .
