@@ -744,18 +744,25 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             $template = new View(__DIR__ . '/../../views/videos/hls-master.phtml');
             $template->setParam('paramsSubtitles', $paramsSubtitles);
             $template->setParam('paramsRenditions', $paramsRenditions);
-            $response->setContentType('application/x-mpegurl')->send($template->render(false));
+            $response->setContentType('application/x-mpegurl')
+                ->send($template->render(false))
+            ;
         } else {
             $adaptationsSubs = [];
             $adaptations = [];
             $adaptationId = 0;
+
             foreach ($renditions ?? [] as $rendition) {
                 $metadata = $rendition->getAttribute('metadata');
                 $xml = simplexml_load_string($metadata['mpd']);
                 if (empty($xml)) {
                     continue;
                 }
+
+                $attributes = (array)$xml->attributes();
+                $mpd = $attributes['@attributes'] ?? [];
                 $representationId = 0;
+
                 foreach ($xml->Period->AdaptationSet ?? [] as $adaptation) {
                     $representation = [];
                     $representation['id'] = $representationId;
@@ -763,45 +770,52 @@ App::get('/v1/videos/:videoId/streams/:streamId')
                     $representation['attributes'] = $attributes['@attributes'] ?? [];
                     $attributes = (array)$adaptation->Representation->SegmentList->attributes();
                     $representation['segmentList']['attributes'] = $attributes['@attributes'] ?? [];
-
                     $segments = Authorization::skip(fn() => $dbForProject->find('videos_renditions_segments', [
                         new Query('renditionId', Query::TYPE_EQUAL, [$rendition->getId()]),
                         new Query('representationId', Query::TYPE_EQUAL, [$representationId]),
                         ], 1000, 0, ['representationId']));
+
                     if (count($segments) === 0) {
                         continue;
                     }
+
                     foreach ($segments ?? [] as $segment) {
                         if ($segment->getAttribute('isInit')) {
                             $representation['segmentList']['init'] = $segment->getId();
                             continue;
                         }
+
                         $representation['segmentList']['media'][] = $segment->getId();
                     }
+
                      $attributes = (array)$adaptation->attributes();
-                     $adaptations[] =  ['attributes' => $attributes['@attributes'] ?? [],
-                        'id' => $adaptationId,
+                     $adaptations[] =  [
+                        'attributes' => $attributes['@attributes'] ?? [],
+                        'group' => $adaptationId,
                         'baseUrl' => $baseUrl . '/renditions/' . $rendition->getId() . '/' . 'segments/',
                         'representation' => $representation,
                      ];
                      $adaptationId++;
                      $representationId++;
                 }
+            }
 
-                foreach ($subtitles ?? [] as $subtitle) {
-                    $adaptationsSubs[] = [
-                        'id' => $adaptationId,
-                        'baseUrl' => $baseUrl . '/subtitles/' . $subtitle->getId(),
-                        'code' => $subtitle->getAttribute('code'),
-                    ];
-                    $adaptationId++;
-                }
+            foreach ($subtitles ?? [] as $subtitle) {
+                $adaptationsSubs[] = [
+                    'id' => $adaptationId,
+                    'baseUrl' => $baseUrl . '/subtitles/' . $subtitle->getId(),
+                    'code' => $subtitle->getAttribute('code'),
+                ];
+                $adaptationId++;
             }
 
             $template = new View(__DIR__ . '/../../views/videos/dash.phtml');
+            $template->setParam('mpd', $mpd);
+            $template->setParam('adaptations', $adaptations);
             $template->setParam('subtitles', $adaptationsSubs);
-            $template->setParam('params', $adaptations);
-            $response->setContentType('application/dash+xml')->send($template->render(false));
+            $response->setContentType('application/dash+xml')
+                ->send($template->render(false))
+            ;
         }
     });
 
