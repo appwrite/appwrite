@@ -46,7 +46,9 @@ class DatabasesPermissionsTeamTest extends Scope
             'name' => 'Collection 1',
             'permissions' => [
                 'read(team: ' . $teams['team1']['$id'] . ')',
-                'write(team: ' . $teams['team1']['$id'] . '/admin)',
+                 'create(team: ' . $teams['team1']['$id'] . '/admin)',
+                    'update(team: ' . $teams['team1']['$id'] . '/admin)',
+                    'delete(team: ' . $teams['team1']['$id'] . '/admin)',
             ],
         ]);
 
@@ -63,7 +65,9 @@ class DatabasesPermissionsTeamTest extends Scope
             'name' => 'Collection 2',
             'permissions' => [
                 'read(team: ' . $teams['team2']['$id'] . ')',
-                'write(team: ' . $teams['team2']['$id'] . '/owner)',
+                 'create(team: ' . $teams['team2']['$id'] . '/owner)',
+                    'update(team: ' . $teams['team2']['$id'] . '/owner)',
+                    'delete(team: ' . $teams['team2']['$id'] . '/owner)',
             ]
         ]);
 

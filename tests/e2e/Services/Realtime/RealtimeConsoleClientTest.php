@@ -161,7 +161,9 @@ class RealtimeConsoleClientTest extends Scope
             'name' => 'Actors',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 

@@ -252,7 +252,9 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => 'first',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);
@@ -266,7 +268,9 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => 'second',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);
@@ -408,7 +412,9 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => 'first',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);
@@ -444,7 +450,9 @@ class DatabasesCustomServerTest extends Scope
             'name' => 'Actors',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);
@@ -499,7 +507,9 @@ class DatabasesCustomServerTest extends Scope
             ],
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 
@@ -724,7 +734,9 @@ class DatabasesCustomServerTest extends Scope
             'name' => 'TestCleanupDuplicateIndexOnDeleteAttribute',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);
@@ -845,7 +857,9 @@ class DatabasesCustomServerTest extends Scope
             ],
             'permissions' => [
                 'read(user: ' . $this->getUser()['$id'] . ')',
-                'write(user: ' . $this->getUser()['$id'] . ')',
+                'create(user: ' . $this->getUser()['$id'] . ')',
+                'update(user: ' . $this->getUser()['$id'] . ')',
+                'delete(user: ' . $this->getUser()['$id'] . ')',
             ],
         ]);
 
@@ -860,7 +874,9 @@ class DatabasesCustomServerTest extends Scope
             ],
             'permissions' => [
                 'read(user: ' . $this->getUser()['$id'] . ')',
-                'write(user: ' . $this->getUser()['$id'] . ')',
+                'create(user: ' . $this->getUser()['$id'] . ')',
+                'update(user: ' . $this->getUser()['$id'] . ')',
+                'delete(user: ' . $this->getUser()['$id'] . ')',
             ],
         ]);
 
@@ -972,7 +988,9 @@ class DatabasesCustomServerTest extends Scope
             'name' => 'attributeRowWidthLimit',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);
@@ -1036,7 +1054,9 @@ class DatabasesCustomServerTest extends Scope
             'name' => 'testLimitException',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);

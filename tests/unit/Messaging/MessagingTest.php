@@ -208,14 +208,18 @@ class MessagingTest extends TestCase
                 '$collection' => 'collection',
                 '$permissions' => [
                     'read(admin)',
-                    'write(admin)',
+                     'create(admin)',
+                    'update(admin)',
+                    'delete(admin)',
                 ],
             ]),
             collection: new Document([
                 '$id' => 'collection',
                 '$permissions' => [
                     'read(any)',
-                    'write(any)',
+                    'create(any)',
+                    'update(any)',
+                    'delete(any)',
                 ],
             ]),
             database: new Document([
@@ -238,14 +242,18 @@ class MessagingTest extends TestCase
                 '$collection' => 'collection',
                 '$permissions' => [
                     'read(any)',
-                    'write(any)',
+                    'create(any)',
+                    'update(any)',
+                    'delete(any)',
                 ],
             ]),
             collection: new Document([
                 '$id' => 'collection',
                 '$permissions' => [
                     'read(admin)',
-                    'write(admin)',
+                     'create(admin)',
+                    'update(admin)',
+                    'delete(admin)',
                 ],
                 'documentSecurity' => true,
             ]),
@@ -270,14 +278,18 @@ class MessagingTest extends TestCase
                 '$collection' => 'bucket',
                 '$permissions' => [
                     'read(admin)',
-                    'write(admin)',
+                     'create(admin)',
+                    'update(admin)',
+                    'delete(admin)',
                 ],
             ]),
             bucket: new Document([
                 '$id' => 'bucket',
                 '$permissions' => [
                     'read(any)',
-                    'write(any)',
+                    'create(any)',
+                    'update(any)',
+                    'delete(any)',
                 ],
             ])
         );
@@ -295,14 +307,18 @@ class MessagingTest extends TestCase
                 '$collection' => 'bucket',
                 '$permissions' => [
                     'read(any)',
-                    'write(any)',
+                    'create(any)',
+                    'update(any)',
+                    'delete(any)',
                 ],
             ]),
             bucket: new Document([
                 '$id' => 'bucket',
                 '$permissions' => [
                     'read(admin)',
-                    'write(admin)',
+                     'create(admin)',
+                    'update(admin)',
+                    'delete(admin)',
                 ],
                 'documentSecurity' => true
             ])

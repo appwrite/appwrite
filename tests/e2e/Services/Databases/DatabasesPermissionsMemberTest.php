@@ -66,7 +66,9 @@ class DatabasesPermissionsMemberTest extends Scope
             'name' => 'Movies',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);
@@ -86,7 +88,9 @@ class DatabasesPermissionsMemberTest extends Scope
             'name' => 'Private Movies',
             'permissions' => [
                 'read(users)',
-                'write(users)',
+                 'create(users)',
+                    'update(users)',
+                    'delete(users)',
             ],
             'documentSecurity' => true,
         ]);
@@ -128,7 +132,9 @@ class DatabasesPermissionsMemberTest extends Scope
             ],
             'permissions' => [
                 'read(' . $read . ')',
-                'write(' . $write . ')',
+                 'create(' . $write . ')',
+                    'update(' . $write . ')',
+                    'delete(' . $write . ')',
             ],
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -140,7 +146,9 @@ class DatabasesPermissionsMemberTest extends Scope
             ],
             'permissions' => [
                 'read(' . $read . ')',
-                'write(' . $write . ')',
+                 'create(' . $write . ')',
+                    'update(' . $write . ')',
+                    'delete(' . $write . ')',
             ],
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -161,8 +169,10 @@ class DatabasesPermissionsMemberTest extends Scope
                     return $carry;
                 }
                 foreach ($document['$permissions'] as $permission) {
-                    if (\stripos($permission, $item) !== false 
-                        && \str_starts_with('read', $permission)) {
+                    if (
+                        \stripos($permission, $item) !== false
+                        && \str_starts_with('read', $permission)
+                    ) {
                         return true;
                     }
                 }
@@ -187,8 +197,10 @@ class DatabasesPermissionsMemberTest extends Scope
                     return $carry;
                 }
                 foreach ($document['$permissions'] as $permission) {
-                    if (\stripos($permission, $item) !== false
-                        && \str_starts_with('read', $permission)) {
+                    if (
+                        \stripos($permission, $item) !== false
+                        && \str_starts_with('read', $permission)
+                    ) {
                         return true;
                     }
                 }

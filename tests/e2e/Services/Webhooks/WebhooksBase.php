@@ -43,7 +43,9 @@ trait WebhooksBase
             'name' => 'Actors',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);
@@ -194,7 +196,9 @@ trait WebhooksBase
             ],
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 
@@ -255,7 +259,9 @@ trait WebhooksBase
             ],
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 
@@ -316,7 +322,9 @@ trait WebhooksBase
             ],
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 
@@ -376,7 +384,9 @@ trait WebhooksBase
             'name' => 'Test Bucket',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 
@@ -482,7 +492,9 @@ trait WebhooksBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'folderId' => 'xyz',
         ]);
@@ -542,7 +554,9 @@ trait WebhooksBase
         ], $this->getHeaders()), [
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 

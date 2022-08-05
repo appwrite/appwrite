@@ -32,7 +32,9 @@ class DatabasesPermissionsGuestTest extends Scope
             'name' => 'Movies',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);

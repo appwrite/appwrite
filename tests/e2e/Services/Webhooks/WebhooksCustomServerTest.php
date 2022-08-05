@@ -159,7 +159,9 @@ class WebhooksCustomServerTest extends Scope
             'name' => 'Demo',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);

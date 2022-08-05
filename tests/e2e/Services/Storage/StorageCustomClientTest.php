@@ -31,7 +31,9 @@ class StorageCustomClientTest extends Scope
             'name' => 'Test Bucket',
             'permissions' => [
                 'read(any)',
-                'write(users)',
+                 'create(users)',
+                    'update(users)',
+                    'delete(users)',
             ],
         ]);
 
@@ -123,7 +125,9 @@ class StorageCustomClientTest extends Scope
             'fileSecurity' => true,
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
@@ -199,7 +203,9 @@ class StorageCustomClientTest extends Scope
             'folderId' => 'xyz',
             'permissions' => [
                 'read(user:notme)',
-                'write(user:notme)',
+                 'create(user:notme)',
+                    'update(user:notme)',
+                    'delete(user:notme)',
             ],
         ]);
 
@@ -252,7 +258,9 @@ class StorageCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'permissions' => [
                 'read(user:notme)',
-                'write(user:notme)',
+                 'create(user:notme)',
+                    'update(user:notme)',
+                    'delete(user:notme)',
             ],
         ]);
 

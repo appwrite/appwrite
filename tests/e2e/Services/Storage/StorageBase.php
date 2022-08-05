@@ -24,7 +24,9 @@ trait StorageBase
             'allowedFileExtensions' => ["jpg", "png"],
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
@@ -40,7 +42,9 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -66,7 +70,9 @@ trait StorageBase
             'fileSecurity' => true,
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
         $this->assertEquals(201, $bucket2['headers']['status-code']);
@@ -100,7 +106,9 @@ trait StorageBase
                 'file' => $curlFile,
                 'permissions' => [
                     'read(any)',
-                    'write(any)',
+                    'create(any)',
+                    'update(any)',
+                    'delete(any)',
                 ],
             ]);
             $counter++;
@@ -140,7 +148,9 @@ trait StorageBase
             'file' => $curlFile,
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
         @fclose($handle);
@@ -160,7 +170,9 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
         $this->assertEquals(404, $res['headers']['status-code']);
@@ -177,7 +189,9 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-1.png'), 'image/png', 'kitten-1.png'),
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 
@@ -196,7 +210,9 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-3.gif'), 'image/gif', 'kitten-3.gif'),
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 
@@ -220,7 +236,9 @@ trait StorageBase
             'allowedFileExtensions' => ["jpg", "png"],
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
         $this->assertEquals(400, $failedBucket['headers']['status-code']);
@@ -473,7 +491,9 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -518,7 +538,9 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-2.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -563,7 +585,9 @@ trait StorageBase
         ], $this->getHeaders()), [
             'permissions' => [
                 'read(user: ' . $this->getUser()['$id'] . ')',
-                'write(user: ' . $this->getUser()['$id'] . ')',
+                'create(user: ' . $this->getUser()['$id'] . ')',
+                'update(user: ' . $this->getUser()['$id'] . ')',
+                'delete(user: ' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -592,7 +616,9 @@ trait StorageBase
         ], $this->getHeaders()), [
             'permissions' => [
                 'read(user: ' . $this->getUser()['$id'] . ')',
-                'write(user: ' . $this->getUser()['$id'] . ')',
+                'create(user: ' . $this->getUser()['$id'] . ')',
+                'update(user: ' . $this->getUser()['$id'] . ')',
+                'delete(user: ' . $this->getUser()['$id'] . ')',
             ]
         ]);
 

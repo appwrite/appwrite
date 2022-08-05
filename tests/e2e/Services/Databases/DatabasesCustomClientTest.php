@@ -79,7 +79,9 @@ class DatabasesCustomClientTest extends Scope
             ],
             'permissions' => [
                 'read(user:' . $userId . ', user:user2)',
-                'write(user:' . $userId . ')',
+                 'create(user:' . $userId . ')',
+                    'update(user:' . $userId . ')',
+                    'delete(user:' . $userId . ')',
             ],
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);

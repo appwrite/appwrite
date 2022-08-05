@@ -681,7 +681,9 @@ class RealtimeCustomClientTest extends Scope
             ],
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 
@@ -726,7 +728,9 @@ class RealtimeCustomClientTest extends Scope
             ],
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 
@@ -770,7 +774,9 @@ class RealtimeCustomClientTest extends Scope
             ],
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 
@@ -861,7 +867,9 @@ class RealtimeCustomClientTest extends Scope
             'name' => 'Actors',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ]
         ]);
 
@@ -1069,7 +1077,9 @@ class RealtimeCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 
@@ -1109,7 +1119,9 @@ class RealtimeCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
         ]);
 

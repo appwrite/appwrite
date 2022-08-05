@@ -170,7 +170,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 'antivirus' => true,
                 '$permissions' => [
                     'read(any)',
-                    'write(any)',
+                    'create(any)',
+                    'update(any)',
+                    'delete(any)',
                 ],
                 'search' => 'buckets Default',
             ]));

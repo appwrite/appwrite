@@ -37,7 +37,9 @@ class DatabasesConsoleClientTest extends Scope
             'name' => 'Movies',
             'permissions' => [
                 'read(any)',
-                'write(any)',
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ],
             'documentSecurity' => true,
         ]);
