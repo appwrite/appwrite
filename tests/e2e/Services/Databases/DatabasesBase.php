@@ -2359,6 +2359,67 @@ trait DatabasesBase
         return $data;
     }
 
+    /**
+     * @depends testUniqueIndexDuplicate
+     */
+    public function testPersistantCreatedAt(array $data): array
+    {
+        $headers = $this->getSide() === 'client' ? array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()) : [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ];
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', $headers, [
+            'documentId' => 'unique()',
+            'data' => [
+                'title' => 'Creation Date Test',
+                'releaseYear' => 2000
+            ]
+        ]);
+
+        $this->assertEquals($document['body']['title'], 'Creation Date Test');
+
+        $documentId = $document['body']['$id'];
+        $createdAt = $document['body']['$createdAt'];
+        $updatedAt = $document['body']['$updatedAt'];
+
+        \sleep(1);
+
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
+            'data' => [
+                'title' => 'Updated Date Test',
+            ]
+        ]);
+
+        $updatedAtSecond = $document['body']['$updatedAt'];
+
+        $this->assertEquals($document['body']['title'], 'Updated Date Test');
+        $this->assertEquals($document['body']['$createdAt'], $createdAt);
+        $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
+
+        \sleep(1);
+
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
+            'data' => [
+                'title' => 'Again Updated Date Test',
+                '$createdAt' => 1657271810, // Try to update it, should not work
+                '$updatedAt' => 1657271810 // Try to update it, should not work
+            ]
+        ]);
+
+        $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
+        $this->assertEquals($document['body']['$createdAt'], $createdAt);
+        $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
+        $this->assertNotEquals($document['body']['$updatedAt'], $updatedAtSecond);
+        $this->assertNotEquals($document['body']['$updatedAt'], 1657271810);
+
+        return $data;
+    }
+
     public function testUpdatePermissionsWithEmptyPayload(): array
     {
         // Create Database
