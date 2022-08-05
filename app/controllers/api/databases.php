@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Permissions\PermissionsProcessor;
 use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
@@ -514,6 +515,8 @@ App::post('/v1/databases/:databaseId/collections')
 
         $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
 
+        $permissions = PermissionsProcessor::handleAggregates($permissions);
+
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
                 '$id' => $collectionId,
@@ -771,6 +774,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         }
 
         $permissions ??= $collection->getPermissions() ?? [];
+        $permissions = PermissionsProcessor::handleAggregates($permissions);
         $enabled ??= $collection->getAttribute('enabled', true);
 
         try {
@@ -1787,8 +1791,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('indexId', $index->getId())
-           ->setContext('collection', $collection)
-        ->setContext('database', $db)
+            ->setContext('collection', $collection)
+            ->setContext('database', $db)
             ->setPayload($response->output($index, Response::MODEL_INDEX))
         ;
 
@@ -1855,35 +1859,20 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        // Check collection permissions when enforced
-        if (!$collection->getAttribute('documentSecurity', false)) {
-            $validator = new Authorization('create');
-            if (!$validator->isValid($collection->getCreate())) {
-                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-            }
+        $permissions = PermissionsProcessor::addDefaultsIfNeeded($permissions, $user->getId());
+        $permissions = PermissionsProcessor::handleAggregates($permissions);
+
+        $validator = new Authorization('create');
+        $valid = $validator->isValid($collection->getCreate());
+        if ($collection->getAttribute('documentSecurity', false)) {
+            $valid |= $validator->isValid($permissions);
+        }
+        if (!$valid) {
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
         $data['$id'] = $documentId == 'unique()' ? $dbForProject->getId() : $documentId;
-
-        if (\is_null($permissions)) {
-            $permissions = [];
-            if (!$user->isEmpty()) {
-                $permissions = [
-                    'read(user:' . $user->getId() . ') ',
-                    'write(user:' . $user->getId() . ') ',
-                ];
-            }
-        } elseif (empty(\preg_grep('#^read\(.+\)$#', $permissions))) {
-            if (!$user->isEmpty()) {
-                $permissions[] = 'read(user:' . $user->getId() . ')';
-            }
-        } elseif (empty(\preg_grep('#^write\(.+\)$#', $permissions))) {
-            if (!$user->isEmpty()) {
-                $permissions[] = 'write(user:' . $user->getId() . ')';
-            }
-        }
-
         $data['$permissions'] = $permissions;
 
         // Users can only add their roles to documents, API keys and Admin users can add any
@@ -1892,24 +1881,20 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($permissions as $permission) {
                 $matches = [];
-                if (\preg_match('/^(create|write)\((.+)(?:,(.+))*\)$/', $permission, $matches)) {
-                    \array_shift($matches);
-                    foreach ($matches as $match) {
-                        if (!Authorization::isRole($match)) {
-                            throw new Exception('Permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-                        }
+                if (!\preg_match('#^create\((.+)(?:,(.+))*\)$#', $permission, $matches)) {
+                    continue;
+                }
+                \array_shift($matches);
+                foreach ($matches as $match) {
+                    if (!Authorization::isRole($match)) {
+                        throw new Exception('Permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
                     }
                 }
             }
         }
 
         try {
-            if ($collection->getAttribute('permission') === 'collection') {
-                /** @var Document $document */
-                $document = Authorization::skip(fn() => $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data)));
-            } else {
-                $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data));
-            }
+            $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data));
             $document->setAttribute('$collection', $collectionId);
         } catch (StructureException $exception) {
             throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
@@ -1985,12 +1970,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        // Check collection permissions when enforced
-        if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization('read');
-            if (!$validator->isValid($collection->getRead())) {
-                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-            }
+        // Check collection permissions
+        $validator = new Authorization('create');
+        $valid = $validator->isValid($collection->getCreate());
+        if (!$valid) {
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
         $queries = \array_map(function ($query) {
@@ -2019,23 +2003,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $cursorDocument = null;
         if (!empty($cursor)) {
-            $cursorDocument = $collection->getAttribute('permission') === 'collection'
-                ? Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor))
-                : $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
-
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor));
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
         }
 
-        if ($collection->getAttribute('permission') === 'collection') {
-            /** @var Document[] $documents */
-            $documents = Authorization::skip(fn() => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
-            $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT));
-        } else {
-            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
-            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
-        }
+        /** @var Document[] $documents */
+        $documents = Authorization::skip(fn() => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
+        $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT));
 
         /**
          * Reset $collection attribute to remove prefix.
@@ -2091,20 +2067,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             }
         }
 
-        // Check collection permissions when enforced
-        if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization('read');
-            if (!$validator->isValid($collection->getRead())) {
-                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-            }
+        // Check collection permissions
+        $validator = new Authorization('create');
+        $valid = $validator->isValid($collection->getCreate());
+        if (!$valid) {
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
-        if ($collection->getAttribute('permission') === 'collection') {
-            /** @var Document $document */
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
-        } else {
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
-        }
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         /**
          * Reset $collection attribute to remove prefix.
@@ -2260,18 +2230,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             }
         }
 
-        // Check collection permissions when enforced
-        if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization('write');
-            if (!$validator->isValid($collection->getWrite())) {
-                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-            }
-
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
-        } else {
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        // Check collection permissions
+        $validator = new Authorization('write');
+        if (!$validator->isValid($collection->getWrite())) {
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception('Document not found', 404, Exception::DOCUMENT_NOT_FOUND);
@@ -2397,30 +2362,19 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             }
         }
 
-        // Check collection permissions when enforced
-        if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization('write');
-            if (!$validator->isValid($collection->getWrite())) {
-                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-            }
+        // Check collection permissions
+        $validator = new Authorization('write');
+        if (!$validator->isValid($collection->getWrite())) {
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
-        if ($collection->getAttribute('permission') === 'collection') {
-            /** @var Document $document */
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
-        } else {
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
-        }
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception('No document found', 404, Exception::DOCUMENT_NOT_FOUND);
         }
 
-        if ($collection->getAttribute('permission') === 'collection') {
-            Authorization::skip(fn() => $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
-        } else {
-            $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
-        }
+        Authorization::skip(fn() => $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         $dbForProject->deleteCachedDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 

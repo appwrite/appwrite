@@ -5,6 +5,7 @@ use Appwrite\ClamAV\Network;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Permissions\PermissionsProcessor;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
@@ -357,41 +358,21 @@ App::post('/v1/storage/buckets/:bucketId/files')
         ) {
             throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
         }
-
-        // Check bucket permissions when enforced
-        $permissionBucket = $bucket->getAttribute('permission') === 'bucket';
-        if ($permissionBucket) {
-            $validator = new Authorization('write');
-            if (!$validator->isValid($bucket->getWrite())) {
-                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-            }
+        
+        $permissions = PermissionsProcessor::addDefaultsIfNeeded($permissions, $user->getId());
+        
+        $validator = new Authorization('write');
+        if (!$validator->isValid($bucket->getWrite())) {
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
-
-        if (\is_null($permissions)) {
-            $permissions = [];
-            if (!$user->isEmpty()) {
-                $permissions = [
-                    'read(user:' . $user->getId() . ') ',
-                    'write(user:' . $user->getId() . ') ',
-                ];
-            }
-        } elseif (empty(\preg_grep('#^read\(.+\)$#', $permissions))) {
-            if (!$user->isEmpty()) {
-                $permissions[] = 'read(user:' . $user->getId() . ')';
-            }
-        } elseif (empty(\preg_grep('#^write\(.+\)$#', $permissions))) {
-            if (!$user->isEmpty()) {
-                $permissions[] = 'write(user:' . $user->getId() . ')';
-            }
-        }
-
+        
         // Users can only add their roles to files, API keys and Admin users can add any
         $roles = Authorization::getRoles();
 
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($permissions as $permission) {
                 $matches = [];
-                if (\preg_match('/^(create|write)\((.+)(?:,(.+))*\)$/', $permission, $matches)) {
+                if (\preg_match('/^create\((.+)(?:,(.+))*\)$/', $permission, $matches)) {
                     \array_shift($matches);
                     foreach ($matches as $match) {
                         if (!Authorization::isRole($match)) {
@@ -699,13 +680,10 @@ App::get('/v1/storage/buckets/:bucketId/files')
         ) {
             throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
         }
-
-        // Check bucket permissions when enforced
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $validator = new Authorization('read');
-            if (!$validator->isValid($bucket->getRead())) {
-                throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-            }
+        
+        $validator = new Authorization('read');
+        if (!$validator->isValid($bucket->getRead())) {
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
         $queries = [new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])];
@@ -731,12 +709,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
         if (!empty($search)) {
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
-
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection));
-        } else {
-            $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
-        }
+        
+        $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection));
 
         $usage
             ->setParam('storage.files.read', 1)
@@ -785,12 +759,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
                 throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
             }
         }
-
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
-        } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-        }
+        
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
@@ -870,13 +840,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
         $key = \md5($fileId . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
-
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            // skip authorization
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
-        } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-        }
+        
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
@@ -1028,11 +993,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             }
         }
 
-        if ($bucket->getAttribute('permission') === 'bucket') {
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
-        } else {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-        }
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
