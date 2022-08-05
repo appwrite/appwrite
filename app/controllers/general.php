@@ -281,6 +281,7 @@ App::init()
             *  Mock user to app and grant API key scopes in addition to default app scopes
             */
             if ($key && $user->isEmpty()) {
+                var_dump($key);
                 $user = new Document([
                     '$id' => '',
                     'status' => true,
