@@ -32,7 +32,7 @@ return [ // Ordered by ABC.
         'mock' => false,
     ],
     'authentik' => [
-        'name' => 'authentik',
+        'name' => 'Authentik',
         'developers' => 'https://goauthentik.io/docs/',
         'icon' => 'icon-authentik',
         'enabled' => true,
