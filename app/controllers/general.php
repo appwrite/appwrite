@@ -30,6 +30,7 @@ use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
 use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -281,7 +282,6 @@ App::init()
             *  Mock user to app and grant API key scopes in addition to default app scopes
             */
             if ($key && $user->isEmpty()) {
-                var_dump($key);
                 $user = new Document([
                     '$id' => '',
                     'status' => true,
@@ -301,6 +301,35 @@ App::init()
 
                 Authorization::setRole('role:' . Auth::USER_ROLE_APP);
                 Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+
+                if (time() > ($key->getAttribute('accessedAt', 0) + (24 * 60 * 60))) {
+                    $key->setAttribute('accessedAt', time());
+                    $sdkValidator = new WhiteList([
+                        'appwrite:nodejs',
+                        'appwrite:deno',
+                        'appwrite:php',
+                        'appwrite:python',
+                        'appwrite:ruby',
+                        'appwrite:go',
+                        'appwrite:java',
+                        'appwrite:dotnet',
+                        'appwrite:dart',
+                        'appwrite:kotlin',
+                        'appwrite:swift'
+                    ], true);
+    
+                    $sdk = $request->getHeader('x-sdk-version', 'UNKNOWN');
+                    $sdk = substr($sdk, 0, strrpos($sdk, ':'));
+
+                    if ($sdkValidator->isValid($sdk)) {
+                        $sdks = $key->getAttribute('sdks', []);
+                        array_push($sdks, $sdk);
+                        $key->setAttribute('sdks', $sdks);
+                    }
+
+                    $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                    $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                }
             }
         }
 
