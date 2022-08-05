@@ -60,8 +60,10 @@ App::post('/v1/teams')
         $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
             '$id' => $teamId ,
             '$permissions' => [
-                "read(team:{$teamId}",
-                "write(team:{$teamId}/owner)",
+                'read(team:' . $teamId . ')',
+                'create(team:' . $teamId . '/owner)',
+                'update(team:' . $teamId . '/owner)',
+                'delete(team:' . $teamId . '/owner)',
             ],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
@@ -74,7 +76,9 @@ App::post('/v1/teams')
                 '$id' => $membershipId,
                 '$permissions' => [
                     "read(user:{$user->getId()}, team:{$team->getId()})",
-                    "write(user:{$user->getId()}, team:{$team->getId()}/owner)",
+                    "create(user:{$user->getId()}, team:{$team->getId()}/owner)",
+                    "update(user:{$user->getId()}, team:{$team->getId()}/owner)",
+                    "delete(user:{$user->getId()}, team:{$team->getId()}/owner)",
                 ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),

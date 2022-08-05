@@ -912,7 +912,9 @@ App::post('/v1/account/sessions/phone')
                 '$id' => $userId,
                 '$permissions' => [
                     'read(any)',
-                    'write(user:' . $userId . ')'
+                    'create(user:' . $userId . ')',
+                    'update(user:' . $userId . ')',
+                    'delete(user:' . $userId . ')',
                 ],
                 'email' => null,
                 'phone' => $number,
@@ -951,7 +953,9 @@ App::post('/v1/account/sessions/phone')
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
                 'read(user: ' . $user->getId() . ')',
-                'write(user:' . $user->getId() . ')'
+                'create(user:' . $user->getId() . ')',
+                'update(user:' . $user->getId() . ')',
+                'delete(user:' . $user->getId() . ')',
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -1045,7 +1049,9 @@ App::put('/v1/account/sessions/phone')
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
                 'read(user: ' . $user->getId() . ')',
-                'write(user:' . $user->getId() . ')'
+                'create(user:' . $user->getId() . ')',
+                'update(user:' . $user->getId() . ')',
+                'delete(user:' . $user->getId() . ')',
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -1146,7 +1152,9 @@ App::post('/v1/account/sessions/anonymous')
             '$id' => $userId,
             '$permissions' => [
                 'read(any)',
-                'write(user:' . $userId . ')'
+                'create(user:' . $userId . ')',
+                'update(user:' . $userId . ')',
+                'delete(user:' . $userId . ')',
             ],
             'email' => null,
             'emailVerification' => false,
@@ -1190,7 +1198,9 @@ App::post('/v1/account/sessions/anonymous')
 
         $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
                 'read(user: ' . $user->getId() . ')',
-                'write(user:' . $user->getId() . ')'
+                'create(user:' . $user->getId() . ')',
+                'update(user:' . $user->getId() . ')',
+                'delete(user:' . $user->getId() . ')',
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());

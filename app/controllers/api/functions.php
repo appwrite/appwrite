@@ -571,7 +571,9 @@ App::post('/v1/functions/:functionId/deployments')
                     '$id' => $deploymentId,
                     '$permissions' => [
                         'read(any)',
-                        'write(any)'
+                        'create(any)',
+                        'update(any)',
+                        'delete(any)',
                     ],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
@@ -602,7 +604,9 @@ App::post('/v1/functions/:functionId/deployments')
                     '$id' => $deploymentId,
                     '$permissions' => [
                         'read(any)',
-                        'write(any)'
+                        'create(any)',
+                        'update(any)',
+                        'delete(any)',
                     ],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',

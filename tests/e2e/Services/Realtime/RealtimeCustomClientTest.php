@@ -1060,7 +1060,9 @@ class RealtimeCustomClientTest extends Scope
             'name' => 'Bucket 1',
             'permissions' => [
                 'read(any)',
-                'write(any)'
+                'create(any)',
+                'update(any)',
+                'delete(any)',
             ]
         ]);
 
