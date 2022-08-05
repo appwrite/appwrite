@@ -9,14 +9,32 @@ use Appwrite\Auth\OAuth2;
 
 class Disqus extends OAuth2
 {
+    /**
+     * @var string
+     */
     private string $endpoint = 'https://disqus.com/api/';
+
+    /**
+     * @var array
+     */
     protected array $user = [];
+
+    /**
+     * @var array
+     */
     protected array $tokens = [];
+
+    /**
+     * @var array
+     */
     protected array $scopes = [
         'read',
         'email',
     ];
 
+    /**
+     * @return string
+     */
     public function getName(): string
     {
         return 'disqus';
@@ -39,6 +57,11 @@ class Disqus extends OAuth2
         return $url;
     }
 
+    /**
+     * @param string $code
+     * 
+     * @return array
+     */
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
@@ -59,6 +82,11 @@ class Disqus extends OAuth2
         return $this->tokens;
     }
 
+    /**
+     * @param string $refreshToken
+     * 
+     * @return array
+     */
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
@@ -79,6 +107,11 @@ class Disqus extends OAuth2
         return $this->tokens;
     }
 
+    /**
+     * @param string $token
+     * 
+     * @return string
+     */
     public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -88,6 +121,11 @@ class Disqus extends OAuth2
         return $userId;
     }
 
+    /**
+     * @param string $accessToken
+     * 
+     * @return string
+     */
     public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -97,6 +135,11 @@ class Disqus extends OAuth2
         return $userEmail;
     }
 
+    /**
+     * @param string $accessToken
+     * 
+     * @return bool
+     */
     public function isEmailVerified(string $accessToken): bool
     {
 
@@ -107,6 +150,11 @@ class Disqus extends OAuth2
         return false;
     }
 
+    /**
+     * @param string $accessToken
+     * 
+     * @return string
+     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -116,6 +164,11 @@ class Disqus extends OAuth2
         return $username;
     }
 
+    /**
+     * @param string $accessToken
+     * 
+     * @return array
+     */
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
