@@ -457,50 +457,13 @@ class Response extends SwooleResponse
      */
     public function send(string $body = ''): void
     {
-        if ($this->sent) {
-            return;
-        }
-
-        $this->sent = true;
-
-        $this->addHeader('X-Debug-Speed', (string)(\microtime(true) - $this->startTime));
-
         $this->payload = [
             'content-type' => $this->getContentType(),
             'payload'  =>  $body
         ];
 
-        $this
-            ->appendCookies()
-            ->appendHeaders()
-        ;
-
-        if (!$this->disablePayload) {
-            $length = strlen($body);
-
-            $this->size = $this->size + strlen(implode("\n", $this->headers)) + $length;
-
-            if (
-                array_key_exists(
-                    $this->contentType,
-                    $this->compressed
-                ) && ($length <= self::CHUNK_SIZE)
-            ) { // Dont compress with GZIP / Brotli if header is not listed and size is bigger than 2mb
-                $this->end($body);
-            } else {
-                for ($i = 0; $i < ceil($length / self::CHUNK_SIZE); $i++) {
-                    $this->write(substr($body, ($i * self::CHUNK_SIZE), min(self::CHUNK_SIZE, $length - ($i * self::CHUNK_SIZE))));
-                }
-
-                $this->end();
-            }
-
-            $this->disablePayload();
-        } else {
-            $this->end();
-        }
+        parent::send($body);
     }
-
 
 
     /**
