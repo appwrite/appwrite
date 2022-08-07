@@ -29,7 +29,6 @@ echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
     <?php endforeach; ?>
      <?php foreach ($this->getParam('subtitles', []) as $subtitle):?>
          <AdaptationSet group="<?php if (isset($subtitle['id'])): echo $subtitle['id'];  endif;?>" contentType="text" lang="<?php if (isset($subtitle['code'])): echo $subtitle['code'];  endif;?>" mimeType="text/vtt">
-            <Role value="main" />
             <Representation id="<?php if (isset($subtitle['id'])): echo $subtitle['id'];  endif;?>" bandwidth="1000">
                 <BaseURL><?php if (isset($subtitle['baseUrl'])): echo $subtitle['baseUrl'];  endif;?></BaseURL>
             </Representation>

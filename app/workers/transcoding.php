@@ -370,10 +370,10 @@ class TranscodingV1 extends Worker
             '-r', '24',
             '-b_strategy', '1',
             '-bf', '3',
-            '-g', '2'
+            '-g', '120'
         ];
 
-        $segmentSize = 8;
+        $segmentSize = 10;
 
         if ($stream === 'dash') {
                 $dash = $video->dash()
