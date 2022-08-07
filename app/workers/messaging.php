@@ -40,6 +40,7 @@ class MessagingV1 extends Worker
             'telesign' => new Telesign($user, $secret),
             'msg91' => new Msg91($user, $secret),
             'vonage' => new Vonage($user, $secret),
+            'fast2sms' => new FAST2SMS($user, $secret),
             default => null
         };
 
