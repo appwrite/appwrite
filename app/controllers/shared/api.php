@@ -86,7 +86,7 @@ App::init()
 
             if (
                 (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled' // Route is rate-limited
-                && $abuse->check()) // Abuse is not disabled
+                    && $abuse->check()) // Abuse is not disabled
                 && (!$isAppUser && !$isPrivilegedUser)
             ) { // User is not an admin or API key
                 throw new Exception('Too many requests', 429, Exception::GENERAL_RATE_LIMIT_EXCEEDED);
@@ -232,7 +232,7 @@ App::shutdown()
                 $bucket = $events->getContext('bucket');
 
                 $target = Realtime::fromPayload(
-                    // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                     event: $allEvents[0],
                     payload: $payload,
                     project: $project,
@@ -255,7 +255,22 @@ App::shutdown()
             }
         }
 
-        if (!empty($audits->getResource())) {
+
+        $parseLabel  = function ($params, $label) {
+            preg_match_all('/{(.*?)}/', $label, $matches);
+            if(array_key_exists($matches[1][0], $params)){
+                return \str_replace($matches[0][0], $params[$matches[1][0]], $label);
+            }
+        };
+
+        $route = $utopia->match($request);
+
+        $resource = $route->getLabel('audits.resource','');
+        if(!empty($resource)) {
+            $audits->setParam('resource', $parseLabel(
+                    $response->getPayload(), $resource)
+            );
+
             foreach ($events->getParams() as $key => $value) {
                 $audits->setParam($key, $value);
             }
@@ -270,7 +285,7 @@ App::shutdown()
             $database->trigger();
         }
 
-        $route = $utopia->match($request);
+
         if (
             App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
             && $project->getId()
