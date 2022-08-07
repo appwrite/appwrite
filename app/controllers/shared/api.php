@@ -200,9 +200,11 @@ App::shutdown()
     ->inject('dbForProject')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) {
 
+        $responsePayload = $response->getPayload();
+
         if (!empty($events->getEvent())) {
-            if (empty($events->getPayload())) {
-                $events->setPayload($response->getPayload());
+            if (empty($events->getPayload())){
+                $events->setPayload($responsePayload);
             }
             /**
              * Trigger functions.
@@ -268,7 +270,7 @@ App::shutdown()
         $resource = $route->getLabel('audits.resource','');
         if(!empty($resource)) {
             $audits->setParam('resource', $parseLabel(
-                    $response->getPayload(), $resource)
+                    $responsePayload, $resource)
             );
 
             foreach ($events->getParams() as $key => $value) {
