@@ -257,7 +257,6 @@ App::shutdown()
             }
         }
 
-
         $parseLabel  = function ($params, $label) {
             preg_match_all('/{(.*?)}/', $label, $matches);
             if(array_key_exists($matches[1][0], $params)){
@@ -267,15 +266,19 @@ App::shutdown()
 
         $route = $utopia->match($request);
 
-        $resource = $route->getLabel('audits.resource','');
-        if(!empty($resource)) {
-            $audits->setParam('resource', $parseLabel(
-                    $responsePayload, $resource)
-            );
+        $auditsResource = $route->getLabel('audits.resource','');
+        if(!empty($auditsResource)) {
+            $resource = $parseLabel($responsePayload, $auditsResource);
+            if(!empty($resource)){
+                $audits->setResource($resource);
+            }
+        }
 
+        if (!empty($audits->getResource())) {
             foreach ($events->getParams() as $key => $value) {
                 $audits->setParam($key, $value);
             }
+
             $audits->trigger();
         }
 
