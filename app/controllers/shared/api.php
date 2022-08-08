@@ -18,6 +18,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
+use Utopia\Route;
 
 App::init()
     ->groups(['api'])
@@ -257,22 +258,50 @@ App::shutdown()
             }
         }
 
-        $parseLabel  = function ($params, $label) {
+        $route = $utopia->match($request);
+
+        $getRequestParams = function() use ($route, $request) {
+            $url    = \parse_url($request->getURI(), PHP_URL_PATH);
+            $regex = '@' . \preg_replace('@:[^/]+@', '([^/]+)', $route->getPath()) . '@';
+            \preg_match($regex, $url, $matches);
+            \array_shift($matches);
+            $url = $route->getIsAlias() ? $route->getAliasPath() : $route->getPath();
+            $keyRegex = '@^' . \preg_replace('@:[^/]+@', ':([^/]+)', $url) . '$@';
+            \preg_match($keyRegex, $url, $keys);
+            \array_shift($keys);
+
+            return \array_combine($keys, $matches) ?? [];
+        };
+
+
+        $parseLabel  = function ($label) use ($responsePayload, $getRequestParams)  {
             preg_match_all('/{(.*?)}/', $label, $matches);
-                foreach ($matches[1] ?? [] as $pos => $match) {
-                if(array_key_exists($match, $params)){
-                    $label = \str_replace($matches[0][$pos], $params[$match], $label);
+            foreach ($matches[1] ?? [] as $pos => $match) {
+                $find = $matches[0][$pos];
+                list($namespace, $replace) = explode('.', $match);
+
+                switch ($namespace) {
+                    case 'payload':
+                        $params = $responsePayload;
+                        break;
+                    case 'request':
+                        $params = $getRequestParams();
+                        break;
+                    default:
+                        $responsePayload;
+                }
+
+                if(array_key_exists($replace, $params)){
+                    $label = \str_replace($find, $params[$replace], $label);
                 }
             }
 
             return $label;
         };
 
-        $route = $utopia->match($request);
-
         $auditsResource = $route->getLabel('audits.resource','');
         if(!empty($auditsResource)) {
-            $resource = $parseLabel($responsePayload, $auditsResource);
+            $resource = $parseLabel($auditsResource);
             if(!empty($resource)) {
                 $audits->setResource($resource);
             }
