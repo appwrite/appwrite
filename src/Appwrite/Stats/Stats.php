@@ -93,6 +93,10 @@ class Stats
         $functionExecution = $this->params['functionExecution'] ?? 0;
         $functionExecutionTime = $this->params['functionExecutionTime'] ?? 0;
         $functionStatus = $this->params['functionStatus'] ?? '';
+        $functionBuildTime = $this->params['functionBuildTime'] ?? 0;
+        $functionBuild = $this->params['functionBuild'] ?? 0;
+        $functionBuildStatus = $this->params['functionBuildStatus'] ?? '';
+        $functionCompute = $functionExecutionTime + $functionBuildTime;
 
         $tags = ",projectId={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
 
@@ -104,8 +108,15 @@ class Stats
         }
 
         if ($functionExecution >= 1) {
-            $this->statsd->increment('executions.all' . $tags . ',functionId=' . $functionId . ',functionStatus=' . $functionStatus);
-            $this->statsd->count('executions.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
+            $this->statsd->increment('functions.executions.all' . $tags . ',functionId=' . $functionId . ',functionStatus=' . $functionStatus);
+            $this->statsd->count('functions.executions.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
+        }
+        if ($functionBuild >= 1) {
+            $this->statsd->increment('functions.builds.all' . $tags . ',functionId=' . $functionId . ',functionBuildStatus=' . $functionBuildStatus);
+            $this->statsd->count('functions.builds.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
+        }
+        if ($functionBuild + $functionExecution >= 1) {
+            $this->statsd->count('functions.compute.time' . $tags . ',functionId=' . $functionId, $functionCompute);
         }
 
         $this->statsd->count('network.inbound' . $tags, $networkRequestSize);

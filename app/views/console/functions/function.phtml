@@ -291,7 +291,7 @@ sort($patterns);
             <li data-state="/console/functions/function/monitors?id={{router.params.id}}&project={{router.params.project}}">
 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="submit"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}"
@@ -302,9 +302,10 @@ sort($patterns);
                 <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="submit"
                     data-name="usage"
+                    data-param-range="30d"
                     data-param-function-id="{{router.params.id}}">
                     <button class="tick">30d</button>
                 </form>
@@ -312,7 +313,7 @@ sort($patterns);
                 <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="submit"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}"
@@ -325,7 +326,7 @@ sort($patterns);
                 <h2>Monitors</h2>
 
                 <div
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="load"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}">

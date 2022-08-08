@@ -22,6 +22,12 @@ class Usage
         'network' => [
             'table' => 'appwrite_usage_network_all',
         ],
+        'inbound' => [
+            'table' => 'appwrite_usage_network_inbound',
+        ],
+        'outbound' => [
+            'table' => 'appwrite_usage_network_outbound',
+        ],
         'executions' => [
             'table' => 'appwrite_usage_executions_all',
         ],
@@ -171,19 +177,50 @@ class Usage
         'users.sessions.delete' => [
             'table' => 'appwrite_usage_users_sessions_delete',
         ],
+        'functions.executions' => [
+            'table' => 'appwrite_usage_functions_executions_all',
+        ],
+        'functions.builds' => [
+            'table' => 'appwrite_usage_functions_builds_all',
+        ],
+        'functions.failures' => [
+            'table' => 'appwrite_usage_functions_executions_all',
+            'filters' => [
+                'functionStatus' => 'failed',
+            ],
+        ],
         'functions.functionId.executions' => [
-            'table' => 'appwrite_usage_executions_all',
+            'table' => 'appwrite_usage_functions_executions_all',
             'groupBy' => ['functionId'],
         ],
-        'functions.functionId.compute' => [
-            'table' => 'appwrite_usage_executions_time',
+        'functions.functionId.builds' => [
+            'table' => 'appwrite_usage_functions_builds_all',
             'groupBy' => ['functionId'],
         ],
-        'functions.functionId.failures' => [
-            'table' => 'appwrite_usage_executions_all',
+        'functions.functionId.execution' => [
+            'table' => 'appwrite_usage_functions_executions_time',
+            'groupBy' => ['functionId'],
+        ],
+        'functions.functionId.build' => [
+            'table' => 'appwrite_usage_functions_builds_time',
+            'groupBy' => ['functionId'],
+        ],
+        'functions.functionId.compute' => [ // Built time + execution time
+            'table' => 'appwrite_usage_functions_compute_time',
+            'groupBy' => ['functionId'],
+        ],
+        'functions.functionId.executions.failures' => [
+            'table' => 'appwrite_usage_functions_executions_all',
             'groupBy' => ['functionId'],
             'filters' => [
                 'functionStatus' => 'failed',
+            ],
+        ],
+        'functions.functionId.builds.failures' => [
+            'table' => 'appwrite_usage_functions_builds_all',
+            'groupBy' => ['functionId'],
+            'filters' => [
+                'functionBuildStatus' => 'failed',
             ],
         ],
     ];
@@ -292,7 +329,6 @@ class Usage
 
                 if (!empty($projectId) && $projectId !== 'console') {
                     $metricUpdated = $metric;
-
                     if (!empty($groupBy)) {
                         foreach ($options['groupBy'] as $groupBy) {
                             $groupedBy = $point[$groupBy] ?? '';

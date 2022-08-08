@@ -137,7 +137,7 @@ $cli
              */
             $usage->collect();
 
-            if ($iterations % 30 != 0) { // return if 30 iterations has not passed
+            if ($iterations % 30 != 0 && App::getEnv('_APP_ENV', 'production') == 'production') { // return if 30 iterations has not passed
                 $iterations++;
                 $loopTook = microtime(true) - $loopStart;
                 $now = date('d-m-Y H:i:s', time());

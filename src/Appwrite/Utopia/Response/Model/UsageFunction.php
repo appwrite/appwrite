@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class UsageFunctions extends Model
+class UsageFunction extends Model
 {
     public function __construct()
     {
@@ -37,20 +37,6 @@ class UsageFunctions extends Model
                 'example' => new \stdClass(),
                 'array' => true
             ])
-            ->addRule('functionsExecutionTime', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for function execution duration.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true
-            ])
-            ->addRule('functionsBuildTime', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for function execution duration.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true
-            ])
         ;
     }
 
@@ -61,7 +47,7 @@ class UsageFunctions extends Model
      */
     public function getName(): string
     {
-        return 'UsageFunctions';
+        return 'UsageFunction';
     }
 
     /**
@@ -71,6 +57,6 @@ class UsageFunctions extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_USAGE_FUNCTIONS;
+        return Response::MODEL_USAGE_FUNCTION;
     }
 }

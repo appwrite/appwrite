@@ -12,11 +12,12 @@ trait ProjectCustom
     protected static $project = [];
 
     /**
+     * @param bool $fresh
      * @return array
      */
-    public function getProject(): array
+    public function getProject(bool $fresh = false): array
     {
-        if (!empty(self::$project)) {
+        if (!empty(self::$project) && !$fresh) {
             return self::$project;
         }
 
@@ -115,13 +116,17 @@ trait ProjectCustom
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']);
 
-        self::$project = [
+        $project = [
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
             'signatureKey' => $webhook['body']['signatureKey'],
         ];
+        if ($fresh) {
+            return $project;
+        }
+        self::$project = $project;
 
         return self::$project;
     }

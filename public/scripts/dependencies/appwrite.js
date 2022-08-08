@@ -3194,11 +3194,30 @@
                  * @throws {AppwriteException}
                  * @returns {Promise}
                  */
-                getUsage: (functionId, range) => __awaiter(this, void 0, void 0, function* () {
+                getFunctionUsage: (functionId, range) => __awaiter(this, void 0, void 0, function* () {
                     if (typeof functionId === 'undefined') {
                         throw new AppwriteException('Missing required parameter: "functionId"');
                     }
                     let path = '/functions/{functionId}/usage'.replace('{functionId}', functionId);
+                    let payload = {};
+                    if (typeof range !== 'undefined') {
+                        payload['range'] = range;
+                    }
+                    const uri = new URL(this.config.endpoint + path);
+                    return yield this.call('get', uri, {
+                        'content-type': 'application/json',
+                    }, payload);
+                }),
+                /**
+                 * Get Function Usage
+                 *
+                 *
+                 * @param {string} range
+                 * @throws {AppwriteException}
+                 * @returns {Promise}
+                 */
+                getUsage: (range) => __awaiter(this, void 0, void 0, function* () {
+                    let path = '/functions/usage';
                     let payload = {};
                     if (typeof range !== 'undefined') {
                         payload['range'] = range;
