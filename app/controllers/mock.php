@@ -214,7 +214,7 @@ App::get('/v1/mock/tests/general/download')
             ->addHeader('Content-Disposition', 'attachment; filename="test.txt"')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send("Download test passed.")
+            ->send("GET:/v1/mock/tests/general/download:passed")
         ;
     });
 
