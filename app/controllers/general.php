@@ -305,21 +305,21 @@ App::init()
                 if (time() > $key->getAttribute('accessedAt', 0) + APP_KEY_USAGE) {
                     $key->setAttribute('accessedAt', time());
                     $sdkValidator = new WhiteList([
-                        'appwrite:nodejs',
-                        'appwrite:deno',
-                        'appwrite:php',
-                        'appwrite:python',
-                        'appwrite:ruby',
-                        'appwrite:go',
-                        'appwrite:java',
-                        'appwrite:dotnet',
-                        'appwrite:dart',
-                        'appwrite:kotlin',
-                        'appwrite:swift'
+                        'nodejs',
+                        'deno',
+                        'php',
+                        'python',
+                        'ruby',
+                        'go',
+                        'java',
+                        'dotnet',
+                        'dart',
+                        'kotlin',
+                        'swift'
                     ], true);
     
                     $sdk = $request->getHeader('x-sdk-version', 'UNKNOWN');
-                    $sdk = substr($sdk, 0, strrpos($sdk, ':'));
+                    $sdk = explode(':', $sdk)[1] ?? 'UNKNOWN';
 
                     if ($sdkValidator->isValid($sdk)) {
                         $sdks = $key->getAttribute('sdks', []);
