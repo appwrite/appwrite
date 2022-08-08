@@ -141,12 +141,13 @@ class UsageDB extends Usage
      *
      * @return int
      */
-    private function sum(string $projectId, string $collection, string $attribute, string $metric, array $queries = []): int
+    private function sum(string $projectId, string $collection, string $attribute, string $metric, int $multiplier = 1): int
     {
         $this->database->setNamespace('_' . $projectId);
 
         try {
-            $sum = (int) $this->database->sum($collection, $attribute, $queries);
+            $sum = $this->database->sum($collection, $attribute);
+            $sum = (int) ($sum * $multiplier);
             $this->createPerPeriodMetric($projectId, $metric, $sum);
             return $sum;
         } catch (\Exception $e) {
@@ -156,6 +157,7 @@ class UsageDB extends Usage
                 throw $e;
             }
         }
+        return 0;
     }
 
     /**
@@ -183,6 +185,7 @@ class UsageDB extends Usage
                 throw $e;
             }
         }
+        return 0;
     }
 
     /**
@@ -245,6 +248,22 @@ class UsageDB extends Usage
         $this->createPerPeriodMetric($projectId, 'storage.files.total', $projectFilesTotal);
 
         $this->createPerPeriodMetric($projectId, 'storage.total', $projectFilesTotal + $deploymentsTotal);
+    }
+
+    /**
+     * Compute Stats
+     * Metrics: functions.executionTime, functions.buildTime, functions.compute,
+     *
+     * @param string $projectId
+     *
+     * @return void
+     */
+    private function computeStats(string $projectId): void
+    {
+        $executionTotal = $this->sum($projectId, 'executions', 'time', 'functions.executionTime', 1000); // in ms
+        $buildTotal = $this->sum($projectId, 'builds', 'duration', 'functions.buildTime', 1000); // in ms
+
+        $this->createPerPeriodMetric($projectId, 'functions.compute', $executionTotal + $buildTotal); //in ms
     }
 
     /**
@@ -464,6 +483,7 @@ class UsageDB extends Usage
             $this->usersStats($projectId);
             $this->databaseStats($projectId);
             $this->storageStats($projectId);
+            $this->computeStats($projectId);
 
             // Aggregate new metrics from already collected usage metrics
             // for lower time period (1day and 1 month metric from 30 minute metrics)
