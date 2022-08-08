@@ -34,12 +34,18 @@ class UsageDB extends Usage
      *
      * @return void
      */
-    private function createPerPeriodMetric(string $projectId, string $metric, int $value): void
+    private function createPerPeriodMetric(string $projectId, string $metric, int $value, bool $monthly = false): void
     {
         foreach ($this->periods as $options) {
             $period = $options['key'];
             $time = (int) (floor(time() / $options['multiplier']) * $options['multiplier']);
             $this->createOrUpdateMetric($projectId, $metric, $period, $time, $value);
+        }
+
+        // Required for billing
+        if ($monthly) {
+            $time = strtotime("first day of the month");
+            $this->createOrUpdateMetric($projectId, $metric, '1mo', $time, $value);
         }
     }
 
@@ -58,31 +64,31 @@ class UsageDB extends Usage
             $id = \md5("{$time}_{$period}_{$metric}");
             $this->database->setNamespace('_' . $projectId);
 
-            try {
-                $document = $this->database->getDocument('stats', $id);
-                if ($document->isEmpty()) {
-                    $this->database->createDocument('stats', new Document([
-                        '$id' => $id,
-                        'period' => $period,
-                        'time' => $time,
-                        'metric' => $metric,
-                        'value' => $value,
-                        'type' => 1,
-                    ]));
-                } else {
-                    $this->database->updateDocument(
-                        'stats',
-                        $document->getId(),
-                        $document->setAttribute('value', $value)
-                    );
-                }
-            } catch (\Exception$e) { // if projects are deleted this might fail
-                if (is_callable($this->errorHandler)) {
-                    call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
-                } else {
-                    throw $e;
-                }
+        try {
+            $document = $this->database->getDocument('stats', $id);
+            if ($document->isEmpty()) {
+                $this->database->createDocument('stats', new Document([
+                    '$id' => $id,
+                    'period' => $period,
+                    'time' => $time,
+                    'metric' => $metric,
+                    'value' => $value,
+                    'type' => 1,
+                ]));
+            } else {
+                $this->database->updateDocument(
+                    'stats',
+                    $document->getId(),
+                    $document->setAttribute('value', $value)
+                );
             }
+        } catch (\Exception$e) { // if projects are deleted this might fail
+            if (is_callable($this->errorHandler)) {
+                call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
+            } else {
+                throw $e;
+            }
+        }
     }
 
     /**
@@ -307,7 +313,7 @@ class UsageDB extends Usage
     protected function aggregateDatabaseMetrics(string $projectId): void
     {
         $this->database->setNamespace('_' . $projectId);
-        
+
         $databasesGeneralMetrics = [
             'databases.create',
             'databases.read',
@@ -323,7 +329,7 @@ class UsageDB extends Usage
             'databases.documents.delete',
         ];
 
-        foreach($databasesGeneralMetrics as $metric) {
+        foreach ($databasesGeneralMetrics as $metric) {
             $this->aggregateDailyMetric($projectId, $metric);
         }
 
@@ -338,7 +344,7 @@ class UsageDB extends Usage
             'databases.databaseId.documents.delete',
         ];
 
-        $this->foreachDocument($projectId, 'databases', [], function(Document $database) use ($databasesDatabaseMetrics, $projectId) {
+        $this->foreachDocument($projectId, 'databases', [], function (Document $database) use ($databasesDatabaseMetrics, $projectId) {
             $databaseId = $database->getId();
             foreach ($databasesDatabaseMetrics as $metric) {
                 $metric = str_replace('databaseId', $databaseId, $metric);
@@ -352,12 +358,11 @@ class UsageDB extends Usage
                 'databases.' . $databaseId . '.collections.collectionId.documents.delete',
             ];
 
-            $this->foreachDocument($projectId, 'database_' . $database->getInternalId(), [], function(Document $collection) use ($databasesCollectionMetrics, $projectId) {
+            $this->foreachDocument($projectId, 'database_' . $database->getInternalId(), [], function (Document $collection) use ($databasesCollectionMetrics, $projectId) {
                 $collectionId = $collection->getId();
                 foreach ($databasesCollectionMetrics as $metric) {
                     $metric = str_replace('collectionId', $collectionId, $metric);
                     $this->aggregateDailyMetric($projectId, $metric);
-                    $this->aggregateMonthlyMetric($projectId, $metric);
                 }
             });
         });
@@ -366,7 +371,7 @@ class UsageDB extends Usage
     protected function aggregateStorageMetrics(string $projectId): void
     {
         $this->database->setNamespace('_' . $projectId);
-        
+
         $storageGeneralMetrics = [
             'storage.buckets.create',
             'storage.buckets.read',
@@ -378,7 +383,7 @@ class UsageDB extends Usage
             'storage.files.delete',
         ];
 
-        foreach($storageGeneralMetrics as $metric) {
+        foreach ($storageGeneralMetrics as $metric) {
             $this->aggregateDailyMetric($projectId, $metric);
         }
 
@@ -389,7 +394,7 @@ class UsageDB extends Usage
             'storage.buckets.bucketId.files.delete',
         ];
 
-        $this->foreachDocument($projectId, 'buckets', [], function(Document $bucket) use ($storageBucketMetrics, $projectId) {
+        $this->foreachDocument($projectId, 'buckets', [], function (Document $bucket) use ($storageBucketMetrics, $projectId) {
             $bucketId = $bucket->getId();
             foreach ($storageBucketMetrics as $metric) {
                 $metric = str_replace('bucketId', $bucketId, $metric);
@@ -402,15 +407,19 @@ class UsageDB extends Usage
     {
         $this->database->setNamespace('_' . $projectId);
 
-        $this->aggregateDailyMetric($projectId, 'executions');
+        $this->aggregateDailyMetric($projectId, 'functions.executions');
+        $this->aggregateDailyMetric($projectId, 'functions.builds');
+        $this->aggregateDailyMetric($projectId, 'functions.failures');
 
         $functionMetrics = [
             'functions.functionId.executions',
+            'functions.functionId.builds',
             'functions.functionId.compute',
-            'function.functionId.failure',
+            'function.functionId.executions.failure',
+            'function.functionId.builds.failure',
         ];
 
-        $this->foreachDocument($projectId, 'functions', [], function(Document $function) use ($functionMetrics, $projectId) {
+        $this->foreachDocument($projectId, 'functions', [], function (Document $function) use ($functionMetrics, $projectId) {
             $functionId = $function->getId();
             foreach ($functionMetrics as $metric) {
                 $metric = str_replace('functionId', $functionId, $metric);
@@ -430,7 +439,7 @@ class UsageDB extends Usage
             'users.sessions.delete'
         ];
 
-        foreach($metrics as $metric) {
+        foreach ($metrics as $metric) {
             $this->aggregateDailyMetric($projectId, $metric);
         }
     }
@@ -439,6 +448,12 @@ class UsageDB extends Usage
     {
         $this->aggregateDailyMetric($projectId, 'requests');
         $this->aggregateDailyMetric($projectId, 'network');
+        $this->aggregateDailyMetric($projectId, 'inbound');
+        $this->aggregateDailyMetric($projectId, 'outbound');
+
+        //Required for billing
+        $this->aggregateMonthlyMetric($projectId, 'inbound');
+        $this->aggregateMonthlyMetric($projectId, 'outbound');
     }
 
     protected function aggregateDailyMetric(string $projectId, string $metric): void

@@ -28,9 +28,6 @@ class Usage
         'outbound' => [
             'table' => 'appwrite_usage_network_outbound',
         ],
-        'executions' => [
-            'table' => 'appwrite_usage_executions_all',
-        ],
         'databases.create' => [
             'table' => 'appwrite_usage_databases_create',
         ],
