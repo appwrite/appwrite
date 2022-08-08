@@ -822,6 +822,7 @@ App::post('/v1/account/sessions/phone')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('auth.type', 'phone')
+    ->label('audits.resource', 'user/{$id}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createPhoneSession')
@@ -934,6 +935,7 @@ App::put('/v1/account/sessions/phone')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
+    ->label('audits.resource', 'user/{$id}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePhoneSession')
@@ -1042,6 +1044,7 @@ App::post('/v1/account/sessions/anonymous')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
     ->label('auth.type', 'anonymous')
+    ->label('audits.resource', 'user/{$id}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createAnonymousSession')
@@ -1427,6 +1430,7 @@ App::patch('/v1/account/password')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.password')
     ->label('scope', 'account')
+    ->label('audits.resource', 'user/{$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePassword')
@@ -1596,6 +1600,7 @@ App::patch('/v1/account/status')
     ->label('event', 'users.[userId].update.status')
     ->label('scope', 'account')
     ->label('audits.resource', 'user/{$id}')
+    ->label('audits.payload', '*')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateStatus')
@@ -1613,8 +1618,6 @@ App::patch('/v1/account/status')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage) {
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
-
-        $audits->setPayload($response->output($user, Response::MODEL_USER)); // TODO is this a mistake?
 
         $events
             ->setParam('userId', $user->getId())
@@ -1634,7 +1637,6 @@ App::delete('/v1/account/sessions/:sessionId')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
-    ->label('audits.resource', 'user/{$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSession')
@@ -1648,9 +1650,10 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
+    ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events, Stats $usage) {
+    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Stats $usage) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -1664,6 +1667,8 @@ App::delete('/v1/account/sessions/:sessionId')
                 unset($sessions[$key]);
 
                 $dbForProject->deleteDocument('sessions', $session->getId());
+
+                $audits->setResource('user/' . $user->getId());
 
                 $session->setAttribute('current', false);
 
@@ -1794,7 +1799,6 @@ App::delete('/v1/account/sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
-    ->label('audits.resource', 'user/{$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSessions')
@@ -1807,15 +1811,18 @@ App::delete('/v1/account/sessions')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
+    ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events, Stats $usage) {
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Stats $usage) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
         foreach ($sessions as $session) {/** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
+
+            $audits->setResource('user/' . $user->getId());
 
             if (!Config::getParam('domainVerification')) {
                 $response->addHeader('X-Fallback-Cookies', \json_encode([]));

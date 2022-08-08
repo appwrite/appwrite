@@ -259,9 +259,13 @@ App::shutdown()
 
         $parseLabel  = function ($params, $label) {
             preg_match_all('/{(.*?)}/', $label, $matches);
-            if(array_key_exists($matches[1][0], $params)){
-                return \str_replace($matches[0][0], $params[$matches[1][0]], $label);
+                foreach ($matches[1] ?? [] as $pos => $match) {
+                if(array_key_exists($match, $params)){
+                    $label = \str_replace($matches[0][$pos], $params[$match], $label);
+                }
             }
+
+            return $label;
         };
 
         $route = $utopia->match($request);
@@ -269,10 +273,18 @@ App::shutdown()
         $auditsResource = $route->getLabel('audits.resource','');
         if(!empty($auditsResource)) {
             $resource = $parseLabel($responsePayload, $auditsResource);
-            if(!empty($resource)){
+            if(!empty($resource)) {
                 $audits->setResource($resource);
             }
         }
+
+        $auditsPayload = $route->getLabel('audits.payload','');
+        if(!empty($auditsPayload)) {
+           if($auditsPayload === '*'){
+               $audits->setPayload($responsePayload);
+           }
+        }
+
 
         if (!empty($audits->getResource())) {
             foreach ($events->getParams() as $key => $value) {

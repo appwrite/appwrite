@@ -50,7 +50,7 @@ use MaxMind\Db\Reader;
  * @return Document Newly created attribute document
  * @throws Exception
  */
-function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage): Document
+function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $database, Event $events, Stats $usage): Document
 {
     $key = $attribute->getAttribute('key');
     $type = $attribute->getAttribute('type', '');
@@ -141,11 +141,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         ->setParam('attributeId', $attribute->getId())
     ;
 
-    $audits
-        ->setResource('database/' . $db->getId() . '/collection/' . $collectionId)
-        ->setPayload($attribute->getArrayCopy())
-    ;
-
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
     return $attribute;
@@ -156,6 +151,8 @@ App::post('/v1/databases')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].create')
     ->label('scope', 'databases.write')
+    ->label('audits.resource', 'database/{$id}')
+    ->label('audits.payload', '*')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'create')
@@ -167,10 +164,9 @@ App::post('/v1/databases')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $databaseId = $databaseId == 'unique()' ? $dbForProject->getId() : $databaseId;
 
@@ -217,11 +213,6 @@ App::post('/v1/databases')
         } catch (DuplicateException $th) {
             throw new Exception('Database already exists', 409, Exception::DATABASE_ALREADY_EXISTS);
         }
-
-        $audits
-            ->setResource('database/' . $databaseId)
-            ->setPayload($database->getArrayCopy())
-        ;
 
         $events->setParam('databaseId', $database->getId());
         $usage->setParam('databases.create', 1);
@@ -386,6 +377,8 @@ App::put('/v1/databases/:databaseId')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.write')
     ->label('event', 'databases.[databaseId].update')
+    ->label('audits.resource', 'database/{$id}')
+    ->label('audits.payload', '*')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'update')
@@ -397,10 +390,9 @@ App::put('/v1/databases/:databaseId')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $database =  $dbForProject->getDocument('databases', $databaseId);
 
@@ -417,11 +409,6 @@ App::put('/v1/databases/:databaseId')
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. ' . $exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
-
-        $audits
-            ->setResource('database/' . $databaseId)
-            ->setPayload($database->getArrayCopy())
-        ;
 
         $usage->setParam('databases.update', 1);
         $events->setParam('databaseId', $database->getId());
@@ -487,6 +474,8 @@ App::post('/v1/databases/:databaseId/collections')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].create')
     ->label('scope', 'collections.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}')
+    ->label('audits.payload', '*')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createCollection')
@@ -502,10 +491,9 @@ App::post('/v1/databases/:databaseId/collections')
     ->param('write', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?string $permission, ?array $read, ?array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $name, ?string $permission, ?array $read, ?array $write, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -535,11 +523,6 @@ App::post('/v1/databases/:databaseId/collections')
         } catch (LimitException $th) {
             throw new Exception('Collection limit exceeded', 400, Exception::COLLECTION_LIMIT_EXCEEDED);
         }
-
-        $audits
-            ->setResource('database/' . $databaseId . '/collection/' . $collectionId)
-            ->setPayload($collection->getArrayCopy())
-        ;
 
         $events
             ->setContext('database', $database)
@@ -741,6 +724,8 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].update')
+    ->label('audits-resource', 'database/{databaseId}/collection/{$id}')
+    ->label('audits-payload', '*')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateCollection')
@@ -757,10 +742,9 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->param('enabled', true, new Boolean(), 'Is collection enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -790,11 +774,6 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. ' . $exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
-
-        $audits
-            ->setResource('database/' . $databaseId . '/collection/' . $collectionId)
-            ->setPayload($collection->getArrayCopy())
-        ;
 
         $usage
             ->setParam('databaseId', $databaseId)
@@ -878,6 +857,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}')
+    ->label('audits.payload', '*')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createStringAttribute')
@@ -895,10 +876,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
 
         // Ensure attribute default is within required size
         $validator = new Text($size);
@@ -913,7 +893,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'required' => $required,
             'default' => $default,
             'array' => $array,
-        ]), $response, $dbForProject, $database, $audits, $events, $usage);
+        ]), $response, $dbForProject, $database, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
@@ -924,6 +904,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}')
+    ->label('audits.payload', '*')
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEmailAttribute')
@@ -940,10 +922,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -953,7 +934,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_EMAIL,
-        ]), $response, $dbForProject, $database, $audits, $events, $usage);
+        ]), $response, $dbForProject, $database, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
@@ -964,6 +945,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}')
+    ->label('audits.payload', '*')
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEnumAttribute')
@@ -981,10 +964,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
 
         // use length of longest string as attribute size
         $size = 0;
@@ -1009,7 +991,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_ENUM,
             'formatOptions' => ['elements' => $elements],
-        ]), $response, $dbForProject, $database, $audits, $events, $usage);
+        ]), $response, $dbForProject, $database, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
@@ -1020,6 +1002,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}')
+    ->label('audits.payload', '*')
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIpAttribute')
@@ -1036,10 +1020,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1049,7 +1032,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_IP,
-        ]), $response, $dbForProject, $database, $audits, $events, $usage);
+        ]), $response, $dbForProject, $database, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
@@ -1060,6 +1043,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}')
+    ->label('audits.payload', '*')
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createUrlAttribute')
@@ -1076,10 +1061,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1089,7 +1073,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_URL,
-        ]), $response, $dbForProject, $database, $audits, $events, $usage);
+        ]), $response, $dbForProject, $database, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
@@ -1100,6 +1084,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}')
+    ->label('audits.payload', '*')
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIntegerAttribute')
@@ -1118,10 +1104,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
@@ -1151,7 +1136,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
                 'min' => $min,
                 'max' => $max,
             ],
-        ]), $response, $dbForProject, $database, $audits, $events, $usage);
+        ]), $response, $dbForProject, $database, $events, $usage);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
 
@@ -1169,6 +1154,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}')
+    ->label('audits.payload', '*')
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createFloatAttribute')
@@ -1187,10 +1174,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Event $events, Stats $usage) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events, Stats $usage) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
@@ -1223,7 +1209,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
                 'min' => $min,
                 'max' => $max,
             ],
-        ]), $response, $dbForProject, $database, $audits, $events, $usage);
+        ]), $response, $dbForProject, $database, $events, $usage);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
 
@@ -1241,6 +1227,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}')
+    ->label('audits.payload', '*')
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createBooleanAttribute')
@@ -1257,10 +1245,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1269,7 +1256,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
             'required' => $required,
             'default' => $default,
             'array' => $array,
-        ]), $response, $dbForProject, $database, $audits, $events, $usage);
+        ]), $response, $dbForProject, $database, $events, $usage);
 
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
@@ -1487,6 +1474,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].create')
     ->label('scope', 'collections.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}')
+    ->label('audits.payload', '*')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createIndex')
@@ -1503,10 +1492,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1626,11 +1614,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->setParam('indexId', $index->getId())
            ->setContext('collection', $collection)
         ->setContext('database', $db)
-        ;
-
-        $audits
-            ->setResource('database/' . $databaseId . '/collection/' . $collection->getId())
-            ->setPayload($index->getArrayCopy())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -1811,6 +1794,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}')
+    ->label('audits.payload', '*')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createDocument')
@@ -1827,11 +1812,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $user, EventAudit $audits, Stats $usage, Event $events, string $mode) {
+    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $user, Stats $usage, Event $events, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1917,11 +1901,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setParam('databases.documents.create', 1)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
-        ;
-
-        $audits
-            ->setResource('database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId())
-            ->setPayload($document->getArrayCopy())
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -2212,6 +2191,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
+    ->label('audits.resource', 'database/{databaseId}/collection/{collectionId}/document/{$id}')
+    ->label('audits.payload', '*')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateDocument')
@@ -2227,11 +2208,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->param('write', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, Stats $usage, Event $events, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2335,11 +2315,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->setParam('databases.documents.update', 1)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
-        ;
-
-        $audits
-            ->setResource('database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId())
-            ->setPayload($document->getArrayCopy())
         ;
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
