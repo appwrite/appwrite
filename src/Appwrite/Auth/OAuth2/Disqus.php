@@ -59,7 +59,7 @@ class Disqus extends OAuth2
 
     /**
      * @param string $code
-     * 
+     *
      * @return array
      */
     protected function getTokens(string $code): array
@@ -84,7 +84,7 @@ class Disqus extends OAuth2
 
     /**
      * @param string $refreshToken
-     * 
+     *
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
@@ -109,7 +109,7 @@ class Disqus extends OAuth2
 
     /**
      * @param string $token
-     * 
+     *
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -123,7 +123,7 @@ class Disqus extends OAuth2
 
     /**
      * @param string $accessToken
-     * 
+     *
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -137,7 +137,7 @@ class Disqus extends OAuth2
 
     /**
      * @param string $accessToken
-     * 
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -152,7 +152,7 @@ class Disqus extends OAuth2
 
     /**
      * @param string $accessToken
-     * 
+     *
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -166,7 +166,7 @@ class Disqus extends OAuth2
 
     /**
      * @param string $accessToken
-     * 
+     *
      * @return array
      */
     protected function getUser(string $accessToken): array
