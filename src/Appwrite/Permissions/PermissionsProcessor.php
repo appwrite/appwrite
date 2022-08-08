@@ -2,12 +2,17 @@
 
 namespace Appwrite\Permissions;
 
+use Appwrite\Auth\Auth;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 
 class PermissionsProcessor
 {
-    public static function handleAggregates(array $permissions): array
+    public static function handleAggregates(?array $permissions): ?array
     {
+        if (\is_null($permissions)) {
+            return null;
+        }
         $aggregates = [
             'admin' => ['create', 'update', 'delete', 'read',],
             'write' => ['create', 'update', 'delete',],
