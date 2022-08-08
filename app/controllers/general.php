@@ -302,7 +302,7 @@ App::init()
                 Authorization::setRole('role:' . Auth::USER_ROLE_APP);
                 Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
 
-                if (time() > ($key->getAttribute('accessedAt', 0) + (24 * 60 * 60))) {
+                if (time() > $key->getAttribute('accessedAt', 0) + APP_KEY_USAGE) {
                     $key->setAttribute('accessedAt', time());
                     $sdkValidator = new WhiteList([
                         'appwrite:nodejs',

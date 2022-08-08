@@ -69,6 +69,7 @@ class Key extends Model
                 'description' => 'List of SDK user agents that used this key.',
                 'default' => null,
                 'example' => 'appwrite:flutter',
+                'array' => true
             ])
         ;
     }
