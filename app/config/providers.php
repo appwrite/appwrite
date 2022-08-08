@@ -31,6 +31,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'authentik' => [
+        'name' => 'Authentik',
+        'developers' => 'https://goauthentik.io/docs/',
+        'icon' => 'icon-authentik',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => 'authentik.phtml',
+        'beta' => false,
+        'mock' => false,
+    ],
     'autodesk' => [
         'name' => 'Autodesk',
         'developers' => 'https://forge.autodesk.com/en/docs/oauth/v2/developers_guide/overview/',
@@ -200,6 +210,16 @@ return [ // Ordered by ABC.
         'form' => false,
         'beta' => false,
         'mock' => false
+    ],
+    'podio' => [
+        'name' => 'Podio',
+        'developers' => 'https://developers.podio.com/doc/oauth-authorization',
+        'icon' => 'icon-podio',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
     ],
     'salesforce' => [
         'name' => 'Salesforce',

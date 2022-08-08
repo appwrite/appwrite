@@ -7,29 +7,34 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
-App::init(function (View $layout) {
+App::init()
+    ->groups(['home'])
+    ->inject('layout')
+    ->action(function (View $layout) {
+        $header = new View(__DIR__ . '/../../views/home/comps/header.phtml');
+        $footer = new View(__DIR__ . '/../../views/home/comps/footer.phtml');
 
-    $header = new View(__DIR__ . '/../../views/home/comps/header.phtml');
-    $footer = new View(__DIR__ . '/../../views/home/comps/footer.phtml');
+        $footer
+            ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
+        ;
 
-    $footer
-        ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
-    ;
+        $layout
+            ->setParam('title', APP_NAME)
+            ->setParam('description', '')
+            ->setParam('class', 'home')
+            ->setParam('platforms', Config::getParam('platforms'))
+            ->setParam('header', [$header])
+            ->setParam('footer', [$footer])
+        ;
+    });
 
-    $layout
-        ->setParam('title', APP_NAME)
-        ->setParam('description', '')
-        ->setParam('class', 'home')
-        ->setParam('platforms', Config::getParam('platforms'))
-        ->setParam('header', [$header])
-        ->setParam('footer', [$footer])
-    ;
-}, ['layout'], 'home');
-
-App::shutdown(function (Response $response, View $layout) {
-
-    $response->html($layout->render());
-}, ['response', 'layout'], 'home');
+App::shutdown()
+    ->groups(['home'])
+    ->inject('response')
+    ->inject('layout')
+    ->action(function (Response $response, View $layout) {
+        $response->html($layout->render());
+    });
 
 App::get('/')
     ->groups(['web', 'home'])

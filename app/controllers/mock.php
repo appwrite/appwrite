@@ -214,7 +214,7 @@ App::get('/v1/mock/tests/general/download')
             ->addHeader('Content-Disposition', 'attachment; filename="test.txt"')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send("Download test passed.")
+            ->send("GET:/v1/mock/tests/general/download:passed")
         ;
     });
 
@@ -253,31 +253,31 @@ App::post('/v1/mock/tests/general/upload')
             $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
 
             if (is_null($start) || is_null($end) || is_null($size)) {
-                throw new Exception(Exception::MOCK_INVALID_CONTENT_RANGE_HEADER);
+                throw new Exception('Invalid content-range header', 400, Exception::GENERAL_MOCK);
             }
 
             if ($start > $end || $end > $size) {
-                throw new Exception(Exception::MOCK_INVALID_CONTENT_RANGE_HEADER);
+                throw new Exception('Invalid content-range header', 400, Exception::GENERAL_MOCK);
             }
 
             if ($start === 0 && !empty($id)) {
-                throw new Exception(Exception::MOCK_FIRST_CHUNK_CANNOT_HAVE_ID);
+                throw new Exception('First chunked request cannot have id header', 400, Exception::GENERAL_MOCK);
             }
 
             if ($start !== 0 && $id !== 'newfileid') {
-                throw new Exception(Exception::MOCK_CHUNK_MISSING_ID);
+                throw new Exception('All chunked request must have id header (except first)', 400, Exception::GENERAL_MOCK);
             }
 
             if ($end !== $size && $end - $start + 1 !== $chunkSize) {
-                throw new Exception(Exception::MOCK_CHUNK_INVALID_SIZE);
+                throw new Exception('Chunk size must be 5MB (except last chunk)', 400, Exception::GENERAL_MOCK);
             }
 
             if ($end !== $size && $file['size'] !== $chunkSize) {
-                throw new Exception(Exception::MOCK_CHUNK_INVALID_SIZE);
+                throw new Exception('Wrong chunk size', 400, Exception::GENERAL_MOCK);
             }
 
             if ($file['size'] > $chunkSize) {
-                throw new Exception(Exception::MOCK_CHUNK_INVALID_SIZE);
+                throw new Exception('Chunk size must be 5MB or less', 400, Exception::GENERAL_MOCK);
             }
 
             if ($end !== $size) {
@@ -293,15 +293,15 @@ App::post('/v1/mock/tests/general/upload')
             $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
 
             if ($file['name'] !== 'file.png') {
-                throw new Exception(Exception::MOCK_INVALID_FILE_NAME);
+                throw new Exception('Wrong file name', 400, Exception::GENERAL_MOCK);
             }
 
             if ($file['size'] !== 38756) {
-                    throw new Exception(Exception::MOCK_INVALID_FILE_SIZE);
+                    throw new Exception('Wrong file size', 400, Exception::GENERAL_MOCK);
             }
 
             if (\md5(\file_get_contents($file['tmp_name'])) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
-                throw new Exception(Exception::MOCK_WRONG_FILE_UPLOADED);
+                throw new Exception('Wrong file uploaded', 400, Exception::GENERAL_MOCK);
             }
         }
     });
@@ -374,7 +374,7 @@ App::get('/v1/mock/tests/general/get-cookie')
     ->action(function (Request $request) {
 
         if ($request->getCookie('cookieName', '') !== 'cookieValue') {
-            throw new Exception(Exception::MOCK_MISSING_COOKIE);
+            throw new Exception('Missing cookie value', 400, Exception::GENERAL_MOCK);
         }
     });
 
@@ -408,7 +408,7 @@ App::get('/v1/mock/tests/general/400-error')
     ->label('sdk.response.model', Response::MODEL_ERROR)
     ->label('sdk.mock', true)
     ->action(function () {
-        throw new Exception(Exception::MOCK_400);
+        throw new Exception('Mock 400 error', 400, Exception::GENERAL_MOCK);
     });
 
 App::get('/v1/mock/tests/general/500-error')
@@ -424,7 +424,7 @@ App::get('/v1/mock/tests/general/500-error')
     ->label('sdk.response.model', Response::MODEL_ERROR)
     ->label('sdk.mock', true)
     ->action(function () {
-        throw new Exception(Exception::MOCK_500);
+        throw new Exception('Mock 500 error', 500, Exception::GENERAL_MOCK);
     });
 
 App::get('/v1/mock/tests/general/502-error')
@@ -480,11 +480,11 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->action(function (string $client_id, string $client_secret, string $grantType, string $redirectURI, string $code, string $refreshToken, Response $response) {
 
         if ($client_id != '1') {
-            throw new Exception(Exception::MOCK_INVALID_CLIENT_ID);
+            throw new Exception('Invalid client ID', 400, Exception::GENERAL_MOCK);
         }
 
         if ($client_secret != '123456') {
-            throw new Exception(Exception::MOCK_INVALID_CLIENT_SECRET);
+            throw new Exception('Invalid client secret', 400, Exception::GENERAL_MOCK);
         }
 
         $responseJson = [
@@ -495,18 +495,18 @@ App::get('/v1/mock/tests/general/oauth2/token')
 
         if ($grantType === 'authorization_code') {
             if ($code !== 'abcdef') {
-                throw new Exception(Exception::MOCK_INVALID_TOKEN);
+                throw new Exception('Invalid token', 400, Exception::GENERAL_MOCK);
             }
 
             $response->json($responseJson);
         } elseif ($grantType === 'refresh_token') {
             if ($refreshToken !== 'tuvwxyz') {
-                throw new Exception(Exception::MOCK_INVALID_REFRESH_TOKEN);
+                throw new Exception('Invalid refresh token', 400, Exception::GENERAL_MOCK);
             }
 
             $response->json($responseJson);
         } else {
-            throw new Exception(Exception::MOCK_INVALID_GRANT_TYPE);
+            throw new Exception('Invalid grant type', 400, Exception::GENERAL_MOCK);
         }
     });
 
@@ -520,7 +520,7 @@ App::get('/v1/mock/tests/general/oauth2/user')
     ->action(function (string $token, Response $response) {
 
         if ($token != '123456') {
-            throw new Exception(Exception::MOCK_INVALID_TOKEN);
+            throw new Exception('Invalid token', 400, Exception::GENERAL_MOCK);
         }
 
         $response->json([
@@ -558,24 +558,29 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::shutdown(function (App $utopia, Response $response, Request $request) {
+App::shutdown()
+    ->groups(['mock'])
+    ->inject('utopia')
+    ->inject('response')
+    ->inject('request')
+    ->action(function (App $utopia, Response $response, Request $request) {
 
-    $result = [];
-    $route  = $utopia->match($request);
-    $path   = APP_STORAGE_CACHE . '/tests.json';
-    $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
+        $result = [];
+        $route  = $utopia->match($request);
+        $path   = APP_STORAGE_CACHE . '/tests.json';
+        $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
 
-    if (!\is_array($tests)) {
-        throw new Exception(Exception::MOCK_FAILED_TO_READ_RESULTS);
-    }
+        if (!\is_array($tests)) {
+            throw new Exception('Failed to read results', 500, Exception::GENERAL_MOCK);
+        }
 
-    $result[$route->getMethod() . ':' . $route->getPath()] = true;
+        $result[$route->getMethod() . ':' . $route->getPath()] = true;
 
-    $tests = \array_merge($tests, $result);
+        $tests = \array_merge($tests, $result);
 
-    if (!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
-        throw new Exception(Exception::MOCK_FAILED_TO_SAVE_RESULTS);
-    }
+        if (!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
+            throw new Exception('Failed to save results', 500, Exception::GENERAL_MOCK);
+        }
 
-    $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
-}, ['utopia', 'response', 'request'], 'mock');
+        $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
+    });
