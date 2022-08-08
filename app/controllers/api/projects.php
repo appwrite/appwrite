@@ -128,14 +128,15 @@ App::post('/v1/projects')
         $wg = new WaitGroup();
 
         foreach ($collections as $key => $collection) {
-            go(function () use ($collection, $dbForProject, $key, $wg) {
-                $wg->add();
+            go(function () use ($collection, $dbForProject, $key, $wg, $time) {
+                $collectionTime = \microtime(true);
 
                 if (($collection['$collection'] ?? '') !== Database::METADATA) {
                     return;
                 }
                 $attributes = [];
                 $indexes = [];
+                $wg->add();
 
                 foreach ($collection['attributes'] as $attribute) {
                     $attributes[] = new Document([
