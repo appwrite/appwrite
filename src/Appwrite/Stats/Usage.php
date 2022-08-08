@@ -28,9 +28,6 @@ class Usage
         'outbound' => [
             'table' => 'appwrite_usage_network_outbound',
         ],
-        'executions' => [
-            'table' => 'appwrite_usage_executions_all',
-        ],
         'databases.create' => [
             'table' => 'appwrite_usage_databases_create',
         ],
@@ -225,17 +222,9 @@ class Usage
         ],
     ];
 
-    protected array $periods = [
-        [
-            'key' => '30m',
-            'multiplier' => 1800,
-            'startTime' => '-24 hours',
-        ],
-        [
-            'key' => '1d',
-            'multiplier' => 86400,
-            'startTime' => '-90 days',
-        ],
+    protected array $period = [
+        'key' => '30m',
+        'startTime' => '-24 hours',
     ];
 
     public function __construct(Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
@@ -378,15 +367,13 @@ class Usage
     public function collect(): void
     {
         foreach ($this->metrics as $metric => $options) { //for each metrics
-            foreach ($this->periods as $period) { // aggregate data for each period
-                try {
-                    $this->syncFromInfluxDB($metric, $options, $period);
-                } catch (\Exception $e) {
-                    if (is_callable($this->errorHandler)) {
-                        call_user_func($this->errorHandler, $e);
-                    } else {
-                        throw $e;
-                    }
+            try {
+                $this->syncFromInfluxDB($metric, $options, $this->period);
+            } catch (\Exception $e) {
+                if (is_callable($this->errorHandler)) {
+                    call_user_func($this->errorHandler, $e);
+                } else {
+                    throw $e;
                 }
             }
         }
