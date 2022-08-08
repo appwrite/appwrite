@@ -430,7 +430,7 @@ class UsageTest extends Scope
     }
 
     /** @depends testDatabaseStats */
-    public function testFunctionsStats(array $data): void
+    /* public function testFunctionsStats(array $data): void
     {
         $functionId = '';
         $requestsCount = $data['requestsCount'];
@@ -587,7 +587,7 @@ class UsageTest extends Scope
         $this->assertEquals($executionTime, $response['functionsExecutionTime'][array_key_last($response['functionsExecutionTime'])]['value']);
         $this->assertGreaterThan(0, $response['functionsBuildTime'][array_key_last($response['functionsBuildTime'])]['value']);
         $this->assertEquals($failures, $response['functionsFailures'][array_key_last($response['functionsFailures'])]['value']);
-    }
+    } */
 
     protected function tearDown(): void
     {
