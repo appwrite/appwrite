@@ -260,7 +260,7 @@ App::shutdown()
 
         $route = $utopia->match($request);
 
-        $getRequestParams = function() use ($route, $request) {
+        $getRequestParams = function() use ($route, $request): array {
             $url    = \parse_url($request->getURI(), PHP_URL_PATH);
             $regex = '@' . \preg_replace('@:[^/]+@', '([^/]+)', $route->getPath()) . '@';
             \preg_match($regex, $url, $matches);
@@ -274,11 +274,16 @@ App::shutdown()
         };
 
 
-        $parseLabel  = function ($label) use ($responsePayload, $getRequestParams)  {
+        $parseLabel  = function ($label) use ($responsePayload, $getRequestParams) :string {
             preg_match_all('/{(.*?)}/', $label, $matches);
             foreach ($matches[1] ?? [] as $pos => $match) {
                 $find = $matches[0][$pos];
-                list($namespace, $replace) = explode('.', $match);
+                $parts = explode('.', $match);
+                if(count($parts) < 2){
+                    return '';
+                }
+                $namespace = $parts[0];
+                $replace  = $parts[1];
 
                 switch ($namespace) {
                     case 'response':
