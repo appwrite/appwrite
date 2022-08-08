@@ -53,4 +53,31 @@ class PermissionsProcessor
         }
         return $permissions;
     }
+
+    public static function allowedForUserType(?array $permissions): bool
+    {
+        if (\is_null($permissions)) {
+            return false;
+        }
+
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    if (!\str_starts_with($permission, $type)) {
+                        continue;
+                    }
+                    $matches = \explode(',', \str_replace([$type, '(', ')', ' '], '', $permission));
+                    foreach ($matches as $role) {
+                        if (!Authorization::isRole($role)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
 }
