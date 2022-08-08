@@ -151,8 +151,8 @@ App::post('/v1/databases')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].create')
     ->label('scope', 'databases.write')
-    ->label('audits.resource', 'database/{payload.$id}')
-    ->label('audits.payload', '*')
+    ->label('audits.resource', 'database/{response.$id}')
+    ->label('audits.payload', true)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'create')
@@ -377,8 +377,8 @@ App::put('/v1/databases/:databaseId')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.write')
     ->label('event', 'databases.[databaseId].update')
-    ->label('audits.resource', 'database/{payload.$id}')
-    ->label('audits.payload', '*')
+    ->label('audits.resource', 'database/{response.$id}')
+    ->label('audits.payload', true)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'update')
@@ -421,6 +421,7 @@ App::delete('/v1/databases/:databaseId')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.write')
     ->label('event', 'databases.[databaseId].delete')
+    ->label('audits.resource', 'database/{request.databaseId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'delete')
@@ -458,10 +459,7 @@ App::delete('/v1/databases/:databaseId')
             ->setPayload($response->output($database, Response::MODEL_DATABASE))
         ;
 
-        $audits
-            ->setResource('database/' . $databaseId)
-            ->setPayload($database->getArrayCopy())
-        ;
+        $audits->setPayload($database->getArrayCopy());
 
         $usage->setParam('databases.delete', 1);
 
@@ -475,7 +473,7 @@ App::post('/v1/databases/:databaseId/collections')
     ->label('event', 'databases.[databaseId].collections.[collectionId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits.payload', '*')
+    ->label('audits.payload', true)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createCollection')
@@ -725,7 +723,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits-payload', '*')
+    ->label('audits-payload', true)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateCollection')
@@ -793,6 +791,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteCollection')
@@ -839,10 +838,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
             ->setPayload($response->output($collection, Response::MODEL_COLLECTION))
         ;
 
-        $audits
-            ->setResource('database/' . $databaseId . '/collection/' . $collectionId)
-            ->setPayload($collection->getArrayCopy())
-        ;
+        $audits->setPayload($collection->getArrayCopy());
 
         $usage
             ->setParam('databaseId', $databaseId)
@@ -858,7 +854,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits.payload', '*')
+    ->label('audits.payload', true)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createStringAttribute')
@@ -905,7 +901,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits.payload', '*')
+    ->label('audits.payload', true)
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEmailAttribute')
@@ -946,7 +942,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits.payload', '*')
+    ->label('audits.payload', true)
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEnumAttribute')
@@ -1003,7 +999,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits.payload', '*')
+    ->label('audits.payload', true)
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIpAttribute')
@@ -1044,7 +1040,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits.payload', '*')
+    ->label('audits.payload', true)
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createUrlAttribute')
@@ -1085,7 +1081,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits.payload', '*')
+    ->label('audits.payload', true)
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIntegerAttribute')
@@ -1155,7 +1151,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits.payload', '*')
+    ->label('audits.payload', true)
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createFloatAttribute')
@@ -1228,7 +1224,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits.payload', '*')
+    ->label('audits.payload', true)
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createBooleanAttribute')
@@ -1380,6 +1376,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteAttribute')
@@ -1460,10 +1457,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setPayload($response->output($attribute, $model))
         ;
 
-        $audits
-            ->setResource('database/' . $databaseId . '/collection/' . $collectionId)
-            ->setPayload($attribute->getArrayCopy())
-        ;
+        $audits->setPayload($attribute->getArrayCopy());
 
         $response->noContent();
     });
@@ -1475,7 +1469,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits.payload', '*')
+    ->label('audits.payload', true)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createIndex')
@@ -1719,6 +1713,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteIndex')
@@ -1780,10 +1775,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             ->setPayload($response->output($index, Response::MODEL_INDEX))
         ;
 
-        $audits
-            ->setResource('database/' . $databaseId . '/collection/' . $collection->getId())
-            ->setPayload($index->getArrayCopy())
-        ;
+        $audits->setPayload($index->getArrayCopy());
 
         $response->noContent();
     });
@@ -1795,7 +1787,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits.payload', '*')
+    ->label('audits.payload', true)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createDocument')
@@ -2191,8 +2183,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{payload.$id}')
-    ->label('audits.payload', '*')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
+    ->label('audits.payload', true)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateDocument')
@@ -2326,6 +2318,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].delete')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteDocument')
@@ -2412,10 +2405,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
         ;
 
-        $audits
-            ->setResource('database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId())
-            ->setPayload($document->getArrayCopy())
-        ;
+        $audits->setPayload($document->getArrayCopy());
 
         $response->noContent();
     });

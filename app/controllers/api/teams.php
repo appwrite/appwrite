@@ -36,6 +36,8 @@ App::post('/v1/teams')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].create')
     ->label('scope', 'teams.write')
+    ->label('audits.resource', 'team/{response.$id}')
+    ->label('audits.payload', true)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'create')
@@ -50,8 +52,7 @@ App::post('/v1/teams')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('audits')
-    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $events, Event $audits) {
+    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -93,12 +94,6 @@ App::post('/v1/teams')
         if (!empty($user->getId())) {
             $events->setParam('userId', $user->getId());
         }
-
-        $audits
-            ->setParam('event', 'teams.create')
-            ->setParam('resource', 'team/' . $teamId)
-            ->setParam('data', $team->getArrayCopy())
-        ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($team, Response::MODEL_TEAM);
@@ -178,6 +173,7 @@ App::put('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update')
     ->label('scope', 'teams.write')
+    ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'update')
@@ -190,8 +186,7 @@ App::put('/v1/teams/:teamId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('audits')
-    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject, Event $events, EventAudit $audits) {
+    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject, Event $events) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -204,7 +199,6 @@ App::put('/v1/teams/:teamId')
             ->setAttribute('search', implode(' ', [$teamId, $name])));
 
         $events->setParam('teamId', $team->getId());
-        $audits->setResource('team/' . $team->getId());
 
         $response->dynamic($team, Response::MODEL_TEAM);
     });
@@ -259,7 +253,6 @@ App::delete('/v1/teams/:teamId')
         ;
 
         $audits
-            ->setParam('event', 'teams.delete')
             ->setParam('resource', 'team/' . $teamId)
             ->setParam('data', $team->getArrayCopy())
         ;
@@ -273,6 +266,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
     ->label('scope', 'teams.write')
     ->label('auth.type', 'invites')
+    ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createMembership')
@@ -291,10 +285,9 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('audits')
     ->inject('mails')
     ->inject('events')
-    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, EventAudit $audits, Mail $mails, Event $events) {
+    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, Event $events) {
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -413,10 +406,6 @@ App::post('/v1/teams/:teamId/memberships')
                 ->trigger()
             ;
         }
-
-        $audits
-            ->setResource('team/' . $teamId)
-        ;
 
         $events
             ->setParam('teamId', $team->getId())
@@ -556,6 +545,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update')
     ->label('scope', 'teams.write')
+    ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateMembershipRoles')
@@ -570,9 +560,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('events')
-    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, EventAudit $audits, Event $events) {
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -608,8 +597,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
          */
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
-        $audits->setResource('team/' . $teamId);
-
         $events
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
@@ -628,6 +615,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
     ->label('scope', 'public')
+    ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateMembershipStatus')
@@ -644,9 +632,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('geodb')
-    ->inject('audits')
     ->inject('events')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Reader $geodb, EventAudit $audits, Event $events) {
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Reader $geodb, Event $events) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -729,8 +716,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
 
-        $audits->setResource('team/' . $teamId);
-
         $events
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
@@ -761,6 +746,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
     ->label('scope', 'teams.write')
+    ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'deleteMembership')
@@ -771,9 +757,8 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('events')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
+    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $events) {
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
@@ -811,8 +796,6 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));
             Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
         }
-
-        $audits->setResource('team/' . $teamId);
 
         $events
             ->setParam('teamId', $team->getId())

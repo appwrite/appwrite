@@ -281,7 +281,7 @@ App::shutdown()
                 list($namespace, $replace) = explode('.', $match);
 
                 switch ($namespace) {
-                    case 'payload':
+                    case 'response':
                         $params = $responsePayload;
                         break;
                     case 'request':
@@ -299,7 +299,7 @@ App::shutdown()
             return $label;
         };
 
-        $auditsResource = $route->getLabel('audits.resource','');
+        $auditsResource = $route->getLabel('audits.resource',null);
         if(!empty($auditsResource)) {
             $resource = $parseLabel($auditsResource);
             if(!empty($resource)) {
@@ -307,13 +307,10 @@ App::shutdown()
             }
         }
 
-        $auditsPayload = $route->getLabel('audits.payload','');
+        $auditsPayload = $route->getLabel('audits.payload',false);
         if(!empty($auditsPayload)) {
-           if($auditsPayload === '*'){
-               $audits->setPayload($responsePayload);
-           }
+           $audits->setPayload($responsePayload);
         }
-
 
         if (!empty($audits->getResource())) {
             foreach ($events->getParams() as $key => $value) {

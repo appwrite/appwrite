@@ -46,8 +46,8 @@ App::post('/v1/storage/buckets')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
     ->label('event', 'buckets.[bucketId].create')
-    ->label('audits.resource', 'storage/buckets/{payload.$id}')
-    ->label('audits.payload', '*')
+    ->label('audits.resource', 'storage/buckets/{response.$id}')
+    ->label('audits.payload', true)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createBucket')
@@ -210,8 +210,8 @@ App::put('/v1/storage/buckets/:bucketId')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
     ->label('event', 'buckets.[bucketId].update')
-    ->label('audits.resource', 'storage/buckets/{payload.$id}')
-    ->label('audits.payload', '*')
+    ->label('audits.resource', 'storage/buckets/{response.$id}')
+    ->label('audits.payload', true)
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateBucket')
@@ -273,6 +273,7 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
     ->label('event', 'buckets.[bucketId].delete')
+    ->label('audits.resource', 'storage/buckets/{request.bucketId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteBucket')
@@ -306,10 +307,7 @@ App::delete('/v1/storage/buckets/:bucketId')
             ->setPayload($response->output($bucket, Response::MODEL_BUCKET))
         ;
 
-        $audits
-            ->setResource('storage/buckets/' . $bucket->getId())
-            ->setPayload($bucket->getArrayCopy())
-        ;
+        $audits->setPayload($bucket->getArrayCopy());
 
         $usage->setParam('storage.buckets.delete', 1);
 
@@ -322,7 +320,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('event', 'buckets.[bucketId].files.[fileId].create')
-    ->label('audits.resource', 'storage/files/{payload.$id}')
+    ->label('audits.resource', 'storage/files/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createFile')
@@ -1267,7 +1265,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('event', 'buckets.[bucketId].files.[fileId].update')
-    ->label('audits.resource', 'storage/files/{payload.$id}')
+    ->label('audits.resource', 'storage/files/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateFile')
@@ -1362,6 +1360,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('event', 'buckets.[bucketId].files.[fileId].delete')
+    ->label('audits.resource', 'file/{request.fileId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteFile')
@@ -1373,12 +1372,11 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('audits')
     ->inject('usage')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('project')
-    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, Audit $audits, Stats $usage, string $mode, Device $deviceFiles, Document $project) {
+    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, Stats $usage, string $mode, Device $deviceFiles, Document $project) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if (
@@ -1433,8 +1431,6 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         } else {
             throw new Exception('Failed to delete file from device', 500, Exception::GENERAL_SERVER_ERROR);
         }
-
-        $audits->setResource('file/' . $file->getId());
 
         $usage
             ->setParam('storage', $file->getAttribute('size', 0) * -1)
