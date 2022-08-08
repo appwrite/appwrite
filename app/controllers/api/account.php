@@ -1816,13 +1816,15 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $oauth2->refreshTokens($refreshToken);
 
+                
                 $session
-                    ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
-                    ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                    ->setAttribute('providerAccessTokenExpiry', \time() + (int) $oauth2->getAccessTokenExpiry(''));
-
+                ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
+                ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
+                ->setAttribute('providerAccessTokenExpiry', \time() + (int) $oauth2->getAccessTokenExpiry(''));
+                
+                
                 $dbForProject->updateDocument('sessions', $sessionId, $session);
-
+                
                 $dbForProject->deleteCachedDocument('users', $user->getId());
 
                 $audits->setResource('user/' . $user->getId());

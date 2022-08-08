@@ -862,7 +862,6 @@ App::get('/v1/users/usage')
     ->inject('dbForProject')
     ->inject('register')
     ->action(function (string $range, string $provider, Response $response, Database $dbForProject) {
-
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [

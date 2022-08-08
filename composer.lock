@@ -1987,12 +1987,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "930acdfe6fca864e1bfed707eac329bbab4ab067"
+                "reference": "b1d4b97e02dc889aaca70edc6e7eaebeea56faeb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/930acdfe6fca864e1bfed707eac329bbab4ab067",
-                "reference": "930acdfe6fca864e1bfed707eac329bbab4ab067",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b1d4b97e02dc889aaca70edc6e7eaebeea56faeb",
+                "reference": "b1d4b97e02dc889aaca70edc6e7eaebeea56faeb",
                 "shasum": ""
             },
             "require": {
@@ -2043,7 +2043,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/fix-mongo-unique-index"
             },
-            "time": "2022-07-27T18:34:33+00:00"
+            "time": "2022-07-29T14:24:14+00:00"
         },
         {
             "name": "utopia-php/domains",
