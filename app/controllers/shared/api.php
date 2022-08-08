@@ -307,6 +307,7 @@ App::shutdown()
         $auditsResource = $route->getLabel('audits.resource',null);
         if(!empty($auditsResource)) {
             $resource = $parseLabel($auditsResource);
+            var_dump($resource);
             if(!empty($resource)) {
                 $audits->setResource($resource);
             }
