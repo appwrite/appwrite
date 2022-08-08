@@ -4,6 +4,7 @@ namespace Appwrite\Permissions;
 
 use Appwrite\Auth\Auth;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
 class PermissionsProcessor
@@ -38,10 +39,10 @@ class PermissionsProcessor
             $permissions = [];
             if (!empty($userId)) {
                 $permissions = [
-                    'read(user:' . $userId . ') ',
-                    'create(user:' . $userId . ') ',
-                    'update(user:' . $userId . ') ',
-                    'delete(user:' . $userId . ') ',
+                    'read(user:' . $userId . ')',
+                    'create(user:' . $userId . ')',
+                    'update(user:' . $userId . ')',
+                    'delete(user:' . $userId . ')',
                 ];
             }
             return $permissions;
@@ -54,12 +55,8 @@ class PermissionsProcessor
         return $permissions;
     }
 
-    public static function allowedForUserType(?array $permissions): bool
+    public static function allowedForUserType(array $permissions): bool
     {
-        if (\is_null($permissions)) {
-            return false;
-        }
-
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
 
