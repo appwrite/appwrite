@@ -185,7 +185,11 @@ class StorageCustomClientTest extends Scope
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'folderId' => 'xyz',
-            'write' => ['user:notme']
+            'permissions' => [
+                'create(user:notme)',
+                'update(user:notme)',
+                'delete(user:notme)',
+            ]
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 400);
@@ -243,7 +247,11 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'write' => ['user:notme']
+            'permissions' => [
+                'create(user:notme)',
+                'update(user:notme)',
+                'delete(user:notme)',
+            ]
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 400);

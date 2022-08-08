@@ -227,8 +227,6 @@ class MessagingTest extends TestCase
             ])
         );
 
-        \var_dump($result);
-
         $this->assertContains('any', $result['roles']);
         $this->assertNotContains('role:admin', $result['roles']);
 

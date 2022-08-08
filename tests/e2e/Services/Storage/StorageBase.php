@@ -300,7 +300,7 @@ trait StorageBase
         //$this->assertNotEmpty($file1['body']['fileOpenSSLTag']);
         //$this->assertNotEmpty($file1['body']['fileOpenSSLIV']);
         $this->assertIsArray($file1['body']['$permissions']);
-        $this->assertCount(2, $file1['body']['$permissions']);
+        $this->assertCount(4, $file1['body']['$permissions']);
 
         $file2 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -604,7 +604,7 @@ trait StorageBase
         //$this->assertNotEmpty($file['body']['fileOpenSSLTag']);
         //$this->assertNotEmpty($file['body']['fileOpenSSLIV']);
         $this->assertIsArray($file['body']['$permissions']);
-        $this->assertCount(2, $file['body']['$permissions']);
+        $this->assertCount(4, $file['body']['$permissions']);
 
         /**
          * Test for FAILURE unknown Bucket
