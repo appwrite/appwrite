@@ -396,7 +396,7 @@ class Response extends SwooleResponse
 
         foreach ($model->getRules() as $key => $rule) {
             if (!$document->isSet($key) && $rule['required']) { // do not set attribute in response if not required
-                if (!is_null($rule['default'])) {
+                if (\array_key_exists('default', $rule)) {
                     $document->setAttribute($key, $rule['default']);
                 } else {
                     throw new Exception('Model ' . $model->getName() . ' is missing response key: ' . $key);
