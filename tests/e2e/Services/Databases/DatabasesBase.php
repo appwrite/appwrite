@@ -48,7 +48,7 @@ trait DatabasesBase
             'documentSecurity' => true,
         ]);
 
-        $this->assertEquals($movies['headers']['status-code'], 201);
+        $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
 
         return ['moviesId' => $movies['body']['$id'], 'databaseId' => $databaseId];
@@ -73,7 +73,7 @@ trait DatabasesBase
             'documentSecurity' => true,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertFalse($response['body']['enabled']);
 
         if ($this->getSide() === 'client') {
@@ -103,9 +103,9 @@ trait DatabasesBase
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            $this->assertEquals($responseCreateDocument['headers']['status-code'], 404);
-            $this->assertEquals($responseListDocument['headers']['status-code'], 404);
-            $this->assertEquals($responseGetDocument['headers']['status-code'], 404);
+            $this->assertEquals(404, $responseCreateDocument['headers']['status-code']);
+            $this->assertEquals(404, $responseListDocument['headers']['status-code']);
+            $this->assertEquals(404, $responseGetDocument['headers']['status-code']);
         }
 
         $response = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $data['moviesId'], array_merge([
@@ -118,7 +118,7 @@ trait DatabasesBase
             'documentSecurity' => true,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['enabled']);
     }
 
@@ -168,23 +168,23 @@ trait DatabasesBase
             'array' => true,
         ]);
 
-        $this->assertEquals($title['headers']['status-code'], 201);
+        $this->assertEquals(201, $title['headers']['status-code']);
         $this->assertEquals($title['body']['key'], 'title');
         $this->assertEquals($title['body']['type'], 'string');
         $this->assertEquals($title['body']['size'], 256);
         $this->assertEquals($title['body']['required'], true);
 
-        $this->assertEquals($releaseYear['headers']['status-code'], 201);
+        $this->assertEquals(201, $releaseYear['headers']['status-code']);
         $this->assertEquals($releaseYear['body']['key'], 'releaseYear');
         $this->assertEquals($releaseYear['body']['type'], 'integer');
         $this->assertEquals($releaseYear['body']['required'], true);
 
-        $this->assertEquals($duration['headers']['status-code'], 201);
+        $this->assertEquals(201, $duration['headers']['status-code']);
         $this->assertEquals($duration['body']['key'], 'duration');
         $this->assertEquals($duration['body']['type'], 'integer');
         $this->assertEquals($duration['body']['required'], false);
 
-        $this->assertEquals($actors['headers']['status-code'], 201);
+        $this->assertEquals(201, $actors['headers']['status-code']);
         $this->assertEquals($actors['body']['key'], 'actors');
         $this->assertEquals($actors['body']['type'], 'string');
         $this->assertEquals($actors['body']['size'], 256);
@@ -227,7 +227,7 @@ trait DatabasesBase
             'documentSecurity' => true,
         ]);
 
-        $this->assertEquals($collection['headers']['status-code'], 201);
+        $this->assertEquals(201, $collection['headers']['status-code']);
         $this->assertEquals($collection['body']['name'], 'Response Models');
 
         $collectionId = $collection['body']['$id'];
@@ -788,10 +788,10 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -810,10 +810,10 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -832,10 +832,10 @@ trait DatabasesBase
                 ],
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -848,44 +848,44 @@ trait DatabasesBase
                 'releaseYear' => 2020, // Missing title, expect an 400 error
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
-        $this->assertEquals($document1['headers']['status-code'], 201);
+        $this->assertEquals(201, $document1['headers']['status-code']);
         $this->assertEquals($document1['body']['title'], 'Captain America');
         $this->assertEquals($document1['body']['releaseYear'], 1944);
         $this->assertIsArray($document1['body']['$permissions']);
-        $this->assertCount(2, $document1['body']['$permissions']);
+        $this->assertCount(4, $document1['body']['$permissions']);
         $this->assertCount(2, $document1['body']['actors']);
         $this->assertEquals($document1['body']['actors'][0], 'Chris Evans');
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
 
-        $this->assertEquals($document2['headers']['status-code'], 201);
+        $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertEquals($document2['body']['title'], 'Spider-Man: Far From Home');
         $this->assertEquals($document2['body']['releaseYear'], 2019);
         $this->assertEquals($document2['body']['duration'], null);
         $this->assertIsArray($document2['body']['$permissions']);
-        $this->assertCount(2, $document2['body']['$permissions']);
+        $this->assertCount(4, $document2['body']['$permissions']);
         $this->assertCount(3, $document2['body']['actors']);
         $this->assertEquals($document2['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document2['body']['actors'][1], 'Zendaya Maree Stoermer');
         $this->assertEquals($document2['body']['actors'][2], 'Samuel Jackson');
 
-        $this->assertEquals($document3['headers']['status-code'], 201);
+        $this->assertEquals(201, $document3['headers']['status-code']);
         $this->assertEquals($document3['body']['title'], 'Spider-Man: Homecoming');
         $this->assertEquals($document3['body']['releaseYear'], 2017);
         $this->assertEquals($document3['body']['duration'], 0);
         $this->assertIsArray($document3['body']['$permissions']);
-        $this->assertCount(2, $document3['body']['$permisisons']);
+        $this->assertCount(4, $document3['body']['$permissions']);
         $this->assertCount(2, $document3['body']['actors']);
         $this->assertEquals($document3['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document3['body']['actors'][1], 'Zendaya Maree Stoermer');
 
-        $this->assertEquals($document4['headers']['status-code'], 400);
+        $this->assertEquals(400, $document4['headers']['status-code']);
 
         return $data;
     }
@@ -904,7 +904,7 @@ trait DatabasesBase
             'orderTypes' => ['ASC'],
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][2]['releaseYear']);
@@ -925,7 +925,7 @@ trait DatabasesBase
             'orderTypes' => ['DESC'],
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(1944, $documents['body']['documents'][2]['releaseYear']);
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
@@ -964,7 +964,7 @@ trait DatabasesBase
             'documentSecurity' => true,
         ]);
 
-        $this->assertEquals($movies['headers']['status-code'], 201);
+        $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
 
         return ['moviesId' => $movies['body']['$id']];
@@ -984,7 +984,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals($documents['body']['total'], 0);
 
         return [];
@@ -1002,7 +1002,7 @@ trait DatabasesBase
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            $this->assertEquals($response['headers']['status-code'], 200);
+            $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals($response['body']['$id'], $document['$id']);
             $this->assertEquals($response['body']['$collection'], $document['$collection']);
             $this->assertEquals($response['body']['title'], $document['title']);
@@ -1026,7 +1026,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($base['headers']['status-code'], 200);
+        $this->assertEquals(200, $base['headers']['status-code']);
         $this->assertEquals('Captain America', $base['body']['documents'][0]['title']);
         $this->assertEquals('Spider-Man: Far From Home', $base['body']['documents'][1]['title']);
         $this->assertEquals('Spider-Man: Homecoming', $base['body']['documents'][2]['title']);
@@ -1039,7 +1039,7 @@ trait DatabasesBase
             'cursor' => $base['body']['documents'][0]['$id']
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][1]['$id']);
         $this->assertCount(2, $documents['body']['documents']);
@@ -1051,7 +1051,7 @@ trait DatabasesBase
             'cursor' => $base['body']['documents'][2]['$id']
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEmpty($documents['body']['documents']);
 
         /**
@@ -1065,7 +1065,7 @@ trait DatabasesBase
             'orderTypes' => ['ASC'],
         ]);
 
-        $this->assertEquals($base['headers']['status-code'], 200);
+        $this->assertEquals(200, $base['headers']['status-code']);
         $this->assertEquals(1944, $base['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $base['body']['documents'][2]['releaseYear']);
@@ -1080,7 +1080,7 @@ trait DatabasesBase
             'cursor' => $base['body']['documents'][1]['$id']
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -1095,7 +1095,7 @@ trait DatabasesBase
             'orderTypes' => ['DESC'],
         ]);
 
-        $this->assertEquals($base['headers']['status-code'], 200);
+        $this->assertEquals(200, $base['headers']['status-code']);
         $this->assertEquals(1944, $base['body']['documents'][2]['releaseYear']);
         $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $base['body']['documents'][0]['releaseYear']);
@@ -1110,7 +1110,7 @@ trait DatabasesBase
             'cursor' => $base['body']['documents'][1]['$id']
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -1124,7 +1124,7 @@ trait DatabasesBase
             'cursor' => 'unknown'
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 400);
+        $this->assertEquals(400, $documents['headers']['status-code']);
 
         return [];
     }
@@ -1143,7 +1143,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($base['headers']['status-code'], 200);
+        $this->assertEquals(200, $base['headers']['status-code']);
         $this->assertEquals('Captain America', $base['body']['documents'][0]['title']);
         $this->assertEquals('Spider-Man: Far From Home', $base['body']['documents'][1]['title']);
         $this->assertEquals('Spider-Man: Homecoming', $base['body']['documents'][2]['title']);
@@ -1157,7 +1157,7 @@ trait DatabasesBase
             'cursorDirection' => Database::CURSOR_BEFORE
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals($base['body']['documents'][0]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertEquals($base['body']['documents'][1]['$id'], $documents['body']['documents'][1]['$id']);
         $this->assertCount(2, $documents['body']['documents']);
@@ -1170,7 +1170,7 @@ trait DatabasesBase
             'cursorDirection' => Database::CURSOR_BEFORE
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEmpty($documents['body']['documents']);
 
         /**
@@ -1184,7 +1184,7 @@ trait DatabasesBase
             'orderTypes' => ['ASC'],
         ]);
 
-        $this->assertEquals($base['headers']['status-code'], 200);
+        $this->assertEquals(200, $base['headers']['status-code']);
         $this->assertEquals(1944, $base['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $base['body']['documents'][2]['releaseYear']);
@@ -1200,7 +1200,7 @@ trait DatabasesBase
             'cursorDirection' => Database::CURSOR_BEFORE
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals($base['body']['documents'][0]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -1215,7 +1215,7 @@ trait DatabasesBase
             'orderTypes' => ['DESC'],
         ]);
 
-        $this->assertEquals($base['headers']['status-code'], 200);
+        $this->assertEquals(200, $base['headers']['status-code']);
         $this->assertEquals(1944, $base['body']['documents'][2]['releaseYear']);
         $this->assertEquals(2017, $base['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $base['body']['documents'][0]['releaseYear']);
@@ -1231,7 +1231,7 @@ trait DatabasesBase
             'cursorDirection' => Database::CURSOR_BEFORE
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals($base['body']['documents'][0]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -1253,7 +1253,7 @@ trait DatabasesBase
             'orderTypes' => ['ASC'],
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -1267,7 +1267,7 @@ trait DatabasesBase
             'orderTypes' => ['ASC'],
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][1]['releaseYear']);
         $this->assertCount(2, $documents['body']['documents']);
@@ -1288,7 +1288,7 @@ trait DatabasesBase
             'queries' => ['title.search("Captain America")'],
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -1299,7 +1299,7 @@ trait DatabasesBase
             'queries' => ['$id.equal("' . $documents['body']['documents'][0]['$id'] . '")'],
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -1310,7 +1310,7 @@ trait DatabasesBase
             'queries' => ['title.search("Homecoming")'],
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
@@ -1321,7 +1321,7 @@ trait DatabasesBase
             'queries' => ['title.search("spider")'],
         ]);
 
-        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertCount(2, $documents['body']['documents']);
@@ -1351,7 +1351,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$createdAt.greater(132)'],
+            'queries' => ['$createdAt.greater("1976-06-12")'],
         ]);
 
         $this->assertCount(3, $documents['body']['documents']);
@@ -1360,7 +1360,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$createdAt.lesser(132)'],
+            'queries' => ['$createdAt.lesser("1976-06-12")'],
         ]);
 
         $this->assertCount(0, $documents['body']['documents']);
@@ -1428,16 +1428,16 @@ trait DatabasesBase
                 '$createdAt' => 5 // Should be ignored
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ],
         ]);
 
         $id = $document['body']['$id'];
 
-        $this->assertEquals($document['headers']['status-code'], 201);
+        $this->assertEquals(201, $document['headers']['status-code']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
         $this->assertNotEquals($document['body']['$createdAt'], 5);
@@ -1461,7 +1461,7 @@ trait DatabasesBase
             ],
         ]);
 
-        $this->assertEquals($document['headers']['status-code'], 200);
+        $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals($document['body']['$id'], $id);
         $this->assertEquals($document['body']['$collection'], $data['moviesId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
@@ -1478,7 +1478,7 @@ trait DatabasesBase
 
         $id = $document['body']['$id'];
 
-        $this->assertEquals($document['headers']['status-code'], 200);
+        $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
 
@@ -1502,37 +1502,37 @@ trait DatabasesBase
                 'actors' => [],
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
         $id = $document['body']['$id'];
 
-        $this->assertEquals($document['headers']['status-code'], 201);
+        $this->assertEquals(201, $document['headers']['status-code']);
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($document['headers']['status-code'], 200);
+        $this->assertEquals(200, $document['headers']['status-code']);
 
         $document = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($document['headers']['status-code'], 204);
+        $this->assertEquals(204, $document['headers']['status-code']);
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($document['headers']['status-code'], 404);
+        $this->assertEquals(404, $document['headers']['status-code']);
 
         return $data;
     }
@@ -1755,10 +1755,10 @@ trait DatabasesBase
                 'email' => 'user@example.com',
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1771,10 +1771,10 @@ trait DatabasesBase
                 'enum' => 'yes',
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1787,10 +1787,10 @@ trait DatabasesBase
                 'ip' => '1.1.1.1',
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1803,10 +1803,10 @@ trait DatabasesBase
                 'url' => 'http://www.example.com',
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1819,10 +1819,10 @@ trait DatabasesBase
                 'range' => 3,
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1835,10 +1835,10 @@ trait DatabasesBase
                 'floatRange' => 1.4,
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1851,10 +1851,10 @@ trait DatabasesBase
                 'probability' => 0.99999,
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1867,10 +1867,10 @@ trait DatabasesBase
                 'upperBound' => 8,
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1883,10 +1883,10 @@ trait DatabasesBase
                 'lowerBound' => 8,
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1913,10 +1913,10 @@ trait DatabasesBase
                 'email' => 'user@@example.com',
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1929,10 +1929,10 @@ trait DatabasesBase
                 'enum' => 'badEnum',
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1945,10 +1945,10 @@ trait DatabasesBase
                 'ip' => '1.1.1.1.1',
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1961,10 +1961,10 @@ trait DatabasesBase
                 'url' => 'example...com',
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1977,10 +1977,10 @@ trait DatabasesBase
                 'range' => 11,
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -1993,10 +1993,10 @@ trait DatabasesBase
                 'floatRange' => 2.5,
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -2009,10 +2009,10 @@ trait DatabasesBase
                 'probability' => 1.1,
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -2025,10 +2025,10 @@ trait DatabasesBase
                 'upperBound' => 11,
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -2041,10 +2041,10 @@ trait DatabasesBase
                 'lowerBound' => 3,
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -2088,13 +2088,13 @@ trait DatabasesBase
 
         $id = $document['body']['$id'];
 
-        $this->assertEquals($document['headers']['status-code'], 201);
+        $this->assertEquals(201, $document['headers']['status-code']);
         $this->assertEquals($document['body']['title'], 'Captain America');
         $this->assertEquals($document['body']['releaseYear'], 1944);
         $this->assertIsArray($document['body']['$permissions']);
 
         if ($this->getSide() == 'client') {
-            $this->assertCount(2, $document['body']['$permissions']);
+            $this->assertCount(4, $document['body']['$permissions']);
             $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
             $this->assertContains('create(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
             $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
@@ -2122,42 +2122,30 @@ trait DatabasesBase
             ],
         ]);
 
-        $this->assertEquals($document['headers']['status-code'], 200);
+        $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals($document['body']['title'], 'Captain America 2');
         $this->assertEquals($document['body']['releaseYear'], 1945);
 
-        if ($this->getSide() == 'client') {
-            $this->assertCount(2, $document['body']['$permissions']);
-            $this->assertContains('read(any)', $document['body']['$permissions']);
-            $this->assertContains('create(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-            $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-            $this->assertContains('delete(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-        }
-
-        if ($this->getSide() == 'server') {
-            $this->assertCount(1, $document['body']['$permissions']);
-            $this->assertEquals(['read(any)'], $document['body']['$permissions']);
-        }
+        // This differs from the old permissions model because we don't inherit
+        // existing document permissions on update, unless none were supplied,
+        // so that specific types can be removed if wanted.
+        $this->assertCount(1, $document['body']['$permissions']);
+        $this->assertContains('read(any)', $document['body']['$permissions']);
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($document['headers']['status-code'], 200);
+        $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals($document['body']['title'], 'Captain America 2');
         $this->assertEquals($document['body']['releaseYear'], 1945);
 
-        if ($this->getSide() == 'client') {
-            $this->assertCount(2, $document['body']['$permissions']);
-            $this->assertEquals(['read(any)'], $document['body']['$permissions']);
-            $this->assertEquals(['user:' . $this->getUser()['$id']], $document['body']['$write']);
-        }
-
-        if ($this->getSide() == 'server') {
-            $this->assertCount(1, $document['body']['$permissions']);
-            $this->assertEquals(['read(any)'], $document['body']['$permissions']);
-        }
+        // This differs from the old permissions model because we don't inherit
+        // existing document permissions on update, unless none were supplied,
+        // so that specific types can be removed if wanted.
+        $this->assertCount(1, $document['body']['$permissions']);
+        $this->assertContains('read(any)', $document['body']['$permissions']);
 
         // Reset Permissions
 
@@ -2174,11 +2162,11 @@ trait DatabasesBase
         ]);
 
         if ($this->getSide() == 'client') {
-            $this->assertEquals($document['headers']['status-code'], 401);
+            $this->assertEquals(401, $document['headers']['status-code']);
         }
 
         if ($this->getSide() == 'server') {
-            $this->assertEquals($document['headers']['status-code'], 200);
+            $this->assertEquals(200, $document['headers']['status-code']);
             $this->assertEquals($document['body']['title'], 'Captain America 3');
             $this->assertEquals($document['body']['releaseYear'], 1946);
             $this->assertCount(0, $document['body']['$permissions']);
@@ -2188,8 +2176,7 @@ trait DatabasesBase
         return $data;
     }
 
-
-    public function testEnforceCollectionPermissions()
+    public function testEnforceDocumentPermissions(): void
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
@@ -2197,10 +2184,10 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'databaseId' => 'unique()',
-            'name' => 'EncorceCollectionPermissions',
+            'name' => 'EnforceCollectionPermissions',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
-        $this->assertEquals('EncorceCollectionPermissions', $database['body']['name']);
+        $this->assertEquals('EnforceCollectionPermissions', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
         $user = 'user:' . $this->getUser()['$id'];
@@ -2211,17 +2198,18 @@ trait DatabasesBase
         ]), [
             'collectionId' => 'unique()',
             'name' => 'enforceCollectionPermissions',
+            'documentSecurity' => true,
             'permissions' => [
                 'read(' . $user . ')',
-                 'create(' . $user . ')',
-                    'update(' . $user . ')',
-                    'delete(' . $user . ')',
+                'create(' . $user . ')',
+                'update(' . $user . ')',
+                'delete(' . $user . ')',
             ],
         ]);
 
-        $this->assertEquals($collection['headers']['status-code'], 201);
+        $this->assertEquals(201, $collection['headers']['status-code']);
         $this->assertEquals($collection['body']['name'], 'enforceCollectionPermissions');
-        $this->assertEquals($collection['body']['permission'], 'collection');
+        $this->assertEquals($collection['body']['documentSecurity'], true);
 
         $collectionId = $collection['body']['$id'];
 
@@ -2269,9 +2257,9 @@ trait DatabasesBase
             ],
             'permissions' => [
                 'read(' . $user . ')',
-                 'create(' . $user . ')',
-                    'update(' . $user . ')',
-                    'delete(' . $user . ')',
+                'create(' . $user . ')',
+                'update(' . $user . ')',
+                'delete(' . $user . ')',
             ]
         ]);
 
@@ -2286,95 +2274,97 @@ trait DatabasesBase
                 'attribute' => 'one',
             ],
             'permissions' => [
-                 'create(' . $user . ')',
-                    'update(' . $user . ')',
-                    'delete(' . $user . ')',
+                'create(' . $user . ')',
+                'update(' . $user . ')',
+                'delete(' . $user . ')',
             ]
         ]);
 
         $this->assertEquals(201, $document2['headers']['status-code']);
 
-        $document3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+        $document3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
             'documentId' => 'unique()',
             'data' => [
                 'attribute' => 'one',
             ],
-            'permissions' => [],
+            'permissions' => [
+                'read(user:other)',
+                'create(user:other)',
+                'update(user:other)',
+            ],
         ]);
 
         $this->assertEquals(201, $document3['headers']['status-code']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+        $documentsUser1 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(3, $documents['body']['total']);
-        $this->assertCount(3, $documents['body']['documents']);
+        $this->assertEquals(2, $documentsUser1['body']['total']);
+        $this->assertCount(2, $documentsUser1['body']['documents']);
 
-        /*
-         * Test for Failure
-         */
-
-        // Remove write permission
-        $collection = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+        $document3GetWithCollectionRead = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document3['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'name' => 'enforceCollectionPermissions',
-            'permissions' => [
-                'read(' . $user . ')'
-            ],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $document3GetWithCollectionRead['headers']['status-code']);
+
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+        $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => 'other',
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+        $session2 = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $session2 = $this->client->parseCookie((string)$session2['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+
+        $document3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document3['body']['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
         ]);
 
-        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertEquals(200, $document3GetWithDocumentRead['headers']['status-code']);
 
-        $badDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+        $document2GetFailure = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document2['body']['$id'], [
+            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => 'unique()',
-            'data' => [
-                'attribute' => 'bad',
-            ],
-            'permissions' => [
-                'read(' . $user . ')',
-                 'create(' . $user . ')',
-                    'update(' . $user . ')',
-                    'delete(' . $user . ')',
-            ],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
         ]);
 
-        if ($this->getSide() == 'client') {
-            $this->assertEquals(401, $badDocument['headers']['status-code']);
-        }
+        $this->assertEquals(401, $document2GetFailure['headers']['status-code']);
 
-        if ($this->getSide() == 'server') {
-            $this->assertEquals(201, $badDocument['headers']['status-code']);
-        }
-
-        // Remove read permission
-        $collection = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+        $documentsUser2 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'name' => 'enforceCollectionPermissions',
-            'permissions' => [],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
         ]);
 
-        $this->assertEquals(200, $collection['headers']['status-code']);
-
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]));
-
-        $this->assertEquals(401, $documents['headers']['status-code']);
+        $this->assertEquals(1, $documentsUser2['body']['total']);
+        $this->assertCount(1, $documentsUser2['body']['documents']);
     }
 
     /**
@@ -2393,7 +2383,7 @@ trait DatabasesBase
             'attributes' => ['title'],
         ]);
 
-        $this->assertEquals($uniqueIndex['headers']['status-code'], 201);
+        $this->assertEquals(201, $uniqueIndex['headers']['status-code']);
 
         sleep(2);
 
@@ -2412,10 +2402,10 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -2436,10 +2426,10 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -2460,10 +2450,10 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -2560,7 +2550,7 @@ trait DatabasesBase
             'documentSecurity' => true,
         ]);
 
-        $this->assertEquals($movies['headers']['status-code'], 201);
+        $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
 
         $moviesId = $movies['body']['$id'];
@@ -2576,7 +2566,7 @@ trait DatabasesBase
             'required' => true,
         ]);
 
-        $this->assertEquals($title['headers']['status-code'], 201);
+        $this->assertEquals(201, $title['headers']['status-code']);
 
         // wait for database worker to create attributes
         sleep(2);
@@ -2600,8 +2590,8 @@ trait DatabasesBase
 
         $id = $document['body']['$id'];
 
-        $this->assertEquals($document['headers']['status-code'], 201);
-        $this->assertCount(2, $document['body']['$permissions']);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertCount(4, $document['body']['$permissions']);
         $this->assertContains('read(any)', $document['body']['$permissions']);
         $this->assertContains('create(any)', $document['body']['$permissions']);
         $this->assertContains('update(any)', $document['body']['$permissions']);
@@ -2613,17 +2603,17 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
         if ($this->getSide() == 'client') {
-            $this->assertEquals($document['headers']['status-code'], 200);
+            $this->assertEquals(200, $document['headers']['status-code']);
         }
 
         if ($this->getSide() == 'server') {
-            $this->assertEquals($document['headers']['status-code'], 200);
-            $this->assertCount(2, $document['body']['$permissions']);
+            $this->assertEquals(200, $document['headers']['status-code']);
+            $this->assertCount(4, $document['body']['$permissions']);
             $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
             $this->assertContains('create(any)', $document['body']['$permissions']);
             $this->assertContains('update(any)', $document['body']['$permissions']);
@@ -2636,15 +2626,15 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ],
         ]);
 
         if ($this->getSide() == 'server') {
-            $this->assertEquals($document['headers']['status-code'], 200);
-            $this->assertCount(2, $document['body']['$permissions']);
+            $this->assertEquals(200, $document['headers']['status-code']);
+            $this->assertCount(4, $document['body']['$permissions']);
             $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
             $this->assertContains('create(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
             $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);

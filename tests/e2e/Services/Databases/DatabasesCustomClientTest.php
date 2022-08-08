@@ -79,9 +79,9 @@ class DatabasesCustomClientTest extends Scope
             ],
             'permissions' => [
                 'read(user:' . $userId . ', user:user2)',
-                 'create(user:' . $userId . ')',
-                    'update(user:' . $userId . ')',
-                    'delete(user:' . $userId . ')',
+                'create(user:' . $userId . ')',
+                'update(user:' . $userId . ')',
+                'delete(user:' . $userId . ')',
             ],
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -96,6 +96,7 @@ class DatabasesCustomClientTest extends Scope
                 'name' => 'AppwriteExpert',
             ]
         ]);
+
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Get name of the document, should be the new one
