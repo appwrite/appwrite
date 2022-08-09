@@ -126,10 +126,7 @@ $cli
         $influxDB = getInfluxDB($register);
 
         if ($type == 'timeseries') {
-
             $interval = (int) App::getEnv('_APP_USAGE_TIMESERIES_INTERVAL', '30'); // 30 seconds (by default)
-
-
             $usage = new TimeSeries($database, $influxDB, $logError);
 
             Console::loop(function () use ($interval, $usage) {
