@@ -330,6 +330,9 @@ App::init()
                     if (!in_array($sdk, $sdks)) {
                         array_push($sdks, $sdk); 
                         $key->setAttribute('sdks', $sdks);
+                        
+                        /** Update access time as well */
+                        $key->setAttribute('accessedAt', time());
                         $dbForConsole->updateDocument('keys', $key->getId(), $key);
                         $dbForConsole->deleteCachedDocument('projects', $project->getId());
                     }
