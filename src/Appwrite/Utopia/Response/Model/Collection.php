@@ -18,13 +18,13 @@ class Collection extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => get_class() . ' creation date in Datetime',
+                'description' => 'Collection creation date in Datetime',
                 'default' => '',
                 'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => get_class() . ' update date in Datetime',
+                'description' => 'Collection update date in Datetime',
                 'default' => '',
                 'example' => '1975-12-06 13:30:59',
             ])
@@ -75,6 +75,7 @@ class Collection extends Model
                     Response::MODEL_ATTRIBUTE_ENUM,
                     Response::MODEL_ATTRIBUTE_URL,
                     Response::MODEL_ATTRIBUTE_IP,
+                    Response::MODEL_ATTRIBUTE_DATETIME,
                     Response::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'Collection attributes.',

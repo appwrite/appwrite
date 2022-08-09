@@ -25,13 +25,13 @@ class Project extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => get_class() . ' creation date in Datetime',
+                'description' => 'Project creation date in Datetime',
                 'default' => '',
                 'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => get_class() . ' update date in Datetime',
+                'description' => 'Project update date in Datetime',
                 'default' => '',
                 'example' => '1975-12-06 13:30:59',
             ])
