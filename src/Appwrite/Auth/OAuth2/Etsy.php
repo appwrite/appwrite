@@ -24,7 +24,7 @@ class Etsy extends OAuth2
     /**
      * @var array
      */
-    protected $tokens = [];
+    protected array $tokens = [];
 
     /**
      * @var array
