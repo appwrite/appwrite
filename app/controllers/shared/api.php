@@ -82,13 +82,12 @@ App::init()
                 $response
                     ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
                     ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
-                    ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
-                ;
+                    ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600));
             }
 
             if (
                 (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled' // Route is rate-limited
-                && $abuse->check()) // Abuse is not disabled
+                    && $abuse->check()) // Abuse is not disabled
                 && (!$isAppUser && !$isPrivilegedUser)
             ) { // User is not an admin or API key
                 throw new Exception('Too many requests', 429, Exception::GENERAL_RATE_LIMIT_EXCEEDED);
@@ -101,13 +100,11 @@ App::init()
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $mails
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $audits
             ->setMode($mode)
@@ -115,8 +112,7 @@ App::init()
             ->setIP($request->getIP())
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $usage
             ->setParam('projectId', $project->getId())
@@ -126,30 +122,49 @@ App::init()
             ->setParam('httpPath', $route->getPath())
             ->setParam('networkRequestSize', 0)
             ->setParam('networkResponseSize', 0)
-            ->setParam('storage', 0)
-        ;
+            ->setParam('storage', 0);
 
         $deletes->setProject($project);
         $database->setProject($project);
 
         $useCache = $route->getLabel('cache', false);
+
         if ($useCache) {
+
+
             $key = md5($request->getURI() . implode('*', $request->getParams()));
             $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
-            var_dump(!empty($data));
+
             if (!empty($data)) {
-                $cacheLog = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
+
+                $cacheLog = Authorization::skip(fn() => $dbForProject->getDocument('cache', $key));
+
                 if ($cacheLog->isEmpty()) {
-                    Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
+                    Authorization::skip(fn() => $dbForProject->createDocument('cache', new Document([
                         '$id' => $key,
                         'accessedAt' => \time(),
                     ])));
                 } elseif (date('Y/m/d', time()) > date('Y/m/d', $cacheLog->getAttribute('accessedAt'))) {
                     $cacheLog->setAttribute('accessedAt', \time());
-                    Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+                    Authorization::skip(fn() => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
+
+                $data = json_decode($data, true);
+
+                $response
+                    ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
+                    ->addHeader('X-Appwrite-Cache', 'hit')
+                    ->setContentType($data['content-type'])
+                    ->send(base64_decode($data['payload']))
+                ;
+
+            } else {
+                $response->addHeader('X-Appwrite-Cache', 'miss');
+            }
+        }
+});
 
 App::init()
     ->groups(['auth'])
@@ -203,7 +218,7 @@ App::init()
                 throw new Exception('Unsupported authentication route', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
                 break;
         }
-    });
+});
 
 App::shutdown()
     ->groups(['api'])
@@ -290,30 +305,30 @@ App::shutdown()
             $database->trigger();
         }
 
-    $route = $utopia->match($request);
+        $route = $utopia->match($request);
 
-    $useCache = $route->getLabel('cache', false);
-    if ($useCache) {
-        $data = $response->getPayload();
-        if (!empty($data)) {
-            $key = md5($request->getURI() . implode('*', $request->getParams()));
-            $cacheLog = $dbForProject->getDocument('cache', $key);
-            if ($cacheLog->isEmpty()) {
-                Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
-                '$id' => $key,
-                'accessedAt' => \time(),
-                ])));
-            } elseif (date('Y/m/d', \time()) > date('Y/m/d', $cacheLog->getAttribute('accessedAt'))) {
-                $cacheLog->setAttribute('accessedAt', \time());
-                Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
-            }
-            if (!empty($data['payload'])) {
-                $data['payload'] = base64_encode($data['payload']);
-                $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
-                $cache->save($key, json_encode($data));
+        $useCache = $route->getLabel('cache', false);
+        if ($useCache) {
+            $data = $response->getPayload();
+            if (!empty($data)) {
+                $key = md5($request->getURI() . implode('*', $request->getParams()));
+                $cacheLog = $dbForProject->getDocument('cache', $key);
+                if ($cacheLog->isEmpty()) {
+                    Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
+                    '$id' => $key,
+                    'accessedAt' => \time(),
+                    ])));
+                } elseif (date('Y/m/d', \time()) > date('Y/m/d', $cacheLog->getAttribute('accessedAt'))) {
+                    $cacheLog->setAttribute('accessedAt', \time());
+                    Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+                }
+                if (!empty($data['payload'])) {
+                    $data['payload'] = base64_encode($data['payload']);
+                    $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
+                    $cache->save($key, json_encode($data));
+                }
             }
         }
-    }
 
         if (
             App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
@@ -326,4 +341,4 @@ App::shutdown()
                 ->setParam('networkResponseSize', $response->getSize())
                 ->submit();
         }
-    });
+});
