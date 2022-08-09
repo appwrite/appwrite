@@ -31,9 +31,9 @@ class StorageCustomClientTest extends Scope
             'name' => 'Test Bucket',
             'permissions' => [
                 'read(any)',
-                 'create(users)',
-                    'update(users)',
-                    'delete(users)',
+                'create(users)',
+                'update(users)',
+                'delete(users)',
             ],
         ]);
 

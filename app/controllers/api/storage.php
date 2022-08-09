@@ -68,7 +68,7 @@ App::post('/v1/storage/buckets')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, string $fileSecurity, ?array $permissions, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, string $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         $bucketId = $bucketId === 'unique()' ? $dbForProject->getId() : $bucketId;
         try {
@@ -234,7 +234,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, string $fileSecurity, ?array $permissions, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, string $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
