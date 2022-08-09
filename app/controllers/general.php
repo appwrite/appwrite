@@ -319,7 +319,7 @@ App::init()
                     ], true);
     
                     $sdk = $request->getHeader('x-sdk-version', 'UNKNOWN');
-                    $sdk = explode(':', $sdk)[1] ?? 'UNKNOWN';
+                    $sdk = explode(':', $sdk)[1] ?? '';
 
                     if ($sdkValidator->isValid($sdk)) {
                         $sdks = $key->getAttribute('sdks', []);
