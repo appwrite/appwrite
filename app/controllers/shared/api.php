@@ -314,12 +314,16 @@ App::shutdown()
             }
         }
 
-        $auditsPayload = $route->getLabel('audits.payload',false);
-        if(!empty($auditsPayload)) {
-           $audits->setPayload($responsePayload);
-        }
-
         if (!empty($audits->getResource())) {
+            /**
+             * audits.payload is switched to default true
+             * in order to auto audit payload for all endpoints
+             */
+            $auditsPayload = $route->getLabel('audits.payload',true);
+            if(!empty($auditsPayload)) {
+                $audits->setPayload($responsePayload);
+            }
+
             foreach ($events->getParams() as $key => $value) {
                 $audits->setParam($key, $value);
             }
