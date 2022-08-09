@@ -383,18 +383,10 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        $variables = $database
+        return $database
             ->find('variables', [
                 new Query('functionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
-            ], $database->getAttributeLimit(), 0, []);
-
-        $object = [];
-
-        foreach ($variables as $variable) {
-            $object[$variable['key']] = $variable['value'];
-        }
-
-        return $object;
+            ], APP_LIMIT_SUBQUERY);
     }
 );
 
