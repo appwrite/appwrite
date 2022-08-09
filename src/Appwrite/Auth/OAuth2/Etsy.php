@@ -14,7 +14,7 @@ class Etsy extends OAuth2
     /**
      * @var string
      */
-    private $version = '2022-07-14';
+    private string $version = '2022-07-14';
 
     /**
      * @var array
