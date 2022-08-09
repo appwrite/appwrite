@@ -1831,6 +1831,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $oauth2->refreshTokens($refreshToken);
 
+                var_dump($oauth2->getAccessToken(''));
                 
                 $session
                 ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
@@ -1838,7 +1839,7 @@ App::patch('/v1/account/sessions/:sessionId')
                 ->setAttribute('providerAccessTokenExpiry', \time() + (int) $oauth2->getAccessTokenExpiry(''));
                 
                 
-                $dbForProject->updateDocument('sessions', $sessionId, $session);
+                $session = $dbForProject->updateDocument('sessions', $sessionId, $session);
                 
                 $dbForProject->deleteCachedDocument('users', $user->getId());
 
