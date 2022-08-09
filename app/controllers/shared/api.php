@@ -279,9 +279,11 @@ App::shutdown()
             foreach ($matches[1] ?? [] as $pos => $match) {
                 $find = $matches[0][$pos];
                 $parts = explode('.', $match);
-                if(count($parts) < 2){
+
+                if(count($parts) !== 2){
                     return '';
                 }
+
                 $namespace = $parts[0];
                 $replace  = $parts[1];
 
@@ -293,7 +295,7 @@ App::shutdown()
                         $params = $getRequestParams();
                         break;
                     default:
-                        $responsePayload;
+                        $params = $responsePayload;
                 }
 
                 if(array_key_exists($replace, $params)){
@@ -307,7 +309,7 @@ App::shutdown()
         $auditsResource = $route->getLabel('audits.resource',null);
         if(!empty($auditsResource)) {
             $resource = $parseLabel($auditsResource);
-            if(!empty($resource)) {
+            if(!empty($resource) && $resource !== $auditsResource) {
                 $audits->setResource($resource);
             }
         }
