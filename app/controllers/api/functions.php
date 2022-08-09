@@ -1117,7 +1117,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
 // Variables
 
-App::post('/v1/functions/variables/:functionId')
+App::post('/v1/functions/:functionId/variables/')
     ->desc('Create Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -1161,7 +1161,7 @@ App::post('/v1/functions/variables/:functionId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::get('/v1/functions/variables/:functionId')
+App::get('/v1/functions/:functionId/variables/')
     ->desc('List Variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -1192,7 +1192,7 @@ App::get('/v1/functions/variables/:functionId')
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
-App::get('/v1/functions/variables/:functionId/:variableId')
+App::get('/v1/functions/:functionId/variables//:variableId')
     ->desc('Get Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -1225,7 +1225,7 @@ App::get('/v1/functions/variables/:functionId/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::put('/v1/functions/variables/:functionId/:variableId')
+App::put('/v1/functions/:functionId/variables//:variableId')
     ->desc('Update Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -1277,7 +1277,7 @@ App::put('/v1/functions/variables/:functionId/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::delete('/v1/functions/variables/:functionId/:variableId')
+App::delete('/v1/functions/:functionId/variables//:variableId')
     ->desc('Delete Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
