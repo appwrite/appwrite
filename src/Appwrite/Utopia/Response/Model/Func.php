@@ -61,6 +61,12 @@ class Func extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('vars', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Function environment variables.',
+                'default' => new \stdClass(),
+                'example' => ['key' => 'value'],
+            ])
             ->addRule('events', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function trigger events.',
