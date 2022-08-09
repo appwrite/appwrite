@@ -14,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
+use Utopia\Validator\WhiteList;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
@@ -112,12 +113,13 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
 
 $cli
     ->task('usage')
+    ->param('type', 'timeseries', new WhiteList(['timeseries', 'database']))
     ->desc('Schedules syncing data from influxdb to Appwrite console db')
-    ->action(function () use ($register, $logError) {
+    ->action(function (string $type) use ($register, $logError) {
         Console::title('Usage Aggregation V1');
         Console::success(APP_NAME . ' usage aggregation process v1 has started');
 
-        $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
+        $interval = (int) App::getEnv('_APP_USAGE_TIMESERIES_INTERVAL', '30'); // 30 seconds (by default)
 
         $database = getDatabase($register, '_console');
         $influxDB = getInfluxDB($register);

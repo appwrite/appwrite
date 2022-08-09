@@ -170,9 +170,27 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to mariadb from InfluxDB. The default value is 30 seconds.',
+                'description' => 'Deprecated since 0.16.0, use `_APP_USAGE_TIMESERIES_INTERVAL` instead.',
                 'introduction' => '0.10.0',
                 'default' => '30',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_USAGE_TIMESERIES_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to mariadb from InfluxDB. The default value is 30 seconds.',
+                'introduction' => '0.16.0',
+                'default' => '30',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_USAGE_DATABASE_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats from data in MariaDB. The default value is 15 minutes.',
+                'introduction' => '0.16.0',
+                'default' => '900',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
