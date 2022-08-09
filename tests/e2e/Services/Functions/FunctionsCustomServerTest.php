@@ -293,7 +293,7 @@ class FunctionsCustomServerTest extends Scope
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
         $this->assertEquals(true, DateTime::isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
@@ -342,7 +342,7 @@ class FunctionsCustomServerTest extends Scope
         }
         @fclose($handle);
 
-        $this->assertEquals(201, $largeTag['headers']['status-code']);
+        $this->assertEquals(202, $largeTag['headers']['status-code']);
         $this->assertNotEmpty($largeTag['body']['$id']);
         $this->assertEquals(true, DateTime::isValid($largeTag['body']['$createdAt']));
         $this->assertEquals('index.php', $largeTag['body']['entrypoint']);
@@ -485,7 +485,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
         $this->assertEquals(true, DateTime::isValid($execution['body']['$createdAt']));
@@ -734,7 +734,7 @@ class FunctionsCustomServerTest extends Scope
             'activate' => true,
         ]);
 
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(20);
@@ -748,7 +748,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         sleep(10);
 
@@ -819,7 +819,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(10);
@@ -840,7 +840,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
 
@@ -931,7 +931,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(10);
@@ -945,7 +945,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
 
@@ -1036,7 +1036,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(30);
@@ -1050,7 +1050,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
 
@@ -1141,7 +1141,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(40);
@@ -1155,7 +1155,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
 
@@ -1246,7 +1246,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(30);
@@ -1260,7 +1260,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
 
@@ -1351,7 +1351,7 @@ class FunctionsCustomServerTest extends Scope
     //     ]);
 
     //     $deploymentId = $deployment['body']['$id'] ?? '';
-    //     $this->assertEquals(201, $deployment['headers']['status-code']);
+    //     $this->assertEquals(202, $deployment['headers']['status-code']);
 
     //     // Allow (slow) build step to run
     //     sleep(300);
@@ -1365,7 +1365,7 @@ class FunctionsCustomServerTest extends Scope
 
     //     $executionId = $execution['body']['$id'] ?? '';
 
-    //     $this->assertEquals(201, $execution['headers']['status-code']);
+    //     $this->assertEquals(202, $execution['headers']['status-code']);
 
     //     $executionId = $execution['body']['$id'] ?? '';
 

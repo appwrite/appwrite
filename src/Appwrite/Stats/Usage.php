@@ -311,7 +311,7 @@ class Usage
                         }
                     }
 
-                    $time = $point['time'];
+                    $time = $point['time']; //todo: check is this datetime format?
                     $value = (!empty($point['value'])) ? $point['value'] : 0;
 
                     $this->createOrUpdateMetric(
