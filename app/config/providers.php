@@ -101,7 +101,7 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
-    'Etsy' => [
+    'etsy' => [
         'name' => 'Etsy',
         'developers' => 'https://developers.etsy.com/',
         'icon' => 'icon-etsy',
