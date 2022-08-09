@@ -34,7 +34,10 @@ class Etsy extends OAuth2
         "profile_r",
     ];
 
-    private $pkce = '';
+    /**
+     * @var string
+     */
+    private string $pkce = '';
 
     private function getPKCE()
     {
