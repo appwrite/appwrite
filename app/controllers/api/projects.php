@@ -31,12 +31,14 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-App::init(function (Document $project) {
-
-    if ($project->getId() !== 'console') {
-        throw new Exception('Access to this API is forbidden.', 401, Exception::GENERAL_ACCESS_FORBIDDEN);
-    }
-}, ['project'], 'projects');
+App::init()
+    ->groups(['projects'])
+    ->inject('project')
+    ->action(function (Document $project) {
+        if ($project->getId() !== 'console') {
+            throw new Exception('Access to this API is forbidden.', 401, Exception::GENERAL_ACCESS_FORBIDDEN);
+        }
+    });
 
 App::post('/v1/projects')
     ->desc('Create Project')
@@ -113,7 +115,7 @@ App::post('/v1/projects')
         $collections = Config::getParam('collections', []);
 
         $dbForProject->setNamespace("_{$project->getInternalId()}");
-        $dbForProject->create('appwrite');
+        $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
         $audit = new Audit($dbForProject);
         $audit->setup();

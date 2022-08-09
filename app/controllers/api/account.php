@@ -133,6 +133,7 @@ App::post('/v1/account')
     });
 
 App::post('/v1/account/sessions/email')
+    ->alias('/v1/account/sessions')
     ->desc('Create Account Session with Email')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -2301,7 +2302,9 @@ App::post('/v1/account/verification/phone')
 
         $messaging
             ->setRecipient($user->getAttribute('phone'))
-            ->setMessage($secret);
+            ->setMessage($secret)
+            ->trigger()
+        ;
 
         $events
             ->setParam('userId', $user->getId())

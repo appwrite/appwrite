@@ -9,31 +9,36 @@ use Utopia\Domains\Domain;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
 
-App::init(function (View $layout) {
+App::init()
+    ->groups(['console'])
+    ->inject('layout')
+    ->action(function (View $layout) {
+        $layout
+            ->setParam('description', 'Appwrite Console allows you to easily manage, monitor, and control your entire backend API and tools.')
+            ->setParam('analytics', 'UA-26264668-5')
+        ;
+    });
 
-    $layout
-        ->setParam('description', 'Appwrite Console allows you to easily manage, monitor, and control your entire backend API and tools.')
-        ->setParam('analytics', 'UA-26264668-5')
-    ;
-}, ['layout'], 'console');
+App::shutdown()
+    ->groups(['console'])
+    ->inject('response')
+    ->inject('layout')
+    ->action(function (Response $response, View $layout) {
+        $header = new View(__DIR__ . '/../../views/console/comps/header.phtml');
+        $footer = new View(__DIR__ . '/../../views/console/comps/footer.phtml');
 
-App::shutdown(function (Response $response, View $layout) {
+        $footer
+            ->setParam('home', App::getEnv('_APP_HOME', ''))
+            ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
+        ;
 
-    $header = new View(__DIR__ . '/../../views/console/comps/header.phtml');
-    $footer = new View(__DIR__ . '/../../views/console/comps/footer.phtml');
+        $layout
+            ->setParam('header', [$header])
+            ->setParam('footer', [$footer])
+        ;
 
-    $footer
-        ->setParam('home', App::getEnv('_APP_HOME', ''))
-        ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
-    ;
-
-    $layout
-        ->setParam('header', [$header])
-        ->setParam('footer', [$footer])
-    ;
-
-    $response->html($layout->render());
-}, ['response', 'layout'], 'console');
+        $response->html($layout->render());
+    });
 
 App::get('/error/:code')
     ->groups(['web', 'console'])

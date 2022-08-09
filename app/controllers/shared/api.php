@@ -151,22 +151,6 @@ App::init()
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
 
-                $data = json_decode($data, true);
-                $response
-                    ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
-                    ->addHeader('X-Appwrite-Cache', 'hit')
-                    ->setContentType($data['content-type'])
-                    ->send(base64_decode($data['payload']))
-                ;
-
-            } else {
-                $response->addHeader('X-Appwrite-Cache', 'miss');
-            }
-        }
-
-
-    });
-
 App::init()
     ->groups(['auth'])
     ->inject('utopia')
@@ -291,20 +275,20 @@ App::shutdown()
             }
         }
 
-    if (!empty($audits->getResource())) {
-        foreach ($events->getParams() as $key => $value) {
-            $audits->setParam($key, $value);
+        if (!empty($audits->getResource())) {
+            foreach ($events->getParams() as $key => $value) {
+                $audits->setParam($key, $value);
+            }
+            $audits->trigger();
         }
-        $audits->trigger();
-    }
 
-    if (!empty($deletes->getType())) {
-        $deletes->trigger();
-    }
+        if (!empty($deletes->getType())) {
+            $deletes->trigger();
+        }
 
-    if (!empty($database->getType())) {
-        $database->trigger();
-    }
+        if (!empty($database->getType())) {
+            $database->trigger();
+        }
 
     $route = $utopia->match($request);
 

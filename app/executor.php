@@ -581,57 +581,64 @@ App::setResource('orchestrationPool', fn() => $orchestrationPool);
 App::setResource('activeRuntimes', fn() => $activeRuntimes);
 
 /** Set callbacks */
-App::error(function ($utopia, $error, $request, $response) {
-    $route = $utopia->match($request);
-    logError($error, "httpError", $route);
+App::error()
+    ->inject('utopia')
+    ->inject('error')
+    ->inject('request')
+    ->inject('response')
+    ->action(function (App $utopia, throwable $error, Request $request, Response $response) {
+        $route = $utopia->match($request);
+        logError($error, "httpError", $route);
 
-    switch ($error->getCode()) {
-        case 400: // Error allowed publicly
-        case 401: // Error allowed publicly
-        case 402: // Error allowed publicly
-        case 403: // Error allowed publicly
-        case 404: // Error allowed publicly
-        case 406: // Error allowed publicly
-        case 409: // Error allowed publicly
-        case 412: // Error allowed publicly
-        case 425: // Error allowed publicly
-        case 429: // Error allowed publicly
-        case 501: // Error allowed publicly
-        case 503: // Error allowed publicly
-            $code = $error->getCode();
-            break;
-        default:
-            $code = 500; // All other errors get the generic 500 server error status code
-    }
+        switch ($error->getCode()) {
+            case 400: // Error allowed publicly
+            case 401: // Error allowed publicly
+            case 402: // Error allowed publicly
+            case 403: // Error allowed publicly
+            case 404: // Error allowed publicly
+            case 406: // Error allowed publicly
+            case 409: // Error allowed publicly
+            case 412: // Error allowed publicly
+            case 425: // Error allowed publicly
+            case 429: // Error allowed publicly
+            case 501: // Error allowed publicly
+            case 503: // Error allowed publicly
+                $code = $error->getCode();
+                break;
+            default:
+                $code = 500; // All other errors get the generic 500 server error status code
+        }
 
-    $output = [
-        'message' => $error->getMessage(),
-        'code' => $error->getCode(),
-        'file' => $error->getFile(),
-        'line' => $error->getLine(),
-        'trace' => $error->getTrace(),
-        'version' => App::getEnv('_APP_VERSION', 'UNKNOWN')
-    ];
+        $output = [
+            'message' => $error->getMessage(),
+            'code' => $error->getCode(),
+            'file' => $error->getFile(),
+            'line' => $error->getLine(),
+            'trace' => $error->getTrace(),
+            'version' => App::getEnv('_APP_VERSION', 'UNKNOWN')
+        ];
 
-    $response
-        ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-        ->addHeader('Expires', '0')
-        ->addHeader('Pragma', 'no-cache')
-        ->setStatusCode($code);
+        $response
+            ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->addHeader('Expires', '0')
+            ->addHeader('Pragma', 'no-cache')
+            ->setStatusCode($code);
 
-    $response->json($output);
-}, ['utopia', 'error', 'request', 'response']);
+        $response->json($output);
+    });
 
-App::init(function ($request, $response) {
-     $secretKey = $request->getHeader('x-appwrite-executor-key', '');
-    if (empty($secretKey)) {
-        throw new Exception('Missing executor key', 401);
-    }
+App::init()
+    ->inject('request')
+    ->action(function (Request $request) {
+        $secretKey = $request->getHeader('x-appwrite-executor-key', '');
+        if (empty($secretKey)) {
+            throw new Exception('Missing executor key', 401);
+        }
 
-    if ($secretKey !== App::getEnv('_APP_EXECUTOR_SECRET', '')) {
-        throw new Exception('Missing executor key', 401);
-    }
-}, ['request', 'response']);
+        if ($secretKey !== App::getEnv('_APP_EXECUTOR_SECRET', '')) {
+            throw new Exception('Missing executor key', 401);
+        }
+    });
 
 
 $http->on('start', function ($http) {
