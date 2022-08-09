@@ -39,7 +39,7 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
-use Appwrite\Stats\Stats;
+use Appwrite\Usage\Stats;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
 
@@ -124,7 +124,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     $usage
         ->setParam('databaseId', $databaseId)
-        ->setParam('databases.collections.update', 1);
+        ->setParam('collections.requests.update', 1);
 
     $database
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
@@ -224,7 +224,7 @@ App::post('/v1/databases')
         ;
 
         $events->setParam('databaseId', $database->getId());
-        $usage->setParam('databases.create', 1);
+        $usage->setParam('databases.requests.create', 1);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($database, Response::MODEL_DATABASE);
@@ -266,7 +266,7 @@ App::get('/v1/databases')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        $usage->setParam('databases.read', 1);
+        $usage->setParam('databases.requests.read', 1);
 
         $response->dynamic(new Document([
             'databases' => $dbForProject->find('databases', $queries, $limit, $offset, [], [$orderType], $cursorDocument ?? null, $cursorDirection),
@@ -297,7 +297,7 @@ App::get('/v1/databases/:databaseId')
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
 
-        $usage->setParam('databases.read', 1);
+        $usage->setParam('databases.requests.read', 1);
 
         $response->dynamic($database, Response::MODEL_DATABASE);
     });
@@ -423,7 +423,7 @@ App::put('/v1/databases/:databaseId')
             ->setPayload($database->getArrayCopy())
         ;
 
-        $usage->setParam('databases.update', 1);
+        $usage->setParam('databases.requests.update', 1);
         $events->setParam('databaseId', $database->getId());
 
         $response->dynamic($database, Response::MODEL_DATABASE);
@@ -476,7 +476,7 @@ App::delete('/v1/databases/:databaseId')
             ->setPayload($database->getArrayCopy())
         ;
 
-        $usage->setParam('databases.delete', 1);
+        $usage->setParam('databases.requests.delete', 1);
 
         $response->noContent();
     });
@@ -548,7 +548,7 @@ App::post('/v1/databases/:databaseId/collections')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.create', 1);
+            ->setParam('collections.requests.create', 1);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($collection, Response::MODEL_COLLECTION);
@@ -600,7 +600,7 @@ App::get('/v1/databases/:databaseId/collections')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
+            ->setParam('collections.requests.read', 1);
 
         $response->dynamic(new Document([
             'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
@@ -640,7 +640,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
+            ->setParam('collections.requests.read', 1);
 
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
@@ -798,7 +798,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.update', 1);
+            ->setParam('collections.requests.update', 1);
 
         $events
             ->setContext('database', $database)
@@ -867,7 +867,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.delete', 1);
+            ->setParam('collections.collections.delete', 1);
 
         $response->noContent();
     });
@@ -1308,7 +1308,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
+            ->setParam('collections.requests.read', 1);
 
         $response->dynamic(new Document([
             'total' => \count($attributes),
@@ -1382,7 +1382,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
+            ->setParam('collections.requests.read', 1);
 
         $response->dynamic($attribute, $model);
     });
@@ -1444,7 +1444,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.update', 1);
+            ->setParam('collections.requests.update', 1);
 
         // Select response model based on type and format
         $type = $attribute->getAttribute('type');
@@ -1618,7 +1618,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.update', 1);
+            ->setParam('collections.requests.update', 1);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -1671,7 +1671,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
+            ->setParam('collections.requests.read', 1);
 
         $response->dynamic(new Document([
             'total' => \count($indexes),
@@ -1725,7 +1725,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
+            ->setParam('collections.requests.read', 1);
 
         $response->dynamic($index, Response::MODEL_INDEX);
     });
@@ -1786,7 +1786,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
 
         $usage
             ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.update', 1);
+            ->setParam('collections.requests.update', 1);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -1914,7 +1914,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         ;
 
         $usage
-            ->setParam('databases.documents.create', 1)
+            ->setParam('documents.requests.create', 1)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
@@ -2031,7 +2031,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $documents = array_map(fn(Document $document) => $document->setAttribute('$collection', $collectionId), $documents);
 
         $usage
-            ->setParam('databases.documents.read', 1)
+            ->setParam('documents.requests.read', 1)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
@@ -2104,7 +2104,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         $usage
-            ->setParam('databases.documents.read', 1)
+            ->setParam('documents.requests.read', 1)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
@@ -2332,7 +2332,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         ;
 
         $usage
-            ->setParam('databases.documents.update', 1)
+            ->setParam('documents.requests.update', 1)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
@@ -2423,7 +2423,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         ;
 
         $usage
-            ->setParam('databases.documents.delete', 1)
+            ->setParam('documents.requests.delete', 1)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collectionId)
         ;
@@ -2482,21 +2482,21 @@ App::get('/v1/databases/usage')
             ];
 
             $metrics = [
-                'databases.count',
-                'databases.documents.count',
-                'databases.collections.count',
-                'databases.create',
-                'databases.read',
-                'databases.update',
-                'databases.delete',
-                'databases.collections.create',
-                'databases.collections.read',
-                'databases.collections.update',
-                'databases.collections.delete',
-                'databases.documents.create',
-                'databases.documents.read',
-                'databases.documents.update',
-                'databases.documents.delete'
+                'databases.$all.count.total',
+                'documents.$all.count.total',
+                'collections.$all.count.total',
+                'databases.$all.requests.create',
+                'databases.$all.requests.read',
+                'databases.$all.requests.update',
+                'databases.$all.requests.delete',
+                'collections.$all.requests.create',
+                'collections.$all.requests.read',
+                'collections.$all.requests.update',
+                'collections.$all.requests.delete',
+                'documents.$all.requests.create',
+                'documents.$all.requests.read',
+                'documents.$all.requests.update',
+                'documents.$all.requests.delete'
             ];
 
             $stats = [];
@@ -2540,21 +2540,21 @@ App::get('/v1/databases/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'databasesCount' => $stats["databases.count"],
-                'documentsCount' => $stats["databases.documents.count"],
-                'collectionsCount' => $stats["databases.collections.count"],
-                'documentsCreate' =>  $stats["databases.documents.create"],
-                'documentsRead' =>  $stats["databases.documents.read"],
-                'documentsUpdate' => $stats["databases.documents.update"],
-                'documentsDelete' => $stats["databases.documents.delete"],
-                'collectionsCreate' => $stats["databases.collections.create"],
-                'collectionsRead' =>  $stats["databases.collections.read"],
-                'collectionsUpdate' => $stats["databases.collections.update"],
-                'collectionsDelete' => $stats["databases.collections.delete"],
-                'databasesCreate' => $stats["databases.create"],
-                'databasesRead' =>  $stats["databases.read"],
-                'databasesUpdate' => $stats["databases.update"],
-                'databasesDelete' => $stats["databases.delete"],
+                'databasesCount' => $stats['databases.$all.count.total'],
+                'documentsCount' => $stats['documents.$all.count.total'],
+                'collectionsCount' => $stats['collections.$all.count.total'],
+                'documentsCreate' =>  $stats['documents.$all.requests.create'],
+                'documentsRead' =>  $stats['documents.$all.requests.read'],
+                'documentsUpdate' => $stats['documents.$all.requests.update'],
+                'documentsDelete' => $stats['documents.$all.requests.delete'],
+                'collectionsCreate' => $stats['collections.$all.requests.create'],
+                'collectionsRead' =>  $stats['collections.$all.requests.read'],
+                'collectionsUpdate' => $stats['collections.$all.requests.update'],
+                'collectionsDelete' => $stats['collections.$all.requests.delete'],
+                'databasesCreate' => $stats['databases.$all.requests.create'],
+                'databasesRead' =>  $stats['databases.$all.requests.read'],
+                'databasesUpdate' => $stats['databases.$all.requests.update'],
+                'databasesDelete' => $stats['databases.$all.requests.delete'],
             ]);
         }
 
@@ -2599,16 +2599,16 @@ App::get('/v1/databases/:databaseId/usage')
             ];
 
             $metrics = [
-                'databases.' . $databaseId . '.documents.count',
-                'databases.' . $databaseId . '.collections.count',
-                'databases.' . $databaseId . '.collections.create',
-                'databases.' . $databaseId . '.collections.read',
-                'databases.' . $databaseId . '.collections.update',
-                'databases.' . $databaseId . '.collections.delete',
-                'databases.' . $databaseId . '.documents.create',
-                'databases.' . $databaseId . '.documents.read',
-                'databases.' . $databaseId . '.documents.update',
-                'databases.' . $databaseId . '.documents.delete'
+                'documents.' . $databaseId . '.count.total',
+                'collections.' . $databaseId . '.count.total',
+                'collections.' . $databaseId . '.requests.create',
+                'collections.' . $databaseId . '.requests.read',
+                'collections.' . $databaseId . '.requests.update',
+                'collections.' . $databaseId . '.requests.delete',
+                'documents.' . $databaseId . '.requests.create',
+                'documents.' . $databaseId . '.requests.read',
+                'documents.' . $databaseId . '.requests.update',
+                'documents.' . $databaseId . '.requests.delete'
             ];
 
             $stats = [];
@@ -2652,16 +2652,16 @@ App::get('/v1/databases/:databaseId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'documentsCount' => $stats["databases.{$databaseId}.documents.count"],
-                'collectionsCount' => $stats["databases.{$databaseId}.collections.count"],
-                'documentsCreate' =>  $stats["databases.{$databaseId}.documents.create"],
-                'documentsRead' =>  $stats["databases.{$databaseId}.documents.read"],
-                'documentsUpdate' => $stats["databases.{$databaseId}.documents.update"],
-                'documentsDelete' => $stats["databases.{$databaseId}.documents.delete"],
-                'collectionsCreate' => $stats["databases.{$databaseId}.collections.create"],
-                'collectionsRead' =>  $stats["databases.{$databaseId}.collections.read"],
-                'collectionsUpdate' => $stats["databases.{$databaseId}.collections.update"],
-                'collectionsDelete' => $stats["databases.{$databaseId}.collections.delete"],
+                'documentsCount' => $stats["documents.{$databaseId}.count.total"],
+                'collectionsCount' => $stats["collections.{$databaseId}.count.total"],
+                'documentsCreate' =>  $stats["documents.{$databaseId}.requests.create"],
+                'documentsRead' =>  $stats["documents.{$databaseId}.requests.read"],
+                'documentsUpdate' => $stats["documents.{$databaseId}.requests.update"],
+                'documentsDelete' => $stats["documents.{$databaseId}.requests.delete"],
+                'collectionsCreate' => $stats["collections.{$databaseId}.requests.create"],
+                'collectionsRead' =>  $stats["collections.{$databaseId}.requests.read"],
+                'collectionsUpdate' => $stats["collections.{$databaseId}.requests.update"],
+                'collectionsDelete' => $stats["collections.{$databaseId}.requests.delete"],
             ]);
         }
 
@@ -2717,11 +2717,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
             ];
 
             $metrics = [
-                "databases.{$databaseId}.collections.{$collectionId}.documents.count",
-                "databases.{$databaseId}.collections.{$collectionId}.documents.create",
-                "databases.{$databaseId}.collections.{$collectionId}.documents.read",
-                "databases.{$databaseId}.collections.{$collectionId}.documents.update",
-                "databases.{$databaseId}.collections.{$collectionId}.documents.delete",
+                "documents.{$databaseId}/{$collectionId}.count.total",
+                "documents.{$databaseId}/{$collectionId}.requests.create",
+                "documents.{$databaseId}/{$collectionId}.requests.read",
+                "documents.{$databaseId}/{$collectionId}.requests.update",
+                "documents.{$databaseId}/{$collectionId}.requests.delete",
             ];
 
             $stats = [];
@@ -2764,11 +2764,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'documentsCount' => $stats["databases.{$databaseId}.collections.{$collectionId}.documents.count"],
-                'documentsCreate' => $stats["databases.{$databaseId}.collections.{$collectionId}.documents.create"],
-                'documentsRead' => $stats["databases.{$databaseId}.collections.{$collectionId}.documents.read"],
-                'documentsUpdate' =>  $stats["databases.{$databaseId}.collections.{$collectionId}.documents.update"],
-                'documentsDelete' =>  $stats["databases.{$databaseId}.collections.{$collectionId}.documents.delete"]
+                'documentsCount' => $stats["documents.{$databaseId}/{$collectionId}.count.total"],
+                'documentsCreate' => $stats["documents.{$databaseId}/{$collectionId}.requests.create"],
+                'documentsRead' => $stats["documents.{$databaseId}/{$collectionId}.requests.read"],
+                'documentsUpdate' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.update"],
+                'documentsDelete' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.delete"]
             ]);
         }
 

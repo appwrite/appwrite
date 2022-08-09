@@ -6,7 +6,7 @@ use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Cron\CronExpression;
 use Executor\Executor;
-use Appwrite\Stats\Stats;
+use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Storage\Storage;

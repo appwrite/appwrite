@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Appwrite\Stats\Stats;
+use Appwrite\Usage\Stats;
 use PHPUnit\Framework\TestCase;
 use Utopia\App;
 
