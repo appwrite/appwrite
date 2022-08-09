@@ -176,7 +176,7 @@ class Etsy extends OAuth2
      *
      * @return array
      */
-    protected function getUser(string $accessToken)
+    protected function getUser(string $accessToken): array
     {
         if (!empty($this->user)) {
             return $this->user;
