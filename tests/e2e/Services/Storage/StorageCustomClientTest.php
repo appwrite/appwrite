@@ -52,7 +52,7 @@ class StorageCustomClientTest extends Scope
         $fileId = $file['body']['$id'];
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($fileId);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertIsString($file['body']['$createdAt']);
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -143,8 +143,10 @@ class StorageCustomClientTest extends Scope
 
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertContains('user:' . $this->getUser()['$id'], $file['body']['$permissions']);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $file['body']['$permissions']);
+        $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $file['body']['$permissions']);
+        $this->assertContains('delete(user:' . $this->getUser()['$id'] . ')', $file['body']['$permissions']);
+        $this->assertIsString($file['body']['$createdAt']);
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -173,7 +175,7 @@ class StorageCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $file['headers']['status-code']);
-        $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
         $this->assertStringContainsString('any', $file['body']['message']);
         $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
@@ -193,7 +195,7 @@ class StorageCustomClientTest extends Scope
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 400);
-        $this->assertStringStartsWith('Write permissions must be one of:', $file['body']['message']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
         $this->assertStringContainsString('any', $file['body']['message']);
         $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
@@ -214,7 +216,7 @@ class StorageCustomClientTest extends Scope
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 400);
-        $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
         $this->assertStringContainsString('any', $file['body']['message']);
         $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
@@ -238,7 +240,7 @@ class StorageCustomClientTest extends Scope
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 400);
-        $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
         $this->assertStringContainsString('any', $file['body']['message']);
         $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
@@ -255,7 +257,7 @@ class StorageCustomClientTest extends Scope
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 400);
-        $this->assertStringStartsWith('Write permissions must be one of:', $file['body']['message']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
         $this->assertStringContainsString('any', $file['body']['message']);
         $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
@@ -273,7 +275,7 @@ class StorageCustomClientTest extends Scope
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 400);
-        $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
         $this->assertStringContainsString('any', $file['body']['message']);
         $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);

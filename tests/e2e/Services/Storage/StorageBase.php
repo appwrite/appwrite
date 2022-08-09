@@ -49,7 +49,7 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertIsString($file['body']['$createdAt']);
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -118,7 +118,7 @@ trait StorageBase
 
         $this->assertEquals(201, $largeFile['headers']['status-code']);
         $this->assertNotEmpty($largeFile['body']['$id']);
-        $this->assertIsInt($largeFile['body']['$createdAt']);
+        $this->assertIsString($largeFile['body']['$createdAt']);
         $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
@@ -219,8 +219,6 @@ trait StorageBase
         $this->assertEquals(400, $res['headers']['status-code']);
         $this->assertEquals('File extension not allowed', $res['body']['message']);
 
-        return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
-
         /**
          * Test for FAILURE create bucket with too high limit (bigger then _APP_STORAGE_LIMIT)
          */
@@ -241,7 +239,10 @@ trait StorageBase
                 'delete(any)',
             ],
         ]);
+
         $this->assertEquals(400, $failedBucket['headers']['status-code']);
+
+        return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
     }
 
     /**
@@ -289,16 +290,10 @@ trait StorageBase
 
         $this->assertEquals(200, $file1['headers']['status-code']);
         $this->assertNotEmpty($file1['body']['$id']);
-        $this->assertIsInt($file1['body']['$createdAt']);
+        $this->assertIsString($file1['body']['$createdAt']);
         $this->assertEquals('logo.png', $file1['body']['name']);
         $this->assertEquals('image/png', $file1['body']['mimeType']);
         $this->assertEquals(47218, $file1['body']['sizeOriginal']);
-        //$this->assertEquals(54944, $file1['body']['sizeActual']);
-        //$this->assertEquals('gzip', $file1['body']['algorithm']);
-        //$this->assertEquals('1', $file1['body']['fileOpenSSLVersion']);
-        //$this->assertEquals('aes-128-gcm', $file1['body']['fileOpenSSLCipher']);
-        //$this->assertNotEmpty($file1['body']['fileOpenSSLTag']);
-        //$this->assertNotEmpty($file1['body']['fileOpenSSLIV']);
         $this->assertIsArray($file1['body']['$permissions']);
         $this->assertCount(4, $file1['body']['$permissions']);
 
@@ -593,7 +588,7 @@ trait StorageBase
 
         $this->assertEquals(200, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertIsString($file['body']['$createdAt']);
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);

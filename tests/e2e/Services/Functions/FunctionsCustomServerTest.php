@@ -294,7 +294,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
-        $this->assertIsInt($deployment['body']['$createdAt']);
+        $this->assertIsString($deployment['body']['$createdAt']);
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
@@ -343,7 +343,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(201, $largeTag['headers']['status-code']);
         $this->assertNotEmpty($largeTag['body']['$id']);
-        $this->assertIsInt($largeTag['body']['$createdAt']);
+        $this->assertIsString($largeTag['body']['$createdAt']);
         $this->assertEquals('index.php', $largeTag['body']['entrypoint']);
         $this->assertGreaterThan(10000, $largeTag['body']['size']);
 
@@ -487,7 +487,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
-        $this->assertIsInt($execution['body']['$createdAt']);
+        $this->assertIsString($execution['body']['$createdAt']);
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('waiting', $execution['body']['status']);
         $this->assertEquals(0, $execution['body']['statusCode']);
@@ -504,7 +504,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
-        $this->assertIsInt($execution['body']['$createdAt']);
+        $this->assertIsString($execution['body']['$createdAt']);
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['statusCode']);
