@@ -1,178 +1,144 @@
 <?php
 
-namespace Appwrite\Event;
+namespace Appwrite\Utopia\Response\Model;
 
-use DateTime;
-use Resque;
-use ResqueScheduler;
+use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model;
+use stdClass;
 use Utopia\Database\Document;
 
-class Func extends Event
+class Func extends Model
 {
-    protected string $jwt = '';
-    protected string $type = '';
-    protected string $data = '';
-    protected ?Document $function = null;
-    protected ?Document $execution = null;
-
     public function __construct()
     {
-        parent::__construct(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME);
+        $this
+            ->addRule('$id', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Function creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Function update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('execute', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Execution permissions.',
+                'default' => [],
+                'example' => 'role:member',
+                'array' => true,
+            ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function name.',
+                'default' => '',
+                'example' => 'My Function',
+            ])
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function status. Possible values: `disabled`, `enabled`',
+                'default' => '',
+                'example' => 'enabled',
+            ])
+            ->addRule('runtime', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function execution runtime.',
+                'default' => '',
+                'example' => 'python-3.8',
+            ])
+            ->addRule('deployment', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function\'s active deployment ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('vars', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Function environment variables.',
+                'default' => new \stdClass(),
+                'example' => ['key' => 'value'],
+            ])
+            ->addRule('events', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function trigger events.',
+                'default' => [],
+                'example' => 'account.create',
+                'array' => true,
+            ])
+            ->addRule('schedule', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function execution schedult in CRON format.',
+                'default' => '',
+                'example' => '5 4 * * *',
+            ])
+            ->addRule('scheduleNext', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Function next scheduled execution date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981292,
+            ])
+            ->addRule('schedulePrevious', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Function next scheduled execution date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981237,
+            ])
+            ->addRule('timeout', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Function execution timeout in seconds.',
+                'default' => 15,
+                'example' => 1592981237,
+            ])
+        ;
     }
 
     /**
-     * Sets function document for the function event.
+     * Get Name
      *
-     * @param Document $function
-     * @return self
+     * @return string
      */
-    public function setFunction(Document $function): self
+    public function getName(): string
     {
-        $this->function = $function;
-
-        return $this;
+        return 'Function';
     }
 
     /**
-     * Returns set function document for the function event.
-     *
-     * @return null|Document
-     */
-    public function getFunction(): ?Document
-    {
-        return $this->function;
-    }
-
-    /**
-     * Sets execution for the function event.
-     *
-     * @param Document $execution
-     * @return self
-     */
-    public function setExecution(Document $execution): self
-    {
-        $this->execution = $execution;
-
-        return $this;
-    }
-
-    /**
-     * Returns set execution for the function event.
-     *
-     * @return null|Document
-     */
-    public function getExecution(): ?Document
-    {
-        return $this->execution;
-    }
-
-    /**
-     * Sets type for the function event.
-     *
-     * @param string $type Can be `schedule`, `event` or `http`.
-     * @return self
-     */
-    public function setType(string $type): self
-    {
-        $this->type = $type;
-
-        return $this;
-    }
-
-    /**
-     * Returns set type for the function event.
+     * Get Type
      *
      * @return string
      */
     public function getType(): string
     {
-        return $this->type;
+        return Response::MODEL_FUNCTION;
     }
 
     /**
-     * Sets custom data for the function event.
+     * Filter Function
      *
-     * @param string $data
-     * @return self
-     */
-    public function setData(string $data): self
-    {
-        $this->data = $data;
-
-        return $this;
-    }
-
-    /**
-     * Returns set custom data for the function event.
+     * Automatically converts a [] default to a stdClass, this is called while grabbing the document.
      *
-     * @return string
+     * @param Document $document
+     * @return Document
      */
-    public function getData(): string
+    public function filter(Document $document): Document
     {
-        return $this->data;
-    }
+        $vars = $document->getAttribute('vars');
+        if ($vars instanceof Document) {
+            $vars = $vars->getArrayCopy();
+        }
 
-    /**
-     * Sets JWT for the function event.
-     *
-     * @param string $jwt
-     * @return self
-     */
-    public function setJWT(string $jwt): self
-    {
-        $this->jwt = $jwt;
-
-        return $this;
-    }
-
-    /**
-     * Returns set JWT for the function event.
-     *
-     * @return string
-     */
-    public function getJWT(): string
-    {
-        return $this->jwt;
-    }
-
-    /**
-     * Executes the function event and sends it to the functions worker.
-     *
-     * @return string|bool
-     * @throws \InvalidArgumentException
-     */
-    public function trigger(): string|bool
-    {
-        return Resque::enqueue($this->queue, $this->class, [
-            'project' => $this->project,
-            'user' => $this->user,
-            'function' => $this->function,
-            'execution' => $this->execution,
-            'type' => $this->type,
-            'jwt' => $this->jwt,
-            'payload' => $this->payload,
-            'data' => $this->data
-        ]);
-    }
-
-    /**
-     * Schedules the function event and schedules it in the functions worker queue.
-     *
-     * @param \DateTime|int $at
-     * @return void
-     * @throws \Resque_Exception
-     * @throws \ResqueScheduler_InvalidTimestampException
-     */
-    public function schedule(DateTime|int $at): void
-    {
-        ResqueScheduler::enqueueAt($at, $this->queue, $this->class, [
-            'project' => $this->project,
-            'user' => $this->user,
-            'function' => $this->function,
-            'execution' => $this->execution,
-            'type' => $this->type,
-            'payload' => $this->payload,
-            'data' => $this->data
-        ]);
+        if (is_array($vars) && empty($vars)) {
+            $document->setAttribute('vars', new stdClass());
+        }
+        return $document;
     }
 }
