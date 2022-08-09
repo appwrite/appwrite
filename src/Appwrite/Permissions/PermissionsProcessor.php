@@ -23,7 +23,7 @@ class PermissionsProcessor
                 if (!\str_starts_with($permission, $type)) {
                     continue;
                 }
-                $permissionsContents = \str_replace([$type, '(', ')', ' '], '', $permission);
+                $permissionsContents = \str_replace([$type . '(', ')', ' '], '', $permission);
                 foreach ($subTypes as $subType) {
                     $permissions[] = $subType . '(' . $permissionsContents . ')';
                 }
@@ -48,6 +48,7 @@ class PermissionsProcessor
             return $permissions;
         }
         foreach (Database::PERMISSIONS as $permission) {
+            // Default any missing permisions to the current user
             if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($userId)) {
                 $permissions[] = $permission . '(user:' . $userId . ')';
             }
