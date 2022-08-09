@@ -82,7 +82,7 @@ class WebhooksCustomServerTest extends Scope
         ]);
 
         $indexKey = $index['body']['key'];
-        $this->assertEquals($index['headers']['status-code'], 201);
+        $this->assertEquals($index['headers']['status-code'], 202);
         $this->assertEquals($index['body']['key'], 'fullname');
 
         // wait for database worker to create index
@@ -512,7 +512,7 @@ class WebhooksCustomServerTest extends Scope
         $id = $data['functionId'] ?? '';
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals($deployment['headers']['status-code'], 201);
+        $this->assertEquals($deployment['headers']['status-code'], 202);
         $this->assertNotEmpty($deployment['body']['$id']);
 
         $webhook = $this->getLastRequest();
@@ -602,7 +602,7 @@ class WebhooksCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals($execution['headers']['status-code'], 201);
+        $this->assertEquals($execution['headers']['status-code'], 202);
         $this->assertNotEmpty($execution['body']['$id']);
 
         $webhook = $this->getLastRequest();

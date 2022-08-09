@@ -111,7 +111,7 @@ class FunctionsCustomClientTest extends Scope
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Wait for deployment to be built.
         sleep(10);
@@ -140,7 +140,7 @@ class FunctionsCustomClientTest extends Scope
             'async' => true,
         ]);
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], [
@@ -228,7 +228,7 @@ class FunctionsCustomClientTest extends Scope
         // Wait for deployment to be built.
         sleep(5);
 
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -245,7 +245,7 @@ class FunctionsCustomClientTest extends Scope
             'data' => 'foobar',
         ]);
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
 
@@ -320,7 +320,7 @@ class FunctionsCustomClientTest extends Scope
             'data' => 'foobar',
         ]);
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         sleep(10);
 
@@ -437,7 +437,7 @@ class FunctionsCustomClientTest extends Scope
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Wait for deployment to be built.
         sleep(10);

@@ -450,7 +450,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('sdk.description', '/docs/references/functions/create-deployment.md')
     ->label('sdk.packaging', true)
     ->label('sdk.request.type', 'multipart/form-data')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
     ->param('functionId', '', new UID(), 'Function ID.')
@@ -619,7 +619,7 @@ App::post('/v1/functions/:functionId/deployments')
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
@@ -903,7 +903,7 @@ App::post('/v1/functions/:functionId/executions')
 
             $event->trigger();
 
-            $response->setStatusCode(Response::STATUS_CODE_CREATED);
+            $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
 
             return $response->dynamic($execution, Response::MODEL_EXECUTION);
         }
