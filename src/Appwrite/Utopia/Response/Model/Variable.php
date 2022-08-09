@@ -12,19 +12,19 @@ class Variable extends Model
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function ID.',
+                'description' => 'Variable ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Function creation date in Unix timestamp.',
+                'description' => 'Variable creation date in Unix timestamp.',
                 'default' => 0,
                 'example' => 1592981250,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Function update date in Unix timestamp.',
+                'description' => 'Variable update date in Unix timestamp.',
                 'default' => 0,
                 'example' => 1592981250,
             ])
@@ -43,7 +43,7 @@ class Variable extends Model
             ])
             ->addRule('functionId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID of function variable is scoped for.',
+                'description' => 'Function ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
