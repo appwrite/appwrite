@@ -23,31 +23,29 @@ class DatabasesPermissionsMemberTest extends Scope
         ];
     }
 
-    /**
-     * [string[] $read, string[] $write]
-     */
-    public function readDocumentsProvider()
+    public function permissionsProvider(): array
     {
         return [
-            [['any'], []],
-            [['users'], []],
-            [['user:random'], []],
-            [['user:lorem'] ,['user:lorem']],
-            [['user:dolor'] ,['user:dolor']],
-            [['user:dolor', 'user:lorem'] ,['user:dolor']],
-            [[], ['any']],
-            [['any'], ['any']],
-            [['users'], ['users']],
-            [['any'], ['users']],
+           [['read(any)']],
+           [['read(users)']],
+           [['read(user:random)']],
+           [['read(user:lorem)', 'create(user:lorem)', 'update(user:lorem)', 'delete(user:lorem)',]],
+           [['read(user:dolor)', 'create(user:dolor)', 'update(user:dolor)', 'delete(user:dolor)',]],
+           [['read(user:dolor, user:lorem)', 'create(user:dolor)', 'update(user:dolor)', 'delete(user:dolor)',]],
+           [['create(any)', 'update(any)', 'delete(any)']],
+           [['read(any)', 'create(any)', 'update(any)', 'delete(any)']],
+           [['read(users)', 'create(users)', 'update(users)', 'delete(users)']],
+           [['read(any)', 'create(users)', 'update(users)', 'delete(users)']],
         ];
     }
 
     /**
      * Setup database
      *
-     * Data providers lose object state
-     * so explicitly pass [$users, $collections] to each iteration
+     * Data providers lose object state so explicitly pass [$users, $collections] to each iteration
+     *
      * @return array
+     * @throws \Exception
      */
     public function testSetupDatabase(): array
     {
@@ -88,9 +86,9 @@ class DatabasesPermissionsMemberTest extends Scope
             'name' => 'Private Movies',
             'permissions' => [
                 'read(users)',
-                 'create(users)',
-                    'update(users)',
-                    'delete(users)',
+                'create(users)',
+                'update(users)',
+                'delete(users)',
             ],
             'documentSecurity' => true,
         ]);
@@ -116,10 +114,10 @@ class DatabasesPermissionsMemberTest extends Scope
 
     /**
      * Data provider params are passed before test dependencies
-     * @dataProvider readDocumentsProvider
+     * @dataProvider permissionsProvider
      * @depends testSetupDatabase
      */
-    public function testReadDocuments($read, $write, $data)
+    public function testReadDocuments($permissions, $data)
     {
         $users = $data['users'];
         $collections = $data['collections'];
@@ -130,12 +128,7 @@ class DatabasesPermissionsMemberTest extends Scope
             'data' => [
                 'title' => 'Lorem',
             ],
-            'permissions' => [
-                'read(' . $read . ')',
-                 'create(' . $write . ')',
-                    'update(' . $write . ')',
-                    'delete(' . $write . ')',
-            ],
+            'permissions' => $permissions
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
@@ -144,12 +137,7 @@ class DatabasesPermissionsMemberTest extends Scope
             'data' => [
                 'title' => 'Lorem',
             ],
-            'permissions' => [
-                'read(' . $read . ')',
-                 'create(' . $write . ')',
-                    'update(' . $write . ')',
-                    'delete(' . $write . ')',
-            ],
+            'permissions' => $permissions
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
@@ -164,20 +152,18 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $hasPermissions = \array_reduce(['any', 'users', 'user:' . $users['user1']['$id']], function ($carry, $item) use ($document) {
+            $hasPermissions = \array_reduce(['any', 'users', 'user:' . $users['user1']['$id']], function (bool $carry, string $role) use ($document) {
                 if ($carry) {
-                    return $carry;
+                    return true;
                 }
                 foreach ($document['$permissions'] as $permission) {
-                    if (
-                        \stripos($permission, $item) !== false
-                        && \str_starts_with('read', $permission)
-                    ) {
+                    if (\str_starts_with($permission, 'read') && \str_contains($permission, $role)) {
                         return true;
                     }
                 }
                 return false;
             }, false);
+
             $this->assertTrue($hasPermissions);
         }
 
@@ -192,20 +178,18 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $hasPermissions = \array_reduce(['any', 'users', 'user:' . $users['user1']['$id']], function ($carry, $item) use ($document) {
+            $hasPermissions = \array_reduce(['any', 'users', 'user:' . $users['user1']['$id']], function (bool $carry, string $role) use ($document) {
                 if ($carry) {
-                    return $carry;
+                    return true;
                 }
                 foreach ($document['$permissions'] as $permission) {
-                    if (
-                        \stripos($permission, $item) !== false
-                        && \str_starts_with('read', $permission)
-                    ) {
+                    if (\str_starts_with($permission, 'read') && \str_contains($permission, $role)) {
                         return true;
                     }
                 }
                 return false;
             }, false);
+
             $this->assertTrue($hasPermissions);
         }
     }

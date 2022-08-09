@@ -584,10 +584,10 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 
@@ -615,10 +615,10 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ]
         ]);
 

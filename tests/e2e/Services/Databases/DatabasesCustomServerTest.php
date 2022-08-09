@@ -856,10 +856,10 @@ class DatabasesCustomServerTest extends Scope
                 'lastName' => 'Holland',
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ],
         ]);
 
@@ -873,10 +873,10 @@ class DatabasesCustomServerTest extends Scope
                 'lastName' => 'Jackson',
             ],
             'permissions' => [
-                'read(user: ' . $this->getUser()['$id'] . ')',
-                'create(user: ' . $this->getUser()['$id'] . ')',
-                'update(user: ' . $this->getUser()['$id'] . ')',
-                'delete(user: ' . $this->getUser()['$id'] . ')',
+                'read(user:' . $this->getUser()['$id'] . ')',
+                'create(user:' . $this->getUser()['$id'] . ')',
+                'update(user:' . $this->getUser()['$id'] . ')',
+                'delete(user:' . $this->getUser()['$id'] . ')',
             ],
         ]);
 
@@ -888,7 +888,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertIsArray($document2['body']['$permissions']);
-        $this->assertCount(1, $document2['body']['$permissions']);
+        $this->assertCount(4, $document2['body']['$permissions']);
         $this->assertEquals($document2['body']['firstName'], 'Samuel');
         $this->assertEquals($document2['body']['lastName'], 'Jackson');
 
