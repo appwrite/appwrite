@@ -1,0 +1,1 @@
+Get a list of all variables that are currently active on your function.
