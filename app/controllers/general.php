@@ -323,7 +323,9 @@ App::init()
 
                     if ($sdkValidator->isValid($sdk)) {
                         $sdks = $key->getAttribute('sdks', []);
-                        array_push($sdks, $sdk);
+                        if (!in_array($sdk, $sdks)) {
+                            array_push($sdks, $sdk); 
+                        }
                         $key->setAttribute('sdks', $sdks);
                     }
 
