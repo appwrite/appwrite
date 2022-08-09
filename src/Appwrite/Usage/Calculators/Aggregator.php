@@ -13,33 +13,34 @@ class Aggregator extends Database {
         $this->database->setNamespace('_' . $projectId);
 
         $databasesGeneralMetrics = [
-            'databases.create',
-            'databases.read',
-            'databases.update',
-            'databases.delete',
-            'databases.collections.create',
-            'databases.collections.read',
-            'databases.collections.update',
-            'databases.collections.delete',
-            'databases.documents.create',
-            'databases.documents.read',
-            'databases.documents.update',
-            'databases.documents.delete',
+            'databases.$all.requests.create',
+            'databases.$all.requests.read',
+            'databases.$all.requests.update',
+            'databases.$all.requests.delete',
+            'collections.$all.requests.create',
+            'collections.$all.requests.read',
+            'collections.$all.requests.update',
+            'collections.$all.requests.delete',
+            'documents.$all.requests.create',
+            'documents.$all.requests.read',
+            'documents.$all.requests.update',
+            'documents.$all.requests.delete'
         ];
 
         foreach ($databasesGeneralMetrics as $metric) {
             $this->aggregateDailyMetric($projectId, $metric);
+            $this->aggregateMonthlyMetric($projectId, $metric);
         }
 
         $databasesDatabaseMetrics = [
-            'databases.databaseId.collections.create',
-            'databases.databaseId.collections.read',
-            'databases.databaseId.collections.update',
-            'databases.databaseId.collections.delete',
-            'databases.databaseId.documents.create',
-            'databases.databaseId.documents.read',
-            'databases.databaseId.documents.update',
-            'databases.databaseId.documents.delete',
+            'collections.databaseId.requests.create',
+            'collections.databaseId.requests.read',
+            'collections.databaseId.requests.update',
+            'collections.databaseId.requests.delete',
+            'documents.databaseId.requests.create',
+            'documents.databaseId.requests.read',
+            'documents.databaseId.requests.update',
+            'documents.databaseId.requests.delete',
         ];
 
         $this->foreachDocument($projectId, 'databases', [], function (Document $database) use ($databasesDatabaseMetrics, $projectId) {
@@ -47,13 +48,14 @@ class Aggregator extends Database {
             foreach ($databasesDatabaseMetrics as $metric) {
                 $metric = str_replace('databaseId', $databaseId, $metric);
                 $this->aggregateDailyMetric($projectId, $metric);
+                $this->aggregateMonthlyMetric($projectId, $metric);
             }
 
             $databasesCollectionMetrics = [
-                'databases.' . $databaseId . '.collections.collectionId.documents.create',
-                'databases.' . $databaseId . '.collections.collectionId.documents.read',
-                'databases.' . $databaseId . '.collections.collectionId.documents.update',
-                'databases.' . $databaseId . '.collections.collectionId.documents.delete',
+                'documents.' . $databaseId . '/collectionId.requests.create',
+                'documents.' . $databaseId . '/collectionId.requests.read',
+                'documents.' . $databaseId . '/collectionId.requests.update',
+                'documents.' . $databaseId . '/collectionId.requests.delete',
             ];
 
             $this->foreachDocument($projectId, 'database_' . $database->getInternalId(), [], function (Document $collection) use ($databasesCollectionMetrics, $projectId) {
@@ -61,6 +63,7 @@ class Aggregator extends Database {
                 foreach ($databasesCollectionMetrics as $metric) {
                     $metric = str_replace('collectionId', $collectionId, $metric);
                     $this->aggregateDailyMetric($projectId, $metric);
+                    $this->aggregateMonthlyMetric($projectId, $metric);
                 }
             });
         });
@@ -71,25 +74,26 @@ class Aggregator extends Database {
         $this->database->setNamespace('_' . $projectId);
 
         $storageGeneralMetrics = [
-            'storage.buckets.create',
-            'storage.buckets.read',
-            'storage.buckets.update',
-            'storage.buckets.delete',
-            'storage.files.create',
-            'storage.files.read',
-            'storage.files.update',
-            'storage.files.delete',
+            'buckets.$all.requests.create',
+            'buckets.$all.requests.read',
+            'buckets.$all.requests.update',
+            'buckets.$all.requests.delete',
+            'files.$all.requests.create',
+            'files.$all.requests.read',
+            'files.$all.requests.update',
+            'files.$all.requests.delete',
         ];
 
         foreach ($storageGeneralMetrics as $metric) {
             $this->aggregateDailyMetric($projectId, $metric);
+            $this->aggregateMonthlyMetric($projectId, $metric);
         }
 
         $storageBucketMetrics = [
-            'storage.buckets.bucketId.files.create',
-            'storage.buckets.bucketId.files.read',
-            'storage.buckets.bucketId.files.update',
-            'storage.buckets.bucketId.files.delete',
+            'files.bucketId.requests.create',
+            'files.bucketId.requests.read',
+            'files.bucketId.requests.update',
+            'files.bucketId.requests.delete',
         ];
 
         $this->foreachDocument($projectId, 'buckets', [], function (Document $bucket) use ($storageBucketMetrics, $projectId) {
@@ -97,6 +101,7 @@ class Aggregator extends Database {
             foreach ($storageBucketMetrics as $metric) {
                 $metric = str_replace('bucketId', $bucketId, $metric);
                 $this->aggregateDailyMetric($projectId, $metric);
+                $this->aggregateMonthlyMetric($projectId, $metric);
             }
         });
     }
@@ -108,6 +113,9 @@ class Aggregator extends Database {
         $this->aggregateDailyMetric($projectId, 'functions.executions');
         $this->aggregateDailyMetric($projectId, 'functions.builds');
         $this->aggregateDailyMetric($projectId, 'functions.failures');
+        $this->aggregateMonthlyMetric($projectId, 'functions.executions');
+        $this->aggregateMonthlyMetric($projectId, 'functions.builds');
+        $this->aggregateMonthlyMetric($projectId, 'functions.failures');
 
         $functionMetrics = [
             'functions.functionId.executions',
@@ -122,6 +130,7 @@ class Aggregator extends Database {
             foreach ($functionMetrics as $metric) {
                 $metric = str_replace('functionId', $functionId, $metric);
                 $this->aggregateDailyMetric($projectId, $metric);
+                $this->aggregateMonthlyMetric($projectId, $metric);
             }
         });
     }
@@ -129,29 +138,30 @@ class Aggregator extends Database {
     protected function aggregateUsersMetrics(string $projectId): void
     {
         $metrics = [
-            'users.create',
-            'users.read',
-            'users.update',
-            'users.delete',
-            'users.sessions.create',
-            'users.sessions.delete'
+            'users.$all.requests.create',
+            'users.$all.requests.read',
+            'users.$all.requests.update',
+            'users.$all.requests.delete',
+            'sessions.$all.requests.create',
+            'sessions.$all.requests.delete'
         ];
 
         foreach ($metrics as $metric) {
             $this->aggregateDailyMetric($projectId, $metric);
+            $this->aggregateMonthlyMetric($projectId, $metric);
         }
     }
 
     protected function aggregateGeneralMetrics(string $projectId): void
     {
-        $this->aggregateDailyMetric($projectId, 'requests');
-        $this->aggregateDailyMetric($projectId, 'network');
-        $this->aggregateDailyMetric($projectId, 'inbound');
-        $this->aggregateDailyMetric($projectId, 'outbound');
-
-        //Required for billing
-        $this->aggregateMonthlyMetric($projectId, 'inbound');
-        $this->aggregateMonthlyMetric($projectId, 'outbound');
+        $this->aggregateDailyMetric($projectId, 'project.$all.network.requests');
+        $this->aggregateDailyMetric($projectId, 'project.$all.network.bandwidth');
+        $this->aggregateDailyMetric($projectId, 'project.$all.network.inbound');
+        $this->aggregateDailyMetric($projectId, 'project.$all.network.outbound');
+        $this->aggregateMonthlyMetric($projectId, 'project.$all.network.requests');
+        $this->aggregateMonthlyMetric($projectId, 'project.$all.network.bandwidth');
+        $this->aggregateMonthlyMetric($projectId, 'project.$all.network.inbound');
+        $this->aggregateMonthlyMetric($projectId, 'project.$all.network.outbound');
     }
 
     protected function aggregateDailyMetric(string $projectId, string $metric): void
