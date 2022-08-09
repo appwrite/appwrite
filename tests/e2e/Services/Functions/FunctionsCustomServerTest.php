@@ -53,7 +53,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(10, $response1['body']['timeout']);
 
         /** Create Variables */
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -61,7 +61,7 @@ class FunctionsCustomServerTest extends Scope
             'value' => 'funcValue1',
         ]);
 
-        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -69,7 +69,7 @@ class FunctionsCustomServerTest extends Scope
             'value' => 'funcValue2',
         ]);
 
-        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -155,7 +155,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
 
         /** Create Variables */
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $response['body']['$id'], array_merge([
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $response['body']['$id'] . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -163,7 +163,7 @@ class FunctionsCustomServerTest extends Scope
             'value' => 'funcValue1',
         ]);
 
-        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $response['body']['$id'], array_merge([
+        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/' . $response['body']['$id'] . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -171,7 +171,7 @@ class FunctionsCustomServerTest extends Scope
             'value' => 'funcValue2',
         ]);
 
-        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $response['body']['$id'], array_merge([
+        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/' . $response['body']['$id'] . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -949,7 +949,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
 
         // Create variable
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1062,7 +1062,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
 
         /** Create Variables */
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1175,7 +1175,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
 
         /** Create Variables */
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1288,7 +1288,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
 
         /** Create Variables */
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, array_merge([
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [

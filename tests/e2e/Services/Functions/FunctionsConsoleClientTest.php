@@ -100,7 +100,7 @@ class FunctionsConsoleClientTest extends Scope
      */
     public function testCreateFunctionVariable(array $data)
     {
-        $response = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $data['functionId'], array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -124,7 +124,7 @@ class FunctionsConsoleClientTest extends Scope
      */
     public function testCreateDuplicateVariable(array $data)
     {
-        $response = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $data['functionId'], array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -142,7 +142,7 @@ class FunctionsConsoleClientTest extends Scope
      */
     public function testListVariables(array $data)
     {
-        $response = $this->client->call(Client::METHOD_GET, '/functions/variables/' . $data['functionId'], array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -160,7 +160,7 @@ class FunctionsConsoleClientTest extends Scope
      */
     public function testGetVariable(array $data)
     {
-        $response = $this->client->call(Client::METHOD_GET, '/functions/variables/' . $data['functionId'] . '/' . $data['variableId'], array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/variables/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -177,7 +177,7 @@ class FunctionsConsoleClientTest extends Scope
      */
     public function testUpdateVariable(array $data)
     {
-        $response = $this->client->call(Client::METHOD_PUT, '/functions/variables/' . $data['functionId'] . '/' . $data['variableId'], array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'] . '/variables/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -187,7 +187,7 @@ class FunctionsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $variable = $this->client->call(Client::METHOD_GET, '/functions/variables/' . $data['functionId'] . '/' . $data['variableId'], array_merge([
+        $variable = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/variables/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -204,14 +204,14 @@ class FunctionsConsoleClientTest extends Scope
      */
     public function testDeleteVariable(array $data)
     {
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/variables/' . $data['functionId'] . '/' . $data['variableId'], array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $data['functionId'] . '/variables/' . $data['variableId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/functions/variables/' . $data['functionId'], array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

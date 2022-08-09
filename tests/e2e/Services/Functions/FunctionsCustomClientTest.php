@@ -65,7 +65,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
 
         /** Create Variables */
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $function['body']['$id'], [
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/variables', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -74,7 +74,7 @@ class FunctionsCustomClientTest extends Scope
             'value' => 'funcValue1',
         ]);
 
-        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $function['body']['$id'], [
+        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/variables', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -83,7 +83,7 @@ class FunctionsCustomClientTest extends Scope
             'value' => 'funcValue2',
         ]);
 
-        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $function['body']['$id'], [
+        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/' . $function['body']['$id'] . '/variables', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -179,7 +179,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
 
         /** Create Variables */
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -188,7 +188,7 @@ class FunctionsCustomClientTest extends Scope
             'value' => 'funcValue1',
         ]);
 
-        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -197,7 +197,7 @@ class FunctionsCustomClientTest extends Scope
             'value' => 'funcValue2',
         ]);
 
-        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -391,7 +391,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
 
         /** Create Variables */
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -400,7 +400,7 @@ class FunctionsCustomClientTest extends Scope
             'value' => 'funcValue1',
         ]);
 
-        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+        $variable2 = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
@@ -409,7 +409,7 @@ class FunctionsCustomClientTest extends Scope
             'value' => 'funcValue2',
         ]);
 
-        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $functionId, [
+        $variable3 = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,

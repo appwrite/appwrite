@@ -450,7 +450,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($function['body']['$id'], $data['functionId']);
 
         // Create variable
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/variables/' . $data['functionId'], array_merge([
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
