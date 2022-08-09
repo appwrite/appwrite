@@ -39,6 +39,9 @@ class Etsy extends OAuth2
      */
     private string $pkce = '';
 
+    /**
+     * @return string
+     */
     private function getPKCE(): string
     {
         if (empty($this->pkce)) {
