@@ -30,14 +30,12 @@ class AttributeEnum extends Attribute
                 'default' => null,
                 'example' => 'element',
                 'array' => true,
-                'required' => true,
             ])
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',
                 'default' => APP_DATABASE_ATTRIBUTE_ENUM,
                 'example' => APP_DATABASE_ATTRIBUTE_ENUM,
-                'required' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,

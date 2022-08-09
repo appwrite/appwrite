@@ -83,11 +83,9 @@ abstract class Model
     {
         $this->rules[$key] = array_merge([
             'required' => true,
-            'type' => '',
+            'array' => false,
             'description' => '',
-            'default' => null,
-            'example' => '',
-            'array' => false
+            'example' => ''
         ], $options);
 
         return $this;

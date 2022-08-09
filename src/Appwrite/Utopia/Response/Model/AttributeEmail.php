@@ -29,7 +29,6 @@ class AttributeEmail extends Attribute
                 'description' => 'String format.',
                 'default' => APP_DATABASE_ATTRIBUTE_EMAIL,
                 'example' => APP_DATABASE_ATTRIBUTE_EMAIL,
-                'required' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
