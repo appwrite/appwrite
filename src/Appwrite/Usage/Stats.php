@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Stats;
+namespace Appwrite\Usage;
 
 use Utopia\App;
 
@@ -104,7 +104,84 @@ class Stats
         $this->statsd->setNamespace($this->namespace);
 
         if ($httpRequest >= 1) {
-            $this->statsd->increment('requests.all' . $tags . ',method=' . \strtolower($httpMethod));
+            $this->statsd->increment('network.requests' . $tags . ',method=' . \strtolower($httpMethod));
+        }
+        $this->statsd->count('network.inbound' . $tags, $networkRequestSize);
+        $this->statsd->count('network.outbound' . $tags, $networkResponseSize);
+        $this->statsd->count('network.bandwidth' . $tags, $networkRequestSize + $networkResponseSize);
+
+        $usersMetrics = [
+            'users.requests.create',
+            'users.requests.read',
+            'users.requests.update',
+            'users.requests.delete',
+        ];
+
+        foreach ($usersMetrics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $this->statsd->increment($metric . $tags);
+            }
+        }
+
+        $dbMetrics = [
+            'databases.requests.create',
+            'databases.requests.read',
+            'databases.requests.update',
+            'databases.requests.delete',
+            'collections.requests.create',
+            'collections.requests.read',
+            'collections.requests.update',
+            'collections.requests.delete',
+            'documents.requests.create',
+            'documents.requests.read',
+            'documents.requests.update',
+            'documents.requests.delete',
+        ];
+
+        foreach ($dbMetrics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $dbTags = $tags . ",collectionId=" . ($this->params['collectionId'] ?? '') . ",databaseId=" . ($this->params['databaseId'] ?? '');
+                $this->statsd->increment($metric . $dbTags);
+            }
+        }
+
+        $storageMertics = [
+            'buckets.requests.create',
+            'buckets.requests.read',
+            'buckets.requests.update',
+            'buckets.requests.delete',
+            'files.requests.create',
+            'files.requests.read',
+            'files.requests.update',
+            'files.requests.delete',
+        ];
+
+        foreach ($storageMertics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $storageTags = $tags . ",bucketId=" . ($this->params['bucketId'] ?? '');
+                $this->statsd->increment($metric . $storageTags);
+            }
+        }
+
+        $sessionsMetrics = [
+            'users.sessions.create',
+            'users.sessions.delete',
+        ];
+
+        foreach ($sessionsMetrics as $metric) {
+            $value = $this->params[$metric] ?? 0;
+            if ($value >= 1) {
+                $sessionTags = $tags . ",provider=" . ($this->params['provider'] ?? '');
+                $this->statsd->count($metric . $sessionTags, $value);
+            }
+        }
+
+        if ($storage >= 1) {
+            $storageTags = $tags . ",bucketId=" . ($this->params['bucketId'] ?? '');
+            $this->statsd->count('storage.all' . $storageTags, $storage);
         }
 
         if ($functionExecution >= 1) {
@@ -117,85 +194,6 @@ class Stats
         }
         if ($functionBuild + $functionExecution >= 1) {
             $this->statsd->count('functions.compute.time' . $tags . ',functionId=' . $functionId, $functionCompute);
-        }
-
-        $this->statsd->count('network.inbound' . $tags, $networkRequestSize);
-        $this->statsd->count('network.outbound' . $tags, $networkResponseSize);
-        $this->statsd->count('network.all' . $tags, $networkRequestSize + $networkResponseSize);
-
-        $dbMetrics = [
-            'databases.create',
-            'databases.read',
-            'databases.update',
-            'databases.delete',
-            'databases.collections.create',
-            'databases.collections.read',
-            'databases.collections.update',
-            'databases.collections.delete',
-            'databases.documents.create',
-            'databases.documents.read',
-            'databases.documents.update',
-            'databases.documents.delete',
-        ];
-
-        foreach ($dbMetrics as $metric) {
-            $value = $this->params[$metric] ?? 0;
-            if ($value >= 1) {
-                $tags = ",projectId={$projectId},collectionId=" . ($this->params['collectionId'] ?? '') . ",databaseId=" . ($this->params['databaseId'] ?? '');
-                $this->statsd->increment($metric . $tags);
-            }
-        }
-
-        $storageMertics = [
-            'storage.buckets.create',
-            'storage.buckets.read',
-            'storage.buckets.update',
-            'storage.buckets.delete',
-            'storage.files.create',
-            'storage.files.read',
-            'storage.files.update',
-            'storage.files.delete',
-        ];
-
-        foreach ($storageMertics as $metric) {
-            $value = $this->params[$metric] ?? 0;
-            if ($value >= 1) {
-                $tags = ",projectId={$projectId},bucketId=" . ($this->params['bucketId'] ?? '');
-                $this->statsd->increment($metric . $tags);
-            }
-        }
-
-        $usersMetrics = [
-            'users.create',
-            'users.read',
-            'users.update',
-            'users.delete',
-        ];
-
-        foreach ($usersMetrics as $metric) {
-            $value = $this->params[$metric] ?? 0;
-            if ($value >= 1) {
-                $tags = ",projectId={$projectId}";
-                $this->statsd->increment($metric . $tags);
-            }
-        }
-
-        $sessionsMetrics = [
-            'users.sessions.create',
-            'users.sessions.delete',
-        ];
-
-        foreach ($sessionsMetrics as $metric) {
-            $value = $this->params[$metric] ?? 0;
-            if ($value >= 1) {
-                $tags = ",projectId={$projectId},provider=" . ($this->params['provider'] ?? '');
-                $this->statsd->count($metric . $tags, $value);
-            }
-        }
-
-        if ($storage >= 1) {
-            $tags = ",projectId={$projectId},bucketId=" . ($this->params['bucketId'] ?? '');
-            $this->statsd->count('storage.all' . $tags, $storage);
         }
 
         $this->reset();
