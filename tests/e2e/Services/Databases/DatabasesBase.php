@@ -166,23 +166,23 @@ trait DatabasesBase
             'array' => true,
         ]);
 
-        $this->assertEquals($title['headers']['status-code'], 201);
+        $this->assertEquals($title['headers']['status-code'], 202);
         $this->assertEquals($title['body']['key'], 'title');
         $this->assertEquals($title['body']['type'], 'string');
         $this->assertEquals($title['body']['size'], 256);
         $this->assertEquals($title['body']['required'], true);
 
-        $this->assertEquals($releaseYear['headers']['status-code'], 201);
+        $this->assertEquals($releaseYear['headers']['status-code'], 202);
         $this->assertEquals($releaseYear['body']['key'], 'releaseYear');
         $this->assertEquals($releaseYear['body']['type'], 'integer');
         $this->assertEquals($releaseYear['body']['required'], true);
 
-        $this->assertEquals($duration['headers']['status-code'], 201);
+        $this->assertEquals($duration['headers']['status-code'], 202);
         $this->assertEquals($duration['body']['key'], 'duration');
         $this->assertEquals($duration['body']['type'], 'integer');
         $this->assertEquals($duration['body']['required'], false);
 
-        $this->assertEquals($actors['headers']['status-code'], 201);
+        $this->assertEquals($actors['headers']['status-code'], 202);
         $this->assertEquals($actors['body']['key'], 'actors');
         $this->assertEquals($actors['body']['type'], 'string');
         $this->assertEquals($actors['body']['size'], 256);
@@ -319,7 +319,7 @@ trait DatabasesBase
             'default' => true,
         ]);
 
-        $this->assertEquals(201, $string['headers']['status-code']);
+        $this->assertEquals(202, $string['headers']['status-code']);
         $this->assertEquals('string', $string['body']['key']);
         $this->assertEquals('string', $string['body']['type']);
         $this->assertEquals(false, $string['body']['required']);
@@ -327,7 +327,7 @@ trait DatabasesBase
         $this->assertEquals(16, $string['body']['size']);
         $this->assertEquals('default', $string['body']['default']);
 
-        $this->assertEquals(201, $email['headers']['status-code']);
+        $this->assertEquals(202, $email['headers']['status-code']);
         $this->assertEquals('email', $email['body']['key']);
         $this->assertEquals('string', $email['body']['type']);
         $this->assertEquals(false, $email['body']['required']);
@@ -335,7 +335,7 @@ trait DatabasesBase
         $this->assertEquals('email', $email['body']['format']);
         $this->assertEquals('default@example.com', $email['body']['default']);
 
-        $this->assertEquals(201, $enum['headers']['status-code']);
+        $this->assertEquals(202, $enum['headers']['status-code']);
         $this->assertEquals('enum', $enum['body']['key']);
         $this->assertEquals('string', $enum['body']['type']);
         $this->assertEquals(false, $enum['body']['required']);
@@ -345,7 +345,7 @@ trait DatabasesBase
         $this->assertIsArray($enum['body']['elements']);
         $this->assertEquals(['yes', 'no', 'maybe'], $enum['body']['elements']);
 
-        $this->assertEquals(201, $ip['headers']['status-code']);
+        $this->assertEquals(202, $ip['headers']['status-code']);
         $this->assertEquals('ip', $ip['body']['key']);
         $this->assertEquals('string', $ip['body']['type']);
         $this->assertEquals(false, $ip['body']['required']);
@@ -353,7 +353,7 @@ trait DatabasesBase
         $this->assertEquals('ip', $ip['body']['format']);
         $this->assertEquals('192.0.2.0', $ip['body']['default']);
 
-        $this->assertEquals(201, $url['headers']['status-code']);
+        $this->assertEquals(202, $url['headers']['status-code']);
         $this->assertEquals('url', $url['body']['key']);
         $this->assertEquals('string', $url['body']['type']);
         $this->assertEquals(false, $url['body']['required']);
@@ -361,7 +361,7 @@ trait DatabasesBase
         $this->assertEquals('url', $url['body']['format']);
         $this->assertEquals('http://example.com', $url['body']['default']);
 
-        $this->assertEquals(201, $integer['headers']['status-code']);
+        $this->assertEquals(202, $integer['headers']['status-code']);
         $this->assertEquals('integer', $integer['body']['key']);
         $this->assertEquals('integer', $integer['body']['type']);
         $this->assertEquals(false, $integer['body']['required']);
@@ -370,7 +370,7 @@ trait DatabasesBase
         $this->assertEquals(5, $integer['body']['max']);
         $this->assertEquals(3, $integer['body']['default']);
 
-        $this->assertEquals(201, $float['headers']['status-code']);
+        $this->assertEquals(202, $float['headers']['status-code']);
         $this->assertEquals('float', $float['body']['key']);
         $this->assertEquals('double', $float['body']['type']);
         $this->assertEquals(false, $float['body']['required']);
@@ -379,7 +379,7 @@ trait DatabasesBase
         $this->assertEquals(5.5, $float['body']['max']);
         $this->assertEquals(3.5, $float['body']['default']);
 
-        $this->assertEquals(201, $boolean['headers']['status-code']);
+        $this->assertEquals(202, $boolean['headers']['status-code']);
         $this->assertEquals('boolean', $boolean['body']['key']);
         $this->assertEquals('boolean', $boolean['body']['type']);
         $this->assertEquals(false, $boolean['body']['required']);
@@ -706,7 +706,7 @@ trait DatabasesBase
             'attributes' => ['title'],
         ]);
 
-        $this->assertEquals(201, $titleIndex['headers']['status-code']);
+        $this->assertEquals(202, $titleIndex['headers']['status-code']);
         $this->assertEquals('titleIndex', $titleIndex['body']['key']);
         $this->assertEquals('fulltext', $titleIndex['body']['type']);
         $this->assertCount(1, $titleIndex['body']['attributes']);
@@ -722,7 +722,7 @@ trait DatabasesBase
             'attributes' => ['releaseYear'],
         ]);
 
-        $this->assertEquals(201, $releaseYearIndex['headers']['status-code']);
+        $this->assertEquals(202, $releaseYearIndex['headers']['status-code']);
         $this->assertEquals('releaseYear', $releaseYearIndex['body']['key']);
         $this->assertEquals('key', $releaseYearIndex['body']['type']);
         $this->assertCount(1, $releaseYearIndex['body']['attributes']);
@@ -738,7 +738,7 @@ trait DatabasesBase
             'attributes' => ['releaseYear', '$createdAt', '$updatedAt'],
         ]);
 
-        $this->assertEquals(201, $releaseWithDate['headers']['status-code']);
+        $this->assertEquals(202, $releaseWithDate['headers']['status-code']);
         $this->assertEquals('releaseYearDated', $releaseWithDate['body']['key']);
         $this->assertEquals('key', $releaseWithDate['body']['type']);
         $this->assertCount(3, $releaseWithDate['body']['attributes']);
@@ -1690,15 +1690,15 @@ trait DatabasesBase
             'default' => 'NORTH'
         ]);
 
-        $this->assertEquals(201, $email['headers']['status-code']);
-        $this->assertEquals(201, $ip['headers']['status-code']);
-        $this->assertEquals(201, $url['headers']['status-code']);
-        $this->assertEquals(201, $range['headers']['status-code']);
-        $this->assertEquals(201, $floatRange['headers']['status-code']);
-        $this->assertEquals(201, $probability['headers']['status-code']);
-        $this->assertEquals(201, $upperBound['headers']['status-code']);
-        $this->assertEquals(201, $lowerBound['headers']['status-code']);
-        $this->assertEquals(201, $enum['headers']['status-code']);
+        $this->assertEquals(202, $email['headers']['status-code']);
+        $this->assertEquals(202, $ip['headers']['status-code']);
+        $this->assertEquals(202, $url['headers']['status-code']);
+        $this->assertEquals(202, $range['headers']['status-code']);
+        $this->assertEquals(202, $floatRange['headers']['status-code']);
+        $this->assertEquals(202, $probability['headers']['status-code']);
+        $this->assertEquals(202, $upperBound['headers']['status-code']);
+        $this->assertEquals(202, $lowerBound['headers']['status-code']);
+        $this->assertEquals(202, $enum['headers']['status-code']);
         $this->assertEquals(400, $invalidRange['headers']['status-code']);
         $this->assertEquals(400, $defaultArray['headers']['status-code']);
         $this->assertEquals(400, $defaultRequired['headers']['status-code']);
@@ -2145,7 +2145,7 @@ trait DatabasesBase
             'required' => true,
         ]);
 
-        $this->assertEquals(201, $attribute['headers']['status-code'], 201);
+        $this->assertEquals(202, $attribute['headers']['status-code'], 202);
         $this->assertEquals('attribute', $attribute['body']['key']);
 
         // wait for db to add attribute
@@ -2161,7 +2161,7 @@ trait DatabasesBase
             'attributes' => [$attribute['body']['key']],
         ]);
 
-        $this->assertEquals(201, $index['headers']['status-code']);
+        $this->assertEquals(202, $index['headers']['status-code']);
         $this->assertEquals('key_attribute', $index['body']['key']);
 
         // wait for db to add attribute
@@ -2293,7 +2293,7 @@ trait DatabasesBase
             'attributes' => ['title'],
         ]);
 
-        $this->assertEquals($uniqueIndex['headers']['status-code'], 201);
+        $this->assertEquals($uniqueIndex['headers']['status-code'], 202);
 
         sleep(2);
 
@@ -2465,7 +2465,7 @@ trait DatabasesBase
             'required' => true,
         ]);
 
-        $this->assertEquals($title['headers']['status-code'], 201);
+        $this->assertEquals($title['headers']['status-code'], 202);
 
         // wait for database worker to create attributes
         sleep(2);
