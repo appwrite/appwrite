@@ -110,19 +110,33 @@ class Aggregator extends Database {
     {
         $this->database->setNamespace('_' . $projectId);
 
-        $this->aggregateDailyMetric($projectId, 'functions.executions');
-        $this->aggregateDailyMetric($projectId, 'functions.builds');
-        $this->aggregateDailyMetric($projectId, 'functions.failures');
-        $this->aggregateMonthlyMetric($projectId, 'functions.executions');
-        $this->aggregateMonthlyMetric($projectId, 'functions.builds');
-        $this->aggregateMonthlyMetric($projectId, 'functions.failures');
+        $functionsGeneralMetrics = [
+            'project.$all.compute.total',
+            'project.$all.compute.time',
+            'executions.$all.compute.total',
+            'executions.$all.compute.success',
+            'executions.$all.compute.failure',
+            'executions.$all.compute.time',
+            'builds.$all.compute.total',
+            'builds.$all.compute.success',
+            'builds.$all.compute.failure',
+            'builds.$all.compute.time',
+        ];
+
+        foreach ($functionsGeneralMetrics as  $metric) {
+            $this->aggregateDailyMetric($projectId, $metric);
+            $this->aggregateMonthlyMetric($projectId, $metric);
+        }
 
         $functionMetrics = [
-            'functions.functionId.executions',
-            'functions.functionId.builds',
-            'functions.functionId.compute',
-            'function.functionId.executions.failure',
-            'function.functionId.builds.failure',
+            'executions.functionId.compute.total',
+            'executions.functionId.compute.success',
+            'executions.functionId.compute.failure',
+            'executions.functionId.compute.time',
+            'builds.functionId.compute.total',
+            'builds.functionId.compute.success',
+            'builds.functionId.compute.failure',
+            'builds.functionId.compute.time',
         ];
 
         $this->foreachDocument($projectId, 'functions', [], function (Document $function) use ($functionMetrics, $projectId) {
