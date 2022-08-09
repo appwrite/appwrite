@@ -1868,9 +1868,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $permissions = PermissionsProcessor::handleAggregates($permissions);
 
         if ($documentSecurity) {
-            $valid |= $validator->isValid((new Document([
-                '$permissions' => $permissions]
-            ))->getCreate());
+            $valid |= $validator->isValid((new Document(['$permissions' => $permissions]))->getCreate());
         }
         if (!$valid) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
@@ -2000,8 +1998,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
-        $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
+        if ($documentSecurity) {
+            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
+            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
+        } else {
+            $documents = Authorization::skip(fn() => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
+            $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT));
+        }
 
         /**
          * Reset $collection attribute to remove prefix.

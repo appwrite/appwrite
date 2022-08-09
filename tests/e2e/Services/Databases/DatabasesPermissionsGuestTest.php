@@ -58,12 +58,12 @@ class DatabasesPermissionsGuestTest extends Scope
     public function readDocumentsProvider()
     {
         return [
-            [['any'], []],
-            [['users'], []],
-            [[] ,['any']],
-            [['any'], ['any']],
-            [['users'], ['users']],
-            [['any'], ['users']],
+            [['read(any)']],
+            [['read(users)']],
+            [['create(any)', 'update(any)', 'delete(any)']],
+            [['read(any)', 'create(any)', 'update(any)', 'delete(any)']],
+            [['read(users)', 'create(users)', 'update(users)', 'delete(users)']],
+            [['read(any)', 'create(users)', 'update(users)', 'delete(users)']],
         ];
     }
 
@@ -82,6 +82,7 @@ class DatabasesPermissionsGuestTest extends Scope
             ],
             'permissions' => $permissions,
         ]);
+
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId  . '/documents', [
@@ -90,7 +91,12 @@ class DatabasesPermissionsGuestTest extends Scope
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $this->assertContains('any', $document['$permissions']);
+            foreach($document['$permissions'] as $permission) {
+                if (!\str_starts_with($permission, 'read')) {
+                     continue;
+                }
+                $this->assertTrue(\str_contains($permission, 'any'));
+            }
         }
     }
 }

@@ -2305,8 +2305,16 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(2, $documentsUser1['body']['total']);
-        $this->assertCount(2, $documentsUser1['body']['documents']);
+        switch ($this->getSide()) {
+            case 'client':
+                $this->assertEquals(2, $documentsUser1['body']['total']);
+                $this->assertCount(2, $documentsUser1['body']['documents']);
+                break;
+            case 'server':
+                $this->assertEquals(3, $documentsUser1['body']['total']);
+                $this->assertCount(3, $documentsUser1['body']['documents']);
+                break;
+        }
 
         $document3GetWithCollectionRead = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document3['body']['$id'], array_merge([
             'content-type' => 'application/json',
@@ -2607,20 +2615,10 @@ trait DatabasesBase
             ]
         ]);
 
-        if ($this->getSide() == 'client') {
-            $this->assertEquals(200, $document['headers']['status-code']);
-        }
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertCount(1, $document['body']['$permissions']);
 
-        if ($this->getSide() == 'server') {
-            $this->assertEquals(200, $document['headers']['status-code']);
-            $this->assertCount(4, $document['body']['$permissions']);
-            $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-            $this->assertContains('create(any)', $document['body']['$permissions']);
-            $this->assertContains('update(any)', $document['body']['$permissions']);
-            $this->assertContains('delete(any)', $document['body']['$permissions']);
-        }
-
-        // send only write permission
+        // send only mutation permissions
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2634,8 +2632,7 @@ trait DatabasesBase
 
         if ($this->getSide() == 'server') {
             $this->assertEquals(200, $document['headers']['status-code']);
-            $this->assertCount(4, $document['body']['$permissions']);
-            $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
+            $this->assertCount(3, $document['body']['$permissions']);
             $this->assertContains('create(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
             $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
             $this->assertContains('delete(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);

@@ -76,7 +76,6 @@ App::post('/v1/teams')
                 '$id' => $membershipId,
                 '$permissions' => [
                     "read(user:{$user->getId()}, team:{$team->getId()})",
-                    "create(user:{$user->getId()}, team:{$team->getId()}/owner)",
                     "update(user:{$user->getId()}, team:{$team->getId()}/owner)",
                     "delete(user:{$user->getId()}, team:{$team->getId()}/owner)",
                 ],
@@ -338,7 +337,6 @@ App::post('/v1/teams/:teamId/memberships')
                     '$id' => $userId,
                     '$permissions' => [
                         'read(any, user:' . $userId . ')',
-                        'create(user:' . $userId . ')',
                         'update(user:' . $userId . ')',
                         'delete(user:' . $userId . ')',
                     ],
@@ -379,7 +377,6 @@ App::post('/v1/teams/:teamId/memberships')
             '$id' => $membershipId,
             '$permissions' => [
                 'read(any)',
-                'create(user:' . $invitee->getId() . ', team:' . $team->getId() . '/owner)',
                 'update(user:' . $invitee->getId() . ', team:' . $team->getId() . '/owner)',
                 'delete(user:' . $invitee->getId() . ', team:' . $team->getId() . '/owner)',
             ],
