@@ -304,33 +304,35 @@ App::init()
 
                 if (time() > $key->getAttribute('accessedAt', 0) + APP_KEY_ACCCESS) {
                     $key->setAttribute('accessedAt', time());
-                    $sdkValidator = new WhiteList([
-                        'nodejs',
-                        'deno',
-                        'php',
-                        'python',
-                        'ruby',
-                        'go',
-                        'java',
-                        'dotnet',
-                        'dart',
-                        'kotlin',
-                        'swift'
-                    ], true);
-    
-                    $sdk = $request->getHeader('x-sdk-version', 'UNKNOWN');
-                    $sdk = explode(':', $sdk)[1] ?? '';
-
-                    if ($sdkValidator->isValid($sdk)) {
-                        $sdks = $key->getAttribute('sdks', []);
-                        if (!in_array($sdk, $sdks)) {
-                            array_push($sdks, $sdk); 
-                        }
-                        $key->setAttribute('sdks', $sdks);
-                    }
-
                     $dbForConsole->updateDocument('keys', $key->getId(), $key);
                     $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                }
+
+                $sdkValidator = new WhiteList([
+                    'nodejs',
+                    'deno',
+                    'php',
+                    'python',
+                    'ruby',
+                    'go',
+                    'java',
+                    'dotnet',
+                    'dart',
+                    'kotlin',
+                    'swift'
+                ], true);
+
+                $sdk = $request->getHeader('x-sdk-version', 'UNKNOWN');
+                $sdk = explode(':', $sdk)[1] ?? '';
+
+                if ($sdkValidator->isValid($sdk)) {
+                    $sdks = $key->getAttribute('sdks', []);
+                    if (!in_array($sdk, $sdks)) {
+                        array_push($sdks, $sdk); 
+                        $key->setAttribute('sdks', $sdks);
+                        $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                    }
                 }
             }
         }
