@@ -12,6 +12,7 @@ use Utopia\CLI\Console;
 use Utopia\Storage\Storage;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
+use Utopia\Database\Query;
 
 require_once __DIR__ . '/../init.php';
 
@@ -143,7 +144,15 @@ class BuildsV1 extends Worker
         );
 
         $source = $deployment->getAttribute('path');
-        $vars = $function->getAttribute('vars', []);
+        $vars = [];
+        $variables = $dbForProject->find('variables', [
+            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()])
+        ], 5000);
+
+        foreach ($variables as $variable) {
+            $vars[$variable['key']] = $variable['value'];
+        }
+
         $baseImage = $runtime['image'];
 
         try {
