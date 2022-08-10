@@ -46,7 +46,8 @@ App::init()
     ->inject('user')
     ->inject('locale')
     ->inject('clients')
-    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients) {
+    ->inject('servers')
+    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers) {
         /*
         * Request format
         */
@@ -308,22 +309,8 @@ App::init()
                     $dbForConsole->deleteCachedDocument('projects', $project->getId());
                 }
 
-                $sdkValidator = new WhiteList([
-                    'nodejs',
-                    'deno',
-                    'php',
-                    'python',
-                    'ruby',
-                    'go',
-                    'java',
-                    'dotnet',
-                    'dart',
-                    'kotlin',
-                    'swift'
-                ], true);
-
+                $sdkValidator = new WhiteList($servers, true);
                 $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
-
                 if ($sdkValidator->isValid($sdk)) {
                     $sdks = $key->getAttribute('sdks', []);
                     if (!in_array($sdk, $sdks)) {

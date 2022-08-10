@@ -998,3 +998,14 @@ App::setResource('phone', function () {
         default => null
     };
 });
+
+App::setResource('servers', function () {
+    $platforms = Config::getParam('platforms');
+    $server = $platforms[APP_PLATFORM_SERVER];
+
+    $languages = array_map(function ($language) {
+        return strtolower($language['name']);
+    }, $server['languages']);
+
+    return $languages;
+});
