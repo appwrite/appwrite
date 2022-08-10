@@ -908,11 +908,17 @@ App::post('/v1/functions/:functionId/executions')
             return $response->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
+        $vars = [];
+
         $variables = $dbForProject->find('variables', [
             new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()]),
         ], APP_LIMIT_COUNT);
 
-        $vars = \array_merge($variables, [
+        foreach ($variables as $variable) {
+            $vars[$variable['key']] = $variable['value'];
+        }
+
+        $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),

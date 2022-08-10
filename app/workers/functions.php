@@ -13,6 +13,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__ . '/../init.php';
@@ -257,8 +258,18 @@ class FunctionsV1 extends Worker
         $execution->setAttribute('status', 'processing');
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
+        $vars = [];
+
+        $variables = $dbForProject->find('variables', [
+            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()]),
+        ], APP_LIMIT_COUNT);
+
+        foreach ($variables as $variable) {
+            $vars[$variable['key']] = $variable['value'];
+        }
+
         /** Collect environment variables */
-        $vars = [
+        $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,
@@ -271,8 +282,7 @@ class FunctionsV1 extends Worker
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
             'APPWRITE_FUNCTION_JWT' => $jwt,
-        ];
-        $vars = \array_merge($function->getAttribute('vars', []), $vars);
+        ]);
 
         /** Execute function */
         try {
