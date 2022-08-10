@@ -26,7 +26,7 @@ class AttributeBoolean extends Attribute
             ])
             ->addRule('default', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
+                'description' => 'Default value for the attribute when not provided. Cannot be set if attribute is required.',
                 'default' => null,
                 'example' => false,
                 'array' => false,

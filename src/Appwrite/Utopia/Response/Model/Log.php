@@ -14,7 +14,7 @@ class Log extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Event name.',
                 'default' => '',
-                'example' => 'account.sessions.create',
+                'example' => 'users.*.create',
             ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,

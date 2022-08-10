@@ -43,13 +43,13 @@ class Execution extends Model
             ])
             ->addRule('trigger', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The trigger that caused the function to execute. Possible values can be: `http`, `schedule`, or `event`.',
+                'description' => 'The trigger that caused the function to execute. Possible values are `http`, `schedule`, or `event`.',
                 'default' => '',
                 'example' => 'http',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The status of the function execution. Possible values can be: `waiting`, `processing`, `completed`, or `failed`.',
+                'description' => 'The status of the function execution. Possible values are `waiting`, `processing`, `completed`, or `failed`.',
                 'default' => '',
                 'example' => 'processing',
             ])
@@ -63,13 +63,13 @@ class Execution extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The script response output string. Logs the last 4,000 characters of the execution response output.',
                 'default' => '',
-                'example' => '',
+                'example' => '{"areDevelopersAwesome":"true"}',
             ])
             ->addRule('stderr', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The script stderr output string. Logs the last 4,000 characters of the execution stderr output',
                 'default' => '',
-                'example' => '',
+                'example' => 'File Not Found',
             ])
             ->addRule('time', [
                 'type' => self::TYPE_FLOAT,

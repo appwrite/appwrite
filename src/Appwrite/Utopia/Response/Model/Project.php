@@ -63,7 +63,7 @@ class Project extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Project website URL.',
                 'default' => '',
-                'example' => '5f5c451b403cb',
+                'example' => 'https://example.com',
             ])
             ->addRule('legalName', [
                 'type' => self::TYPE_STRING,

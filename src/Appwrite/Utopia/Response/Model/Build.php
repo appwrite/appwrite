@@ -43,25 +43,25 @@ class Build extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The stdout of the build.',
                 'default' => '',
-                'example' => '',
+                'example' => 'Build completed successfully in 9.12 seconds.',
             ])
             ->addRule('stderr', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The stderr of the build.',
                 'default' => '',
-                'example' => '',
+                'example' => 'Build failed.',
             ])
             ->addRule('endTime', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The time the build was finished in Unix timestamp.',
                 'default' => 0,
-                'example' => 0,
+                'example' => 1592981250,
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The build time in seconds.',
                 'default' => 0,
-                'example' => 0,
+                'example' => 7,
             ])
         ;
     }

@@ -45,7 +45,7 @@ class Func extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function status. Possible values: `disabled`, `enabled`',
+                'description' => 'Function status. Possible values are `disabled` or `enabled`',
                 'default' => '',
                 'example' => 'enabled',
             ])
@@ -71,7 +71,7 @@ class Func extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Function trigger events.',
                 'default' => [],
-                'example' => 'account.create',
+                'example' => 'users.*.create',
                 'array' => true,
             ])
             ->addRule('schedule', [
@@ -96,7 +96,7 @@ class Func extends Model
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Function execution timeout in seconds.',
                 'default' => 15,
-                'example' => 1592981237,
+                'example' => 15,
             ])
         ;
     }

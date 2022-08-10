@@ -32,7 +32,7 @@ class Token extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Token secret key. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
-                'example' => '',
+                'example' => 'eyJhbGciOiJIUz...f36POk6yJV_adQssw5c',
             ])
             ->addRule('expire', [
                 'type' => self::TYPE_INTEGER,

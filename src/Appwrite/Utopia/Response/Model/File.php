@@ -70,19 +70,19 @@ class File extends Model
                 'type' => self::TYPE_INTEGER,
                 'description' => 'File original size in bytes.',
                 'default' => 0,
-                'example' => 17890,
+                'example' => 1789000000, //1.789 GB
             ])
             ->addRule('chunksTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total number of chunks available',
                 'default' => 0,
-                'example' => 17890,
+                'example' => 357, 
             ])
             ->addRule('chunksUploaded', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total number of chunks uploaded',
                 'default' => 0,
-                'example' => 17890,
+                'example' => 201,
             ])
         ;
     }

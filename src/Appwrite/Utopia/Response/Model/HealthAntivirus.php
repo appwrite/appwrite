@@ -18,7 +18,7 @@ class HealthAntivirus extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Antivirus status. Possible values can are: `disabled`, `offline`, `online`',
+                'description' => 'Antivirus status. Possible values are `disabled`, `offline`, or `online`',
                 'default' => '',
                 'example' => 'online',
             ])

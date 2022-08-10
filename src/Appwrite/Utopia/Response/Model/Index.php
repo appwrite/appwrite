@@ -32,14 +32,14 @@ class Index extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Index attributes.',
                 'default' => [],
-                'example' => [],
+                'example' => ["title", "description"],
                 'array' => true,
             ])
             ->addRule('orders', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Index orders.',
                 'default' => [],
-                'example' => [],
+                'example' => ["ASC", "DESC"],
                 'array' => true,
                 'required' => false,
             ])

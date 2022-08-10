@@ -18,7 +18,7 @@ class HealthStatus extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Service status. Possible values can are: `pass`, `fail`',
+                'description' => 'Service status. Possible values are `pass` or `fail`.',
                 'default' => '',
                 'example' => 'pass',
             ])

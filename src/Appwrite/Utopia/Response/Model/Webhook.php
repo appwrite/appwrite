@@ -49,7 +49,7 @@ class Webhook extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Webhook trigger events.',
                 'default' => [],
-                'example' => 'database.collections.update',
+                'example' => ['databases.*.collections.*.update'],
                 'array' => true,
             ])
             ->addRule('security', [

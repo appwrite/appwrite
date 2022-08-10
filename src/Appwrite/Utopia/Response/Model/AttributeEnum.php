@@ -28,7 +28,7 @@ class AttributeEnum extends Attribute
                 'type' => self::TYPE_STRING,
                 'description' => 'Array of elements in enumerated type.',
                 'default' => null,
-                'example' => 'element',
+                'example' => "['elementA','elementB']",
                 'array' => true,
                 'require' => true,
             ])
@@ -42,9 +42,9 @@ class AttributeEnum extends Attribute
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
+                'description' => 'Default value for the attribute when not provided. Cannot be set if attribute is required.',
                 'default' => null,
-                'example' => 'element',
+                'example' => 'elementA',
                 'array' => false,
                 'require' => false,
             ])

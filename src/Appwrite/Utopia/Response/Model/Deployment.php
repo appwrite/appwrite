@@ -44,7 +44,7 @@ class Deployment extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The entrypoint file to use to execute the deployment code.',
                 'default' => '',
-                'example' => 'enabled',
+                'example' => 'src/index.js',
             ])
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,
@@ -74,13 +74,13 @@ class Deployment extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The build stdout.',
                 'default' => '',
-                'example' => 'enabled',
+                'example' => 'Build completed successfully in 9.12 seconds.',
             ])
             ->addRule('buildStderr', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The build stderr.',
                 'default' => '',
-                'example' => 'enabled',
+                'example' => 'Build failed.',
             ])
         ;
     }

@@ -44,7 +44,7 @@ class Bucket extends Model
             ])
             ->addRule('permission', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Bucket permission model. Possible values: `bucket` or `file`',
+                'description' => 'Bucket permission model. Possible values are `bucket` or `file`',
                 'default' => '',
                 'example' => 'file',
             ])
@@ -56,15 +56,15 @@ class Bucket extends Model
             ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Bucket enabled.',
+                'description' => 'If the bucket is enabled.',
                 'default' => true,
                 'example' => false,
             ])
             ->addRule('maximumFileSize', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Maximum file size supported.',
+                'description' => 'Maximum file size supported in bytes.',
                 'default' => 0,
-                'example' => 100,
+                'example' => 1000000,
             ])
             ->addRule('allowedFileExtensions', [
                 'type' => self::TYPE_STRING,
@@ -75,13 +75,13 @@ class Bucket extends Model
             ])
             ->addRule('encryption', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Bucket is encrypted.',
+                'description' => 'If the bucket is encrypted.',
                 'default' => true,
                 'example' => false,
             ])
             ->addRule('antivirus', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Virus scanning is enabled.',
+                'description' => 'If virus scanning is enabled.',
                 'default' => true,
                 'example' => false,
             ])
