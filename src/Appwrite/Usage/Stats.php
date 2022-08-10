@@ -168,6 +168,7 @@ class Stats
 
         $sessionsMetrics = [
             'sessions.{scope}.requests.create',
+            'sessions.{scope}.requests.update',
             'sessions.{scope}.requests.delete',
         ];
 

@@ -364,6 +364,9 @@ App::shutdown()
                         case 'request':
                             $params = $getRequestParams();
                             break;
+                        case 'value':
+                            $usage->setParam($param, $key);
+                            break;
                         default:
                             $params = $responsePayload;
                     }
