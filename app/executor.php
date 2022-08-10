@@ -546,7 +546,7 @@ App::post('/v1/execution')
                 case $statusCode >= 100:
                     $stdout = $executorResponse['stdout'];
                     $res = $executorResponse['response'];
-                    if(is_array($res)) {
+                    if (is_array($res)) {
                         $res = json_encode($res);
                     }
                     break;
