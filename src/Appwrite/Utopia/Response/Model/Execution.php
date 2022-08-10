@@ -65,6 +65,12 @@ class Execution extends Model
                 'default' => '',
                 'example' => '',
             ])
+            ->addRule('stdout', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The script stdout output string. Logs the last 4,000 characters of the execution stdout output',
+                'default' => '',
+                'example' => '',
+            ])
             ->addRule('stderr', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The script stderr output string. Logs the last 4,000 characters of the execution stderr output',
