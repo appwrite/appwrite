@@ -6,7 +6,6 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -483,6 +482,7 @@ App::patch('/v1/users/:userId/name')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.name')
     ->label('scope', 'users.write')
+    ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateName')
@@ -494,9 +494,8 @@ App::patch('/v1/users/:userId/name')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('events')
-    ->action(function (string $userId, string $name, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
+    ->action(function (string $userId, string $name, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -511,13 +510,7 @@ App::patch('/v1/users/:userId/name')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        $audits
-            ->setResource('user/' . $user->getId())
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -527,6 +520,7 @@ App::patch('/v1/users/:userId/password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.password')
     ->label('scope', 'users.write')
+    ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePassword')
@@ -538,9 +532,8 @@ App::patch('/v1/users/:userId/password')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('events')
-    ->action(function (string $userId, string $password, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
+    ->action(function (string $userId, string $password, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -554,13 +547,7 @@ App::patch('/v1/users/:userId/password')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        $audits
-            ->setResource('user/' . $user->getId())
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -570,6 +557,7 @@ App::patch('/v1/users/:userId/email')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.email')
     ->label('scope', 'users.write')
+    ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateEmail')
@@ -581,9 +569,8 @@ App::patch('/v1/users/:userId/email')
     ->param('email', '', new Email(), 'User email.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('events')
-    ->action(function (string $userId, string $email, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
+    ->action(function (string $userId, string $email, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -605,11 +592,6 @@ App::patch('/v1/users/:userId/email')
             throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
-
-        $audits
-            ->setResource('user/' . $user->getId())
-        ;
-
         $events
             ->setParam('userId', $user->getId())
         ;
@@ -622,6 +604,7 @@ App::patch('/v1/users/:userId/phone')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.phone')
     ->label('scope', 'users.write')
+    ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePhone')
@@ -633,9 +616,8 @@ App::patch('/v1/users/:userId/phone')
     ->param('number', '', new Phone(), 'User phone number.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('events')
-    ->action(function (string $userId, string $number, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
+    ->action(function (string $userId, string $number, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -654,14 +636,7 @@ App::patch('/v1/users/:userId/phone')
             throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
-
-        $audits
-            ->setResource('user/' . $user->getId())
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });

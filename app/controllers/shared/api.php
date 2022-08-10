@@ -18,6 +18,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
+use Utopia\Route;
 
 App::init()
     ->groups(['api'])
@@ -86,7 +87,7 @@ App::init()
 
             if (
                 (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled' // Route is rate-limited
-                && $abuse->check()) // Abuse is not disabled
+                    && $abuse->check()) // Abuse is not disabled
                 && (!$isAppUser && !$isPrivilegedUser)
             ) { // User is not an admin or API key
                 throw new Exception('Too many requests', 429, Exception::GENERAL_RATE_LIMIT_EXCEEDED);
@@ -200,9 +201,11 @@ App::shutdown()
     ->inject('dbForProject')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) {
 
+        $responsePayload = $response->getPayload();
+
         if (!empty($events->getEvent())) {
-            if (empty($events->getPayload())) {
-                $events->setPayload($response->getPayload());
+            if (empty($events->getPayload())){
+                $events->setPayload($responsePayload);
             }
             /**
              * Trigger functions.
@@ -232,7 +235,7 @@ App::shutdown()
                 $bucket = $events->getContext('bucket');
 
                 $target = Realtime::fromPayload(
-                    // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                     event: $allEvents[0],
                     payload: $payload,
                     project: $project,
@@ -255,10 +258,76 @@ App::shutdown()
             }
         }
 
+        $route = $utopia->match($request);
+
+        $getRequestParams = function() use ($route, $request): array {
+            $url    = \parse_url($request->getURI(), PHP_URL_PATH);
+            $regex = '@' . \preg_replace('@:[^/]+@', '([^/]+)', $route->getPath()) . '@';
+            \preg_match($regex, $url, $matches);
+            \array_shift($matches);
+            $url = $route->getIsAlias() ? $route->getAliasPath() : $route->getPath();
+            $keyRegex = '@^' . \preg_replace('@:[^/]+@', ':([^/]+)', $url) . '$@';
+            \preg_match($keyRegex, $url, $keys);
+            \array_shift($keys);
+
+            return \array_combine($keys, $matches) ?? [];
+        };
+
+
+        $parseLabel  = function ($label) use ($responsePayload, $getRequestParams) :string {
+            preg_match_all('/{(.*?)}/', $label, $matches);
+            foreach ($matches[1] ?? [] as $pos => $match) {
+                $find = $matches[0][$pos];
+                $parts = explode('.', $match);
+
+                if(count($parts) !== 2){
+                    return '';
+                }
+
+                $namespace = $parts[0];
+                $replace  = $parts[1];
+
+                switch ($namespace) {
+                    case 'response':
+                        $params = $responsePayload;
+                        break;
+                    case 'request':
+                        $params = $getRequestParams();
+                        break;
+                    default:
+                        $params = $responsePayload;
+                }
+
+                if(array_key_exists($replace, $params)){
+                    $label = \str_replace($find, $params[$replace], $label);
+                }
+            }
+
+            return $label;
+        };
+
+        $auditsResource = $route->getLabel('audits.resource',null);
+        if(!empty($auditsResource)) {
+            $resource = $parseLabel($auditsResource);
+            if(!empty($resource) && $resource !== $auditsResource) {
+                $audits->setResource($resource);
+            }
+        }
+
         if (!empty($audits->getResource())) {
+            /**
+             * audits.payload is switched to default true
+             * in order to auto audit payload for all endpoints
+             */
+            $auditsPayload = $route->getLabel('audits.payload',true);
+            if(!empty($auditsPayload)) {
+                $audits->setPayload($responsePayload);
+            }
+
             foreach ($events->getParams() as $key => $value) {
                 $audits->setParam($key, $value);
             }
+
             $audits->trigger();
         }
 
@@ -270,7 +339,7 @@ App::shutdown()
             $database->trigger();
         }
 
-        $route = $utopia->match($request);
+
         if (
             App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
             && $project->getId()
