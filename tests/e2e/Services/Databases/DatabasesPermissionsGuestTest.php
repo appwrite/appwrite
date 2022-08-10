@@ -53,7 +53,7 @@ class DatabasesPermissionsGuestTest extends Scope
     }
 
     /**
-     * [string[] $read, string[] $write]
+     * [string[] $permissions]
      */
     public function readDocumentsProvider()
     {

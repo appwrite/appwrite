@@ -5077,11 +5077,11 @@
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
-                if (typeof fileSecurity !== 'undefined') {
-                    payload['fileSecurity'] = fileSecurity;
-                }
                 if (typeof permissions !== 'undefined') {
                     payload['permissions'] = permissions;
+                }
+                if (typeof fileSecurity !== 'undefined') {
+                    payload['fileSecurity'] = fileSecurity;
                 }
                 if (typeof enabled !== 'undefined') {
                     payload['enabled'] = enabled;
@@ -5160,11 +5160,11 @@
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
-                if (typeof fileSecurity !== 'undefined') {
-                    payload['fileSecurity'] = fileSecurity;
-                }
                 if (typeof permissions !== 'undefined') {
                     payload['permissions'] = permissions;
+                }
+                if (typeof fileSecurity !== 'undefined') {
+                    payload['fileSecurity'] = fileSecurity;
                 }
                 if (typeof enabled !== 'undefined') {
                     payload['enabled'] = enabled;
