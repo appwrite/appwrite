@@ -18,219 +18,252 @@ class TimeSeries extends Calculator {
     // all the mertics that we are collecting
     protected array $metrics = [
         'project.$all.network.requests' => [
-            'table' => 'appwrite_usage_network_requests',
+            'table' => 'appwrite_usage_network_{scope}_requests',
         ],
         'project.$all.network.bandwidth' => [
-            'table' => 'appwrite_usage_network_bandwidth',
+            'table' => 'appwrite_usage_network_{scope}_bandwidth',
         ],
         'project.$all.network.inbound' => [
-            'table' => 'appwrite_usage_network_inbound',
+            'table' => 'appwrite_usage_network_{scope}_inbound',
         ],
         'project.$all.network.outbound' => [
-            'table' => 'appwrite_usage_network_outbound',
+            'table' => 'appwrite_usage_network_{scope}_outbound',
         ],
         /* Users service metrics */
         'users.$all.requests.create' => [
-            'table' => 'appwrite_usage_users_requests_create',
+            'table' => 'appwrite_usage_users_{scope}_requests_create',
         ],
         'users.$all.requests.read' => [
-            'table' => 'appwrite_usage_users_requests_read',
+            'table' => 'appwrite_usage_users_{scope}_requests_read',
         ],
         'users.$all.requests.update' => [
-            'table' => 'appwrite_usage_users_requests_update',
+            'table' => 'appwrite_usage_users_{scope}_requests_update',
         ],
         'users.$all.requests.delete' => [
-            'table' => 'appwrite_usage_users_requests_delete',
+            'table' => 'appwrite_usage_users_{scope}_requests_delete',
         ],
 
         'databases.$all.requests.create' => [
-            'table' => 'appwrite_usage_databases_requests_create',
+            'table' => 'appwrite_usage_databases_{scope}_requests_create',
         ],
         'databases.$all.requests.read' => [
-            'table' => 'appwrite_usage_databases_requests_read',
+            'table' => 'appwrite_usage_databases_{scope}_requests_read',
         ],
         'databases.$all.requests.update' => [
-            'table' => 'appwrite_usage_databases_requests_update',
+            'table' => 'appwrite_usage_databases_{scope}_requests_update',
         ],
         'databases.$all.requests.delete' => [
-            'table' => 'appwrite_usage_databases_requests_delete',
+            'table' => 'appwrite_usage_databases_{scope}_requests_delete',
         ],
 
         'collections.$all.requests.create' => [
-            'table' => 'appwrite_usage_dollections_requests_create',
+            'table' => 'appwrite_usage_dollections_{scope}_requests_create',
         ],
         'collections.$all.requests.read' => [
-            'table' => 'appwrite_usage_collections_requests_read',
+            'table' => 'appwrite_usage_collections_{scope}_requests_read',
         ],
         'collections.$all.requests.update' => [
-            'table' => 'appwrite_usage_collections_requests_update',
+            'table' => 'appwrite_usage_collections_{scope}_requests_update',
         ],
         'collections.$all.requests.delete' => [
-            'table' => 'appwrite_usage_collections_requests_delete',
+            'table' => 'appwrite_usage_collections_{scope}_requests_delete',
         ],
 
         'documents.$all.requests.create' => [
-            'table' => 'appwrite_usage_documents_requests_create',
+            'table' => 'appwrite_usage_documents_{scope}_requests_create',
         ],
         'documents.$all.requests.read' => [
-            'table' => 'appwrite_usage_documents_requests_read',
+            'table' => 'appwrite_usage_documents_{scope}_requests_read',
         ],
         'documents.$all.requests.update' => [
-            'table' => 'appwrite_usage_documents_requests_update',
+            'table' => 'appwrite_usage_documents_{scope}_requests_update',
         ],
         'documents.$all.requests.delete' => [
-            'table' => 'appwrite_usage_documents_requests_delete',
+            'table' => 'appwrite_usage_documents_{scope}_requests_delete',
         ],
 
         'collections.databaseId.requests.create' => [
-            'table' => 'appwrite_usage_collections_requests_create',
+            'table' => 'appwrite_usage_collections_{scope}_requests_create',
             'groupBy' => ['databaseId'],
         ],
         'collections.databaseId.requests.read' => [
-            'table' => 'appwrite_usage_collections_requests_read',
+            'table' => 'appwrite_usage_collections_{scope}_requests_read',
             'groupBy' => ['databaseId'],
         ],
         'collections.databaseId.requests.update' => [
-            'table' => 'appwrite_usage_collections_requests_update',
+            'table' => 'appwrite_usage_collections_{scope}_requests_update',
             'groupBy' => ['databaseId'],
         ],
         'collections.databaseId.requests.delete' => [
-            'table' => 'appwrite_usage_collections_requests_delete',
+            'table' => 'appwrite_usage_collections_{scope}_requests_delete',
             'groupBy' => ['databaseId'],
         ],
 
         'documents.databaseId.requests.create' => [
-            'table' => 'appwrite_usage_documents_requests_create',
+            'table' => 'appwrite_usage_documents_{scope}_requests_create',
             'groupBy' => ['databaseId'],
         ],
         'documents.databaseId.requests.read' => [
-            'table' => 'appwrite_usage_documents_requests_read',
+            'table' => 'appwrite_usage_documents_{scope}_requests_read',
             'groupBy' => ['databaseId'],
         ],
         'documents.databaseId.requests.update' => [
-            'table' => 'appwrite_usage_documents_requests_update',
+            'table' => 'appwrite_usage_documents_{scope}_requests_update',
             'groupBy' => ['databaseId'],
         ],
         'documents.databaseId.requests.delete' => [
-            'table' => 'appwrite_usage_documents_requests_delete',
+            'table' => 'appwrite_usage_documents_{scope}_requests_delete',
             'groupBy' => ['databaseId'],
         ],
 
         'documents.databaseId/collectionId.requests.create' => [
-            'table' => 'appwrite_usage_documents_requests_create',
+            'table' => 'appwrite_usage_documents_{scope}_requests_create',
             'groupBy' => ['databaseId', 'collectionId'],
         ],
         'documents.databaseId/collectionId.requests.read' => [
-            'table' => 'appwrite_usage_documents_requests_read',
+            'table' => 'appwrite_usage_documents_{scope}_requests_read',
             'groupBy' => ['databaseId', 'collectionId'],
         ],
         'documents.databaseId/collectionId.requests.update' => [
-            'table' => 'appwrite_usage_documents_requests_update',
+            'table' => 'appwrite_usage_documents_{scope}_requests_update',
             'groupBy' => ['databaseId', 'collectionId'],
         ],
         'documents.databaseId/collectionId.requests.delete' => [
-            'table' => 'appwrite_usage_documents_requests_delete',
+            'table' => 'appwrite_usage_documents_{scope}_requests_delete',
             'groupBy' => ['databaseId', 'collectionId'],
         ],
 
         'buckets.$all.requests.create' => [
-            'table' => 'appwrite_usage_buckets_requests_create',
+            'table' => 'appwrite_usage_buckets_{scope}_requests_create',
         ],
         'buckets.$all.requests.read' => [
-            'table' => 'appwrite_usage_buckets_requests_read',
+            'table' => 'appwrite_usage_buckets_{scope}_requests_read',
         ],
         'buckets.$all.requests.update' => [
-            'table' => 'appwrite_usage_buckets_requests_update',
+            'table' => 'appwrite_usage_buckets_{scope}_requests_update',
         ],
         'buckets.$all.requests.delete' => [
-            'table' => 'appwrite_usage_buckets_requests_delete',
+            'table' => 'appwrite_usage_buckets_{scope}_requests_delete',
         ],
 
         'files.$all.requests.create' => [
-            'table' => 'appwrite_usage_files_requests_create',
+            'table' => 'appwrite_usage_files_{scope}_requests_create',
         ],
         'files.$all.requests.read' => [
-            'table' => 'appwrite_usage_files_requests_read',
+            'table' => 'appwrite_usage_files_{scope}_requests_read',
         ],
         'files.$all.requests.update' => [
-            'table' => 'appwrite_usage_files_requests_update',
+            'table' => 'appwrite_usage_files_{scope}_requests_update',
         ],
         'files.$all.requests.delete' => [
-            'table' => 'appwrite_usage_files_requests_delete',
+            'table' => 'appwrite_usage_files_{scope}_requests_delete',
         ],
         
         'files.bucketId.requests.create' => [
-            'table' => 'appwrite_usage_files_requests_create',
+            'table' => 'appwrite_usage_files_{scope}_requests_create',
             'groupBy' => ['bucketId'],
         ],
         'files.bucketId.requests.read' => [
-            'table' => 'appwrite_usage_files_requests_read',
+            'table' => 'appwrite_usage_files_{scope}_requests_read',
             'groupBy' => ['bucketId'],
         ],
         'files.bucketId.requests.update' => [
-            'table' => 'appwrite_usage_files_requests_update',
+            'table' => 'appwrite_usage_files_{scope}_requests_update',
             'groupBy' => ['bucketId'],
         ],
         'files.bucketId.requests.delete' => [
-            'table' => 'appwrite_usage_files_requests_delete',
+            'table' => 'appwrite_usage_files_{scope}_requests_delete',
             'groupBy' => ['bucketId'],
         ],
 
-        'users.sessions.create' => [
-            'table' => 'appwrite_usage_users_sessions_create',
+        'sessions.$all.requests.create' => [
+            'table' => 'appwrite_usage_sessions__{scope}_requests_create',
         ],
-        'users.sessions.provider.create' => [
-            'table' => 'appwrite_usage_users_sessions_create',
+        'sessions.provider.requests.create' => [
+            'table' => 'appwrite_usage_sessions_{scope}_requests_create',
             'groupBy' => ['provider'],
         ],
-        'users.sessions.delete' => [
-            'table' => 'appwrite_usage_users_sessions_delete',
+        'sessions.$all.requests.delete' => [
+            'table' => 'appwrite_usage_sessions_{scope}_requests_delete',
         ],
-        'functions.executions' => [
-            'table' => 'appwrite_usage_functions_executions_all',
+        'executions.$all.compute.total' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute',
         ],
-        'functions.builds' => [
-            'table' => 'appwrite_usage_functions_builds_all',
+        'builds.$all.compute.total' => [
+            'table' => 'appwrite_usage_builds_{scope}_compute',
         ],
-        'functions.failures' => [
-            'table' => 'appwrite_usage_functions_executions_all',
+        'executions.$all.compute.failures' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute',
             'filters' => [
                 'functionStatus' => 'failed',
             ],
         ],
-        'functions.functionId.executions' => [
-            'table' => 'appwrite_usage_functions_executions_all',
+        'builds.$all.compute.failures' => [
+            'table' => 'appwrite_usage_builds_{scope}_compute',
+            'filters' => [
+                'functionStatus' => 'failed',
+            ],
+        ],
+        'executions.$all.compute.success' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute',
+            'filters' => [
+                'functionStatus' => 'success',
+            ],
+        ],
+        'builds.$all.compute.success' => [
+            'table' => 'appwrite_usage_builds_{scope}_compute',
+            'filters' => [
+                'functionStatus' => 'success',
+            ],
+        ],
+        'executions.functionId.compute.total' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute',
             'groupBy' => ['functionId'],
         ],
-        'functions.functionId.builds' => [
-            'table' => 'appwrite_usage_functions_builds_all',
+        'builds.functionId.compute.total' => [
+            'table' => 'appwrite_usage_builds_{scope}_compute',
             'groupBy' => ['functionId'],
         ],
-        'functions.functionId.execution' => [
-            'table' => 'appwrite_usage_functions_executions_time',
+        'executions.functionId.compute.time' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute_time',
             'groupBy' => ['functionId'],
         ],
-        'functions.functionId.build' => [
-            'table' => 'appwrite_usage_functions_builds_time',
+        'builds.functionId.compute.time' => [
+            'table' => 'appwrite_usage_builds_{scope}_compute_time',
             'groupBy' => ['functionId'],
         ],
-        'functions.functionId.compute' => [ // Built time + execution time
-            'table' => 'appwrite_usage_functions_compute_time',
-            'groupBy' => ['functionId'],
-        ],
-        'functions.functionId.executions.failures' => [
-            'table' => 'appwrite_usage_functions_executions_all',
+        'executions.functionId.compute.failures' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute',
             'groupBy' => ['functionId'],
             'filters' => [
                 'functionStatus' => 'failed',
             ],
         ],
-        'functions.functionId.builds.failures' => [
-            'table' => 'appwrite_usage_functions_builds_all',
+        'builds.functionId.compute.failures' => [
+            'table' => 'appwrite_usage_builds_{scope}_compute',
             'groupBy' => ['functionId'],
             'filters' => [
                 'functionBuildStatus' => 'failed',
             ],
+        ],
+        'executions.functionId.compute.success' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute',
+            'groupBy' => ['functionId'],
+            'filters' => [
+                'functionStatus' => 'success',
+            ],
+        ],
+        'builds.functionId.compute.success' => [
+            'table' => 'appwrite_usage_builds_{scope}_compute',
+            'groupBy' => ['functionId'],
+            'filters' => [
+                'functionBuildStatus' => 'success',
+            ],
+        ],
+
+        'project.$all.compute.time' => [ // Built time + execution time
+            'table' => 'appwrite_usage_project_{scope}_compute_time',
+            'groupBy' => ['functionId'],
         ],
     ];
 

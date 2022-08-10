@@ -104,17 +104,17 @@ class Stats
         $this->statsd->setNamespace($this->namespace);
 
         if ($httpRequest >= 1) {
-            $this->statsd->increment('network.requests' . $tags . ',method=' . \strtolower($httpMethod));
+            $this->statsd->increment('project.{scope}.network.requests' . $tags . ',method=' . \strtolower($httpMethod));
         }
-        $this->statsd->count('network.inbound' . $tags, $networkRequestSize);
-        $this->statsd->count('network.outbound' . $tags, $networkResponseSize);
-        $this->statsd->count('network.bandwidth' . $tags, $networkRequestSize + $networkResponseSize);
+        $this->statsd->count('project.{scope}.network.inbound' . $tags, $networkRequestSize);
+        $this->statsd->count('project.{scope}.network.outbound' . $tags, $networkResponseSize);
+        $this->statsd->count('project.{scope}.network.bandwidth' . $tags, $networkRequestSize + $networkResponseSize);
 
         $usersMetrics = [
-            'users.requests.create',
-            'users.requests.read',
-            'users.requests.update',
-            'users.requests.delete',
+            'users.{scope}.requests.create',
+            'users.{scope}.requests.read',
+            'users.{scope}.requests.update',
+            'users.{scope}.requests.delete',
         ];
 
         foreach ($usersMetrics as $metric) {
@@ -125,18 +125,18 @@ class Stats
         }
 
         $dbMetrics = [
-            'databases.requests.create',
-            'databases.requests.read',
-            'databases.requests.update',
-            'databases.requests.delete',
-            'collections.requests.create',
-            'collections.requests.read',
-            'collections.requests.update',
-            'collections.requests.delete',
-            'documents.requests.create',
-            'documents.requests.read',
-            'documents.requests.update',
-            'documents.requests.delete',
+            'databases.{scope}.requests.create',
+            'databases.{scope}.requests.read',
+            'databases.{scope}.requests.update',
+            'databases.{scope}.requests.delete',
+            'collections.{scope}.requests.create',
+            'collections.{scope}.requests.read',
+            'collections.{scope}.requests.update',
+            'collections.{scope}.requests.delete',
+            'documents.{scope}.requests.create',
+            'documents.{scope}.requests.read',
+            'documents.{scope}.requests.update',
+            'documents.{scope}.requests.delete',
         ];
 
         foreach ($dbMetrics as $metric) {
@@ -148,14 +148,14 @@ class Stats
         }
 
         $storageMertics = [
-            'buckets.requests.create',
-            'buckets.requests.read',
-            'buckets.requests.update',
-            'buckets.requests.delete',
-            'files.requests.create',
-            'files.requests.read',
-            'files.requests.update',
-            'files.requests.delete',
+            'buckets.{scope}.requests.create',
+            'buckets.{scope}.requests.read',
+            'buckets.{scope}.requests.update',
+            'buckets.{scope}.requests.delete',
+            'files.{scope}.requests.create',
+            'files.{scope}.requests.read',
+            'files.{scope}.requests.update',
+            'files.{scope}.requests.delete',
         ];
 
         foreach ($storageMertics as $metric) {
@@ -167,8 +167,8 @@ class Stats
         }
 
         $sessionsMetrics = [
-            'users.sessions.create',
-            'users.sessions.delete',
+            'sessions.{scope}.requests.create',
+            'sessions.{scope}.requests.delete',
         ];
 
         foreach ($sessionsMetrics as $metric) {
@@ -185,15 +185,15 @@ class Stats
         }
 
         if ($functionExecution >= 1) {
-            $this->statsd->increment('executions.compute' . $tags . ',functionId=' . $functionId . ',functionStatus=' . $functionStatus);
-            $this->statsd->count('executions.compute.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
+            $this->statsd->increment('executions.{scope}.compute' . $tags . ',functionId=' . $functionId . ',functionStatus=' . $functionStatus);
+            $this->statsd->count('executions.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
         }
         if ($functionBuild >= 1) {
-            $this->statsd->increment('builds.compute' . $tags . ',functionId=' . $functionId . ',functionBuildStatus=' . $functionBuildStatus);
-            $this->statsd->count('builds.compute.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
+            $this->statsd->increment('builds.{scope}.compute' . $tags . ',functionId=' . $functionId . ',functionBuildStatus=' . $functionBuildStatus);
+            $this->statsd->count('builds.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
         }
         if ($functionBuild + $functionExecution >= 1) {
-            $this->statsd->count('compute.time' . $tags . ',functionId=' . $functionId, $functionCompute);
+            $this->statsd->count('project.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionCompute);
         }
 
         $this->reset();
