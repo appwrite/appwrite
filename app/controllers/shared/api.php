@@ -131,7 +131,6 @@ App::init()
 
         if ($useCache) {
 
-
             $key = md5($request->getURI() . implode('*', $request->getParams()));
             $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
             $timestamp = 60 * 60 * 24 * 30;
@@ -159,6 +158,8 @@ App::init()
                     ->setContentType($data['content-type'])
                     ->send(base64_decode($data['payload']))
                 ;
+
+                $route->setActive(false);
 
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
