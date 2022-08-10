@@ -276,7 +276,7 @@ App::post('/v1/runtimes')
                 throw new Exception('Failed to create build container', 500);
             }
 
-            $orchestration->networkConnect($runtimeId, App::getEnv('OPEN_RUNTIMES_NETWORK', 'appwrite_runtimes'));
+            $orchestration->networkConnect($runtimeId, App::getEnv('OPEN_RUNTIMES_NETWORK', 'appwrite-runtimes'));
 
             /**
              * Execute any commands if they were provided
@@ -516,6 +516,7 @@ App::post('/v1/execution')
             ]);
 
             $executorResponse = \curl_exec($ch);
+            $executorResponse = json_decode($executorResponse, true);
 
             $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -545,6 +546,9 @@ App::post('/v1/execution')
                 case $statusCode >= 100:
                     $stdout = $executorResponse['stdout'];
                     $res = $executorResponse['response'];
+                    if(is_array($res)) {
+                        $res = json_encode($res);
+                    }
                     break;
                 default:
                     $stderr = ($executorResponse ?? [])['stderr'] ?? 'Execution failed.';
