@@ -134,7 +134,7 @@ function getDatabase(Registry &$register, string $namespace)
 
 $server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
     sleep(5); // wait for the initial database schema to be ready
-    Console::success('Server started succefully');
+    Console::success('Server started successfully');
 
     /**
      * Create document for this worker to share stats across Containers.
