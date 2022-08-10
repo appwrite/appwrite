@@ -60,7 +60,7 @@ class Platform extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Web app hostname. Empty string for other platforms.',
                 'default' => '',
-                'example' => 'demo.appwrite.com',
+                'example' => 'myapp.appwrite.io',
             ])
             ->addRule('httpUser', [
                 'type' => self::TYPE_STRING,
