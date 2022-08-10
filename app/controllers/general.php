@@ -322,8 +322,7 @@ App::init()
                     'swift'
                 ], true);
 
-                $sdk = $request->getHeader('x-sdk-version', 'UNKNOWN');
-                $sdk = explode(':', $sdk)[1] ?? '';
+                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
 
                 if ($sdkValidator->isValid($sdk)) {
                     $sdks = $key->getAttribute('sdks', []);
