@@ -424,21 +424,37 @@ sort($patterns);
                                             <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
 
                                                 <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
-                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
+                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Logs</button>
+                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-response-{{execution.$id}}">Output</button>
 
-                                                <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
+                                                <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-response-{{execution.$id}}">Output</button>
+                                                <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Logs</button>
                                                 <button class="phones-only-inline tablets-only-inline link text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
 
-                                                <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stdout-{{execution.$id}}">
+                                                <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-response-{{execution.$id}}">
                                                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                                    <h1>STDOUT</h1>
+                                                    <h1>RESPONSE</h1>
 
                                                     <div class="margin-bottom ide" data-ls-if="({{execution.response.length}})">
                                                         <pre data-ls-bind="{{execution.response}}"></pre>
                                                     </div>
 
                                                     <div class="margin-bottom" data-ls-if="(!{{execution.response.length}})">
+                                                        <p>No Response was logged.</p>
+                                                    </div>
+                                                </div>
+
+                                                <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stdout-{{execution.$id}}">
+                                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                    <h1>STDOUT</h1>
+
+                                                    <div class="margin-bottom ide" data-ls-if="({{execution.stdout.length}})">
+                                                        <pre data-ls-bind="{{execution.response}}"></pre>
+                                                    </div>
+
+                                                    <div class="margin-bottom" data-ls-if="(!{{execution.stdout.length}})">
                                                         <p>No output was logged.</p>
                                                     </div>
                                                 </div>
