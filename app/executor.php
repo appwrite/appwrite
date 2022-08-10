@@ -488,6 +488,7 @@ App::post('/v1/execution')
             $executionStart = \microtime(true);
             $stdout = '';
             $stderr = '';
+            $res = '';
             $statusCode = 0;
             $errNo = -1;
             $executorResponse = '';
@@ -538,13 +539,16 @@ App::post('/v1/execution')
 
             switch (true) {
                 case $statusCode >= 500:
-                    $stderr = $executorResponse ?? 'Internal Runtime error.';
+                    $stderr = ($executorResponse ?? [])['stderr'] ?? 'Internal Runtime error.';
+                    $stdout = ($executorResponse ?? [])['stdout'] ?? 'Internal Runtime error.';
                     break;
                 case $statusCode >= 100:
-                    $stdout = $executorResponse;
+                    $stdout = $executorResponse['stdout'];
+                    $res = $executorResponse['response'];
                     break;
                 default:
-                    $stderr = $executorResponse ?? 'Execution failed.';
+                    $stderr = ($executorResponse ?? [])['stderr'] ?? 'Execution failed.';
+                    $stdout = ($executorResponse ?? [])['stdout'] ?? '';
                     break;
             }
 
@@ -557,7 +561,8 @@ App::post('/v1/execution')
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'response' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
+                'response' => \mb_strcut($res, 0, 1000000), // Limit to 1MB
+                'stdout' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
                 'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
                 'time' => $executionTime,
             ];

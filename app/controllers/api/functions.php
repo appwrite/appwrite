@@ -945,6 +945,7 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('status', $executionResponse['status']);
             $execution->setAttribute('statusCode', $executionResponse['statusCode']);
             $execution->setAttribute('response', $executionResponse['response']);
+            $execution->setAttribute('stdout', $executionResponse['stdout']);
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
