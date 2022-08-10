@@ -8,8 +8,8 @@ use Utopia\Database\Document;
 use InfluxDB\Database as InfluxDatabase;
 use DateTime;
 
-class TimeSeries extends Calculator {
- 
+class TimeSeries extends Calculator
+{
     protected InfluxDatabase $influxDB;
     protected Database $database;
     protected $errorHandler;
@@ -158,7 +158,7 @@ class TimeSeries extends Calculator {
         'files.$all.requests.delete' => [
             'table' => 'appwrite_usage_files_{scope}_requests_delete',
         ],
-        
+
         'files.bucketId.requests.create' => [
             'table' => 'appwrite_usage_files_{scope}_requests_create',
             'groupBy' => ['bucketId'],

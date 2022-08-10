@@ -157,7 +157,7 @@ class Database extends Calculator
             $sum = $this->database->sum($collection, $attribute);
             $sum = (int) ($sum * $multiplier);
 
-            if(!is_null($metric)) {
+            if (!is_null($metric)) {
                 $this->createPerPeriodMetric($projectId, $metric, $sum);
             }
             return $sum;
@@ -187,7 +187,7 @@ class Database extends Calculator
 
         try {
             $count = $this->database->count($collection);
-            if(!is_null($metric)) {
+            if (!is_null($metric)) {
                 $this->createPerPeriodMetric($projectId, (string) $metric, $count);
             }
             return $count;

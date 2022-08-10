@@ -6,8 +6,8 @@ use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 
-class Aggregator extends Database {
-    
+class Aggregator extends Database
+{
     protected function aggregateDatabaseMetrics(string $projectId): void
     {
         $this->database->setNamespace('_' . $projectId);
@@ -123,7 +123,7 @@ class Aggregator extends Database {
             'builds.$all.compute.time',
         ];
 
-        foreach ($functionsGeneralMetrics as  $metric) {
+        foreach ($functionsGeneralMetrics as $metric) {
             $this->aggregateDailyMetric($projectId, $metric);
             $this->aggregateMonthlyMetric($projectId, $metric);
         }

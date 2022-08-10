@@ -346,6 +346,34 @@ App::shutdown()
             // && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
             && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
+
+            $metric = $route->getLabel('usage.metric', '');
+            $params = $route->getLabel('usage.params', []);
+
+            if(!empty($metric)) {
+                $usage->setParam($metric, 1);
+                foreach ($params as $param => $value) {
+                    $parts = explode('.',$value);
+                    $namespace = $parts[0];
+                    $key = $parts[1];
+
+                    switch ($namespace) {
+                        case 'response':
+                            $params = $responsePayload;
+                            break;
+                        case 'request':
+                            $params = $getRequestParams();
+                            break;
+                        default:
+                            $params = $responsePayload;
+                    }
+    
+                    if(array_key_exists($key, $params)){
+                        $usage->setParam($param, $params[$key]);
+                    }
+                }
+            }
+
             $usage
                 ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
                 ->setParam('networkResponseSize', $response->getSize())
