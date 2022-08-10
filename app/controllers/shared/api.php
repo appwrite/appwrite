@@ -159,7 +159,7 @@ App::init()
                     ->send(base64_decode($data['payload']))
                 ;
 
-                $route->setActive(false);
+                $route->setIsActive(false);
 
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
