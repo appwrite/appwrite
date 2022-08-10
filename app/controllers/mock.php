@@ -420,7 +420,7 @@ App::get('/v1/mock/tests/general/headers')
             return $key . ': ' . $value;
         }, array_keys($res), $res);
         $res = implode("; ", $res);
-        
+
         $response->dynamic(new Document(['result' => $res]), Response::MODEL_MOCK);
     });
 

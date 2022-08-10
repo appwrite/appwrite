@@ -314,9 +314,9 @@ App::init()
                 if ($sdkValidator->isValid($sdk)) {
                     $sdks = $key->getAttribute('sdks', []);
                     if (!in_array($sdk, $sdks)) {
-                        array_push($sdks, $sdk); 
+                        array_push($sdks, $sdk);
                         $key->setAttribute('sdks', $sdks);
-                        
+
                         /** Update access time as well */
                         $key->setAttribute('accessedAt', time());
                         $dbForConsole->updateDocument('keys', $key->getId(), $key);
