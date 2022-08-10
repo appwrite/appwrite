@@ -75,7 +75,7 @@ class Database extends Calculator
                     'time' => $time,
                     'metric' => $metric,
                     'value' => $value,
-                    'type' => 1,
+                    'type' => 2, // these are cumulative metrics
                 ]));
             } else {
                 $this->database->updateDocument(
