@@ -204,7 +204,7 @@ App::shutdown()
         $responsePayload = $response->getPayload();
 
         if (!empty($events->getEvent())) {
-            if (empty($events->getPayload())){
+            if (empty($events->getPayload())) {
                 $events->setPayload($responsePayload);
             }
             /**
@@ -229,11 +229,9 @@ App::shutdown()
             if ($project->getId() !== 'console') {
                 $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
                 $payload = new Document($events->getPayload());
-
                 $db = $events->getContext('database');
                 $collection = $events->getContext('collection');
                 $bucket = $events->getContext('bucket');
-
                 $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
                     event: $allEvents[0],
@@ -251,7 +249,6 @@ App::shutdown()
                     channels: $target['channels'],
                     roles: $target['roles'],
                     options: [
-                        'permissionsChanged' => $target['permissionsChanged'],
                         'userId' => $events->getParam('userId')
                     ]
                 );
@@ -260,22 +257,21 @@ App::shutdown()
 
         $route = $utopia->match($request);
 
-        $getRequestParams = function() use ($route, $request): array {
-            $url    = \parse_url($request->getURI(), PHP_URL_PATH);
+        $getRequestParams = function() use ($route, $request) {
+            $url    = \parse_url($request->getURI(),PHP_URL_PATH);
             $regex = '@' . \preg_replace('@:[^/]+@', '([^/]+)', $route->getPath()) . '@';
-            \preg_match($regex, $url, $matches);
+            \preg_match($regex, $url,$matches);
             \array_shift($matches);
             $url = $route->getIsAlias() ? $route->getAliasPath() : $route->getPath();
-            $keyRegex = '@^' . \preg_replace('@:[^/]+@', ':([^/]+)', $url) . '$@';
-            \preg_match($keyRegex, $url, $keys);
+            $keyRegex = '@^' . \preg_replace('@:[^/]+@',':([^/]+)', $url) . '$@';
+            \preg_match($keyRegex, $url,$keys);
             \array_shift($keys);
 
             return \array_combine($keys, $matches) ?? [];
         };
 
-
-        $parseLabel  = function ($label) use ($responsePayload, $getRequestParams) :string {
-            preg_match_all('/{(.*?)}/', $label, $matches);
+        $parseLabel  = function ($label) use ($responsePayload, $getRequestParams) {
+            preg_match_all('/{(.*?)}/', $label,$matches);
             foreach ($matches[1] ?? [] as $pos => $match) {
                 $find = $matches[0][$pos];
                 $parts = explode('.', $match);
@@ -287,16 +283,10 @@ App::shutdown()
                 $namespace = $parts[0];
                 $replace  = $parts[1];
 
-                switch ($namespace) {
-                    case 'response':
-                        $params = $responsePayload;
-                        break;
-                    case 'request':
-                        $params = $getRequestParams();
-                        break;
-                    default:
-                        $params = $responsePayload;
-                }
+                $params = match ($namespace) {
+                    'request' => $getRequestParams(),
+                    default => $responsePayload,
+                };
 
                 if(array_key_exists($replace, $params)){
                     $label = \str_replace($find, $params[$replace], $label);
@@ -319,8 +309,8 @@ App::shutdown()
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints
              */
-            $auditsPayload = $route->getLabel('audits.payload',true);
-            if(!empty($auditsPayload)) {
+            $auditsPayload = $route->getLabel('audits.payload', true);
+            if (!empty($auditsPayload)) {
                 $audits->setPayload($responsePayload);
             }
 
@@ -338,7 +328,6 @@ App::shutdown()
         if (!empty($database->getType())) {
             $database->trigger();
         }
-
 
         if (
             App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
