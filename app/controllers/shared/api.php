@@ -277,7 +277,7 @@ App::shutdown()
                 $parts = explode('.', $match);
 
                 if(count($parts) !== 2){
-                    return '';
+                    throw new Exception('Too less or more parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
                 }
 
                 $namespace = $parts[0];
@@ -296,10 +296,10 @@ App::shutdown()
             return $label;
         };
 
-        $auditsResource = $route->getLabel('audits.resource',null);
-        if(!empty($auditsResource)) {
+        $auditsResource = $route->getLabel('audits.resource', null);
+        if (!empty($auditsResource)) {
             $resource = $parseLabel($auditsResource);
-            if(!empty($resource) && $resource !== $auditsResource) {
+            if (!empty($resource) && $resource !== $auditsResource) {
                 $audits->setResource($resource);
             }
         }
