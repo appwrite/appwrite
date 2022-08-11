@@ -59,7 +59,6 @@ class UsageTest extends Scope
             }
         }
 
-
         sleep(35);
 
         // console request

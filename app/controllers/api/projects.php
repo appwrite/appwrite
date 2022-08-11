@@ -276,13 +276,13 @@ App::get('/v1/projects/:projectId/usage')
             $dbForProject->setNamespace("_{$project->getInternalId()}");
 
             $metrics = [
-                'requests',
-                'network',
-                'executions',
-                'users.count',
-                'databases.documents.count',
-                'databases.collections.count',
-                'storage.total'
+                'project.$all.network.requests',
+                'project.$all.network.bandwidth',
+                'executions.$all.compute.total',
+                'users.$all.count.total',
+                'documents.$all.count.total',
+                'collections.$all.count.total',
+                'project.$all.storage.size'
             ];
 
             $stats = [];
@@ -325,13 +325,13 @@ App::get('/v1/projects/:projectId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'requests' => $stats['requests'],
-                'network' => $stats['network'],
-                'functions' => $stats['executions'],
-                'documents' => $stats['databases.documents.count'],
-                'collections' => $stats['databases.collections.count'],
-                'users' => $stats['users.count'],
-                'storage' => $stats['storage.total']
+                'requests' => $stats[$metrics[0]],
+                'network' => $stats[$metrics[1]],
+                'executions' => $stats[$metrics[2]],
+                'users' => $stats[$metrics[3]],
+                'documents' => $stats[$metrics[4]],
+                'collections' => $stats[$metrics[5]],
+                'storage' => $stats[$metrics[6]],
             ]);
         }
 

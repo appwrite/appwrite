@@ -18,16 +18,16 @@ class TimeSeries extends Calculator
     // all the mertics that we are collecting
     protected array $metrics = [
         'project.$all.network.requests' => [
-            'table' => 'appwrite_usage_network_{scope}_requests',
+            'table' => 'appwrite_usage_project_{scope}_network_requests',
         ],
         'project.$all.network.bandwidth' => [
-            'table' => 'appwrite_usage_network_{scope}_bandwidth',
+            'table' => 'appwrite_usage_project_{scope}_network_bandwidth',
         ],
         'project.$all.network.inbound' => [
-            'table' => 'appwrite_usage_network_{scope}_inbound',
+            'table' => 'appwrite_usage_project_{scope}_network_inbound',
         ],
         'project.$all.network.outbound' => [
-            'table' => 'appwrite_usage_network_{scope}_outbound',
+            'table' => 'appwrite_usage_project_{scope}_network_outbound',
         ],
         /* Users service metrics */
         'users.$all.requests.create' => [
