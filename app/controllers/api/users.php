@@ -76,13 +76,9 @@ App::post('/v1/users')
             throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
         }
 
-        $usage
-            ->setParam('users.create', 1)
-        ;
+        $usage->setParam('users.create', 1);
 
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $events->setParam('userId', $user->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
@@ -124,9 +120,7 @@ App::get('/v1/users')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
+        $usage->setParam('users.read', 1);
 
         $response->dynamic(new Document([
             'users' => $dbForProject->find('users', $queries, $limit, $offset, [], [$orderType], $cursorUser ?? null, $cursorDirection),
@@ -157,9 +151,8 @@ App::get('/v1/users/:userId')
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
+        $usage->setParam('users.read', 1);
+
         $response->dynamic($user, Response::MODEL_USER);
     });
 
@@ -188,9 +181,8 @@ App::get('/v1/users/:userId/prefs')
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
+        $usage->setParam('users.read', 1);
+
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
@@ -230,9 +222,8 @@ App::get('/v1/users/:userId/sessions')
             $sessions[$key] = $session;
         }
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
+        $usage->setParam('users.read', 1);
+
         $response->dynamic(new Document([
             'sessions' => $sessions,
             'total' => count($sessions),
@@ -350,9 +341,7 @@ App::get('/v1/users/:userId/logs')
             }
         }
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
+        $usage->setParam('users.read', 1);
 
         $response->dynamic(new Document([
             'total' => $audit->countLogsByUser($user->getId()),
@@ -388,13 +377,9 @@ App::patch('/v1/users/:userId/status')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
 
-        $usage
-            ->setParam('users.update', 1)
-        ;
+        $usage->setParam('users.update', 1);
 
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -427,13 +412,9 @@ App::patch('/v1/users/:userId/verification')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
 
-        $usage
-            ->setParam('users.update', 1)
-        ;
+        $usage->setParam('users.update', 1);
 
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -466,13 +447,9 @@ App::patch('/v1/users/:userId/verification/phone')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('phoneVerification', $phoneVerification));
 
-        $usage
-            ->setParam('users.update', 1)
-        ;
+        $usage->setParam('users.update', 1);
 
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -669,13 +646,9 @@ App::patch('/v1/users/:userId/prefs')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
-        $usage
-            ->setParam('users.update', 1)
-        ;
+        $usage->setParam('users.update', 1);
 
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $events->setParam('userId', $user->getId());
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
@@ -814,9 +787,7 @@ App::delete('/v1/users/:userId')
             ->setPayload($response->output($clone, Response::MODEL_USER))
         ;
 
-        $usage
-            ->setParam('users.delete', 1)
-        ;
+        $usage->setParam('users.delete', 1);
 
         $response->noContent();
     });

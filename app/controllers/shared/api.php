@@ -229,11 +229,13 @@ App::shutdown()
             if ($project->getId() !== 'console') {
                 $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
                 $payload = new Document($events->getPayload());
+
                 $db = $events->getContext('database');
                 $collection = $events->getContext('collection');
                 $bucket = $events->getContext('bucket');
+
                 $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
+                    // Pass first, most verbose event pattern
                     event: $allEvents[0],
                     payload: $payload,
                     project: $project,
@@ -249,6 +251,7 @@ App::shutdown()
                     channels: $target['channels'],
                     roles: $target['roles'],
                     options: [
+                        'permissionsChanged' => $target['permissionsChanged'],
                         'userId' => $events->getParam('userId')
                     ]
                 );
@@ -277,7 +280,7 @@ App::shutdown()
                 $parts = explode('.', $match);
 
                 if(count($parts) !== 2){
-                    throw new Exception('Too less or more parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
+                    throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
                 }
 
                 $namespace = $parts[0];
@@ -296,12 +299,19 @@ App::shutdown()
             return $label;
         };
 
-        $auditsResource = $route->getLabel('audits.resource', null);
-        if (!empty($auditsResource)) {
-            $resource = $parseLabel($auditsResource);
-            if (!empty($resource) && $resource !== $auditsResource) {
+        $pattern = $route->getLabel('audits.resource', null);
+        if (!empty($pattern)) {
+            $resource = $parseLabel($pattern);
+            if (!empty($resource) && $resource !== $pattern) {
                 $audits->setResource($resource);
             }
+        }
+
+        $pattern = $route->getLabel('audits.userId', null);
+        if(!empty($pattern)) {
+            $userId = $parseLabel($pattern);
+            $user = $dbForProject->getDocument('users', $userId);
+            $audits->setUser($user);
         }
 
         if (!empty($audits->getResource())) {
@@ -309,15 +319,14 @@ App::shutdown()
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints
              */
-            $auditsPayload = $route->getLabel('audits.payload', true);
-            if (!empty($auditsPayload)) {
+            $pattern = $route->getLabel('audits.payload', true);
+            if (!empty($pattern)) {
                 $audits->setPayload($responsePayload);
             }
 
             foreach ($events->getParams() as $key => $value) {
                 $audits->setParam($key, $value);
             }
-
             $audits->trigger();
         }
 
