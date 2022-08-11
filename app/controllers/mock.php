@@ -237,7 +237,7 @@ App::post('/v1/mock/tests/general/upload')
     ->param('file', [], new File(), 'Sample file param', false)
     ->inject('request')
     ->inject('response')
-    ->action(function (string $x, int $y, array $z, array $file, Request $request, Response $response) {
+    ->action(function (string $x, int $y, array $z, mixed $file, Request $request, Response $response) {
 
         $file = $request->getFiles('file');
 

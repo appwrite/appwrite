@@ -19,6 +19,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
+use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -151,11 +152,10 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
     Config::setParam(
         'domainVerification',
         ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
-        $endDomain->getRegisterable() !== ''
+            $endDomain->getRegisterable() !== ''
     );
 
-    Config::setParam('cookieDomain', (
-        $request->getHostname() === 'localhost' ||
+    Config::setParam('cookieDomain', ($request->getHostname() === 'localhost' ||
         $request->getHostname() === 'localhost:' . $request->getPort() ||
         (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
     )
@@ -176,6 +176,9 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
                 break;
             case version_compare($responseFormat, '0.13.4', '<='):
                 Response::setFilter(new ResponseV13());
+                break;
+            case version_compare($responseFormat, '0.14.0', '<='):
+                Response::setFilter(new ResponseV14());
                 break;
             default:
                 Response::setFilter(null);
@@ -209,8 +212,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
         ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $refDomain)
-        ->addHeader('Access-Control-Allow-Credentials', 'true')
-    ;
+        ->addHeader('Access-Control-Allow-Credentials', 'true');
 
     /*
      * Validate Client Domain - Check to avoid CSRF attack
@@ -282,7 +284,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
             $expire = $key->getAttribute('expire', 0);
 
             if (!empty($expire) && $expire < \time()) {
-                throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
+                throw new AppwriteException('Project key expired', 401, AppwriteException::PROJECT_KEY_EXPIRED);
             }
 
             Authorization::setRole('role:' . Auth::USER_ROLE_APP);
@@ -478,8 +480,7 @@ App::error(function (Throwable $error, App $utopia, Request $request, Response $
         ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
         ->addHeader('Expires', '0')
         ->addHeader('Pragma', 'no-cache')
-        ->setStatusCode($code)
-    ;
+        ->setStatusCode($code);
 
     $template = ($route) ? $route->getLabel('error', null) : null;
 
@@ -492,16 +493,14 @@ App::error(function (Throwable $error, App $utopia, Request $request, Response $
             ->setParam('projectURL', $project->getAttribute('url'))
             ->setParam('message', $error->getMessage())
             ->setParam('code', $code)
-            ->setParam('trace', $trace)
-        ;
+            ->setParam('trace', $trace);
 
         $layout
             ->setParam('title', $project->getAttribute('name') . ' - Error')
             ->setParam('description', 'No Description')
             ->setParam('body', $comp)
             ->setParam('version', $version)
-            ->setParam('litespeed', false)
-        ;
+            ->setParam('litespeed', false);
 
         $response->html($layout->render());
     }

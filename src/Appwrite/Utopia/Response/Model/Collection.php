@@ -16,6 +16,18 @@ class Collection extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Collection creation date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Collection update date in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
             ->addRule('$read', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection read permissions.',
@@ -29,6 +41,12 @@ class Collection extends Model
                 'default' => '',
                 'example' => 'user:608f9da25e7e1',
                 'array' => true
+            ])
+            ->addRule('databaseId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Database ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,

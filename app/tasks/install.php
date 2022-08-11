@@ -33,7 +33,7 @@ $cli
          * 3. Ask user to backup important volumes, env vars, and SQL tables
          *      In th future we can try and automate this for smaller/medium size setups
          * 4. Drop new docker-compose.yml setup (located inside the container, no network dependencies with appwrite.io) - DONE
-         * 5. Run docker-compose up -d - DONE
+         * 5. Run docker compose up -d - DONE
          * 6. Run data migration
          */
         $config = Config::getParam('variables');
@@ -173,6 +173,16 @@ $cli
             if (empty($input[$var['name']])) {
                 $input[$var['name']] = $var['default'];
             }
+
+            if ($var['filter'] === 'domainTarget') {
+                if ($input[$var['name']] !== 'localhost') {
+                    Console::warning("\nIf you haven't already done so, set the following record for {$input[$var['name']]} on your DNS provider:\n");
+                    $mask = "%-15.15s %-10.10s %-30.30s\n";
+                    printf($mask, "Type", "Name", "Value");
+                    printf($mask, "A or AAAA", "@", "<YOUR PUBLIC IP>");
+                    Console::warning("\nUse 'AAAA' if you're using an IPv6 address and 'A' if you're using an IPv4 address.\n");
+                }
+            }
         }
 
         $templateForCompose = new View(__DIR__ . '/../views/install/compose.phtml');
@@ -214,9 +224,9 @@ $cli
             }
         }
 
-        Console::log("Running \"docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes\"");
+        Console::log("Running \"docker compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes\"");
 
-        $exit = Console::execute("${env} docker-compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
+        $exit = Console::execute("${env} docker compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';

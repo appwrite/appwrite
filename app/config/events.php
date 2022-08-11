@@ -69,54 +69,68 @@ return [
             ],
         ]
     ],
-    'collections' => [
-        '$model' => Response::MODEL_COLLECTION,
+    'databases' => [
+        '$model' => Response::MODEL_DATABASE,
         '$resource' => true,
-        '$description' => 'This event triggers on any collection event.',
-        'documents' => [
-            '$model' => Response::MODEL_DOCUMENT,
+        '$description' => 'This event triggers on any database event.',
+        'collections' => [
+            '$model' => Response::MODEL_COLLECTION,
             '$resource' => true,
-            '$description' => 'This event triggers on any documents event.',
+            '$description' => 'This event triggers on any collection event.',
+            'documents' => [
+                '$model' => Response::MODEL_DOCUMENT,
+                '$resource' => true,
+                '$description' => 'This event triggers on any documents event.',
+                'create' => [
+                    '$description' => 'This event triggers when a document is created.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when a document is deleted.'
+                ],
+                'update' => [
+                    '$description' => 'This event triggers when a document is updated.'
+                ],
+            ],
+            'indexes' => [
+                '$model' => Response::MODEL_INDEX,
+                '$resource' => true,
+                '$description' => 'This event triggers on any indexes event.',
+                'create' => [
+                    '$description' => 'This event triggers when an index is created.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when an index is deleted.'
+                ]
+            ],
+            'attributes' => [
+                '$model' => Response::MODEL_ATTRIBUTE,
+                '$resource' => true,
+                '$description' => 'This event triggers on any attributes event.',
+                'create' => [
+                    '$description' => 'This event triggers when an attribute is created.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when an attribute is deleted.'
+                ]
+            ],
             'create' => [
-                '$description' => 'This event triggers when a document is created.',
+                '$description' => 'This event triggers when a collection is created.'
             ],
             'delete' => [
-                '$description' => 'This event triggers when a document is deleted.'
+                '$description' => 'This event triggers when a collection is deleted.',
             ],
             'update' => [
-                '$description' => 'This event triggers when a document is updated.'
-            ],
-        ],
-        'indexes' => [
-            '$model' => Response::MODEL_INDEX,
-            '$resource' => true,
-            '$description' => 'This event triggers on any indexes event.',
-            'create' => [
-                '$description' => 'This event triggers when an index is created.',
-            ],
-            'delete' => [
-                '$description' => 'This event triggers when an index is deleted.'
-            ]
-        ],
-        'attributes' => [
-            '$model' => Response::MODEL_ATTRIBUTE,
-            '$resource' => true,
-            '$description' => 'This event triggers on any attributes event.',
-            'create' => [
-                '$description' => 'This event triggers when an attribute is created.',
-            ],
-            'delete' => [
-                '$description' => 'This event triggers when an attribute is deleted.'
+                '$description' => 'This event triggers when a collection is updated.',
             ]
         ],
         'create' => [
-            '$description' => 'This event triggers when a collection is created.'
+            '$description' => 'This event triggers when a database is created.'
         ],
         'delete' => [
-            '$description' => 'This event triggers when a collection is deleted.',
+            '$description' => 'This event triggers when a database is deleted.',
         ],
         'update' => [
-            '$description' => 'This event triggers when a collection is updated.',
+            '$description' => 'This event triggers when a database is updated.',
         ]
     ],
     'buckets' => [
