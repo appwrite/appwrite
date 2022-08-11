@@ -197,7 +197,7 @@ trait DatabasesBase
         $this->assertEquals($actors['body']['required'], false);
         $this->assertEquals($actors['body']['array'], true);
 
-        $this->assertEquals($datetime['headers']['status-code'], 201);
+        $this->assertEquals($datetime['headers']['status-code'], 202);
         $this->assertEquals($datetime['body']['key'], 'birthDay');
         $this->assertEquals($datetime['body']['type'], 'datetime');
         $this->assertEquals($datetime['body']['required'], false);
@@ -410,7 +410,7 @@ trait DatabasesBase
         $this->assertEquals(false, $boolean['body']['array']);
         $this->assertEquals(true, $boolean['body']['default']);
 
-        $this->assertEquals(201, $datetime['headers']['status-code']);
+        $this->assertEquals(202, $datetime['headers']['status-code']);
         $this->assertEquals('datetime', $datetime['body']['key']);
         $this->assertEquals('datetime', $datetime['body']['type']);
         $this->assertEquals(false, $datetime['body']['required']);
@@ -834,7 +834,7 @@ trait DatabasesBase
             'attributes' => ['birthDay'],
         ]);
 
-        $this->assertEquals(201, $releaseWithDate['headers']['status-code']);
+        $this->assertEquals(202, $releaseWithDate['headers']['status-code']);
         $this->assertEquals('birthDay', $releaseWithDate['body']['key']);
         $this->assertEquals('key', $releaseWithDate['body']['type']);
         $this->assertCount(1, $releaseWithDate['body']['attributes']);
@@ -1359,7 +1359,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['title.search("Captain America")'],
+            'queries' => ['search("title", "Captain America")'],
         ]);
 
         $this->assertEquals($documents['headers']['status-code'], 200);
@@ -1370,7 +1370,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$id.equal("' . $documents['body']['documents'][0]['$id'] . '")'],
+            'queries' => ['equal("$id", "' . $documents['body']['documents'][0]['$id'] . '")'],
         ]);
 
         $this->assertEquals($documents['headers']['status-code'], 200);
@@ -1381,7 +1381,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['title.search("Homecoming")'],
+            'queries' => ['search("title", "Homecoming")'],
         ]);
 
         $this->assertEquals($documents['headers']['status-code'], 200);
@@ -1392,7 +1392,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['title.search("spider")'],
+            'queries' => ['search("title", "spider")'],
         ]);
 
         $this->assertEquals($documents['headers']['status-code'], 200);
@@ -1404,7 +1404,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['releaseYear.equal(1944)'],
+            'queries' => ['equal("releaseYear", 1944)'],
         ]);
 
         $this->assertCount(1, $documents['body']['documents']);
@@ -1414,7 +1414,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['releaseYear.notEqual(1944)'],
+            'queries' => ['notEqual("releaseYear", 1944)'],
         ]);
 
         $this->assertCount(2, $documents['body']['documents']);
@@ -1425,7 +1425,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$createdAt.greater("1976-06-12")'],
+            'queries' => ['greaterThan("$createdAt", "1976-06-12")'],
         ]);
 
         $this->assertCount(3, $documents['body']['documents']);
@@ -1434,7 +1434,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$createdAt.lesser("1976-06-12")'],
+            'queries' => ['lessThan("$createdAt", "1976-06-12")'],
         ]);
 
         $this->assertCount(0, $documents['body']['documents']);
@@ -1446,7 +1446,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['actors.equal("Tom Holland")'],
+            'queries' => ['equal("actors", "Tom Holland")'],
         ]);
         $this->assertEquals(400, $documents['headers']['status-code']);
         $this->assertEquals('Index not found: actors', $documents['body']['message']);
@@ -1461,7 +1461,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['releaseYear.equal(' . implode(',', $conditions) . ')'],
+            'queries' => ['equal("releaseYear", [' . implode(',', $conditions) . '])'],
         ]);
 
         $this->assertEquals(400, $documents['headers']['status-code']);
@@ -1476,7 +1476,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['title.search(' . implode(',', $conditions) . ')'],
+            'queries' => ['search("title", ' . implode(',', $conditions) . ')'],
         ]);
 
         $this->assertEquals(400, $documents['headers']['status-code']);
@@ -1486,7 +1486,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['birthDay.greater("1960-01-01 10:10:10+02:30")'],
+            'queries' => ['greaterThan("birthDay", "1960-01-01 10:10:10+02:30")'],
         ]);
 
         $this->assertEquals($documents['headers']['status-code'], 200);

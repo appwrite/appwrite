@@ -45,20 +45,20 @@ App::init()
     /*
      * Abuse Check
      */
-    $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-    $timeLimitArray = [];
+        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
+        $timeLimitArray = [];
 
         $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
-    foreach ($abuseKeyLabel as $abuseKey) {
-        $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
-        $timeLimit
+        foreach ($abuseKeyLabel as $abuseKey) {
+            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
+            $timeLimit
             ->setParam('{userId}', $user->getId())
             ->setParam('{userAgent}', $request->getUserAgent(''))
             ->setParam('{ip}', $request->getIP())
             ->setParam('{url}', $request->getHostname() . $route->getPath());
-        $timeLimitArray[] = $timeLimit;
-    }
+            $timeLimitArray[] = $timeLimit;
+        }
 
         $closestLimit = null;
 
@@ -99,11 +99,11 @@ App::init()
     /*
      * Background Jobs
      */
-    $events
+        $events
         ->setEvent($route->getLabel('event', ''))
         ->setProject($project)
         ->setUser($user)
-    ;
+        ;
 
         $mails
             ->setProject($project)
@@ -184,7 +184,7 @@ App::init()
 
             default:
                 throw new Exception('Unsupported authentication route', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
-            }
+        }
     });
 
 App::shutdown()

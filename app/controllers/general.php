@@ -22,8 +22,8 @@ use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Hostname;
@@ -90,7 +90,7 @@ App::init()
                 if (!empty($envDomain) && $envDomain !== 'localhost') {
                     $mainDomain = $envDomain;
                 } else {
-                    $domainDocument = $dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
+                    $domainDocument = $dbForConsole->findOne('domains', [Query::orderAsc('_id')]);
                     $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
 
@@ -98,7 +98,7 @@ App::init()
                     Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
                 } else {
                     $domainDocument = $dbForConsole->findOne('domains', [
-                        new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
+                        Query::equal('domain', [$domain->get()])
                     ]);
 
                     if (!$domainDocument) {
@@ -173,42 +173,42 @@ App::init()
             ? null
             : '.' . $request->getHostname());
 
-    /*
-     * Response format
-     */
-    $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
-    if ($responseFormat) {
-        switch ($responseFormat) {
-            case version_compare($responseFormat, '0.11.2', '<='):
-                Response::setFilter(new ResponseV11());
-                break;
-            case version_compare($responseFormat, '0.12.4', '<='):
-                Response::setFilter(new ResponseV12());
-                break;
-            case version_compare($responseFormat, '0.13.4', '<='):
-                Response::setFilter(new ResponseV13());
-                break;
-            case version_compare($responseFormat, '0.14.0', '<='):
-                Response::setFilter(new ResponseV14());
-                break;
-            default:
-                Response::setFilter(null);
-        }
-    } else {
-        Response::setFilter(null);
-    }
-
-    /*
-     * Security Headers
-     *
-     * As recommended at:
-     * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
-     */
-    if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-        if ($request->getProtocol() !== 'https') {
-            if ($request->getMethod() !== Request::METHOD_GET) {
-                throw new AppwriteException('Method unsupported over HTTP.', 500, AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED);
+        /*
+        * Response format
+        */
+        $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        if ($responseFormat) {
+            switch ($responseFormat) {
+                case version_compare($responseFormat, '0.11.2', '<='):
+                    Response::setFilter(new ResponseV11());
+                    break;
+                case version_compare($responseFormat, '0.12.4', '<='):
+                    Response::setFilter(new ResponseV12());
+                    break;
+                case version_compare($responseFormat, '0.13.4', '<='):
+                    Response::setFilter(new ResponseV13());
+                    break;
+                case version_compare($responseFormat, '0.14.0', '<='):
+                    Response::setFilter(new ResponseV14());
+                    break;
+                default:
+                    Response::setFilter(null);
             }
+        } else {
+            Response::setFilter(null);
+        }
+
+        /*
+        * Security Headers
+        *
+        * As recommended at:
+        * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
+        */
+        if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+            if ($request->getProtocol() !== 'https') {
+                if ($request->getMethod() !== Request::METHOD_GET) {
+                    throw new AppwriteException('Method unsupported over HTTP.', 500, AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED);
+                }
 
                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
             }
