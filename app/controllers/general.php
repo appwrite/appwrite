@@ -97,7 +97,7 @@ App::init()
                     Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
                 } else {
                     $domainDocument = $dbForConsole->findOne('domains', [
-                        new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
+                        Query::equal('domain', [$domain->get()])
                     ]);
 
                     if (!$domainDocument) {
@@ -161,7 +161,7 @@ App::init()
         Config::setParam(
             'domainVerification',
             ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
-            $endDomain->getRegisterable() !== ''
+                $endDomain->getRegisterable() !== ''
         );
 
         Config::setParam('cookieDomain', (
@@ -222,8 +222,7 @@ App::init()
             ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
-            ->addHeader('Access-Control-Allow-Credentials', 'true')
-        ;
+            ->addHeader('Access-Control-Allow-Credentials', 'true');
 
         /*
         * Validate Client Domain - Check to avoid CSRF attack
@@ -295,7 +294,7 @@ App::init()
                 $expire = $key->getAttribute('expire', 0);
 
                 if (!empty($expire) && $expire < \time()) {
-                    throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
+                    throw new AppwriteException('Project key expired', 401, AppwriteException::PROJECT_KEY_EXPIRED);
                 }
 
                 Authorization::setRole('role:' . Auth::USER_ROLE_APP);
@@ -502,8 +501,7 @@ App::error()
             ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->addHeader('Expires', '0')
             ->addHeader('Pragma', 'no-cache')
-            ->setStatusCode($code)
-        ;
+            ->setStatusCode($code);
 
         $template = ($route) ? $route->getLabel('error', null) : null;
 
@@ -516,16 +514,14 @@ App::error()
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $error->getMessage())
                 ->setParam('code', $code)
-                ->setParam('trace', $trace)
-            ;
+                ->setParam('trace', $trace);
 
             $layout
                 ->setParam('title', $project->getAttribute('name') . ' - Error')
                 ->setParam('description', 'No Description')
                 ->setParam('body', $comp)
                 ->setParam('version', $version)
-                ->setParam('litespeed', false)
-            ;
+                ->setParam('litespeed', false);
 
             $response->html($layout->render());
         }

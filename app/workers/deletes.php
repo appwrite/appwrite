@@ -150,11 +150,11 @@ class DeletesV1 extends Worker
         $dbForProject->deleteCollection('database_' . $databaseId . '_collection_' . $document->getInternalId());
 
         $this->deleteByGroup('attributes', [
-            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
+            Query::equal('collectionId', [$collectionId])
         ], $dbForProject);
 
         $this->deleteByGroup('indexes', [
-            new Query('collectionId', Query::TYPE_EQUAL, [$collectionId])
+            Query::equal('collectionId', [$collectionId])
         ], $dbForProject);
 
         $this->deleteAuditLogsByResource('collection/' . $collectionId, $projectId);
@@ -170,13 +170,13 @@ class DeletesV1 extends Worker
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Usage stats
             $this->deleteByGroup('stats', [
-                new Query('time', Query::TYPE_LESSER, [$timestamp1d]),
-                new Query('period', Query::TYPE_EQUAL, ['1d']),
+                Query::lessThan('time', $timestamp1d),
+                Query::equal('period', ['1d']),
             ], $dbForProject);
 
             $this->deleteByGroup('stats', [
-                new Query('time', Query::TYPE_LESSER, [$timestamp30m]),
-                new Query('period', Query::TYPE_EQUAL, ['30m']),
+                Query::lessThan('time', $timestamp30m),
+                Query::equal('period', ['30m']),
             ], $dbForProject);
         });
     }
@@ -191,7 +191,7 @@ class DeletesV1 extends Worker
 
         // Delete Memberships
         $this->deleteByGroup('memberships', [
-            new Query('teamId', Query::TYPE_EQUAL, [$teamId])
+            Query::equal('teamId', [$teamId])
         ], $this->getProjectDB($projectId));
     }
 
@@ -223,14 +223,14 @@ class DeletesV1 extends Worker
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
         $this->deleteByGroup('sessions', [
-            new Query('userId', Query::TYPE_EQUAL, [$userId])
+            Query::equal('userId', [$userId])
         ], $this->getProjectDB($projectId));
 
         $this->getProjectDB($projectId)->deleteCachedDocument('users', $userId);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
-            new Query('userId', Query::TYPE_EQUAL, [$userId])
+            Query::equal('userId', [$userId])
         ], $this->getProjectDB($projectId), function (Document $document) use ($projectId) {
 
             if ($document->getAttribute('confirm')) { // Count only confirmed members
@@ -251,7 +251,7 @@ class DeletesV1 extends Worker
 
         // Delete tokens
         $this->deleteByGroup('tokens', [
-            new Query('userId', Query::TYPE_EQUAL, [$userId])
+            Query::equal('userId', [$userId])
         ], $this->getProjectDB($projectId));
     }
 
@@ -264,7 +264,7 @@ class DeletesV1 extends Worker
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Executions
             $this->deleteByGroup('executions', [
-                new Query('$createdAt', Query::TYPE_LESSER, [$timestamp])
+                Query::lessThan('$createdAt', $timestamp)
             ], $dbForProject);
         });
     }
@@ -278,7 +278,7 @@ class DeletesV1 extends Worker
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Sessions
             $this->deleteByGroup('sessions', [
-                new Query('expire', Query::TYPE_LESSER, [$timestamp])
+                Query::lessThan('expire', $timestamp)
             ], $dbForProject);
         });
     }
@@ -292,7 +292,7 @@ class DeletesV1 extends Worker
             $dbForProject = $this->getProjectDB($projectId);
             // Delete Dead Realtime Logs
             $this->deleteByGroup('realtime', [
-                new Query('timestamp', Query::TYPE_LESSER, [$timestamp])
+                Query::lessThan('timestamp', $timestamp)
             ], $dbForProject);
         });
     }
@@ -344,7 +344,7 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
 
         $this->deleteByGroup(Audit::COLLECTION, [
-            new Query('resource', Query::TYPE_EQUAL, [$resource])
+            Query::equal('resource', [$resource])
         ], $dbForProject);
     }
 
@@ -364,7 +364,7 @@ class DeletesV1 extends Worker
         $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
-            new Query('resourceId', Query::TYPE_EQUAL, [$functionId])
+            Query::equal('resourceId', [$functionId])
         ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentIds) {
             $deploymentIds[] = $document->getId();
             if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
@@ -381,7 +381,7 @@ class DeletesV1 extends Worker
         $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
         foreach ($deploymentIds as $deploymentId) {
             $this->deleteByGroup('builds', [
-                new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId])
+                Query::equal('deploymentId', [$deploymentId])
             ], $dbForProject, function (Document $document) use ($storageBuilds, $deploymentId) {
                 if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
                     Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
@@ -396,7 +396,7 @@ class DeletesV1 extends Worker
          */
         Console::info("Deleting executions for function " . $functionId);
         $this->deleteByGroup('executions', [
-            new Query('functionId', Query::TYPE_EQUAL, [$functionId])
+            Query::equal('functionId', [$functionId])
         ], $dbForProject);
 
         /**
@@ -440,7 +440,7 @@ class DeletesV1 extends Worker
         Console::info("Deleting builds for deployment " . $deploymentId);
         $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
         $this->deleteByGroup('builds', [
-            new Query('deploymentId', Query::TYPE_EQUAL, [$deploymentId])
+            Query::equal('deploymentId', [$deploymentId])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
             if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
                 Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
@@ -499,7 +499,7 @@ class DeletesV1 extends Worker
         $executionStart = \microtime(true);
 
         while ($sum === $limit) {
-            $projects = $this->getConsoleDB()->find('projects', [], $limit, ($chunk * $limit));
+            $projects = $this->getConsoleDB()->find('projects', [Query::limit($limit), Query::offset($chunk * $limit)]);
 
             $chunk++;
 
@@ -538,7 +538,7 @@ class DeletesV1 extends Worker
         while ($sum === $limit) {
             $chunk++;
 
-            $results = $database->find($collection, $queries, $limit, 0);
+            $results = $database->find($collection, \array_merge([Query::limit($limit), Query::offset(0)], $queries));
 
             $sum = count($results);
 
@@ -565,7 +565,7 @@ class DeletesV1 extends Worker
         // If domain has certificate generated
         if (isset($document['certificateId'])) {
             $domainUsingCertificate = $consoleDB->findOne('domains', [
-                new Query('certificateId', Query::TYPE_EQUAL, [$document['certificateId']])
+                Query::equal('certificateId', [$document['certificateId']])
             ]);
 
             if (!$domainUsingCertificate) {

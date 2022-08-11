@@ -251,8 +251,7 @@ Database::addFilter(
         if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
             $attribute
                 ->setAttribute('min', $formatOptions['min'])
-                ->setAttribute('max', $formatOptions['max'])
-            ;
+                ->setAttribute('max', $formatOptions['max']);
         }
 
         return $value;
@@ -267,9 +266,10 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('attributes', [
-                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
-                new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
-            ], $database->getAttributeLimit(), 0, []);
+                Query::equal('collectionInternalId', [$document->getInternalId()]),
+                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+                Query::limit($database->getAttributeLimit()),
+            ]);
     }
 );
 
@@ -281,9 +281,10 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('indexes', [
-                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
-                new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
-            ], 64);
+                Query::equal('collectionInternalId', [$document->getInternalId()]),
+                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+                Query::limit(64),
+            ]);
     }
 );
 
@@ -295,8 +296,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('platforms', [
-                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY);
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -308,8 +310,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('domains', [
-                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY);
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -321,8 +324,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
-                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY);
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -334,8 +338,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('webhooks', [
-                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY);
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -346,8 +351,9 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database->find('sessions', [
-            new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-        ], APP_LIMIT_SUBQUERY));
+            Query::equal('userInternalId', [$document->getInternalId()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
     }
 );
 
@@ -357,10 +363,11 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('tokens', [
-                new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY));
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
     }
 );
 
@@ -370,10 +377,11 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('memberships', [
-                new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY));
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
     }
 );
 
@@ -456,7 +464,7 @@ $register->set('logger', function () {
     return new Logger($adapter);
 });
 $register->set('dbPool', function () {
- // Register DB connection
+    // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbPort = App::getEnv('_APP_DB_PORT', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
@@ -465,20 +473,20 @@ $register->set('dbPool', function () {
 
     $pool = new PDOPool(
         (new PDOConfig())
-        ->withHost($dbHost)
-        ->withPort($dbPort)
-        ->withDbName($dbScheme)
-        ->withCharset('utf8mb4')
-        ->withUsername($dbUser)
-        ->withPassword($dbPass)
-        ->withOptions([
-            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-            PDO::ATTR_TIMEOUT => 3, // Seconds
-            PDO::ATTR_PERSISTENT => true,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => true,
-            PDO::ATTR_STRINGIFY_FETCHES => true,
-        ]),
+            ->withHost($dbHost)
+            ->withPort($dbPort)
+            ->withDbName($dbScheme)
+            ->withCharset('utf8mb4')
+            ->withUsername($dbUser)
+            ->withPassword($dbPass)
+            ->withOptions([
+                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+                PDO::ATTR_TIMEOUT => 3, // Seconds
+                PDO::ATTR_PERSISTENT => true,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => true,
+                PDO::ATTR_STRINGIFY_FETCHES => true,
+            ]),
         64
     );
 
@@ -497,17 +505,17 @@ $register->set('redisPool', function () {
 
     $pool = new RedisPool(
         (new RedisConfig())
-        ->withHost($redisHost)
-        ->withPort($redisPort)
-        ->withAuth($redisAuth)
-        ->withDbIndex(0),
+            ->withHost($redisHost)
+            ->withPort($redisPort)
+            ->withAuth($redisAuth)
+            ->withDbIndex(0),
         64
     );
 
     return $pool;
 });
 $register->set('influxdb', function () {
- // Register DB connection
+    // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
     $port = App::getEnv('_APP_INFLUXDB_PORT', '');
 
@@ -521,7 +529,7 @@ $register->set('influxdb', function () {
     return $client;
 });
 $register->set('statsd', function () {
- // Register DB connection
+    // Register DB connection
     $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
     $port = App::getEnv('_APP_STATSD_PORT', 8125);
 
@@ -562,7 +570,7 @@ $register->set('geodb', function () {
     return new Reader(__DIR__ . '/db/DBIP/dbip-country-lite-2022-06.mmdb');
 });
 $register->set('db', function () {
- // This is usually for our workers or CLI commands scope
+    // This is usually for our workers or CLI commands scope
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbPort = App::getEnv('_APP_DB_PORT', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
@@ -581,7 +589,7 @@ $register->set('db', function () {
     return $pdo;
 });
 $register->set('cache', function () {
- // This is usually for our workers or CLI commands scope
+    // This is usually for our workers or CLI commands scope
     $redis = new Redis();
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
@@ -687,7 +695,7 @@ App::setResource('loggerBreadcrumbs', function () {
     return [];
 });
 
-App::setResource('register', fn() => $register);
+App::setResource('register', fn () => $register);
 
 App::setResource('layout', function ($locale) {
     $layout = new View(__DIR__ . '/views/layouts/default.phtml');
@@ -696,15 +704,15 @@ App::setResource('layout', function ($locale) {
     return $layout;
 }, ['locale']);
 
-App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
+App::setResource('locale', fn () => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues
-App::setResource('events', fn() => new Event('', ''));
-App::setResource('audits', fn() => new Audit());
-App::setResource('mails', fn() => new Mail());
-App::setResource('deletes', fn() => new Delete());
-App::setResource('database', fn() => new EventDatabase());
-App::setResource('messaging', fn() => new Phone());
+App::setResource('events', fn () => new Event('', ''));
+App::setResource('audits', fn () => new Audit());
+App::setResource('mails', fn () => new Mail());
+App::setResource('deletes', fn () => new Delete());
+App::setResource('database', fn () => new EventDatabase());
+App::setResource('messaging', fn () => new Phone());
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
@@ -766,7 +774,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             Auth::$cookieName, // Get sessions
             $request->getCookie(Auth::$cookieName . '_legacy', '')
         )
-    );// Get fallback session from old clients (no SameSite support)
+    ); // Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
     if ($response) {
@@ -847,7 +855,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
         return $console;
     }
 
-    $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
+    $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
 }, ['dbForConsole', 'request', 'console']);

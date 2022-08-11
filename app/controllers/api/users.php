@@ -78,12 +78,10 @@ App::post('/v1/users')
         }
 
         $usage
-            ->setParam('users.create', 1)
-        ;
+            ->setParam('users.create', 1);
 
         $events
-            ->setParam('userId', $user->getId())
-        ;
+            ->setParam('userId', $user->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
@@ -105,33 +103,38 @@ App::get('/v1/users')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the user used as the starting point for the query, excluding the user itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
 
-        if (!empty($cursor)) {
-            $cursorUser = $dbForProject->getDocument('users', $cursor);
+        $filterQueries = [];
 
-            if ($cursorUser->isEmpty()) {
-                throw new Exception("User '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('search', $search);
         }
 
         $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('users', $cursor);
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("User '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         $usage
-            ->setParam('users.read', 1)
-        ;
+            ->setParam('users.read', 1);
 
         $response->dynamic(new Document([
-            'users' => $dbForProject->find('users', $queries, $limit, $offset, [], [$orderType], $cursorUser ?? null, $cursorDirection),
-            'total' => $dbForProject->count('users', $queries, APP_LIMIT_COUNT),
+            'users' => $dbForProject->find('users', \array_merge($filterQueries, $queries)),
+            'total' => $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -159,8 +162,7 @@ App::get('/v1/users/:userId')
         }
 
         $usage
-            ->setParam('users.read', 1)
-        ;
+            ->setParam('users.read', 1);
         $response->dynamic($user, Response::MODEL_USER);
     });
 
@@ -190,8 +192,7 @@ App::get('/v1/users/:userId/prefs')
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
         $usage
-            ->setParam('users.read', 1)
-        ;
+            ->setParam('users.read', 1);
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
@@ -232,8 +233,7 @@ App::get('/v1/users/:userId/sessions')
         }
 
         $usage
-            ->setParam('users.read', 1)
-        ;
+            ->setParam('users.read', 1);
         $response->dynamic(new Document([
             'sessions' => $sessions,
             'total' => count($sessions),
@@ -352,8 +352,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $usage
-            ->setParam('users.read', 1)
-        ;
+            ->setParam('users.read', 1);
 
         $response->dynamic(new Document([
             'total' => $audit->countLogsByUser($user->getId()),
@@ -390,12 +389,10 @@ App::patch('/v1/users/:userId/status')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
 
         $usage
-            ->setParam('users.update', 1)
-        ;
+            ->setParam('users.update', 1);
 
         $events
-            ->setParam('userId', $user->getId())
-        ;
+            ->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -429,12 +426,10 @@ App::patch('/v1/users/:userId/verification')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
 
         $usage
-            ->setParam('users.update', 1)
-        ;
+            ->setParam('users.update', 1);
 
         $events
-            ->setParam('userId', $user->getId())
-        ;
+            ->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -468,12 +463,10 @@ App::patch('/v1/users/:userId/verification/phone')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('phoneVerification', $phoneVerification));
 
         $usage
-            ->setParam('users.update', 1)
-        ;
+            ->setParam('users.update', 1);
 
         $events
-            ->setParam('userId', $user->getId())
-        ;
+            ->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -507,17 +500,14 @@ App::patch('/v1/users/:userId/name')
         $user
             ->setAttribute('name', $name)
             ->setAttribute('search', \implode(' ', [$user->getId(), $user->getAttribute('email', ''), $name, $user->getAttribute('phone', '')]));
-        ;
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $audits
-            ->setResource('user/' . $user->getId())
-        ;
+            ->setResource('user/' . $user->getId());
 
         $events
-            ->setParam('userId', $user->getId())
-        ;
+            ->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -555,12 +545,10 @@ App::patch('/v1/users/:userId/password')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $audits
-            ->setResource('user/' . $user->getId())
-        ;
+            ->setResource('user/' . $user->getId());
 
         $events
-            ->setParam('userId', $user->getId())
-        ;
+            ->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -596,8 +584,7 @@ App::patch('/v1/users/:userId/email')
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false)
-            ->setAttribute('search', \implode(' ', [$user->getId(), $email, $user->getAttribute('name', ''), $user->getAttribute('phone', '')]))
-        ;
+            ->setAttribute('search', \implode(' ', [$user->getId(), $email, $user->getAttribute('name', ''), $user->getAttribute('phone', '')]));
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -607,12 +594,10 @@ App::patch('/v1/users/:userId/email')
 
 
         $audits
-            ->setResource('user/' . $user->getId())
-        ;
+            ->setResource('user/' . $user->getId());
 
         $events
-            ->setParam('userId', $user->getId())
-        ;
+            ->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -647,7 +632,6 @@ App::patch('/v1/users/:userId/phone')
             ->setAttribute('phone', $number)
             ->setAttribute('phoneVerification', false)
             ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $number]));
-        ;
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -657,12 +641,10 @@ App::patch('/v1/users/:userId/phone')
 
 
         $audits
-            ->setResource('user/' . $user->getId())
-        ;
+            ->setResource('user/' . $user->getId());
 
         $events
-            ->setParam('userId', $user->getId())
-        ;
+            ->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -696,12 +678,10 @@ App::patch('/v1/users/:userId/prefs')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
         $usage
-            ->setParam('users.update', 1)
-        ;
+            ->setParam('users.update', 1);
 
         $events
-            ->setParam('userId', $user->getId())
-        ;
+            ->setParam('userId', $user->getId());
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
@@ -743,13 +723,11 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
         $usage
             ->setParam('users.update', 1)
-            ->setParam('users.sessions.delete', 1)
-        ;
+            ->setParam('users.sessions.delete', 1);
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $sessionId)
-        ;
+            ->setParam('sessionId', $sessionId);
 
         $response->noContent();
     });
@@ -780,7 +758,8 @@ App::delete('/v1/users/:userId/sessions')
 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $key => $session) { /** @var Document $session */
+        foreach ($sessions as $key => $session) {
+            /** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
             //TODO: fix this
         }
@@ -789,13 +768,11 @@ App::delete('/v1/users/:userId/sessions')
 
         $events
             ->setParam('userId', $user->getId())
-            ->setPayload($response->output($user, Response::MODEL_USER))
-        ;
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $usage
             ->setParam('users.update', 1)
-            ->setParam('users.sessions.delete', 1)
-        ;
+            ->setParam('users.sessions.delete', 1);
 
         $response->noContent();
     });
@@ -832,17 +809,14 @@ App::delete('/v1/users/:userId')
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($clone)
-        ;
+            ->setDocument($clone);
 
         $events
             ->setParam('userId', $user->getId())
-            ->setPayload($response->output($clone, Response::MODEL_USER))
-        ;
+            ->setPayload($response->output($clone, Response::MODEL_USER));
 
         $usage
-            ->setParam('users.delete', 1)
-        ;
+            ->setParam('users.delete', 1);
 
         $response->noContent();
     });
@@ -858,7 +832,7 @@ App::get('/v1/users/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->param('provider', '', new WhiteList(\array_merge(['email', 'anonymous'], \array_map(fn($value) => "oauth-" . $value, \array_keys(Config::getParam('providers', [])))), true), 'Provider Name.', true)
+    ->param('provider', '', new WhiteList(\array_merge(['email', 'anonymous'], \array_map(fn ($value) => "oauth-" . $value, \array_keys(Config::getParam('providers', [])))), true), 'Provider Name.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('register')
@@ -904,9 +878,12 @@ App::get('/v1/users/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::offset(0),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {

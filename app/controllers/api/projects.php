@@ -181,22 +181,28 @@ App::get('/v1/projects')
     ->inject('dbForConsole')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForConsole) {
 
-        if (!empty($cursor)) {
-            $cursorProject = $dbForConsole->getDocument('projects', $cursor);
+        $filterQueries = [];
 
-            if ($cursorProject->isEmpty()) {
-                throw new Exception("Project '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('search', $search);
         }
 
         $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForConsole->getDocument('projects', $cursor);
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("Project '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
-        $results = $dbForConsole->find('projects', $queries, $limit, $offset, [], [$orderType], $cursorProject ?? null, $cursorDirection);
-        $total = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
+        $results = $dbForConsole->find('projects', \array_merge($filterQueries, $queries));
+        $total = $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'projects' => $results,
@@ -293,9 +299,12 @@ App::get('/v1/projects/:projectId/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::offset(0),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -370,17 +379,17 @@ App::patch('/v1/projects/:projectId')
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('name', $name)
-                ->setAttribute('description', $description)
-                ->setAttribute('logo', $logo)
-                ->setAttribute('url', $url)
-                ->setAttribute('legalName', $legalName)
-                ->setAttribute('legalCountry', $legalCountry)
-                ->setAttribute('legalState', $legalState)
-                ->setAttribute('legalCity', $legalCity)
-                ->setAttribute('legalAddress', $legalAddress)
-                ->setAttribute('legalTaxId', $legalTaxId)
-                ->setAttribute('search', implode(' ', [$projectId, $name])));
+            ->setAttribute('name', $name)
+            ->setAttribute('description', $description)
+            ->setAttribute('logo', $logo)
+            ->setAttribute('url', $url)
+            ->setAttribute('legalName', $legalName)
+            ->setAttribute('legalCountry', $legalCountry)
+            ->setAttribute('legalState', $legalState)
+            ->setAttribute('legalCity', $legalCity)
+            ->setAttribute('legalAddress', $legalAddress)
+            ->setAttribute('legalTaxId', $legalTaxId)
+            ->setAttribute('search', implode(' ', [$projectId, $name])));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -396,7 +405,7 @@ App::patch('/v1/projects/:projectId/service')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional'])), true), 'Service name.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')
@@ -543,8 +552,7 @@ App::delete('/v1/projects/:projectId')
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($project)
-        ;
+            ->setDocument($project);
 
         if (!$dbForConsole->deleteDocument('teams', $project->getAttribute('teamId', null))) {
             throw new Exception('Failed to remove project team from DB', 500, Exception::GENERAL_SERVER_ERROR);
@@ -633,8 +641,9 @@ App::get('/v1/projects/:projectId/webhooks')
         }
 
         $webhooks = $dbForConsole->find('webhooks', [
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
-        ], 5000);
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'webhooks' => $webhooks,
@@ -665,8 +674,8 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
@@ -707,8 +716,8 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
@@ -721,8 +730,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('url', $url)
             ->setAttribute('security', $security)
             ->setAttribute('httpUser', $httpUser)
-            ->setAttribute('httpPass', $httpPass)
-        ;
+            ->setAttribute('httpPass', $httpPass);
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
@@ -753,8 +761,8 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
@@ -791,8 +799,8 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
@@ -874,8 +882,9 @@ App::get('/v1/projects/:projectId/keys')
         }
 
         $keys = $dbForConsole->find('keys', [
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()]),
-        ], 5000);
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'keys' => $keys,
@@ -906,8 +915,8 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($key === false || $key->isEmpty()) {
@@ -943,8 +952,8 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($key === false || $key->isEmpty()) {
@@ -954,8 +963,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $key
             ->setAttribute('name', $name)
             ->setAttribute('scopes', $scopes)
-            ->setAttribute('expire', $expire)
-        ;
+            ->setAttribute('expire', $expire);
 
         $dbForConsole->updateDocument('keys', $key->getId(), $key);
 
@@ -986,8 +994,8 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($key === false || $key->isEmpty()) {
@@ -1071,8 +1079,9 @@ App::get('/v1/projects/:projectId/platforms')
         }
 
         $platforms = $dbForConsole->find('platforms', [
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
-        ], 5000);
+            Query::equal('projectId', [$project->getId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'platforms' => $platforms,
@@ -1103,8 +1112,8 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$platformId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
@@ -1140,8 +1149,8 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$platformId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
@@ -1152,8 +1161,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             ->setAttribute('name', $name)
             ->setAttribute('key', $key)
             ->setAttribute('store', $store)
-            ->setAttribute('hostname', $hostname)
-        ;
+            ->setAttribute('hostname', $hostname);
 
         $dbForConsole->updateDocument('platforms', $platform->getId(), $platform);
 
@@ -1184,8 +1192,8 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$platformId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
@@ -1224,8 +1232,8 @@ App::post('/v1/projects/:projectId/domains')
         }
 
         $document = $dbForConsole->findOne('domains', [
-            new Query('domain', Query::TYPE_EQUAL, [$domain]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()]),
+            Query::equal('domain', [$domain]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($document && !$document->isEmpty()) {
@@ -1284,8 +1292,9 @@ App::get('/v1/projects/:projectId/domains')
         }
 
         $domains = $dbForConsole->find('domains', [
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
-        ], 5000);
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'domains' => $domains,
@@ -1316,8 +1325,8 @@ App::get('/v1/projects/:projectId/domains/:domainId')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$domainId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
@@ -1350,8 +1359,8 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$domainId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
@@ -1410,8 +1419,8 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$domainId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($domain === false || $domain->isEmpty()) {

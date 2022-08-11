@@ -209,7 +209,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             $payload = [];
 
             $list = Authorization::skip(fn () => $database->find('realtime', [
-                new Query('timestamp', Query::TYPE_GREATER, [(time() - 15)])
+                Query::greaterThan('timestamp', (time() - 15)),
             ]));
 
             /**
@@ -305,7 +305,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
                         [$consoleDatabase, $returnConsoleDatabase] = getDatabase($register, '_console');
-                        $project = Authorization::skip(fn() => $consoleDatabase->getDocument('projects', $projectId));
+                        $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         [$database, $returnDatabase] = getDatabase($register, "_{$project->getInternalId()}");
 
                         $user = $database->getDocument('users', $userId);
@@ -494,7 +494,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $projectId = $realtime->connections[$connection]['projectId'];
 
         if ($projectId !== 'console') {
-            $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
+            $project = Authorization::skip(fn () => $database->getDocument('projects', $projectId));
             $database->setNamespace("_{$project->getInternalId()}");
         }
 

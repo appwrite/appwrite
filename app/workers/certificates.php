@@ -73,7 +73,7 @@ class CertificatesV1 extends Worker
         $domain = new Domain($document->getAttribute('domain', ''));
 
         // Get current certificate
-        $certificate = $this->dbForConsole->findOne('certificates', [new Query('domain', Query::TYPE_EQUAL, [$domain->get()])]);
+        $certificate = $this->dbForConsole->findOne('certificates', [Query::equal('domain', [$domain->get()])]);
 
         // If we don't have certificate for domain yet, let's create new document. At the end we save it
         if (!$certificate) {
@@ -151,7 +151,7 @@ class CertificatesV1 extends Worker
     private function saveCertificateDocument(string $domain, Document $certificate): void
     {
         // Check if update or insert required
-        $certificateDocument = $this->dbForConsole->findOne('certificates', [new Query('domain', Query::TYPE_EQUAL, [$domain])]);
+        $certificateDocument = $this->dbForConsole->findOne('certificates', [Query::equal('domain', [$domain])]);
         if (!empty($certificateDocument) && !$certificateDocument->isEmpty()) {
             // Merge new data with current data
             $certificate = new Document(\array_merge($certificateDocument->getArrayCopy(), $certificate->getArrayCopy()));
@@ -395,8 +395,9 @@ class CertificatesV1 extends Worker
     private function updateDomainDocuments(string $certificateId, string $domain): void
     {
         $domains = $this->dbForConsole->find('domains', [
-            new Query('domain', Query::TYPE_EQUAL, [$domain])
-        ], 1000);
+            Query::equal('domain', [$domain]),
+            Query::limit(1000),
+        ]);
 
         foreach ($domains as $domainDocument) {
             $domainDocument->setAttribute('updated', \time());

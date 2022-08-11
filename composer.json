@@ -44,13 +44,13 @@
         "appwrite/php-runtimes": "0.10.*",
         "utopia-php/framework": "0.20.*",
         "utopia-php/logger": "0.3.*",
-        "utopia-php/abuse": "0.7.*",
+        "utopia-php/abuse": "dev-feat-update-database-queries",
         "utopia-php/analytics": "0.2.*",
-        "utopia-php/audit": "0.8.*",
+        "utopia-php/audit": "dev-feat-update-database-queries",
         "utopia-php/cache": "0.6.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.18.*",
+        "utopia-php/database": "dev-feat-query-gen-2.3",
         "utopia-php/locale": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
@@ -72,6 +72,18 @@
     "repositories": [
         {
             "url": "https://github.com/appwrite/runtimes.git",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/database.git",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/abuse.git",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/audit.git",
             "type": "git"
         }
     ],

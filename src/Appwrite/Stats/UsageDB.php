@@ -4,6 +4,7 @@ namespace Appwrite\Stats;
 
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 
 class UsageDB extends Usage
 {
@@ -48,7 +49,7 @@ class UsageDB extends Usage
                         $document->setAttribute('value', $value)
                     );
                 }
-            } catch (\Exception$e) { // if projects are deleted this might fail
+            } catch (\Exception $e) { // if projects are deleted this might fail
                 if (is_callable($this->errorHandler)) {
                     call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
                 } else {
@@ -79,7 +80,11 @@ class UsageDB extends Usage
 
         while ($sum === $limit) {
             try {
-                $results = $this->database->find($collection, $queries, $limit, cursor:$latestDocument);
+                $paginationQueries = [Query::limit($limit)];
+                if ($latestDocument !== null) {
+                    $paginationQueries[] =  Query::cursorAfter($latestDocument);
+                }
+                $results = $this->database->find($collection, \array_merge($paginationQueries, $queries));
             } catch (\Exception $e) {
                 if (is_callable($this->errorHandler)) {
                     call_user_func($this->errorHandler, $e, "fetch_documents_project_{$projectId}_collection_{$collection}");

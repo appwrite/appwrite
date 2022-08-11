@@ -13,7 +13,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Query;
 
 require_once __DIR__ . '/../init.php';
 
@@ -61,7 +61,12 @@ class FunctionsV1 extends Worker
             /** @var Document[] $functions */
 
             while ($sum >= $limit) {
-                $functions = $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]);
+                $queries = [
+                    Query::limit($limit),
+                    Query::offset($offset),
+                    Query::orderAsc('name'),
+                ];
+                $functions = $database->find('functions', $queries);
                 $sum = \count($functions);
                 $offset = $offset + $limit;
 

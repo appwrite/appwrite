@@ -128,12 +128,10 @@ App::post('/v1/storage/buckets')
 
         $audits
             ->setResource('storage/buckets/' . $bucket->getId())
-            ->setPayload($bucket->getArrayCopy())
-        ;
+            ->setPayload($bucket->getArrayCopy());
 
         $events
-            ->setParam('bucketId', $bucket->getId())
-        ;
+            ->setParam('bucketId', $bucket->getId());
 
         $usage->setParam('storage.buckets.create', 1);
 
@@ -157,27 +155,37 @@ App::get('/v1/storage/buckets')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('cursor', '', new UID(), 'ID of the bucket used as the starting point for the query, excluding the bucket itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' .  Database::ORDER_ASC . ' or ' .  Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
+        $filterQueries = [];
 
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('name', $search);
+        }
+
+        $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
         if (!empty($cursor)) {
-            $cursorBucket = $dbForProject->getDocument('buckets', $cursor);
+            $cursorDocument = $dbForProject->getDocument('buckets', $cursor);
 
-            if ($cursorBucket->isEmpty()) {
+            if ($cursorDocument->isEmpty()) {
                 throw new Exception("Bucket '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         $usage->setParam('storage.buckets.read', 1);
 
         $response->dynamic(new Document([
-            'buckets' => $dbForProject->find('buckets', $queries, $limit, $offset, [], [$orderType], $cursorBucket ?? null, $cursorDirection),
-            'total' => $dbForProject->count('buckets', $queries, APP_LIMIT_COUNT),
+            'buckets' => $dbForProject->find('buckets', \array_merge($filterQueries, $queries)),
+            'total' => $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BUCKET_LIST);
     });
 
@@ -252,24 +260,22 @@ App::put('/v1/storage/buckets/:bucketId')
         $antivirus ??= $bucket->getAttribute('antivirus', true);
 
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
-                ->setAttribute('name', $name)
-                ->setAttribute('$read', $read)
-                ->setAttribute('$write', $write)
-                ->setAttribute('maximumFileSize', $maximumFileSize)
-                ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
-                ->setAttribute('enabled', (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN))
-                ->setAttribute('encryption', (bool) filter_var($encryption, FILTER_VALIDATE_BOOLEAN))
-                ->setAttribute('permission', $permission)
-                ->setAttribute('antivirus', (bool) filter_var($antivirus, FILTER_VALIDATE_BOOLEAN)));
+            ->setAttribute('name', $name)
+            ->setAttribute('$read', $read)
+            ->setAttribute('$write', $write)
+            ->setAttribute('maximumFileSize', $maximumFileSize)
+            ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
+            ->setAttribute('enabled', (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN))
+            ->setAttribute('encryption', (bool) filter_var($encryption, FILTER_VALIDATE_BOOLEAN))
+            ->setAttribute('permission', $permission)
+            ->setAttribute('antivirus', (bool) filter_var($antivirus, FILTER_VALIDATE_BOOLEAN)));
 
         $audits
             ->setResource('storage/buckets/' . $bucket->getId())
-            ->setPayload($bucket->getArrayCopy())
-        ;
+            ->setPayload($bucket->getArrayCopy());
 
         $events
-            ->setParam('bucketId', $bucket->getId())
-        ;
+            ->setParam('bucketId', $bucket->getId());
 
         $usage->setParam('storage.buckets.update', 1);
 
@@ -311,13 +317,11 @@ App::delete('/v1/storage/buckets/:bucketId')
 
         $events
             ->setParam('bucketId', $bucket->getId())
-            ->setPayload($response->output($bucket, Response::MODEL_BUCKET))
-        ;
+            ->setPayload($response->output($bucket, Response::MODEL_BUCKET));
 
         $audits
             ->setResource('storage/buckets/' . $bucket->getId())
-            ->setPayload($bucket->getArrayCopy())
-        ;
+            ->setPayload($bucket->getArrayCopy());
 
         $usage->setParam('storage.buckets.delete', 1);
 
@@ -440,8 +444,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         /**
-        * Validators
-        */
+         * Validators
+         */
         // Check if file type is allowed
         $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
         $fileExt = new FileExt($allowedFileExtensions);
@@ -595,14 +599,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $audits
-                ->setResource('storage/files/' . $file->getId())
-            ;
+                ->setResource('storage/files/' . $file->getId());
 
             $usage
                 ->setParam('storage', $sizeActual ?? 0)
                 ->setParam('storage.files.create', 1)
-                ->setParam('bucketId', $bucketId)
-            ;
+                ->setParam('bucketId', $bucketId);
         } else {
             try {
                 if ($file->isEmpty()) {
@@ -650,8 +652,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setContext('bucket', $bucket)
-        ;
+            ->setContext('bucket', $bucket);
 
         $metadata = null; // was causing leaks as it was passed by reference
 
@@ -677,7 +678,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
@@ -701,44 +702,45 @@ App::get('/v1/storage/buckets/:bucketId/files')
             }
         }
 
-        $queries = [new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])];
+        $filterQueries = [];
 
-        if ($search) {
-            $queries[] = [new Query('name', Query::TYPE_SEARCH, [$search])];
-        }
-
-        if (!empty($cursor)) {
-            if ($bucket->getAttribute('permission') === 'bucket') {
-                $cursorFile = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor));
-            } else {
-                $cursorFile = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
-            }
-
-            if ($cursorFile->isEmpty()) {
-                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('name', $search);
         }
 
         $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            if ($bucket->getAttribute('permission') === 'bucket') {
+                $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor));
+            } else {
+                $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
+            }
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         if ($bucket->getAttribute('permission') === 'bucket') {
-            $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection));
+            $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), \array_merge($filterQueries, $queries)));
+            $total = Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         } else {
-            $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
+            $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), \array_merge($filterQueries, $queries));
+            $total = $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
         }
 
         $usage
             ->setParam('storage.files.read', 1)
-            ->setParam('bucketId', $bucketId)
-        ;
+            ->setParam('bucketId', $bucketId);
 
         $response->dynamic(new Document([
             'files' => $files,
-            'total' => $dbForProject->count('bucket_' . $bucket->getInternalId(), $queries, APP_LIMIT_COUNT),
+            'total' => $total,
         ]), Response::MODEL_FILE_LIST);
     });
 
@@ -791,8 +793,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $usage
             ->setParam('storage.files.read', 1)
-            ->setParam('bucketId', $bucketId)
-        ;
+            ->setParam('bucketId', $bucketId);
 
         $response->dynamic($file, Response::MODEL_FILE);
     });
@@ -918,8 +919,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data)
-            ;
+                ->send($data);
         }
 
         $source = $deviceFiles->read($path);
@@ -969,15 +969,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $usage
             ->setParam('storage.files.read', 1)
-            ->setParam('bucketId', $bucketId)
-        ;
+            ->setParam('bucketId', $bucketId);
 
         $response
             ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
             ->addHeader('Expires', $date)
             ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send($data)
-        ;
+            ->send($data);
 
         unset($image);
     });
@@ -1039,15 +1037,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $usage
             ->setParam('storage.files.read', 1)
-            ->setParam('bucketId', $bucketId)
-        ;
+            ->setParam('bucketId', $bucketId);
 
         $response
             ->setContentType($file->getAttribute('mimeType'))
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
-        ;
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"');
 
         $size = $file->getAttribute('sizeOriginal', 0);
 
@@ -1192,8 +1188,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-        ;
+            ->addHeader('X-Peak', \memory_get_peak_usage());
 
         $size = $file->getAttribute('sizeOriginal', 0);
 
@@ -1241,8 +1236,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         $usage
             ->setParam('storage.files.read', 1)
-            ->setParam('bucketId', $bucketId)
-        ;
+            ->setParam('bucketId', $bucketId);
 
         if (!empty($source)) {
             if (!empty($rangeHeader)) {
@@ -1345,8 +1339,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $file
             ->setAttribute('$read', $read)
-            ->setAttribute('$write', $write)
-        ;
+            ->setAttribute('$write', $write);
 
         if ($bucket->getAttribute('permission') === 'bucket') {
             $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
@@ -1357,15 +1350,13 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setContext('bucket', $bucket)
-        ;
+            ->setContext('bucket', $bucket);
 
         $audits->setResource('file/' . $file->getId());
 
         $usage
             ->setParam('storage.files.update', 1)
-            ->setParam('bucketId', $bucketId)
-        ;
+            ->setParam('bucketId', $bucketId);
 
         $response->dynamic($file, Response::MODEL_FILE);
     });
@@ -1453,15 +1444,13 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $usage
             ->setParam('storage', $file->getAttribute('size', 0) * -1)
             ->setParam('storage.files.delete', 1)
-            ->setParam('bucketId', $bucketId)
-        ;
+            ->setParam('bucketId', $bucketId);
 
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
             ->setContext('bucket', $bucket)
-            ->setPayload($response->output($file, Response::MODEL_FILE))
-        ;
+            ->setPayload($response->output($file, Response::MODEL_FILE));
 
         $response->noContent();
     });
@@ -1525,9 +1514,12 @@ App::get('/v1/storage/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::offset(0),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -1634,9 +1626,12 @@ App::get('/v1/storage/:bucketId/usage')
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::offset(0),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
