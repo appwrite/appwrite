@@ -188,7 +188,7 @@ class Stats
 
         if ($functionExecution >= 1) {
             $this->statsd->increment('executions.{scope}.compute' . $tags . ',functionId=' . $functionId . ',functionStatus=' . $functionExecutionStatus);
-            if($functionExecutionTime > 0) {
+            if ($functionExecutionTime > 0) {
                 $this->statsd->count('executions.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
             }
         }
