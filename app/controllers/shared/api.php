@@ -81,8 +81,7 @@ App::init()
                 $response
                     ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
                     ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
-                    ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
-                ;
+                    ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600));
             }
 
             if (
@@ -100,13 +99,11 @@ App::init()
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $mails
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $audits
             ->setMode($mode)
@@ -114,8 +111,7 @@ App::init()
             ->setIP($request->getIP())
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $usage
             ->setParam('projectId', $project->getId())
@@ -125,8 +121,7 @@ App::init()
             ->setParam('httpPath', $route->getPath())
             ->setParam('networkRequestSize', 0)
             ->setParam('networkResponseSize', 0)
-            ->setParam('storage', 0)
-        ;
+            ->setParam('storage', 0);
 
         $deletes->setProject($project);
         $database->setProject($project);
@@ -204,7 +199,7 @@ App::shutdown()
         $responsePayload = $response->getPayload();
 
         if (!empty($events->getEvent())) {
-            if (empty($events->getPayload())){
+            if (empty($events->getPayload())) {
                 $events->setPayload($responsePayload);
             }
             /**
@@ -235,7 +230,7 @@ App::shutdown()
                 $bucket = $events->getContext('bucket');
 
                 $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
+                    // Pass first, most verbose event pattern
                     event: $allEvents[0],
                     payload: $payload,
                     project: $project,
@@ -260,7 +255,7 @@ App::shutdown()
 
         $route = $utopia->match($request);
 
-        $getRequestParams = function() use ($route, $request): array {
+        $getRequestParams = function () use ($route, $request): array {
             $url    = \parse_url($request->getURI(), PHP_URL_PATH);
             $regex = '@' . \preg_replace('@:[^/]+@', '([^/]+)', $route->getPath()) . '@';
             \preg_match($regex, $url, $matches);
@@ -274,13 +269,13 @@ App::shutdown()
         };
 
 
-        $parseLabel  = function ($label) use ($responsePayload, $getRequestParams) :string {
+        $parseLabel  = function ($label) use ($responsePayload, $getRequestParams): string {
             preg_match_all('/{(.*?)}/', $label, $matches);
             foreach ($matches[1] ?? [] as $pos => $match) {
                 $find = $matches[0][$pos];
                 $parts = explode('.', $match);
 
-                if(count($parts) !== 2){
+                if (count($parts) !== 2) {
                     return '';
                 }
 
@@ -298,7 +293,7 @@ App::shutdown()
                         $params = $responsePayload;
                 }
 
-                if(array_key_exists($replace, $params)){
+                if (array_key_exists($replace, $params)) {
                     $label = \str_replace($find, $params[$replace], $label);
                 }
             }
@@ -306,10 +301,10 @@ App::shutdown()
             return $label;
         };
 
-        $auditsResource = $route->getLabel('audits.resource',null);
-        if(!empty($auditsResource)) {
+        $auditsResource = $route->getLabel('audits.resource', null);
+        if (!empty($auditsResource)) {
             $resource = $parseLabel($auditsResource);
-            if(!empty($resource) && $resource !== $auditsResource) {
+            if (!empty($resource) && $resource !== $auditsResource) {
                 $audits->setResource($resource);
             }
         }
@@ -319,8 +314,8 @@ App::shutdown()
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints
              */
-            $auditsPayload = $route->getLabel('audits.payload',true);
-            if(!empty($auditsPayload)) {
+            $auditsPayload = $route->getLabel('audits.payload', true);
+            if (!empty($auditsPayload)) {
                 $audits->setPayload($responsePayload);
             }
 
@@ -346,14 +341,13 @@ App::shutdown()
             && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
             && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
-
             $metric = $route->getLabel('usage.metric', '');
             $usageParams = $route->getLabel('usage.params', []);
 
-            if(!empty($metric)) {
+            if (!empty($metric)) {
                 $usage->setParam($metric, 1);
                 foreach ($usageParams as $param => $value) {
-                    $parts = explode('.',$value);
+                    $parts = explode('.', $value);
                     $namespace = $parts[0];
                     $key = $parts[1];
 
@@ -371,8 +365,8 @@ App::shutdown()
                         default:
                             $params = $responsePayload;
                     }
-    
-                    if(array_key_exists($key, $params)){
+
+                    if (array_key_exists($key, $params)) {
                         $usage->setParam($param, $params[$key]);
                     }
                 }
