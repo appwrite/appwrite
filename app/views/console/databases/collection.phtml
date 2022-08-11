@@ -528,8 +528,6 @@ $logs = $this->getParam('logs', null);
                             data-failure-param-alert-text="Failed to update collection"
                             data-failure-param-alert-classname="error">
 
-                            <label>&nbsp;</label>
-
                             <div class="box">
                                 <label for="collection-name">Name</label>
                                 <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" maxlength="128" />
@@ -544,11 +542,10 @@ $logs = $this->getParam('logs', null);
 
                                 <hr class="margin-top-small" />
 
-                                <div
-                                    class="permissions-matrix margin-bottom-large"
-                                    data-ls-attrs="x-init=console.log({{project-collection}})"
-                                    x-data="{permissions: []}">
-                                    <table>
+                                <div class="permissions-matrix margin-bottom-large" x-data="permissionsMatrix">
+                                    <input type="hidden" data-ls-bind="{{project-collection.$permissions}}" :value="rawPermissions"/>
+
+                                    <table data-ls-attrs="x-init=load({{project-collection.$permissions}})">
                                         <thead>
                                             <tr>
                                                 <th style="width: 100px;">Role</th>
@@ -560,53 +557,51 @@ $logs = $this->getParam('logs', null);
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <template x-for="permission in permissions">
+                                            <template x-for="(permission, index) in permissions">
                                                 <tr>
                                                     <td>
-                                                        <label></label>
+                                                        <p x-text="permission.role"></p>
                                                     </td>
                                                     <td>
-                                                        <input type="checkbox" name="read" id="read" value="1"/>
+                                                        <input type="checkbox" name="read" x-model="permission.read"/>
                                                     </td>
                                                     <td>
-                                                        <input type="checkbox" name="create" id="create" value="1"/>
+                                                        <input type="checkbox" name="create" x-model="permission.create"/>
                                                     </td>
                                                     <td>
-                                                        <input type="checkbox" name="update" id="update" value="1"/>
+                                                        <input type="checkbox" name="update" x-model="permission.update"/>
                                                     </td>
                                                     <td>
-                                                        <input type="checkbox" name="delete" id="delete" value="1"/>
+                                                        <input type="checkbox" name="delete" x-model="permission.xdelete"/>
                                                     </td>
                                                     <td>
-                                                        <button type="button" @click="deleteRow(index)"></button>
+                                                        <button type="button" @click="removePermission(index)"></button>
                                                     </td>
                                                 </tr>
                                             </template>
-                                            <tr>
-                                                <td style="vertical-align: middle">
-                                                    <input type="text" name="permission" id="permission" />
-                                                </td>
-                                                <td style="text-align: center">
-                                                    <input type="checkbox" name="read" id="read" value="1"/>
-                                                </td>
-                                                <td style="text-align: center">
-                                                    <input type="checkbox" name="create" id="create" value="1"/>
-                                                </td>
-                                                <td style="text-align: center">
-                                                    <input type="checkbox" name="update" id="update" value="1"/>
-                                                </td>
-                                                <td style="text-align: center">
-                                                    <input type="checkbox" name="delete" id="delete" value="1"/>
-                                                </td>
+                                            <tr x-data="permissionsRow" x-on:addrow.window="addPermission(role,read,create,update,xdelete)">
                                                 <td>
-                                                    <button type="button" class="icon-trash"></button>
+                                                    <input style="display:block; vertical-align: middle" type="text" name="role" x-model="role" />
                                                 </td>
+                                                <td style="text-align: center">
+                                                    <input type="checkbox" name="read" x-model="read" />
+                                                </td>
+                                                <td style="text-align: center">
+                                                    <input type="checkbox" name="create" x-model="create"/>
+                                                </td>
+                                                <td style="text-align: center">
+                                                    <input type="checkbox" name="update" x-model="update" />
+                                                </td>
+                                                <td style="text-align: center">
+                                                    <input type="checkbox" name="delete" x-model="xdelete" />
+                                                </td>
+                                                <td></td>
                                             </tr>
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <td>
-                                                    <button type="button" class="btn btn-primary" @click="addRow()">Add</button>
+                                                <td colspan="6">
+                                                    <button type="button" class="btn btn-primary" @click="$dispatch('addrow')">Add</button>
                                                 </td>
                                             </tr>
                                         </tfoot>
