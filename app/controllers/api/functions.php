@@ -108,23 +108,29 @@ App::get('/v1/functions')
     ->inject('dbForProject')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
-        if (!empty($cursor)) {
-            $cursorFunction = $dbForProject->getDocument('functions', $cursor);
+        $filterQueries = [];
 
-            if ($cursorFunction->isEmpty()) {
-                throw new Exception("Function '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('search', $search);
         }
 
         $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('functions', $cursor);
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("Function '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         $response->dynamic(new Document([
-            'functions' => $dbForProject->find('functions', $queries, $limit, $offset, [], [$orderType], $cursorFunction ?? null, $cursorDirection),
-            'total' => $dbForProject->count('functions', $queries, APP_LIMIT_COUNT),
+            'functions' => $dbForProject->find('functions', \array_merge($filterQueries, $queries)),
+            'total' => $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FUNCTION_LIST);
     });
 
@@ -236,9 +242,12 @@ App::get('/v1/functions/:functionId/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::offset(0),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -553,9 +562,9 @@ App::post('/v1/functions/:functionId/deployments')
             if ($activate) {
                 // Remove deploy for all other deployments.
                 $activeDeployments = $dbForProject->find('deployments', [
-                    new Query('activate', Query::TYPE_EQUAL, [true]),
-                    new Query('resourceId', Query::TYPE_EQUAL, [$functionId]),
-                    new Query('resourceType', Query::TYPE_EQUAL, ['functions'])
+                    Query::equal('activate', [true]),
+                    Query::equal('resourceId', [$functionId]),
+                    Query::equal('resourceType', ['functions'])
                 ]);
 
                 foreach ($activeDeployments as $activeDeployment) {
@@ -654,25 +663,31 @@ App::get('/v1/functions/:functionId/deployments')
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
         }
 
-        if (!empty($cursor)) {
-            $cursorDeployment = $dbForProject->getDocument('deployments', $cursor);
-
-            if ($cursorDeployment->isEmpty()) {
-                throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
-        }
-
-        $queries = [];
+        $filterQueries = [];
 
         if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            $filterQueries[] = Query::search('search', $search);
         }
 
-        $queries[] = new Query('resourceId', Query::TYPE_EQUAL, [$function->getId()]);
-        $queries[] = new Query('resourceType', Query::TYPE_EQUAL, ['functions']);
+        $filterQueries[] = Query::equal('resourceId', [$function->getId()]);
+        $filterQueries[] = Query::equal('resourceType', ['functions']);
 
-        $results = $dbForProject->find('deployments', $queries, $limit, $offset, [], [$orderType], $cursorDeployment ?? null, $cursorDirection);
-        $total = $dbForProject->count('deployments', $queries, APP_LIMIT_COUNT);
+        $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('deployments', $cursor);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+        }
+
+        $results = $dbForProject->find('deployments', \array_merge($filterQueries, $queries));
+        $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
 
         foreach ($results as $result) {
             $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId', ''));
@@ -996,24 +1011,30 @@ App::get('/v1/functions/:functionId/executions')
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
         }
 
-        if (!empty($cursor)) {
-            $cursorExecution = $dbForProject->getDocument('executions', $cursor);
-
-            if ($cursorExecution->isEmpty()) {
-                throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
-        }
-
-        $queries = [
-            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()])
+        $filterQueries = [
+            Query::equal('functionId', [$function->getId()])
         ];
 
         if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            $filterQueries[] = Query::search('search', $search);
         }
 
-        $results = $dbForProject->find('executions', $queries, $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
-        $total = $dbForProject->count('executions', $queries, APP_LIMIT_COUNT);
+        $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('executions', $cursor);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+        }
+
+        $results = $dbForProject->find('executions', \array_merge($filterQueries, $queries));
+        $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'executions' => $results,

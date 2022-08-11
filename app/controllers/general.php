@@ -89,7 +89,7 @@ App::init(function (App $utopia, Request $request, Response $response, Document 
                 Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
             } else {
                 $domainDocument = $dbForConsole->findOne('domains', [
-                    new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
+                    Query::equal('domain', [$domain->get()])
                 ]);
 
                 if (!$domainDocument) {
