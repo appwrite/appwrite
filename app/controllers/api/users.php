@@ -813,14 +813,14 @@ App::get('/v1/users/usage')
             ];
 
             $metrics = [
-                "users.count",
-                "users.create",
-                "users.read",
-                "users.update",
-                "users.delete",
-                "users.sessions.create",
-                "users.sessions.$provider.create",
-                "users.sessions.delete"
+                'users.$all.requests.count',
+                'users.$all.requests.create',
+                'users.$all.requests.read',
+                'users.$all.requests.update',
+                'users.$all.requests.delete',
+                'sessions.$all.requests.create',
+                'sessions.$all.requests.delete',
+                "sessions.$provider.requests.create",
             ];
 
             $stats = [];
@@ -863,14 +863,14 @@ App::get('/v1/users/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'usersCount' => $stats["users.count"],
-                'usersCreate' => $stats["users.create"],
-                'usersRead' => $stats["users.read"],
-                'usersUpdate' => $stats["users.update"],
-                'usersDelete' => $stats["users.delete"],
-                'sessionsCreate' => $stats["users.sessions.create"],
-                'sessionsProviderCreate' => $stats["users.sessions.$provider.create"],
-                'sessionsDelete' => $stats["users.sessions.delete"]
+                'usersCount' => $stats['users.$all.requests.count'],
+                'usersCreate' => $stats['users.$all.requests.create'],
+                'usersRead' => $stats['users.$all.requests.read'],
+                'usersUpdate' => $stats['users.$all.requests.update'],
+                'usersDelete' => $stats['users.$all.requests.delete'],
+                'sessionsCreate' => $stats['sessions.$all.requests.create'],
+                'sessionsProviderCreate' => $stats["sessions.$provider.requests.create"],
+                'sessionsDelete' => $stats['sessions.$all.requests.delete']
             ]);
         }
 
