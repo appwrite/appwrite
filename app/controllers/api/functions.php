@@ -899,8 +899,6 @@ App::post('/v1/functions/:functionId/executions')
     ->desc('Create Execution')
     ->label('scope', 'execution.write')
     ->label('event', 'functions.[functionId].executions.[executionId].create')
-    ->label('usage.metric', 'executions.{scope}.compute')
-    ->label('usage.params', ['functionId' => 'request.functionId','executionStatus' => 'response.status', 'executionTime', 'response.time'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
@@ -918,7 +916,8 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events) {
+    ->inject('usage')
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1069,6 +1068,13 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
+
+        // TODO revise this later using route label
+        $usage
+        ->setParam('functionId', $function->getId())
+        ->setParam('functionExecution', 1)
+        ->setParam('functionStatus', $execution->getAttribute('status', ''))
+        ->setParam('functionExecutionTime', $execution->getAttribute('time')); // ms
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

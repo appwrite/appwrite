@@ -361,7 +361,7 @@ class FunctionsV1 extends Worker
                 ->setParam('functionId', $function->getId())
                 ->setParam('executions.{scope}.compute', 1)
                 ->setParam('executionStatus', $execution->getAttribute('status', ''))
-                ->setParam('executionTime', $execution->getAttribute('time') * 1000) // ms
+                ->setParam('executionTime', $execution->getAttribute('time'))
                 ->setParam('networkRequestSize', 0)
                 ->setParam('networkResponseSize', 0)
                 ->submit();
