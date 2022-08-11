@@ -33,6 +33,7 @@ App::post('/v1/users')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
+    ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'create')
@@ -46,9 +47,8 @@ App::post('/v1/users')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
 
         $email = \strtolower($email);
 
@@ -76,10 +76,6 @@ App::post('/v1/users')
             throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
         }
 
-        $usage
-            ->setParam('users.create', 1)
-        ;
-
         $events
             ->setParam('userId', $user->getId())
         ;
@@ -92,6 +88,7 @@ App::get('/v1/users')
     ->desc('List Users')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'list')
@@ -107,8 +104,7 @@ App::get('/v1/users')
     ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
         if (!empty($cursor)) {
             $cursorUser = $dbForProject->getDocument('users', $cursor);
@@ -124,10 +120,6 @@ App::get('/v1/users')
             $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
         }
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
-
         $response->dynamic(new Document([
             'users' => $dbForProject->find('users', $queries, $limit, $offset, [], [$orderType], $cursorUser ?? null, $cursorDirection),
             'total' => $dbForProject->count('users', $queries, APP_LIMIT_COUNT),
@@ -138,6 +130,7 @@ App::get('/v1/users/:userId')
     ->desc('Get User')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'get')
@@ -148,8 +141,7 @@ App::get('/v1/users/:userId')
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $userId, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -157,9 +149,6 @@ App::get('/v1/users/:userId')
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
         $response->dynamic($user, Response::MODEL_USER);
     });
 
@@ -167,6 +156,7 @@ App::get('/v1/users/:userId/prefs')
     ->desc('Get User Preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getPrefs')
@@ -177,8 +167,7 @@ App::get('/v1/users/:userId/prefs')
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $userId, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -188,9 +177,6 @@ App::get('/v1/users/:userId/prefs')
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
@@ -198,6 +184,7 @@ App::get('/v1/users/:userId/sessions')
     ->desc('Get User Sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getSessions')
@@ -209,8 +196,7 @@ App::get('/v1/users/:userId/sessions')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('usage')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Locale $locale, Stats $usage) {
+    ->action(function (string $userId, Response $response, Database $dbForProject, Locale $locale) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -230,9 +216,6 @@ App::get('/v1/users/:userId/sessions')
             $sessions[$key] = $session;
         }
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
         $response->dynamic(new Document([
             'sessions' => $sessions,
             'total' => count($sessions),
@@ -243,6 +226,7 @@ App::get('/v1/users/:userId/memberships')
     ->desc('Get User Memberships')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getMemberships')
@@ -282,6 +266,7 @@ App::get('/v1/users/:userId/logs')
     ->desc('Get User Logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getLogs')
@@ -296,8 +281,7 @@ App::get('/v1/users/:userId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('usage')
-    ->action(function (string $userId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Stats $usage) {
+    ->action(function (string $userId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -350,10 +334,6 @@ App::get('/v1/users/:userId/logs')
             }
         }
 
-        $usage
-            ->setParam('users.read', 1)
-        ;
-
         $response->dynamic(new Document([
             'total' => $audit->countLogsByUser($user->getId()),
             'logs' => $output,
@@ -365,6 +345,7 @@ App::patch('/v1/users/:userId/status')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.status')
     ->label('scope', 'users.write')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateStatus')
@@ -376,9 +357,8 @@ App::patch('/v1/users/:userId/status')
     ->param('status', null, new Boolean(true), 'User Status. To activate the user pass `true` and to block the user pass `false`.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -387,10 +367,6 @@ App::patch('/v1/users/:userId/status')
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
-
-        $usage
-            ->setParam('users.update', 1)
-        ;
 
         $events
             ->setParam('userId', $user->getId())
@@ -404,6 +380,7 @@ App::patch('/v1/users/:userId/verification')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
     ->label('scope', 'users.write')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateEmailVerification')
@@ -415,9 +392,8 @@ App::patch('/v1/users/:userId/verification')
     ->param('emailVerification', false, new Boolean(), 'User email verification status.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -426,10 +402,6 @@ App::patch('/v1/users/:userId/verification')
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
-
-        $usage
-            ->setParam('users.update', 1)
-        ;
 
         $events
             ->setParam('userId', $user->getId())
@@ -443,6 +415,7 @@ App::patch('/v1/users/:userId/verification/phone')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
     ->label('scope', 'users.write')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePhoneVerification')
@@ -454,9 +427,8 @@ App::patch('/v1/users/:userId/verification/phone')
     ->param('phoneVerification', false, new Boolean(), 'User phone verification status.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, bool $phoneVerification, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $userId, bool $phoneVerification, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -465,10 +437,6 @@ App::patch('/v1/users/:userId/verification/phone')
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('phoneVerification', $phoneVerification));
-
-        $usage
-            ->setParam('users.update', 1)
-        ;
 
         $events
             ->setParam('userId', $user->getId())
@@ -483,6 +451,7 @@ App::patch('/v1/users/:userId/name')
     ->label('event', 'users.[userId].update.name')
     ->label('scope', 'users.write')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateName')
@@ -521,6 +490,7 @@ App::patch('/v1/users/:userId/password')
     ->label('event', 'users.[userId].update.password')
     ->label('scope', 'users.write')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePassword')
@@ -558,6 +528,7 @@ App::patch('/v1/users/:userId/email')
     ->label('event', 'users.[userId].update.email')
     ->label('scope', 'users.write')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateEmail')
@@ -605,6 +576,7 @@ App::patch('/v1/users/:userId/phone')
     ->label('event', 'users.[userId].update.phone')
     ->label('scope', 'users.write')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePhone')
@@ -646,6 +618,7 @@ App::patch('/v1/users/:userId/prefs')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'users.write')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePrefs')
@@ -657,9 +630,8 @@ App::patch('/v1/users/:userId/prefs')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, array $prefs, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $userId, array $prefs, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -668,10 +640,6 @@ App::patch('/v1/users/:userId/prefs')
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
-
-        $usage
-            ->setParam('users.update', 1)
-        ;
 
         $events
             ->setParam('userId', $user->getId())
@@ -685,6 +653,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('scope', 'users.write')
+    ->label('usage.metric', 'sessions.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSession')
@@ -696,8 +665,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('usage')
-    ->action(function (string $userId, string $sessionId, Response $response, Database $dbForProject, Event $events, Stats $usage) {
+    ->action(function (string $userId, string $sessionId, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -714,12 +682,6 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         $dbForProject->deleteDocument('sessions', $session->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-
-        $usage
-            ->setParam('users.update', 1)
-            ->setParam('users.sessions.delete', 1)
-        ;
-
         $events
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $sessionId)
@@ -733,6 +695,7 @@ App::delete('/v1/users/:userId/sessions')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('scope', 'users.write')
+    ->label('usage.metric', 'sessions.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSessions')
@@ -743,8 +706,7 @@ App::delete('/v1/users/:userId/sessions')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('usage')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events, Stats $usage) {
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -766,11 +728,6 @@ App::delete('/v1/users/:userId/sessions')
             ->setPayload($response->output($user, Response::MODEL_USER))
         ;
 
-        $usage
-            ->setParam('users.update', 1)
-            ->setParam('users.sessions.delete', 1)
-        ;
-
         $response->noContent();
     });
 
@@ -779,6 +736,7 @@ App::delete('/v1/users/:userId')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete')
     ->label('scope', 'users.write')
+    ->label('usage.metric', 'users.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'delete')
@@ -790,8 +748,7 @@ App::delete('/v1/users/:userId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
-    ->inject('usage')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events, Delete $deletes, Stats $usage) {
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -812,10 +769,6 @@ App::delete('/v1/users/:userId')
         $events
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($clone, Response::MODEL_USER))
-        ;
-
-        $usage
-            ->setParam('users.delete', 1)
         ;
 
         $response->noContent();
