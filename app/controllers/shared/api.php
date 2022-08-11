@@ -81,8 +81,7 @@ App::init()
                 $response
                     ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
                     ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
-                    ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
-                ;
+                    ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600));
             }
 
             if (
@@ -100,13 +99,11 @@ App::init()
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $mails
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $audits
             ->setMode($mode)
@@ -114,8 +111,7 @@ App::init()
             ->setIP($request->getIP())
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $usage
             ->setParam('projectId', $project->getId())
@@ -125,8 +121,7 @@ App::init()
             ->setParam('httpPath', $route->getPath())
             ->setParam('networkRequestSize', 0)
             ->setParam('networkResponseSize', 0)
-            ->setParam('storage', 0)
-        ;
+            ->setParam('storage', 0);
 
         $deletes->setProject($project);
         $database->setProject($project);
@@ -235,7 +230,7 @@ App::shutdown()
                 $bucket = $events->getContext('bucket');
 
                 $target = Realtime::fromPayload(
-                    // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                     event: $allEvents[0],
                     payload: $payload,
                     project: $project,
@@ -260,38 +255,38 @@ App::shutdown()
 
         $route = $utopia->match($request);
 
-        $getRequestParams = function() use ($route, $request) {
-            $url    = \parse_url($request->getURI(),PHP_URL_PATH);
+        $getRequestParams = function () use ($route, $request) {
+            $url = \parse_url($request->getURI(), PHP_URL_PATH);
             $regex = '@' . \preg_replace('@:[^/]+@', '([^/]+)', $route->getPath()) . '@';
-            \preg_match($regex, $url,$matches);
+            \preg_match($regex, $url, $matches);
             \array_shift($matches);
             $url = $route->getIsAlias() ? $route->getAliasPath() : $route->getPath();
-            $keyRegex = '@^' . \preg_replace('@:[^/]+@',':([^/]+)', $url) . '$@';
-            \preg_match($keyRegex, $url,$keys);
+            $keyRegex = '@^' . \preg_replace('@:[^/]+@', ':([^/]+)', $url) . '$@';
+            \preg_match($keyRegex, $url, $keys);
             \array_shift($keys);
 
             return \array_combine($keys, $matches) ?? [];
         };
 
-        $parseLabel  = function ($label) use ($responsePayload, $getRequestParams) {
-            preg_match_all('/{(.*?)}/', $label,$matches);
+        $parseLabel = function ($label) use ($responsePayload, $getRequestParams) {
+            preg_match_all('/{(.*?)}/', $label, $matches);
             foreach ($matches[1] ?? [] as $pos => $match) {
                 $find = $matches[0][$pos];
                 $parts = explode('.', $match);
 
-                if(count($parts) !== 2){
+                if (count($parts) !== 2) {
                     throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
                 }
 
                 $namespace = $parts[0];
-                $replace  = $parts[1];
+                $replace = $parts[1];
 
                 $params = match ($namespace) {
                     'request' => $getRequestParams(),
                     default => $responsePayload,
                 };
 
-                if(array_key_exists($replace, $params)){
+                if (array_key_exists($replace, $params)) {
                     $label = \str_replace($find, $params[$replace], $label);
                 }
             }
@@ -308,7 +303,7 @@ App::shutdown()
         }
 
         $pattern = $route->getLabel('audits.userId', null);
-        if(!empty($pattern)) {
+        if (!empty($pattern)) {
             $userId = $parseLabel($pattern);
             $user = $dbForProject->getDocument('users', $userId);
             $audits->setUser($user);
