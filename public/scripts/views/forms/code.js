@@ -58,7 +58,7 @@
           value = element.value;
         }
 
-        code.innerHTML = value;
+        code.textContent = value;
 
         Prism.highlightElement(code);
 
