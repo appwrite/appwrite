@@ -59,8 +59,8 @@ App::post('/v1/teams')
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $teamId = $teamId == 'unique()' ? $dbForProject->getId() : $teamId;
-        $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
-            '$id' => $teamId ,
+        $team = Authorization::skip(fn () => $dbForProject->createDocument('teams', new Document([
+            '$id' => $teamId,
             '$read' => ['team:' . $teamId],
             '$write' => ['team:' . $teamId . '/owner'],
             'name' => $name,
@@ -99,8 +99,7 @@ App::post('/v1/teams')
         $audits
             ->setParam('event', 'teams.create')
             ->setParam('resource', 'team/' . $teamId)
-            ->setParam('data', $team->getArrayCopy())
-        ;
+            ->setParam('data', $team->getArrayCopy());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($team, Response::MODEL_TEAM);
@@ -127,22 +126,28 @@ App::get('/v1/teams')
     ->inject('dbForProject')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
-        if (!empty($cursor)) {
-            $cursorTeam = $dbForProject->getDocument('teams', $cursor);
+        $filterQueries = [];
 
-            if ($cursorTeam->isEmpty()) {
-                throw new Exception("Team '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('search', $search);
         }
 
         $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('teams', $cursor);
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("Team '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
-        $results = $dbForProject->find('teams', $queries, $limit, $offset, [], [$orderType], $cursorTeam ?? null, $cursorDirection);
-        $total = $dbForProject->count('teams', $queries, APP_LIMIT_COUNT);
+        $results = $dbForProject->find('teams', \array_merge($filterQueries, $queries));
+        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -237,8 +242,10 @@ App::delete('/v1/teams/:teamId')
         }
 
         $memberships = $dbForProject->find('memberships', [
-            new Query('teamId', Query::TYPE_EQUAL, [$teamId]),
-        ], 2000, 0); // TODO fix members limit
+            Query::equal('teamId', [$teamId]),
+            Query::limit(2000), // TODO fix members limit
+            Query::offset(0),
+        ]);
 
         // TODO delete all members individually from the user object
         foreach ($memberships as $membership) {
@@ -257,14 +264,12 @@ App::delete('/v1/teams/:teamId')
 
         $events
             ->setParam('teamId', $team->getId())
-            ->setPayload($response->output($team, Response::MODEL_TEAM))
-        ;
+            ->setPayload($response->output($team, Response::MODEL_TEAM));
 
         $audits
             ->setParam('event', 'teams.delete')
             ->setParam('resource', 'team/' . $teamId)
-            ->setParam('data', $team->getArrayCopy())
-        ;
+            ->setParam('data', $team->getArrayCopy());
 
         $response->noContent();
     });
@@ -286,7 +291,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('email', '', new Email(), 'Email of the new team member.')
     ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
-    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
+    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -313,7 +318,7 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
-        $invitee = $dbForProject->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+        $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
 
         if (empty($invitee)) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -328,7 +333,7 @@ App::post('/v1/teams/:teamId/memberships')
 
             try {
                 $userId = $dbForProject->getId();
-                $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+                $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
                     '$read' => ['user:' . $userId, 'role:all'],
                     '$write' => ['user:' . $userId],
@@ -383,12 +388,12 @@ App::post('/v1/teams/:teamId/memberships')
 
         if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
             try {
-                $membership = Authorization::skip(fn() => $dbForProject->createDocument('memberships', $membership));
+                $membership = Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership));
             } catch (Duplicate $th) {
                 throw new Exception('User is already a member of this team', 409, Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
             $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
-            $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+            $team = Authorization::skip(fn () => $dbForProject->updateDocument('teams', $team->getId(), $team));
 
             $dbForProject->deleteCachedDocument('users', $invitee->getId());
         } else {
@@ -412,25 +417,22 @@ App::post('/v1/teams/:teamId/memberships')
                 ->setLocale($locale->default)
                 ->setTeam($team)
                 ->setUser($user)
-                ->trigger()
-            ;
+                ->trigger();
         }
 
         $audits
-            ->setResource('team/' . $teamId)
-        ;
+            ->setResource('team/' . $teamId);
 
         $events
             ->setParam('teamId', $team->getId())
-            ->setParam('membershipId', $membership->getId())
-        ;
+            ->setParam('membershipId', $membership->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic(
             $membership
-            ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $invitee->getAttribute('name'))
-            ->setAttribute('userEmail', $invitee->getAttribute('email')),
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $invitee->getAttribute('name'))
+                ->setAttribute('userEmail', $invitee->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });
@@ -452,7 +454,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $teamId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
@@ -463,37 +465,38 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
-        if (!empty($cursor)) {
-            $cursorMembership = $dbForProject->getDocument('memberships', $cursor);
-
-            if ($cursorMembership->isEmpty()) {
-                throw new Exception("Membership '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
-        }
-
-        $queries = [new Query('teamId', Query::TYPE_EQUAL, [$teamId])];
+        $filterQueries = [Query::equal('teamId', [$teamId])];
 
         if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            $filterQueries[] = Query::search('search', $search);
+        }
+
+        $otherQueries = [];
+        $otherQueries[] = Query::limit($limit);
+        $otherQueries[] = Query::offset($offset);
+        $otherQueries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('memberships', $cursor);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("Membership '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $otherQueries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         $memberships = $dbForProject->find(
             collection: 'memberships',
-            queries: $queries,
-            limit: $limit,
-            offset: $offset,
-            orderTypes: [$orderType],
-            cursor: $cursorMembership ?? null,
-            cursorDirection: $cursorDirection
+            queries: \array_merge($filterQueries, $otherQueries),
         );
 
         $total = $dbForProject->count(
-            collection:'memberships',
-            queries: $queries,
+            collection: 'memberships',
+            queries: $filterQueries,
             max: APP_LIMIT_COUNT
         );
 
-        $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
+        $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
         $memberships = array_map(function ($membership) use ($dbForProject, $team) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
@@ -501,8 +504,7 @@ App::get('/v1/teams/:teamId/memberships')
             $membership
                 ->setAttribute('teamName', $team->getAttribute('name'))
                 ->setAttribute('userName', $user->getAttribute('name'))
-                ->setAttribute('userEmail', $user->getAttribute('email'))
-            ;
+                ->setAttribute('userEmail', $user->getAttribute('email'));
 
             return $membership;
         }, $memberships);
@@ -547,8 +549,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         $membership
             ->setAttribute('teamName', $team->getAttribute('name'))
             ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email'))
-        ;
+            ->setAttribute('userEmail', $user->getAttribute('email'));
 
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
     });
@@ -661,7 +662,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception('Team IDs don\'t match', 404, Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
-        $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
+        $team = Authorization::skip(fn () => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
             throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
@@ -693,8 +694,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         ;
 
         $user
-            ->setAttribute('emailVerification', true)
-        ;
+            ->setAttribute('emailVerification', true);
 
         // Log user in
 
@@ -729,19 +729,17 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
+        $team = Authorization::skip(fn () => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
 
         $audits->setResource('team/' . $teamId);
 
         $events
             ->setParam('teamId', $team->getId())
-            ->setParam('membershipId', $membership->getId())
-        ;
+            ->setParam('membershipId', $membership->getId());
 
         if (!Config::getParam('domainVerification')) {
             $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $response
@@ -751,9 +749,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $response->dynamic(
             $membership
-            ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email')),
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $user->getAttribute('name'))
+                ->setAttribute('userEmail', $user->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });
@@ -811,7 +809,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));
-            Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+            Authorization::skip(fn () => $dbForProject->updateDocument('teams', $team->getId(), $team));
         }
 
         $audits->setResource('team/' . $teamId);
@@ -819,8 +817,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $events
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
-            ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP))
-        ;
+            ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP));
 
         $response->noContent();
     });

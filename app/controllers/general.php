@@ -22,6 +22,7 @@ use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -89,7 +90,7 @@ App::init()
                 if (!empty($envDomain) && $envDomain !== 'localhost') {
                     $mainDomain = $envDomain;
                 } else {
-                    $domainDocument = $dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
+                    $domainDocument = $dbForConsole->findOne('domains', [Query::orderAsc('_id')]);
                     $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
 
@@ -97,7 +98,7 @@ App::init()
                     Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
                 } else {
                     $domainDocument = $dbForConsole->findOne('domains', [
-                        new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
+                        Query::equal('domain', [$domain->get()])
                     ]);
 
                     if (!$domainDocument) {

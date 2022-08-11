@@ -108,8 +108,8 @@ $cli
             $time = DateTime::now();
 
             $certificates = $dbForConsole->find('certificates', [
-                new Query('attempts', Query::TYPE_LESSEREQUAL, [5]), // Maximum 5 attempts
-                new Query('renewDate', Query::TYPE_LESSEREQUAL, [$time]) // includes 60 days cooldown (we have 30 days to renew)
+               Query::lessThanEqual('attempts', 5), // Maximum 5 attempts
+               Query::lessThanEqual('renewDate', $time) // includes 60 days cooldown (we have 30 days to renew)
             ], 200); // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
 
 
