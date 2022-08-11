@@ -222,9 +222,9 @@ class BuildsV1 extends Worker
                 $usage
                     ->setParam('projectId', $project->getId())
                     ->setParam('functionId', $function->getId())
-                    ->setParam('functionBuild', 1)
-                    ->setParam('functionBuildStatus', $build->getAttribute('status', ''))
-                    ->setParam('functionBuildTime', $build->getAttribute('duration') * 1000) // ms
+                    ->setParam('builds.{scope}.compute', 1)
+                    ->setParam('buildStatus', $build->getAttribute('status', ''))
+                    ->setParam('buildTime', $build->getAttribute('duration') * 1000) // ms
                     ->setParam('networkRequestSize', 0)
                     ->setParam('networkResponseSize', 0)
                     ->submit();

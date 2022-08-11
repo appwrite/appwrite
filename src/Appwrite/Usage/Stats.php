@@ -89,15 +89,6 @@ class Stats
         $httpMethod = $this->params['httpMethod'] ?? '';
         $httpRequest = $this->params['httpRequest'] ?? 0;
 
-        $functionId = $this->params['functionId'] ?? '';
-        $functionExecution = $this->params['functionExecution'] ?? 0;
-        $functionExecutionTime = $this->params['functionExecutionTime'] ?? 0;
-        $functionStatus = $this->params['functionStatus'] ?? '';
-        $functionBuildTime = $this->params['functionBuildTime'] ?? 0;
-        $functionBuild = $this->params['functionBuild'] ?? 0;
-        $functionBuildStatus = $this->params['functionBuildStatus'] ?? '';
-        $functionCompute = $functionExecutionTime + $functionBuildTime;
-
         $tags = ",projectId={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         // the global namespace is prepended to every key (optional)
@@ -185,13 +176,25 @@ class Stats
             $this->statsd->count('storage.all' . $storageTags, $storage);
         }
 
+        $functionId = $this->params['functionId'] ?? '';
+        $functionExecution = $this->params['executions.{scope}.compute'] ?? 0;
+        $functionExecutionTime = ($this->params['executionTime'] ?? 0) * 1000; // ms
+        $functionExecutionStatus = $this->params['executionStatus'] ?? '';
+
+        $functionBuild = $this->params['builds.{scope}.compute'] ?? 0;
+        $functionBuildTime = ($this->params['buildTime'] ?? 0) * 1000; // ms
+        $functionBuildStatus = $this->params['buildStatus'] ?? '';
+        $functionCompute = $functionExecutionTime + $functionBuildTime;
+
         if ($functionExecution >= 1) {
-            $this->statsd->increment('executions.{scope}.compute' . $tags . ',functionId=' . $functionId . ',functionStatus=' . $functionStatus);
-            $this->statsd->count('executions.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
+            $this->statsd->increment('executions.{scope}.compute' . $tags . ',functionId=' . $functionId . ',functionStatus=' . $functionExecutionStatus);
+            if($functionExecutionTime > 0) {
+                $this->statsd->count('executions.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
+            }
         }
         if ($functionBuild >= 1) {
             $this->statsd->increment('builds.{scope}.compute' . $tags . ',functionId=' . $functionId . ',functionBuildStatus=' . $functionBuildStatus);
-            $this->statsd->count('builds.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
+            $this->statsd->count('builds.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionBuildTime);
         }
         if ($functionBuild + $functionExecution >= 1) {
             $this->statsd->count('project.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionCompute);

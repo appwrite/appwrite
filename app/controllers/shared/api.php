@@ -348,15 +348,16 @@ App::shutdown()
         ) { // Don't calculate console usage on admin mode
 
             $metric = $route->getLabel('usage.metric', '');
-            $params = $route->getLabel('usage.params', []);
+            $usageParams = $route->getLabel('usage.params', []);
 
             if(!empty($metric)) {
                 $usage->setParam($metric, 1);
-                foreach ($params as $param => $value) {
+                foreach ($usageParams as $param => $value) {
                     $parts = explode('.',$value);
                     $namespace = $parts[0];
                     $key = $parts[1];
 
+                    $params = [];
                     switch ($namespace) {
                         case 'response':
                             $params = $responsePayload;

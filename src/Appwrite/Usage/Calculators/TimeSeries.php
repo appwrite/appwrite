@@ -192,13 +192,13 @@ class TimeSeries extends Calculator
         'builds.$all.compute.total' => [
             'table' => 'appwrite_usage_builds_{scope}_compute',
         ],
-        'executions.$all.compute.failures' => [
+        'executions.$all.compute.failure' => [
             'table' => 'appwrite_usage_executions_{scope}_compute',
             'filters' => [
                 'functionStatus' => 'failed',
             ],
         ],
-        'builds.$all.compute.failures' => [
+        'builds.$all.compute.failure' => [
             'table' => 'appwrite_usage_builds_{scope}_compute',
             'filters' => [
                 'functionStatus' => 'failed',
@@ -232,14 +232,14 @@ class TimeSeries extends Calculator
             'table' => 'appwrite_usage_builds_{scope}_compute_time',
             'groupBy' => ['functionId'],
         ],
-        'executions.functionId.compute.failures' => [
+        'executions.functionId.compute.failure' => [
             'table' => 'appwrite_usage_executions_{scope}_compute',
             'groupBy' => ['functionId'],
             'filters' => [
                 'functionStatus' => 'failed',
             ],
         ],
-        'builds.functionId.compute.failures' => [
+        'builds.functionId.compute.failure' => [
             'table' => 'appwrite_usage_builds_{scope}_compute',
             'groupBy' => ['functionId'],
             'filters' => [

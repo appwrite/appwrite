@@ -223,9 +223,14 @@ App::get('/v1/functions/:functionId/usage')
             ];
 
             $metrics = [
-                "functions.$functionId.executions",
-                "functions.$functionId.failures",
-                "functions.$functionId.compute"
+                "executions.$functionId.compute.total",
+                "executions.$functionId.compute.success",
+                "executions.$functionId.compute.failure",
+                "executions.$functionId.compute.time",
+                "builds.$functionId.compute.total",
+                "builds.$functionId.compute.success",
+                "builds.$functionId.compute.failure",
+                "builds.$functionId.compute.time",
             ];
 
             $stats = [];
@@ -268,9 +273,14 @@ App::get('/v1/functions/:functionId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'functionsExecutions' => $stats["functions.$functionId.executions"],
-                'functionsFailures' => $stats["functions.$functionId.failures"],
-                'functionsCompute' => $stats["functions.$functionId.compute"]
+                'executionsTotal' => $stats["executions.$functionId.compute.total"],
+                'executionsFailure' => $stats["executions.$functionId.compute.failure"],
+                'executionsSuccesse' => $stats["executions.$functionId.compute.success"],
+                'executionsTime' => $stats["executions.$functionId.compute.time"],
+                'buildsTotal' => $stats["builds.$functionId.compute.total"],
+                'buildsFailure' => $stats["builds.$functionId.compute.failure"],
+                'buildsSuccess' => $stats["builds.$functionId.compute.success"],
+                'buildsTime' => $stats["builds.$functionId.compute.time"]
             ]);
         }
 
@@ -314,11 +324,14 @@ App::get('/v1/functions/usage')
             ];
 
             $metrics = [
-                "functions.executions",
-                "functions.failures",
-                "functions.executionTime",
-                "functions.buildTime",
-                "functions.compute"
+                'executions.$all.compute.total',
+                'executions.$all.compute.failure',
+                'executions.$all.compute.success',
+                'executions.$all.compute.time',
+                'builds.$all.compute.total',
+                'builds.$all.compute.failure',
+                'builds.$all.compute.success',
+                'builds.$all.compute.time',
             ];
 
             $stats = [];
@@ -361,11 +374,14 @@ App::get('/v1/functions/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'functionsExecutions' => $stats["functions.executions"],
-                'functionsFailures' => $stats["functions.failures"],
-                'functionsCompute' => $stats["functions.compute"],
-                'functionsExecutionTime' => $stats["functions.executionTime"],
-                'functionsBuildTime' => $stats["functions.buildTime"]
+                'executionsTotal' => $stats[$metrics[0]],
+                'executionsFailure' => $stats[$metrics[1]],
+                'executionsSuccess' => $stats[$metrics[2]],
+                'executionsTime' => $stats[$metrics[3]],
+                'buildsTotal' => $stats[$metrics[4]],
+                'buildsFailure' => $stats[$metrics[5]],
+                'buildsSuccess' => $stats[$metrics[6]],
+                'buildsTime' => $stats[$metrics[7]],
             ]);
         }
 
@@ -563,12 +579,11 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Stats $usage, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -692,8 +707,6 @@ App::post('/v1/functions/:functionId/deployments')
                 ->setDeployment($deployment)
                 ->setProject($project)
                 ->trigger();
-
-            $usage->setParam('storage', $deployment->getAttribute('size', 0));
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -839,11 +852,10 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('deletes')
     ->inject('events')
     ->inject('deviceFunctions')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Stats $usage, Delete $deletes, Event $events, Device $deviceFunctions) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Device $deviceFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -871,9 +883,6 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             ])));
         }
 
-        $usage
-            ->setParam('storage', $deployment->getAttribute('size', 0) * -1);
-
         $events
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
@@ -890,6 +899,8 @@ App::post('/v1/functions/:functionId/executions')
     ->desc('Create Execution')
     ->label('scope', 'execution.write')
     ->label('event', 'functions.[functionId].executions.[executionId].create')
+    ->label('usage.metric', 'executions.{scope}.compute')
+    ->label('usage.params', ['functionId'=>'request.functionId','executionStatus' => 'response.status', 'executionTime', 'response.time'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
@@ -907,8 +918,7 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('events')
-    ->inject('usage')
-    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage) {
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1059,12 +1069,6 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
-
-        $usage
-            ->setParam('functionId', $function->getId())
-            ->setParam('functionExecution', 1)
-            ->setParam('functionStatus', $execution->getAttribute('status', ''))
-            ->setParam('functionExecutionTime', $execution->getAttribute('time') * 1000); // ms
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

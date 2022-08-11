@@ -359,9 +359,9 @@ class FunctionsV1 extends Worker
             $usage
                 ->setParam('projectId', $project->getId())
                 ->setParam('functionId', $function->getId())
-                ->setParam('functionExecution', 1)
-                ->setParam('functionStatus', $execution->getAttribute('status', ''))
-                ->setParam('functionExecutionTime', $execution->getAttribute('time') * 1000) // ms
+                ->setParam('executions.{scope}.compute', 1)
+                ->setParam('executionStatus', $execution->getAttribute('status', ''))
+                ->setParam('executionTime', $execution->getAttribute('time') * 1000) // ms
                 ->setParam('networkRequestSize', 0)
                 ->setParam('networkResponseSize', 0)
                 ->submit();
