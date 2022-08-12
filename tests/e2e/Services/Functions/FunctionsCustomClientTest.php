@@ -57,7 +57,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'functionId' => 'unique()',
             'name' => 'Test',
-            'execute' => ['create(user:' . $this->getUser()['$id'] . ')'],
+            'execute' => ["user:{$this->getUser()['$id']}"],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
@@ -147,7 +147,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'functionId' => 'unique()',
             'name' => 'Test',
-            'execute' => ['create(any)'],
+            'execute' => ['any'],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
@@ -332,7 +332,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'functionId' => 'unique()',
             'name' => 'Test',
-            'execute' => ['create(any)'],
+            'execute' => ['any'],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
