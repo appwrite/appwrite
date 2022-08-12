@@ -8,13 +8,16 @@ use Swoole\Database\PDOPool as SwoolePDOPool;
 
 class PDOPool
 {
-    private array $activeConnections = [];
-
     private SwoolePDOPool $pool;
 
-    public function __construct(PDOConfig $pdoConfig, int $size = SwoolePDOPool::DEFAULT_SIZE)
+    private string $name;
+
+    private array $activeConnections = [];
+
+    public function __construct(PDOConfig $pdoConfig, string $name, int $size = SwoolePDOPool::DEFAULT_SIZE)
     {
         $this->pool = new SwoolePDOPool($pdoConfig, $size);
+        $this->name = $name;
     }
 
     public function getActiveConnections()
@@ -22,17 +25,17 @@ class PDOPool
         return $this->activeConnections;
     }
 
-    public function get(float $timeout = -1)
+    public function get(float $timeout = -1): PDOWrapper
     {
-        $connection = $this->pool->get($timeout);
-        $this->activeConnections[] = $connection;
-        return $connection;
+        $pdo = $this->pool->get($timeout);
+        $this->activeConnections[] = $pdo;
+        return new PDOWrapper($pdo, $this->name);
     }
 
-    public function put($connection): void
+    public function put(PDOWrapper $pdo): void
     {
-        $this->pool->put($connection);
-        unset($this->activeConnections[array_search($connection, $this->activeConnections)]);
+        $this->pool->put($pdo->getConnection());
+        unset($this->activeConnections[array_search($pdo, $this->activeConnections)]);
     }
 
     public function reset(): void
@@ -40,7 +43,6 @@ class PDOPool
         foreach($this->activeConnections as $connection) {
             $this->pool->put($connection);
         }
-
         $this->activeConnections = [];
     }
 }

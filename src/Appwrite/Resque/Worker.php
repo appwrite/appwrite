@@ -159,16 +159,17 @@ abstract class Worker
     {
         \array_push(self::$errorCallbacks, $callback);
     }
+
     /**
      * Get internal project database
      * @param string $projectId
      * @return Database
      */
-    protected function getProjectDB(string $projectId): Database
+    protected function getProjectDB(string $database): Database
     {
         global $register;
-        if (!$projectId) {
-            throw new \Exception('ProjectID not provided - cannot get database');
+        if (!$database) {
+            throw new \Exception('Database name not provided - cannot get database');
         }
         $cache = $register->get('cache');
         $dbPool = $register->get('dbPool');

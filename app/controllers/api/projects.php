@@ -24,6 +24,9 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
+use Utopia\Cache\Adapter\Redis;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\MariaDB;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -85,7 +88,7 @@ App::post('/v1/projects')
             throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
         }
 
-        [$dbForProject, $dbName] = $dbPool->getAnyFromPool($cache);
+        $pdo = $dbPool->getAnyFromPool();
 
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
@@ -112,9 +115,11 @@ App::post('/v1/projects')
             'domains' => null,
             'auths' => $auths,
             'search' => implode(' ', [$projectId, $name]),
-            'database' => $dbName
+            'database' => $pdo->getName()
         ]));
 
+        $cache = new Cache(new Redis($cache));
+        $dbForProject = new Database(new MariaDB($pdo->getConnection()), $cache);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 

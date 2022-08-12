@@ -2,6 +2,7 @@
 
 namespace Appwrite\Database;
 
+use Appwrite\Database\PDO as DatabasePDO;
 use PDO;
 use Utopia\App;
 use Appwrite\DSN\DSN;
@@ -78,7 +79,7 @@ class DatabasePool
                 PDO::ATTR_STRINGIFY_FETCHES => true
             ]);
 
-            $pool = new PDOPool($pdoConfig, 64);
+            $pool = new PDOPool($pdoConfig, $name, 64);
 
             $this->pools[$name] = $pool;
         }
@@ -114,32 +115,32 @@ class DatabasePool
         return $pdo;
     }
 
-    /**
-     * Get the name of the database from the project ID
-     *
-     * @param string $projectID
-     *
-     * @return array
-     */
-    private function getName(string $projectID, \Redis $redis): array
-    {
-        if ($projectID === 'console') {
-            return [$this->consoleDB, 'console'];
-        }
+    // /**
+    //  * Get the name of the database from the project ID
+    //  *
+    //  * @param string $projectID
+    //  *
+    //  * @return array
+    //  */
+    // private function getName(string $projectID, \Redis $redis): array
+    // {
+    //     if ($projectID === 'console') {
+    //         return [$this->consoleDB, 'console'];
+    //     }
 
-        $pdo = $this->getPDO($this->consoleDB);
-        $database = $this->getDatabase($pdo, $redis);
+    //     $pdo = $this->getPDO($this->consoleDB);
+    //     $database = $this->getDatabase($pdo, $redis);
 
-        $namespace = "_console";
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace($namespace);
+    //     $namespace = "_console";
+    //     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+    //     $database->setNamespace($namespace);
 
-        $project = Authorization::skip(fn() => $database->getDocument('projects', $projectID));
-        $internalID = $project->getInternalId();
-        $database = $project->getAttribute('database', '');
+    //     $project = Authorization::skip(fn() => $database->getDocument('projects', $projectID));
+    //     $internalID = $project->getInternalId();
+    //     $database = $project->getAttribute('database', '');
 
-        return [$database, $internalID];
-    }
+    //     return [$database, $internalID];
+    // }
 
     /**
      * Function to get a single PDO instance for a project
@@ -148,17 +149,10 @@ class DatabasePool
      *
      * @return ?Database
      */
-    public function getDB(string $projectID, ?\Redis $redis): ?Database
+    public function getDB(string $database, ?\Redis $redis): ?Database
     {
-        /** Get DB name from the console database */
-        [$name, $internalID] = $this->getName($projectID, $redis);
-
-        if (empty($name)) {
-            throw new Exception("Database with name : $name not found.", 500);
-        }
-
         /** Get a PDO instance using the databse name */
-        $pdo = $this->getPDO($name);
+        $pdo = $this->getPDO($database);
         $database = $this->getDatabase($pdo, $redis);
 
         $namespace = "_$internalID";
@@ -168,20 +162,20 @@ class DatabasePool
         return $database;
     }
 
-    /**
-     * Get a database instance from a PDO and cache
-     *
-     * @param PDO|PDOProxy $pdo
-     * @param \Redis $redis
-     *
-     * @return Database
-     */
-    private function getDatabase(PDO|PDOProxy $pdo, \Redis $redis): Database
-    {
-        $cache = new Cache(new RedisCache($redis));
-        $database = new Database(new MariaDB($pdo), $cache);
-        return $database;
-    }
+    // /**
+    //  * Get a database instance from a PDO and cache
+    //  *
+    //  * @param PDO|PDOProxy $pdo
+    //  * @param \Redis $redis
+    //  *
+    //  * @return Database
+    //  */
+    // private function getDatabase(PDO|PDOProxy $pdo, \Redis $redis): Database
+    // {
+    //     $cache = new Cache(new RedisCache($redis));
+    //     $database = new Database(new MariaDB($pdo), $cache);
+    //     return $database;
+    // }
 
     /**
      * Get a PDO instance from the list of available database pools. Meant to be used in co-routines
@@ -190,7 +184,7 @@ class DatabasePool
      *
      * @return array
      */
-    public function getDBFromPool(string $name): PDO|PDOProxy
+    public function getDBFromPool(string $name): PDOWrapper
     {
         /** Get DB name from the console database */
         // [$name, $internalID] = $this->getName($projectID, $redis);
@@ -226,38 +220,14 @@ class DatabasePool
      /**
      * Get a random PDO instance from the available database pools
      *
-     * @return array [PDO, string]
+     * @return PDOWrapper
      */
-    public function getAnyFromPool(\Redis $redis): array
+    public function getAnyFromPool(): PDOWrapper
     {
         $name = array_rand($this->pools);
         $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_DB_PROJECT in .env", 500);
-
-        $attempts = 0;
-        do {
-            try {
-                $attempts++;
-                $pdo = $pool->get();
-                $database = $this->getDatabase($pdo, $redis);
-                $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-
-                // if (!$database->exists($database->getDefaultDatabase(), 'metadata')) {
-                //     throw new Exception('Collection not ready');
-                // }
-                break; // leave loop if successful
-            } catch (\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-                }
-                sleep(DATABASE_RECONNECT_SLEEP);
-            }
-        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-
-        return [
-            $database,
-            $name
-        ];
+        $pdo = $pool->get();
+        return $pdo;
     }
 
     public function reset(): void

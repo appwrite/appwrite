@@ -867,8 +867,9 @@ App::setResource('dbForProject', function ($dbPool, $cache, Document $project) {
         $database = $dbPool->getConsoleDB();
     }
     $pdo = $dbPool->getDBFromPool($database);
+    
     $cache = new Cache(new RedisCache($cache));
-    $database = new Database(new MariaDB($pdo), $cache);
+    $database = new Database(new MariaDB($pdo->getConnection()), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getInternalId()}");
 
@@ -878,11 +879,12 @@ App::setResource('dbForProject', function ($dbPool, $cache, Document $project) {
 App::setResource('dbForConsole', function ($dbPool, $cache) {
     $database = $dbPool->getConsoleDB();
     $pdo = $dbPool->getDBFromPool($database);
+    
     $cache = new Cache(new RedisCache($cache));
-    $database = new Database(new MariaDB($pdo), $cache);
+    $database = new Database(new MariaDB($pdo->getConnection()), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace('_console');
-
+    
     return $database;
 }, ['dbPool', 'cache']);
 

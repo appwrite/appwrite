@@ -66,7 +66,24 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         $dbPool = $register->get('dbPool');
         App::setResource('dbPool', fn() => $dbPool);
 
-        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+        // wait for database to be ready
+        $attempts = 0;
+        $max = 10;
+        $sleep = 1;
+
+        do {
+            try {
+                $attempts++;
+                $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+                break; // leave the do-while if successful
+            } catch (\Exception $e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= $max) {
+                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                }
+                sleep($sleep);
+            }
+        } while ($attempts < $max);
 
         Console::success('[Setup] - Server database init started...');
         $collections = Config::getParam('collections', []); /** @var array $collections */

@@ -25,6 +25,8 @@ class DatabaseV1 extends Worker
         $document = new Document($this->args['document'] ?? []);
         $database = new Document($this->args['database'] ?? []);
 
+        var_dump($project);
+
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
         }
@@ -61,12 +63,13 @@ class DatabaseV1 extends Worker
      * @param Document $database
      * @param Document $collection
      * @param Document $attribute
-     * @param string $projectId
+     * @param Document $project
      */
-    protected function createAttribute(Document $database, Document $collection, Document $attribute, string $projectId): void
+    protected function createAttribute(Document $database, Document $collection, Document $attribute, Document $project): void
     {
+        $projectId = $project->getId();
         $dbForConsole = $this->getConsoleDB();
-        $dbForProject = $this->getProjectDB($projectId);
+        $dbForProject = $this->getProjectDB($project->getAttribute('database', ''));
 
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].update', [
             'databaseId' => $database->getId(),
@@ -128,12 +131,13 @@ class DatabaseV1 extends Worker
      * @param Document $database
      * @param Document $collection
      * @param Document $attribute
-     * @param string $projectId
+     * @param Document $project
      */
-    protected function deleteAttribute(Document $database, Document $collection, Document $attribute, string $projectId): void
+    protected function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project): void
     {
+        $projectId = $project->getId();
         $dbForConsole = $this->getConsoleDB();
-        $dbForProject = $this->getProjectDB($projectId);
+        $dbForProject = $this->getProjectDB($project->getAttribute('database', ''));
 
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete', [
             'databaseId' => $database->getId(),
@@ -241,12 +245,13 @@ class DatabaseV1 extends Worker
      * @param Document $database
      * @param Document $collection
      * @param Document $index
-     * @param string $projectId
+     * @param Document $project
      */
-    protected function createIndex(Document $database, Document $collection, Document $index, string $projectId): void
+    protected function createIndex(Document $database, Document $collection, Document $index, Document $project): void
     {
+        $projectId = $project->getId();
         $dbForConsole = $this->getConsoleDB();
-        $dbForProject = $this->getProjectDB($projectId);
+        $dbForProject = $this->getProjectDB($project->getAttribute('database', ''));
 
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].update', [
             'databaseId' => $database->getId(),
@@ -298,12 +303,13 @@ class DatabaseV1 extends Worker
      * @param Document $database
      * @param Document $collection
      * @param Document $index
-     * @param string $projectId
+     * @param Document $project
      */
-    protected function deleteIndex(Document $database, Document $collection, Document $index, string $projectId): void
+    protected function deleteIndex(Document $database, Document $collection, Document $index, Document $project): void
     {
+        $projectId = $project->getId();
         $dbForConsole = $this->getConsoleDB();
-        $dbForProject = $this->getProjectDB($projectId);
+        $dbForProject = $this->getProjectDB($project->getAttribute('database', ''));
 
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].delete', [
             'databaseId' => $database->getId(),
