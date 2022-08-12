@@ -538,12 +538,12 @@ $logs = $this->getParam('logs', null);
 
                                 <label class="margin-bottom-small">Permissions</label>
 
-                                <p class="text-fade text-size-small">Configure the permissions matrix for this collection.</p>
+                                <p class="text-fade text-size-small">Configure the permissions for this collection.</p>
 
                                 <hr class="margin-top-small" />
 
                                 <div class="permissions-matrix margin-bottom-large" x-data="permissionsMatrix">
-                                    <input type="hidden" data-ls-bind="{{project-collection.$permissions}}" :value="rawPermissions"/>
+                                    <input type="hidden" name="permissions" required data-cast-from="csv" data-cast-to="array" data-ls-bind="{{project-collection.$permissions}}" :value="rawPermissions"/>
 
                                     <table data-ls-attrs="x-init=load({{project-collection.$permissions}})">
                                         <thead>

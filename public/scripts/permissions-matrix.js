@@ -28,8 +28,10 @@
                                 [type]: true,
                             })
                         }
-                        existing[type] = true;
-                        this.permissions[index] = existing;
+                        if (index !== -1) {
+                            existing[type] = true;
+                            this.permissions[index] = existing;
+                        }
                     });
                 })
             },
