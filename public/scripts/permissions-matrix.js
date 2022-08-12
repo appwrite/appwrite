@@ -34,6 +34,7 @@
                 return { type, role };
             },
             addPermission(role, read, create, update, xdelete) {
+                if (!document.getElementById('role').reportValidity()) return;
                 if (read) this.rawPermissions.push(`read(${role})`);
                 if (create) this.rawPermissions.push(`create(${role})`);
                 if (update) this.rawPermissions.push(`update(${role})`);

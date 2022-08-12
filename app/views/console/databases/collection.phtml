@@ -511,6 +511,8 @@ $logs = $this->getParam('logs', null);
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
 
+                        <form id="permissions"></form>
+
                         <form
                             data-analytics
                             data-analytics-activity
@@ -595,7 +597,7 @@ $logs = $this->getParam('logs', null);
                                                         <option value="any">
                                                     </datalist>
 
-                                                    <input type="text" name="role" x-model="role" list="types" />
+                                                    <input required id="role" form="permissions" type="text" name="role" x-model="role" list="types" />
                                                 </td>
                                                 <td>
                                                     <input type="checkbox" name="read" x-model="read" />
