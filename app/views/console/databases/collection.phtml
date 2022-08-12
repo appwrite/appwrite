@@ -510,6 +510,7 @@ $logs = $this->getParam('logs', null);
 
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
+
                         <form
                             data-analytics
                             data-analytics-activity
@@ -545,7 +546,8 @@ $logs = $this->getParam('logs', null);
                                 <hr class="margin-top-small" />
 
                                 <div class="permissions-matrix margin-bottom-large" x-data="permissionsMatrix">
-                                    <input type="hidden" name="permissions" required data-cast-from="csv" data-cast-to="array" data-ls-bind="{{project-collection.$permissions}}" :value="rawPermissions"/>
+
+                                    <input type="hidden" name="permissions" data-cast-from="csv" data-cast-to="array" data-ls-bind="{{project-collection.$permissions}}" :value="rawPermissions"/>
 
                                     <table data-ls-attrs="x-init=load({{project-collection.$permissions}})">
                                         <thead>
@@ -565,16 +567,16 @@ $logs = $this->getParam('logs', null);
                                                         <p x-text="permission.role"></p>
                                                     </td>
                                                     <td>
-                                                        <input type="checkbox" name="read" x-model="permission.read"/>
+                                                        <input type="checkbox" name="read" x-model="permission.read" @click="updatePermission(index)"/>
                                                     </td>
                                                     <td>
-                                                        <input type="checkbox" name="create" x-model="permission.create"/>
+                                                        <input type="checkbox" name="create" x-model="permission.create" @click="updatePermission(index)"/>
                                                     </td>
                                                     <td>
-                                                        <input type="checkbox" name="update" x-model="permission.update"/>
+                                                        <input type="checkbox" name="update" x-model="permission.update" @click="updatePermission(index)"/>
                                                     </td>
                                                     <td>
-                                                        <input type="checkbox" name="delete" x-model="permission.xdelete"/>
+                                                        <input type="checkbox" name="delete" x-model="permission.xdelete" @click="updatePermission(index)"/>
                                                     </td>
                                                     <td>
                                                         <span class="action" @click="removePermission(index)">
@@ -628,7 +630,7 @@ $logs = $this->getParam('logs', null);
                                     <div class="col span-1"><input name="documentSecurity" value="false" type="checkbox" class="margin-top-no" data-ls-bind="{{project-collection.documentSecurity}}" /></div>
                                     <div class="col span-11">
                                         <b>Enabled</b>
-                                        <p class="text-fade margin-top-tiny">With Document Security enabled, users will be able to access documents for which they have <i>either</i> Document or Collection permissions.</p>
+                                        <p class="text-fade margin-top-tiny">With Document Security enabled, users will be able to access documents for which they have been granted <b>either</b> Document or Collection permissions.</p>
                                     </div>
                                 </div>
 
