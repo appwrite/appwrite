@@ -834,7 +834,7 @@ trait DatabasesBase
             'attributes' => ['birthDay'],
         ]);
 
-        $this->assertEquals(201, $releaseWithDate['headers']['status-code']);
+        $this->assertEquals(202, $releaseWithDate['headers']['status-code']);
         $this->assertEquals('birthDay', $releaseWithDate['body']['key']);
         $this->assertEquals('key', $releaseWithDate['body']['type']);
         $this->assertCount(1, $releaseWithDate['body']['attributes']);

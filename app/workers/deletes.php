@@ -19,11 +19,6 @@ Console::success(APP_NAME . ' deletes worker v1 has started' . "\n");
 
 class DeletesV1 extends Worker
 {
-    /**
-     * @var Database
-     */
-    protected $consoleDB = null;
-
     public function getName(): string
     {
         return "deletes";
