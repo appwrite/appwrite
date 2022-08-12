@@ -91,7 +91,7 @@ class DatabasesPermissionsGuestTest extends Scope
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            foreach($document['$permissions'] as $permission) {
+            foreach ($document['$permissions'] as $permission) {
                 if (!\str_starts_with($permission, 'read')) {
                      continue;
                 }

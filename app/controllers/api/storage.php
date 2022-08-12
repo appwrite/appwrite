@@ -1336,7 +1336,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception('File not found', 404, Exception::STORAGE_FILE_NOT_FOUND);
         }
-        
+
         if ($fileSecurity) {
             $valid |= $validator->isValid($file->getDelete());
         }
