@@ -39,8 +39,6 @@
                 if (update) this.rawPermissions.push(`update(${role})`);
                 if (xdelete) this.rawPermissions.push(`delete(${role})`);
 
-                console.log(this.rawPermissions);
-
                 this.permissions.push({
                     role,
                     read,
@@ -53,7 +51,9 @@
             },
             removePermission(index) {
                 let row = this.permissions.splice(index, 1);
-                this.rawPermissions = this.rawPermissions.filter(p => !p.includes(row.role));
+                if (row.length === 1) {
+                    this.rawPermissions = this.rawPermissions.filter(p => !p.includes(row[0].role));
+                }
             }
         }));
         Alpine.data('permissionsRow', () => ({
