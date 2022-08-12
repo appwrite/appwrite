@@ -2383,6 +2383,3 @@ App::put('/v1/account/verification/phone')
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
-
-
-
