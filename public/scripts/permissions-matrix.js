@@ -8,6 +8,8 @@
 
                 permissions.map(p => {
                     let { type, role } = this.parsePermission(p);
+                    type = this.parseInputPermission(type);
+
                     let index = -1;
                     let existing = this.permissions.find((p, idx) => {
                         if (p.role === role) {
@@ -26,12 +28,6 @@
                         this.permissions[index] = existing;
                     }
                 });
-            },
-            parsePermission(permission) {
-                let parts = permission.split('(');
-                let type = parts[0];
-                let role = parts[1].replace(')', '').replace(' ', '');
-                return { type, role };
             },
             addPermission(role, read, create, update, xdelete) {
                 if (!document.getElementById('role').reportValidity()) return;
@@ -59,7 +55,7 @@
                         if (key === 'role') {
                             continue;
                         }
-                        const parsedKey = this.parseKey(key);
+                        const parsedKey = this.parseOutputPermission(key);
                         if (permission[key]) {
                             if (!this.rawPermissions.includes(`${parsedKey}(${permission.role})`)) {
                                 this.rawPermissions.push(`${parsedKey}(${permission.role})`);
@@ -78,7 +74,21 @@
                     this.rawPermissions = this.rawPermissions.filter(p => !p.includes(row[0].role));
                 }
             },
-            parseKey(key) {
+            parsePermission(permission) {
+                let parts = permission.split('(');
+                let type = parts[0];
+                let role = parts[1].replace(')', '').replace(' ', '');
+                return { type, role };
+            },
+            parseInputPermission(key) {
+                // Can't bind to a property named delete
+                if (key === 'delete') {
+                    return 'xdelete';
+                }
+                return key;
+            },
+            parseOutputPermission(key) {
+                // Can't bind to a property named delete
                 if (key === 'xdelete') {
                     return 'delete';
                 }
