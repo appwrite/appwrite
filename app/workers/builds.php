@@ -188,6 +188,7 @@ class BuildsV1 extends Worker
             if ($deployment->getAttribute('activate') === true) {
                 $function->setAttribute('deployment', $deployment->getId());
                 $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+                $dbForProject->deleteCachedDocument('functions', $function->getId());
             }
 
             /** Update function schedule */
@@ -196,6 +197,7 @@ class BuildsV1 extends Worker
             $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
             $function->setAttribute('scheduleNext', (int)$next);
             $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+            $dbForProject->deleteCachedDocument('functions', $function->getId());
         } catch (\Throwable $th) {
             $endtime = \time();
             $build->setAttribute('endTime', $endtime);

@@ -77,6 +77,7 @@ App::post('/v1/functions')
             'scheduleNext' => 0,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime]),
+            'vars' => []
         ]));
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -320,6 +321,8 @@ App::put('/v1/functions/:functionId')
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
+        $dbForProject->deleteCachedDocument('functions', $function->getId());
+
         if ($next && $schedule !== $original) {
             // Async task reschedule
             $functionEvent = new Func();
@@ -385,6 +388,8 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             'deployment' => $deployment->getId(),
             'scheduleNext' => (int)$next,
         ])));
+
+        $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         if ($next) { // Init first schedule
             $functionEvent = new Func();
@@ -766,6 +771,8 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
                 'deployment' => '',
             ])));
         }
+
+        $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $usage
             ->setParam('storage', $deployment->getAttribute('size', 0) * -1);
