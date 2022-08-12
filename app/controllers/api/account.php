@@ -497,7 +497,7 @@ App::patch('/v1/account/phone')
     });
 
 App::post('/v1/account/sessions')
-    ->desc('Create Account Session')
+    ->desc('Create Email Session')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
@@ -955,7 +955,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
 
 App::post('/v1/account/sessions/magic-url')
-    ->desc('Create Magic URL session')
+    ->desc('Create Magic URL Session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('auth.type', 'magic-url')
@@ -1084,7 +1084,7 @@ App::post('/v1/account/sessions/magic-url')
     });
 
 App::put('/v1/account/sessions/magic-url')
-    ->desc('Create Magic URL session (confirmation)')
+    ->desc('Create Magic URL Session (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -1328,7 +1328,7 @@ App::post('/v1/account/sessions/anonymous')
     });
 
 App::post('/v1/account/sessions/phone')
-    ->desc('Create Phone session')
+    ->desc('Create Phone Session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('auth.type', 'phone')
@@ -1446,7 +1446,7 @@ App::post('/v1/account/sessions/phone')
     });
 
 App::put('/v1/account/sessions/phone')
-    ->desc('Create Phone session (confirmation)')
+    ->desc('Create Phone Session (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
