@@ -1894,16 +1894,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.6.0",
+            "version": "0.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "8ea1353a4bbab617e23c865a7c97b60d8074aee3"
+                "reference": "9889235a6d3da6cbb1f435201529da4d27c30e79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/8ea1353a4bbab617e23c865a7c97b60d8074aee3",
-                "reference": "8ea1353a4bbab617e23c865a7c97b60d8074aee3",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/9889235a6d3da6cbb1f435201529da4d27c30e79",
+                "reference": "9889235a6d3da6cbb1f435201529da4d27c30e79",
                 "shasum": ""
             },
             "require": {
@@ -1941,9 +1941,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.6.0"
+                "source": "https://github.com/utopia-php/cache/tree/0.6.1"
             },
-            "time": "2022-04-04T12:30:05+00:00"
+            "time": "2022-08-10T08:12:46+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -2055,12 +2055,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "2e33ddd74c9950abdacabd5f0745564674c6d74f"
+                "reference": "60bba4d8c90e06cde558beae128ac66d428ac5be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/2e33ddd74c9950abdacabd5f0745564674c6d74f",
-                "reference": "2e33ddd74c9950abdacabd5f0745564674c6d74f",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/60bba4d8c90e06cde558beae128ac66d428ac5be",
+                "reference": "60bba4d8c90e06cde558beae128ac66d428ac5be",
                 "shasum": ""
             },
             "require": {
@@ -2111,7 +2111,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/refactor-permissions"
             },
-            "time": "2022-08-09T00:27:04+00:00"
+            "time": "2022-08-12T05:05:24+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2832,12 +2832,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "ec94bd61d49ddacfd1ac41cf645477e8cc1cc5a4"
+                "reference": "409e9a6f24a2ad4be7fd45bc424ff5d845c7eb51"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ec94bd61d49ddacfd1ac41cf645477e8cc1cc5a4",
-                "reference": "ec94bd61d49ddacfd1ac41cf645477e8cc1cc5a4",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/409e9a6f24a2ad4be7fd45bc424ff5d845c7eb51",
+                "reference": "409e9a6f24a2ad4be7fd45bc424ff5d845c7eb51",
                 "shasum": ""
             },
             "require": {
@@ -2875,7 +2875,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/master"
             },
-            "time": "2022-08-09T08:42:43+00:00"
+            "time": "2022-08-10T12:49:03+00:00"
         },
         {
             "name": "doctrine/instantiator",

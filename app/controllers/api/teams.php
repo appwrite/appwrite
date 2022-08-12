@@ -336,9 +336,10 @@ App::post('/v1/teams/:teamId/memberships')
                 $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
                     '$permissions' => [
-                        'read(any, user:' . $userId . ')',
-                        'update(user:' . $userId . ')',
-                        'delete(user:' . $userId . ')',
+                        "read(any)",
+                        "read(user:{$userId})",
+                        "update(user:{$userId})",
+                        "delete(user:{$userId})",
                     ],
                     'email' => $email,
                     'emailVerification' => false,
@@ -377,8 +378,10 @@ App::post('/v1/teams/:teamId/memberships')
             '$id' => $membershipId,
             '$permissions' => [
                 'read(any)',
-                'update(user:' . $invitee->getId() . ', team:' . $team->getId() . '/owner)',
-                'delete(user:' . $invitee->getId() . ', team:' . $team->getId() . '/owner)',
+                "update(user:{$invitee->getId()})",
+                "update(team:{$team->getId()}/owner)",
+                "delete(user:{$invitee->getId()})",
+                "delete(team:{$team->getId()}/owner)",
             ],
             'userId' => $invitee->getId(),
             'userInternalId' => $invitee->getInternalId(),
@@ -730,10 +733,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
-                'read(user:' . $user->getId() . ')',
-                'create(user:' . $user->getId() . ')',
-                'update(user:' . $user->getId() . ')',
-                'delete(user:' . $user->getId() . ')',
+                "read(user:{$user->getId()})",
+                "create(user:{$user->getId()})",
+                "update(user:{$user->getId()})",
+                "delete(user:{$user->getId()})",
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());

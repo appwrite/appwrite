@@ -86,10 +86,14 @@ App::post('/v1/projects')
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
             '$permissions' => [
-                'read(team:' . $teamId . ')',
-                'create(team:' . $teamId . '/owner, team:' . $teamId . '/developer)',
-                'update(team:' . $teamId . '/owner, team:' . $teamId . '/developer)',
-                'delete(team:' . $teamId . '/owner, team:' . $teamId . '/developer)',
+                "read(team:{$teamId})",
+                "create(team:{$teamId}/owner)",
+                "create(team:{$teamId}/developer)",
+                "update(team:{$teamId}/owner)",
+                "update(team:{$teamId}/developer)",
+                "delete(team:{$teamId}/owner)",
+                "delete(team:{$teamId}/developer)",
+
             ],
             'name' => $name,
             'teamInternalId' => $team->getInternalId(),

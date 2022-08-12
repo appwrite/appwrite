@@ -862,7 +862,7 @@ App::post('/v1/functions/:functionId/executions')
         /** @var Document $execution */
         $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
-            '$permissions' => !$user->isEmpty() ? ['read(user:' . $user->getId() . ')'] : [],
+            '$permissions' => !$user->isEmpty() ? ["read(user:{$user->getId()})"] : [],
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
