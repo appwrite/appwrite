@@ -99,7 +99,7 @@ App::post('/v1/users')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/import/bcrypt')
+App::post('/v1/users/bcrypt')
     ->desc('Create User with Bcrypt Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
