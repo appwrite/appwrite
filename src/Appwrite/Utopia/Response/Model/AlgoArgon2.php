@@ -25,7 +25,7 @@ class AlgoArgon2 extends Model
             ])
             ->addRule('threads', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Number of threads to use to compute hash.',
+                'description' => 'Number of threads used to compute hash.',
                 'default' => '',
                 'example' => 3,
             ])
