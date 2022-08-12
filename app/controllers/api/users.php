@@ -30,6 +30,7 @@ use Utopia\Validator\Boolean;
 use MaxMind\Db\Reader;
 use Utopia\Validator\Integer;
 
+/** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, string $email, string $password, string $name, Database $dbForProject, Stats $usage, Event $events): Document
 {
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
