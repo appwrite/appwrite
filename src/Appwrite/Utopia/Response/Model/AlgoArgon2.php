@@ -19,7 +19,7 @@ class AlgoArgon2 extends Model
             ])
             ->addRule('timeCost', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Amount of time it may take to compute hash.',
+                'description' => 'Amount of time consumed to compute hash',
                 'default' => '',
                 'example' => 4,
             ])
