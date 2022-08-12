@@ -186,7 +186,7 @@ class Realtime extends Adapter
                      */
                     if (
                         \array_key_exists($channel, $this->subscriptions[$event['project']][$role])
-                        && (\in_array($role, $event['roles']) || \in_array('role:all', $event['roles']))
+                        && (\in_array($role, $event['roles']) || \in_array('any', $event['roles']))
                     ) {
                         /**
                          * Saving all connections that are allowed to receive this event.

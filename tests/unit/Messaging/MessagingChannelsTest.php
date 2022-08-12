@@ -153,7 +153,7 @@ class MessagingChannelsTest extends TestCase
         foreach ($this->allChannels as $index => $channel) {
             $event = [
                 'project' => '1',
-                'roles' => ['role:all'],
+                'roles' => ['any'],
                 'data' => [
                     'channels' => [
                         0 => $channel,

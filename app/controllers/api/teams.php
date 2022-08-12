@@ -75,9 +75,12 @@ App::post('/v1/teams')
             $membership = new Document([
                 '$id' => $membershipId,
                 '$permissions' => [
-                    "read(user:{$user->getId()}, team:{$team->getId()})",
-                    "update(user:{$user->getId()}, team:{$team->getId()}/owner)",
-                    "delete(user:{$user->getId()}, team:{$team->getId()}/owner)",
+                    "read(user:{$user->getId()})",
+                    "read(team:{$team->getId()})",
+                    "update(user:{$user->getId()})",
+                    "update(team:{$team->getId()}/owner)",
+                    "delete(user:{$user->getId()})",
+                    "delete(team:{$team->getId()}/owner)",
                 ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),

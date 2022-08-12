@@ -555,9 +555,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             "read(user:{$user->getId()})",
-             "create(user:{$user->getId()})",
-             "update(user:{$user->getId()})",
-             "delete(user:{$user->getId()})",
+            "create(user:{$user->getId()})",
+            "update(user:{$user->getId()})",
+            "delete(user:{$user->getId()})",
         ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -698,9 +698,9 @@ App::post('/v1/account/sessions/magic-url')
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
                 "read(user:{$user->getId()})",
-                 "create(user:{$user->getId()})",
-                 "update(user:{$user->getId()})",
-                 "delete(user:{$user->getId()})",
+                "create(user:{$user->getId()})",
+                "update(user:{$user->getId()})",
+                "delete(user:{$user->getId()})",
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());

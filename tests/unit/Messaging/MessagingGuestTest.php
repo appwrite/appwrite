@@ -20,7 +20,7 @@ class MessagingGuestTest extends TestCase
 
         $event = [
             'project' => '1',
-            'roles' => ['role:all'],
+            'roles' => ['any'],
             'data' => [
                 'channels' => [
                     0 => 'documents',
@@ -95,7 +95,7 @@ class MessagingGuestTest extends TestCase
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['role:all'];
+        $event['roles'] = ['any'];
         $event['data']['channels'] = ['documents.123'];
 
         $receivers = $realtime->getSubscribers($event);

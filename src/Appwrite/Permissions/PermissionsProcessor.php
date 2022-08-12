@@ -15,8 +15,7 @@ class PermissionsProcessor
             return null;
         }
         $aggregates = [
-            'admin' => ['create', 'update', 'delete', 'read',],
-            'write' => ['create', 'update', 'delete',],
+            'admin' => Database::PERMISSIONS,
         ];
         foreach ($permissions as $i => $permission) {
             foreach ($aggregates as $type => $subTypes) {
@@ -48,7 +47,7 @@ class PermissionsProcessor
             return $permissions;
         }
         foreach (Database::PERMISSIONS as $permission) {
-            // Default any missing permisions to the current user
+            // Default any missing permissions to the current user
             if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($userId)) {
                 $permissions[] = $permission . '(user:' . $userId . ')';
             }
@@ -67,11 +66,9 @@ class PermissionsProcessor
                     if (!\str_starts_with($permission, $type)) {
                         continue;
                     }
-                    $matches = \explode(',', \str_replace([$type, '(', ')', ' '], '', $permission));
-                    foreach ($matches as $role) {
-                        if (!Authorization::isRole($role)) {
-                            return false;
-                        }
+                    $role = \str_replace([$type, '(', ')', ' '], '', $permission);
+                    if (!Authorization::isRole($role)) {
+                        return false;
                     }
                 }
             }
