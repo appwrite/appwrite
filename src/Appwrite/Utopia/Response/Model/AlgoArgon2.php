@@ -13,7 +13,7 @@ class AlgoArgon2 extends Model
         $this
             ->addRule('memoryCost', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Memory that may be used to compute hash.',
+                'description' => 'Memory used to compute hash.',
                 'default' => '',
                 'example' => 65536,
             ])
