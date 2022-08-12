@@ -1,3 +1,7 @@
+# Unreleased
+
+- Reorder endpoints to improve docs by @Meldiron in https://github.com/appwrite/appwrite/pull/3343
+
 # Version 0.15.3
 ## Features
 - Added hint during Installation for DNS Configuration by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/2450
