@@ -35,7 +35,6 @@ use Utopia\Storage\Validator\Upload;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -281,11 +280,10 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('deletes')
     ->inject('events')
     ->inject('usage')
-    ->action(function (string $bucketId, Response $response, Database $dbForProject, Audit $audits, Delete $deletes, Event $events, Stats $usage) {
+    ->action(function (string $bucketId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Stats $usage) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -304,8 +302,6 @@ App::delete('/v1/storage/buckets/:bucketId')
             ->setParam('bucketId', $bucket->getId())
             ->setPayload($response->output($bucket, Response::MODEL_BUCKET))
         ;
-
-        $audits->setPayload($bucket->getArrayCopy());
 
         $usage->setParam('storage.buckets.delete', 1);
 

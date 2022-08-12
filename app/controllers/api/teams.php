@@ -2,7 +2,6 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
@@ -219,8 +218,7 @@ App::delete('/v1/teams/:teamId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
-    ->inject('audits')
-    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Delete $deletes, EventAudit $audits) {
+    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -251,8 +249,6 @@ App::delete('/v1/teams/:teamId')
             ->setParam('teamId', $team->getId())
             ->setPayload($response->output($team, Response::MODEL_TEAM))
         ;
-
-        $audits->setParam('data', $team->getArrayCopy());
 
         $response->noContent();
     });

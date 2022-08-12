@@ -17,8 +17,6 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Registry\Registry;
-use Utopia\Route;
 
 App::init()
     ->groups(['api'])
@@ -257,8 +255,9 @@ App::shutdown()
         $requestParams = array_combine(
             array_keys($route->getParams()), array_column($route->getParams(), 'value')
         );
+        $user = $audits->getUser();
 
-        $parseLabel = function ($label) use ($responsePayload, $requestParams) {
+        $parseLabel = function ($label) use ($responsePayload, $requestParams, $user) {
             preg_match_all('/{(.*?)}/', $label, $matches);
             foreach ($matches[1] ?? [] as $pos => $match) {
                 $find = $matches[0][$pos];
@@ -272,6 +271,7 @@ App::shutdown()
                 $replace = $parts[1];
 
                 $params = match ($namespace) {
+                    'user' => $user,
                     'request' => $requestParams,
                     default => $responsePayload,
                 };

@@ -135,6 +135,8 @@ App::post('/v1/account/sessions/email')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
     ->label('auth.type', 'emailPassword')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createEmailSession')
@@ -151,10 +153,9 @@ App::post('/v1/account/sessions/email')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $email, string $password, Request $request, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audits, Stats $usage, Event $events) {
+    ->action(function (string $email, string $password, Request $request, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Stats $usage, Event $events) {
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -199,11 +200,6 @@ App::post('/v1/account/sessions/email')
             ->setAttribute('$write', ['user:' . $profile->getId()]));
 
         $dbForProject->deleteCachedDocument('users', $profile->getId());
-
-        $audits
-            ->setResource('user/' . $profile->getId())
-            ->setUser($profile)
-        ;
 
         if (!Config::getParam('domainVerification')) {
             $response
@@ -1649,6 +1645,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
+    ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSession')
@@ -1662,10 +1659,9 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Stats $usage) {
+    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events, Stats $usage) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -1679,8 +1675,6 @@ App::delete('/v1/account/sessions/:sessionId')
                 unset($sessions[$key]);
 
                 $dbForProject->deleteDocument('sessions', $session->getId());
-
-                $audits->setResource('user/' . $user->getId());
 
                 $session->setAttribute('current', false);
 
@@ -1812,6 +1806,7 @@ App::delete('/v1/account/sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
+    ->label('audits.resource', 'user/{user.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteSessions')
@@ -1824,18 +1819,15 @@ App::delete('/v1/account/sessions')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('audits')
     ->inject('events')
     ->inject('usage')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Stats $usage) {
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events, Stats $usage) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
         foreach ($sessions as $session) {/** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
-
-            $audits->setResource('user/' . $user->getId());
 
             if (!Config::getParam('domainVerification')) {
                 $response->addHeader('X-Fallback-Cookies', \json_encode([]));
