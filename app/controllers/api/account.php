@@ -306,6 +306,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
 
         $oauth2 = new $className($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
 
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
@@ -491,8 +492,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 }
 
                 try {
-                    $userId = ID::unique();
-                    $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
+                    echo "ACCOUNT.PHP --------- \n";
+                    $userId = $dbForProject->getId();
+                    var_dump($userId);
+
+                    $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
                         '$id' => $userId,
                         '$permissions' => [
                             Permission::read(Role::any()),
@@ -515,6 +519,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'memberships' => null,
                         'search' => implode(' ', [$userId, $email, $name]),
                     ])));
+
+                    var_dump($user->getId());
                 } catch (Duplicate $th) {
                     throw new Exception(Exception::USER_ALREADY_EXISTS);
                 }
