@@ -585,7 +585,15 @@ $logs = $this->getParam('logs', null);
                                             </template>
                                             <tr x-data="permissionsRow" x-on:addrow.window="addPermission(role,read,create,update,xdelete)">
                                                 <td>
-                                                    <input type="text" name="role" x-model="role" />
+                                                    <datalist id="types">
+                                                        <option value="user:">
+                                                        <option value="team:">
+                                                        <option value="users">
+                                                        <option value="guests">
+                                                        <option value="any">
+                                                    </datalist>
+
+                                                    <input type="text" name="role" x-model="role" list="types" />
                                                 </td>
                                                 <td>
                                                     <input type="checkbox" name="read" x-model="read" />
