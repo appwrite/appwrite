@@ -536,6 +536,8 @@ $logs = $this->getParam('logs', null);
                                     <input name="enabled" type="hidden" data-forms-switch data-cast-to="boolean" data-ls-bind="{{project-collection.enabled}}" /> &nbsp; Enabled <span class="tooltip" data-tooltip="Mark whether collection is enabled"><i class="icon-info-circled"></i></span>
                                 </div>
 
+                                <hr class="margin-top-small" />
+
                                 <label class="margin-bottom-small">Permissions</label>
 
                                 <p class="text-fade text-size-small">Configure the permissions for this collection.</p>
@@ -548,12 +550,12 @@ $logs = $this->getParam('logs', null);
                                     <table data-ls-attrs="x-init=load({{project-collection.$permissions}})">
                                         <thead>
                                             <tr>
-                                                <th style="width: 100px;">Role</th>
-                                                <th style="text-align: center; width: 30px">Read</th>
-                                                <th style="text-align: center; width: 30px">Create</th>
-                                                <th style="text-align: center; width: 30px">Update</th>
-                                                <th style="text-align: center; width: 30px">Delete</th>
-                                                <th style="width: 10px"></th>
+                                                <th>Role</th>
+                                                <th>Read</th>
+                                                <th>Create</th>
+                                                <th>Update</th>
+                                                <th>Delete</th>
+                                                <th></th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -575,24 +577,26 @@ $logs = $this->getParam('logs', null);
                                                         <input type="checkbox" name="delete" x-model="permission.xdelete"/>
                                                     </td>
                                                     <td>
-                                                        <button type="button" @click="removePermission(index)"></button>
+                                                        <span class="action" @click="removePermission(index)">
+                                                            <i class="icon-trash"></i>
+                                                        </span>
                                                     </td>
                                                 </tr>
                                             </template>
                                             <tr x-data="permissionsRow" x-on:addrow.window="addPermission(role,read,create,update,xdelete)">
                                                 <td>
-                                                    <input style="display:block; vertical-align: middle" type="text" name="role" x-model="role" />
+                                                    <input type="text" name="role" x-model="role" />
                                                 </td>
-                                                <td style="text-align: center">
+                                                <td>
                                                     <input type="checkbox" name="read" x-model="read" />
                                                 </td>
-                                                <td style="text-align: center">
+                                                <td>
                                                     <input type="checkbox" name="create" x-model="create"/>
                                                 </td>
-                                                <td style="text-align: center">
+                                                <td>
                                                     <input type="checkbox" name="update" x-model="update" />
                                                 </td>
-                                                <td style="text-align: center">
+                                                <td>
                                                     <input type="checkbox" name="delete" x-model="xdelete" />
                                                 </td>
                                                 <td></td>
@@ -601,7 +605,7 @@ $logs = $this->getParam('logs', null);
                                         <tfoot>
                                             <tr>
                                                 <td colspan="6">
-                                                    <button type="button" class="btn btn-primary" @click="$dispatch('addrow')">Add</button>
+                                                    <button type="button" class="btn btn-primary margin-top-small" @click="$dispatch('addrow')">Add</button>
                                                 </td>
                                             </tr>
                                         </tfoot>

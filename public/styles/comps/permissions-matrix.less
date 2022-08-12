@@ -1,5 +1,27 @@
 .permissions-matrix {
-  tr {
-    vertical-align: center;
+  th:first-child {
+    width: 100px;
+  }
+  th:not(:first-child):not(:last-child) {
+    width: 30px;
+    text-align: center;
+  }
+  th:last-child {
+    width: 20px;
+  }
+  td {
+    vertical-align: middle;
+  }
+  td:not(:first-child) {
+    text-align: center;
+  }
+  input, p {
+    margin-bottom: 0;
+  }
+  p {
+    margin-left: 15px;
+  }
+  i {
+    cursor: pointer;
   }
 }
