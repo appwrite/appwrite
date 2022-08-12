@@ -62,7 +62,7 @@ class DatabasesCustomClientTest extends Scope
             'size' => 255,
             'required' => true,
         ]);
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(202, $response['headers']['status-code']);
 
         // Wait for database worker to finish creating attributes
         sleep(2);

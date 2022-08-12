@@ -883,7 +883,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createStringAttribute')
     ->label('sdk.description', '/docs/references/databases/create-string-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_STRING)
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -916,6 +916,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'array' => $array,
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
@@ -929,7 +930,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEmailAttribute')
     ->label('sdk.description', '/docs/references/databases/create-email-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_EMAIL)
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -956,6 +957,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
             'format' => APP_DATABASE_ATTRIBUTE_EMAIL,
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
@@ -969,7 +971,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEnumAttribute')
     ->label('sdk.description', '/docs/references/databases/create-attribute-enum.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_ENUM)
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -1012,6 +1014,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
             'formatOptions' => ['elements' => $elements],
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
 
@@ -1025,7 +1028,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIpAttribute')
     ->label('sdk.description', '/docs/references/databases/create-ip-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_IP)
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -1052,6 +1055,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
             'format' => APP_DATABASE_ATTRIBUTE_IP,
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
 
@@ -1065,7 +1069,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createUrlAttribute')
     ->label('sdk.description', '/docs/references/databases/create-url-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_URL)
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -1092,6 +1096,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
             'format' => APP_DATABASE_ATTRIBUTE_URL,
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
 
@@ -1105,7 +1110,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIntegerAttribute')
     ->label('sdk.description', '/docs/references/databases/create-integer-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_INTEGER)
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -1161,6 +1166,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
             $attribute->setAttribute('max', \intval($formatOptions['max']));
         }
 
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
@@ -1174,7 +1180,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createFloatAttribute')
     ->label('sdk.description', '/docs/references/databases/create-float-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_FLOAT)
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -1233,6 +1239,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
             $attribute->setAttribute('max', \floatval($formatOptions['max']));
         }
 
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
@@ -1246,7 +1253,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createBooleanAttribute')
     ->label('sdk.description', '/docs/references/databases/create-boolean-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_BOOLEAN)
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -1272,6 +1279,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
             'array' => $array,
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
@@ -1492,7 +1500,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createIndex')
     ->label('sdk.description', '/docs/references/databases/create-index.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX)
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -1634,7 +1642,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->setPayload($index->getArrayCopy())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($index, Response::MODEL_INDEX);
     });
 

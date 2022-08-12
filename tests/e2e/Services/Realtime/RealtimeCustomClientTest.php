@@ -660,7 +660,7 @@ class RealtimeCustomClientTest extends Scope
             'required' => true,
         ]);
 
-        $this->assertEquals($name['headers']['status-code'], 201);
+        $this->assertEquals($name['headers']['status-code'], 202);
         $this->assertEquals($name['body']['key'], 'name');
         $this->assertEquals($name['body']['type'], 'string');
         $this->assertEquals($name['body']['size'], 256);
@@ -885,7 +885,7 @@ class RealtimeCustomClientTest extends Scope
             'required' => true,
         ]);
 
-        $this->assertEquals($name['headers']['status-code'], 201);
+        $this->assertEquals($name['headers']['status-code'], 202);
         $this->assertEquals($name['body']['key'], 'name');
         $this->assertEquals($name['body']['type'], 'string');
         $this->assertEquals($name['body']['size'], 256);
@@ -1244,7 +1244,7 @@ class RealtimeCustomClientTest extends Scope
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals($deployment['headers']['status-code'], 201);
+        $this->assertEquals($deployment['headers']['status-code'], 202);
         $this->assertNotEmpty($deployment['body']['$id']);
 
         // Wait for deployment to be built.
@@ -1264,7 +1264,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), []);
 
-        $this->assertEquals($execution['headers']['status-code'], 201);
+        $this->assertEquals($execution['headers']['status-code'], 202);
         $this->assertNotEmpty($execution['body']['$id']);
 
         $response = json_decode($client->receive(), true);

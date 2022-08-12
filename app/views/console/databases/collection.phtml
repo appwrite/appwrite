@@ -648,6 +648,11 @@ $logs = $this->getParam('logs', null);
                         <input id="id" type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-collection.$id}}" disabled data-forms-copy class="margin-bottom-no" />
                     </div>
 
+                    <label>Database ID</label>
+                    <div class="input-copy margin-bottom">
+                        <input type="text" autocomplete="off" placeholder="" data-ls-bind="{{router.params.databaseId}}" disabled data-forms-copy class="margin-bottom-no" />
+                    </div>
+
                     <ul class="margin-bottom-large text-fade text-size-small">
                         <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i>
                             <button data-ls-ui-trigger="open-json"
