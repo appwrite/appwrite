@@ -79,12 +79,13 @@ class DatabasesCustomClientTest extends Scope
             ],
             'permissions' => [
                 "read(user:user2)",
-                "read(user:{$userId}",
-                "create(user:{$userId}",
-                "update(user:{$userId}",
-                "delete(user:{$userId}",
+                "read(user:{$userId})",
+                "create(user:{$userId})",
+                "update(user:{$userId})",
+                "delete(user:{$userId})",
             ],
         ]);
+
         $this->assertEquals(201, $response['headers']['status-code']);
 
         // Update document

@@ -31,7 +31,7 @@ class DatabasesPermissionsMemberTest extends Scope
            [['read(user:random)']],
            [['read(user:lorem)', 'create(user:lorem)', 'update(user:lorem)', 'delete(user:lorem)',]],
            [['read(user:dolor)', 'create(user:dolor)', 'update(user:dolor)', 'delete(user:dolor)',]],
-           [['read(user:dolor, user:lorem)', 'create(user:dolor)', 'update(user:dolor)', 'delete(user:dolor)',]],
+           [['read(user:dolor)', 'read(user:lorem)', 'create(user:dolor)', 'update(user:dolor)', 'delete(user:dolor)',]],
            [['create(any)', 'update(any)', 'delete(any)']],
            [['read(any)', 'create(any)', 'update(any)', 'delete(any)']],
            [['read(users)', 'create(users)', 'update(users)', 'delete(users)']],
