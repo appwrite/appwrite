@@ -27,8 +27,8 @@ class AttributeEmail extends Attribute
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',
-                'default' => APP_DATABASE_ATTRIBUTE_EMAIL,
-                'example' => APP_DATABASE_ATTRIBUTE_EMAIL,
+                'default' => 'email',
+                'example' => 'email',
                 'array' => false,
                 'require' => true,
             ])
