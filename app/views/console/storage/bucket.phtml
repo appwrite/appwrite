@@ -2,6 +2,9 @@
 $home = $this->getParam('home', '');
 $fileLimit = $this->getParam('fileLimit', 0);
 $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
+$bucketPermissions = $this->getParam('bucketPermissions', null);
+$fileCreatePermissions = $this->getParam('fileCreatePermissions', null);
+$fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
 ?>
 
 <div
@@ -34,6 +37,11 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
     </div>
 
     <div class="zone xl">
+        <!-- Required for permission input validation -->
+        <form id="<?php echo $bucketPermissions->getParam('form') ?>"></form>
+        <form id="<?php echo $fileCreatePermissions->getParam('form') ?>"></form>
+        <form id="<?php echo $fileUpdatePermissions->getParam('form') ?>"></form>
+
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/storage/bucket?id={{router.params.id}}&project={{router.params.project}}">
                 <h2 class="margin-bottom">Files</h2>
@@ -131,13 +139,15 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                                 </div>
                                                                 <input type="hidden" data-ls-attrs="id=file-bucketId-{{file.$id}}" name="bucketId" data-ls-bind="{{file.bucketId}}">
 
-                                                                <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                                                <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions}}" placeholder="User ID, Team ID or Role" />
-                                                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
+                                                                <div class="toggle margin-bottom" data-ls-if="{{project-bucket.fileSecurity}}" data-ls-ui-open data-button-aria="Open Permissions">
+                                                                    <i class="icon-plus pull-end margin-top-tiny"></i>
+                                                                    <i class="icon-minus pull-end margin-top-tiny"></i>
 
-                                                                <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                                                <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions}}" placeholder="User ID, Team ID or Role" />
-                                                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
+                                                                    <h3 class="margin-bottom-large">Permissions</h3>
+
+                                                                    <?php echo $fileUpdatePermissions->setParam('method', 'storage.getFile')->render();
+                                                                    ?>
+                                                                </div>
                                                             </form>
 
                                                             <form class="strip"
@@ -270,8 +280,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             data-analytics-category="console"
                             data-analytics-label="Create Storage File"
                             x-data
-                            @submit.prevent="$store.uploader.uploadFile($event.target)"
-                            >
+                            @submit.prevent="$store.uploader.uploadFile($event.target)">
                             <input type="hidden" name="bucketId" id="files-bucketId" data-ls-bind="{{router.params.id}}">
 
                             <label for="fileId">File ID</label>
@@ -285,18 +294,19 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 name="fileId"
                                 id="fileId" />
 
-                            <label for="file-read">File</label>
+                            <label for="file">File</label>
                             <input type="file" name="file" id="file-file" size="1" required>
 
                             <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
-                            <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                            <input type="hidden" id="file-read" name="read" data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['any'])); ?>" placeholder="User ID, Team ID or Role" />
-                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
+                            <div class="toggle margin-bottom" data-ls-if="{{project-bucket.fileSecurity}}" data-ls-ui-open data-button-aria="Open Permissions">
+                                <i class="icon-plus pull-end margin-top-tiny"></i>
+                                <i class="icon-minus pull-end margin-top-tiny"></i>
 
-                            <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                            <input type="hidden" id="file-write" name="write" data-forms-tags data-cast-to="json" value="" placeholder="User ID, Team ID or Role" />
-                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
+                                <h3 class="margin-bottom-large">Permissions</h3>
+
+                                <?php echo $fileCreatePermissions->render() ?>
+                            </div>
 
                             <footer>
                                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -381,6 +391,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
+
                         <form
                             data-analytics
                             data-analytics-activity
@@ -426,35 +437,21 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                                 <label class="margin-bottom-small">Permissions</label>
 
-                                <p class="text-fade text-size-small">Choose the permissions model for this bucket.</p>
+                                <p class="text-fade text-size-small">Configure the permissions for this bucket.</p>
 
                                 <hr class="margin-top-small" />
 
-                                <div class="row">
-                                    <div class="col span-1"><input name="permission" value="bucket" type="radio" class="margin-top-tiny" data-ls-bind="{{project-bucket.permission}}" /></div>
-                                    <div class="col span-11">
-                                        <b>Bucket Level</b>
-                                        <p class="text-fade margin-top-tiny">With Bucket Level permissions, you assign permissions only once in the bucket.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level permissions assigned to bucket takes the precedence and file permissions are ignored</p>
-                                        <div data-ls-if="{{project-bucket.permission}} == 'bucket'">
+                                <?php echo $bucketPermissions->render(); ?>
 
-                                            <label for="bucket-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                            <input type="hidden" id="bucket-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$permissions}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
+                                <hr class="margin-top-no" />
 
-                                            <label for="bucket-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                            <input type="hidden" id="bucket-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$permissions}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <label class="margin-bottom-small">File Security</label>
 
                                 <div class="row">
-                                    <div class="col span-1"><input name="documentSecurity" value="file" type="checkbox" class="margin-top-no" data-ls-bind="{{project-bucket.documentSecurity}}" /></div>
+                                    <div class="col span-1"><input name="fileSecurity" value="false" type="checkbox" class="margin-top-no" data-ls-bind="{{project-bucket.fileSecurity}}" /></div>
                                     <div class="col span-11">
-                                        <b>File Level</b>
-                                        <p class="text-fade margin-top-tiny">With File Level permissions, you have granular access control over every file. Users will only be able to access files for which they have explicit permissions.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level file permissions take precedence and bucket permissions are ignored.</p>
+                                        <b>Enabled</b>
+                                        <p class="text-fade margin-top-tiny">With File Security enabled, users will be able to access files for which they have been granted <b>either</b> File or Bucket permissions.</p>
                                     </div>
                                 </div>
 

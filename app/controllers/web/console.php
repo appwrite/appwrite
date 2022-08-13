@@ -432,11 +432,49 @@ App::get('/console/storage/bucket')
     ->inject('layout')
     ->action(function (string $id, Response $response, View $layout) {
 
+        $bucketPermissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $bucketPermissions
+            ->setParam('method', 'databases.getBucket')
+            ->setParam('events', 'load,databases.updateBucket')
+            ->setParam('data', 'project-bucket')
+            ->setParam('form', 'bucketPermissions')
+            ->setParam('params', [
+                'bucket-id' => '{{router.params.id}}',
+            ]);
+
+        $fileCreatePermissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $fileCreatePermissions
+            ->setParam('data', 'project-document')
+            ->setParam('form', 'fileCreatePermissions')
+            ->setParam('permissions', \array_filter(
+                Database::PERMISSIONS,
+                fn ($perm) => $perm != Database::PERMISSION_CREATE
+            ))
+            ->setParam('params', [
+                'bucket-id' => '{{router.params.id}}',
+            ]);
+
+        $fileUpdatePermissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $fileUpdatePermissions
+            ->setParam('method', 'storage.getFile')
+            ->setParam('data', 'project-document')
+            ->setParam('form', 'fileUpdatePermissions')
+            ->setParam('permissions', \array_filter(
+                Database::PERMISSIONS,
+                fn ($perm) => $perm != Database::PERMISSION_CREATE
+            ))
+            ->setParam('params', [
+                'bucket-id' => '{{router.params.id}}',
+            ]);
+
         $page = new View(__DIR__ . '/../../views/console/storage/bucket.phtml');
         $page
             ->setParam('home', App::getEnv('_APP_HOME', 0))
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
             ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
+            ->setParam('bucketPermissions', $bucketPermissions)
+            ->setParam('fileCreatePermissions', $fileCreatePermissions)
+            ->setParam('fileUpdatePermissions', $fileUpdatePermissions)
         ;
 
         $layout
