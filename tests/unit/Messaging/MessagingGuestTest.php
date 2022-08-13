@@ -1,13 +1,13 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
 
 class MessagingGuestTest extends TestCase
 {
-    public function testGuest()
+    public function testGuest(): void
     {
         $realtime = new Realtime();
 
