@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Messaging;
 
 use Appwrite\Auth\Auth;
 use Utopia\Database\Document;
@@ -106,7 +106,7 @@ class MessagingChannelsTest extends TestCase
         $this->connectionsCount = 0;
     }
 
-    public function testSubscriptions()
+    public function testSubscriptions(): void
     {
         /**
          * Check for 1 project.
@@ -148,7 +148,7 @@ class MessagingChannelsTest extends TestCase
     /**
      * Tests Wildcard (role:all) Permissions on every channel.
      */
-    public function testWildcardPermission()
+    public function testWildcardPermission(): void
     {
         foreach ($this->allChannels as $index => $channel) {
             $event = [
@@ -177,7 +177,7 @@ class MessagingChannelsTest extends TestCase
         }
     }
 
-    public function testRolePermissions()
+    public function testRolePermissions(): void
     {
         $roles = ['guests', 'users'];
         foreach ($this->allChannels as $index => $channel) {
@@ -211,7 +211,7 @@ class MessagingChannelsTest extends TestCase
         }
     }
 
-    public function testUserPermissions()
+    public function testUserPermissions(): void
     {
         foreach ($this->allChannels as $index => $channel) {
             $permissions = [];
@@ -244,7 +244,7 @@ class MessagingChannelsTest extends TestCase
         }
     }
 
-    public function testTeamPermissions()
+    public function testTeamPermissions(): void
     {
         foreach ($this->allChannels as $index => $channel) {
             $permissions = [];

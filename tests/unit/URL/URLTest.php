@@ -1,13 +1,13 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\URL;
 
 use Appwrite\URL\URL;
 use PHPUnit\Framework\TestCase;
 
 class URLTest extends TestCase
 {
-    public function testParse()
+    public function testParse(): void
     {
         $url = URL::parse('https://appwrite.io:8080/path?query=string&param=value');
 
@@ -28,7 +28,7 @@ class URLTest extends TestCase
         $this->assertEquals('', $url['query']);
     }
 
-    public function testUnparse()
+    public function testUnparse(): void
     {
         $url = URL::unparse([
             'scheme' => 'https',
@@ -88,7 +88,7 @@ class URLTest extends TestCase
         $this->assertEquals('https://eldad:fux@appwrite.io/#bottom', $url);
     }
 
-    public function testParseQuery()
+    public function testParseQuery(): void
     {
         $result = URL::parseQuery('param1=value1&param2=value2');
 
@@ -96,7 +96,7 @@ class URLTest extends TestCase
         $this->assertEquals(['param1' => 'value1', 'param2' => 'value2'], $result);
     }
 
-    public function testUnParseQuery()
+    public function testUnParseQuery(): void
     {
         $result = URL::unparseQuery(['param1' => 'value1', 'param2' => 'value2']);
 

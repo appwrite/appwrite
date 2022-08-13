@@ -5,7 +5,6 @@ use Appwrite\ClamAV\Network;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Permissions\Permissions;
 use Appwrite\Permissions\PermissionsProcessor;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\OpenSSL\OpenSSL;
