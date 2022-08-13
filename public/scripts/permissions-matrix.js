@@ -1,4 +1,4 @@
-(function(window){
+(function (window) {
     document.addEventListener('alpine:init', () => {
         Alpine.data('permissionsMatrix', () => ({
             permissions: [],
@@ -7,11 +7,11 @@
                 if (permissions === undefined) {
                     return;
                 }
-                
+
                 this.rawPermissions = permissions;
 
                 permissions.map(p => {
-                    let { type, role } = this.parsePermission(p);
+                    let {type, role} = this.parsePermission(p);
                     type = this.parseInputPermission(type);
 
                     let index = -1;
@@ -33,21 +33,21 @@
                     }
                 });
             },
-            addPermission(role, read, create, update, xdelete) {
-                if (!document.getElementById('role').reportValidity()) return;
-                if (read) this.rawPermissions.push(`read(${role})`);
-                if (create) this.rawPermissions.push(`create(${role})`);
-                if (update) this.rawPermissions.push(`update(${role})`);
-                if (xdelete) this.rawPermissions.push(`delete(${role})`);
-
+            addPermission(formId, role, permissions) {
+                if (!document.getElementById(formId).reportValidity()) {
+                    return;
+                }
+                Object.entries(permissions).forEach(entry => {
+                    let [type, enabled] = entry;
+                    type = this.parseOutputPermission(type);
+                    if (enabled) {
+                        this.rawPermissions.push(`${type}(${role})`);
+                    }
+                });
                 this.permissions.push({
                     role,
-                    read,
-                    create,
-                    update,
-                    xdelete
+                    ...permissions,
                 });
-
                 this.reset();
             },
             updatePermission(index) {
@@ -55,9 +55,10 @@
                 // we setTimeout to give Alpine enough time to update the model.
                 setTimeout(() => {
                     const permission = this.permissions[index];
-                    for (const key of Object.keys(permission)) {
+
+                    Object.keys(permission).forEach(key => {
                         if (key === 'role') {
-                            continue;
+                            return;
                         }
                         const parsedKey = this.parseOutputPermission(key);
                         if (permission[key]) {
@@ -69,7 +70,7 @@
                                 return !p.includes(`${parsedKey}(${permission.role})`);
                             });
                         }
-                    }
+                    });
                 });
             },
             removePermission(index) {
@@ -82,7 +83,7 @@
                 let parts = permission.split('(');
                 let type = parts[0];
                 let role = parts[1].replace(')', '').replace(' ', '');
-                return { type, role };
+                return {type, role};
             },
             parseInputPermission(key) {
                 // Can't bind to a property named delete
