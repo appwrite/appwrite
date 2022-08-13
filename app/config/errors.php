@@ -89,19 +89,6 @@ return [
         'code' => 500,
     ],
 
-    /** Account Errors */
-    Exception::ACCOUNT_OAUTH_FAILED_TO_OBTAIN_TOKEN => [
-        'name' => Exception::ACCOUNT_OAUTH_FAILED_TO_OBTAIN_TOKEN,
-        'description' => 'Failed to obtain access token.',
-        'code' => 500,
-    ],
-
-    Exception::ACCOUNT_OAUTH_MISSING_ID => [
-        'name' => Exception::ACCOUNT_OAUTH_MISSING_ID,
-        'description' => 'Missing ID in the request.',
-        'code' => 400,
-    ],
-
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
         'name' => Exception::USER_COUNT_EXCEEDED,
@@ -196,6 +183,11 @@ return [
     Exception::USER_PHONE_NOT_FOUND => [
         'name' => Exception::USER_PHONE_NOT_FOUND,
         'description' => 'The current user does not have a phone number associated with their account.',
+        'code' => 400,
+    ],
+    Exception::USER_MISSING_ID => [
+        'name' => Exception::USER_MISSING_ID,
+        'description' => 'Missing ID from OAuth2 provider',
         'code' => 400,
     ],
 
@@ -511,11 +503,6 @@ return [
     Exception::PROJECT_INVALID_FAILURE_URL => [
         'name' => Exception::PROJECT_INVALID_FAILURE_URL,
         'description' => 'Invalid URL received for OAuth failure redirect.',
-        'code' => 400,
-    ],
-    Exception::PROJECT_MISSING_USER_ID => [
-        'name' => Exception::PROJECT_MISSING_USER_ID,
-        'description' => 'Failed to obtain user ID from the OAuth provider.',
         'code' => 400,
     ],
     Exception::PROJECT_KEY_EXPIRED => [

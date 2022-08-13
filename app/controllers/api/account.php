@@ -422,7 +422,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $response->redirect($state['failure'], 301, 0);
             }
 
-            throw new Exception(Exception::ACCOUNT_OAUTH_FAILED_TO_OBTAIN_TOKEN);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to obtain access token');
         }
 
         $oauth2ID = $oauth2->getUserID($accessToken);
@@ -432,7 +432,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $response->redirect($state['failure'], 301, 0);
             }
 
-            throw new Exception(Exception::ACCOUNT_OAUTH_MISSING_ID);
+            throw new Exception(Exception::USER_MISSING_ID);
         }
 
         $sessions = $user->getAttribute('sessions', []);

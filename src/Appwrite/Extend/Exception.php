@@ -14,7 +14,6 @@ class Exception extends \Exception
      *
      * Appwrite has the follwing entities:
      * - General
-     * - Account
      * - Users
      * - Teams
      * - Memberships
@@ -54,10 +53,6 @@ class Exception extends \Exception
     public const GENERAL_SERVER_ERROR              = 'general_server_error';
     public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
 
-    /** Account */
-    public const ACCOUNT_OAUTH_FAILED_TO_OBTAIN_TOKEN = 'account_oauth_failed_to_obtain_token';
-    public const ACCOUNT_OAUTH_MISSING_ID            = 'account_oauth_missing_id';
-
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
     public const USER_JWT_INVALID                  = 'user_jwt_invalid';
@@ -78,6 +73,7 @@ class Exception extends \Exception
     public const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
     public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
     public const USER_PHONE_NOT_FOUND              = 'user_phone_not_found';
+    public const USER_MISSING_ID                   = 'user_missing_id';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -90,7 +86,7 @@ class Exception extends \Exception
 
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
-    public const MEMBERSHIP_ALREADY_CONFIRMED              = 'membership_already_confirmed';
+    public const MEMBERSHIP_ALREADY_CONFIRMED      = 'membership_already_confirmed';
 
     /** Avatars */
     public const AVATAR_SET_NOT_FOUND              = 'avatar_set_not_found';
@@ -127,8 +123,8 @@ class Exception extends \Exception
     public const EXECUTION_NOT_FOUND               = 'execution_not_found';
 
     /** Databases */
-    public const DATABASE_NOT_FOUND              = 'database_not_found';
-    public const DATABASE_ALREADY_EXISTS         = 'database_already_exists';
+    public const DATABASE_NOT_FOUND                = 'database_not_found';
+    public const DATABASE_ALREADY_EXISTS           = 'database_already_exists';
 
     /** Collections */
     public const COLLECTION_NOT_FOUND              = 'collection_not_found';
@@ -163,7 +159,6 @@ class Exception extends \Exception
     public const PROJECT_PROVIDER_UNSUPPORTED      = 'project_provider_unsupported';
     public const PROJECT_INVALID_SUCCESS_URL       = 'project_invalid_success_url';
     public const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
-    public const PROJECT_MISSING_USER_ID           = 'project_missing_user_id';
     public const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
     public const PROJECT_KEY_EXPIRED               = 'project_key_expired';
 
@@ -203,19 +198,17 @@ class Exception extends \Exception
     public const MOCK_400 = 'mock_400';
     public const MOCK_500 = 'mock_500';
 
-
     protected $type = '';
 
-    protected array $errors;
+    protected static array $errors = Config::getParam('errors');
 
-    public function __construct(string $type, string $message = null, int $code = null, \Throwable $previous = null)
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
-        $this->errors = Config::getParam('errors');
         $this->type = $type;
 
-        if (isset($this->errors[$type])) {
-            $this->message = $this->errors[$type]['description'];
-            $this->code = $this->errors[$type]['code'];
+        if (isset(self::$errors[$type])) {
+            $this->code = self::$errors[$type]['code'];
+            $this->message = self::$errors[$type]['description'];
         }
 
         $this->message = $message ?? $this->message;
