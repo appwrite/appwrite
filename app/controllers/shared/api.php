@@ -326,7 +326,7 @@ App::shutdown()
         && $project->getId()
         && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
         && !empty($route->getLabel('sdk.namespace', null))
-        ) { // Don't calculate console usage on admin mode
+    ) { // Don't calculate console usage on admin mode
             $usage
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
             ->setParam('networkResponseSize', $response->getSize())
