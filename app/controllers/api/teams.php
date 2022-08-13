@@ -67,6 +67,10 @@ App::post('/v1/teams')
         ])));
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
+            if (!\in_array('owner', $roles)) {
+                $roles[] = 'owner';
+            }
+
             $membershipId = $dbForProject->getId();
             $membership = new Document([
                 '$id' => $membershipId,
