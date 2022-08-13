@@ -32,22 +32,23 @@ class PermissionsProcessor
         return $permissions;
     }
 
-    public static function addDefaultsIfNeeded(?array $permissions, string $userId): array
+    public static function addDefaultsIfNeeded(
+        ?array $permissions, 
+        string $userId, 
+        array $allowedPermissions = Database::PERMISSIONS
+    ): array
     {
         if (\is_null($permissions)) {
             $permissions = [];
             if (!empty($userId)) {
-                $permissions = [
-                    'read(user:' . $userId . ')',
-                    'create(user:' . $userId . ')',
-                    'update(user:' . $userId . ')',
-                    'delete(user:' . $userId . ')',
-                ];
+                foreach ($allowedPermissions as $permission) {
+                    $permissions[] = $permission . '(' . $userId . ')';
+                }
             }
             return $permissions;
         }
-        foreach (Database::PERMISSIONS as $permission) {
-            // Default any missing permissions to the current user
+        foreach ($allowedPermissions as $permission) {
+            // Default any missing allowed permissions to the current user
             if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($userId)) {
                 $permissions[] = $permission . '(user:' . $userId . ')';
             }

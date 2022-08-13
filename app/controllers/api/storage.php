@@ -357,7 +357,14 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $permissions = PermissionsProcessor::addDefaultsIfNeeded($permissions, $user->getId());
+        $permissions = PermissionsProcessor::addDefaultsIfNeeded(
+            $permissions,
+            $user->getId(),
+            allowedPermissions: \array_filter(
+                Database::PERMISSIONS,
+                fn ($permission) => $permission !== Database::PERMISSION_CREATE
+            ),
+        );
         $permissions = PermissionsProcessor::handleAggregates($permissions);
 
         $validator = new Authorization('create');

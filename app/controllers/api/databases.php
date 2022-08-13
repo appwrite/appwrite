@@ -1872,7 +1872,14 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
-        $permissions = PermissionsProcessor::addDefaultsIfNeeded($permissions, $user->getId());
+        $permissions = PermissionsProcessor::addDefaultsIfNeeded(
+            $permissions,
+            $user->getId(),
+            allowedPermissions: \array_filter(
+                Database::PERMISSIONS,
+                fn ($permission) => $permission !== Database::PERMISSION_CREATE
+            ),
+        );
         $permissions = PermissionsProcessor::handleAggregates($permissions);
 
         if ($documentSecurity) {
