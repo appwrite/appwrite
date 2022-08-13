@@ -278,11 +278,11 @@ App::get('/v1/projects/:projectId/usage')
             $metrics = [
                 'project.$all.network.requests',
                 'project.$all.network.bandwidth',
-                'executions.$all.compute.total',
+                'project.$all.storage.size',
                 'users.$all.count.total',
-                'documents.$all.count.total',
                 'collections.$all.count.total',
-                'project.$all.storage.size'
+                'documents.$all.count.total',
+                'executions.$all.compute.total',
             ];
 
             $stats = [];
@@ -327,11 +327,11 @@ App::get('/v1/projects/:projectId/usage')
                 'range' => $range,
                 'requests' => $stats[$metrics[0]],
                 'network' => $stats[$metrics[1]],
-                'executions' => $stats[$metrics[2]],
+                'storage' => $stats[$metrics[2]],
                 'users' => $stats[$metrics[3]],
-                'documents' => $stats[$metrics[4]],
-                'collections' => $stats[$metrics[5]],
-                'storage' => $stats[$metrics[6]],
+                'collections' => $stats[$metrics[4]],
+                'documents' => $stats[$metrics[5]],
+                'executions' => $stats[$metrics[6]],
             ]);
         }
 
