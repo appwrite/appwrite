@@ -1550,12 +1550,12 @@ App::get('/v1/storage/:bucketId/usage')
             ];
 
             $metrics = [
-                "files.$bucketId.count.total",
-                "files.$bucketId.storage.size",
-                "files.$bucketId.requests.create",
-                "files.$bucketId.requests.read",
-                "files.$bucketId.requests.update",
-                "files.$bucketId.requests.delete",
+                "files.{$bucketId}.count.total",
+                "files.{$bucketId}.storage.size",
+                "files.{$bucketId}.requests.create",
+                "files.{$bucketId}.requests.read",
+                "files.{$bucketId}.requests.update",
+                "files.{$bucketId}.requests.delete",
             ];
 
             $stats = [];
@@ -1597,12 +1597,12 @@ App::get('/v1/storage/:bucketId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'filesStorage' => $stats["files.$bucketId.storage.size"],
-                'filesCount' => $stats["files.$bucketId.count.total"],
-                'filesCreate' => $stats["files.$bucketId.requests.create"],
-                'filesRead' => $stats["files.$bucketId.requests.read"],
-                'filesUpdate' => $stats["files.$bucketId.requests.update"],
-                'filesDelete' => $stats["files.$bucketId.requests.delete"],
+                'filesCount' => $stats[$metrics[0]],
+                'filesStorage' => $stats[$metrics[1]],
+                'filesCreate' => $stats[$metrics[2]],
+                'filesRead' => $stats[$metrics[3]],
+                'filesUpdate' => $stats[$metrics[4]],
+                'filesDelete' => $stats[$metrics[5]],
             ]);
         }
 
