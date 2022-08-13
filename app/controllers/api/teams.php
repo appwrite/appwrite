@@ -2,7 +2,6 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
@@ -207,6 +206,7 @@ App::delete('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].delete')
     ->label('scope', 'teams.write')
+    ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'delete')
@@ -218,8 +218,7 @@ App::delete('/v1/teams/:teamId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
-    ->inject('audits')
-    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Delete $deletes, EventAudit $audits) {
+    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -251,11 +250,6 @@ App::delete('/v1/teams/:teamId')
             ->setPayload($response->output($team, Response::MODEL_TEAM))
         ;
 
-        $audits
-            ->setParam('resource', 'team/' . $teamId)
-            ->setParam('data', $team->getArrayCopy())
-        ;
-
         $response->noContent();
     });
 
@@ -265,7 +259,8 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
     ->label('scope', 'teams.write')
     ->label('auth.type', 'invites')
-    ->label('audits.resource', 'team/{response.teamId}')
+    ->label('audits.resource', 'team/{request.teamId}')
+    ->label('audits.userId', '{request.userId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createMembership')
@@ -544,7 +539,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update')
     ->label('scope', 'teams.write')
-    ->label('audits.resource', 'team/{response.teamId}')
+    ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateMembershipRoles')
@@ -614,7 +609,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
     ->label('scope', 'public')
-    ->label('audits.resource', 'team/{response.teamId}')
+    ->label('audits.resource', 'team/{request.teamId}')
+    ->label('audits.userId', '{request.userId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateMembershipStatus')
@@ -676,9 +672,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setAttribute('confirm', true)
         ;
 
-        $user
-            ->setAttribute('emailVerification', true)
-        ;
+        $user->setAttribute('emailVerification', true);
 
         // Log user in
 

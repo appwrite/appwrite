@@ -17,8 +17,6 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Registry\Registry;
-use Utopia\Route;
 
 App::init()
     ->groups(['api'])
@@ -254,44 +252,29 @@ App::shutdown()
         }
 
         $route = $utopia->match($request);
+        $requestParams = array_combine(
+            array_keys($route->getParams()), array_column($route->getParams(), 'value')
+        );
+        $user = $audits->getUser();
 
-        $getRequestParams = function () use ($route, $request): array {
-            $url    = \parse_url($request->getURI(), PHP_URL_PATH);
-            $regex = '@' . \preg_replace('@:[^/]+@', '([^/]+)', $route->getPath()) . '@';
-            \preg_match($regex, $url, $matches);
-            \array_shift($matches);
-            $url = $route->getIsAlias() ? $route->getAliasPath() : $route->getPath();
-            $keyRegex = '@^' . \preg_replace('@:[^/]+@', ':([^/]+)', $url) . '$@';
-            \preg_match($keyRegex, $url, $keys);
-            \array_shift($keys);
-
-            return \array_combine($keys, $matches) ?? [];
-        };
-
-
-        $parseLabel  = function ($label) use ($responsePayload, $getRequestParams): string {
+        $parseLabel = function ($label) use ($responsePayload, $requestParams, $user) {
             preg_match_all('/{(.*?)}/', $label, $matches);
             foreach ($matches[1] ?? [] as $pos => $match) {
                 $find = $matches[0][$pos];
                 $parts = explode('.', $match);
 
                 if (count($parts) !== 2) {
-                    return '';
+                    throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
                 }
 
                 $namespace = $parts[0];
-                $replace  = $parts[1];
+                $replace = $parts[1];
 
-                switch ($namespace) {
-                    case 'response':
-                        $params = $responsePayload;
-                        break;
-                    case 'request':
-                        $params = $getRequestParams();
-                        break;
-                    default:
-                        $params = $responsePayload;
-                }
+                $params = match ($namespace) {
+                    'user' => $user,
+                    'request' => $requestParams,
+                    default => $responsePayload,
+                };
 
                 if (array_key_exists($replace, $params)) {
                     $label = \str_replace($find, $params[$replace], $label);
@@ -301,12 +284,19 @@ App::shutdown()
             return $label;
         };
 
-        $auditsResource = $route->getLabel('audits.resource', null);
-        if (!empty($auditsResource)) {
-            $resource = $parseLabel($auditsResource);
-            if (!empty($resource) && $resource !== $auditsResource) {
+        $pattern = $route->getLabel('audits.resource', null);
+        if (!empty($pattern)) {
+            $resource = $parseLabel($pattern);
+            if (!empty($resource) && $resource !== $pattern) {
                 $audits->setResource($resource);
             }
+        }
+
+        $pattern = $route->getLabel('audits.userId', null);
+        if (!empty($pattern)) {
+            $userId = $parseLabel($pattern);
+            $user = $dbForProject->getDocument('users', $userId);
+            $audits->setUser($user);
         }
 
         if (!empty($audits->getResource())) {
@@ -314,15 +304,14 @@ App::shutdown()
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints
              */
-            $auditsPayload = $route->getLabel('audits.payload', true);
-            if (!empty($auditsPayload)) {
+            $pattern = $route->getLabel('audits.payload', true);
+            if (!empty($pattern)) {
                 $audits->setPayload($responsePayload);
             }
 
             foreach ($events->getParams() as $key => $value) {
                 $audits->setParam($key, $value);
             }
-
             $audits->trigger();
         }
 
@@ -333,7 +322,6 @@ App::shutdown()
         if (!empty($database->getType())) {
             $database->trigger();
         }
-
 
         if (
             App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
@@ -357,7 +345,7 @@ App::shutdown()
                             $params = $responsePayload;
                             break;
                         case 'request':
-                            $params = $getRequestParams();
+                            $params = $requestParams;
                             break;
                         case 'value':
                             $usage->setParam($param, $key);

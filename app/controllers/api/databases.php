@@ -36,7 +36,6 @@ use Appwrite\Utopia\Database\Validator\Queries as QueriesValidator;
 use Appwrite\Utopia\Database\Validator\OrderAttributes;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Utopia\Config\Config;
@@ -420,9 +419,8 @@ App::delete('/v1/databases/:databaseId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('audits')
     ->inject('deletes')
-    ->action(function (string $databaseId, Response $response, Database $dbForProject, Event $events, EventAudit $audits, Delete $deletes) {
+    ->action(function (string $databaseId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -445,8 +443,6 @@ App::delete('/v1/databases/:databaseId')
             ->setParam('databaseId', $database->getId())
             ->setPayload($response->output($database, Response::MODEL_DATABASE))
         ;
-
-        $audits->setPayload($database->getArrayCopy());
 
         $response->noContent();
     });
@@ -698,7 +694,6 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('audits-payload', true)
     ->label('usage.metric', 'collections.{scope}.requests.update')
     ->label('usage.params', ['databaseId' => 'request.databaseId'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -777,9 +772,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('audits')
     ->inject('deletes')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Event $events, EventAudit $audits, Delete $deletes) {
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -810,8 +804,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
             ->setParam('collectionId', $collection->getId())
             ->setPayload($response->output($collection, Response::MODEL_COLLECTION))
         ;
-
-        $audits->setPayload($collection->getArrayCopy());
 
         $response->noContent();
     });
@@ -1363,8 +1355,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->inject('audits')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events, EventAudit $audits) {
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1424,8 +1415,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setContext('database', $db)
             ->setPayload($response->output($attribute, $model))
         ;
-
-        $audits->setPayload($attribute->getArrayCopy());
 
         $response->noContent();
     });
@@ -1687,8 +1676,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->inject('audits')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events, EventAudit $audits) {
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1729,8 +1717,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         ->setContext('database', $db)
             ->setPayload($response->output($index, Response::MODEL_INDEX))
         ;
-
-        $audits->setPayload($index->getArrayCopy());
 
         $response->noContent();
     });
@@ -2266,10 +2252,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('audits')
     ->inject('deletes')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, Event $events, EventAudit $audits, Delete $deletes, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, Event $events, Delete $deletes, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2332,8 +2317,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setContext('database', $database)
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
         ;
-
-        $audits->setPayload($document->getArrayCopy());
 
         $response->noContent();
     });
