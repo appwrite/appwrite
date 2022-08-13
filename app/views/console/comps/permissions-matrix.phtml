@@ -6,6 +6,7 @@ $method = $this->getParam('method', '');
 $params = $this->getParam('params', []);
 $events = $this->getParam('events', '');
 $data = $this->getParam('data', '');
+$form = $this->getParam('form', 'permissionsForm');
 $permissions = $this->getParam('permissions', Database::PERMISSIONS);
 
 $escapedPermissions = \array_map(function ($perm) {
@@ -30,9 +31,11 @@ $escapedPermissions = \array_map(function ($perm) {
     class="permissions-matrix margin-bottom-large"
     x-data="permissionsMatrix">
 
+    <form id="<?php echo $form ?>"></form>
+
     <input
         type="hidden"
-        name="permissions"
+        name="<?php echo $form; ?>"
         data-cast-from="csv"
         data-cast-to="array"
         data-ls-bind="{{<?php echo $data ?>.$permissions}}"
@@ -71,7 +74,7 @@ $escapedPermissions = \array_map(function ($perm) {
             </tr>
         </template>
         <tr x-data="permissionsRow"
-            @addrow.window="addPermission(role,<?php echo \implode(',', $escapedPermissions) ?>)">
+            @addrow.window="addPermission(<?php echo $form; ?>,role,{<?php echo \implode(',', $escapedPermissions) ?>})">
             <td>
                 <datalist id="types">
                     <option value="user:">
@@ -81,7 +84,14 @@ $escapedPermissions = \array_map(function ($perm) {
                     <option value="any">
                 </datalist>
 
-                <input required id="role" form="permissions" type="text" name="role" x-model="role" list="types"/>
+                <input
+                    required
+                    id="<?php echo $form; ?>"
+                    name="<?php echo $form; ?>"
+                    form="<?php echo $form ?>"
+                    list="types"
+                    type="text"
+                    x-model="role" />
             </td>
             <?php foreach ($escapedPermissions as $permission): ?>
                 <td>
