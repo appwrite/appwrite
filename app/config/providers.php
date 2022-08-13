@@ -101,6 +101,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'disqus' => [
+        'name' => 'Disqus',
+        'developers' => 'https://disqus.com/api/docs/auth/',
+        'icon' => 'icon-disqus',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'dropbox' => [
         'name' => 'Dropbox',
         'developers' => 'https://www.dropbox.com/developers/documentation',
