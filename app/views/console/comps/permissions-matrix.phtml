@@ -31,7 +31,8 @@ $escapedPermissions = \array_map(function ($perm) {
     data-event="load<?php if (!empty($events)) echo ',' . $events; ?>"
     data-name="<?php echo $data; ?>"
     class="permissions-matrix margin-bottom-large"
-    x-data="permissionsMatrix">
+    x-data="permissionsMatrix"
+    @reset.window="permissions = rawPermissions = []">
 
     <input
         type="hidden"
