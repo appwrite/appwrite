@@ -1,6 +1,7 @@
 <?php
 
 $logs = $this->getParam('logs', null);
+$permissions = $this->getParam('permissions', null);
 
 ?>
 <div
@@ -547,82 +548,7 @@ $logs = $this->getParam('logs', null);
 
                                 <hr class="margin-top-small" />
 
-                                <div class="permissions-matrix margin-bottom-large" x-data="permissionsMatrix">
-
-                                    <input type="hidden" name="permissions" data-cast-from="csv" data-cast-to="array" data-ls-bind="{{project-collection.$permissions}}" :value="rawPermissions"/>
-
-                                    <table data-ls-attrs="x-init=load({{project-collection.$permissions}})">
-                                        <thead>
-                                            <tr>
-                                                <th>Role</th>
-                                                <th>Read</th>
-                                                <th>Create</th>
-                                                <th>Update</th>
-                                                <th>Delete</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <template x-for="(permission, index) in permissions">
-                                                <tr>
-                                                    <td>
-                                                        <p x-text="permission.role"></p>
-                                                    </td>
-                                                    <td>
-                                                        <input type="checkbox" name="read" x-model="permission.read" @click="updatePermission(index)"/>
-                                                    </td>
-                                                    <td>
-                                                        <input type="checkbox" name="create" x-model="permission.create" @click="updatePermission(index)"/>
-                                                    </td>
-                                                    <td>
-                                                        <input type="checkbox" name="update" x-model="permission.update" @click="updatePermission(index)"/>
-                                                    </td>
-                                                    <td>
-                                                        <input type="checkbox" name="delete" x-model="permission.xdelete" @click="updatePermission(index)"/>
-                                                    </td>
-                                                    <td>
-                                                        <span class="action" @click="removePermission(index)">
-                                                            <i class="icon-trash"></i>
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            </template>
-                                            <tr x-data="permissionsRow" x-on:addrow.window="addPermission(role,read,create,update,xdelete)">
-                                                <td>
-                                                    <datalist id="types">
-                                                        <option value="user:">
-                                                        <option value="team:">
-                                                        <option value="users">
-                                                        <option value="guests">
-                                                        <option value="any">
-                                                    </datalist>
-
-                                                    <input required id="role" form="permissions" type="text" name="role" x-model="role" list="types" />
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" name="read" x-model="read" />
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" name="create" x-model="create"/>
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" name="update" x-model="update" />
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" name="delete" x-model="xdelete" />
-                                                </td>
-                                                <td></td>
-                                            </tr>
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <td colspan="6">
-                                                    <button type="button" class="btn btn-primary margin-top-small" @click="$dispatch('addrow')">Add</button>
-                                                </td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
+                                <?php echo $permissions->render(); ?>
 
                                 <hr class="margin-top-no" />
 

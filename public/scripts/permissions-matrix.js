@@ -4,6 +4,10 @@
             permissions: [],
             rawPermissions: [],
             load(permissions) {
+                if (permissions === undefined) {
+                    return;
+                }
+                
                 this.rawPermissions = permissions;
 
                 permissions.map(p => {

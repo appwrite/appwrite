@@ -284,9 +284,22 @@ App::get('/console/databases/collection')
             ])
         ;
 
+        $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $permissions
+            ->setParam('method', 'databases.getCollection')
+            ->setParam('events', 'load,databases.updateCollection')
+            ->setParam('data', 'project-collection')
+            ->setParam('params', [
+                'collection-id' => '{{router.params.id}}',
+                'database-id' => '{{router.params.databaseId}}'
+            ]);
+        
         $page = new View(__DIR__ . '/../../views/console/databases/collection.phtml');
 
-        $page->setParam('logs', $logs);
+        $page
+            ->setParam('permissions', $permissions)
+            ->setParam('logs', $logs)
+        ;
 
         $layout
             ->setParam('title', APP_NAME . ' - Database Collection')
