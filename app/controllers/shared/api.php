@@ -252,9 +252,7 @@ App::shutdown()
         }
 
         $route = $utopia->match($request);
-        $requestParams = array_combine(
-            array_keys($route->getParams()), array_column($route->getParams(), 'value')
-        );
+        $requestParams = array_combine(array_keys($route->getParams()), array_column($route->getParams(), 'value'));
         $user = $audits->getUser();
 
         $parseLabel = function ($label) use ($responsePayload, $requestParams, $user) {
@@ -284,54 +282,54 @@ App::shutdown()
             return $label;
         };
 
-        $pattern = $route->getLabel('audits.resource', null);
+    $pattern = $route->getLabel('audits.resource', null);
+    if (!empty($pattern)) {
+        $resource = $parseLabel($pattern);
+        if (!empty($resource) && $resource !== $pattern) {
+            $audits->setResource($resource);
+        }
+    }
+
+    $pattern = $route->getLabel('audits.userId', null);
+    if (!empty($pattern)) {
+        $userId = $parseLabel($pattern);
+        $user = $dbForProject->getDocument('users', $userId);
+        $audits->setUser($user);
+    }
+
+    if (!empty($audits->getResource())) {
+        /**
+         * audits.payload is switched to default true
+         * in order to auto audit payload for all endpoints
+         */
+        $pattern = $route->getLabel('audits.payload', true);
         if (!empty($pattern)) {
-            $resource = $parseLabel($pattern);
-            if (!empty($resource) && $resource !== $pattern) {
-                $audits->setResource($resource);
-            }
+            $audits->setPayload($responsePayload);
         }
 
-        $pattern = $route->getLabel('audits.userId', null);
-        if (!empty($pattern)) {
-            $userId = $parseLabel($pattern);
-            $user = $dbForProject->getDocument('users', $userId);
-            $audits->setUser($user);
+        foreach ($events->getParams() as $key => $value) {
+            $audits->setParam($key, $value);
         }
+        $audits->trigger();
+    }
 
-        if (!empty($audits->getResource())) {
-            /**
-             * audits.payload is switched to default true
-             * in order to auto audit payload for all endpoints
-             */
-            $pattern = $route->getLabel('audits.payload', true);
-            if (!empty($pattern)) {
-                $audits->setPayload($responsePayload);
-            }
+    if (!empty($deletes->getType())) {
+        $deletes->trigger();
+    }
 
-            foreach ($events->getParams() as $key => $value) {
-                $audits->setParam($key, $value);
-            }
-            $audits->trigger();
-        }
+    if (!empty($database->getType())) {
+        $database->trigger();
+    }
 
-        if (!empty($deletes->getType())) {
-            $deletes->trigger();
-        }
-
-        if (!empty($database->getType())) {
-            $database->trigger();
-        }
-
-        if (
-            App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
-            && $project->getId()
-            && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
-            && !empty($route->getLabel('sdk.namespace', null))
+    if (
+        App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
+        && $project->getId()
+        && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
+        && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
             $usage
-                ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-                ->setParam('networkResponseSize', $response->getSize())
-                ->submit();
-        }
+            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
+            ->setParam('networkResponseSize', $response->getSize())
+            ->submit();
+    }
     });
