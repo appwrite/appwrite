@@ -19,7 +19,6 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Registry\Registry;
 
 App::init()
     ->groups(['api'])

@@ -208,7 +208,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-       - ./vendor:/usr/src/code/vendor
+      #- ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
@@ -302,7 +302,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor:/usr/src/code/vendor
+      #- ./vendor:/usr/src/code/vendor
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
