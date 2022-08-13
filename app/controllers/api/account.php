@@ -98,7 +98,6 @@ App::post('/v1/account')
                 '$id' => $userId,
                 '$permissions' => [
                     'read(any)',
-                    'create(user:' . $userId . ')',
                     'update(user:' . $userId . ')',
                     'delete(user:' . $userId . ')',
                 ],
@@ -204,7 +203,6 @@ App::post('/v1/account/sessions/email')
 
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             "read(user:{$profile->getId()})",
-            "create(user:{$profile->getId()})",
             "update(user:{$profile->getId()})",
             "delete(user:{$profile->getId()})",
         ]));
@@ -487,7 +485,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         '$id' => $userId,
                         '$permissions' => [
                             'read(any)',
-                            'create(user:' . $userId . ')',
                             'update(user:' . $userId . ')',
                             'delete(user:' . $userId . ')',
                         ],
@@ -555,7 +552,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             "read(user:{$user->getId()})",
-            "create(user:{$user->getId()})",
             "update(user:{$user->getId()})",
             "delete(user:{$user->getId()})",
         ]));
@@ -659,7 +655,6 @@ App::post('/v1/account/sessions/magic-url')
                 '$id' => $userId,
                 '$permissions' => [
                     'read(any)',
-                    'create(user:' . $userId . ')',
                     'update(user:' . $userId . ')',
                     'delete(user:' . $userId . ')',
                 ],
@@ -698,7 +693,6 @@ App::post('/v1/account/sessions/magic-url')
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
                 "read(user:{$user->getId()})",
-                "create(user:{$user->getId()})",
                 "update(user:{$user->getId()})",
                 "delete(user:{$user->getId()})",
             ]));
@@ -807,7 +801,6 @@ App::put('/v1/account/sessions/magic-url')
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
                 "read(user:{$user->getId()})",
-                "create(user:{$user->getId()})",
                 "update(user:{$user->getId()})",
                 "delete(user:{$user->getId()})",
             ]));
@@ -912,7 +905,6 @@ App::post('/v1/account/sessions/phone')
                 '$id' => $userId,
                 '$permissions' => [
                     'read(any)',
-                    'create(user:' . $userId . ')',
                     'update(user:' . $userId . ')',
                     'delete(user:' . $userId . ')',
                 ],
@@ -953,7 +945,6 @@ App::post('/v1/account/sessions/phone')
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
                 "read(user:{$user->getId()})",
-                "create(user:{$user->getId()})",
                 "update(user:{$user->getId()})",
                 "delete(user:{$user->getId()})",
             ]));
@@ -1049,7 +1040,6 @@ App::put('/v1/account/sessions/phone')
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
                 "read(user:{$user->getId()})",
-                "create(user:{$user->getId()})",
                 "update(user:{$user->getId()})",
                 "delete(user:{$user->getId()})",
             ]));
@@ -1152,7 +1142,6 @@ App::post('/v1/account/sessions/anonymous')
             '$id' => $userId,
             '$permissions' => [
                 'read(any)',
-                'create(user:' . $userId . ')',
                 'update(user:' . $userId . ')',
                 'delete(user:' . $userId . ')',
             ],
@@ -1198,7 +1187,7 @@ App::post('/v1/account/sessions/anonymous')
 
         $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
                 "read(user:{$user->getId()})",
-                "create(user:{$user->getId()})",
+            
                 "update(user:{$user->getId()})",
                 "delete(user:{$user->getId()})",
             ]));
@@ -2026,7 +2015,6 @@ App::post('/v1/account/recovery')
         $recovery = $dbForProject->createDocument('tokens', $recovery
             ->setAttribute('$permissions', [
                 "read(user:{$profile->getId()})",
-                "create(user:{$profile->getId()})",
                 "update(user:{$profile->getId()})",
                 "delete(user:{$profile->getId()})",
             ]));
@@ -2191,7 +2179,6 @@ App::post('/v1/account/verification')
         $verification = $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
                 "read(user:{$user->getId()})",
-                "create(user:{$user->getId()})",
                 "update(user:{$user->getId()})",
                 "delete(user:{$user->getId()})",
             ]));
@@ -2350,7 +2337,6 @@ App::post('/v1/account/verification/phone')
         $verification = $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
                 "read(user:{$user->getId()})",
-                "create(user:{$user->getId()})",
                 "update(user:{$user->getId()})",
                 "delete(user:{$user->getId()})",
             ]));

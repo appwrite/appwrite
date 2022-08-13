@@ -1865,10 +1865,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        $documentSecurity = $collection->getAttribute('documentSecurity', false);
         $validator = new Authorization('create');
-        $valid = $validator->isValid($collection->getCreate());
-        if (!$valid && !$documentSecurity) {
+        if (!$validator->isValid($collection->getCreate())) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
@@ -1881,13 +1879,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ),
         );
         $permissions = PermissionsProcessor::handleAggregates($permissions);
-
-        if ($documentSecurity) {
-            $valid |= $validator->isValid((new Document(['$permissions' => $permissions]))->getCreate());
-        }
-        if (!$valid) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
-        }
 
         if (!PermissionsProcessor::allowedForUserType($permissions)) {
             throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);

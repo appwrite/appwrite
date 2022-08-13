@@ -61,7 +61,6 @@ App::post('/v1/teams')
             '$id' => $teamId ,
             '$permissions' => [
                 'read(team:' . $teamId . ')',
-                'create(team:' . $teamId . '/owner)',
                 'update(team:' . $teamId . '/owner)',
                 'delete(team:' . $teamId . '/owner)',
             ],
@@ -737,7 +736,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
                 "read(user:{$user->getId()})",
-                "create(user:{$user->getId()})",
                 "update(user:{$user->getId()})",
                 "delete(user:{$user->getId()})",
             ]));

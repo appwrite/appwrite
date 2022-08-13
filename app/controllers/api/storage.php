@@ -368,11 +368,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $permissions = PermissionsProcessor::handleAggregates($permissions);
 
         $validator = new Authorization('create');
-        $valid = $validator->isValid($bucket->getCreate());
-        if ($bucket->getAttribute('fileSecurity', false)) {
-            $valid |= $validator->isValid($permissions);
-        }
-        if (!$valid) {
+        if (!$validator->isValid($bucket->getCreate())) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 

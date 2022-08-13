@@ -72,7 +72,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'Actors');
         $this->assertIsArray($webhook['data']['$permissions']);
-        $this->assertCount(2, $webhook['data']['$permissions']);
+        $this->assertCount(4, $webhook['data']['$permissions']);
 
         return array_merge(['actorsId' => $actorsId, 'databaseId' => $databaseId]);
     }
@@ -196,7 +196,6 @@ trait WebhooksBase
             ],
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -231,7 +230,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['firstName'], 'Chris');
         $this->assertEquals($webhook['data']['lastName'], 'Evans');
         $this->assertIsArray($webhook['data']['$permissions']);
-        $this->assertCount(2, $webhook['data']['$permissions']);
+        $this->assertCount(3, $webhook['data']['$permissions']);
 
         $data['documentId'] = $document['body']['$id'];
 
@@ -259,7 +258,6 @@ trait WebhooksBase
             ],
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -294,7 +292,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['firstName'], 'Chris1');
         $this->assertEquals($webhook['data']['lastName'], 'Evans2');
         $this->assertIsArray($webhook['data']['$permissions']);
-        $this->assertCount(2, $webhook['data']['$permissions']);
+        $this->assertCount(3, $webhook['data']['$permissions']);
 
         return $data;
     }
@@ -322,7 +320,6 @@ trait WebhooksBase
             ],
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -364,7 +361,7 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['firstName'], 'Bradly');
         $this->assertEquals($webhook['data']['lastName'], 'Cooper');
         $this->assertIsArray($webhook['data']['$permissions']);
-        $this->assertCount(2, $webhook['data']['$permissions']);
+        $this->assertCount(3, $webhook['data']['$permissions']);
 
         return $data;
     }
@@ -492,7 +489,6 @@ trait WebhooksBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],

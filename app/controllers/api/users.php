@@ -59,7 +59,6 @@ App::post('/v1/users')
                 '$id' => $userId,
                 '$permissions' => [
                     'read(any)',
-                    'create(user:' . $userId . ')',
                     'update(user:' . $userId . ')',
                     'delete(user:' . $userId . ')',
                 ],

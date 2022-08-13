@@ -42,7 +42,7 @@ class PermissionsProcessor
             $permissions = [];
             if (!empty($userId)) {
                 foreach ($allowedPermissions as $permission) {
-                    $permissions[] = $permission . '(' . $userId . ')';
+                    $permissions[] = $permission . '(user:' . $userId . ')';
                 }
             }
             return $permissions;

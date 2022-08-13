@@ -145,8 +145,7 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
 
                                                                     <h3 class="margin-bottom-large">Permissions</h3>
 
-                                                                    <?php echo $fileUpdatePermissions->setParam('method', 'storage.getFile')->render();
-                                                                    ?>
+                                                                    <?php echo $fileUpdatePermissions->render(); ?>
                                                                 </div>
                                                             </form>
 

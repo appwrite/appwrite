@@ -55,7 +55,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'Actors1');
         $this->assertIsArray($webhook['data']['$permissions']);
-        $this->assertCount(2, $webhook['data']['$permissions']);
+        $this->assertCount(4, $webhook['data']['$permissions']);
 
         return array_merge(['actorsId' => $actors['body']['$id']]);
     }
@@ -196,7 +196,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'Demo');
         $this->assertIsArray($webhook['data']['$permissions']);
-        $this->assertCount(2, $webhook['data']['$permissions']);
+        $this->assertCount(4, $webhook['data']['$permissions']);
 
         return [];
     }
@@ -394,7 +394,7 @@ class WebhooksCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'functionId' => 'unique()',
             'name' => 'Test',
-            'execute' => ['create(any)'],
+            'execute' => ['any'],
             'runtime' => 'php-8.0',
             'timeout' => 10,
         ]);
@@ -443,7 +443,7 @@ class WebhooksCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Test',
             'runtime' => 'php-8.0',
-            'execute' => ['create(any)'],
+            'execute' => ['any'],
             'vars' => [
                 'key1' => 'value1',
             ]

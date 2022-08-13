@@ -42,7 +42,6 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -106,7 +105,6 @@ trait StorageBase
                 'file' => $curlFile,
                 'permissions' => [
                     'read(any)',
-                    'create(any)',
                     'update(any)',
                     'delete(any)',
                 ],
@@ -148,7 +146,6 @@ trait StorageBase
             'file' => $curlFile,
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -170,7 +167,6 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -189,7 +185,6 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-1.png'), 'image/png', 'kitten-1.png'),
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -210,7 +205,6 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-3.gif'), 'image/gif', 'kitten-3.gif'),
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -295,7 +289,7 @@ trait StorageBase
         $this->assertEquals('image/png', $file1['body']['mimeType']);
         $this->assertEquals(47218, $file1['body']['sizeOriginal']);
         $this->assertIsArray($file1['body']['$permissions']);
-        $this->assertCount(4, $file1['body']['$permissions']);
+        $this->assertCount(3, $file1['body']['$permissions']);
 
         $file2 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
@@ -486,7 +480,6 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -533,7 +526,6 @@ trait StorageBase
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-2.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -580,7 +572,6 @@ trait StorageBase
         ], $this->getHeaders()), [
             'permissions' => [
                 'read(user:' . $this->getUser()['$id'] . ')',
-                'create(user:' . $this->getUser()['$id'] . ')',
                 'update(user:' . $this->getUser()['$id'] . ')',
                 'delete(user:' . $this->getUser()['$id'] . ')',
             ]
@@ -599,7 +590,7 @@ trait StorageBase
         //$this->assertNotEmpty($file['body']['fileOpenSSLTag']);
         //$this->assertNotEmpty($file['body']['fileOpenSSLIV']);
         $this->assertIsArray($file['body']['$permissions']);
-        $this->assertCount(4, $file['body']['$permissions']);
+        $this->assertCount(3, $file['body']['$permissions']);
 
         /**
          * Test for FAILURE unknown Bucket
@@ -611,7 +602,6 @@ trait StorageBase
         ], $this->getHeaders()), [
             'permissions' => [
                 'read(user:' . $this->getUser()['$id'] . ')',
-                'create(user:' . $this->getUser()['$id'] . ')',
                 'update(user:' . $this->getUser()['$id'] . ')',
                 'delete(user:' . $this->getUser()['$id'] . ')',
             ]

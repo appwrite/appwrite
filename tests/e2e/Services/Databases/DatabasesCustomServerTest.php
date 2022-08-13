@@ -507,7 +507,6 @@ class DatabasesCustomServerTest extends Scope
             ],
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -857,7 +856,6 @@ class DatabasesCustomServerTest extends Scope
             ],
             'permissions' => [
                 'read(user:' . $this->getUser()['$id'] . ')',
-                'create(user:' . $this->getUser()['$id'] . ')',
                 'update(user:' . $this->getUser()['$id'] . ')',
                 'delete(user:' . $this->getUser()['$id'] . ')',
             ],
@@ -874,7 +872,6 @@ class DatabasesCustomServerTest extends Scope
             ],
             'permissions' => [
                 'read(user:' . $this->getUser()['$id'] . ')',
-                'create(user:' . $this->getUser()['$id'] . ')',
                 'update(user:' . $this->getUser()['$id'] . ')',
                 'delete(user:' . $this->getUser()['$id'] . ')',
             ],
@@ -882,13 +879,13 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(201, $document1['headers']['status-code']);
         $this->assertIsArray($document1['body']['$permissions']);
-        $this->assertCount(4, $document1['body']['$permissions']);
+        $this->assertCount(3, $document1['body']['$permissions']);
         $this->assertEquals($document1['body']['firstName'], 'Tom');
         $this->assertEquals($document1['body']['lastName'], 'Holland');
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertIsArray($document2['body']['$permissions']);
-        $this->assertCount(4, $document2['body']['$permissions']);
+        $this->assertCount(3, $document2['body']['$permissions']);
         $this->assertEquals($document2['body']['firstName'], 'Samuel');
         $this->assertEquals($document2['body']['lastName'], 'Jackson');
 

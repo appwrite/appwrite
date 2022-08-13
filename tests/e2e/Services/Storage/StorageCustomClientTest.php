@@ -188,7 +188,6 @@ class StorageCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'folderId' => 'xyz',
             'permissions' => [
-                'create(user:notme)',
                 'update(user:notme)',
                 'delete(user:notme)',
             ]
@@ -250,7 +249,6 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'create(user:notme)',
                 'update(user:notme)',
                 'delete(user:notme)',
             ]

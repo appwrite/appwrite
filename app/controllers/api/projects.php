@@ -87,8 +87,6 @@ App::post('/v1/projects')
             '$id' => $projectId,
             '$permissions' => [
                 "read(team:{$teamId})",
-                "create(team:{$teamId}/owner)",
-                "create(team:{$teamId}/developer)",
                 "update(team:{$teamId}/owner)",
                 "update(team:{$teamId}/developer)",
                 "delete(team:{$teamId}/owner)",
@@ -598,7 +596,6 @@ App::post('/v1/projects/:projectId/webhooks')
             '$id' => $dbForConsole->getId(),
             '$permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -846,7 +843,6 @@ App::post('/v1/projects/:projectId/keys')
             '$id' => $dbForConsole->getId(),
             '$permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -1046,7 +1042,6 @@ App::post('/v1/projects/:projectId/platforms')
             '$id' => $dbForConsole->getId(),
             '$permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -1262,7 +1257,6 @@ App::post('/v1/projects/:projectId/domains')
             '$id' => $dbForConsole->getId(),
             '$permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],

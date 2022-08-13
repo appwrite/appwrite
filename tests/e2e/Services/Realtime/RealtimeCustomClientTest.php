@@ -644,7 +644,12 @@ class RealtimeCustomClientTest extends Scope
         ]), [
             'collectionId' => 'unique()',
             'name' => 'Actors',
-            'permissions' => [],
+            'permissions' => [
+                'read(users)',
+                'create(users)',
+                'update(users)',
+                'delete(users)',
+            ],
             'documentSecurity' => true,
         ]);
 
@@ -681,7 +686,6 @@ class RealtimeCustomClientTest extends Scope
             ],
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -728,7 +732,6 @@ class RealtimeCustomClientTest extends Scope
             ],
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -774,7 +777,6 @@ class RealtimeCustomClientTest extends Scope
             ],
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],
@@ -1079,7 +1081,6 @@ class RealtimeCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 'read(any)',
-                'create(any)',
                 'update(any)',
                 'delete(any)',
             ],

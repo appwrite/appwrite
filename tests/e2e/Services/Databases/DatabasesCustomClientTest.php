@@ -80,7 +80,6 @@ class DatabasesCustomClientTest extends Scope
             'permissions' => [
                 "read(user:user2)",
                 "read(user:{$userId})",
-                "create(user:{$userId})",
                 "update(user:{$userId})",
                 "delete(user:{$userId})",
             ],
