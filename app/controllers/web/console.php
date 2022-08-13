@@ -5,6 +5,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Utopia\App;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Domains\Domain;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
@@ -334,12 +335,25 @@ App::get('/console/databases/document')
             ])
         ;
 
+        $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        
+        $permissions
+            ->setParam('method', 'databases.getDocument')
+            ->setParam('data', 'project-document')
+            ->setParam('permissions', \array_filter(Database::PERMISSIONS, fn ($perm) => $perm != Database::PERMISSION_CREATE))
+            ->setParam('params', [
+                'collection-id' => '{{router.params.collection}}',
+                'database-id' => '{{router.params.databaseId}}',
+                'document-id' => '{{router.params.id}}',
+            ]);
+
         $page = new View(__DIR__ . '/../../views/console/databases/document.phtml');
 
         $page
             ->setParam('new', false)
             ->setParam('database', $databaseId)
             ->setParam('collection', $collection)
+            ->setParam('permissions', $permissions)
             ->setParam('logs', $logs)
         ;
 
@@ -356,13 +370,25 @@ App::get('/console/databases/document/new')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
     ->action(function (string $databaseId, string $collection, View $layout) {
+        
+        $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
 
+        $permissions
+            ->setParam('data', 'project-document')
+            ->setParam('permissions', \array_filter(Database::PERMISSIONS, fn ($perm) => $perm != Database::PERMISSION_CREATE))
+            ->setParam('params', [
+                'collection-id' => '{{router.params.collection}}',
+                'database-id' => '{{router.params.databaseId}}',
+                'document-id' => '{{router.params.id}}',
+            ]);
+        
         $page = new View(__DIR__ . '/../../views/console/databases/document.phtml');
 
         $page
             ->setParam('new', true)
             ->setParam('database', $databaseId)
             ->setParam('collection', $collection)
+            ->setParam('permissions', $permissions)
             ->setParam('logs', new View())
         ;
 
