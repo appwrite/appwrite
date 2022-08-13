@@ -18,6 +18,7 @@ use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\S3;
 use Exception;
 use PDO;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Worker
@@ -162,18 +163,26 @@ abstract class Worker
 
     /**
      * Get internal project database
-     * @param string $projectId
+     * @param Document $project
      * @return Database
      */
-    protected function getProjectDB(string $database): Database
+    protected function getProjectDB(Document $project): Database
     {
         global $register;
-        if (!$database) {
+        $database = $project->getAttribute('database', '');
+        $internalId = $project->getInternalId();
+        if (empty($database)) {
             throw new \Exception('Database name not provided - cannot get database');
         }
+
         $cache = $register->get('cache');
         $dbPool = $register->get('dbPool');
-        $dbForProject = $dbPool->getDB($projectId, $cache);
+        $dbForProject = $dbPool->getDB($database, $cache);
+
+        $namespace = "_$internalId";
+        $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForProject->setNamespace($namespace);
+
         return $dbForProject;
     }
 
@@ -186,8 +195,17 @@ abstract class Worker
         global $register;
         $cache = $register->get('cache');
         $dbPool = $register->get('dbPool');
+        $database = $dbPool->getConsoleDB();
+        if (empty($database)) {
+            throw new \Exception('Database name not provided - cannot get database');
+        }
 
-        $dbForConsole = $dbPool->getDB('console', $cache);
+        $dbForConsole = $dbPool->getDB($database, $cache);
+        
+        $namespace = "_console";
+        $dbForConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForConsole->setNamespace($namespace);
+
         return $dbForConsole;
     }
 

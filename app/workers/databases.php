@@ -25,8 +25,6 @@ class DatabaseV1 extends Worker
         $document = new Document($this->args['document'] ?? []);
         $database = new Document($this->args['database'] ?? []);
 
-        var_dump($project);
-
         if ($collection->isEmpty()) {
             throw new Exception('Missing collection');
         }
@@ -37,16 +35,16 @@ class DatabaseV1 extends Worker
 
         switch (strval($type)) {
             case DATABASE_TYPE_CREATE_ATTRIBUTE:
-                $this->createAttribute($database, $collection, $document, $project->getId());
+                $this->createAttribute($database, $collection, $document, $project);
                 break;
             case DATABASE_TYPE_DELETE_ATTRIBUTE:
-                $this->deleteAttribute($database, $collection, $document, $project->getId());
+                $this->deleteAttribute($database, $collection, $document, $project);
                 break;
             case DATABASE_TYPE_CREATE_INDEX:
-                $this->createIndex($database, $collection, $document, $project->getId());
+                $this->createIndex($database, $collection, $document, $project);
                 break;
             case DATABASE_TYPE_DELETE_INDEX:
-                $this->deleteIndex($database, $collection, $document, $project->getId());
+                $this->deleteIndex($database, $collection, $document, $project);
                 break;
 
             default:
@@ -69,7 +67,7 @@ class DatabaseV1 extends Worker
     {
         $projectId = $project->getId();
         $dbForConsole = $this->getConsoleDB();
-        $dbForProject = $this->getProjectDB($project->getAttribute('database', ''));
+        $dbForProject = $this->getProjectDB($project);
 
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].update', [
             'databaseId' => $database->getId(),
@@ -137,7 +135,7 @@ class DatabaseV1 extends Worker
     {
         $projectId = $project->getId();
         $dbForConsole = $this->getConsoleDB();
-        $dbForProject = $this->getProjectDB($project->getAttribute('database', ''));
+        $dbForProject = $this->getProjectDB($project);
 
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete', [
             'databaseId' => $database->getId(),
@@ -229,7 +227,7 @@ class DatabaseV1 extends Worker
                     }
 
                     if ($exists) { // Delete the duplicate if created, else update in db
-                        $this->deleteIndex($database, $collection, $index, $projectId);
+                        $this->deleteIndex($database, $collection, $index, $project);
                     } else {
                         $dbForProject->updateDocument('indexes', $index->getId(), $index);
                     }
@@ -251,7 +249,7 @@ class DatabaseV1 extends Worker
     {
         $projectId = $project->getId();
         $dbForConsole = $this->getConsoleDB();
-        $dbForProject = $this->getProjectDB($project->getAttribute('database', ''));
+        $dbForProject = $this->getProjectDB($project);
 
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].update', [
             'databaseId' => $database->getId(),
@@ -309,7 +307,7 @@ class DatabaseV1 extends Worker
     {
         $projectId = $project->getId();
         $dbForConsole = $this->getConsoleDB();
-        $dbForProject = $this->getProjectDB($project->getAttribute('database', ''));
+        $dbForProject = $this->getProjectDB($project);
 
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].delete', [
             'databaseId' => $database->getId(),

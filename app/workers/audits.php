@@ -37,7 +37,7 @@ class AuditsV1 extends Worker
         $userName = $user->getAttribute('name', '');
         $userEmail = $user->getAttribute('email', '');
 
-        $dbForProject = $this->getProjectDB($project->getAttribute('database', ''));
+        $dbForProject = $this->getProjectDB($project);
         $audit = new Audit($dbForProject);
         $audit->log(
             userId: $user->getId(),

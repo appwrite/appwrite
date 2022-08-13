@@ -55,7 +55,7 @@ class BuildsV1 extends Worker
 
     protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
-        $dbForProject = $this->getProjectDB($project->getAttribute('database', ''));
+        $dbForProject = $this->getProjectDB($project);
 
         $function = $dbForProject->getDocument('functions', $function->getId());
         if ($function->isEmpty()) {

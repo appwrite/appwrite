@@ -328,25 +328,21 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
 
-    App::setResource('request', fn() => $request);
-    App::setResource('response', fn() => $response);
-
-    /** @var Redis $redis */
-    $redis = $register->get('redisPool')->get();
-    App::setResource('cache', fn() => $redis);
-
     /** @var PDO $db */
     $dbPool = $register->get('dbPool');
-    App::setResource('dbPool', fn() => $dbPool);
+    /** @var Redis $redis */
+    $redis = $register->get('redisPool')->get();
 
     Console::info("Connection open (user: {$connection})");
+
+    App::setResource('dbPool', fn() => $dbPool);
+    App::setResource('cache', fn() => $redis);
+    App::setResource('request', fn() => $request);
+    App::setResource('response', fn() => $response);
 
     try {
         /** @var \Utopia\Database\Document $console */
         $console = $app->getResource('console');
-
-        $dbForConsole = $dbPool->getDBFromPool('console', $redis);
-        App::setResource('dbForConsole', fn() => $dbForConsole);
 
         /** @var \Utopia\Database\Document $project */
         $project = $app->getResource('project');
@@ -358,8 +354,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception('Missing or unknown project ID', 1008);
         }
 
-        $dbForProject = $dbPool->getDBFromPool($project->getId(), $redis);
-        App::setResource('dbForProject', fn() => $dbForProject);
+        $dbForProject = $app->getResource('dbForProject');
+        
 
         /** @var \Utopia\Database\Document $user */
         $user = $app->getResource('user');

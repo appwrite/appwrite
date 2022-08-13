@@ -154,28 +154,23 @@ class DatabasePool
         /** Get a PDO instance using the databse name */
         $pdo = $this->getPDO($database);
         $database = $this->getDatabase($pdo, $redis);
-
-        $namespace = "_$internalID";
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace($namespace);
-
         return $database;
     }
 
-    // /**
-    //  * Get a database instance from a PDO and cache
-    //  *
-    //  * @param PDO|PDOProxy $pdo
-    //  * @param \Redis $redis
-    //  *
-    //  * @return Database
-    //  */
-    // private function getDatabase(PDO|PDOProxy $pdo, \Redis $redis): Database
-    // {
-    //     $cache = new Cache(new RedisCache($redis));
-    //     $database = new Database(new MariaDB($pdo), $cache);
-    //     return $database;
-    // }
+    /**
+     * Get a database instance from a PDO and cache
+     *
+     * @param PDO|PDOProxy $pdo
+     * @param \Redis $redis
+     *
+     * @return Database
+     */
+    private function getDatabase(PDO|PDOProxy $pdo, \Redis $redis): Database
+    {
+        $cache = new Cache(new RedisCache($redis));
+        $database = new Database(new MariaDB($pdo), $cache);
+        return $database;
+    }
 
     /**
      * Get a PDO instance from the list of available database pools. Meant to be used in co-routines

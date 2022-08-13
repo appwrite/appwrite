@@ -65,9 +65,9 @@ App::get('/v1/health/db')
 
         try {
             $dbPool = $utopia->getResource('dbPool');
-            $name = $dbPool->getConsoleDB();
+            $database = $dbPool->getConsoleDB();
             /* @var $consoleDB PDO */
-            $consoleDB = $dbPool->getPDO($name);
+            $consoleDB = $dbPool->getPDO($database);
 
             // Run a small test to check the connection
             $statement = $consoleDB->prepare("SELECT 1;");

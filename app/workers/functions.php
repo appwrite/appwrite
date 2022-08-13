@@ -48,7 +48,7 @@ class FunctionsV1 extends Worker
             return;
         }
 
-        $database = $this->getProjectDB($project->getId());
+        $database = $this->getProjectDB($project);
 
         /**
          * Handle Event execution.
