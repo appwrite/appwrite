@@ -60,10 +60,10 @@ class DatabasesPermissionsGuestTest extends Scope
         return [
             [['read(any)']],
             [['read(users)']],
-            [['create(any)', 'update(any)', 'delete(any)']],
-            [['read(any)', 'create(any)', 'update(any)', 'delete(any)']],
-            [['read(users)', 'create(users)', 'update(users)', 'delete(users)']],
-            [['read(any)', 'create(users)', 'update(users)', 'delete(users)']],
+            [['update(any)', 'delete(any)']],
+            [['read(any)', 'update(any)', 'delete(any)']],
+            [['read(users)', 'update(users)', 'delete(users)']],
+            [['read(any)', 'update(users)', 'delete(users)']],
         ];
     }
 

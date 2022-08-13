@@ -208,10 +208,12 @@ class MessagingTest extends TestCase
                 '$collection' => 'collection',
                 '$permissions' => [
                     'read(admin)',
-                    
                     'update(admin)',
                     'delete(admin)',
                 ],
+            ]),
+            database: new Document([
+                '$id' => 'database',
             ]),
             collection: new Document([
                 '$id' => 'collection',
@@ -220,9 +222,6 @@ class MessagingTest extends TestCase
                     'update(any)',
                     'delete(any)',
                 ],
-            ]),
-            database: new Document([
-                '$id' => 'database',
             ])
         );
 
@@ -243,29 +242,28 @@ class MessagingTest extends TestCase
                     'delete(any)',
                 ],
             ]),
+            database: new Document([
+                '$id' => 'database',
+            ]),
             collection: new Document([
                 '$id' => 'collection',
                 '$permissions' => [
                     'read(admin)',
-                    
                     'update(admin)',
                     'delete(admin)',
                 ],
                 'documentSecurity' => true,
-            ]),
-            database: new Document([
-                '$id' => 'database',
             ])
         );
 
         $this->assertContains('any', $result['roles']);
-        $this->assertNotContains('role:admin', $result['roles']);
+        $this->assertContains('admin', $result['roles']);
     }
 
     public function testFromPayloadBucketLevelPermissions(): void
     {
         /**
-         * Test Collection Level Permissions
+         * Test Bucket Level Permissions
          */
         $result = Realtime::fromPayload(
             event: 'buckets.bucket_id.files.file_id.create',
@@ -274,7 +272,6 @@ class MessagingTest extends TestCase
                 '$collection' => 'bucket',
                 '$permissions' => [
                     'read(admin)',
-                    
                     'update(admin)',
                     'delete(admin)',
                 ],
@@ -290,10 +287,10 @@ class MessagingTest extends TestCase
         );
 
         $this->assertContains('any', $result['roles']);
-        $this->assertNotContains('role:admin', $result['roles']);
+        $this->assertNotContains('admin', $result['roles']);
 
         /**
-         * Test Document Level Permissions
+         * Test File Level Permissions
          */
         $result = Realtime::fromPayload(
             event: 'buckets.bucket_id.files.file_id.create',
@@ -310,15 +307,14 @@ class MessagingTest extends TestCase
                 '$id' => 'bucket',
                 '$permissions' => [
                     'read(admin)',
-                    
                     'update(admin)',
                     'delete(admin)',
                 ],
-                'documentSecurity' => true
+                'fileSecurity' => true
             ])
         );
 
         $this->assertContains('any', $result['roles']);
-        $this->assertNotContains('role:admin', $result['roles']);
+        $this->assertContains('admin', $result['roles']);
     }
 }

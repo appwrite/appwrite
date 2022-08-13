@@ -287,7 +287,6 @@ class Realtime extends Adapter
                     $channels[] = 'documents';
                     $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getCollection() . '.documents';
                     $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getCollection() . '.documents.' . $payload->getId();
-
                     $roles = ($collection->getAttribute('documentSecurity', false))
                         ? \array_merge($collection->getRead(), $payload->getRead())
                         : $collection->getRead();
@@ -301,7 +300,9 @@ class Realtime extends Adapter
                     $channels[] = 'files';
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files';
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
-                    $roles = ($bucket->getAttribute('permission') === 'bucket') ? $bucket->getRead() : $payload->getRead();
+                    $roles = $bucket->getAttribute('fileSecurity', false) 
+                        ? \array_merge($bucket->getRead(), $payload->getRead())
+                        : $bucket->getRead();
                 }
 
                 break;
