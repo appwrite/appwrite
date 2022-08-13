@@ -53,6 +53,8 @@ $permissions = $this->getParam('permissions', null);
 
                     <div class="row responsive">
                         <div class="col span-8 margin-bottom">
+                            <form id="<?php echo $permissions->getParam('form', 'permissions') ?>"></form>
+
                             <form
                                 data-analytics
                                 data-analytics-activity

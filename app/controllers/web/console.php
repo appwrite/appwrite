@@ -288,13 +288,13 @@ App::get('/console/databases/collection')
         $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
         $permissions
             ->setParam('method', 'databases.getCollection')
-            ->setParam('events', 'load,databases.updateCollection')
+            ->setParam('events', 'databases.updateCollection')
             ->setParam('data', 'project-collection')
             ->setParam('params', [
                 'collection-id' => '{{router.params.id}}',
                 'database-id' => '{{router.params.databaseId}}'
             ]);
-        
+
         $page = new View(__DIR__ . '/../../views/console/databases/collection.phtml');
 
         $page
@@ -336,11 +336,14 @@ App::get('/console/databases/document')
         ;
 
         $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
-        
+
         $permissions
             ->setParam('method', 'databases.getDocument')
             ->setParam('data', 'project-document')
-            ->setParam('permissions', \array_filter(Database::PERMISSIONS, fn ($perm) => $perm != Database::PERMISSION_CREATE))
+            ->setParam('permissions', \array_filter(
+                Database::PERMISSIONS,
+                fn ($perm) => $perm != Database::PERMISSION_CREATE
+            ))
             ->setParam('params', [
                 'collection-id' => '{{router.params.collection}}',
                 'database-id' => '{{router.params.databaseId}}',
@@ -370,18 +373,21 @@ App::get('/console/databases/document/new')
     ->param('collection', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
     ->action(function (string $databaseId, string $collection, View $layout) {
-        
+
         $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
 
         $permissions
             ->setParam('data', 'project-document')
-            ->setParam('permissions', \array_filter(Database::PERMISSIONS, fn ($perm) => $perm != Database::PERMISSION_CREATE))
+            ->setParam('permissions', \array_filter(
+                Database::PERMISSIONS,
+                fn ($perm) => $perm != Database::PERMISSION_CREATE
+            ))
             ->setParam('params', [
                 'collection-id' => '{{router.params.collection}}',
                 'database-id' => '{{router.params.databaseId}}',
                 'document-id' => '{{router.params.id}}',
             ]);
-        
+
         $page = new View(__DIR__ . '/../../views/console/databases/document.phtml');
 
         $page

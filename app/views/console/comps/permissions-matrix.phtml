@@ -2,12 +2,14 @@
 
 use Utopia\Database\Database;
 
+// Data
 $method = $this->getParam('method', '');
 $params = $this->getParam('params', []);
 $events = $this->getParam('events', '');
-$data = $this->getParam('data', '');
-$form = $this->getParam('form', 'permissionsForm');
 $permissions = $this->getParam('permissions', Database::PERMISSIONS);
+// Names
+$data = $this->getParam('data', '');
+$form = $this->getParam('form', 'form');
 
 $escapedPermissions = \array_map(function ($perm) {
     // Alpine won't bind to a parameter named delete :/
@@ -31,11 +33,9 @@ $escapedPermissions = \array_map(function ($perm) {
     class="permissions-matrix margin-bottom-large"
     x-data="permissionsMatrix">
 
-    <form id="<?php echo $form ?>"></form>
-
     <input
         type="hidden"
-        name="<?php echo $form; ?>"
+        name="permissions"
         data-cast-from="csv"
         data-cast-to="array"
         data-ls-bind="{{<?php echo $data ?>.$permissions}}"
@@ -74,7 +74,7 @@ $escapedPermissions = \array_map(function ($perm) {
             </tr>
         </template>
         <tr x-data="permissionsRow"
-            @addrow.window="addPermission(<?php echo $form; ?>,role,{<?php echo \implode(',', $escapedPermissions) ?>})">
+            @addrow.window="addPermission('<?php echo $form; ?>',role,{<?php echo \implode(',', $escapedPermissions) ?>})">
             <td>
                 <datalist id="types">
                     <option value="user:">
@@ -103,7 +103,7 @@ $escapedPermissions = \array_map(function ($perm) {
         </tbody>
         <tfoot>
         <tr>
-            <td colspan="6">
+            <td colspan="<?php \count($permissions) + 2 ?>">
                 <button type="button" class="btn btn-primary margin-top-small" @click="$dispatch('addrow')">Add</button>
             </td>
         </tr>
