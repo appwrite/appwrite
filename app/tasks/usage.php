@@ -163,7 +163,7 @@ $cli
         $database = getDatabase($register, '_console');
         $influxDB = getInfluxDB($register);
 
-        switch($type) {
+        switch ($type) {
             case 'timeseries':
                 aggregateTimeseries($database, $influxDB, $logError);
                 break;
