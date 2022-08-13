@@ -2475,12 +2475,12 @@ App::get('/v1/databases/:databaseId/usage')
             ];
 
             $metrics = [
-                'documents.' . $databaseId . '.count.total',
                 'collections.' . $databaseId . '.count.total',
                 'collections.' . $databaseId . '.requests.create',
                 'collections.' . $databaseId . '.requests.read',
                 'collections.' . $databaseId . '.requests.update',
                 'collections.' . $databaseId . '.requests.delete',
+                'documents.' . $databaseId . '.count.total',
                 'documents.' . $databaseId . '.requests.create',
                 'documents.' . $databaseId . '.requests.read',
                 'documents.' . $databaseId . '.requests.update',
@@ -2528,16 +2528,16 @@ App::get('/v1/databases/:databaseId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'documentsCount' => $stats["documents.{$databaseId}.count.total"],
                 'collectionsCount' => $stats["collections.{$databaseId}.count.total"],
-                'documentsCreate' =>  $stats["documents.{$databaseId}.requests.create"],
-                'documentsRead' =>  $stats["documents.{$databaseId}.requests.read"],
-                'documentsUpdate' => $stats["documents.{$databaseId}.requests.update"],
-                'documentsDelete' => $stats["documents.{$databaseId}.requests.delete"],
                 'collectionsCreate' => $stats["collections.{$databaseId}.requests.create"],
                 'collectionsRead' =>  $stats["collections.{$databaseId}.requests.read"],
                 'collectionsUpdate' => $stats["collections.{$databaseId}.requests.update"],
                 'collectionsDelete' => $stats["collections.{$databaseId}.requests.delete"],
+                'documentsCount' => $stats["documents.{$databaseId}.count.total"],
+                'documentsCreate' =>  $stats["documents.{$databaseId}.requests.create"],
+                'documentsRead' =>  $stats["documents.{$databaseId}.requests.read"],
+                'documentsUpdate' => $stats["documents.{$databaseId}.requests.update"],
+                'documentsDelete' => $stats["documents.{$databaseId}.requests.delete"],
             ]);
         }
 
