@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "029dcab43ed83efdf56d471a8cc26f50",
+    "content-hash": "a1ab1a7aab14b5ac016472261bb814ff",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1841,22 +1841,22 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.8.0",
+            "version": "dev-refactor-permissions",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "b46dc42614a69437c45eb229249b6a6d000122c1"
+                "reference": "d9ab49e3208c65f25386895242931595248bbe32"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/b46dc42614a69437c45eb229249b6a6d000122c1",
-                "reference": "b46dc42614a69437c45eb229249b6a6d000122c1",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/d9ab49e3208c65f25386895242931595248bbe32",
+                "reference": "d9ab49e3208c65f25386895242931595248bbe32",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": ">=0.11 <1.0"
+                "utopia-php/database": "dev-refactor-permissions"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1888,9 +1888,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.8.0"
+                "source": "https://github.com/utopia-php/audit/tree/refactor-permissions"
             },
-            "time": "2021-12-27T13:05:56+00:00"
+            "time": "2022-08-13T15:11:07+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -5361,6 +5361,12 @@
             "alias_normalized": "0.7.0.0"
         },
         {
+            "package": "utopia-php/audit",
+            "version": "dev-refactor-permissions",
+            "alias": "0.8.0",
+            "alias_normalized": "0.8.0.0"
+        },
+        {
             "package": "utopia-php/database",
             "version": "dev-refactor-permissions",
             "alias": "0.18.9",
@@ -5370,6 +5376,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/abuse": 20,
+        "utopia-php/audit": 20,
         "utopia-php/database": 20,
         "appwrite/sdk-generator": 20
     },

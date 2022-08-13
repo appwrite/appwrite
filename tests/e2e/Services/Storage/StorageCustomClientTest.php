@@ -208,9 +208,8 @@ class StorageCustomClientTest extends Scope
             'folderId' => 'xyz',
             'permissions' => [
                 'read(user:notme)',
-                 'create(user:notme)',
-                    'update(user:notme)',
-                    'delete(user:notme)',
+                'update(user:notme)',
+                'delete(user:notme)',
             ],
         ]);
 

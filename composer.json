@@ -47,7 +47,7 @@
         "utopia-php/logger": "0.3.*",
         "utopia-php/abuse": "dev-refactor-permissions-premerge as 0.7.0",
         "utopia-php/analytics": "0.2.*",
-        "utopia-php/audit": "0.8.*",
+        "utopia-php/audit": "dev-refactor-permissions as 0.8.0",
         "utopia-php/cache": "0.6.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
