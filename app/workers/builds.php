@@ -145,9 +145,7 @@ class BuildsV1 extends Worker
 
         $source = $deployment->getAttribute('path');
         $vars = [];
-        $variables = $dbForProject->find('variables', [
-            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()])
-        ], 5000);
+        $variables = $function['vars'];
 
         foreach ($variables as $variable) {
             $vars[$variable['key']] = $variable['value'];
@@ -187,8 +185,7 @@ class BuildsV1 extends Worker
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
                 $function->setAttribute('deployment', $deployment->getId());
-                $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
-                $dbForProject->deleteCachedDocument('functions', $function->getId());
+                $function = $dbForProject->updateDocument('functions', $function->getId(), $function);               
             }
 
             /** Update function schedule */
@@ -197,7 +194,6 @@ class BuildsV1 extends Worker
             $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
             $function->setAttribute('scheduleNext', (int)$next);
             $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
-            $dbForProject->deleteCachedDocument('functions', $function->getId());
         } catch (\Throwable $th) {
             $endtime = \time();
             $build->setAttribute('endTime', $endtime);

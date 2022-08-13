@@ -260,9 +260,7 @@ class FunctionsV1 extends Worker
 
         $vars = [];
 
-        $variables = $dbForProject->find('variables', [
-            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()]),
-        ], APP_LIMIT_COUNT);
+        $variables = $function['vars'];
 
         foreach ($variables as $variable) {
             $vars[$variable['key']] = $variable['value'];

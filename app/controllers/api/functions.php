@@ -321,8 +321,6 @@ App::put('/v1/functions/:functionId')
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
-
         if ($next && $schedule !== $original) {
             // Async task reschedule
             $functionEvent = new Func();
@@ -388,8 +386,6 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             'deployment' => $deployment->getId(),
             'scheduleNext' => (int)$next,
         ])));
-
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         if ($next) { // Init first schedule
             $functionEvent = new Func();
@@ -772,8 +768,6 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             ])));
         }
 
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
-
         $usage
             ->setParam('storage', $deployment->getAttribute('size', 0) * -1);
 
@@ -917,9 +911,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $vars = [];
 
-        $variables = $dbForProject->find('variables', [
-            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()]),
-        ], APP_LIMIT_COUNT);
+        $variables = $function['vars'];
 
         foreach ($variables as $variable) {
             $vars[$variable['key']] = $variable['value'];
@@ -1197,9 +1189,7 @@ App::get('/v1/functions/:functionId/variables')
             throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
         }
 
-        $variables = $dbForProject->find('variables', [
-            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()]),
-        ], 5000);
+        $variables = $function['vars'];
 
         $response->dynamic(new Document([
             'variables' => $variables,
@@ -1325,7 +1315,6 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         }
 
         $dbForProject->deleteDocument('variables', $variable->getId());
-
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $response->noContent();
