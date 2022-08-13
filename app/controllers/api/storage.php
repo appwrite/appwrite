@@ -1436,13 +1436,13 @@ App::get('/v1/storage/usage')
 
             $metrics = [
                 'project.$all.storage.size',
-                'files.$all.storage.size',
-                'files.$all.count.total',
                 'buckets.$all.count.total',
                 'buckets.$all.requests.create',
                 'buckets.$all.requests.read',
                 'buckets.$all.requests.update',
                 'buckets.$all.requests.delete',
+                'files.$all.storage.size',
+                'files.$all.count.total',
                 'files.$all.requests.create',
                 'files.$all.requests.read',
                 'files.$all.requests.update',
@@ -1489,13 +1489,13 @@ App::get('/v1/storage/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'storage' => $stats['project.$all.storage.size'],
-                'filesCount' => $stats['files.$all.count.total'],
                 'bucketsCount' => $stats['buckets.$all.count.total'],
                 'bucketsCreate' => $stats['buckets.$all.requests.create'],
                 'bucketsRead' => $stats['buckets.$all.requests.read'],
                 'bucketsUpdate' => $stats['buckets.$all.requests.update'],
                 'bucketsDelete' => $stats['buckets.$all.requests.delete'],
+                'storage' => $stats['project.$all.storage.size'],
+                'filesCount' => $stats['files.$all.count.total'],
                 'filesCreate' => $stats['files.$all.requests.create'],
                 'filesRead' => $stats['files.$all.requests.read'],
                 'filesUpdate' => $stats['files.$all.requests.update'],
