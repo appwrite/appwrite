@@ -44,7 +44,7 @@
         "appwrite/php-runtimes": "0.10.*",
         "utopia-php/framework": "0.19.*",
         "utopia-php/logger": "0.3.*",
-        "utopia-php/abuse": "dev-refactor-permissions as 0.7.0",
+        "utopia-php/abuse": "dev-refactor-permissions-premerge as 0.7.0",
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.8.*",
         "utopia-php/cache": "0.6.*",

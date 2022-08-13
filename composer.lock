@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1c445856ae9bb3cc261811ed64bc6b38",
+    "content-hash": "3c1c6b1b397973a275146054a3221610",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1733,16 +1733,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-refactor-permissions",
+            "version": "dev-refactor-permissions-premerge",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "438925eddc8975b8377d1b0fced74055935870ce"
+                "reference": "5e413f57b5bb7c947a430311f40224ca76525b1f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/438925eddc8975b8377d1b0fced74055935870ce",
-                "reference": "438925eddc8975b8377d1b0fced74055935870ce",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/5e413f57b5bb7c947a430311f40224ca76525b1f",
+                "reference": "5e413f57b5bb7c947a430311f40224ca76525b1f",
                 "shasum": ""
             },
             "require": {
@@ -1780,9 +1780,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/refactor-permissions"
+                "source": "https://github.com/utopia-php/abuse/tree/refactor-permissions-premerge"
             },
-            "time": "2022-08-12T13:21:57+00:00"
+            "time": "2022-08-13T01:20:01+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -5356,7 +5356,7 @@
         },
         {
             "package": "utopia-php/abuse",
-            "version": "dev-refactor-permissions",
+            "version": "dev-refactor-permissions-premerge",
             "alias": "0.7.0",
             "alias_normalized": "0.7.0.0"
         },
