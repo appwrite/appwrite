@@ -1489,7 +1489,7 @@ App::get('/v1/storage/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'filesStorage' => $stats['project.$all.storage.size'],
+                'storage' => $stats['project.$all.storage.size'],
                 'filesCount' => $stats['files.$all.count.total'],
                 'bucketsCount' => $stats['buckets.$all.count.total'],
                 'bucketsCreate' => $stats['buckets.$all.requests.create'],

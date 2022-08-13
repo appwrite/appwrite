@@ -208,7 +208,7 @@ class UsageTest extends Scope
             'x-appwrite-mode' => 'admin'
         ]));
         $res = $res['body'];
-        $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesStorage'])]['value']);
+        $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
         $this->assertEquals($bucketsCount, $res['bucketsCount'][array_key_last($res['bucketsCount'])]['value']);
         $this->assertEquals($bucketsRead, $res['bucketsRead'][array_key_last($res['bucketsRead'])]['value']);
         $this->assertEquals($bucketsCreate, $res['bucketsCreate'][array_key_last($res['bucketsCreate'])]['value']);
