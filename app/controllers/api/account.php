@@ -1321,7 +1321,7 @@ App::get('/v1/account/logs')
     ->action(function (int $limit, int $offset, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Stats $usage) {
 
         $audit = new EventAudit($dbForProject);
-
+        var_dump($user);
         $logs = $audit->getLogsByUser($user->getId(), $limit, $offset);
 
         $output = [];

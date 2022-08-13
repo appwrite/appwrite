@@ -269,7 +269,7 @@ App::shutdown()
                 $replace = $parts[1];
 
                 $params = match ($namespace) {
-                    'user' => $user,
+                    'user' => (array)$user,
                     'request' => $requestParams,
                     default => $responsePayload,
                 };
