@@ -102,7 +102,7 @@ return [
     ],
     Exception::USER_ALREADY_EXISTS => [
         'name' => Exception::USER_ALREADY_EXISTS,
-        'description' => 'A user with the same email ID already exists in your project.',
+        'description' => 'A user with the same email already exists in your project.',
         'code' => 409,
     ],
     Exception::USER_BLOCKED => [
@@ -152,7 +152,7 @@ return [
     ],
     Exception::USER_EMAIL_ALREADY_EXISTS => [
         'name' => Exception::USER_EMAIL_ALREADY_EXISTS,
-        'description' => 'Another user with the same email already exists in the current project.',
+        'description' => 'A user with the same email already exists in the current project.',
         'code' => 409,
     ],
     Exception::USER_PASSWORD_MISMATCH => [
@@ -187,7 +187,7 @@ return [
     ],
     Exception::USER_MISSING_ID => [
         'name' => Exception::USER_MISSING_ID,
-        'description' => 'Missing ID from OAuth2 provider',
+        'description' => 'Missing ID from OAuth2 provider.',
         'code' => 400,
     ],
 
@@ -497,12 +497,12 @@ return [
     ],
     Exception::PROJECT_INVALID_SUCCESS_URL => [
         'name' => Exception::PROJECT_INVALID_SUCCESS_URL,
-        'description' => 'Invalid URL received for OAuth success redirect.',
+        'description' => 'Invalid redirect URL for OAuth success.',
         'code' => 400,
     ],
     Exception::PROJECT_INVALID_FAILURE_URL => [
         'name' => Exception::PROJECT_INVALID_FAILURE_URL,
-        'description' => 'Invalid URL received for OAuth failure redirect.',
+        'description' => 'Invalid redirect URL for OAuth failure.',
         'code' => 400,
     ],
     Exception::PROJECT_KEY_EXPIRED => [

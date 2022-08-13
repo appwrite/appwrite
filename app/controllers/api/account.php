@@ -397,7 +397,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             try {
                 $state = \array_merge($defaultState, $oauth2->parseState($state));
             } catch (\Exception$exception) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR);
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to parse login state params as passed from OAuth2 provider');
             }
         } else {
             $state = $defaultState;
@@ -619,7 +619,7 @@ App::post('/v1/account/sessions/magic-url')
     ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Mail $mails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception(Exception::GENERAL_SMTP_DISABLED);
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
         $roles = Authorization::getRoles();
@@ -860,7 +860,7 @@ App::post('/v1/account/sessions/phone')
     ->inject('phone')
     ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging, Phone $phone) {
         if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
-            throw new Exception(Exception::GENERAL_PHONE_DISABLED);
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
         $roles = Authorization::getRoles();
@@ -1092,11 +1092,11 @@ App::post('/v1/account/sessions/anonymous')
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
-            throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED);
+            throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user');
         }
 
         if (!$user->isEmpty()) {
-            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
+            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS, 'Cannot create an anonymous user when logged in');
         }
 
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -1941,7 +1941,7 @@ App::post('/v1/account/recovery')
     ->action(function (string $email, string $url, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Mail $mails, Audit $audits, Event $events, Stats $usage) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception(Exception::GENERAL_SMTP_DISABLED);
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
         $roles = Authorization::getRoles();
@@ -2115,7 +2115,7 @@ App::post('/v1/account/verification')
     ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Mail $mails, Stats $usage) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception(Exception::GENERAL_SMTP_DISABLED);
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
         $roles = Authorization::getRoles();
@@ -2265,7 +2265,7 @@ App::post('/v1/account/verification/phone')
     ->action(function (Request $request, Response $response, Phone $phone, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
 
         if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
-            throw new Exception(Exception::GENERAL_PHONE_DISABLED);
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
         if (empty($user->getAttribute('phone'))) {
