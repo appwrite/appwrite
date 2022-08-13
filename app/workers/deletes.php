@@ -317,8 +317,7 @@ class DeletesV1 extends Worker
                 $this->deleteByGroup('sessions', [
                 new Query('expire', Query::TYPE_LESSER, [$timestamp])
                 ], $dbForProject);
-            }
-        );
+        });
     }
 
     /**

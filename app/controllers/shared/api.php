@@ -129,14 +129,12 @@ App::init()
         $useCache = $route->getLabel('cache', false);
 
         if ($useCache) {
-
             $key = md5($request->getURI() . implode('*', $request->getParams()));
             $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
 
             if (!empty($data)) {
-
                 $cacheLog = Authorization::skip(fn() => $dbForProject->getDocument('cache', $key));
 
                 if ($cacheLog->isEmpty()) {
@@ -159,12 +157,11 @@ App::init()
                 ;
 
                 $route->setIsActive(false);
-
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
             }
         }
-});
+    });
 
 App::init()
     ->groups(['auth'])
@@ -218,7 +215,7 @@ App::init()
                 throw new Exception('Unsupported authentication route', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
                 break;
         }
-});
+    });
 
 App::shutdown()
     ->groups(['api'])
@@ -341,4 +338,4 @@ App::shutdown()
                 ->setParam('networkResponseSize', $response->getSize())
                 ->submit();
         }
-});
+    });
