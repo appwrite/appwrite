@@ -70,7 +70,7 @@
                 }
                 let permissions = formData.get('permissions');
                 if(permissions) {
-                    permissions = JSON.parse(permissions);
+                    permissions = permissions.split(',');
                 }
 
                 if(this.getFile(id)) {
