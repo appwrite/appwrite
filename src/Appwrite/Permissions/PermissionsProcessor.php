@@ -4,7 +4,6 @@ namespace Appwrite\Permissions;
 
 use Appwrite\Auth\Auth;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
 class PermissionsProcessor
@@ -33,8 +32,8 @@ class PermissionsProcessor
     }
 
     public static function addDefaultsIfNeeded(
-        ?array $permissions, 
-        string $userId, 
+        ?array $permissions,
+        string $userId,
         array $allowedPermissions = Database::PERMISSIONS
     ): array
     {
@@ -75,5 +74,14 @@ class PermissionsProcessor
             }
         }
         return true;
+    }
+
+    public static function allowedForResourceType(string $resourceType, array $permissions): bool
+    {
+        return match ($resourceType) {
+            'document',
+            'file' => empty(\preg_grep("#^create\(.+\)$#", $permissions)),
+            default => true
+        };
     }
 }

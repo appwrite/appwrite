@@ -88,6 +88,11 @@ return [
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
     ],
+    Exception::GENERAL_PERMISSION_INVALID => [
+        'name' => Exception::GENERAL_PERMISSION_INVALID,
+        'description' => 'The provided permissions are invalid for this resource type. Documents and files cannot contain a create permission.',
+        'code' => 400,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [

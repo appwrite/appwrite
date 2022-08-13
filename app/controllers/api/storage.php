@@ -5,6 +5,7 @@ use Appwrite\ClamAV\Network;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Permissions\Permissions;
 use Appwrite\Permissions\PermissionsProcessor;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\OpenSSL\OpenSSL;
@@ -357,6 +358,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
+        $validator = new Authorization('create');
+        if (!$validator->isValid($bucket->getCreate())) {
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        }
+
         $permissions = PermissionsProcessor::addDefaultsIfNeeded(
             $permissions,
             $user->getId(),
@@ -365,13 +371,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 fn ($permission) => $permission !== Database::PERMISSION_CREATE
             ),
         );
+
         $permissions = PermissionsProcessor::handleAggregates($permissions);
 
-        $validator = new Authorization('create');
-        if (!$validator->isValid($bucket->getCreate())) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        if (!PermissionsProcessor::allowedForResourceType('file', $permissions)) {
+            throw new Exception('Invalid permission', 400, Exception::GENERAL_PERMISSION_INVALID);
         }
-
         if (!PermissionsProcessor::allowedForUserType($permissions)) {
             throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
         }

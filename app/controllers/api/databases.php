@@ -1878,8 +1878,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 fn ($permission) => $permission !== Database::PERMISSION_CREATE
             ),
         );
+        
         $permissions = PermissionsProcessor::handleAggregates($permissions);
 
+        if (!PermissionsProcessor::allowedForResourceType('document', $permissions)) {
+            throw new Exception('Invalid permission', 400, Exception::GENERAL_PERMISSION_INVALID);
+        }
         if (!PermissionsProcessor::allowedForUserType($permissions)) {
             throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
         }
