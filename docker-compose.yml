@@ -103,12 +103,9 @@ services:
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor/utopia/database:/usr/src/code/vendor/utopia/database
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
-      #- ./vendor:/usr/src/code/vendor
-      # - ./debug:/tmp
       - ./dev:/usr/local/dev
     depends_on:
       - mariadb
@@ -208,7 +205,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      #- ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
@@ -302,7 +298,6 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      #- ./vendor:/usr/src/code/vendor
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -332,7 +327,6 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      # - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
       - mariadb
@@ -563,7 +557,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      #- ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
     environment:
