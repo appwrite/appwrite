@@ -175,15 +175,14 @@ class Exception extends \Exception
 
     protected $type = '';
 
-    protected static array $errors = Config::getParam('errors');
-
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
+        $this->errors = Config::getParam('errors');
         $this->type = $type;
 
-        if (isset(self::$errors[$type])) {
-            $this->code = self::$errors[$type]['code'];
-            $this->message = self::$errors[$type]['description'];
+        if (isset($this->errors[$type])) {
+            $this->code = $this->errors[$type]['code'];
+            $this->message = $this->errors[$type]['description'];
         }
 
         $this->message = $message ?? $this->message;
