@@ -49,7 +49,7 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $response
         ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
         ->setContentType('image/png')
-        ->send($data)
+        ->file($data)
     ;
     unset($image);
 };
@@ -156,7 +156,7 @@ App::get('/v1/avatars/image')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType('image/png')
-            ->send($data)
+            ->file($data)
         ;
         unset($image);
     });
@@ -287,7 +287,7 @@ App::get('/v1/avatars/favicon')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType('image/png')
-            ->send($data)
+            ->file($data)
         ;
         unset($image);
     });
@@ -329,7 +329,7 @@ App::get('/v1/avatars/qr')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->output('png', 9))
+            ->file($image->output('png', 9))
         ;
     });
 
@@ -411,6 +411,6 @@ App::get('/v1/avatars/initials')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->getImageBlob())
+            ->file($image->getImageBlob())
         ;
     });

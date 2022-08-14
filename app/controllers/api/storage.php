@@ -960,7 +960,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType($contentType)
-            ->send($data)
+            ->file($data)
         ;
         unset($image);
     });

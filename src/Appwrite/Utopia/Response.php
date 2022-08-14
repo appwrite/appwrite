@@ -449,7 +449,6 @@ class Response extends SwooleResponse
         return $this->payload;
     }
 
-
     /**
      * Output response
      *
@@ -459,16 +458,14 @@ class Response extends SwooleResponse
      *
      * @return void
      */
-    public function send(string $body = ''): void
+    public function file(string $body = ''): void
     {
         $this->payload = [
-            'content-type' => $this->getContentType(),
-            'payload'  =>  $body
+            'payload' => $body
         ];
 
-        parent::send($body);
+        $this->send($body);
     }
-
 
     /**
      * YAML
@@ -500,7 +497,6 @@ class Response extends SwooleResponse
     {
         return $this->payload;
     }
-
 
     /**
      * Function to set a response filter

@@ -307,7 +307,7 @@ App::shutdown()
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
             $data = $response->getPayload();
-            if (!empty($data)) {
+            if (!empty($data['payload'])) {
                 $key = md5($request->getURI() . implode('*', $request->getParams()));
                 $cacheLog = $dbForProject->getDocument('cache', $key);
                 if ($cacheLog->isEmpty()) {
@@ -319,11 +319,14 @@ App::shutdown()
                     $cacheLog->setAttribute('accessedAt', \time());
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
-                if (!empty($data['payload'])) {
-                    $data['payload'] = base64_encode($data['payload']);
-                    $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
-                    $cache->save($key, json_encode($data));
-                }
+
+                $data = [
+                    'content-type' => $response->getContentType(),
+                    'payload' => base64_encode($data['payload']),
+                ] ;
+
+                $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
+                $cache->save($key, json_encode($data));
             }
         }
 
