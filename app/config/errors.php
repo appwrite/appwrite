@@ -541,13 +541,6 @@ return [
         'code' => 401,
     ],
 
-    /* Registry Errors */
-    Exception::LOGGER_NOT_SUPPORTED => [
-        'name' => Exception::LOGGER_NOT_SUPPORTED,
-        'description' => 'Logging provider not supported. Logging disabled.',
-        'code' => 500,
-    ],
-
     /** Mocks */
     Exception::MOCK_INVALID_CONTENT_RANGE_HEADER => [
         'name' => Exception::MOCK_INVALID_CONTENT_RANGE_HEADER,

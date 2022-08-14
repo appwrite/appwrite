@@ -176,9 +176,6 @@ class Exception extends \Exception
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
 
-    /** Logger */
-    public const LOGGER_NOT_SUPPORTED = 'logger_not_supported';
-
     /** Mocks */
     public const MOCK_INVALID_CONTENT_RANGE_HEADER = 'mock_invalid_content_range_header';
     public const MOCK_FIRST_CHUNK_CANNOT_HAVE_ID = 'mock_first_chunk_cannot_have_id';
