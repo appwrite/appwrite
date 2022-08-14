@@ -382,12 +382,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($read as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Read permissions must be one of: (' . \implode(', ', $roles) . ')');
+                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400);
                 }
             }
             foreach ($write as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Write permissions must be one of: (' . \implode(', ', $roles) . ')');
+                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400);
                 }
             }
         }
@@ -1308,12 +1308,12 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach ($read as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Read permissions must be one of: (' . \implode(', ', $roles) . ')');
+                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400);
                 }
             }
             foreach ($write as $role) {
                 if (!Authorization::isRole($role)) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Write permissions must be one of: (' . \implode(', ', $roles) . ')');
+                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Write permissions must be one of: (' . \implode(', ', $roles) . ')', 400);
                 }
             }
         }
