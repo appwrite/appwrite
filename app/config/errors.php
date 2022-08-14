@@ -505,6 +505,11 @@ return [
         'description' => 'Invalid redirect URL for OAuth failure.',
         'code' => 400,
     ],
+    Exception::PROJECT_RESERVED_PROJECT => [
+        'name' => Exception::PROJECT_RESERVED_PROJECT,
+        'description' => 'The project ID is reserved. Please choose another project ID.',
+        'code' => 400,
+    ],
     Exception::PROJECT_KEY_EXPIRED => [
         'name' => Exception::PROJECT_KEY_EXPIRED,
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
