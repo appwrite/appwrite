@@ -4,8 +4,16 @@ namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 
-class Linkedin extends OAuth2
+// Reference Material
+// https://disqus.com/api/docs/auth/
+
+class Disqus extends OAuth2
 {
+    /**
+     * @var string
+     */
+    private string $endpoint = 'https://disqus.com/api/';
+
     /**
      * @var array
      */
@@ -20,29 +28,16 @@ class Linkedin extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'r_liteprofile',
-        'r_emailaddress',
+        'read',
+        'email',
     ];
-
-    /**
-     * Documentation.
-     *
-     * OAuth:
-     * https://developer.linkedin.com/docs/oauth2
-     *
-     * API/V2:
-     * https://developer.linkedin.com/docs/guide/v2
-     *
-     * Basic Profile Fields:
-     * https://developer.linkedin.com/docs/fields/basic-profile
-     */
 
     /**
      * @return string
      */
     public function getName(): string
     {
-        return 'linkedin';
+        return 'disqus';
     }
 
     /**
@@ -50,13 +45,16 @@ class Linkedin extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://www.linkedin.com/oauth/v2/authorization?' . \http_build_query([
-            'response_type' => 'code',
-            'client_id' => $this->appID,
-            'redirect_uri' => $this->callback,
-            'scope' => \implode(' ', $this->getScopes()),
-            'state' => \json_encode($this->state),
-        ]);
+        $url = $this->endpoint . 'oauth/2.0/authorize/?' .
+            \http_build_query([
+                'response_type' => 'code',
+                'client_id' => $this->appID,
+                'state' => \json_encode($this->state),
+                'redirect_uri' => $this->callback,
+                'scope' => \implode(',', $this->getScopes())
+            ]);
+
+        return $url;
     }
 
     /**
@@ -69,14 +67,15 @@ class Linkedin extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                'https://www.linkedin.com/oauth/v2/accessToken',
+                $this->endpoint . 'oauth/2.0/access_token/',
                 ['Content-Type: application/x-www-form-urlencoded'],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
-                    'code' => $code,
-                    'redirect_uri' => $this->callback,
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
+                    'redirect_uri' => $this->callback,
+                    'code' => $code,
+                    'scope' => \implode(' ', $this->getScopes()),
                 ])
             ), true);
         }
@@ -92,12 +91,11 @@ class Linkedin extends OAuth2
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://www.linkedin.com/oauth/v2/accessToken',
+            $this->endpoint . 'oauth/2.0/access_token/?',
             ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken,
-                'redirect_uri' => $this->callback,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
             ])
@@ -110,7 +108,7 @@ class Linkedin extends OAuth2
     }
 
     /**
-     * @param string $accessToken
+     * @param string $token
      *
      * @return string
      */
@@ -118,7 +116,9 @@ class Linkedin extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['id'] ?? '';
+        $userId = $user['id'];
+
+        return $userId;
     }
 
     /**
@@ -128,25 +128,26 @@ class Linkedin extends OAuth2
      */
     public function getUserEmail(string $accessToken): string
     {
-        $email = \json_decode($this->request('GET', 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', ['Authorization: Bearer ' . \urlencode($accessToken)]), true);
+        $user = $this->getUser($accessToken);
 
-        return $email['elements'][0]['handle~']['emailAddress'] ?? '';
+        $userEmail = $user['email'];
+
+        return $userEmail;
     }
 
     /**
-     * Check if the OAuth email is verified
-     *
-     * If present, the email is verified. This was verfied through a manual Linkedin sign up process
-     *
      * @param string $accessToken
      *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $email = $this->getUserEmail($accessToken);
 
-        return !empty($email);
+        // Look out for the change in their enpoint.
+        // It's in Beta so they may provide a parameter in the future.
+        // https://disqus.com/api/docs/users/details/
+
+        return false;
     }
 
     /**
@@ -157,17 +158,10 @@ class Linkedin extends OAuth2
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        $name = '';
 
-        if (isset($user['localizedFirstName'])) {
-            $name = $user['localizedFirstName'];
-        }
+        $username = $user['name'] ?? '';
 
-        if (isset($user['localizedLastName'])) {
-            $name = (empty($name)) ? $user['localizedLastName'] : $name . ' ' . $user['localizedLastName'];
-        }
-
-        return $name;
+        return $username;
     }
 
     /**
@@ -175,10 +169,18 @@ class Linkedin extends OAuth2
      *
      * @return array
      */
-    protected function getUser(string $accessToken)
+    protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.linkedin.com/v2/me', ['Authorization: Bearer ' . \urlencode($accessToken)]), true);
+            $user = $this->request(
+                'GET',
+                $this->endpoint . '3.0/users/details.json?' . \http_build_query([
+                    'access_token' => $accessToken,
+                    'api_key' => $this->appID,
+                    'api_secret' => $this->appSecret
+                ]),
+            );
+            $this->user = \json_decode($user, true)['response'];
         }
 
         return $this->user;

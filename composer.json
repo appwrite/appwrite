@@ -23,6 +23,7 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\E2E\\": "tests/e2e",
+            "Tests\\Unit\\": "tests/unit",
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
@@ -42,7 +43,7 @@
         "ext-sockets": "*",
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.10.*",
-        "utopia-php/framework": "0.19.*",
+        "utopia-php/framework": "0.20.*",
         "utopia-php/logger": "0.3.*",
         "utopia-php/abuse": "0.7.*",
         "utopia-php/analytics": "0.2.*",

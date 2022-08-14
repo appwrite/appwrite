@@ -1,13 +1,13 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\Origin;
 use PHPUnit\Framework\TestCase;
 
 class OriginTest extends TestCase
 {
-    public function testValues()
+    public function testValues(): void
     {
         $validator = new Origin([
             [

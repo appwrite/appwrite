@@ -214,7 +214,7 @@ App::get('/v1/mock/tests/general/download')
             ->addHeader('Content-Disposition', 'attachment; filename="test.txt"')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send("Download test passed.")
+            ->send("GET:/v1/mock/tests/general/download:passed")
         ;
     });
 
@@ -558,24 +558,29 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::shutdown(function (App $utopia, Response $response, Request $request) {
+App::shutdown()
+    ->groups(['mock'])
+    ->inject('utopia')
+    ->inject('response')
+    ->inject('request')
+    ->action(function (App $utopia, Response $response, Request $request) {
 
-    $result = [];
-    $route  = $utopia->match($request);
-    $path   = APP_STORAGE_CACHE . '/tests.json';
-    $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
+        $result = [];
+        $route  = $utopia->match($request);
+        $path   = APP_STORAGE_CACHE . '/tests.json';
+        $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
 
-    if (!\is_array($tests)) {
-        throw new Exception('Failed to read results', 500, Exception::GENERAL_MOCK);
-    }
+        if (!\is_array($tests)) {
+            throw new Exception('Failed to read results', 500, Exception::GENERAL_MOCK);
+        }
 
-    $result[$route->getMethod() . ':' . $route->getPath()] = true;
+        $result[$route->getMethod() . ':' . $route->getPath()] = true;
 
-    $tests = \array_merge($tests, $result);
+        $tests = \array_merge($tests, $result);
 
-    if (!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
-        throw new Exception('Failed to save results', 500, Exception::GENERAL_MOCK);
-    }
+        if (!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
+            throw new Exception('Failed to save results', 500, Exception::GENERAL_MOCK);
+        }
 
-    $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
-}, ['utopia', 'response', 'request'], 'mock');
+        $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
+    });
