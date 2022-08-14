@@ -192,7 +192,7 @@ class AuthTest extends TestCase
     public function testCodeGenerator(): void
     {
         $this->assertEquals(6, \strlen(Auth::codeGenerator()));
-        $this->assertEquals(\mb_strlen(Auth::codeGenerator()), 256);
+        $this->assertEquals(\mb_strlen(Auth::codeGenerator(256)), 256);
         $this->assertEquals(\mb_strlen(Auth::codeGenerator(5)), 10);
         $this->assertTrue(is_numeric(Auth::codeGenerator(5)));
     }
