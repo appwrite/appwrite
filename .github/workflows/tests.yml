@@ -38,6 +38,9 @@ jobs:
     - name: Run Tests
       run: docker compose exec -T appwrite test --debug
 
+    - name: Logs
+      run: docker compose logs appwrite
+
     - name: Teardown
       if: always()
       run: |
