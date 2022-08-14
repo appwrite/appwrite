@@ -203,6 +203,12 @@
         let params = [];
         let match;
 
+        let indexOfArguments = functionAsString.indexOf('(');
+
+        if (indexOfArguments !== -1) {
+          functionAsString = functionAsString.slice(indexOfArguments, -1);
+        }
+
         functionAsString = functionAsString.replaceAll('={}', "");
         functionAsString = functionAsString.replaceAll('=[]', "");
         functionAsString = functionAsString.replace(REGEX_COMMENTS, "");
@@ -259,7 +265,7 @@
         let args = getParams(target);
 
         return target.apply(
-          target,
+          container.get(scope),
           args.map(function(value) {
             let result = getValue(value, prefix, data);
 

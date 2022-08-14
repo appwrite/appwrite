@@ -269,7 +269,7 @@ App::shutdown()
                 $replace = $parts[1];
 
                 $params = match ($namespace) {
-                    'user' => $user,
+                    'user' => (array)$user,
                     'request' => $requestParams,
                     default => $responsePayload,
                 };
@@ -282,36 +282,36 @@ App::shutdown()
             return $label;
         };
 
-        $pattern = $route->getLabel('audits.resource', null);
+    $pattern = $route->getLabel('audits.resource', null);
+    if (!empty($pattern)) {
+        $resource = $parseLabel($pattern);
+        if (!empty($resource) && $resource !== $pattern) {
+            $audits->setResource($resource);
+        }
+    }
+
+    $pattern = $route->getLabel('audits.userId', null);
+    if (!empty($pattern)) {
+        $userId = $parseLabel($pattern);
+        $user = $dbForProject->getDocument('users', $userId);
+        $audits->setUser($user);
+    }
+
+    if (!empty($audits->getResource())) {
+        /**
+         * audits.payload is switched to default true
+         * in order to auto audit payload for all endpoints
+         */
+        $pattern = $route->getLabel('audits.payload', true);
         if (!empty($pattern)) {
-            $resource = $parseLabel($pattern);
-            if (!empty($resource) && $resource !== $pattern) {
-                $audits->setResource($resource);
-            }
+            $audits->setPayload($responsePayload);
         }
 
-        $pattern = $route->getLabel('audits.userId', null);
-        if (!empty($pattern)) {
-            $userId = $parseLabel($pattern);
-            $user = $dbForProject->getDocument('users', $userId);
-            $audits->setUser($user);
+        foreach ($events->getParams() as $key => $value) {
+            $audits->setParam($key, $value);
         }
-
-        if (!empty($audits->getResource())) {
-            /**
-             * audits.payload is switched to default true
-             * in order to auto audit payload for all endpoints
-             */
-            $pattern = $route->getLabel('audits.payload', true);
-            if (!empty($pattern)) {
-                $audits->setPayload($responsePayload);
-            }
-
-            foreach ($events->getParams() as $key => $value) {
-                $audits->setParam($key, $value);
-            }
-            $audits->trigger();
-        }
+        $audits->trigger();
+    }
 
         if (!empty($deletes->getType())) {
             $deletes->trigger();
@@ -359,8 +359,8 @@ App::shutdown()
             }
 
             $usage
-                ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-                ->setParam('networkResponseSize', $response->getSize())
-                ->submit();
-        }
+            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
+            ->setParam('networkResponseSize', $response->getSize())
+            ->submit();
+    }
     });
