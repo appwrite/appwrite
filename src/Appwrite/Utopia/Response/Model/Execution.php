@@ -28,7 +28,7 @@ class Execution extends Model
                 'default' => '',
                 'example' => '1975-12-06 13:30:59',
             ])
-            ->addRule('$roles', [
+            ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Execution roles.',
                 'default' => '',

@@ -72,7 +72,7 @@ App::post('/v1/storage/buckets')
     ->inject('events')
     ->action(function (string $bucketId, string $name, ?array $permissions, string $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
-        $bucketId = $bucketId === 'unique()' ? $dbForProject->getId() : $bucketId;
+        $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
         try {
             $files = Config::getParam('collections', [])['files'] ?? [];
             if (empty($files)) {
@@ -107,7 +107,7 @@ App::post('/v1/storage/buckets')
             }
 
             $dbForProject->createDocument('buckets', new Document([
-                '$id' => ID::custom($bucketId),
+                '$id' => $bucketId,
                 '$collection' => ID::custom('buckets'),
                 '$permissions' => $permissions,
                 'name' => $name,
@@ -375,7 +375,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         /**
-         * Add permissions for current the user for any missing types 
+         * Add permissions for current the user for any missing types
          * from the allowed permissions for this resource type.
          */
         $permissions = PermissionsProcessor::addDefaultsIfNeeded(
@@ -420,7 +420,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         $contentRange = $request->getHeader('content-range');
-        $fileId = $fileId === 'unique()' ? $dbForProject->getId() : $fileId;
+        $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
         $chunk = 1;
         $chunks = 1;
 
@@ -539,7 +539,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             try {
                 if ($file->isEmpty()) {
                     $doc = new Document([
-                        '$id' => ID::custom($fileId),
+                        '$id' => $fileId,
                         '$permissions' => $permissions,
                         'bucketId' => ID::custom($bucket->getId()),
                         'name' => $fileName,
@@ -688,7 +688,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
         if (!empty($cursor)) {
             if ($bucket->getAttribute('fileSecurity', false)) {
-				$cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
+                $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
             } else {
                 $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor));
             }

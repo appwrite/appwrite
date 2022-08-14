@@ -58,13 +58,13 @@ App::post('/v1/users')
         $email = \strtolower($email);
 
         try {
-            $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+            $userId = $userId == 'unique()' ? ID::unique() : $userId;
             $user = $dbForProject->createDocument('users', new Document([
-                '$id' => ID::custom($userId),
+                '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
-                    Permission::update(Role::user(ID::custom($userId))),
-                    Permission::delete(Role::user(ID::custom($userId))),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
                 ],
                 'email' => $email,
                 'emailVerification' => false,

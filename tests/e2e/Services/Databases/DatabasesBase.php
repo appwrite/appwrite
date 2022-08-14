@@ -1542,9 +1542,9 @@ trait DatabasesBase
         $this->assertEquals($document['body']['releaseYear'], 2017);
         $this->assertEquals(true, DateTime::isValid($document['body']['$createdAt']));
         $this->assertEquals(true, DateTime::isValid($document['body']['birthDay']));
-        $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-        $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-        $this->assertContains('delete(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
+        $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
 
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -1565,9 +1565,9 @@ trait DatabasesBase
         $this->assertEquals($document['body']['$collection'], $data['moviesId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertContains('read(users)', $document['body']['$permissions']);
-        $this->assertContains('update(users)', $document['body']['$permissions']);
-        $this->assertContains('delete(users)', $document['body']['$permissions']);
+        $this->assertContains(Permission::read(Role::users()), $document['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::users()), $document['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::users()), $document['body']['$permissions']);
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -2212,9 +2212,9 @@ trait DatabasesBase
 
         if ($this->getSide() == 'client') {
             $this->assertCount(3, $document['body']['$permissions']);
-            $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-            $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-            $this->assertContains('delete(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
+            $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+            $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+            $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
         }
 
         if ($this->getSide() == 'server') {
@@ -2246,7 +2246,7 @@ trait DatabasesBase
         // existing document permissions on update, unless none were supplied,
         // so that specific types can be removed if wanted.
         $this->assertCount(1, $document['body']['$permissions']);
-        $this->assertContains('read(any)', $document['body']['$permissions']);
+        $this->assertContains(Permission::read(Role::any()), $document['body']['$permissions']);
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -2261,7 +2261,7 @@ trait DatabasesBase
         // existing document permissions on update, unless none were supplied,
         // so that specific types can be removed if wanted.
         $this->assertCount(1, $document['body']['$permissions']);
-        $this->assertContains('read(any)', $document['body']['$permissions']);
+        $this->assertContains(Permission::read(Role::any()), $document['body']['$permissions']);
 
         // Reset Permissions
 
@@ -2300,7 +2300,7 @@ trait DatabasesBase
         $this->assertEquals('EnforceCollectionPermissions', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
-        $user = 'user:' . $this->getUser()['$id'];
+        $user = $this->getUser()['$id'];
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2310,10 +2310,10 @@ trait DatabasesBase
             'name' => 'enforceCollectionPermissions',
             'documentSecurity' => true,
             'permissions' => [
-                'read(' . $user . ')',
-                'create(' . $user . ')',
-                'update(' . $user . ')',
-                'delete(' . $user . ')',
+                Permission::read(Role::user($user)),
+                Permission::create(Role::user($user)),
+                Permission::update(Role::user($user)),
+                Permission::delete(Role::user($user)),
             ],
         ]);
 
@@ -2366,9 +2366,9 @@ trait DatabasesBase
                 'attribute' => 'one',
             ],
             'permissions' => [
-                'read(' . $user . ')',
-                'update(' . $user . ')',
-                'delete(' . $user . ')',
+                Permission::read(Role::user($user)),
+                Permission::update(Role::user($user)),
+                Permission::delete(Role::user($user)),
             ]
         ]);
 
@@ -2383,8 +2383,8 @@ trait DatabasesBase
                 'attribute' => 'one',
             ],
             'permissions' => [
-                'update(' . $user . ')',
-                'delete(' . $user . ')',
+                Permission::update(Role::user($user)),
+                Permission::delete(Role::user($user)),
             ]
         ]);
 
@@ -2709,9 +2709,9 @@ trait DatabasesBase
 
         $this->assertEquals(201, $document['headers']['status-code']);
         $this->assertCount(3, $document['body']['$permissions']);
-        $this->assertContains('read(any)', $document['body']['$permissions']);
-        $this->assertContains('update(any)', $document['body']['$permissions']);
-        $this->assertContains('delete(any)', $document['body']['$permissions']);
+        $this->assertContains(Permission::read(Role::any()), $document['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::any()), $document['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::any()), $document['body']['$permissions']);
 
         // Send only read permission
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $id, array_merge([
@@ -2740,8 +2740,8 @@ trait DatabasesBase
         if ($this->getSide() == 'server') {
             $this->assertEquals(200, $document['headers']['status-code']);
             $this->assertCount(2, $document['body']['$permissions']);
-            $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-            $this->assertContains('delete(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
+            $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+            $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
         }
 
         // remove collection

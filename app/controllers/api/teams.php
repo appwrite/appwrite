@@ -61,9 +61,9 @@ App::post('/v1/teams')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
-        $teamId = $teamId == 'unique()' ? $dbForProject->getId() : $teamId;
+        $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
         $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
-            '$id' => ID::custom($teamId ),
+            '$id' => $teamId,
             '$permissions' => [
                 Permission::read(Role::team(ID::custom($teamId))),
                 Permission::update(Role::team(ID::custom($teamId), 'owner')),
@@ -75,9 +75,9 @@ App::post('/v1/teams')
         ])));
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
-            $membershipId = $dbForProject->getId();
+            $membershipId = ID::unique();
             $membership = new Document([
-                '$id' => ID::custom($membershipId),
+                '$id' => $membershipId,
                 '$permissions' => [
                     Permission::read(Role::user(ID::custom($user->getId()))),
                     Permission::read(Role::team(ID::custom($team->getId()))),
@@ -346,14 +346,14 @@ App::post('/v1/teams/:teamId/memberships')
             }
 
             try {
-                $userId = $dbForProject->getId();
+                $userId = ID::unique();
                 $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
-                    '$id' => ID::custom($userId),
+                    '$id' => $userId,
                     '$permissions' => [
                         Permission::read(Role::any()),
-                        Permission::read(Role::user(ID::custom($userId))),
-                        Permission::update(Role::user(ID::custom($userId))),
-                        Permission::delete(Role::user(ID::custom($userId))),
+                        Permission::read(Role::user($userId)),
+                        Permission::update(Role::user($userId)),
+                        Permission::delete(Role::user($userId)),
                     ],
                     'email' => $email,
                     'emailVerification' => false,
@@ -387,9 +387,9 @@ App::post('/v1/teams/:teamId/memberships')
 
         $secret = Auth::tokenGenerator();
 
-        $membershipId = $dbForProject->getId();
+        $membershipId = ID::unique();
         $membership = new Document([
-            '$id' => ID::custom($membershipId),
+            '$id' => $membershipId,
             '$permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::user(ID::custom($invitee->getId()))),
@@ -734,7 +734,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
-            '$id' => ID::custom($dbForProject->getId()),
+            '$id' => ID::unique(),
             'userId' => ID::custom($user->getId()),
             'userInternalId' => ID::custom($user->getInternalId()),
             'provider' => Auth::SESSION_PROVIDER_EMAIL,

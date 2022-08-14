@@ -14,6 +14,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
 use Utopia\Database\Query;
 
 require_once __DIR__ . '/../init.php';
@@ -234,9 +235,9 @@ class FunctionsV1 extends Worker
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
-            $executionId = $dbForProject->getId();
+            $executionId = ID::unique();
             $execution = $dbForProject->createDocument('executions', new Document([
-                '$id' => ID::custom($executionId),
+                '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user(ID::custom($user->getId())))],
                 'functionId' => ID::custom($functionId),
                 'deploymentId' => ID::custom($deploymentId),

@@ -176,11 +176,11 @@ App::post('/v1/databases')
     ->inject('events')
     ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
 
-        $databaseId = $databaseId == 'unique()' ? $dbForProject->getId() : $databaseId;
+        $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
         try {
             $dbForProject->createDocument('databases', new Document([
-                '$id' => ID::custom($databaseId),
+                '$id' => $databaseId,
                 'name' => $name,
                 'search' => implode(' ', [$databaseId, $name]),
             ]));
@@ -522,13 +522,13 @@ App::post('/v1/databases/:databaseId/collections')
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
 
-        $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
+        $collectionId = $collectionId == 'unique()' ? ID::unique() : $collectionId;
 
         $permissions = PermissionsProcessor::handleAggregates($permissions);
 
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
-                '$id' => ID::custom($collectionId),
+                '$id' => $collectionId,
                 '$permissions' => $permissions ?? [],
                 'databaseInternalId' => $database->getInternalId(),
                 'databaseId' => $databaseId,
@@ -1954,7 +1954,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
-        $data['$id'] = $documentId == 'unique()' ? $dbForProject->getId() : $documentId;
+        $data['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
         $data['$permissions'] = $permissions;
 
         try {

@@ -2033,7 +2033,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "75ac6965dea2ddada8ecb6bb7ede2e8a7f2249c2"
+                "reference": "fe06d672973541ecd4e61e6a7f2f294686f5a61f"
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2083,7 +2083,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-08-14T09:23:08+00:00"
+            "time": "2022-08-14T13:17:09+00:00"
         },
         {
             "name": "utopia-php/domains",

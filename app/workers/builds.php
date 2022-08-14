@@ -10,6 +10,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\ID;
 use Utopia\Storage\Storage;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
@@ -78,9 +79,9 @@ class BuildsV1 extends Worker
         $buildId = $deployment->getAttribute('buildId', '');
         $startTime = DateTime::now();
         if (empty($buildId)) {
-            $buildId = $dbForProject->getId();
+            $buildId = ID::unique();
             $build = $dbForProject->createDocument('builds', new Document([
-                '$id' => ID::custom($buildId),
+                '$id' => $buildId,
                 '$permissions' => [],
                 'startTime' => $startTime,
                 'deploymentId' => ID::custom($deployment->getId()),

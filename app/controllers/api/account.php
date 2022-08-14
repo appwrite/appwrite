@@ -97,7 +97,7 @@ App::post('/v1/account')
         }
 
         try {
-            $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+            $userId = $userId == 'unique()' ? ID::unique() : $userId;
             $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
                 '$id' => ID::custom($userId),
                 '$permissions' => [
@@ -188,7 +188,7 @@ App::post('/v1/account/sessions/email')
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
-                '$id' => ID::custom($dbForProject->getId()),
+                '$id' => ID::unique(),
                 'userId' => ID::custom($profile->getId()),
                 'userInternalId' => ID::custom($profile->getInternalId()),
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
@@ -486,13 +486,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 }
 
                 try {
-                    $userId = $dbForProject->getId();
+                    $userId = ID::unique();
                     $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
-                        '$id' => ID::custom($userId),
+                        '$id' => $userId,
                         '$permissions' => [
                             Permission::read(Role::any()),
-                            Permission::update(Role::user(ID::custom($userId))),
-                            Permission::delete(Role::user(ID::custom($userId))),
+                            Permission::update(Role::user($userId)),
+                            Permission::delete(Role::user($userId)),
                         ],
                         'email' => $email,
                         'emailVerification' => true,
@@ -525,7 +525,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
 
         $session = new Document(array_merge([
-            '$id' => ID::custom($dbForProject->getId()),
+            '$id' => ID::unique(),
             'userId' => ID::custom($user->getId()),
             'userInternalId' => ID::custom($user->getInternalId()),
             'provider' => $provider,
@@ -656,10 +656,10 @@ App::post('/v1/account/sessions/magic-url')
                 }
             }
 
-            $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+            $userId = $userId == 'unique()' ? ID::unique() : $userId;
 
             $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
-                '$id' => ID::custom($userId),
+                '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::user(ID::custom($userId))),
@@ -684,7 +684,7 @@ App::post('/v1/account/sessions/magic-url')
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $token = new Document([
-            '$id' => ID::custom($dbForProject->getId()),
+            '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_MAGIC_URL,
@@ -788,7 +788,7 @@ App::put('/v1/account/sessions/magic-url')
 
         $session = new Document(array_merge(
             [
-                '$id' => ID::custom($dbForProject->getId()),
+                '$id' => ID::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_MAGIC_URL,
@@ -906,10 +906,10 @@ App::post('/v1/account/sessions/phone')
                 }
             }
 
-            $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+            $userId = $userId == 'unique()' ? ID::unique() : $userId;
 
             $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
-                '$id' => ID::custom($userId),
+                '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::user(ID::custom($userId))),
@@ -936,7 +936,7 @@ App::post('/v1/account/sessions/phone')
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE);
 
         $token = new Document([
-            '$id' => ID::custom($dbForProject->getId()),
+            '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_PHONE,
@@ -1027,7 +1027,7 @@ App::put('/v1/account/sessions/phone')
 
         $session = new Document(array_merge(
             [
-                '$id' => ID::custom($dbForProject->getId()),
+                '$id' => ID::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_PHONE,
@@ -1144,13 +1144,13 @@ App::post('/v1/account/sessions/anonymous')
             }
         }
 
-        $userId = $dbForProject->getId();
+        $userId = ID::unique();
         $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
-            '$id' => ID::custom($userId),
+            '$id' => $userId,
             '$permissions' => [
                 Permission::read(Role::any()),
-                Permission::update(Role::user(ID::custom($userId))),
-                Permission::delete(Role::user(ID::custom($userId))),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
             ],
             'email' => null,
             'emailVerification' => false,
@@ -1176,7 +1176,7 @@ App::post('/v1/account/sessions/anonymous')
 
         $session = new Document(array_merge(
             [
-                '$id' => ID::custom($dbForProject->getId()),
+                '$id' => ID::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
@@ -2007,7 +2007,7 @@ App::post('/v1/account/recovery')
 
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
-            '$id' => ID::custom($dbForProject->getId()),
+            '$id' => ID::unique(),
             'userId' => $profile->getId(),
             'userInternalId' => $profile->getInternalId(),
             'type' => Auth::TOKEN_TYPE_RECOVERY,
@@ -2169,7 +2169,7 @@ App::post('/v1/account/verification')
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
-            '$id' => ID::custom($dbForProject->getId()),
+            '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
@@ -2325,7 +2325,7 @@ App::post('/v1/account/verification/phone')
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
-            '$id' => ID::custom($dbForProject->getId()),
+            '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_PHONE,

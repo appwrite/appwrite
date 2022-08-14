@@ -147,9 +147,9 @@ class StorageCustomClientTest extends Scope
 
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $file['body']['$permissions']);
-        $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $file['body']['$permissions']);
-        $this->assertContains('delete(user:' . $this->getUser()['$id'] . ')', $file['body']['$permissions']);
+        $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $file['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $file['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $file['body']['$permissions']);
         $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);

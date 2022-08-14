@@ -67,9 +67,9 @@ App::post('/v1/functions')
     ->inject('events')
     ->action(function (string $functionId, string $name, array $execute, string $runtime, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Event $eventsInstance) {
 
-        $functionId = ($functionId == 'unique()') ? $dbForProject->getId() : $functionId;
+        $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
-            '$id' => ID::custom($functionId),
+            '$id' => $functionId,
             'execute' => $execute,
             'status' => 'disabled',
             'name' => $name,
@@ -506,7 +506,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $contentRange = $request->getHeader('content-range');
-        $deploymentId = $dbForProject->getId();
+        $deploymentId = ID::unique();
         $chunk = 1;
         $chunks = 1;
 
@@ -579,7 +579,7 @@ App::post('/v1/functions/:functionId/deployments')
 
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => ID::custom($deploymentId),
+                    '$id' => $deploymentId,
                     '$permissions' => [
                         Permission::read(Role::any()),
                         Permission::update(Role::any()),
@@ -611,7 +611,7 @@ App::post('/v1/functions/:functionId/deployments')
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => ID::custom($deploymentId),
+                    '$id' => $deploymentId,
                     '$permissions' => [
                         Permission::read(Role::any()),
                         Permission::update(Role::any()),
@@ -872,11 +872,11 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception($validator->getDescription(), 401, Exception::USER_UNAUTHORIZED);
         }
 
-        $executionId = $dbForProject->getId();
+        $executionId = ID::unique();
 
         /** @var Document $execution */
         $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
-            '$id' => ID::custom($executionId),
+            '$id' => $executionId,
             '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user(ID::custom($user->getId())))] : [],
             'functionId' => ID::custom($function->getId()),
             'deploymentId' => ID::custom($deployment->getId()),

@@ -8,8 +8,8 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
-
 use Utopia\Database\ID;
+
 use function sleep;
 
 class AccountCustomClientTest extends Scope

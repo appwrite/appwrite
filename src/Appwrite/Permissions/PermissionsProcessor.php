@@ -21,9 +21,9 @@ class PermissionsProcessor
                 if (!\str_starts_with($permission, $type)) {
                     continue;
                 }
-                $permissionsContents = \str_replace([$type . '(', ')', ' '], '', $permission);
+                $permissionsContents = \str_replace([$type . '(', ')', '"', ' '], '', $permission);
                 foreach ($subTypes as $subType) {
-                    $permissions[] = $subType . '(' . $permissionsContents . ')';
+                    $permissions[] = $subType . '("' . $permissionsContents . '")';
                 }
                 unset($permissions[$i]);
             }
@@ -40,7 +40,7 @@ class PermissionsProcessor
             $permissions = [];
             if (!empty($userId)) {
                 foreach ($allowedPermissions as $permission) {
-                    $permissions[] = $permission . '(user:' . $userId . ')';
+                    $permissions[] = $permission . '("user:' . $userId . '")';
                 }
             }
             return $permissions;
@@ -48,7 +48,7 @@ class PermissionsProcessor
         foreach ($allowedPermissions as $permission) {
             // Default any missing allowed permissions to the current user
             if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($userId)) {
-                $permissions[] = $permission . '(user:' . $userId . ')';
+                $permissions[] = $permission . '("user:' . $userId . '")';
             }
         }
         return $permissions;
@@ -65,7 +65,7 @@ class PermissionsProcessor
                     if (!\str_starts_with($permission, $type)) {
                         continue;
                     }
-                    $role = \str_replace([$type, '(', ')', ' '], '', $permission);
+                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
                     if (!Authorization::isRole($role)) {
                         return false;
                     }
@@ -79,7 +79,7 @@ class PermissionsProcessor
     {
         return match ($resourceType) {
             'document',
-            'file' => empty(\preg_grep("#^create\(.+\)$#", $permissions)),
+            'file' => empty(\preg_grep("#^create\(\".+\"\)$#", $permissions)),
             default => true
         };
     }

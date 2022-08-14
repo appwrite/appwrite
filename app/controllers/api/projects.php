@@ -83,14 +83,14 @@ App::post('/v1/projects')
             $auths[$method['key'] ?? ''] = true;
         }
 
-        $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
+        $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
         if ($projectId === 'console') {
             throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
         }
 
         $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => ID::custom($projectId),
+            '$id' => $projectId,
             '$permissions' => [
                 Permission::read(Role::team(ID::custom($teamId))),
                 Permission::update(Role::team(ID::custom($teamId), 'owner')),
@@ -606,7 +606,7 @@ App::post('/v1/projects/:projectId/webhooks')
         $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
         $webhook = new Document([
-            '$id' => ID::custom($dbForConsole->getId()),
+            '$id' => ID::unique(),
             '$permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -854,7 +854,7 @@ App::post('/v1/projects/:projectId/keys')
         }
 
         $key = new Document([
-            '$id' => ID::custom($dbForConsole->getId()),
+            '$id' => ID::unique(),
             '$permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -1054,7 +1054,7 @@ App::post('/v1/projects/:projectId/platforms')
         }
 
         $platform = new Document([
-            '$id' => ID::custom($dbForConsole->getId()),
+            '$id' => ID::unique(),
             '$permissions' => [
                 'read(any)',
                 'update(any)',
@@ -1270,7 +1270,7 @@ App::post('/v1/projects/:projectId/domains')
         $domain = new Domain($domain);
 
         $domain = new Document([
-            '$id' => ID::custom($dbForConsole->getId()),
+            '$id' => ID::unique(),
             '$permissions' => [
                 'read(any)',
                 'update(any)',

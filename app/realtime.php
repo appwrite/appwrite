@@ -13,6 +13,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\ID;
 use Utopia\Logger\Log;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -146,7 +147,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
             try {
                 $attempts++;
                 $document = new Document([
-                    '$id' => ID::custom($database->getId()),
+                    '$id' => ID::unique(),
                     '$collection' => ID::custom('realtime'),
                     '$permissions' => [],
                     'container' => $containerId,
