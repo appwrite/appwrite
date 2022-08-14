@@ -95,7 +95,6 @@ App::post('/v1/projects')
                 Permission::update(Role::team($teamId, 'developer')),
                 Permission::delete(Role::team($teamId, 'owner')),
                 Permission::delete(Role::team($teamId, 'developer')),
-
             ],
             'name' => $name,
             'teamInternalId' => $team->getInternalId(),

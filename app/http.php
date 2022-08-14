@@ -170,6 +170,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 'enabled' => true,
                 'encryption' => true,
                 'antivirus' => true,
+                'fileSecurity' => true,
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),

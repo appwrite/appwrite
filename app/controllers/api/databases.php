@@ -2224,12 +2224,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
-        if (empty($data) && empty($permissions)) {
+        if (empty($data) && \is_null($permissions)) {
             throw new Exception('Missing payload or permissions', 400, Exception::DOCUMENT_MISSING_PAYLOAD);
-        }
-
-        if (!\is_array($data)) {
-            throw new Exception('Data param should be a valid JSON object', 400, Exception::DOCUMENT_INVALID_STRUCTURE);
         }
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
