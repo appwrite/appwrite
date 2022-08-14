@@ -158,8 +158,8 @@ class V12 extends Migration
 
                     if (!$this->projectDB->findOne('buckets', [new Query('$id', Query::TYPE_EQUAL, ['default'])])) {
                         $this->projectDB->createDocument('buckets', new Document([
-                            '$id' => 'default',
-                            '$collection' => 'buckets',
+                            '$id' => ID::custom('default'),
+                            '$collection' => ID::custom('buckets'),
                             'dateCreated' => \time(),
                             'dateUpdated' => \time(),
                             'name' => 'Default',

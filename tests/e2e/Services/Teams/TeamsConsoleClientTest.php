@@ -24,7 +24,7 @@ class TeamsConsoleClientTest extends Scope
             'x-appwrite-project' => 'console'
         ], $this->getHeaders()), [
             'name' => 'Latest version Team',
-            'teamId' => 'unique()'
+            'teamId' => ID::unique()
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);

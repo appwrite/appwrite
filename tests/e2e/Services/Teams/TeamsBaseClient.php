@@ -238,7 +238,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => $userUid,
+            'userId' => ID::custom($userUid),
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -318,7 +318,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => 'sdasdasd',
-            'userId' => $userUid,
+            'userId' => ID::custom($userUid),
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -329,7 +329,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => '',
-            'userId' => $userUid,
+            'userId' => ID::custom($userUid),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -340,7 +340,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => 'sdasd',
+            'userId' => ID::custom('sdasd'),
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -351,7 +351,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => '',
+            'userId' => ID::custom(''),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -362,7 +362,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => $userUid,
+            'userId' => ID::custom($userUid),
         ]);
 
         $this->assertEquals(409, $response['headers']['status-code']);

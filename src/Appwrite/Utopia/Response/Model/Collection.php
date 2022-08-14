@@ -32,7 +32,7 @@ class Collection extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection permissions.',
                 'default' => '',
-                'example' => Permission::read(Role::any()),
+                'example' => ['read("any")'],
                 'array' => true
             ])
             ->addRule('databaseId', [

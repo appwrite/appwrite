@@ -146,8 +146,8 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
             try {
                 $attempts++;
                 $document = new Document([
-                    '$id' => $database->getId(),
-                    '$collection' => 'realtime',
+                    '$id' => ID::custom($database->getId()),
+                    '$collection' => ID::custom('realtime'),
                     '$permissions' => [],
                     'container' => $containerId,
                     'timestamp' => time(),
@@ -443,7 +443,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         ]));
 
         $stats->set($project->getId(), [
-            'projectId' => $project->getId(),
+            'projectId' => ID::custom($project->getId()),
             'teamId' => $project->getAttribute('teamId')
         ]);
         $stats->incr($project->getId(), 'connections');

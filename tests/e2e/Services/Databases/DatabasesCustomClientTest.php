@@ -6,6 +6,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class DatabasesCustomClientTest extends Scope
 {
@@ -32,7 +35,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'permissionCheckDatabase',
+            'databaseId' => ID::custom('permissionCheckDatabase'),
             'name' => 'Test Database',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -45,7 +48,7 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'permissionCheck',
+            'collectionId' => ID::custom('permissionCheck'),
             'name' => 'permissionCheck',
             'permissions' => [],
             'documentSecurity' => true,
@@ -73,15 +76,15 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'permissionCheckDocument',
+            'documentId' => ID::custom('permissionCheckDocument'),
             'data' => [
                 'name' => 'AppwriteBeginner',
             ],
             'permissions' => [
-                Permission::read(Role::user('user2')),
-                Permission::read(Role::user($userId)),
-                Permission::update(Role::user($userId)),
-                Permission::delete(Role::user($userId)),
+                Permission::read(Role::user(ID::custom('user2'))),
+                Permission::read(Role::user(ID::custom($userId))),
+                Permission::update(Role::user(ID::custom($userId))),
+                Permission::delete(Role::user(ID::custom($userId))),
             ],
         ]);
 

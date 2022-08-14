@@ -14,6 +14,9 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Locale\Locale;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
@@ -56,11 +59,11 @@ App::post('/v1/users')
         try {
             $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
             $user = $dbForProject->createDocument('users', new Document([
-                '$id' => $userId,
+                '$id' => ID::custom($userId),
                 '$permissions' => [
                     Permission::read(Role::any()),
-                    Permission::update(Role::user($userId)),
-                    Permission::delete(Role::user($userId)),
+                    Permission::update(Role::user(ID::custom($userId))),
+                    Permission::delete(Role::user(ID::custom($userId))),
                 ],
                 'email' => $email,
                 'emailVerification' => false,

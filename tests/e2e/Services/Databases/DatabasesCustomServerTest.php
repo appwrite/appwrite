@@ -7,6 +7,9 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class DatabasesCustomServerTest extends Scope
 {
@@ -21,7 +24,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'first',
+            'databaseId' => ID::custom('first'),
             'name' => 'Test 1',
         ]);
         $this->assertEquals(201, $test1['headers']['status-code']);
@@ -32,7 +35,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'second',
+            'databaseId' => ID::custom('second'),
             'name' => 'Test 2',
         ]);
         $this->assertEquals(201, $test2['headers']['status-code']);
@@ -172,7 +175,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test 1',
-            'databaseId' => 'first',
+            'databaseId' => ID::custom('first'),
         ]);
 
         $this->assertEquals(409, $response['headers']['status-code']);
@@ -233,7 +236,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'invalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -249,7 +252,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test 1',
-            'collectionId' => 'first',
+            'collectionId' => ID::custom('first'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -265,7 +268,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test 2',
-            'collectionId' => 'second',
+            'collectionId' => ID::custom('second'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -409,7 +412,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'name' => 'Test 1',
-            'collectionId' => 'first',
+            'collectionId' => ID::custom('first'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -429,7 +432,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'invalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -446,7 +449,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -499,7 +502,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'firstName' => 'lorem',
                 'lastName' => 'ipsum',
@@ -717,7 +720,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'invalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -729,7 +732,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'TestCleanupDuplicateIndexOnDeleteAttribute',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -849,15 +852,15 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'firstName' => 'Tom',
                 'lastName' => 'Holland',
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ],
         ]);
 
@@ -865,15 +868,15 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'firstName' => 'Samuel',
                 'lastName' => 'Jackson',
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ],
         ]);
 
@@ -924,7 +927,7 @@ class DatabasesCustomServerTest extends Scope
     //         'x-appwrite-project' => $this->getProject()['$id'],
     //         'x-appwrite-key' => $this->getProject()['apiKey']
     //     ]), [
-    //         'collectionId' => 'unique()',
+    //         'collectionId' => ID::unique(),
     //         'name' => 'attributeCountLimit',
     //         'read' => ['any'],
     //         'write' => ['any'],
@@ -969,7 +972,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'invalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -981,7 +984,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'attributeRowWidthLimit',
+            'collectionId' => ID::custom('attributeRowWidthLimit'),
             'name' => 'attributeRowWidthLimit',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1035,7 +1038,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'invalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -1047,7 +1050,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'testLimitException',
+            'collectionId' => ID::custom('testLimitException'),
             'name' => 'testLimitException',
             'permissions' => [
                 Permission::read(Role::any()),

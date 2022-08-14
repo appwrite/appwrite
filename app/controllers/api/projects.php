@@ -17,6 +17,7 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
@@ -88,17 +89,17 @@ App::post('/v1/projects')
         }
 
         $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => $projectId,
+            '$id' => ID::custom($projectId),
             '$permissions' => [
-                Permission::read(Role::team($teamId)),
-                Permission::update(Role::team($teamId, 'owner')),
-                Permission::update(Role::team($teamId, 'developer')),
-                Permission::delete(Role::team($teamId, 'owner')),
-                Permission::delete(Role::team($teamId, 'developer')),
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
             ],
             'name' => $name,
-            'teamInternalId' => $team->getInternalId(),
-            'teamId' => $team->getId(),
+            'teamInternalId' => ID::custom($team->getInternalId()),
+            'teamId' => ID::custom($team->getId()),
             'description' => $description,
             'logo' => $logo,
             'url' => $url,
@@ -108,7 +109,7 @@ App::post('/v1/projects')
             'legalState' => $legalState,
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
-            'legalTaxId' => $legalTaxId,
+            'legalTaxId' => ID::custom($legalTaxId),
             'services' => new stdClass(),
             'platforms' => null,
             'authProviders' => [],
@@ -139,7 +140,7 @@ App::post('/v1/projects')
 
             foreach ($collection['attributes'] as $attribute) {
                 $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
+                    '$id' => ID::custom($attribute['$id']),
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
@@ -153,7 +154,7 @@ App::post('/v1/projects')
 
             foreach ($collection['indexes'] as $index) {
                 $indexes[] = new Document([
-                    '$id' => $index['$id'],
+                    '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],
@@ -596,14 +597,14 @@ App::post('/v1/projects/:projectId/webhooks')
         $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
         $webhook = new Document([
-            '$id' => $dbForConsole->getId(),
+            '$id' => ID::custom($dbForConsole->getId()),
             '$permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => $project->getInternalId(),
-            'projectId' => $project->getId(),
+            'projectInternalId' => ID::custom($project->getInternalId()),
+            'projectId' => ID::custom($project->getId()),
             'name' => $name,
             'events' => $events,
             'url' => $url,
@@ -843,14 +844,14 @@ App::post('/v1/projects/:projectId/keys')
         }
 
         $key = new Document([
-            '$id' => $dbForConsole->getId(),
+            '$id' => ID::custom($dbForConsole->getId()),
             '$permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
             'projectInternalId' => $project->getInternalId(),
-            'projectId' => $project->getId(),
+            'projectId' => ID::custom($project->getId()),
             'name' => $name,
             'scopes' => $scopes,
             'expire' => $expire,
@@ -1042,7 +1043,7 @@ App::post('/v1/projects/:projectId/platforms')
         }
 
         $platform = new Document([
-            '$id' => $dbForConsole->getId(),
+            '$id' => ID::custom($dbForConsole->getId()),
             '$permissions' => [
                 'read(any)',
                 'update(any)',
@@ -1257,7 +1258,7 @@ App::post('/v1/projects/:projectId/domains')
         $domain = new Domain($domain);
 
         $domain = new Document([
-            '$id' => $dbForConsole->getId(),
+            '$id' => ID::custom($dbForConsole->getId()),
             '$permissions' => [
                 'read(any)',
                 'update(any)',

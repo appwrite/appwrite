@@ -67,7 +67,7 @@ class V14 extends Migration
 
         try {
             $this->projectDB->createDocument('databases', new Document([
-                '$id' => 'default',
+                '$id' => ID::custom('default'),
                 'name' => 'Default',
                 'search' => 'default Default'
             ]));

@@ -43,6 +43,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
+use Utopia\Database\ID;
 use Utopia\Logger\Logger;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
@@ -711,7 +712,7 @@ App::setResource('usage', function ($register) {
 
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
-        '$collection' => 'platforms',
+        '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
         'type' => 'web',
         'hostname' => $request->getHostname(),
@@ -787,7 +788,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     if (APP_MODE_ADMIN !== $mode) {
         if ($project->isEmpty()) {
-            $user = new Document(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
         } else {
             $user = $dbForProject->getDocument('users', Auth::$unique);
         }
@@ -799,14 +800,14 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
     ) { // Validate user has valid login token
-        $user = new Document(['$id' => '', '$collection' => 'users']);
+        $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
     }
 
     if (APP_MODE_ADMIN === $mode) {
         if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
-            $user = new Document(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
         }
     }
 
@@ -829,7 +830,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
         }
     }
 
@@ -854,10 +855,10 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 
 App::setResource('console', function () {
     return new Document([
-        '$id' => 'console',
-        '$internalId' => 'console',
+        '$id' => ID::custom('console'),
+        '$internalId' => ID::custom('console'),
         'name' => 'Appwrite',
-        '$collection' => 'projects',
+        '$collection' => ID::custom('projects'),
         'description' => 'Appwrite core engine',
         'logo' => '',
         'teamId' => -1,
@@ -865,7 +866,7 @@ App::setResource('console', function () {
         'keys' => [],
         'platforms' => [
             [
-                '$collection' => 'platforms',
+                '$collection' => ID::custom('platforms'),
                 'name' => 'Localhost',
                 'type' => 'web',
                 'hostname' => 'localhost',

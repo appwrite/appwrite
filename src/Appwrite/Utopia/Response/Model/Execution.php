@@ -28,11 +28,11 @@ class Execution extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
-            ->addRule('$permissions', [
+            ->addRule('$roles', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Execution permissions.',
+                'description' => 'Execution roles.',
                 'default' => '',
-                'example' => 'any',
+                'example' => ['any'],
                 'array' => true,
             ])
             ->addRule('functionId', [

@@ -19,6 +19,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
@@ -82,7 +83,7 @@ App::post('/v1/storage/buckets')
 
             foreach ($files['attributes'] as $attribute) {
                 $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
+                    '$id' => ID::custom($attribute['$id']),
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
@@ -96,7 +97,7 @@ App::post('/v1/storage/buckets')
 
             foreach ($files['indexes'] as $index) {
                 $indexes[] = new Document([
-                    '$id' => $index['$id'],
+                    '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],
@@ -105,8 +106,8 @@ App::post('/v1/storage/buckets')
             }
 
             $dbForProject->createDocument('buckets', new Document([
-                '$id' => $bucketId,
-                '$collection' => 'buckets',
+                '$id' => ID::custom($bucketId),
+                '$collection' => ID::custom('buckets'),
                 '$permissions' => $permissions,
                 'name' => $name,
                 'maximumFileSize' => $maximumFileSize,
@@ -362,6 +363,10 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
+        /**
+         * Add permissions for current the user for any missing types 
+         * from the allowed permissions for this resource type.
+         */
         $permissions = PermissionsProcessor::addDefaultsIfNeeded(
             $permissions,
             $user->getId(),
@@ -523,9 +528,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
             try {
                 if ($file->isEmpty()) {
                     $doc = new Document([
-                        '$id' => $fileId,
+                        '$id' => ID::custom($fileId),
                         '$permissions' => $permissions,
-                        'bucketId' => $bucket->getId(),
+                        'bucketId' => ID::custom($bucket->getId()),
                         'name' => $fileName,
                         'path' => $path,
                         'signature' => $fileHash,
@@ -580,7 +585,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             try {
                 if ($file->isEmpty()) {
                     $doc = new Document([
-                        '$id' => $fileId,
+                        '$id' => ID::custom($fileId),
                         '$permissions' => $permissions,
                         'bucketId' => $bucket->getId(),
                         'name' => $fileName,

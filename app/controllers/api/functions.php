@@ -9,6 +9,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
@@ -67,7 +68,7 @@ App::post('/v1/functions')
 
         $functionId = ($functionId == 'unique()') ? $dbForProject->getId() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
-            '$id' => $functionId,
+            '$id' => ID::custom($functionId),
             'execute' => $execute,
             'status' => 'disabled',
             'name' => $name,
@@ -570,13 +571,13 @@ App::post('/v1/functions/:functionId/deployments')
 
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => $deploymentId,
+                    '$id' => ID::custom($deploymentId),
                     '$permissions' => [
                         Permission::read(Role::any()),
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
-                    'resourceId' => $function->getId(),
+                    'resourceId' => ID::custom($function->getId()),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
                     'path' => $path,
@@ -602,7 +603,7 @@ App::post('/v1/functions/:functionId/deployments')
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => $deploymentId,
+                    '$id' => ID::custom($deploymentId),
                     '$permissions' => [
                         Permission::read(Role::any()),
                         Permission::update(Role::any()),
@@ -861,10 +862,10 @@ App::post('/v1/functions/:functionId/executions')
 
         /** @var Document $execution */
         $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
-            '$id' => $executionId,
-            '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
-            'functionId' => $function->getId(),
-            'deploymentId' => $deployment->getId(),
+            '$id' => ID::custom($executionId),
+            '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user(ID::custom($user->getId())))] : [],
+            'functionId' => ID::custom($function->getId()),
+            'deploymentId' => ID::custom($deployment->getId()),
             'trigger' => 'http', // http / schedule / event
             'status' => 'waiting', // waiting / processing / completed / failed
             'statusCode' => 0,
@@ -889,8 +890,8 @@ App::post('/v1/functions/:functionId/executions')
             if (!$current->isEmpty()) {
                 $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
                 $jwt = $jwtObj->encode([
-                    'userId' => $user->getId(),
-                    'sessionId' => $current->getId(),
+                    'userId' => ID::custom($user->getId()),
+                    'sessionId' => ID::custom($current->getId()),
                 ]);
             }
         }

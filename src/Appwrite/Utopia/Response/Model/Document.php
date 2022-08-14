@@ -56,9 +56,9 @@ class Document extends Any
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Document write permissions.',
+                'description' => 'Document permissions.',
                 'default' => '',
-                'example' => Permission::read(Role::user('608f9da25e7e1')),
+                'example' => ['read("any")'],
                 'array' => true,
             ])
         ;

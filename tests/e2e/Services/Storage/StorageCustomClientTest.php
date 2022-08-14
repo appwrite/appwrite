@@ -10,6 +10,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class StorageCustomClientTest extends Scope
 {
@@ -27,7 +30,7 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -45,7 +48,7 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -92,7 +95,7 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -120,7 +123,7 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'permissions' => [
@@ -137,7 +140,7 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -166,11 +169,11 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
-            'folderId' => 'xyz',
+            'folderId' => ID::custom('xyz'),
             'permissions' => [
-                Permission::read(Role::user('notme')),
+                Permission::read(Role::user(ID::custom('notme'))),
             ],
         ]);
 
@@ -184,12 +187,12 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
-            'folderId' => 'xyz',
+            'folderId' => ID::custom('xyz'),
             'permissions' => [
-                Permission::update(Role::user('notme')),
-                Permission::delete(Role::user('notme')),
+                Permission::update(Role::user(ID::custom('notme'))),
+                Permission::delete(Role::user(ID::custom('notme'))),
             ]
         ]);
 
@@ -203,13 +206,13 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
-            'folderId' => 'xyz',
+            'folderId' => ID::custom('xyz'),
             'permissions' => [
-                Permission::read(Role::user('notme')),
-                Permission::update(Role::user('notme')),
-                Permission::delete(Role::user('notme')),
+                Permission::read(Role::user(ID::custom('notme'))),
+                Permission::update(Role::user(ID::custom('notme'))),
+                Permission::delete(Role::user(ID::custom('notme'))),
             ],
         ]);
 
@@ -233,7 +236,7 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
                         'permissions' => [
-        Permission::read(Role::user('notme')),
+        Permission::read(Role::user(ID::custom('notme'))),
                         ],
         ]);
 
@@ -248,8 +251,8 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                Permission::update(Role::user('notme')),
-                Permission::delete(Role::user('notme')),
+                Permission::update(Role::user(ID::custom('notme'))),
+                Permission::delete(Role::user(ID::custom('notme'))),
             ]
         ]);
 
@@ -264,10 +267,10 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                Permission::read(Role::user('notme')),
-                 Permission::create(Role::user('notme')),
-                    Permission::update(Role::user('notme')),
-                    Permission::delete(Role::user('notme')),
+                Permission::read(Role::user(ID::custom('notme'))),
+                 Permission::create(Role::user(ID::custom('notme'))),
+                    Permission::update(Role::user(ID::custom('notme'))),
+                    Permission::delete(Role::user(ID::custom('notme'))),
             ],
         ]);
 

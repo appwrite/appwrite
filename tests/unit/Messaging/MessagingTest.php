@@ -5,6 +5,9 @@ namespace Tests\Unit\Messaging;
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class MessagingTest extends TestCase
 {
@@ -160,17 +163,17 @@ class MessagingTest extends TestCase
     public function testConvertChannelsUser(): void
     {
         $user  = new Document([
-            '$id' => '123',
+            '$id' => ID::custom('123'),
             'memberships' => [
                 [
-                    'teamId' => 'abc',
+                    'teamId' => ID::custom('abc'),
                     'roles' => [
                         'administrator',
                         'moderator'
                     ]
                 ],
                 [
-                    'teamId' => 'def',
+                    'teamId' => ID::custom('def'),
                     'roles' => [
                         'guest'
                     ]
@@ -204,8 +207,8 @@ class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'databases.database_id.collections.collection_id.documents.document_id.create',
             payload: new Document([
-                '$id' => 'test',
-                '$collection' => 'collection',
+                '$id' => ID::custom('test'),
+                '$collection' => ID::custom('collection'),
                 '$permissions' => [
                     'read(admin)',
                     'update(admin)',
@@ -213,10 +216,10 @@ class MessagingTest extends TestCase
                 ],
             ]),
             database: new Document([
-                '$id' => 'database',
+                '$id' => ID::custom('database'),
             ]),
             collection: new Document([
-                '$id' => 'collection',
+                '$id' => ID::custom('collection'),
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
@@ -234,8 +237,8 @@ class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'databases.database_id.collections.collection_id.documents.document_id.create',
             payload: new Document([
-                '$id' => 'test',
-                '$collection' => 'collection',
+                '$id' => ID::custom('test'),
+                '$collection' => ID::custom('collection'),
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
@@ -243,10 +246,10 @@ class MessagingTest extends TestCase
                 ],
             ]),
             database: new Document([
-                '$id' => 'database',
+                '$id' => ID::custom('database'),
             ]),
             collection: new Document([
-                '$id' => 'collection',
+                '$id' => ID::custom('collection'),
                 '$permissions' => [
                     'read(admin)',
                     'update(admin)',
@@ -268,8 +271,8 @@ class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'buckets.bucket_id.files.file_id.create',
             payload: new Document([
-                '$id' => 'test',
-                '$collection' => 'bucket',
+                '$id' => ID::custom('test'),
+                '$collection' => ID::custom('bucket'),
                 '$permissions' => [
                     'read(admin)',
                     'update(admin)',
@@ -277,7 +280,7 @@ class MessagingTest extends TestCase
                 ],
             ]),
             bucket: new Document([
-                '$id' => 'bucket',
+                '$id' => ID::custom('bucket'),
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
@@ -295,8 +298,8 @@ class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'buckets.bucket_id.files.file_id.create',
             payload: new Document([
-                '$id' => 'test',
-                '$collection' => 'bucket',
+                '$id' => ID::custom('test'),
+                '$collection' => ID::custom('bucket'),
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
@@ -304,7 +307,7 @@ class MessagingTest extends TestCase
                 ],
             ]),
             bucket: new Document([
-                '$id' => 'bucket',
+                '$id' => ID::custom('bucket'),
                 '$permissions' => [
                     'read(admin)',
                     'update(admin)',

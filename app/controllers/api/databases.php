@@ -5,6 +5,7 @@ use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
+use Utopia\Database\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;
@@ -94,12 +95,12 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     try {
         $attribute = new Document([
-            '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
+            '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
             'key' => $key,
-            'databaseInternalId' => $db->getInternalId(),
-            'databaseId' => $db->getId(),
-            'collectionInternalId' => $collection->getInternalId(),
-            'collectionId' => $collectionId,
+            'databaseInternalId' => ID::custom($db->getInternalId()),
+            'databaseId' => ID::custom($db->getId()),
+            'collectionInternalId' => ID::custom($collection->getInternalId()),
+            'collectionId' => ID::custom($collectionId),
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
@@ -177,7 +178,7 @@ App::post('/v1/databases')
 
         try {
             $dbForProject->createDocument('databases', new Document([
-                '$id' => $databaseId,
+                '$id' => ID::custom($databaseId),
                 'name' => $name,
                 'search' => implode(' ', [$databaseId, $name]),
             ]));
@@ -193,7 +194,7 @@ App::post('/v1/databases')
 
             foreach ($collections['attributes'] as $attribute) {
                 $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
+                    '$id' => ID::custom($attribute['$id']),
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
@@ -207,7 +208,7 @@ App::post('/v1/databases')
 
             foreach ($collections['indexes'] as $index) {
                 $indexes[] = new Document([
-                    '$id' => $index['$id'],
+                    '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],
@@ -344,7 +345,7 @@ App::get('/v1/databases/:databaseId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => $log['userId'],
+                'userId' => ID::custom($log['userId']),
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
@@ -519,7 +520,7 @@ App::post('/v1/databases/:databaseId/collections')
 
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
-                '$id' => $collectionId,
+                '$id' => ID::custom($collectionId),
                 '$permissions' => $permissions ?? [],
                 'databaseInternalId' => $database->getInternalId(),
                 'databaseId' => $databaseId,
@@ -1600,7 +1601,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         try {
             $index = $dbForProject->createDocument('indexes', new Document([
-                '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
+                '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
                 'databaseInternalId' => $db->getInternalId(),
@@ -1870,6 +1871,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
+        /**
+         * Add permissions for current the user for any missing types
+         * from the allowed permissions for this resource type.
+         */
         $permissions = PermissionsProcessor::addDefaultsIfNeeded(
             $permissions,
             $user->getId(),

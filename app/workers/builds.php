@@ -80,10 +80,10 @@ class BuildsV1 extends Worker
         if (empty($buildId)) {
             $buildId = $dbForProject->getId();
             $build = $dbForProject->createDocument('builds', new Document([
-                '$id' => $buildId,
+                '$id' => ID::custom($buildId),
                 '$permissions' => [],
                 'startTime' => $startTime,
-                'deploymentId' => $deployment->getId(),
+                'deploymentId' => ID::custom($deployment->getId()),
                 'status' => 'processing',
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
@@ -123,7 +123,7 @@ class BuildsV1 extends Worker
 
         /** Trigger Realtime */
         $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
-            'functionId' => $function->getId(),
+            'functionId' => ID::custom($function->getId()),
             'deploymentId' => $deployment->getId()
         ]);
         $target = Realtime::fromPayload(

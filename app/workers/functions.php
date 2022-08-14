@@ -236,10 +236,10 @@ class FunctionsV1 extends Worker
         if ($execution->isEmpty()) {
             $executionId = $dbForProject->getId();
             $execution = $dbForProject->createDocument('executions', new Document([
-                '$id' => $executionId,
-                '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-                'functionId' => $functionId,
-                'deploymentId' => $deploymentId,
+                '$id' => ID::custom($executionId),
+                '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user(ID::custom($user->getId())))],
+                'functionId' => ID::custom($functionId),
+                'deploymentId' => ID::custom($deploymentId),
                 'trigger' => $trigger,
                 'status' => 'waiting',
                 'statusCode' => 0,
@@ -327,7 +327,7 @@ class FunctionsV1 extends Worker
 
         /** Trigger realtime event */
         $allEvents = Event::generateEvents('functions.[functionId].executions.[executionId].update', [
-            'functionId' => $function->getId(),
+            'functionId' => ID::custom($function->getId()),
             'executionId' => $execution->getId()
         ]);
         $target = Realtime::fromPayload(

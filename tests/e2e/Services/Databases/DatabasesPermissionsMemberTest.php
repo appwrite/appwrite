@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
@@ -30,10 +31,10 @@ class DatabasesPermissionsMemberTest extends Scope
         return [
            [[Permission::read(Role::any())]],
            [[Permission::read(Role::users())]],
-           [[Permission::read(Role::user('random'))]],
-           [[Permission::read(Role::user('lorem')), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))]],
-           [[Permission::read(Role::user('dolor')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))]],
-           [[Permission::read(Role::user('dolor')), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))]],
+           [[Permission::read(Role::user(ID::custom('random')))]],
+           [[Permission::read(Role::user(ID::custom('lorem'))), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))]],
+           [[Permission::read(Role::user(ID::custom('dolor'))), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))]],
+           [[Permission::read(Role::user(ID::custom('dolor'))), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))]],
            [[Permission::update(Role::any()), Permission::delete(Role::any())]],
            [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())]],
            [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())]],
@@ -54,7 +55,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->createUsers();
 
         $db = $this->client->call(Client::METHOD_POST, '/databases', $this->getServerHeader(), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'Test Database',
         ]);
         $this->assertEquals(201, $db['headers']['status-code']);
@@ -62,7 +63,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $databaseId = $db['body']['$id'];
 
         $public = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -84,7 +85,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(202, $response['headers']['status-code']);
 
         $private = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Private Movies',
             'permissions' => [
                 Permission::read(Role::users()),
@@ -126,7 +127,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $databaseId = $data['databaseId'];
 
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['public'] . '/documents', $this->getServerHeader(), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -135,7 +136,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['private'] . '/documents', $this->getServerHeader(), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
