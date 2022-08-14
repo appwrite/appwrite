@@ -1023,6 +1023,16 @@ App::get('/v1/functions/:functionId/executions')
         $results = $dbForProject->find('executions', $queries, $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
         $total = $dbForProject->count('executions', $queries, APP_LIMIT_COUNT);
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+        if ($isPrivilegedUser || $isAppUser) {
+            $results = array_map(function ($execution) {
+                $execution->setAttribute('stdout', '');
+                $execution->setAttribute('stderr', '');
+            }, $results);
+        }
+
         $response->dynamic(new Document([
             'executions' => $results,
             'total' => $total,
