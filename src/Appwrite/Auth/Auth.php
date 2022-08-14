@@ -293,7 +293,13 @@ class Auth
      */
     public static function codeGenerator(int $length = 6): string
     {
-        return substr(str_shuffle("0123456789"), 0, $length);
+        $value = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $value .= random_int(0,9);
+        }
+        
+        return $value;
     }
 
     /**
