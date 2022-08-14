@@ -1878,7 +1878,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 fn ($permission) => $permission !== Database::PERMISSION_CREATE
             ),
         );
-        
+
         $permissions = PermissionsProcessor::handleAggregates($permissions);
 
         if (!PermissionsProcessor::allowedForResourceType('document', $permissions)) {

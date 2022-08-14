@@ -300,7 +300,7 @@ class Realtime extends Adapter
                     $channels[] = 'files';
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files';
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
-                    $roles = $bucket->getAttribute('fileSecurity', false) 
+                    $roles = $bucket->getAttribute('fileSecurity', false)
                         ? \array_merge($bucket->getRead(), $payload->getRead())
                         : $bucket->getRead();
                 }

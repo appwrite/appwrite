@@ -35,8 +35,7 @@ class PermissionsProcessor
         ?array $permissions,
         string $userId,
         array $allowedPermissions = Database::PERMISSIONS
-    ): array
-    {
+    ): array {
         if (\is_null($permissions)) {
             $permissions = [];
             if (!empty($userId)) {
