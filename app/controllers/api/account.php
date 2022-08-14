@@ -496,7 +496,8 @@ App::patch('/v1/account/phone')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/account/sessions')
+App::post('/v1/account/sessions/email')
+    ->alias('/v1/account/sessions/')
     ->desc('Create Email Session')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
