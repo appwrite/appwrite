@@ -58,7 +58,7 @@ trait UsersBase
          /**
          * Test Create with hashed passwords
          */
-        $res = $this->client->call(Client::METHOD_POST, '/users/import/md5', array_merge([
+        $res = $this->client->call(Client::METHOD_POST, '/users/md5', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -68,7 +68,7 @@ trait UsersBase
             'name' => 'MD5 User',
         ]);
 
-        $res = $this->client->call(Client::METHOD_POST, '/users/import/bcrypt', array_merge([
+        $res = $this->client->call(Client::METHOD_POST, '/users/bcrypt', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -82,7 +82,7 @@ trait UsersBase
         $this->assertEquals($res['body']['password'], '$2a$15$xX/myGbFU.ZSKHSi6EHdBOySTdYm8QxBLXmOPHrYMwV0mHRBBSBOq');
         $this->assertEquals($res['body']['hash'], 'bcrypt');
 
-        $res = $this->client->call(Client::METHOD_POST, '/users/import/argon2', array_merge([
+        $res = $this->client->call(Client::METHOD_POST, '/users/argon2', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -96,7 +96,7 @@ trait UsersBase
         $this->assertEquals($res['body']['password'], '$argon2i$v=19$m=20,t=3,p=2$YXBwd3JpdGU$A/54i238ed09ZR4NwlACU5XnkjNBZU9QeOEuhjLiexI');
         $this->assertEquals($res['body']['hash'], 'argon2');
 
-        $res = $this->client->call(Client::METHOD_POST, '/users/import/sha', array_merge([
+        $res = $this->client->call(Client::METHOD_POST, '/users/sha', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -112,7 +112,7 @@ trait UsersBase
         $this->assertEquals($res['body']['hash'], 'sha');
         $this->assertEquals($res['body']['hashOptions']['version'], 'sha512');
 
-        $res = $this->client->call(Client::METHOD_POST, '/users/import/scrypt', array_merge([
+        $res = $this->client->call(Client::METHOD_POST, '/users/scrypt', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -136,7 +136,7 @@ trait UsersBase
         $this->assertEquals($res['body']['hashOptions']['costParallel'], 2);
         $this->assertEquals($res['body']['hashOptions']['length'], 64);
 
-        $res = $this->client->call(Client::METHOD_POST, '/users/import/phpass', array_merge([
+        $res = $this->client->call(Client::METHOD_POST, '/users/phpass', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -149,7 +149,7 @@ trait UsersBase
         $this->assertEquals($res['headers']['status-code'], 201);
         $this->assertEquals($res['body']['password'], '$P$Br387rwferoKN7uwHZqNMu98q3U8RO.');
 
-        $res = $this->client->call(Client::METHOD_POST, '/users/import/scrypt-modified', array_merge([
+        $res = $this->client->call(Client::METHOD_POST, '/users/scrypt-modified', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [

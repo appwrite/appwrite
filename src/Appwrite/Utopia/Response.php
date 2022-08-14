@@ -217,7 +217,7 @@ class Response extends SwooleResponse
     /**
      * @var array
      */
-    protected $payload = [];
+    protected array $payload = [];
 
     /**
      * Response constructor.
@@ -326,8 +326,7 @@ class Response extends SwooleResponse
             // Verification
             // Recovery
             // Tests (keep last)
-            ->setModel(new Mock())
-        ;
+            ->setModel(new Mock());
 
         parent::__construct($response);
     }
@@ -417,12 +416,13 @@ class Response extends SwooleResponse
 
         if ($model->isAny()) {
             $this->payload = $document->getArrayCopy();
+
             return $this->payload;
         }
 
         foreach ($model->getRules() as $key => $rule) {
-            if (!$document->isSet($key) && $rule['require']) { // do not set attribute in response if not required
-                if (!is_null($rule['default'])) {
+            if (!$document->isSet($key) && $rule['required']) { // do not set attribute in response if not required
+                if (\array_key_exists('default', $rule)) {
                     $document->setAttribute($key, $rule['default']);
                 } else {
                     throw new Exception('Model ' . $model->getName() . ' is missing response key: ' . $key);
@@ -434,7 +434,7 @@ class Response extends SwooleResponse
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
-                foreach ($data[$key] as &$item) {
+                foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
@@ -458,8 +458,12 @@ class Response extends SwooleResponse
                             throw new Exception('Missing model for rule: ' . $ruleType);
                         }
 
-                        $item = $this->output($item, $ruleType);
+                        $data[$key][$index] = $this->output($item, $ruleType);
                     }
+                }
+            } else {
+                if ($data[$key] instanceof Document) {
+                    $data[$key] = $this->output($data[$key], $rule['type']);
                 }
             }
 
@@ -491,8 +495,7 @@ class Response extends SwooleResponse
 
         $this
             ->setContentType(Response::CONTENT_TYPE_YAML)
-            ->send(yaml_emit($data, YAML_UTF8_ENCODING))
-        ;
+            ->send(yaml_emit($data, YAML_UTF8_ENCODING));
     }
 
     /**

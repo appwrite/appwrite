@@ -115,11 +115,11 @@ trait WebhooksBase
 
         $attributeId = $extra['body']['key'];
 
-        $this->assertEquals($firstName['headers']['status-code'], 201);
+        $this->assertEquals($firstName['headers']['status-code'], 202);
         $this->assertEquals($firstName['body']['key'], 'firstName');
-        $this->assertEquals($lastName['headers']['status-code'], 201);
+        $this->assertEquals($lastName['headers']['status-code'], 202);
         $this->assertEquals($lastName['body']['key'], 'lastName');
-        $this->assertEquals($extra['headers']['status-code'], 201);
+        $this->assertEquals($extra['headers']['status-code'], 202);
         $this->assertEquals($extra['body']['key'], 'extra');
 
         // wait for database worker to kick in

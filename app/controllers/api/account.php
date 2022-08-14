@@ -2,7 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\SMS\Mock;
+use Appwrite\SMS\Adapter\Mock;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
@@ -74,11 +74,11 @@ App::post('/v1/account')
             $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
             if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
-                throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401, Exception::USER_EMAIL_NOT_WHITELISTED);
+                throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
             }
 
             if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
-                throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401, Exception::USER_IP_NOT_WHITELISTED);
+                throw new Exception(Exception::USER_IP_NOT_WHITELISTED);
             }
         }
 
@@ -88,7 +88,7 @@ App::post('/v1/account')
             $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
             if ($total >= $limit) {
-                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
+                throw new Exception(Exception::USER_COUNT_EXCEEDED);
             }
         }
 
@@ -117,7 +117,7 @@ App::post('/v1/account')
                 'search' => implode(' ', [$userId, $email, $name])
             ])));
         } catch (Duplicate $th) {
-            throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
+            throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
 
         Authorization::unsetRole('role:' . Auth::USER_ROLE_GUEST);
@@ -171,11 +171,11 @@ App::post('/v1/account/sessions/email')
             new Query('email', Query::TYPE_EQUAL, [$email])]);
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
-            throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS); // Wrong password or username
+            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
         if (false === $profile->getAttribute('status')) { // Account is blocked
-            throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED); // User is in status blocked
+            throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
         }
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -289,13 +289,13 @@ App::get('/v1/account/sessions/oauth2/:provider')
         }
 
         if (empty($appId) || empty($appSecret)) {
-            throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.', 412, Exception::PROJECT_PROVIDER_DISABLED);
+            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
         }
 
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
         if (!\class_exists($className)) {
-            throw new Exception('Provider is not supported', 501, Exception::PROJECT_PROVIDER_UNSUPPORTED);
+            throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
         if (empty($success)) {
@@ -401,7 +401,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
         if (!\class_exists($className)) {
-            throw new Exception('Provider is not supported', 501, Exception::PROJECT_PROVIDER_UNSUPPORTED);
+            throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback);
@@ -410,18 +410,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             try {
                 $state = \array_merge($defaultState, $oauth2->parseState($state));
             } catch (\Exception$exception) {
-                throw new Exception('Failed to parse login state params as passed from OAuth2 provider', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to parse login state params as passed from OAuth2 provider');
             }
         } else {
             $state = $defaultState;
         }
 
         if (!$validateURL->isValid($state['success'])) {
-            throw new Exception('Invalid redirect URL for success login', 400, Exception::PROJECT_INVALID_SUCCESS_URL);
+            throw new Exception(Exception::PROJECT_INVALID_SUCCESS_URL);
         }
 
         if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
-            throw new Exception('Invalid redirect URL for failure login', 400, Exception::PROJECT_INVALID_FAILURE_URL);
+            throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
 
         $state['failure'] = null;
@@ -435,7 +435,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $response->redirect($state['failure'], 301, 0);
             }
 
-            throw new Exception('Failed to obtain access token', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to obtain access token');
         }
 
         $oauth2ID = $oauth2->getUserID($accessToken);
@@ -445,7 +445,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $response->redirect($state['failure'], 301, 0);
             }
 
-            throw new Exception('Missing ID from OAuth2 provider', 400, Exception::PROJECT_MISSING_USER_ID);
+            throw new Exception(Exception::USER_MISSING_ID);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -483,7 +483,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
                     if ($total >= $limit) {
-                        throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
+                        throw new Exception(Exception::USER_COUNT_EXCEEDED);
                     }
                 }
 
@@ -510,13 +510,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'search' => implode(' ', [$userId, $email, $name])
                     ])));
                 } catch (Duplicate $th) {
-                    throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
+                    throw new Exception(Exception::USER_ALREADY_EXISTS);
                 }
             }
         }
 
         if (false === $user->getAttribute('status')) { // Account is blocked
-            throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED); // User is in status blocked
+            throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
         }
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
@@ -634,7 +634,7 @@ App::post('/v1/account/sessions/magic-url')
     ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Mail $mails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
         $roles = Authorization::getRoles();
@@ -650,7 +650,7 @@ App::post('/v1/account/sessions/magic-url')
                 $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
                 if ($total >= $limit) {
-                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
+                    throw new Exception(Exception::USER_COUNT_EXCEEDED);
                 }
             }
 
@@ -767,13 +767,13 @@ App::put('/v1/account/sessions/magic-url')
         $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $token = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
 
         if (!$token) {
-            throw new Exception('Invalid login token', 401, Exception::USER_INVALID_TOKEN);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -819,7 +819,7 @@ App::put('/v1/account/sessions/magic-url')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
         }
 
         $audits->setResource('user/' . $user->getId());
@@ -874,10 +874,9 @@ App::post('/v1/account/sessions/phone')
     ->inject('audits')
     ->inject('events')
     ->inject('messaging')
-    ->inject('sms')
     ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging) {
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
-            throw new Exception('Phone provider not configured', 503, Exception::GENERAL_PHONE_DISABLED);
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
         $roles = Authorization::getRoles();
@@ -893,7 +892,7 @@ App::post('/v1/account/sessions/phone')
                 $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
                 if ($total >= $limit) {
-                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
+                    throw new Exception(Exception::USER_COUNT_EXCEEDED);
                 }
             }
 
@@ -920,7 +919,7 @@ App::post('/v1/account/sessions/phone')
             ])));
         }
 
-        $secret = (App::getEnv('_APP_SMS_PROVIDER') === 'sms://mock') ? Mock::$defaultDigits : Auth::codeGenerator();
+        $secret = (App::getEnv('_APP_SMS_PROVIDER') === 'sms://mock') ? Mock::$digits : Auth::codeGenerator();
 
         $expire = \time() + Auth::TOKEN_EXPIRATION_PHONE;
 
@@ -997,13 +996,13 @@ App::put('/v1/account/sessions/phone')
         $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $token = Auth::phoneTokenVerify($user->getAttribute('tokens', []), $secret);
 
         if (!$token) {
-            throw new Exception('Invalid login token', 401, Exception::USER_INVALID_TOKEN);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -1047,7 +1046,7 @@ App::put('/v1/account/sessions/phone')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
-            throw new Exception('Failed saving user to DB', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
         }
 
         $audits->setResource('user/' . $user->getId());
@@ -1109,11 +1108,11 @@ App::post('/v1/account/sessions/anonymous')
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
-            throw new Exception('Failed to create anonymous user.', 401, Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED);
+            throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user');
         }
 
         if (!$user->isEmpty()) {
-            throw new Exception('Cannot create an anonymous user when logged in.', 401, Exception::USER_SESSION_ALREADY_EXISTS);
+            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS, 'Cannot create an anonymous user when logged in');
         }
 
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -1122,7 +1121,7 @@ App::post('/v1/account/sessions/anonymous')
             $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
             if ($total >= $limit) {
-                throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
+                throw new Exception(Exception::USER_COUNT_EXCEEDED);
             }
         }
 
@@ -1241,7 +1240,7 @@ App::post('/v1/account/jwt')
         }
 
         if ($current->isEmpty()) {
-            throw new Exception('No valid session found', 404, Exception::USER_SESSION_NOT_FOUND);
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
@@ -1434,7 +1433,7 @@ App::get('/v1/account/sessions/:sessionId')
             }
         }
 
-        throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
+        throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
 App::patch('/v1/account/name')
@@ -1460,7 +1459,7 @@ App::patch('/v1/account/name')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
             ->setAttribute('name', $name)
-            ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email')])));
+            ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email', ''), $user->getAttribute('phone', '')])));
 
         $audits
             ->setResource('user/' . $user->getId())
@@ -1496,7 +1495,7 @@ App::patch('/v1/account/password')
     ->action(function (string $password, string $oldPassword, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
         // Check old password only if its an existing user.
         if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
-            throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
+            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
@@ -1543,7 +1542,7 @@ App::patch('/v1/account/email')
             !$isAnonymousUser &&
             !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
         ) { // Double check user password
-            throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
+            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
         $email = \strtolower($email);
@@ -1554,12 +1553,12 @@ App::patch('/v1/account/email')
             ->setAttribute('hashOptions', $isAnonymousUser ? Auth::DEFAULT_ALGO_OPTIONS : $user->getAttribute('hashOptions', ''))
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')]));
+            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $email, $user->getAttribute('phone', '')]));
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         } catch (Duplicate $th) {
-            throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
         $audits
@@ -1601,18 +1600,18 @@ App::patch('/v1/account/phone')
             !$isAnonymousUser &&
             !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
         ) { // Double check user password
-            throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
+            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
         $user
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
-            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name'), $user->getAttribute('email')]));
+            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $phone]));
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         } catch (Duplicate $th) {
-            throw new Exception('Phone number already exists', 409, Exception::USER_PHONE_ALREADY_EXISTS);
+            throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
 
         $audits
@@ -1770,7 +1769,7 @@ App::delete('/v1/account/sessions/:sessionId')
             }
         }
 
-        throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
+        throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
 App::patch('/v1/account/sessions/:sessionId')
@@ -1824,7 +1823,7 @@ App::patch('/v1/account/sessions/:sessionId')
                 $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
                 if (!\class_exists($className)) {
-                    throw new Exception('Provider is not supported', 501, Exception::PROJECT_PROVIDER_UNSUPPORTED);
+                    throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
                 }
 
                 $oauth2 = new $className($appId, $appSecret, '', [], []);
@@ -1857,7 +1856,7 @@ App::patch('/v1/account/sessions/:sessionId')
             }
         }
 
-        throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
+        throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
 App::delete('/v1/account/sessions')
@@ -1956,7 +1955,7 @@ App::post('/v1/account/recovery')
     ->action(function (string $email, string $url, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Mail $mails, Audit $audits, Event $events, Stats $usage) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
         $roles = Authorization::getRoles();
@@ -1970,11 +1969,11 @@ App::post('/v1/account/recovery')
         ]);
 
         if (!$profile) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         if (false === $profile->getAttribute('status')) { // Account is blocked
-            throw new Exception('Invalid credentials. User is blocked', 401, Exception::USER_BLOCKED);
+            throw new Exception(Exception::USER_BLOCKED);
         }
 
         $expire = \time() + Auth::TOKEN_EXPIRATION_RECOVERY;
@@ -2057,20 +2056,20 @@ App::put('/v1/account/recovery')
     ->inject('events')
     ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
         if ($password !== $passwordAgain) {
-            throw new Exception('Passwords must match', 400, Exception::USER_PASSWORD_MISMATCH);
+            throw new Exception(Exception::USER_PASSWORD_MISMATCH);
         }
 
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $tokens = $profile->getAttribute('tokens', []);
         $recovery = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_RECOVERY, $secret);
 
         if (!$recovery) {
-            throw new Exception('Invalid recovery token', 401, Exception::USER_INVALID_TOKEN);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         Authorization::setRole('user:' . $profile->getId());
@@ -2131,7 +2130,7 @@ App::post('/v1/account/verification')
     ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Mail $mails, Stats $usage) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
         $roles = Authorization::getRoles();
@@ -2220,14 +2219,14 @@ App::put('/v1/account/verification')
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $tokens = $profile->getAttribute('tokens', []);
         $verification = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_VERIFICATION, $secret);
 
         if (!$verification) {
-            throw new Exception('Invalid verification token', 401, Exception::USER_INVALID_TOKEN);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         Authorization::setRole('user:' . $profile->getId());
@@ -2279,12 +2278,12 @@ App::post('/v1/account/verification/phone')
     ->inject('messaging')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
 
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+        if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
             throw new Exception('Phone provider not configured', 503, Exception::GENERAL_PHONE_DISABLED);
         }
 
         if (empty($user->getAttribute('phone'))) {
-            throw new Exception('User has no phone number.', 400, Exception::USER_PHONE_NOT_FOUND);
+            throw new Exception(Exception::USER_PHONE_NOT_FOUND);
         }
 
         $roles = Authorization::getRoles();
@@ -2293,7 +2292,7 @@ App::post('/v1/account/verification/phone')
 
         $verificationSecret = Auth::tokenGenerator();
 
-        $secret = (App::getEnv('_APP_SMS_PROVIDER') === 'sms://mock') ? Mock::$defaultDigits : Auth::codeGenerator();
+        $secret = (App::getEnv('_APP_SMS_PROVIDER') === 'sms://mock') ? Mock::$digits : Auth::codeGenerator();
         $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
 
         $verification = new Document([
@@ -2367,13 +2366,13 @@ App::put('/v1/account/verification/phone')
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $verification = Auth::phoneTokenVerify($user->getAttribute('tokens', []), $secret);
 
         if (!$verification) {
-            throw new Exception('Invalid verification token', 401, Exception::USER_INVALID_TOKEN);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         Authorization::setRole('user:' . $profile->getId());

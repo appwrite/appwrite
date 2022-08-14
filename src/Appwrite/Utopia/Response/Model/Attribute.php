@@ -39,7 +39,6 @@ class Attribute extends Model
                 'description' => 'Is attribute an array?',
                 'default' => false,
                 'example' => false,
-                'require' => false
             ])
         ;
     }
