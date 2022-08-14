@@ -17,7 +17,9 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
@@ -88,11 +90,11 @@ App::post('/v1/projects')
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
             '$permissions' => [
-                "read(team:{$teamId})",
-                "update(team:{$teamId}/owner)",
-                "update(team:{$teamId}/developer)",
-                "delete(team:{$teamId}/owner)",
-                "delete(team:{$teamId}/developer)",
+                Permission::read(Role::team($teamId)),
+                Permission::update(Role::team($teamId, 'owner')),
+                Permission::update(Role::team($teamId, 'developer')),
+                Permission::delete(Role::team($teamId, 'owner')),
+                Permission::delete(Role::team($teamId, 'developer')),
 
             ],
             'name' => $name,
@@ -597,9 +599,9 @@ App::post('/v1/projects/:projectId/webhooks')
         $webhook = new Document([
             '$id' => $dbForConsole->getId(),
             '$permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
@@ -844,9 +846,9 @@ App::post('/v1/projects/:projectId/keys')
         $key = new Document([
             '$id' => $dbForConsole->getId(),
             '$permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),

@@ -58,9 +58,9 @@ App::post('/v1/users')
             $user = $dbForProject->createDocument('users', new Document([
                 '$id' => $userId,
                 '$permissions' => [
-                    'read(any)',
-                    'update(user:' . $userId . ')',
-                    'delete(user:' . $userId . ')',
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
                 ],
                 'email' => $email,
                 'emailVerification' => false,

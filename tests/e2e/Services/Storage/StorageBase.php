@@ -23,10 +23,10 @@ trait StorageBase
             'maximumFileSize' => 2000000, //2MB
             'allowedFileExtensions' => ["jpg", "png"],
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
@@ -41,9 +41,9 @@ trait StorageBase
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -68,10 +68,10 @@ trait StorageBase
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
         $this->assertEquals(201, $bucket2['headers']['status-code']);
@@ -104,9 +104,9 @@ trait StorageBase
                 'fileId' => $fileId,
                 'file' => $curlFile,
                 'permissions' => [
-                    'read(any)',
-                    'update(any)',
-                    'delete(any)',
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
                 ],
             ]);
             $counter++;
@@ -145,9 +145,9 @@ trait StorageBase
             'fileId' => $fileId,
             'file' => $curlFile,
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
         @fclose($handle);
@@ -166,9 +166,9 @@ trait StorageBase
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
         $this->assertEquals(404, $res['headers']['status-code']);
@@ -184,9 +184,9 @@ trait StorageBase
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-1.png'), 'image/png', 'kitten-1.png'),
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -204,9 +204,9 @@ trait StorageBase
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-3.gif'), 'image/gif', 'kitten-3.gif'),
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -227,10 +227,10 @@ trait StorageBase
             'maximumFileSize' => 200000000, //200MB
             'allowedFileExtensions' => ["jpg", "png"],
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -479,9 +479,9 @@ trait StorageBase
             'fileId' => 'testcache',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -525,9 +525,9 @@ trait StorageBase
             'fileId' => 'testcache',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-2.png'), 'image/png', 'logo.png'),
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -571,9 +571,9 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -601,9 +601,9 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 

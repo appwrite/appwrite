@@ -31,10 +31,10 @@ class DatabasesPermissionsGuestTest extends Scope
             'collectionId' => 'unique()',
             'name' => 'Movies',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
@@ -58,12 +58,12 @@ class DatabasesPermissionsGuestTest extends Scope
     public function readDocumentsProvider()
     {
         return [
-            [['read(any)']],
-            [['read(users)']],
-            [['update(any)', 'delete(any)']],
-            [['read(any)', 'update(any)', 'delete(any)']],
-            [['read(users)', 'update(users)', 'delete(users)']],
-            [['read(any)', 'update(users)', 'delete(users)']],
+            [[Permission::read(Role::any())]],
+            [[Permission::read(Role::users())]],
+            [[Permission::update(Role::any()), Permission::delete(Role::any())]],
+            [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())]],
+            [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())]],
+            [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())]],
         ];
     }
 

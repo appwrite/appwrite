@@ -38,7 +38,7 @@ class File extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'File permissions.',
                 'default' => [],
-                'example' => 'read(any)',
+                'example' => Permission::read(Role::any()),
                 'array' => true,
             ])
             ->addRule('name', [

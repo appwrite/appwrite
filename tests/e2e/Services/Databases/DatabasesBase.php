@@ -45,10 +45,10 @@ trait DatabasesBase
             'collectionId' => 'unique()',
             'name' => 'Movies',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
@@ -91,9 +91,9 @@ trait DatabasesBase
                     'title' => 'Captain America',
                 ],
                 'permissions' => [
-                    'read(user:' . $this->getUser()['$id'] . ')',
-                    'update(user:' . $this->getUser()['$id'] . ')',
-                    'delete(user:' . $this->getUser()['$id'] . ')',
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
                 ],
             ]);
 
@@ -792,9 +792,9 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -813,9 +813,9 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -834,9 +834,9 @@ trait DatabasesBase
                 ],
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -849,9 +849,9 @@ trait DatabasesBase
                 'releaseYear' => 2020, // Missing title, expect an 400 error
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1428,9 +1428,9 @@ trait DatabasesBase
                 '$createdAt' => 5 // Should be ignored
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ],
         ]);
 
@@ -1452,9 +1452,9 @@ trait DatabasesBase
                 'title' => 'Thor: Ragnarok',
             ],
             'permissions' => [
-                'read(users)',
-                'update(users)',
-                'delete(users)',
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
             ],
         ]);
 
@@ -1498,9 +1498,9 @@ trait DatabasesBase
                 'actors' => [],
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1554,8 +1554,8 @@ trait DatabasesBase
             'collectionId' => 'unique()',
             'name' => 'invalidDocumentStructure',
             'permissions' => [
-                'create(any)',
-                'read(any)',
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
@@ -1753,9 +1753,9 @@ trait DatabasesBase
                 'email' => 'user@example.com',
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1768,9 +1768,9 @@ trait DatabasesBase
                 'enum' => 'yes',
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1783,9 +1783,9 @@ trait DatabasesBase
                 'ip' => '1.1.1.1',
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1798,9 +1798,9 @@ trait DatabasesBase
                 'url' => 'http://www.example.com',
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1813,9 +1813,9 @@ trait DatabasesBase
                 'range' => 3,
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1828,9 +1828,9 @@ trait DatabasesBase
                 'floatRange' => 1.4,
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1843,9 +1843,9 @@ trait DatabasesBase
                 'probability' => 0.99999,
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1858,9 +1858,9 @@ trait DatabasesBase
                 'upperBound' => 8,
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1873,9 +1873,9 @@ trait DatabasesBase
                 'lowerBound' => 8,
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1902,9 +1902,9 @@ trait DatabasesBase
                 'email' => 'user@@example.com',
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1917,9 +1917,9 @@ trait DatabasesBase
                 'enum' => 'badEnum',
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1932,9 +1932,9 @@ trait DatabasesBase
                 'ip' => '1.1.1.1.1',
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1947,9 +1947,9 @@ trait DatabasesBase
                 'url' => 'example...com',
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1962,9 +1962,9 @@ trait DatabasesBase
                 'range' => 11,
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1977,9 +1977,9 @@ trait DatabasesBase
                 'floatRange' => 2.5,
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1992,9 +1992,9 @@ trait DatabasesBase
                 'probability' => 1.1,
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -2007,9 +2007,9 @@ trait DatabasesBase
                 'upperBound' => 11,
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -2022,9 +2022,9 @@ trait DatabasesBase
                 'lowerBound' => 3,
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -2097,7 +2097,7 @@ trait DatabasesBase
                 'actors' => [],
             ],
             'permissions' => [
-                'read(any)',
+                Permission::read(Role::any()),
             ],
         ]);
 
@@ -2263,8 +2263,8 @@ trait DatabasesBase
                 'attribute' => 'one',
             ],
             'permissions' => [
-                'read(user:other)',
-                'update(user:other)',
+                Permission::read(Role::user('other')),
+                Permission::update(Role::user('other')),
             ],
         ]);
 
@@ -2380,9 +2380,9 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -2403,9 +2403,9 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -2426,9 +2426,9 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -2522,10 +2522,10 @@ trait DatabasesBase
             'collectionId' => 'unique()',
             'name' => 'Movies',
             'permissions' => [
-                'create(user:' . $this->getUser()['$id'] . ')',
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ],
             'documentSecurity' => true,
         ]);
@@ -2561,9 +2561,9 @@ trait DatabasesBase
                 'title' => 'Captain America',
             ],
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -2581,7 +2581,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -2594,8 +2594,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ],
         ]);
 

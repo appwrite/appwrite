@@ -218,9 +218,9 @@ class MessagingTest extends TestCase
             collection: new Document([
                 '$id' => 'collection',
                 '$permissions' => [
-                    'read(any)',
-                    'update(any)',
-                    'delete(any)',
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
                 ],
             ])
         );
@@ -237,9 +237,9 @@ class MessagingTest extends TestCase
                 '$id' => 'test',
                 '$collection' => 'collection',
                 '$permissions' => [
-                    'read(any)',
-                    'update(any)',
-                    'delete(any)',
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
                 ],
             ]),
             database: new Document([
@@ -279,9 +279,9 @@ class MessagingTest extends TestCase
             bucket: new Document([
                 '$id' => 'bucket',
                 '$permissions' => [
-                    'read(any)',
-                    'update(any)',
-                    'delete(any)',
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
                 ],
             ])
         );
@@ -298,9 +298,9 @@ class MessagingTest extends TestCase
                 '$id' => 'test',
                 '$collection' => 'bucket',
                 '$permissions' => [
-                    'read(any)',
-                    'update(any)',
-                    'delete(any)',
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
                 ],
             ]),
             bucket: new Document([

@@ -42,10 +42,10 @@ trait WebhooksBase
             'collectionId' => 'unique()',
             'name' => 'Actors',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
@@ -195,9 +195,9 @@ trait WebhooksBase
                 'lastName' => 'Evans',
             ],
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -257,9 +257,9 @@ trait WebhooksBase
                 'lastName' => 'Evans2',
             ],
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -319,9 +319,9 @@ trait WebhooksBase
 
             ],
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -380,10 +380,10 @@ trait WebhooksBase
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -488,9 +488,9 @@ trait WebhooksBase
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'folderId' => 'xyz',
         ]);
@@ -549,10 +549,10 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 

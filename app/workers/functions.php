@@ -237,7 +237,7 @@ class FunctionsV1 extends Worker
             $executionId = $dbForProject->getId();
             $execution = $dbForProject->createDocument('executions', new Document([
                 '$id' => $executionId,
-                '$permissions' => $user->isEmpty() ? [] : ['read(user:' . $user->getId() . ')'],
+                '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
                 'functionId' => $functionId,
                 'deploymentId' => $deploymentId,
                 'trigger' => $trigger,

@@ -645,10 +645,10 @@ class RealtimeCustomClientTest extends Scope
             'collectionId' => 'unique()',
             'name' => 'Actors',
             'permissions' => [
-                'read(users)',
-                'create(users)',
-                'update(users)',
-                'delete(users)',
+                Permission::read(Role::users()),
+                Permission::create(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
             ],
             'documentSecurity' => true,
         ]);
@@ -685,9 +685,9 @@ class RealtimeCustomClientTest extends Scope
                 'name' => 'Chris Evans'
             ],
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -731,9 +731,9 @@ class RealtimeCustomClientTest extends Scope
                 'name' => 'Chris Evans 2'
             ],
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -776,9 +776,9 @@ class RealtimeCustomClientTest extends Scope
                 'name' => 'Bradley Cooper'
             ],
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -868,10 +868,10 @@ class RealtimeCustomClientTest extends Scope
             'collectionId' => 'unique()',
             'name' => 'Actors',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ]
         ]);
 
@@ -1061,10 +1061,10 @@ class RealtimeCustomClientTest extends Scope
             'bucketId' => 'unique()',
             'name' => 'Bucket 1',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ]
         ]);
 
@@ -1080,9 +1080,9 @@ class RealtimeCustomClientTest extends Scope
             'fileId' => 'unique()',
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -1121,10 +1121,10 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 

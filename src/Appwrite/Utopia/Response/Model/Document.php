@@ -58,7 +58,7 @@ class Document extends Any
                 'type' => self::TYPE_STRING,
                 'description' => 'Document write permissions.',
                 'default' => '',
-                'example' => 'read(user:608f9da25e7e1)',
+                'example' => Permission::read(Role::user('608f9da25e7e1')),
                 'array' => true,
             ])
         ;

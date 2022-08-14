@@ -251,10 +251,10 @@ class DatabasesCustomServerTest extends Scope
             'name' => 'Test 1',
             'collectionId' => 'first',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
@@ -267,10 +267,10 @@ class DatabasesCustomServerTest extends Scope
             'name' => 'Test 2',
             'collectionId' => 'second',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
@@ -411,10 +411,10 @@ class DatabasesCustomServerTest extends Scope
             'name' => 'Test 1',
             'collectionId' => 'first',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
@@ -449,10 +449,10 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => 'unique()',
             'name' => 'Actors',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
@@ -506,9 +506,9 @@ class DatabasesCustomServerTest extends Scope
                 'unneeded' =>  'dolor'
             ],
             'permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
 
@@ -732,10 +732,10 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => 'unique()',
             'name' => 'TestCleanupDuplicateIndexOnDeleteAttribute',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
@@ -855,9 +855,9 @@ class DatabasesCustomServerTest extends Scope
                 'lastName' => 'Holland',
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ],
         ]);
 
@@ -871,9 +871,9 @@ class DatabasesCustomServerTest extends Scope
                 'lastName' => 'Jackson',
             ],
             'permissions' => [
-                'read(user:' . $this->getUser()['$id'] . ')',
-                'update(user:' . $this->getUser()['$id'] . ')',
-                'delete(user:' . $this->getUser()['$id'] . ')',
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ],
         ]);
 
@@ -984,10 +984,10 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => 'attributeRowWidthLimit',
             'name' => 'attributeRowWidthLimit',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
@@ -1050,10 +1050,10 @@ class DatabasesCustomServerTest extends Scope
             'collectionId' => 'testLimitException',
             'name' => 'testLimitException',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);

@@ -9,6 +9,8 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
 use Appwrite\Stats\Stats;
 use Utopia\Storage\Device;
@@ -570,9 +572,9 @@ App::post('/v1/functions/:functionId/deployments')
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
                     '$permissions' => [
-                        'read(any)',
-                        'update(any)',
-                        'delete(any)',
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
                     ],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
@@ -602,9 +604,9 @@ App::post('/v1/functions/:functionId/deployments')
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
                     '$permissions' => [
-                        'read(any)',
-                        'update(any)',
-                        'delete(any)',
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
                     ],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
@@ -860,7 +862,7 @@ App::post('/v1/functions/:functionId/executions')
         /** @var Document $execution */
         $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
-            '$permissions' => !$user->isEmpty() ? ["read(user:{$user->getId()})"] : [],
+            '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event

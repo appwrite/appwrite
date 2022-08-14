@@ -32,7 +32,7 @@ class Bucket extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'File permissions.',
                 'default' => [],
-                'example' => ['read(any)'],
+                'example' => [Permission::read(Role::any())],
                 'array' => true,
             ])
             ->addRule('fileSecurity', [

@@ -21,7 +21,9 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
@@ -60,9 +62,9 @@ App::post('/v1/teams')
         $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
             '$id' => $teamId ,
             '$permissions' => [
-                'read(team:' . $teamId . ')',
-                'update(team:' . $teamId . '/owner)',
-                'delete(team:' . $teamId . '/owner)',
+                Permission::read(Role::team($teamId)),
+                Permission::update(Role::team($teamId, 'owner')),
+                Permission::delete(Role::team($teamId, 'owner')),
             ],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
@@ -74,12 +76,12 @@ App::post('/v1/teams')
             $membership = new Document([
                 '$id' => $membershipId,
                 '$permissions' => [
-                    "read(user:{$user->getId()})",
-                    "read(team:{$team->getId()})",
-                    "update(user:{$user->getId()})",
-                    "update(team:{$team->getId()}/owner)",
-                    "delete(user:{$user->getId()})",
-                    "delete(team:{$team->getId()}/owner)",
+                    Permission::read(Role::user($user->getId())),
+                    Permission::read(Role::team($team->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::update(Role::team($team->getId(), 'owner')),
+                    Permission::delete(Role::user($user->getId())),
+                    Permission::delete(Role::team($team->getId(), 'owner')),
                 ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
@@ -338,10 +340,10 @@ App::post('/v1/teams/:teamId/memberships')
                 $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
                     '$permissions' => [
-                        "read(any)",
-                        "read(user:{$userId})",
-                        "update(user:{$userId})",
-                        "delete(user:{$userId})",
+                        Permission::read(Role::any()),
+                        Permission::read(Role::user($userId)),
+                        Permission::update(Role::user($userId)),
+                        Permission::delete(Role::user($userId)),
                     ],
                     'email' => $email,
                     'emailVerification' => false,
@@ -379,11 +381,11 @@ App::post('/v1/teams/:teamId/memberships')
         $membership = new Document([
             '$id' => $membershipId,
             '$permissions' => [
-                'read(any)',
-                "update(user:{$invitee->getId()})",
-                "update(team:{$team->getId()}/owner)",
-                "delete(user:{$invitee->getId()})",
-                "delete(team:{$team->getId()}/owner)",
+                Permission::read(Role::any()),
+                Permission::update(Role::user($invitee->getId())),
+                Permission::update(Role::team($team->getId(), 'owner')),
+                Permission::delete(Role::user($invitee->getId())),
+                Permission::delete(Role::team($team->getId(), 'owner')),
             ],
             'userId' => $invitee->getId(),
             'userInternalId' => $invitee->getInternalId(),
@@ -735,9 +737,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
-                "read(user:{$user->getId()})",
-                "update(user:{$user->getId()})",
-                "delete(user:{$user->getId()})",
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());

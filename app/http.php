@@ -10,6 +10,8 @@ use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -169,9 +171,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 'encryption' => true,
                 'antivirus' => true,
                 '$permissions' => [
-                    'read(any)',
-                    'update(any)',
-                    'delete(any)',
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
                 ],
                 'search' => 'buckets Default',
             ]));

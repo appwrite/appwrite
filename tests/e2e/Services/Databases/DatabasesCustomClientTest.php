@@ -78,10 +78,10 @@ class DatabasesCustomClientTest extends Scope
                 'name' => 'AppwriteBeginner',
             ],
             'permissions' => [
-                "read(user:user2)",
-                "read(user:{$userId})",
-                "update(user:{$userId})",
-                "delete(user:{$userId})",
+                Permission::read(Role::user('user2')),
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
             ],
         ]);
 

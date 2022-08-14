@@ -6,6 +6,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class DatabasesPermissionsMemberTest extends Scope
 {
@@ -26,16 +28,16 @@ class DatabasesPermissionsMemberTest extends Scope
     public function permissionsProvider(): array
     {
         return [
-           [['read(any)']],
-           [['read(users)']],
-           [['read(user:random)']],
-           [['read(user:lorem)', 'update(user:lorem)', 'delete(user:lorem)',]],
-           [['read(user:dolor)', 'update(user:dolor)', 'delete(user:dolor)',]],
-           [['read(user:dolor)', 'read(user:lorem)', 'update(user:dolor)', 'delete(user:dolor)',]],
-           [['update(any)', 'delete(any)']],
-           [['read(any)', 'update(any)', 'delete(any)']],
-           [['read(users)', 'update(users)', 'delete(users)']],
-           [['read(any)', 'update(users)', 'delete(users)']],
+           [[Permission::read(Role::any())]],
+           [[Permission::read(Role::users())]],
+           [[Permission::read(Role::user('random'))]],
+           [[Permission::read(Role::user('lorem')), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))]],
+           [[Permission::read(Role::user('dolor')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))]],
+           [[Permission::read(Role::user('dolor')), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))]],
+           [[Permission::update(Role::any()), Permission::delete(Role::any())]],
+           [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())]],
+           [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())]],
+           [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())]],
         ];
     }
 
@@ -63,10 +65,10 @@ class DatabasesPermissionsMemberTest extends Scope
             'collectionId' => 'unique()',
             'name' => 'Movies',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
@@ -85,10 +87,10 @@ class DatabasesPermissionsMemberTest extends Scope
             'collectionId' => 'unique()',
             'name' => 'Private Movies',
             'permissions' => [
-                'read(users)',
-                'create(users)',
-                'update(users)',
-                'delete(users)',
+                Permission::read(Role::users()),
+                Permission::create(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
             ],
             'documentSecurity' => true,
         ]);

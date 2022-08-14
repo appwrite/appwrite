@@ -30,10 +30,10 @@ class StorageCustomClientTest extends Scope
             'bucketId' => 'unique()',
             'name' => 'Test Bucket',
             'permissions' => [
-                'read(any)',
-                'create(users)',
-                'update(users)',
-                'delete(users)',
+                Permission::read(Role::any()),
+                Permission::create(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
             ],
         ]);
 
@@ -124,10 +124,10 @@ class StorageCustomClientTest extends Scope
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
@@ -170,7 +170,7 @@ class StorageCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'folderId' => 'xyz',
             'permissions' => [
-                'read(user:notme)',
+                Permission::read(Role::user('notme')),
             ],
         ]);
 
@@ -188,8 +188,8 @@ class StorageCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'folderId' => 'xyz',
             'permissions' => [
-                'update(user:notme)',
-                'delete(user:notme)',
+                Permission::update(Role::user('notme')),
+                Permission::delete(Role::user('notme')),
             ]
         ]);
 
@@ -207,9 +207,9 @@ class StorageCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'folderId' => 'xyz',
             'permissions' => [
-                'read(user:notme)',
-                'update(user:notme)',
-                'delete(user:notme)',
+                Permission::read(Role::user('notme')),
+                Permission::update(Role::user('notme')),
+                Permission::delete(Role::user('notme')),
             ],
         ]);
 
@@ -233,7 +233,7 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
                         'permissions' => [
-        'read(user:notme)',
+        Permission::read(Role::user('notme')),
                         ],
         ]);
 
@@ -248,8 +248,8 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'update(user:notme)',
-                'delete(user:notme)',
+                Permission::update(Role::user('notme')),
+                Permission::delete(Role::user('notme')),
             ]
         ]);
 
@@ -264,10 +264,10 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                'read(user:notme)',
-                 'create(user:notme)',
-                    'update(user:notme)',
-                    'delete(user:notme)',
+                Permission::read(Role::user('notme')),
+                 Permission::create(Role::user('notme')),
+                    Permission::update(Role::user('notme')),
+                    Permission::delete(Role::user('notme')),
             ],
         ]);
 

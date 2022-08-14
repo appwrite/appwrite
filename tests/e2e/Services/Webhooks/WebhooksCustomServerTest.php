@@ -158,10 +158,10 @@ class WebhooksCustomServerTest extends Scope
             'collectionId' => 'unique()',
             'name' => 'Demo',
             'permissions' => [
-                'read(any)',
-                'create(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'documentSecurity' => true,
         ]);
