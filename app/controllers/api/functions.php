@@ -1030,6 +1030,7 @@ App::get('/v1/functions/:functionId/executions')
             $results = array_map(function ($execution) {
                 $execution->setAttribute('stdout', '');
                 $execution->setAttribute('stderr', '');
+                return $execution;
             }, $results);
         }
 
