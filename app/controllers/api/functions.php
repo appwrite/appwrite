@@ -966,6 +966,12 @@ App::post('/v1/functions/:functionId/executions')
             ->setParam('functionStatus', $execution->getAttribute('status', ''))
             ->setParam('functionExecutionTime', $execution->getAttribute('time') * 1000); // ms
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+        $execution->setAttribute('stdout', ($isPrivilegedUser || $isAppUser) ? $executionResponse['stdout'] : '');
+        $execution->setAttribute('stderr', ($isPrivilegedUser || $isAppUser) ? $executionResponse['stderr'] : '');
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($execution, Response::MODEL_EXECUTION);
@@ -1055,6 +1061,12 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         if ($execution->isEmpty()) {
             throw new Exception('Execution not found', 404, Exception::EXECUTION_NOT_FOUND);
         }
+
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+        $execution->setAttribute('stdout', ($isPrivilegedUser || $isAppUser) ? $execution->getAttribute('stdout') : '');
+        $execution->setAttribute('stderr', ($isPrivilegedUser || $isAppUser) ? $execution->getAttribute('stderr') : '');
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
