@@ -31,7 +31,6 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
-     * - Logger
      * - Mocks
      */
 
