@@ -177,7 +177,7 @@ class RealtimeConsoleClientTest extends Scope
 
         $attributeKey = $name['body']['key'];
 
-        $this->assertEquals($name['headers']['status-code'], 201);
+        $this->assertEquals($name['headers']['status-code'], 202);
         $this->assertEquals($name['body']['key'], 'name');
         $this->assertEquals($name['body']['type'], 'string');
         $this->assertEquals($name['body']['size'], 256);
@@ -266,7 +266,7 @@ class RealtimeConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($index['headers']['status-code'], 201);
+        $this->assertEquals($index['headers']['status-code'], 202);
         $indexKey = $index['body']['key'];
 
         $response = json_decode($client->receive(), true);

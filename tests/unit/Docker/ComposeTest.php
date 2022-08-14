@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Docker;
 
 use Appwrite\Docker\Compose;
 use Exception;
@@ -8,11 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class ComposeTest extends TestCase
 {
-    /**
-     * @var Compose
-     */
-    protected $object = null;
-
+    protected ?Compose $object = null;
 
     public function setUp(): void
     {
@@ -25,16 +21,12 @@ class ComposeTest extends TestCase
         $this->object = new Compose($data);
     }
 
-    public function tearDown(): void
-    {
-    }
-
-    public function testVersion()
+    public function testVersion(): void
     {
         $this->assertEquals('3', $this->object->getVersion());
     }
 
-    public function testServices()
+    public function testServices(): void
     {
         $this->assertCount(17, $this->object->getServices());
         $this->assertEquals('appwrite-telegraf', $this->object->getService('telegraf')->getContainerName());
@@ -44,12 +36,12 @@ class ComposeTest extends TestCase
         $this->assertEquals(['2080' => '80', '2443' => '443', '8080' => '8080'], $this->object->getService('traefik')->getPorts());
     }
 
-    public function testNetworks()
+    public function testNetworks(): void
     {
         $this->assertCount(2, $this->object->getNetworks());
     }
 
-    public function testVolumes()
+    public function testVolumes(): void
     {
         $this->assertCount(9, $this->object->getVolumes());
         $this->assertEquals('appwrite-mariadb', $this->object->getVolumes()[0]);

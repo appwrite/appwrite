@@ -1,7 +1,7 @@
 (function (exports, isomorphicFormData, crossFetch) {
     'use strict';
 
-    /*! *****************************************************************************
+    /******************************************************************************
     Copyright (c) Microsoft Corporation.
 
     Permission to use, copy, modify, and/or distribute this software for any
@@ -26,6 +26,45 @@
         });
     }
 
+    class Service {
+        constructor(client) {
+            this.client = client;
+        }
+        static flatten(data, prefix = '') {
+            let output = {};
+            for (const key in data) {
+                let value = data[key];
+                let finalKey = prefix ? `${prefix}[${key}]` : key;
+                if (Array.isArray(value)) {
+                    output = Object.assign(output, this.flatten(value, finalKey));
+                }
+                else {
+                    output[finalKey] = value;
+                }
+            }
+            return output;
+        }
+    }
+    Service.CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+
+    class Query {
+    }
+    Query.equal = (attribute, value) => Query.addQuery(attribute, 'equal', value);
+    Query.notEqual = (attribute, value) => Query.addQuery(attribute, 'notEqual', value);
+    Query.lesser = (attribute, value) => Query.addQuery(attribute, 'lesser', value);
+    Query.lesserEqual = (attribute, value) => Query.addQuery(attribute, 'lesserEqual', value);
+    Query.greater = (attribute, value) => Query.addQuery(attribute, 'greater', value);
+    Query.greaterEqual = (attribute, value) => Query.addQuery(attribute, 'greaterEqual', value);
+    Query.search = (attribute, value) => Query.addQuery(attribute, 'search', value);
+    Query.addQuery = (attribute, oper, value) => value instanceof Array
+        ? `${attribute}.${oper}(${value
+        .map((v) => Query.parseValues(v))
+        .join(',')})`
+        : `${attribute}.${oper}(${Query.parseValues(value)})`;
+    Query.parseValues = (value) => typeof value === 'string' || value instanceof String
+        ? `"${value}"`
+        : `${value}`;
+
     class AppwriteException extends Error {
         constructor(message, code = 0, type = '', response = '') {
             super(message);
@@ -36,7 +75,7 @@
             this.response = response;
         }
     }
-    class Appwrite {
+    class Client {
         constructor() {
             this.config = {
                 endpoint: 'https://HOSTNAME/v1',
@@ -48,7 +87,7 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:5.0.0',
+                'x-sdk-version': 'appwrite:web:6.0.0',
                 'X-Appwrite-Response-Format': '0.15.0',
             };
             this.realtime = {
@@ -6607,9 +6646,20 @@
         ? `"${value}"`
         : `${value}`;
 
-    exports.Appwrite = Appwrite;
+    exports.Account = Account;
+    exports.AppwriteException = AppwriteException;
+    exports.Avatars = Avatars;
+    exports.Client = Client;
+    exports.Databases = Databases;
+    exports.Functions = Functions;
+    exports.Health = Health;
+    exports.Locale = Locale;
+    exports.Projects = Projects;
     exports.Query = Query;
+    exports.Storage = Storage;
+    exports.Teams = Teams;
+    exports.Users = Users;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-}(this.window = this.window || {}, null, window));
+})(this.Appwrite = this.Appwrite || {}, null, window);

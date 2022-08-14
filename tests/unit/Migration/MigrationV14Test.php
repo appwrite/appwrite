@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Migration;
 
 use ReflectionClass;
 use Appwrite\Migration\Version\V14;
@@ -16,7 +16,7 @@ class MigrationV14Test extends MigrationTest
         $this->method->setAccessible(true);
     }
 
-    public function testMigrateProjects()
+    public function testMigrateProjects(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -28,7 +28,7 @@ class MigrationV14Test extends MigrationTest
         $this->assertEquals($document->getAttribute('version'), '0.15.0');
     }
 
-    public function testMigrateKeys()
+    public function testMigrateKeys(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -39,7 +39,7 @@ class MigrationV14Test extends MigrationTest
         $this->assertEquals($document->getAttribute('expire'), 0);
     }
 
-    public function testMigrateWebhooks()
+    public function testMigrateWebhooks(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -50,7 +50,7 @@ class MigrationV14Test extends MigrationTest
         $this->assertEquals(strlen($document->getAttribute('signatureKey')), 128);
     }
 
-    public function testMigrateUsers()
+    public function testMigrateUsers(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -62,7 +62,7 @@ class MigrationV14Test extends MigrationTest
         $this->assertFalse($document->getAttribute('phoneVerification'));
     }
 
-    public function testMigratePlatforms()
+    public function testMigratePlatforms(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -77,7 +77,7 @@ class MigrationV14Test extends MigrationTest
         $this->assertEquals($document->getUpdatedAt(), 987654321);
     }
 
-    public function testMigrateFunctions()
+    public function testMigrateFunctions(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -92,7 +92,7 @@ class MigrationV14Test extends MigrationTest
         $this->assertEquals($document->getUpdatedAt(), 987654321);
     }
 
-    public function testMigrateDeployments()
+    public function testMigrateDeployments(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -104,7 +104,7 @@ class MigrationV14Test extends MigrationTest
         $this->assertEquals($document->getCreatedAt(), 123456789);
     }
 
-    public function testMigrateExecutions()
+    public function testMigrateExecutions(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -116,7 +116,7 @@ class MigrationV14Test extends MigrationTest
         $this->assertEquals($document->getCreatedAt(), 123456789);
     }
 
-    public function testMigrateTeams()
+    public function testMigrateTeams(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -128,7 +128,7 @@ class MigrationV14Test extends MigrationTest
         $this->assertEquals($document->getCreatedAt(), 123456789);
     }
 
-    public function testMigrateAudits()
+    public function testMigrateAudits(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -151,7 +151,7 @@ class MigrationV14Test extends MigrationTest
         $this->assertEquals($document->getAttribute('event'), 'databases.default.collections.movies.documents.avatar.create');
     }
 
-    public function testMigrateStats()
+    public function testMigrateStats(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
