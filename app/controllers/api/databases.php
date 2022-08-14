@@ -1322,6 +1322,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             'filters' => ['datetime']
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
     });
 

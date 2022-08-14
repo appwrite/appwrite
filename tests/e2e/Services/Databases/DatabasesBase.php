@@ -197,7 +197,7 @@ trait DatabasesBase
         $this->assertEquals($actors['body']['required'], false);
         $this->assertEquals($actors['body']['array'], true);
 
-        $this->assertEquals($datetime['headers']['status-code'], 201);
+        $this->assertEquals($datetime['headers']['status-code'], 202);
         $this->assertEquals($datetime['body']['key'], 'birthDay');
         $this->assertEquals($datetime['body']['type'], 'datetime');
         $this->assertEquals($datetime['body']['required'], false);
@@ -410,7 +410,7 @@ trait DatabasesBase
         $this->assertEquals(false, $boolean['body']['array']);
         $this->assertEquals(true, $boolean['body']['default']);
 
-        $this->assertEquals(201, $datetime['headers']['status-code']);
+        $this->assertEquals(202, $datetime['headers']['status-code']);
         $this->assertEquals('datetime', $datetime['body']['key']);
         $this->assertEquals('datetime', $datetime['body']['type']);
         $this->assertEquals(false, $datetime['body']['required']);
@@ -834,7 +834,7 @@ trait DatabasesBase
             'attributes' => ['birthDay'],
         ]);
 
-        $this->assertEquals(201, $releaseWithDate['headers']['status-code']);
+        $this->assertEquals(202, $releaseWithDate['headers']['status-code']);
         $this->assertEquals('birthDay', $releaseWithDate['body']['key']);
         $this->assertEquals('key', $releaseWithDate['body']['type']);
         $this->assertCount(1, $releaseWithDate['body']['attributes']);
