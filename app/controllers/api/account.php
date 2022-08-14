@@ -56,9 +56,9 @@ App::post('/v1/account')
     ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.', true)
+    ->param('email', null, new Email(), 'User email.', true)
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.', true)
-    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('phone', null, new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('request')
     ->inject('response')
@@ -67,7 +67,7 @@ App::post('/v1/account')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $phone, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
+    ->action(function (string $userId, ?string $email, string $password, ?string $phone, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
@@ -2278,7 +2278,7 @@ App::post('/v1/account/verification/phone')
     ->inject('messaging')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
 
-        if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
+        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception('Phone provider not configured', 503, Exception::GENERAL_PHONE_DISABLED);
         }
 

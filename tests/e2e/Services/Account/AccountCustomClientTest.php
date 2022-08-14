@@ -690,7 +690,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'userId' => 'unique()',
-            'number' => $number,
+            'phone' => $number,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -869,7 +869,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'number' => $newPhone,
+            'phone' => $newPhone,
             'password' => 'new-password'
         ]);
 
