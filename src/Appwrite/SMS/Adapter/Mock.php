@@ -9,7 +9,7 @@ class Mock extends Adapter
     /**
      * @var string
      */
-    public static string $defaultDigits = '123456';
+    public static string $digits = '123456';
 
     /**
      * @param string $from
@@ -20,14 +20,5 @@ class Mock extends Adapter
     public function send(string $from, string $to, string $message): void
     {
         return;
-    }
-
-    /**
-     * @param int $digits
-     * @return string
-     */
-    public function generateSecretDigits(int $digits = 6): string
-    {
-        return self::$defaultDigits;
     }
 }

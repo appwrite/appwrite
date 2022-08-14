@@ -713,7 +713,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $data['token'] = Mock::$defaultDigits;
+        $data['token'] = Mock::$digits;
         $data['id'] = $userId;
         $data['number'] = $number;
 
@@ -949,7 +949,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'userId' => $id,
-            'secret' => Mock::$defaultDigits,
+            'secret' => Mock::$digits,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -964,7 +964,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'userId' => 'ewewe',
-            'secret' => Mock::$defaultDigits,
+            'secret' => Mock::$digits,
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);

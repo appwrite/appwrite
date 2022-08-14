@@ -25,6 +25,7 @@ abstract class Adapter
 
     /**
      * Send Message to phone.
+     * 
      * @param string $from
      * @param string $to
      * @param string $message
@@ -71,16 +72,5 @@ abstract class Adapter
         }
 
         return $response;
-    }
-
-    /**
-     * Generate 6 random digits for phone verification.
-     *
-     * @param int $digits
-     * @return string
-     */
-    public function generateSecretDigits(int $digits = 6): string
-    {
-        return substr(str_shuffle("0123456789"), 0, $digits);
     }
 }

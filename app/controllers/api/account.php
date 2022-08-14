@@ -2,7 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\SMS;
+use Appwrite\Auth\SMS\Mock;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone as ValidatorPhone;
 use Appwrite\Detector\Detector;
@@ -873,7 +873,7 @@ App::post('/v1/account/sessions/phone')
     ->inject('events')
     ->inject('messaging')
     ->inject('sms')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging, SMS $sms) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging) {
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception('Phone provider not configured', 503, Exception::GENERAL_PHONE_DISABLED);
         }
@@ -918,7 +918,7 @@ App::post('/v1/account/sessions/phone')
             ])));
         }
 
-        $secret = $sms->generateSecretDigits();
+        $secret = (App::getEnv('_APP_SMS_PROVIDER') === 'sms://mock') ? Mock::$defaultDigits : Auth::codeGenerator();
 
         $expire = \time() + Auth::TOKEN_EXPIRATION_PHONE;
 
@@ -2269,14 +2269,13 @@ App::post('/v1/account/verification/phone')
     ->label('abuse-key', 'userId:{userId}')
     ->inject('request')
     ->inject('response')
-    ->inject('phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
     ->inject('messaging')
-    ->action(function (Request $request, Response $response, Phone $phone, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception('Phone provider not configured', 503, Exception::GENERAL_PHONE_DISABLED);
@@ -2292,7 +2291,7 @@ App::post('/v1/account/verification/phone')
 
         $verificationSecret = Auth::tokenGenerator();
 
-        $secret = $phone->generateSecretDigits();
+        $secret = (App::getEnv('_APP_SMS_PROVIDER') === 'sms://mock') ? Mock::$defaultDigits : Auth::codeGenerator();
         $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
 
         $verification = new Document([

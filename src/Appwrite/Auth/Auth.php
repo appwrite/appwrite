@@ -281,6 +281,22 @@ class Auth
     }
 
     /**
+     * Code Generator.
+     *
+     * Generate random code string
+     *
+     * @param int $length
+     *
+     * @return string
+     *
+     * @throws \Exception
+     */
+    public static function codeGenerator(int $length = 6): string
+    {
+        return substr(str_shuffle("0123456789"), 0, $length);
+    }
+
+    /**
      * Verify token and check that its not expired.
      *
      * @param array  $tokens
