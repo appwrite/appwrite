@@ -618,8 +618,8 @@ class DatabasesCustomServerTest extends Scope
             'required' => true,
         ]);
 
-        $this->assertEquals(202, $attribute1['headers']['status-code']);
-        $this->assertEquals(202, $attribute2['headers']['status-code']);
+        $this->assertEquals(201, $attribute1['headers']['status-code']);
+        $this->assertEquals(201, $attribute2['headers']['status-code']);
         $this->assertEquals('attribute1', $attribute1['body']['key']);
         $this->assertEquals('attribute2', $attribute2['body']['key']);
 
@@ -646,8 +646,8 @@ class DatabasesCustomServerTest extends Scope
             'attributes' => ['attribute2'],
         ]);
 
-        $this->assertEquals(202, $index1['headers']['status-code']);
-        $this->assertEquals(202, $index2['headers']['status-code']);
+        $this->assertEquals(201, $index1['headers']['status-code']);
+        $this->assertEquals(201, $index2['headers']['status-code']);
         $this->assertEquals('index1', $index1['body']['key']);
         $this->assertEquals('index2', $index2['body']['key']);
 
@@ -742,8 +742,8 @@ class DatabasesCustomServerTest extends Scope
             'required' => true,
         ]);
 
-        $this->assertEquals(202, $attribute1['headers']['status-code']);
-        $this->assertEquals(202, $attribute2['headers']['status-code']);
+        $this->assertEquals(201, $attribute1['headers']['status-code']);
+        $this->assertEquals(201, $attribute2['headers']['status-code']);
         $this->assertEquals('attribute1', $attribute1['body']['key']);
         $this->assertEquals('attribute2', $attribute2['body']['key']);
 
@@ -770,8 +770,8 @@ class DatabasesCustomServerTest extends Scope
             'attributes' => ['attribute2'],
         ]);
 
-        $this->assertEquals(202, $index1['headers']['status-code']);
-        $this->assertEquals(202, $index2['headers']['status-code']);
+        $this->assertEquals(201, $index1['headers']['status-code']);
+        $this->assertEquals(201, $index2['headers']['status-code']);
         $this->assertEquals('index1', $index1['body']['key']);
         $this->assertEquals('index2', $index2['body']['key']);
 
@@ -980,7 +980,7 @@ class DatabasesCustomServerTest extends Scope
                 'required' => true,
             ]);
 
-            $this->assertEquals($attribute['headers']['status-code'], 202);
+            $this->assertEquals($attribute['headers']['status-code'], 201);
         }
 
         sleep(5);
@@ -1043,7 +1043,7 @@ class DatabasesCustomServerTest extends Scope
                 'required' => true,
             ]);
 
-            $this->assertEquals($attribute['headers']['status-code'], 202);
+            $this->assertEquals($attribute['headers']['status-code'], 201);
         }
 
         sleep(20);
@@ -1080,7 +1080,7 @@ class DatabasesCustomServerTest extends Scope
                 'attributes' => ["attribute{$i}"],
             ]);
 
-            $this->assertEquals(202, $index['headers']['status-code']);
+            $this->assertEquals(201, $index['headers']['status-code']);
             $this->assertEquals("key_attribute{$i}", $index['body']['key']);
         }
 
