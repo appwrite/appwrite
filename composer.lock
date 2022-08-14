@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a4ac7a4e39a15f9c3a3c285ec5d78e7a",
+    "content-hash": "5be520b18b84c2ad8933a8595650bda4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1737,13 +1737,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "857af4a8265d8c52537c0c4c7a4574dd17e6b46d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/857af4a8265d8c52537c0c4c7a4574dd17e6b46d",
-                "reference": "857af4a8265d8c52537c0c4c7a4574dd17e6b46d",
-                "shasum": ""
+                "reference": "6f38037d823269e859c0bdb0dd644b2349031b91"
             },
             "require": {
                 "ext-pdo": "*",
@@ -1760,7 +1754,6 @@
                     "Utopia\\Abuse\\": "src/Abuse"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1772,17 +1765,13 @@
             ],
             "description": "A simple abuse library to manage application usage limits",
             "keywords": [
-                "Abuse",
+                "abuse",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/refactor-permissions"
-            },
-            "time": "2022-08-14T03:33:16+00:00"
+            "time": "2022-08-14T10:22:39+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1845,13 +1834,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "0e218d932ce7f278a2730a8d8078a1cfdb73446a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/0e218d932ce7f278a2730a8d8078a1cfdb73446a",
-                "reference": "0e218d932ce7f278a2730a8d8078a1cfdb73446a",
-                "shasum": ""
+                "reference": "9c1b6263fb197db2d73984e3b8188d6a3db990e1"
             },
             "require": {
                 "ext-pdo": "*",
@@ -1868,7 +1851,6 @@
                     "Utopia\\Audit\\": "src/Audit"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1880,17 +1862,13 @@
             ],
             "description": "A simple audit library to manage application users logs",
             "keywords": [
-                "Audit",
+                "audit",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/refactor-permissions"
-            },
-            "time": "2022-08-14T03:20:52+00:00"
+            "time": "2022-08-14T10:25:56+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2055,13 +2033,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "33557bdd6ea9e884f583c288d0711be18cbd15f9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/33557bdd6ea9e884f583c288d0711be18cbd15f9",
-                "reference": "33557bdd6ea9e884f583c288d0711be18cbd15f9",
-                "shasum": ""
+                "reference": "75ac6965dea2ddada8ecb6bb7ede2e8a7f2249c2"
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2085,7 +2057,11 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Database"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -2107,11 +2083,7 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/refactor-permissions"
-            },
-            "time": "2022-08-14T03:11:23+00:00"
+            "time": "2022-08-14T09:23:08+00:00"
         },
         {
             "name": "utopia-php/domains",

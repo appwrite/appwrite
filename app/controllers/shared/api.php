@@ -42,9 +42,9 @@ App::init()
             throw new Exception('Missing or unknown project ID', 400, Exception::PROJECT_UNKNOWN);
         }
 
-        /*
-        * Abuse Check
-        */
+    /*
+     * Abuse Check
+     */
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $timeLimitArray = [];
 
@@ -53,10 +53,10 @@ App::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
             $timeLimit
-                ->setParam('{userId}', $user->getId())
-                ->setParam('{userAgent}', $request->getUserAgent(''))
-                ->setParam('{ip}', $request->getIP())
-                ->setParam('{url}', $request->getHostname() . $route->getPath());
+            ->setParam('{userId}', $user->getId())
+            ->setParam('{userAgent}', $request->getUserAgent(''))
+            ->setParam('{ip}', $request->getIP())
+            ->setParam('{url}', $request->getHostname() . $route->getPath());
             $timeLimitArray[] = $timeLimit;
         }
 
@@ -96,13 +96,13 @@ App::init()
             }
         }
 
-        /*
-        * Background Jobs
-        */
+    /*
+     * Background Jobs
+     */
         $events
-            ->setEvent($route->getLabel('event', ''))
-            ->setProject($project)
-            ->setUser($user)
+        ->setEvent($route->getLabel('event', ''))
+        ->setProject($project)
+        ->setUser($user)
         ;
 
         $mails

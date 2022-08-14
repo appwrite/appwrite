@@ -6,8 +6,11 @@ use Appwrite\Auth\Phone;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone as ValidatorPhone;
 use Appwrite\Detector\Detector;
+use Appwrite\Event\Audit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Phone as EventPhone;
+use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Network\Validator\URL;
@@ -15,13 +18,11 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Database\Validator\CustomId;
 use MaxMind\Db\Reader;
 use Utopia\App;
-use Appwrite\Event\Audit;
-use Appwrite\Event\Phone as EventPhone;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -35,7 +36,6 @@ use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
-use Appwrite\Extend\Exception;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Range;
@@ -171,7 +171,8 @@ App::post('/v1/account/sessions/email')
         $protocol = $request->getProtocol();
 
         $profile = $dbForProject->findOne('users', [
-            new Query('email', Query::TYPE_EQUAL, [$email])]);
+            Query::equal('email', [$email]),
+        ]);
 
         if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
             throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS); // Wrong password or username
@@ -456,8 +457,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $user = ($user->isEmpty()) ? $dbForProject->findOne('sessions', [ // Get user by provider id
-            new Query('provider', QUERY::TYPE_EQUAL, [$provider]),
-            new Query('providerUid', QUERY::TYPE_EQUAL, [$oauth2ID]),
+            Query::equal('provider', [$provider]),
+            Query::equal('providerUid', [$oauth2ID]),
         ]) : $user;
 
         if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
@@ -470,7 +471,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
             $user = $dbForProject->findOne('users', [
-                new Query('email', Query::TYPE_EQUAL, [$email])]);
+                Query::equal('email', [$email]),
+            ]);
 
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -641,7 +643,7 @@ App::post('/v1/account/sessions/magic-url')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $user = $dbForProject->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]);
+        $user = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
 
         if (!$user) {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -891,7 +893,7 @@ App::post('/v1/account/sessions/phone')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $user = $dbForProject->findOne('users', [new Query('phone', Query::TYPE_EQUAL, [$number])]);
+        $user = $dbForProject->findOne('users', [Query::equal('phone', [$number])]);
 
         if (!$user) {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -1990,7 +1992,7 @@ App::post('/v1/account/recovery')
         $email = \strtolower($email);
 
         $profile = $dbForProject->findOne('users', [
-            new Query('email', Query::TYPE_EQUAL, [$email])
+            Query::equal('email', [$email]),
         ]);
 
         if (!$profile) {

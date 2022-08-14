@@ -74,6 +74,18 @@
         {
             "url": "https://github.com/appwrite/runtimes.git",
             "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/database.git",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/abuse.git",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/audit.git",
+            "type": "git"
         }
     ],
     "require-dev": {

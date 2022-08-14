@@ -178,7 +178,7 @@ class FunctionsCustomClientTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         // Wait for deployment to be built.
-        sleep(5);
+        sleep(10);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 

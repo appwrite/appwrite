@@ -139,22 +139,28 @@ App::get('/v1/teams')
     ->inject('dbForProject')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
-        if (!empty($cursor)) {
-            $cursorTeam = $dbForProject->getDocument('teams', $cursor);
+        $filterQueries = [];
 
-            if ($cursorTeam->isEmpty()) {
-                throw new Exception("Team '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('search', $search);
         }
 
         $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('teams', $cursor);
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("Team '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
-        $results = $dbForProject->find('teams', $queries, $limit, $offset, [], [$orderType], $cursorTeam ?? null, $cursorDirection);
-        $total = $dbForProject->count('teams', $queries, APP_LIMIT_COUNT);
+        $results = $dbForProject->find('teams', \array_merge($filterQueries, $queries));
+        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -249,8 +255,9 @@ App::delete('/v1/teams/:teamId')
         }
 
         $memberships = $dbForProject->find('memberships', [
-            new Query('teamId', Query::TYPE_EQUAL, [$teamId]),
-        ], 2000, 0); // TODO fix members limit
+            Query::equal('teamId', [$teamId]),
+            Query::limit(2000), // TODO fix members limit
+        ]);
 
         // TODO delete all members individually from the user object
         foreach ($memberships as $membership) {
@@ -325,7 +332,7 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
-        $invitee = $dbForProject->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+        $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
 
         if (empty($invitee)) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -473,7 +480,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $teamId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
@@ -484,33 +491,34 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
-        if (!empty($cursor)) {
-            $cursorMembership = $dbForProject->getDocument('memberships', $cursor);
-
-            if ($cursorMembership->isEmpty()) {
-                throw new Exception("Membership '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
-        }
-
-        $queries = [new Query('teamId', Query::TYPE_EQUAL, [$teamId])];
+        $filterQueries = [Query::equal('teamId', [$teamId])];
 
         if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            $filterQueries[] = Query::search('search', $search);
+        }
+
+        $otherQueries = [];
+        $otherQueries[] = Query::limit($limit);
+        $otherQueries[] = Query::offset($offset);
+        $otherQueries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('memberships', $cursor);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("Membership '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $otherQueries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         $memberships = $dbForProject->find(
             collection: 'memberships',
-            queries: $queries,
-            limit: $limit,
-            offset: $offset,
-            orderTypes: [$orderType],
-            cursor: $cursorMembership ?? null,
-            cursorDirection: $cursorDirection
+            queries: \array_merge($filterQueries, $otherQueries),
         );
 
         $total = $dbForProject->count(
-            collection:'memberships',
-            queries: $queries,
+            collection: 'memberships',
+            queries: $filterQueries,
             max: APP_LIMIT_COUNT
         );
 
