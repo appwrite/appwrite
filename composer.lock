@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a1ab1a7aab14b5ac016472261bb814ff",
+    "content-hash": "a4ac7a4e39a15f9c3a3c285ec5d78e7a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1733,16 +1733,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-refactor-permissions-premerge",
+            "version": "dev-refactor-permissions",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "5e413f57b5bb7c947a430311f40224ca76525b1f"
+                "reference": "857af4a8265d8c52537c0c4c7a4574dd17e6b46d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/5e413f57b5bb7c947a430311f40224ca76525b1f",
-                "reference": "5e413f57b5bb7c947a430311f40224ca76525b1f",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/857af4a8265d8c52537c0c4c7a4574dd17e6b46d",
+                "reference": "857af4a8265d8c52537c0c4c7a4574dd17e6b46d",
                 "shasum": ""
             },
             "require": {
@@ -1780,9 +1780,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/refactor-permissions-premerge"
+                "source": "https://github.com/utopia-php/abuse/tree/refactor-permissions"
             },
-            "time": "2022-08-13T01:20:01+00:00"
+            "time": "2022-08-14T03:33:16+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1845,12 +1845,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "d9ab49e3208c65f25386895242931595248bbe32"
+                "reference": "0e218d932ce7f278a2730a8d8078a1cfdb73446a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/d9ab49e3208c65f25386895242931595248bbe32",
-                "reference": "d9ab49e3208c65f25386895242931595248bbe32",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/0e218d932ce7f278a2730a8d8078a1cfdb73446a",
+                "reference": "0e218d932ce7f278a2730a8d8078a1cfdb73446a",
                 "shasum": ""
             },
             "require": {
@@ -1890,7 +1890,7 @@
                 "issues": "https://github.com/utopia-php/audit/issues",
                 "source": "https://github.com/utopia-php/audit/tree/refactor-permissions"
             },
-            "time": "2022-08-13T15:11:07+00:00"
+            "time": "2022-08-14T03:20:52+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2055,12 +2055,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "4af6d9d1e9ec518e5f87628051132a6402c647fc"
+                "reference": "33557bdd6ea9e884f583c288d0711be18cbd15f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/4af6d9d1e9ec518e5f87628051132a6402c647fc",
-                "reference": "4af6d9d1e9ec518e5f87628051132a6402c647fc",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/33557bdd6ea9e884f583c288d0711be18cbd15f9",
+                "reference": "33557bdd6ea9e884f583c288d0711be18cbd15f9",
                 "shasum": ""
             },
             "require": {
@@ -2111,7 +2111,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/refactor-permissions"
             },
-            "time": "2022-08-12T13:00:50+00:00"
+            "time": "2022-08-14T03:11:23+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5356,7 +5356,7 @@
         },
         {
             "package": "utopia-php/abuse",
-            "version": "dev-refactor-permissions-premerge",
+            "version": "dev-refactor-permissions",
             "alias": "0.7.0",
             "alias_normalized": "0.7.0.0"
         },
