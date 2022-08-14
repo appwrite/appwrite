@@ -90,7 +90,7 @@ return [
     ],
     Exception::GENERAL_PERMISSION_INVALID => [
         'name' => Exception::GENERAL_PERMISSION_INVALID,
-        'description' => 'The provided permissions are invalid for this resource type. Documents and files cannot contain a create permission.',
+        'description' => 'The provided permissions are invalid for this resource type. Documents and files cannot contain a `create` permission.',
         'code' => 400,
     ],
 
