@@ -222,13 +222,6 @@ return [
         'description' => 'The invite does not belong to the current user.',
         'code' => 401,
     ],
-    Exception::TEAM_ID_MISMATCH => [
-        'name' => Exception::TEAM_ID_MISMATCH,
-        'description' => 'Team IDs don\'t match',
-        'code' => 404,
-    ],
-
-
 
     /** Membership */
     Exception::MEMBERSHIP_NOT_FOUND => [
@@ -287,12 +280,12 @@ return [
     ],
     Exception::STORAGE_FILE_TYPE_UNSUPPORTED => [
         'name' => Exception::STORAGE_FILE_TYPE_UNSUPPORTED,
-        'description' => 'The file type is not supported.',
+        'description' => 'The given file extension is not supported.',
         'code' => 400,
     ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
         'name' => Exception::STORAGE_INVALID_FILE_SIZE,
-        'description' => 'File size not allowed',
+        'description' => 'The file size is either not valid or exceeds the maximum allowed size. Please check the file or the value of the _APP_STORAGE_LIMIT environment variable.',
         'code' => 400,
     ],
     Exception::STORAGE_INVALID_FILE => [
@@ -364,6 +357,7 @@ return [
         'code' => 404,
     ],
 
+    /** Databases */
     Exception::DATABASE_NOT_FOUND => [
         'name' => Exception::DATABASE_NOT_FOUND,
         'description' => 'Database not found',
@@ -438,7 +432,7 @@ return [
     ],
     Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED => [
         'name' => Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED,
-        'description' => 'Cannot set default value for array attributes',
+        'description' => 'Default values cannot be set for <span class="tag">array</span> and <span class="tag">required</span> attributes.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
@@ -544,92 +538,5 @@ return [
         'name' => Exception::DOMAIN_VERIFICATION_FAILED,
         'description' => 'Domain verification for the requested domain has failed.',
         'code' => 401,
-    ],
-
-    /** Mocks */
-    Exception::MOCK_INVALID_CONTENT_RANGE_HEADER => [
-        'name' => Exception::MOCK_INVALID_CONTENT_RANGE_HEADER,
-        'description' => 'Invalid content-range header',
-        'code' => 400,
-    ],
-    Exception::MOCK_FIRST_CHUNK_CANNOT_HAVE_ID => [
-        'name' => Exception::MOCK_FIRST_CHUNK_CANNOT_HAVE_ID,
-        'description' => 'First chunked request cannot have id header',
-        'code' => 400,
-    ],
-    Exception::MOCK_CHUNK_MISSING_ID => [
-        'name' => Exception::MOCK_CHUNK_MISSING_ID,
-        'description' => 'All chunked request must have id header (except first)',
-        'code' => 400,
-    ],
-    Exception::MOCK_CHUNK_INVALID_SIZE => [
-        'name' => Exception::MOCK_CHUNK_INVALID_SIZE,
-        'description' => 'Chunk size must be 5MB (except last chunk)',
-        'code' => 400,
-    ],
-    Exception::MOCK_INVALID_FILE_NAME => [
-        'name' => Exception::MOCK_INVALID_FILE_NAME,
-        'description' => 'Wrong file name',
-        'code' => 400,
-    ],
-    Exception::MOCK_INVALID_FILE_SIZE => [
-        'name' => Exception::MOCK_INVALID_FILE_SIZE,
-        'description' => 'Wrong file size',
-        'code' => 400,
-    ],
-    Exception::MOCK_WRONG_FILE_UPLOADED => [
-        'name' => Exception::MOCK_WRONG_FILE_UPLOADED,
-        'description' => 'Wrong file uploaded',
-        'code' => 400,
-    ],
-    Exception::MOCK_MISSING_COOKIE => [
-        'name' => Exception::MOCK_MISSING_COOKIE,
-        'description' => 'Missing cookie value',
-        'code' => 400,
-    ],
-    Exception::MOCK_INVALID_CLIENT_ID => [
-        'name' => Exception::MOCK_INVALID_CLIENT_ID,
-        'description' => 'Invalid client ID',
-        'code' => 400,
-    ],
-    Exception::MOCK_INVALID_CLIENT_SECRET => [
-        'name' => Exception::MOCK_INVALID_CLIENT_SECRET,
-        'description' => 'Invalid client secret',
-        'code' => 400,
-    ],
-    Exception::MOCK_INVALID_TOKEN => [
-        'name' => Exception::MOCK_INVALID_TOKEN,
-        'description' => 'Invalid token',
-        'code' => 400,
-    ],
-    Exception::MOCK_INVALID_REFRESH_TOKEN => [
-        'name' => Exception::MOCK_INVALID_REFRESH_TOKEN,
-        'description' => 'Invalid refresh token',
-        'code' => 400,
-    ],
-    Exception::MOCK_INVALID_GRANT_TYPE => [
-        'name' => Exception::MOCK_INVALID_GRANT_TYPE,
-        'description' => 'Invalid grant type',
-        'code' => 400,
-    ],
-    Exception::MOCK_FAILED_TO_READ_RESULTS => [
-        'name' => Exception::MOCK_FAILED_TO_READ_RESULTS,
-        'description' => 'Failed to read results',
-        'code' => 500,
-    ],
-    Exception::MOCK_FAILED_TO_SAVE_RESULTS => [
-        'name' => Exception::MOCK_FAILED_TO_SAVE_RESULTS,
-        'description' => 'Failed to save results',
-        'code' => 500,
-    ],
-    Exception::MOCK_400 => [
-        'name' => Exception::MOCK_400,
-        'description' => 'Mock 400 error',
-        'code' => 400,
-    ],
-    Exception::MOCK_500 => [
-        'name' => Exception::MOCK_500,
-        'description' => 'Mock 500 error',
-        'code' => 500,
     ],
 ];

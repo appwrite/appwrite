@@ -84,11 +84,11 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     // Must throw here since dbForProject->createAttribute is performed by db worker
     if ($required && $default) {
-        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED);
+        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for required attribute');
     }
 
     if ($array && $default) {
-        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED);
+        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array attribute');
     }
 
     try {
@@ -184,7 +184,7 @@ App::post('/v1/databases')
 
             $collections = Config::getParam('collections', [])['collections'] ?? [];
             if (empty($collections)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Collections collection is not configured.');
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The "collections" collection is not configured.');
             }
 
             $attributes = [];

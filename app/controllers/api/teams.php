@@ -320,7 +320,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $total = $dbForProject->count('users', [], APP_LIMIT_USERS);
 
                 if ($total >= $limit) {
-                    throw new Exception(Exception::USER_COUNT_EXCEEDED);
+                    throw new Exception(Exception::USER_COUNT_EXCEEDED, 'Project registration is restricted. Contact your administrator for more information.');
                 }
             }
 
@@ -782,7 +782,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception(Exception::TEAM_ID_MISMATCH);
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));

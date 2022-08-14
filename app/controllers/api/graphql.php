@@ -19,6 +19,6 @@ App::post('/v1/graphql')
     ->label('scope', 'public')
     ->action(
         function () {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'GraphQL support is coming soon!');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'GraphQL support is coming soon!', 503);
         }
     );

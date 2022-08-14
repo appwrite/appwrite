@@ -31,7 +31,6 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
-     * - Mocks
      */
 
     /** General */
@@ -81,7 +80,6 @@ class Exception extends \Exception
     public const TEAM_INVALID_SECRET               = 'team_invalid_secret';
     public const TEAM_MEMBERSHIP_MISMATCH          = 'team_membership_mismatch';
     public const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch';
-    public const TEAM_ID_MISMATCH                  = 'team_id_mismatch';
 
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
@@ -174,25 +172,6 @@ class Exception extends \Exception
     public const DOMAIN_NOT_FOUND                  = 'domain_not_found';
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
-
-    /** Mocks */
-    public const MOCK_INVALID_CONTENT_RANGE_HEADER = 'mock_invalid_content_range_header';
-    public const MOCK_FIRST_CHUNK_CANNOT_HAVE_ID = 'mock_first_chunk_cannot_have_id';
-    public const MOCK_CHUNK_MISSING_ID = 'mock_chunk_missing_id';
-    public const MOCK_CHUNK_INVALID_SIZE = 'mock_chunk_invalid_size';
-    public const MOCK_INVALID_FILE_NAME = 'mock_invalid_file_name';
-    public const MOCK_INVALID_FILE_SIZE = 'mock_invalid_file_size';
-    public const MOCK_WRONG_FILE_UPLOADED = 'mock_wrong_file_uploaded';
-    public const MOCK_MISSING_COOKIE = 'mock_missing_cookie';
-    public const MOCK_INVALID_CLIENT_ID = 'mock_invalid_client_id';
-    public const MOCK_INVALID_CLIENT_SECRET = 'mock_invalid_client_secret';
-    public const MOCK_INVALID_TOKEN = 'mock_invalid_token';
-    public const MOCK_INVALID_REFRESH_TOKEN = 'mock_invalid_refresh_token';
-    public const MOCK_INVALID_GRANT_TYPE = 'mock_invalid_grant_type';
-    public const MOCK_FAILED_TO_READ_RESULTS = 'mock_failed_to_read_results';
-    public const MOCK_FAILED_TO_SAVE_RESULTS = 'mock_failed_to_save_results';
-    public const MOCK_400 = 'mock_400';
-    public const MOCK_500 = 'mock_500';
 
     protected $type = '';
 

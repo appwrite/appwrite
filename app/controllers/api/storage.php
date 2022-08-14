@@ -302,7 +302,7 @@ App::delete('/v1/storage/buckets/:bucketId')
         }
 
         if (!$dbForProject->deleteDocument('buckets', $bucketId)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove bucket from DB');
         }
 
         $deletes
@@ -452,7 +452,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         // Check if file size is exceeding allowed limit
         $fileSizeValidator = new FileSize($maximumFileSize);
         if (!$fileSizeValidator->isValid($fileSize)) {
-            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE);
+            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE, 'File size not allowed');
         }
 
         $upload = new Upload();
