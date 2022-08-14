@@ -4,7 +4,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\SMS\Mock;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Auth\Validator\Phone as ValidatorPhone;
+use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
@@ -56,9 +56,9 @@ App::post('/v1/account')
     ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
-    ->param('phone', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('email', '', new Email(), 'User email.', true)
+    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.', true)
+    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('request')
     ->inject('response')
@@ -67,7 +67,7 @@ App::post('/v1/account')
     ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
+    ->action(function (string $userId, string $email, string $password, string $phone, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
@@ -100,6 +100,8 @@ App::post('/v1/account')
                 '$write' => ['user:' . $userId],
                 'email' => $email,
                 'emailVerification' => false,
+                'phone' => $phone,
+                'phoneVerification' => false,
                 'status' => true,
                 'password' => Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
                 'hash' => Auth::DEFAULT_ALGO,
@@ -864,7 +866,7 @@ App::post('/v1/account/sessions/phone')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('phone', '', new ValidatorPhone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -1583,7 +1585,7 @@ App::patch('/v1/account/phone')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ACCOUNT)
-    ->param('number', '', new ValidatorPhone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('response')
     ->inject('user')
