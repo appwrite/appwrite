@@ -296,9 +296,9 @@ class Auth
         $value = '';
 
         for ($i = 0; $i < $length; $i++) {
-            $value .= random_int(0,9);
+            $value .= random_int(0, 9);
         }
-        
+
         return $value;
     }
 
