@@ -1,10 +1,8 @@
 <?php
 
-namespace Appwrite\Auth;
+namespace Appwrite\SMS;
 
-use Appwrite\Extend\Exception;
-
-abstract class Phone
+abstract class Adapter
 {
     /**
      * @var string
@@ -69,7 +67,7 @@ abstract class Phone
         \curl_close($ch);
 
         if ($code >= 400) {
-            throw new Exception($response);
+            throw new \Exception($response);
         }
 
         return $response;

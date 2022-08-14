@@ -149,8 +149,8 @@ services:
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
-      - _APP_PHONE_PROVIDER
-      - _APP_PHONE_SECRET
+      - _APP_SMS_PROVIDER
+      - _APP_SMS_FROM
 
   appwrite-realtime:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -514,8 +514,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_PHONE_PROVIDER
-      - _APP_PHONE_FROM
+      - _APP_SMS_PROVIDER
+      - _APP_SMS_FROM
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 

@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\Account;
 
-use Appwrite\Auth\Phone\Mock;
+use Appwrite\SMS\Adapter\Mock;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;

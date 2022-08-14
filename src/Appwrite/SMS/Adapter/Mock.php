@@ -1,10 +1,10 @@
 <?php
 
-namespace Appwrite\Auth\Phone;
+namespace Appwrite\SMS\Adapter;
 
-use Appwrite\Auth\Phone;
+use Appwrite\SMS\Adapter;
 
-class Mock extends Phone
+class Mock extends Adapter
 {
     /**
      * @var string
