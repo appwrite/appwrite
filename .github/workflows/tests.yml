@@ -30,7 +30,7 @@ jobs:
         docker compose up -d
         sleep 10
     - name: Doctor
-      run: docker compose exec  appwrite logs
+      run: docker compose exec -T  appwrite logs
 
     - name: Environment Variables
       run:  docker compose exec -T appwrite vars
