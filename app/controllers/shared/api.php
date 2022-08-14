@@ -252,7 +252,7 @@ App::shutdown()
         }
 
         $route = $utopia->match($request);
-        $requestParams = array_combine(array_keys($route->getParams()), array_column($route->getParams(), 'value'));
+        $requestParams = $route->getParamsValues();
         $user = $audits->getUser();
 
         $parseLabel = function ($label) use ($responsePayload, $requestParams, $user) {
