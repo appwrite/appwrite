@@ -440,7 +440,7 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-        $this->assertEquals('The current user is not authorized to perform the requested action.', $response['body']['message']);
+        $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
 
         return $data;
     }
