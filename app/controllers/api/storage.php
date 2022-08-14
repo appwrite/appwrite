@@ -1370,6 +1370,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
+    ->inject('request')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('audits')
@@ -1377,7 +1378,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('project')
-    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, Audit $audits, Stats $usage, string $mode, Device $deviceFiles, Document $project) {
+    ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Database $dbForProject, Event $events, Audit $audits, Stats $usage, string $mode, Device $deviceFiles, Document $project) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if (
@@ -1416,10 +1417,9 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($deviceDeleted) {
-            //delete related cache
-            $cacheDir = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId;
-            $deviceLocal = new Local($cacheDir);
-            $deviceLocal->delete($cacheDir, true);
+            $key = md5($request->getURI() . implode('*', $request->getParams()));
+            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
+            $cache->purge($key);
 
             if ($bucket->getAttribute('permission') === 'bucket') {
                 $deleted = Authorization::skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
