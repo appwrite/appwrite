@@ -103,7 +103,7 @@ App::post('/v1/account')
                 'phone' => $phone,
                 'phoneVerification' => false,
                 'status' => true,
-                'password' => Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
+                'password' => (!empty($password)) ? Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS) : '',
                 'hash' => Auth::DEFAULT_ALGO,
                 'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                 'passwordUpdate' => \time(),
