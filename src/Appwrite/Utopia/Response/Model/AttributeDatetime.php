@@ -21,7 +21,7 @@ class AttributeDatetime extends Attribute
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Attribute type.',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('format', [
                 'type' => self::TYPE_DATETIME,
@@ -35,7 +35,7 @@ class AttributeDatetime extends Attribute
                 'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Only null is optional',
                 'default' => null,
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
                 'array' => false,
                 'require' => false,
             ])
