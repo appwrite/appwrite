@@ -116,7 +116,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     } catch (DuplicateException $exception) {
         throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
     } catch (LimitException $exception) {
-        throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED);
+        throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
     }
 
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
@@ -1527,7 +1527,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
 
         if ($count >= $limit) {
-            throw new Exception(Exception::INDEX_LIMIT_EXCEEDED);
+            throw new Exception(Exception::INDEX_LIMIT_EXCEEDED, 'Index limit exceeded.');
         }
 
         // Convert Document[] to array of attribute metadata
