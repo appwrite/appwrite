@@ -127,7 +127,7 @@ App::post('/v1/users/bcrypt')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/import/md5')
+App::post('/v1/users/md5')
     ->desc('Create User with MD5 Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -154,7 +154,7 @@ App::post('/v1/users/import/md5')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/import/argon2')
+App::post('/v1/users/argon2')
     ->desc('Create User with Argon2 Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -181,7 +181,7 @@ App::post('/v1/users/import/argon2')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/import/sha')
+App::post('/v1/users/sha')
     ->desc('Create User with SHA Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -215,7 +215,7 @@ App::post('/v1/users/import/sha')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/import/phpass')
+App::post('/v1/users/phpass')
     ->desc('Create User with PHPass Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -242,7 +242,7 @@ App::post('/v1/users/import/phpass')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/import/scrypt')
+App::post('/v1/users/scrypt')
     ->desc('Create User with Scrypt Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -282,7 +282,7 @@ App::post('/v1/users/import/scrypt')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/import/scrypt-modified')
+App::post('/v1/users/scrypt-modified')
     ->desc('Create User with Scrypt Modified Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
