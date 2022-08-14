@@ -19,16 +19,16 @@ class Func extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Function creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Function creation date in Datetime',
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('$updatedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Function update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Function update date in Datetime',
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('execute', [
                 'type' => self::TYPE_STRING,
@@ -81,16 +81,16 @@ class Func extends Model
                 'example' => '5 4 * * *',
             ])
             ->addRule('scheduleNext', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Function next scheduled execution date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981292,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Function next scheduled execution date in Datetime.',
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('schedulePrevious', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Function next scheduled execution date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981237,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Function Previous scheduled execution date in Datetime.',
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('timeout', [
                 'type' => self::TYPE_INTEGER,

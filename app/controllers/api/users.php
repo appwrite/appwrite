@@ -20,6 +20,7 @@ use Utopia\Database\Role;
 use Utopia\Locale\Locale;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Database;
@@ -69,8 +70,8 @@ App::post('/v1/users')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => Auth::passwordHash($password),
-                'passwordUpdate' => \time(),
-                'registration' => \time(),
+                'passwordUpdate' => DateTime::now(),
+                'registration' => DateTime::now(),
                 'reset' => false,
                 'name' => $name,
                 'prefs' => new \stdClass(),
@@ -556,7 +557,7 @@ App::patch('/v1/users/:userId/password')
 
         $user
             ->setAttribute('password', Auth::passwordHash($password))
-            ->setAttribute('passwordUpdate', \time());
+            ->setAttribute('passwordUpdate', DateTime::now());
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -932,7 +933,7 @@ App::get('/v1/users/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }

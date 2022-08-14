@@ -74,13 +74,16 @@ App::init()
             }
 
             $abuse = new Abuse($timeLimit);
+            $remaining = $timeLimit->remaining();
+            $limit = $timeLimit->limit();
+            $time = (new DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
 
-            if ($timeLimit->limit() && ($timeLimit->remaining() < $closestLimit || is_null($closestLimit))) {
-                $closestLimit = $timeLimit->remaining();
+            if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
+                $closestLimit = $remaining;
                 $response
-                    ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
-                    ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
-                    ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
+                    ->addHeader('X-RateLimit-Limit', $limit)
+                    ->addHeader('X-RateLimit-Remaining', $remaining)
+                    ->addHeader('X-RateLimit-Reset', $time)
                 ;
             }
 
@@ -181,7 +184,6 @@ App::init()
 
             default:
                 throw new Exception('Unsupported authentication route', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
-                break;
         }
     });
 

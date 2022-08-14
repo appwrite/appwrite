@@ -16,6 +16,7 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -24,6 +25,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\DateTime;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
@@ -89,8 +91,8 @@ App::post('/v1/teams')
                 'teamId' => ID::custom($team->getId()),
                 'teamInternalId' => ID::custom($team->getInternalId()),
                 'roles' => $roles,
-                'invited' => \time(),
-                'joined' => \time(),
+                'invited' => DateTime::now(),
+                'joined' => DateTime::now(),
                 'confirm' => true,
                 'secret' => '',
                 'search' => implode(' ', [$membershipId, $user->getId()])
@@ -355,8 +357,8 @@ App::post('/v1/teams/:teamId/memberships')
                      * team invite and OAuth to allow password updates without an
                      * old password
                      */
-                    'passwordUpdate' => 0,
-                    'registration' => \time(),
+                    'passwordUpdate' => null,
+                    'registration' => DateTime::now(),
                     'reset' => false,
                     'name' => $name,
                     'prefs' => new \stdClass(),
@@ -393,8 +395,8 @@ App::post('/v1/teams/:teamId/memberships')
             'teamId' => ID::custom($team->getId()),
             'teamInternalId' => ID::custom($team->getInternalId()),
             'roles' => $roles,
-            'invited' => \time(),
-            'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
+            'invited' => DateTime::now(),
+            'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
             'confirm' => ($isPrivilegedUser || $isAppUser),
             'secret' => Auth::hash($secret),
             'search' => implode(' ', [$membershipId, $invitee->getId()])
@@ -707,7 +709,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         $membership // Attach user to team
-            ->setAttribute('joined', \time())
+            ->setAttribute('joined', DateTime::now())
             ->setAttribute('confirm', true)
         ;
 
@@ -721,7 +723,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
             '$id' => ID::custom($dbForProject->getId()),
@@ -730,7 +732,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'provider' => Auth::SESSION_PROVIDER_EMAIL,
             'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => $expiry,
+            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
@@ -767,8 +769,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ;
 
         $response->dynamic(

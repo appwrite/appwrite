@@ -3,10 +3,12 @@
 namespace Tests\Unit\Auth;
 
 use Appwrite\Auth\Auth;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\ID;
 use Utopia\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Database;
 
 class AuthTest extends TestCase
 {
@@ -72,14 +74,14 @@ class AuthTest extends TestCase
         $tokens1 = [
             new Document([
                 '$id' => ID::custom('token1'),
-                'expire' => time() + 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60 * 24),
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
@@ -89,14 +91,14 @@ class AuthTest extends TestCase
         $tokens2 = [
             new Document([ // Correct secret and type time, wrong expire time
                 '$id' => ID::custom('token1'),
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
@@ -117,13 +119,13 @@ class AuthTest extends TestCase
             new Document([
                 '$id' => ID::custom('token1'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() + 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60 * 24),
                 'secret' => $hash,
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => 'secret2',
             ]),
         ];
@@ -132,13 +134,13 @@ class AuthTest extends TestCase
             new Document([ // Correct secret and type time, wrong expire time
                 '$id' => ID::custom('token1'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => $hash,
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => 'secret2',
             ]),
         ];
@@ -147,13 +149,13 @@ class AuthTest extends TestCase
             new Document([
                 '$id' => ID::custom('token1'),
                 'type' => Auth::TOKEN_TYPE_INVITE,
-                'expire' => time() + 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60 * 24),
                 'secret' => $hash,
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => 'secret2',
             ]),
         ];

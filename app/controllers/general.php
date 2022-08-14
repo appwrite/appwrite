@@ -292,9 +292,9 @@ App::init()
                 $role = Auth::USER_ROLE_APP;
                 $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
-                $expire = $key->getAttribute('expire', 0);
+                $expire = $key->getAttribute('expire');
 
-                if (!empty($expire) && $expire < \time()) {
+                if (!empty($expire) && $expire < DateTime::now()) {
                     throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
                 }
 

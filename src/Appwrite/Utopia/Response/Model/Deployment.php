@@ -17,16 +17,16 @@ class Deployment extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Deployment creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Deployment creation date in Datetime',
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('$updatedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Deployment update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Deployment update date in Datetime',
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,

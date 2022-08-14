@@ -11,6 +11,7 @@ abstract class Model
     public const TYPE_FLOAT = 'double';
     public const TYPE_BOOLEAN = 'boolean';
     public const TYPE_JSON = 'json';
+    public const TYPE_DATETIME = 'datetime';
 
     /**
      * @var bool

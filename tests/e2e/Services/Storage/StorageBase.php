@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
 use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
@@ -51,7 +52,7 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -119,7 +120,7 @@ trait StorageBase
 
         $this->assertEquals(201, $largeFile['headers']['status-code']);
         $this->assertNotEmpty($largeFile['body']['$id']);
-        $this->assertIsInt($largeFile['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($largeFile['body']['$createdAt']));
         $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
@@ -287,7 +288,7 @@ trait StorageBase
 
         $this->assertEquals(200, $file1['headers']['status-code']);
         $this->assertNotEmpty($file1['body']['$id']);
-        $this->assertIsInt($file1['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($file1['body']['$createdAt']));
         $this->assertEquals('logo.png', $file1['body']['name']);
         $this->assertEquals('image/png', $file1['body']['mimeType']);
         $this->assertEquals(47218, $file1['body']['sizeOriginal']);
@@ -582,7 +583,7 @@ trait StorageBase
 
         $this->assertEquals(200, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);

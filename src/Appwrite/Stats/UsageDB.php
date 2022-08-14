@@ -2,6 +2,7 @@
 
 namespace Appwrite\Stats;
 
+use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -12,6 +13,7 @@ class UsageDB extends Usage
         $this->database = $database;
         $this->errorHandler = $errorHandler;
     }
+
     /**
      * Create or Update Mertic
      * Create or update each metric in the stats collection for the given project
@@ -21,12 +23,22 @@ class UsageDB extends Usage
      * @param int $value
      *
      * @return void
+     * @throws Exception
      */
     private function createOrUpdateMetric(string $projectId, string $metric, int $value): void
     {
         foreach ($this->periods as $options) {
             $period = $options['key'];
-            $time = (int) (floor(time() / $options['multiplier']) * $options['multiplier']);
+            $date = new \DateTime();
+            if ($period === '30m') {
+                $minutes = $date->format('i') >= '30' ? "30" : "00";
+                $time = $date->format('Y-m-d H:' . $minutes . ':00');
+            } elseif ($period === '1d') {
+                $time = $date->format('Y-m-d 00:00:00');
+            } else {
+                throw new Exception("Period type not found", 500);
+            }
+
             $id = \md5("{$time}_{$period}_{$metric}");
             $this->database->setNamespace('_' . $projectId);
 
@@ -48,7 +60,7 @@ class UsageDB extends Usage
                         $document->setAttribute('value', $value)
                     );
                 }
-            } catch (\Exception$e) { // if projects are deleted this might fail
+            } catch (Exception$e) { // if projects are deleted this might fail
                 if (is_callable($this->errorHandler)) {
                     call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
                 } else {
@@ -80,7 +92,7 @@ class UsageDB extends Usage
         while ($sum === $limit) {
             try {
                 $results = $this->database->find($collection, $queries, $limit, cursor:$latestDocument);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 if (is_callable($this->errorHandler)) {
                     call_user_func($this->errorHandler, $e, "fetch_documents_project_{$projectId}_collection_{$collection}");
                     return;
@@ -113,6 +125,7 @@ class UsageDB extends Usage
      * @param string $metric
      *
      * @return int
+     * @throws Exception
      */
     private function sum(string $projectId, string $collection, string $attribute, string $metric): int
     {
@@ -122,7 +135,7 @@ class UsageDB extends Usage
             $sum = (int) $this->database->sum($collection, $attribute);
             $this->createOrUpdateMetric($projectId, $metric, $sum);
             return $sum;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             if (is_callable($this->errorHandler)) {
                 call_user_func($this->errorHandler, $e, "fetch_sum_project_{$projectId}_collection_{$collection}");
             } else {
@@ -140,6 +153,7 @@ class UsageDB extends Usage
      * @param string $metric
      *
      * @return int
+     * @throws Exception
      */
     private function count(string $projectId, string $collection, string $metric): int
     {
@@ -149,7 +163,7 @@ class UsageDB extends Usage
             $count = $this->database->count($collection);
             $this->createOrUpdateMetric($projectId, $metric, $count);
             return $count;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             if (is_callable($this->errorHandler)) {
                 call_user_func($this->errorHandler, $e, "fetch_count_project_{$projectId}_collection_{$collection}");
             } else {

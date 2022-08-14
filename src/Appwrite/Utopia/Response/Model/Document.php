@@ -43,16 +43,16 @@ class Document extends Any
                 'example' => '5e5ea5c15117e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Document creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Document creation date in Datetime',
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('$updatedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Document update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Document update date in Datetime',
+                'default' => '',
+                'example' => '1975-12-06 13:30:59',
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,

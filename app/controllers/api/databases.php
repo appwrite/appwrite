@@ -5,6 +5,7 @@ use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
+use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
@@ -16,6 +17,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Validator\Authorization;
@@ -1284,6 +1286,48 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
+
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime')
+    ->alias('/v1/database/collections/:collectionId/attributes/datetime', ['databaseId' => 'default'])
+    ->desc('Create datetime Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('scope', 'collections.write')
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.method', 'createDatetimeAttribute')
+    ->label('sdk.description', '/docs/references/databases/create-datetime-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_DATETIME)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new DatetimeValidator(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('database')
+    ->inject('audits')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
+            'key' => $key,
+            'type' => Database::VAR_DATETIME,
+            'size' => 0,
+            'required' => $required,
+            'default' => $default,
+            'array' => $array,
+            'filters' => ['datetime']
+        ]), $response, $dbForProject, $database, $audits, $events, $usage);
+
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
+    });
+
+
 App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->alias('/v1/database/collections/:collectionId/attributes', ['databaseId' => 'default'])
     ->desc('List Attributes')
@@ -1338,6 +1382,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', [
+        Response::MODEL_ATTRIBUTE_DATETIME,
         Response::MODEL_ATTRIBUTE_BOOLEAN,
         Response::MODEL_ATTRIBUTE_INTEGER,
         Response::MODEL_ATTRIBUTE_FLOAT,
@@ -1377,6 +1422,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $format = $attribute->getAttribute('format');
 
         $model = match ($type) {
+            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
@@ -1461,6 +1507,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         $format = $attribute->getAttribute('format');
 
         $model = match ($type) {
+            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
@@ -1555,7 +1602,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $oldAttributes[] = [
             'key' => '$createdAt',
-            'type' => 'integer',
+            'type' => 'string',
             'status' => 'available',
             'signed' => false,
             'required' => false,
@@ -1566,7 +1613,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $oldAttributes[] = [
             'key' => '$updatedAt',
-            'type' => 'integer',
+            'type' => 'string',
             'status' => 'available',
             'signed' => false,
             'required' => false,
@@ -2504,11 +2551,11 @@ App::get('/v1/databases/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
-                    // TODO@kodumbeats explore performance if query is ordered by time ASC
+                    // Added 3'rd level to Index [period, metric, time] because of order by.
                     $stats[$metric] = array_reverse($stats[$metric]);
                 }
             });
@@ -2616,7 +2663,7 @@ App::get('/v1/databases/:databaseId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -2729,7 +2776,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }

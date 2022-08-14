@@ -12,8 +12,8 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__ . '/../init.php';
 
@@ -147,31 +147,26 @@ class FunctionsV1 extends Worker
                 }
 
                 $cron = new CronExpression($function->getAttribute('schedule'));
-                $next = (int) $cron->getNextRunDate()->format('U');
+                $next = DateTime::format($cron->getNextRunDate());
 
                 $function
                     ->setAttribute('scheduleNext', $next)
-                    ->setAttribute('schedulePrevious', \time());
+                    ->setAttribute('schedulePrevious', DateTime::now());
 
                 $function = $database->updateDocument(
                     'functions',
                     $function->getId(),
-                    $function->setAttribute('scheduleNext', (int) $next)
+                    $function->setAttribute('scheduleNext', $next)
                 );
-
-                if ($function === false) {
-                    throw new Exception('Function update failed.');
-                }
 
                 $reschedule = new Func();
                 $reschedule
                     ->setFunction($function)
                     ->setType('schedule')
                     ->setUser($user)
-                    ->setProject($project);
-
-                // Async task reschedule
-                $reschedule->schedule($next);
+                    ->setProject($project)
+                    ->schedule(new \DateTime($next));
+                ;
 
                 $this->execute(
                     project: $project,
@@ -295,10 +290,9 @@ class FunctionsV1 extends Worker
                 ->setAttribute('stderr', $executionResponse['stderr'])
                 ->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
-            $endtime = \microtime(true);
-            $time = $endtime - $execution->getCreatedAt();
+            $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution
-                ->setAttribute('time', $time)
+                ->setAttribute('time', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());

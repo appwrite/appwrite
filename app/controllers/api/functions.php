@@ -25,6 +25,7 @@ use Appwrite\Task\Validator\Cron;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\ArrayList;
@@ -77,8 +78,8 @@ App::post('/v1/functions')
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
-            'schedulePrevious' => 0,
-            'scheduleNext' => 0,
+            'schedulePrevious' => null,
+            'scheduleNext' => null,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ]));
@@ -260,7 +261,7 @@ App::get('/v1/functions/:functionId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -312,8 +313,8 @@ App::put('/v1/functions/:functionId')
         }
 
         $original = $function->getAttribute('schedule', '');
-        $cron = (!empty($function->getAttribute('deployment', null)) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (!empty($function->getAttribute('deployment', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+        $cron = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
+        $next = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
@@ -321,7 +322,7 @@ App::put('/v1/functions/:functionId')
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
-            'scheduleNext' => (int)$next,
+            'scheduleNext' => $next,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
@@ -333,9 +334,8 @@ App::put('/v1/functions/:functionId')
                 ->setFunction($function)
                 ->setType('schedule')
                 ->setUser($user)
-                ->setProject($project);
-
-            $functionEvent->schedule($next);
+                ->setProject($project)
+                ->schedule(new \DateTime($next));
         }
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -385,11 +385,11 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
 
         $schedule = $function->getAttribute('schedule', '');
         $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'deployment' => $deployment->getId(),
-            'scheduleNext' => (int)$next,
+            'scheduleNext' => $next,
         ])));
 
         if ($next) { // Init first schedule
@@ -397,8 +397,8 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             $functionEvent
                 ->setType('schedule')
                 ->setFunction($function)
-                ->setProject($project);
-            $functionEvent->schedule($next);
+                ->setProject($project)
+                ->schedule(new \DateTime($next));
         }
 
         $events
@@ -935,7 +935,6 @@ App::post('/v1/functions/:functionId/executions')
 
         /** Execute function */
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-        $executionResponse = [];
         try {
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
@@ -956,12 +955,12 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
-            $endtime = \microtime(true);
-            $time = $endtime - $execution->getCreatedAt();
-            $execution->setAttribute('time', $time);
-            $execution->setAttribute('status', 'failed');
-            $execution->setAttribute('statusCode', $th->getCode());
-            $execution->setAttribute('stderr', $th->getMessage());
+            $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
+            $execution
+                ->setAttribute('time', (float)$interval->format('%s.%f'))
+                ->setAttribute('status', 'failed')
+                ->setAttribute('statusCode', $th->getCode())
+                ->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());
         }
 
