@@ -831,6 +831,14 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
         }
 
+        /**
+         * Force document security
+         */
+        $validator = new Authorization('delete');
+        if (!$validator->isValid($membership->getDelete())) {
+            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        }
+
         try {
             $dbForProject->deleteDocument('memberships', $membership->getId());
         } catch (AuthorizationException $exception) {
