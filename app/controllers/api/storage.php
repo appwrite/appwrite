@@ -469,9 +469,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $path = $deviceFiles->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $path = str_ireplace($deviceFiles->getRoot(), $deviceFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
 
-        $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId) {
-            return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-        });
+        $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
 
         $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
         if (!$file->isEmpty()) {

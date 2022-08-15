@@ -1056,9 +1056,9 @@ App::post('/v1/projects/:projectId/platforms')
         $platform = new Document([
             '$id' => ID::unique(),
             '$permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
@@ -1272,9 +1272,9 @@ App::post('/v1/projects/:projectId/domains')
         $domain = new Document([
             '$id' => ID::unique(),
             '$permissions' => [
-                'read(any)',
-                'update(any)',
-                'delete(any)',
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
             ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
