@@ -282,36 +282,36 @@ App::shutdown()
             return $label;
         };
 
-    $pattern = $route->getLabel('audits.resource', null);
-    if (!empty($pattern)) {
-        $resource = $parseLabel($pattern);
-        if (!empty($resource) && $resource !== $pattern) {
-            $audits->setResource($resource);
-        }
-    }
-
-    $pattern = $route->getLabel('audits.userId', null);
-    if (!empty($pattern)) {
-        $userId = $parseLabel($pattern);
-        $user = $dbForProject->getDocument('users', $userId);
-        $audits->setUser($user);
-    }
-
-    if (!empty($audits->getResource())) {
-        /**
-         * audits.payload is switched to default true
-         * in order to auto audit payload for all endpoints
-         */
-        $pattern = $route->getLabel('audits.payload', true);
+        $pattern = $route->getLabel('audits.resource', null);
         if (!empty($pattern)) {
-            $audits->setPayload($responsePayload);
+            $resource = $parseLabel($pattern);
+            if (!empty($resource) && $resource !== $pattern) {
+                $audits->setResource($resource);
+            }
         }
 
-        foreach ($events->getParams() as $key => $value) {
-            $audits->setParam($key, $value);
+        $pattern = $route->getLabel('audits.userId', null);
+        if (!empty($pattern)) {
+            $userId = $parseLabel($pattern);
+            $user = $dbForProject->getDocument('users', $userId);
+            $audits->setUser($user);
         }
-        $audits->trigger();
-    }
+
+        if (!empty($audits->getResource())) {
+            /**
+             * audits.payload is switched to default true
+             * in order to auto audit payload for all endpoints
+             */
+            $pattern = $route->getLabel('audits.payload', true);
+            if (!empty($pattern)) {
+                $audits->setPayload($responsePayload);
+            }
+
+            foreach ($events->getParams() as $key => $value) {
+                $audits->setParam($key, $value);
+            }
+            $audits->trigger();
+        }
 
         if (!empty($deletes->getType())) {
             $deletes->trigger();
@@ -334,8 +334,8 @@ App::shutdown()
                 $usage->setParam($metric, 1);
                 foreach ($usageParams as $param => $value) {
                     $parts = explode('.', $value);
-                    $namespace = $parts[0];
-                    $key = $parts[1];
+                    $namespace = $parts[0] ?? '';
+                    $key = $parts[1] ?? '';
 
                     $params = [];
                     switch ($namespace) {
@@ -362,5 +362,5 @@ App::shutdown()
             ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
             ->setParam('networkResponseSize', $response->getSize())
             ->submit();
-    }
+        }
     });
