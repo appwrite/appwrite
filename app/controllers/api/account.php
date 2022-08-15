@@ -2279,7 +2279,7 @@ App::post('/v1/account/verification/phone')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
-            throw new Exception('Phone provider not configured', 503, Exception::GENERAL_PHONE_DISABLED);
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED);
         }
 
         if (empty($user->getAttribute('phone'))) {
