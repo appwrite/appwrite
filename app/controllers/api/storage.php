@@ -16,9 +16,12 @@ use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
@@ -70,7 +73,7 @@ App::post('/v1/storage/buckets')
     ->inject('events')
     ->action(function (string $bucketId, string $name, ?array $permissions, string $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
-        $bucketId = $bucketId === 'unique()' ? $dbForProject->getId() : $bucketId;
+        $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
         try {
             $files = Config::getParam('collections', [])['files'] ?? [];
             if (empty($files)) {
@@ -156,27 +159,37 @@ App::get('/v1/storage/buckets')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('cursor', '', new UID(), 'ID of the bucket used as the starting point for the query, excluding the bucket itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' .  Database::ORDER_ASC . ' or ' .  Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
 
-        $queries = ($search) ? [new Query('name', Query::TYPE_SEARCH, [$search])] : [];
+        $filterQueries = [];
 
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('name', $search);
+        }
+
+        $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
         if (!empty($cursor)) {
-            $cursorBucket = $dbForProject->getDocument('buckets', $cursor);
+            $cursorDocument = $dbForProject->getDocument('buckets', $cursor);
 
-            if ($cursorBucket->isEmpty()) {
+            if ($cursorDocument->isEmpty()) {
                 throw new Exception("Bucket '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         $usage->setParam('storage.buckets.read', 1);
 
         $response->dynamic(new Document([
-            'buckets' => $dbForProject->find('buckets', $queries, $limit, $offset, [], [$orderType], $cursorBucket ?? null, $cursorDirection),
-            'total' => $dbForProject->count('buckets', $queries, APP_LIMIT_COUNT),
+            'buckets' => $dbForProject->find('buckets', \array_merge($filterQueries, $queries)),
+            'total' => $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BUCKET_LIST);
     });
 
@@ -338,7 +351,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new CustomId(), 'File ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file.', false)
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE]), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -362,22 +375,44 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
-        $permissions = PermissionsProcessor::addDefaultsIfNeeded(
-            $permissions,
-            $user->getId(),
-            allowedPermissions: \array_filter(
-                Database::PERMISSIONS,
-                fn ($permission) => $permission !== Database::PERMISSION_CREATE
-            ),
+        /**
+         * Add permissions for current the user for any missing types
+         * from the allowed permissions for this resource type.
+         */
+        $allowedPermissions = \array_filter(
+            Database::PERMISSIONS,
+            fn ($permission) => $permission !== Database::PERMISSION_CREATE
         );
-
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
-
-        if (!PermissionsProcessor::allowedForResourceType('file', $permissions)) {
-            throw new Exception('Invalid permission', 400, Exception::GENERAL_PERMISSION_INVALID);
+        if (\is_null($permissions)) {
+            $permissions = [];
+            if (!empty($user->getId())) {
+                foreach ($allowedPermissions as $permission) {
+                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                }
+            }
+        } else {
+            foreach ($allowedPermissions as $permission) {
+                // Default any missing allowed permissions to the current user
+                if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($user->getId())) {
+                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                }
+            }
         }
-        if (!PermissionsProcessor::allowedForUserType($permissions)) {
-            throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    if (!\str_starts_with($permission, $type)) {
+                        continue;
+                    }
+                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+                    }
+                }
+            }
         }
 
         $file = $request->getFiles('file');
@@ -404,7 +439,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         $contentRange = $request->getHeader('content-range');
-        $fileId = $fileId === 'unique()' ? $dbForProject->getId() : $fileId;
+        $fileId = $fileId === 'unique()' ? ID::unique() : $fileId;
         $chunk = 1;
         $chunks = 1;
 
@@ -453,9 +488,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $path = $deviceFiles->getPath($fileId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $path = str_ireplace($deviceFiles->getRoot(), $deviceFiles->getRoot() . DIRECTORY_SEPARATOR . $bucket->getId(), $path); // Add bucket id to path after root
 
-        $file = Authorization::skip(function () use ($dbForProject, $bucket, $fileId) {
-            return $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-        });
+        $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
 
         $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
         if (!$file->isEmpty()) {
@@ -544,7 +577,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
 
-                    $file = Authorization::skip(fn () => $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc));
+                    $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                 } else {
                     $file = $file
                         ->setAttribute('$permissions', $permissions)
@@ -559,7 +592,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('metadata', $metadata)
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
-                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                    $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                 }
             } catch (StructureException $exception) {
                 throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
@@ -580,7 +613,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             try {
                 if ($file->isEmpty()) {
                     $doc = new Document([
-                        '$id' => $fileId,
+                        '$id' => ID::custom($fileId),
                         '$permissions' => $permissions,
                         'bucketId' => $bucket->getId(),
                         'name' => $fileName,
@@ -597,13 +630,13 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
 
-                    $file = Authorization::skip(fn () => $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc));
+                    $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                 } else {
                     $file = $file
                         ->setAttribute('chunksUploaded', $chunksUploaded)
                         ->setAttribute('metadata', $metadata);
 
-                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                    $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                 }
             } catch (StructureException $exception) {
                 throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
@@ -642,7 +675,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
@@ -660,34 +693,32 @@ App::get('/v1/storage/buckets/:bucketId/files')
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
-        $queries = [new Query('bucketId', Query::TYPE_EQUAL, [$bucketId])];
+        $filterQueries = [];
 
-        if ($search) {
-            $queries[] = [new Query('name', Query::TYPE_SEARCH, [$search])];
-        }
-
-        if (!empty($cursor)) {
-            if ($bucket->getAttribute('fileSecurity', false)) {
-                $cursorFile = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
-            } else {
-                $cursorFile = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor));
-            }
-
-            if ($cursorFile->isEmpty()) {
-                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('name', $search);
         }
 
         $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         if ($bucket->getAttribute('fileSecurity', false)) {
-            $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection);
+            $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), \array_merge($filterQueries, $queries));
+            $total = $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
         } else {
-            $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorFile ?? null, $cursorDirection));
+            $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), \array_merge($filterQueries, $queries)));
+            $total = Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         }
 
         $usage
@@ -697,7 +728,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         $response->dynamic(new Document([
             'files' => $files,
-            'total' => $dbForProject->count('bucket_' . $bucket->getInternalId(), $queries, APP_LIMIT_COUNT),
+            'total' => $total,
         ]), Response::MODEL_FILE_LIST);
     });
 
@@ -1276,10 +1307,20 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
-
-        if (!PermissionsProcessor::allowedForUserType($permissions)) {
-            throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    if (!\str_starts_with($permission, $type)) {
+                        continue;
+                    }
+                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+                    }
+                }
+            }
         }
 
         $file->setAttribute('$permissions', $permissions);
@@ -1453,9 +1494,11 @@ App::get('/v1/storage/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -1475,7 +1518,7 @@ App::get('/v1/storage/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -1562,9 +1605,11 @@ App::get('/v1/storage/:bucketId/usage')
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -1584,7 +1629,7 @@ App::get('/v1/storage/:bucketId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }

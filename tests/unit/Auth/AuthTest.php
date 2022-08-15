@@ -3,9 +3,12 @@
 namespace Tests\Unit\Auth;
 
 use Appwrite\Auth\Auth;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
 use Utopia\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Database;
 
 class AuthTest extends TestCase
 {
@@ -15,7 +18,7 @@ class AuthTest extends TestCase
     public function tearDown(): void
     {
         Authorization::cleanRoles();
-        Authorization::setRole('role:all');
+        Authorization::setRole('any');
     }
 
     public function testCookieName(): void
@@ -70,15 +73,15 @@ class AuthTest extends TestCase
         $hash = Auth::hash($secret);
         $tokens1 = [
             new Document([
-                '$id' => 'token1',
-                'expire' => time() + 60 * 60 * 24,
+                '$id' => ID::custom('token1'),
+                'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60 * 24),
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
             ]),
             new Document([
-                '$id' => 'token2',
-                'expire' => time() - 60 * 60 * 24,
+                '$id' => ID::custom('token2'),
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
@@ -87,15 +90,15 @@ class AuthTest extends TestCase
 
         $tokens2 = [
             new Document([ // Correct secret and type time, wrong expire time
-                '$id' => 'token1',
-                'expire' => time() - 60 * 60 * 24,
+                '$id' => ID::custom('token1'),
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
             ]),
             new Document([
-                '$id' => 'token2',
-                'expire' => time() - 60 * 60 * 24,
+                '$id' => ID::custom('token2'),
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
@@ -114,45 +117,45 @@ class AuthTest extends TestCase
         $hash = Auth::hash($secret);
         $tokens1 = [
             new Document([
-                '$id' => 'token1',
+                '$id' => ID::custom('token1'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() + 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60 * 24),
                 'secret' => $hash,
             ]),
             new Document([
-                '$id' => 'token2',
+                '$id' => ID::custom('token2'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => 'secret2',
             ]),
         ];
 
         $tokens2 = [
             new Document([ // Correct secret and type time, wrong expire time
-                '$id' => 'token1',
+                '$id' => ID::custom('token1'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => $hash,
             ]),
             new Document([
-                '$id' => 'token2',
+                '$id' => ID::custom('token2'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => 'secret2',
             ]),
         ];
 
         $tokens3 = [ // Correct secret and expire time, wrong type
             new Document([
-                '$id' => 'token1',
+                '$id' => ID::custom('token1'),
                 'type' => Auth::TOKEN_TYPE_INVITE,
-                'expire' => time() + 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), 60 * 60 * 24),
                 'secret' => $hash,
             ]),
             new Document([
-                '$id' => 'token2',
+                '$id' => ID::custom('token2'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::addSeconds(new \DateTime(), -60 * 60 * 24),
                 'secret' => 'secret2',
             ]),
         ];
@@ -173,11 +176,11 @@ class AuthTest extends TestCase
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_ADMIN]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_DEVELOPER]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER]));
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APP]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS]));
         $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_SYSTEM]));
 
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APP, Auth::USER_ROLE_APP]));
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APP, Auth::USER_ROLE_GUESTS]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_APPS]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_GUESTS]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_ADMIN, Auth::USER_ROLE_DEVELOPER]));
     }
@@ -190,11 +193,11 @@ class AuthTest extends TestCase
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_ADMIN]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_DEVELOPER]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER]));
-        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APP]));
+        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_SYSTEM]));
 
-        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APP, Auth::USER_ROLE_APP]));
-        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APP, Auth::USER_ROLE_GUESTS]));
+        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_APPS]));
+        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_GUESTS]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_ADMIN, Auth::USER_ROLE_DEVELOPER]));
     }
@@ -213,17 +216,17 @@ class AuthTest extends TestCase
     public function testUserRoles(): void
     {
         $user  = new Document([
-            '$id' => '123',
+            '$id' => ID::custom('123'),
             'memberships' => [
                 [
-                    'teamId' => 'abc',
+                    'teamId' => ID::custom('abc'),
                     'roles' => [
                         'administrator',
                         'moderator'
                     ]
                 ],
                 [
-                    'teamId' => 'def',
+                    'teamId' => ID::custom('def'),
                     'roles' => [
                         'guest'
                     ]
@@ -247,17 +250,17 @@ class AuthTest extends TestCase
     {
         Authorization::setRole(Auth::USER_ROLE_OWNER);
         $user  = new Document([
-            '$id' => '123',
+            '$id' => ID::custom('123'),
             'memberships' => [
                 [
-                    'teamId' => 'abc',
+                    'teamId' => ID::custom('abc'),
                     'roles' => [
                         'administrator',
                         'moderator'
                     ]
                 ],
                 [
-                    'teamId' => 'def',
+                    'teamId' => ID::custom('def'),
                     'roles' => [
                         'guest'
                     ]
@@ -279,19 +282,19 @@ class AuthTest extends TestCase
 
     public function testAppUserRoles(): void
     {
-        Authorization::setRole(Auth::USER_ROLE_APP);
+        Authorization::setRole(Auth::USER_ROLE_APPS);
         $user  = new Document([
-            '$id' => '123',
+            '$id' => ID::custom('123'),
             'memberships' => [
                 [
-                    'teamId' => 'abc',
+                    'teamId' => ID::custom('abc'),
                     'roles' => [
                         'administrator',
                         'moderator'
                     ]
                 ],
                 [
-                    'teamId' => 'def',
+                    'teamId' => ID::custom('def'),
                     'roles' => [
                         'guest'
                     ]

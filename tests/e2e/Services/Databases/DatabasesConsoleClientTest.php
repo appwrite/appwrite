@@ -6,6 +6,9 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class DatabasesConsoleClientTest extends Scope
 {
@@ -19,7 +22,7 @@ class DatabasesConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'invalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -33,7 +36,7 @@ class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::read(Role::any()),

@@ -4,6 +4,10 @@ namespace Tests\E2E\Services\Webhooks;
 
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 trait WebhooksBase
 {
@@ -25,7 +29,7 @@ trait WebhooksBase
            'x-appwrite-project' => $this->getProject()['$id'],
            'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-           'databaseId' => 'unique()',
+           'databaseId' => ID::unique(),
            'name' => 'Actors DB',
         ]);
 
@@ -39,7 +43,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -189,7 +193,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'firstName' => 'Chris',
                 'lastName' => 'Evans',
@@ -312,7 +316,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'firstName' => 'Bradly',
                 'lastName' => 'Cooper',
@@ -377,7 +381,7 @@ trait WebhooksBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -485,14 +489,14 @@ trait WebhooksBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'folderId' => 'xyz',
+            'folderId' => ID::custom('xyz'),
         ]);
 
         $fileId = $file['body']['$id'];
@@ -523,7 +527,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['$createdAt']));
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -582,7 +586,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['$createdAt']));
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -632,7 +636,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['$createdAt']));
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -687,7 +691,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -714,7 +718,7 @@ trait WebhooksBase
         $this->assertEquals('Arsenal', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['$createdAt']));
 
         /**
          * Test for FAILURE
@@ -759,7 +763,7 @@ trait WebhooksBase
         $this->assertEquals('Demo New', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['$createdAt']));
 
         /**
          * Test for FAILURE
@@ -776,7 +780,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Chelsea'
         ]);
 
@@ -808,7 +812,7 @@ trait WebhooksBase
         $this->assertEquals('Chelsea', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $this->assertIsInt($webhook['data']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['$createdAt']));
 
         /**
          * Test for FAILURE
@@ -869,7 +873,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);
         $this->assertCount(2, $webhook['data']['roles']);
-        $this->assertIsInt($webhook['data']['joined']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['invited']));
         $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
 
         /**
@@ -941,7 +945,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);
         $this->assertCount(2, $webhook['data']['roles']);
-        $this->assertIsInt($webhook['data']['joined']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['invited']));
         $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
     }
 }

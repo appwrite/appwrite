@@ -3,6 +3,8 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 
 trait TeamsBaseServer
 {
@@ -61,8 +63,7 @@ trait TeamsBaseServer
         $this->assertEquals($email, $response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertIsInt($response['body']['joined']);
-        $this->assertGreaterThan(0, $response['body']['joined']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
 
         $userUid = $response['body']['userId'];
@@ -206,8 +207,7 @@ trait TeamsBaseServer
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertEquals(1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertIsInt($response['body']['$createdAt']);
-
+        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
 
         /** Delete User */
         $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $userUid, array_merge([
@@ -232,6 +232,6 @@ trait TeamsBaseServer
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertEquals(0, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertIsInt($response['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
     }
 }

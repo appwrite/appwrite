@@ -13,7 +13,27 @@
       let showYAxis = element.getAttribute('data-show-y-axis') || false;
       let colors = (element.getAttribute('data-colors') || 'blue,green,orange,red').split(',');
       let themes = { 'blue': '#29b5d9', 'green': '#4eb55b', 'orange': '#fba233', 'red': '#dc3232', 'create': '#00b680', 'read': '#009cde', 'update': '#696fd7', 'delete': '#da5d95', };
-      let range = { '24h': 'H:i', '7d': 'd F Y', '30d': 'd F Y', '90d': 'd F Y' }
+      let range = {
+        '24h': {
+          hour: '2-digit',
+          minute: '2-digit'
+        },
+        '7d': {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+        },
+        '30d': {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+        },
+        '90d': {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+        }
+      }
       let ticksCount = 5;
 
       element.parentNode.insertBefore(wrapper, element.nextSibling);
@@ -97,10 +117,14 @@
             return;
           }
 
-          let dateFormat = (value.range && range[value.range]) ? range[value.range] : 'd F Y';
+          let dateFormat = (value.range && range[value.range]) ? range[value.range] : {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+          };
 
           for (let x = 0; x < data.length; x++) {
-            if(data[x].value > highest) {
+            if (data[x].value > highest) {
               highest = data[x].value;
             }
             config.data.datasets[i].data[x] = data[x].value;
@@ -108,7 +132,7 @@
           }
         }
 
-        if(highest == 0) {
+        if (highest == 0) {
           config.options.scales.y.ticks.stepSize = 1;
           config.options.scales.y.max = ticksCount;
         } else {
@@ -117,8 +141,8 @@
           config.options.scales.y.ticks.stepSize = highest / ticksCount;
           config.options.scales.y.max = highest;
         }
-        
-        if(chart) {
+
+        if (chart) {
           chart.destroy();
         }
         else {

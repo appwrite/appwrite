@@ -17,22 +17,22 @@ class Execution extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Execution creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Execution creation date in Datetime',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Execution update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Execution upate date in Datetime',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Execution permissions.',
+                'description' => 'Execution roles.',
                 'default' => '',
-                'example' => 'any',
+                'example' => ['any'],
                 'array' => true,
             ])
             ->addRule('functionId', [

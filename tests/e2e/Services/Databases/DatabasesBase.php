@@ -4,6 +4,10 @@ namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 use Utopia\Database\Database;
+use Utopia\Database\ID;
+use Utopia\Database\DateTime;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 trait DatabasesBase
 {
@@ -17,7 +21,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'Test Database'
         ]);
 
@@ -42,7 +46,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -86,7 +90,7 @@ trait DatabasesBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'documentId' => 'unique()',
+                'documentId' => ID::unique(),
                 'data' => [
                     'title' => 'Captain America',
                 ],
@@ -172,6 +176,14 @@ trait DatabasesBase
             'array' => true,
         ]);
 
+        $datetime = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'birthDay',
+            'required' => false,
+        ]);
         $this->assertEquals(202, $title['headers']['status-code']);
         $this->assertEquals($title['body']['key'], 'title');
         $this->assertEquals($title['body']['type'], 'string');
@@ -195,6 +207,11 @@ trait DatabasesBase
         $this->assertEquals($actors['body']['required'], false);
         $this->assertEquals($actors['body']['array'], true);
 
+        $this->assertEquals($datetime['headers']['status-code'], 202);
+        $this->assertEquals($datetime['body']['key'], 'birthDay');
+        $this->assertEquals($datetime['body']['type'], 'datetime');
+        $this->assertEquals($datetime['body']['required'], false);
+
         // wait for database worker to create attributes
         sleep(2);
 
@@ -205,11 +222,12 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['attributes']);
-        $this->assertCount(4, $movies['body']['attributes']);
+        $this->assertCount(5, $movies['body']['attributes']);
         $this->assertEquals($movies['body']['attributes'][0]['key'], $title['body']['key']);
         $this->assertEquals($movies['body']['attributes'][1]['key'], $releaseYear['body']['key']);
         $this->assertEquals($movies['body']['attributes'][2]['key'], $duration['body']['key']);
         $this->assertEquals($movies['body']['attributes'][3]['key'], $actors['body']['key']);
+        $this->assertEquals($movies['body']['attributes'][4]['key'], $datetime['body']['key']);
 
         return $data;
     }
@@ -225,7 +243,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Response Models',
             'permissions' => [],
             'documentSecurity' => true,
@@ -324,6 +342,16 @@ trait DatabasesBase
             'default' => true,
         ]);
 
+        $datetime = $this->client->call(Client::METHOD_POST, $attributesPath . '/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'datetime',
+            'required' => false,
+            'default' => null,
+        ]);
+
         $this->assertEquals(202, $string['headers']['status-code']);
         $this->assertEquals('string', $string['body']['key']);
         $this->assertEquals('string', $string['body']['type']);
@@ -391,6 +419,13 @@ trait DatabasesBase
         $this->assertEquals(false, $boolean['body']['array']);
         $this->assertEquals(true, $boolean['body']['default']);
 
+        $this->assertEquals(202, $datetime['headers']['status-code']);
+        $this->assertEquals('datetime', $datetime['body']['key']);
+        $this->assertEquals('datetime', $datetime['body']['type']);
+        $this->assertEquals(false, $datetime['body']['required']);
+        $this->assertEquals(false, $datetime['body']['array']);
+        $this->assertEquals(null, $datetime['body']['default']);
+
         // wait for database worker to create attributes
         sleep(30);
 
@@ -437,6 +472,12 @@ trait DatabasesBase
         ]));
 
         $booleanResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $boolean['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $datetimeResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $datetime['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -516,6 +557,14 @@ trait DatabasesBase
         $this->assertEquals($boolean['body']['array'], $booleanResponse['body']['array']);
         $this->assertEquals($boolean['body']['default'], $booleanResponse['body']['default']);
 
+        $this->assertEquals(200, $datetimeResponse['headers']['status-code']);
+        $this->assertEquals($datetime['body']['key'], $datetimeResponse['body']['key']);
+        $this->assertEquals($datetime['body']['type'], $datetimeResponse['body']['type']);
+        $this->assertEquals('available', $datetimeResponse['body']['status']);
+        $this->assertEquals($datetime['body']['required'], $datetimeResponse['body']['required']);
+        $this->assertEquals($datetime['body']['array'], $datetimeResponse['body']['array']);
+        $this->assertEquals($datetime['body']['default'], $datetimeResponse['body']['default']);
+
         $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -523,12 +572,12 @@ trait DatabasesBase
         ]));
 
         $this->assertEquals(200, $attributes['headers']['status-code']);
-        $this->assertEquals(8, $attributes['body']['total']);
+        $this->assertEquals(9, $attributes['body']['total']);
 
         $attributes = $attributes['body']['attributes'];
 
         $this->assertIsArray($attributes);
-        $this->assertCount(8, $attributes);
+        $this->assertCount(9, $attributes);
 
         $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
@@ -595,6 +644,13 @@ trait DatabasesBase
         $this->assertEquals($booleanResponse['body']['required'], $attributes[7]['required']);
         $this->assertEquals($booleanResponse['body']['array'], $attributes[7]['array']);
         $this->assertEquals($booleanResponse['body']['default'], $attributes[7]['default']);
+
+        $this->assertEquals($datetimeResponse['body']['key'], $attributes[8]['key']);
+        $this->assertEquals($datetimeResponse['body']['type'], $attributes[8]['type']);
+        $this->assertEquals($datetimeResponse['body']['status'], $attributes[8]['status']);
+        $this->assertEquals($datetimeResponse['body']['required'], $attributes[8]['required']);
+        $this->assertEquals($datetimeResponse['body']['array'], $attributes[8]['array']);
+        $this->assertEquals($datetimeResponse['body']['default'], $attributes[8]['default']);
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -607,7 +663,7 @@ trait DatabasesBase
         $attributes = $collection['body']['attributes'];
 
         $this->assertIsArray($attributes);
-        $this->assertCount(8, $attributes);
+        $this->assertCount(9, $attributes);
 
         $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
@@ -674,6 +730,13 @@ trait DatabasesBase
         $this->assertEquals($booleanResponse['body']['required'], $attributes[7]['required']);
         $this->assertEquals($booleanResponse['body']['array'], $attributes[7]['array']);
         $this->assertEquals($booleanResponse['body']['default'], $attributes[7]['default']);
+
+        $this->assertEquals($datetimeResponse['body']['key'], $attributes[8]['key']);
+        $this->assertEquals($datetimeResponse['body']['type'], $attributes[8]['type']);
+        $this->assertEquals($datetimeResponse['body']['status'], $attributes[8]['status']);
+        $this->assertEquals($datetimeResponse['body']['required'], $attributes[8]['required']);
+        $this->assertEquals($datetimeResponse['body']['array'], $attributes[8]['array']);
+        $this->assertEquals($datetimeResponse['body']['default'], $attributes[8]['default']);
 
         /**
          * Test for FAILURE
@@ -769,6 +832,23 @@ trait DatabasesBase
         $this->assertEquals('available', $movies['body']['indexes'][1]['status']);
         $this->assertEquals('available', $movies['body']['indexes'][2]['status']);
 
+
+        $releaseWithDate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'birthDay',
+            'type' => 'key',
+            'attributes' => ['birthDay'],
+        ]);
+
+        $this->assertEquals(202, $releaseWithDate['headers']['status-code']);
+        $this->assertEquals('birthDay', $releaseWithDate['body']['key']);
+        $this->assertEquals('key', $releaseWithDate['body']['type']);
+        $this->assertCount(1, $releaseWithDate['body']['attributes']);
+        $this->assertEquals('birthDay', $releaseWithDate['body']['attributes'][0]);
+
         return $data;
     }
 
@@ -782,10 +862,11 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Captain America',
                 'releaseYear' => 1944,
+                'birthDay' => '1975-06-12 14:12:55+02:00',
                 'actors' => [
                     'Chris Evans',
                     'Samuel Jackson',
@@ -802,10 +883,11 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Spider-Man: Far From Home',
                 'releaseYear' => 2019,
+                'birthDay' => null,
                 'actors' => [
                     'Tom Holland',
                     'Zendaya Maree Stoermer',
@@ -823,10 +905,11 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Spider-Man: Homecoming',
                 'releaseYear' => 2017,
+                'birthDay' => '1975-06-12 14:12:55 America/New_York',
                 'duration' => 0,
                 'actors' => [
                     'Tom Holland',
@@ -844,7 +927,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'releaseYear' => 2020, // Missing title, expect an 400 error
             ],
@@ -863,6 +946,7 @@ trait DatabasesBase
         $this->assertCount(2, $document1['body']['actors']);
         $this->assertEquals($document1['body']['actors'][0], 'Chris Evans');
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
+        $this->assertEquals($document1['body']['birthDay'], '1975-06-12 12:12:55.000');
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertEquals($document2['body']['title'], 'Spider-Man: Far From Home');
@@ -874,6 +958,7 @@ trait DatabasesBase
         $this->assertEquals($document2['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document2['body']['actors'][1], 'Zendaya Maree Stoermer');
         $this->assertEquals($document2['body']['actors'][2], 'Samuel Jackson');
+        $this->assertEquals($document2['body']['birthDay'], null);
 
         $this->assertEquals(201, $document3['headers']['status-code']);
         $this->assertEquals($document3['body']['title'], 'Spider-Man: Homecoming');
@@ -884,6 +969,7 @@ trait DatabasesBase
         $this->assertCount(2, $document3['body']['actors']);
         $this->assertEquals($document3['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document3['body']['actors'][1], 'Zendaya Maree Stoermer');
+        $this->assertEquals($document3['body']['birthDay'], '1975-06-12 18:12:55.000');// UTC for NY
 
         $this->assertEquals(400, $document4['headers']['status-code']);
 
@@ -942,7 +1028,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'databaseId' => 'default',
+            'databaseId' => ID::custom('default'),
             'name' => 'Default'
         ]);
 
@@ -958,7 +1044,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [],
             'documentSecurity' => true,
@@ -1008,6 +1094,7 @@ trait DatabasesBase
             $this->assertEquals($response['body']['title'], $document['title']);
             $this->assertEquals($response['body']['releaseYear'], $document['releaseYear']);
             $this->assertEquals($response['body']['$permissions'], $document['$permissions']);
+            $this->assertEquals($response['body']['birthDay'], $document['birthDay']);
             $this->assertFalse(array_key_exists('$internalId', $response['body']));
         }
     }
@@ -1285,7 +1372,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['title.search("Captain America")'],
+            'queries' => ['search("title", "Captain America")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1296,7 +1383,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$id.equal("' . $documents['body']['documents'][0]['$id'] . '")'],
+            'queries' => ['equal("$id", "' . $documents['body']['documents'][0]['$id'] . '")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1307,7 +1394,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['title.search("Homecoming")'],
+            'queries' => ['search("title", "Homecoming")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1318,7 +1405,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['title.search("spider")'],
+            'queries' => ['search("title", "spider")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1330,7 +1417,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['releaseYear.equal(1944)'],
+            'queries' => ['equal("releaseYear", 1944)'],
         ]);
 
         $this->assertCount(1, $documents['body']['documents']);
@@ -1340,7 +1427,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['releaseYear.notEqual(1944)'],
+            'queries' => ['notEqual("releaseYear", 1944)'],
         ]);
 
         $this->assertCount(2, $documents['body']['documents']);
@@ -1351,7 +1438,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$createdAt.greater(132)'],
+            'queries' => ['greaterThan("$createdAt", "1976-06-12")'],
         ]);
 
         $this->assertCount(3, $documents['body']['documents']);
@@ -1360,7 +1447,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['$createdAt.lesser(132)'],
+            'queries' => ['lessThan("$createdAt", "1976-06-12")'],
         ]);
 
         $this->assertCount(0, $documents['body']['documents']);
@@ -1372,7 +1459,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['actors.equal("Tom Holland")'],
+            'queries' => ['equal("actors", "Tom Holland")'],
         ]);
         $this->assertEquals(400, $documents['headers']['status-code']);
         $this->assertEquals('Index not found: actors', $documents['body']['message']);
@@ -1387,7 +1474,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['releaseYear.equal(' . implode(',', $conditions) . ')'],
+            'queries' => ['equal("releaseYear", [' . implode(',', $conditions) . '])'],
         ]);
 
         $this->assertEquals(400, $documents['headers']['status-code']);
@@ -1402,10 +1489,23 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['title.search(' . implode(',', $conditions) . ')'],
+            'queries' => ['search("title", ' . implode(',', $conditions) . ')'],
         ]);
 
         $this->assertEquals(400, $documents['headers']['status-code']);
+
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['greaterThan("birthDay", "1960-01-01 10:10:10+02:30")'],
+        ]);
+
+        $this->assertEquals($documents['headers']['status-code'], 200);
+        $this->assertEquals('1975-06-12 12:12:55.000', $documents['body']['documents'][0]['birthDay']);
+        $this->assertEquals('1975-06-12 18:12:55.000', $documents['body']['documents'][1]['birthDay']);
+        $this->assertCount(2, $documents['body']['documents']);
 
         return [];
     }
@@ -1420,10 +1520,11 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Thor: Ragnaroc',
                 'releaseYear' => 2017,
+                'birthDay' => '1976-06-12 14:12:55',
                 'actors' => [],
                 '$createdAt' => 5 // Should be ignored
             ],
@@ -1439,10 +1540,11 @@ trait DatabasesBase
         $this->assertEquals(201, $document['headers']['status-code']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertNotEquals($document['body']['$createdAt'], 5);
-        $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-        $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-        $this->assertContains('delete(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
+        $this->assertEquals(true, DateTime::isValid($document['body']['$createdAt']));
+        $this->assertEquals(true, DateTime::isValid($document['body']['birthDay']));
+        $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
 
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -1463,9 +1565,9 @@ trait DatabasesBase
         $this->assertEquals($document['body']['$collection'], $data['moviesId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertContains('read(users)', $document['body']['$permissions']);
-        $this->assertContains('update(users)', $document['body']['$permissions']);
-        $this->assertContains('delete(users)', $document['body']['$permissions']);
+        $this->assertContains(Permission::read(Role::users()), $document['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::users()), $document['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::users()), $document['body']['$permissions']);
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -1491,16 +1593,17 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Thor: Ragnarok',
                 'releaseYear' => 2017,
+                'birthDay' => '1975-06-12 14:12:55',
                 'actors' => [],
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1539,7 +1642,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'InvalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -1551,7 +1654,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'invalidDocumentStructure',
             'permissions' => [
                 Permission::create(Role::any()),
@@ -1687,7 +1790,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'defaultRequired',
+            'attributeId' => ID::custom('defaultRequired'),
             'required' => true,
             'default' => 12
         ]);
@@ -1697,7 +1800,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'enumDefault',
+            'attributeId' => ID::custom('enumDefault'),
             'elements' => ['north', 'west'],
             'default' => 'south'
         ]);
@@ -1707,9 +1810,29 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'attributeId' => 'enumDefault',
+            'attributeId' => ID::custom('enumDefault'),
             'elements' => ['north', 'west'],
             'default' => 'NORTH'
+        ]);
+
+        $goodDatetime = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'birthDay',
+            'required' => false,
+            'default' => null
+        ]);
+
+        $datetimeDefault = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'badBirthDay',
+            'required' => false,
+            'default' => 'bad'
         ]);
 
         $this->assertEquals(202, $email['headers']['status-code']);
@@ -1721,6 +1844,7 @@ trait DatabasesBase
         $this->assertEquals(202, $upperBound['headers']['status-code']);
         $this->assertEquals(202, $lowerBound['headers']['status-code']);
         $this->assertEquals(202, $enum['headers']['status-code']);
+        $this->assertEquals(202, $goodDatetime['headers']['status-code']);
         $this->assertEquals(400, $invalidRange['headers']['status-code']);
         $this->assertEquals(400, $defaultArray['headers']['status-code']);
         $this->assertEquals(400, $defaultRequired['headers']['status-code']);
@@ -1728,7 +1852,7 @@ trait DatabasesBase
         $this->assertEquals(400, $enumDefaultStrict['headers']['status-code']);
         $this->assertEquals('Minimum value must be lesser than maximum value', $invalidRange['body']['message']);
         $this->assertEquals('Cannot set default value for array attributes', $defaultArray['body']['message']);
-
+        $this->assertEquals(400, $datetimeDefault['headers']['status-code']);
         // wait for worker to add attributes
         sleep(3);
 
@@ -1738,7 +1862,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), []);
 
-        $this->assertCount(9, $collection['body']['attributes']);
+        $this->assertCount(10, $collection['body']['attributes']);
 
         /**
          * Test for successful validation
@@ -1748,14 +1872,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'email' => 'user@example.com',
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1763,14 +1887,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'enum' => 'yes',
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1778,14 +1902,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'ip' => '1.1.1.1',
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1793,14 +1917,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'url' => 'http://www.example.com',
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1808,14 +1932,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'range' => 3,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1823,14 +1947,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'floatRange' => 1.4,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1838,14 +1962,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'probability' => 0.99999,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1853,14 +1977,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'upperBound' => 8,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1868,14 +1992,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'lowerBound' => 8,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1897,14 +2021,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'email' => 'user@@example.com',
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1912,14 +2036,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'enum' => 'badEnum',
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1927,14 +2051,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'ip' => '1.1.1.1.1',
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1942,14 +2066,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'url' => 'example...com',
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1957,14 +2081,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'range' => 11,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1972,14 +2096,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'floatRange' => 2.5,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -1987,14 +2111,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'probability' => 1.1,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -2002,14 +2126,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'upperBound' => 11,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -2017,15 +2141,27 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'lowerBound' => 3,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
+        ]);
+
+        $badTime = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'unique()',
+            'data' => [
+                'birthDay' => '2020-10-10 27:30:10+01:00',
+            ],
+            'read' => ['user:' . $this->getUser()['$id']],
+            'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
         $this->assertEquals(400, $badEmail['headers']['status-code']);
@@ -2037,6 +2173,7 @@ trait DatabasesBase
         $this->assertEquals(400, $badProbability['headers']['status-code']);
         $this->assertEquals(400, $tooHigh['headers']['status-code']);
         $this->assertEquals(400, $tooLow['headers']['status-code']);
+        $this->assertEquals(400, $badTime['headers']['status-code']);
         $this->assertEquals('Invalid document structure: Attribute "email" has invalid format. Value must be a valid email address', $badEmail['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "enum" has invalid format. Value must be one of (yes, no, maybe)', $badEnum['body']['message']);
         $this->assertEquals('Invalid document structure: Attribute "ip" has invalid format. Value must be a valid IP address', $badIp['body']['message']);
@@ -2058,7 +2195,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Captain America',
                 'releaseYear' => 1944,
@@ -2075,9 +2212,9 @@ trait DatabasesBase
 
         if ($this->getSide() == 'client') {
             $this->assertCount(3, $document['body']['$permissions']);
-            $this->assertContains('read(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-            $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-            $this->assertContains('delete(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
+            $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+            $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+            $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
         }
 
         if ($this->getSide() == 'server') {
@@ -2109,7 +2246,7 @@ trait DatabasesBase
         // existing document permissions on update, unless none were supplied,
         // so that specific types can be removed if wanted.
         $this->assertCount(1, $document['body']['$permissions']);
-        $this->assertContains('read(any)', $document['body']['$permissions']);
+        $this->assertContains(Permission::read(Role::any()), $document['body']['$permissions']);
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -2124,7 +2261,7 @@ trait DatabasesBase
         // existing document permissions on update, unless none were supplied,
         // so that specific types can be removed if wanted.
         $this->assertCount(1, $document['body']['$permissions']);
-        $this->assertContains('read(any)', $document['body']['$permissions']);
+        $this->assertContains(Permission::read(Role::any()), $document['body']['$permissions']);
 
         // Reset Permissions
 
@@ -2156,27 +2293,27 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'EnforceCollectionPermissions',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('EnforceCollectionPermissions', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
-        $user = 'user:' . $this->getUser()['$id'];
+        $user = $this->getUser()['$id'];
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'enforceCollectionPermissions',
             'documentSecurity' => true,
             'permissions' => [
-                'read(' . $user . ')',
-                'create(' . $user . ')',
-                'update(' . $user . ')',
-                'delete(' . $user . ')',
+                Permission::read(Role::user($user)),
+                Permission::create(Role::user($user)),
+                Permission::update(Role::user($user)),
+                Permission::delete(Role::user($user)),
             ],
         ]);
 
@@ -2224,14 +2361,14 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'attribute' => 'one',
             ],
             'permissions' => [
-                'read(' . $user . ')',
-                'update(' . $user . ')',
-                'delete(' . $user . ')',
+                Permission::read(Role::user($user)),
+                Permission::update(Role::user($user)),
+                Permission::delete(Role::user($user)),
             ]
         ]);
 
@@ -2241,13 +2378,13 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'attribute' => 'one',
             ],
             'permissions' => [
-                'update(' . $user . ')',
-                'delete(' . $user . ')',
+                Permission::update(Role::user($user)),
+                Permission::delete(Role::user($user)),
             ]
         ]);
 
@@ -2258,13 +2395,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'attribute' => 'one',
             ],
             'permissions' => [
-                Permission::read(Role::user('other')),
-                Permission::update(Role::user('other')),
+                Permission::read(Role::user(ID::custom('other'))),
+                Permission::update(Role::user(ID::custom('other'))),
             ],
         ]);
 
@@ -2301,7 +2438,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'userId' => 'other',
+            'userId' => ID::custom('other'),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -2370,7 +2507,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Captain America',
                 'releaseYear' => 1944,
@@ -2380,9 +2517,9 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -2393,7 +2530,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Captain America 5',
                 'releaseYear' => 1944,
@@ -2403,9 +2540,9 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -2416,7 +2553,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Captain America',
                 'releaseYear' => 1944,
@@ -2426,9 +2563,9 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -2452,7 +2589,7 @@ trait DatabasesBase
         ];
 
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', $headers, [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Creation Date Test',
                 'releaseYear' => 2000
@@ -2484,16 +2621,17 @@ trait DatabasesBase
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documentId, $headers, [
             'data' => [
                 'title' => 'Again Updated Date Test',
-                '$createdAt' => 1657271810, // Try to update it, should not work
-                '$updatedAt' => 1657271810 // Try to update it, should not work
+                '$createdAt' => '2022-08-01 13:09:23.040', // $createdAt is not updatable
+                '$updatedAt' => '2022-08-01 13:09:23.050' // system will update it not api
             ]
         ]);
 
         $this->assertEquals($document['body']['title'], 'Again Updated Date Test');
         $this->assertEquals($document['body']['$createdAt'], $createdAt);
+        $this->assertNotEquals($document['body']['$createdAt'], '2022-08-01 13:09:23.040');
         $this->assertNotEquals($document['body']['$updatedAt'], $updatedAt);
         $this->assertNotEquals($document['body']['$updatedAt'], $updatedAtSecond);
-        $this->assertNotEquals($document['body']['$updatedAt'], 1657271810);
+        $this->assertNotEquals($document['body']['$updatedAt'], '2022-08-01 13:09:23.050');
 
         return $data;
     }
@@ -2506,7 +2644,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'Empty Permissions',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -2519,13 +2657,13 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
-                Permission::create(Role::user($this->getUser()['$id'])),
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ],
             'documentSecurity' => true,
         ]);
@@ -2556,7 +2694,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Captain America',
             ],
@@ -2571,9 +2709,9 @@ trait DatabasesBase
 
         $this->assertEquals(201, $document['headers']['status-code']);
         $this->assertCount(3, $document['body']['$permissions']);
-        $this->assertContains('read(any)', $document['body']['$permissions']);
-        $this->assertContains('update(any)', $document['body']['$permissions']);
-        $this->assertContains('delete(any)', $document['body']['$permissions']);
+        $this->assertContains(Permission::read(Role::any()), $document['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::any()), $document['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::any()), $document['body']['$permissions']);
 
         // Send only read permission
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents/' . $id, array_merge([
@@ -2581,7 +2719,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
             ]
         ]);
 
@@ -2594,16 +2732,16 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ],
         ]);
 
         if ($this->getSide() == 'server') {
             $this->assertEquals(200, $document['headers']['status-code']);
             $this->assertCount(2, $document['body']['$permissions']);
-            $this->assertContains('update(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
-            $this->assertContains('delete(user:' . $this->getUser()['$id'] . ')', $document['body']['$permissions']);
+            $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+            $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
         }
 
         // remove collection

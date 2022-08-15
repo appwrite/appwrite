@@ -1459,7 +1459,8 @@
          *
          * You can use this endpoint to show different country flags icons to your
          * users. The code argument receives the 2 letter country code. Use width,
-         * height and quality arguments to change the output settings.
+         * height and quality arguments to change the output settings. Country codes
+         * follow the [ISO 3166-1](http://en.wikipedia.org/wiki/ISO_3166-1) standard.
          *
          * When one dimension is specified and the other is 0, the image is scaled
          * with preserved aspect ratio. If both dimensions are 0, the API provides an
@@ -2065,6 +2066,53 @@
                     throw new AppwriteException('Missing required parameter: "required"');
                 }
                 let path = '/databases/{databaseId}/collections/{collectionId}/attributes/boolean'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
+                let payload = {};
+                if (typeof key !== 'undefined') {
+                    payload['key'] = key;
+                }
+                if (typeof required !== 'undefined') {
+                    payload['required'] = required;
+                }
+                if (typeof xdefault !== 'undefined') {
+                    payload['default'] = xdefault;
+                }
+                if (typeof array !== 'undefined') {
+                    payload['array'] = array;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create DateTime Attribute
+         *
+         *
+         * @param {string} databaseId
+         * @param {string} collectionId
+         * @param {string} key
+         * @param {boolean} required
+         * @param {string} xdefault
+         * @param {boolean} array
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createDatetimeAttribute(databaseId, collectionId, key, required, xdefault, array) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof databaseId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "databaseId"');
+                }
+                if (typeof collectionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "collectionId"');
+                }
+                if (typeof key === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "key"');
+                }
+                if (typeof required === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "required"');
+                }
+                let path = '/databases/{databaseId}/collections/{collectionId}/attributes/datetime'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
                 let payload = {};
                 if (typeof key !== 'undefined') {
                     payload['key'] = key;
@@ -4395,7 +4443,7 @@
          * @param {string} projectId
          * @param {string} name
          * @param {string[]} scopes
-         * @param {number} expire
+         * @param {string} expire
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -4460,7 +4508,7 @@
          * @param {string} keyId
          * @param {string} name
          * @param {string[]} scopes
-         * @param {number} expire
+         * @param {string} expire
          * @throws {AppwriteException}
          * @returns {Promise}
          */

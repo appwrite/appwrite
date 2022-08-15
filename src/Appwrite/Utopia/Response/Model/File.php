@@ -23,22 +23,22 @@ class File extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'File creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'File creation date in Datetime',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'File update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'File update date in Datetime',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
                 'description' => 'File permissions.',
                 'default' => [],
-                'example' => Permission::read(Role::any()),
+                'example' => ['read("any")'],
                 'array' => true,
             ])
             ->addRule('name', [

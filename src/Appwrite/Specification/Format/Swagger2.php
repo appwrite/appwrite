@@ -278,6 +278,11 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         $node['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
                         break;
+                    case 'Utopia\Database\Validator\DatetimeValidator':
+                        $node['type'] = $validator->getType();
+                        $node['format'] = 'datetime';
+                        $node['x-example'] = '2022-06-15T13:45:30.496';
+                        break;
                     case 'Appwrite\Network\Validator\Email':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'email';
@@ -313,6 +318,14 @@ class Swagger2 extends Format
                             'type' => 'string',
                         ];
                         $node['x-example'] = '["read(any)"]';
+                        break;
+                    case 'Utopia\Database\Validator\Roles':
+                        $node['type'] = $validator->getType();
+                        $node['collectionFormat'] = 'multi';
+                        $node['items'] = [
+                            'type' => 'string',
+                        ];
+                        $node['x-example'] = '["any"]';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['type'] = $validator->getType();
@@ -446,6 +459,7 @@ class Swagger2 extends Format
 
                 switch ($rule['type']) {
                     case 'string':
+                    case 'datetime':
                         $type = 'string';
                         break;
 

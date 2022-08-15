@@ -4,6 +4,10 @@ namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 trait StorageBase
 {
@@ -17,7 +21,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
@@ -38,7 +42,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -48,7 +52,7 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -64,7 +68,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'permissions' => [
@@ -116,7 +120,7 @@ trait StorageBase
 
         $this->assertEquals(201, $largeFile['headers']['status-code']);
         $this->assertNotEmpty($largeFile['body']['$id']);
-        $this->assertIsInt($largeFile['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($largeFile['body']['$createdAt']));
         $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
@@ -163,7 +167,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -181,7 +185,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-1.png'), 'image/png', 'kitten-1.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -201,7 +205,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-3.gif'), 'image/gif', 'kitten-3.gif'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -221,7 +225,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'maximumFileSize' => 200000000, //200MB
@@ -284,7 +288,7 @@ trait StorageBase
 
         $this->assertEquals(200, $file1['headers']['status-code']);
         $this->assertNotEmpty($file1['body']['$id']);
-        $this->assertIsInt($file1['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($file1['body']['$createdAt']));
         $this->assertEquals('logo.png', $file1['body']['name']);
         $this->assertEquals('image/png', $file1['body']['mimeType']);
         $this->assertEquals(47218, $file1['body']['sizeOriginal']);
@@ -476,7 +480,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'testcache',
+            'fileId' => ID::custom('testcache'),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -522,7 +526,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'testcache',
+            'fileId' => ID::custom('testcache'),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-2.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -579,7 +583,7 @@ trait StorageBase
 
         $this->assertEquals(200, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);

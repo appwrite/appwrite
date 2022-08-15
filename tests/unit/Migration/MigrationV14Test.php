@@ -5,6 +5,7 @@ namespace Tests\Unit\Migration;
 use ReflectionClass;
 use Appwrite\Migration\Version\V14;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
 
 class MigrationV14Test extends MigrationTest
 {
@@ -19,8 +20,8 @@ class MigrationV14Test extends MigrationTest
     public function testMigrateProjects(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
-            '$collection' => 'projects',
+            '$id' => ID::custom('appwrite'),
+            '$collection' => ID::custom('projects'),
             'version' => '0.14.0'
         ]));
 
@@ -31,7 +32,7 @@ class MigrationV14Test extends MigrationTest
     public function testMigrateKeys(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
+            '$id' => ID::custom('appwrite'),
             '$collection' => 'keys'
         ]));
 
@@ -42,7 +43,7 @@ class MigrationV14Test extends MigrationTest
     public function testMigrateWebhooks(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
+            '$id' => ID::custom('appwrite'),
             '$collection' => 'webhooks'
         ]));
 
@@ -53,8 +54,8 @@ class MigrationV14Test extends MigrationTest
     public function testMigrateUsers(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
-            '$collection' => 'users',
+            '$id' => ID::custom('appwrite'),
+            '$collection' => ID::custom('users'),
             'phoneVerification' => null
         ]));
 
@@ -65,8 +66,8 @@ class MigrationV14Test extends MigrationTest
     public function testMigratePlatforms(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
-            '$collection' => 'platforms',
+            '$id' => ID::custom('appwrite'),
+            '$collection' => ID::custom('platforms'),
             '$createdAt' => null,
             '$updatedAt' => null,
             'dateCreated' => 123456789,
@@ -80,8 +81,8 @@ class MigrationV14Test extends MigrationTest
     public function testMigrateFunctions(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
-            '$collection' => 'functions',
+            '$id' => ID::custom('appwrite'),
+            '$collection' => ID::custom('functions'),
             '$createdAt' => null,
             '$updatedAt' => null,
             'dateCreated' => 123456789,
@@ -95,8 +96,8 @@ class MigrationV14Test extends MigrationTest
     public function testMigrateDeployments(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
-            '$collection' => 'deployments',
+            '$id' => ID::custom('appwrite'),
+            '$collection' => ID::custom('deployments'),
             '$createdAt' => null,
             'dateCreated' => 123456789,
         ]));
@@ -107,8 +108,8 @@ class MigrationV14Test extends MigrationTest
     public function testMigrateExecutions(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
-            '$collection' => 'executions',
+            '$id' => ID::custom('appwrite'),
+            '$collection' => ID::custom('executions'),
             '$createdAt' => null,
             'dateCreated' => 123456789,
         ]));
@@ -119,8 +120,8 @@ class MigrationV14Test extends MigrationTest
     public function testMigrateTeams(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
-            '$collection' => 'teams',
+            '$id' => ID::custom('appwrite'),
+            '$collection' => ID::custom('teams'),
             '$createdAt' => null,
             'dateCreated' => 123456789,
         ]));
@@ -131,8 +132,8 @@ class MigrationV14Test extends MigrationTest
     public function testMigrateAudits(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
-            '$collection' => 'audit',
+            '$id' => ID::custom('appwrite'),
+            '$collection' => ID::custom('audit'),
             'resource' => 'collection/movies',
             'event' => 'collections.movies.create'
         ]));
@@ -141,8 +142,8 @@ class MigrationV14Test extends MigrationTest
         $this->assertEquals($document->getAttribute('event'), 'databases.default.collections.movies.create');
 
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
-            '$collection' => 'audit',
+            '$id' => ID::custom('appwrite'),
+            '$collection' => ID::custom('audit'),
             'resource' => 'document/avatar',
             'event' => 'collections.movies.documents.avatar.create'
         ]));
@@ -154,16 +155,16 @@ class MigrationV14Test extends MigrationTest
     public function testMigrateStats(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
-            '$collection' => 'stats',
+            '$id' => ID::custom('appwrite'),
+            '$collection' => ID::custom('stats'),
             'metric' => 'database.collections.62b2039844d4277495d0.documents.create'
         ]));
 
         $this->assertEquals($document->getAttribute('metric'), 'databases.default.collections.62b2039844d4277495d0.documents.create');
 
         $document = $this->fixDocument(new Document([
-            '$id' => 'appwrite',
-            '$collection' => 'stats',
+            '$id' => ID::custom('appwrite'),
+            '$collection' => ID::custom('stats'),
             'metric' => 'users.create'
         ]));
 

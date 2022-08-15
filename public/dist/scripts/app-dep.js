@@ -257,6 +257,15 @@ if(typeof required!=='undefined'){payload['required']=required;}
 if(typeof xdefault!=='undefined'){payload['default']=xdefault;}
 if(typeof array!=='undefined'){payload['array']=array;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createDatetimeAttribute(databaseId,collectionId,key,required,xdefault,array){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof key==='undefined'){throw new AppwriteException('Missing required parameter: "key"');}
+if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
+let path='/databases/{databaseId}/collections/{collectionId}/attributes/datetime'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};if(typeof key!=='undefined'){payload['key']=key;}
+if(typeof required!=='undefined'){payload['required']=required;}
+if(typeof xdefault!=='undefined'){payload['default']=xdefault;}
+if(typeof array!=='undefined'){payload['array']=array;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 createEmailAttribute(databaseId,collectionId,key,required,xdefault,array){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof key==='undefined'){throw new AppwriteException('Missing required parameter: "key"');}

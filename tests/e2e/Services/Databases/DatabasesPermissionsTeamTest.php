@@ -6,6 +6,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class DatabasesPermissionsTeamTest extends Scope
 {
@@ -42,7 +45,7 @@ class DatabasesPermissionsTeamTest extends Scope
         $this->assertEquals(201, $db['headers']['status-code']);
 
         $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => 'collection1',
+            'collectionId' => ID::custom('collection1'),
             'name' => 'Collection 1',
             'permissions' => [
                 Permission::read(Role::team($teams['team1']['$id'])),
@@ -61,7 +64,7 @@ class DatabasesPermissionsTeamTest extends Scope
         ]);
 
         $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => 'collection2',
+            'collectionId' => ID::custom('collection2'),
             'name' => 'Collection 2',
             'permissions' => [
                 Permission::read(Role::team($teams['team2']['$id'])),
@@ -138,7 +141,7 @@ class DatabasesPermissionsTeamTest extends Scope
         $this->createCollections($this->teams);
 
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection1'] . '/documents', $this->getServerHeader(), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
@@ -146,7 +149,7 @@ class DatabasesPermissionsTeamTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection2'] . '/documents', $this->getServerHeader(), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Ipsum',
             ],
@@ -189,7 +192,7 @@ class DatabasesPermissionsTeamTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users[$user]['session'],
         ], [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Ipsum',
             ],

@@ -5,6 +5,9 @@ use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
+use Utopia\Database\Permission;
+use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;
@@ -15,12 +18,13 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
-use Utopia\Database\Validator\QueryValidator;
+use Utopia\Database\Validator\Query as QueryValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -94,7 +98,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     try {
         $attribute = new Document([
-            '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
+            '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
             'key' => $key,
             'databaseInternalId' => $db->getInternalId(),
             'databaseId' => $db->getId(),
@@ -173,7 +177,7 @@ App::post('/v1/databases')
     ->inject('events')
     ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, EventAudit $audits, Stats $usage, Event $events) {
 
-        $databaseId = $databaseId == 'unique()' ? $dbForProject->getId() : $databaseId;
+        $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
         try {
             $dbForProject->createDocument('databases', new Document([
@@ -247,31 +251,37 @@ App::get('/v1/databases')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
 
+        $filterQueries = [];
+
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('search', $search);
+        }
+
+        $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === 'ASC' ? Query::orderAsc('') : Query::orderDesc('');
         if (!empty($cursor)) {
             $cursorDocument = $dbForProject->getDocument('databases', $cursor);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
-        }
 
-        $queries = [];
-
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         $usage->setParam('databases.read', 1);
 
         $response->dynamic(new Document([
-            'databases' => $dbForProject->find('databases', $queries, $limit, $offset, [], [$orderType], $cursorDocument ?? null, $cursorDirection),
-            'total' => $dbForProject->count('databases', $queries, APP_LIMIT_COUNT),
+            'databases' => $dbForProject->find('databases', \array_merge($filterQueries, $queries)),
+            'total' => $dbForProject->count('databases', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_DATABASE_LIST);
     });
 
@@ -344,7 +354,7 @@ App::get('/v1/databases/:databaseId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => $log['userId'],
+                'userId' => ID::custom($log['userId']),
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
@@ -513,9 +523,7 @@ App::post('/v1/databases/:databaseId/collections')
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
 
-        $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
-
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
+        $collectionId = $collectionId == 'unique()' ? ID::unique() : $collectionId;
 
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
@@ -573,7 +581,7 @@ App::get('/v1/databases/:databaseId/collections')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
@@ -585,18 +593,26 @@ App::get('/v1/databases/:databaseId/collections')
             throw new Exception('Database not found', 404, Exception::DATABASE_NOT_FOUND);
         }
 
-        if (!empty($cursor)) {
-            $cursorCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $cursor);
+        $filterQueries = [];
 
-            if ($cursorCollection->isEmpty()) {
-                throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('search', $search);
         }
 
         $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === 'ASC' ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $cursor);
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER
+                ? Query::cursorAfter($cursorDocument)
+                : Query::cursorBefore($cursorDocument);
         }
 
         $usage
@@ -604,8 +620,8 @@ App::get('/v1/databases/:databaseId/collections')
             ->setParam('databases.collections.read', 1);
 
         $response->dynamic(new Document([
-            'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries, $limit, $offset, [], [$orderType], $cursorCollection ?? null, $cursorDirection),
-            'total' => $dbForProject->count('database_' . $database->getInternalId(), $queries, APP_LIMIT_COUNT),
+            'collections' => $dbForProject->find('database_' . $database->getInternalId(), \array_merge($filterQueries, $queries)),
+            'total' => $dbForProject->count('database_' . $database->getInternalId(), $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
@@ -776,7 +792,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         }
 
         $permissions ??= $collection->getPermissions() ?? [];
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
+
         $enabled ??= $collection->getAttribute('enabled', true);
 
         try {
@@ -1283,6 +1299,49 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
+
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime')
+    ->alias('/v1/database/collections/:collectionId/attributes/datetime', ['databaseId' => 'default'])
+    ->desc('Create DateTime Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('scope', 'collections.write')
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.method', 'createDatetimeAttribute')
+    ->label('sdk.description', '/docs/references/databases/create-datetime-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_DATETIME)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new DatetimeValidator(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('database')
+    ->inject('audits')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
+            'key' => $key,
+            'type' => Database::VAR_DATETIME,
+            'size' => 0,
+            'required' => $required,
+            'default' => $default,
+            'array' => $array,
+            'filters' => ['datetime']
+        ]), $response, $dbForProject, $database, $audits, $events, $usage);
+
+        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
+        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
+    });
+
+
 App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->alias('/v1/database/collections/:collectionId/attributes', ['databaseId' => 'default'])
     ->desc('List Attributes')
@@ -1337,6 +1396,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', [
+        Response::MODEL_ATTRIBUTE_DATETIME,
         Response::MODEL_ATTRIBUTE_BOOLEAN,
         Response::MODEL_ATTRIBUTE_INTEGER,
         Response::MODEL_ATTRIBUTE_FLOAT,
@@ -1344,7 +1404,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         Response::MODEL_ATTRIBUTE_ENUM,
         Response::MODEL_ATTRIBUTE_URL,
         Response::MODEL_ATTRIBUTE_IP,
-        Response::MODEL_ATTRIBUTE_STRING,])// needs to be last, since its condition would dominate any other string attribute
+        Response::MODEL_ATTRIBUTE_DATETIME,
+        Response::MODEL_ATTRIBUTE_STRING])// needs to be last, since its condition would dominate any other string attribute
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1376,6 +1437,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $format = $attribute->getAttribute('format');
 
         $model = match ($type) {
+            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
@@ -1460,6 +1522,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         $format = $attribute->getAttribute('format');
 
         $model = match ($type) {
+            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
@@ -1529,8 +1592,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         $count = $dbForProject->count('indexes', [
-            new Query('collectionInternalId', Query::TYPE_EQUAL, [$collection->getInternalId()]),
-            new Query('databaseInternalId', Query::TYPE_EQUAL, [$db->getInternalId()])
+            Query::equal('collectionInternalId', [$collection->getInternalId()]),
+            Query::equal('databaseInternalId', [$db->getInternalId()])
         ], 61);
 
         $limit = 64 - MariaDB::getNumberOfDefaultIndexes();
@@ -1554,7 +1617,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $oldAttributes[] = [
             'key' => '$createdAt',
-            'type' => 'integer',
+            'type' => 'string',
             'status' => 'available',
             'signed' => false,
             'required' => false,
@@ -1565,7 +1628,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $oldAttributes[] = [
             'key' => '$updatedAt',
-            'type' => 'integer',
+            'type' => 'string',
             'status' => 'available',
             'signed' => false,
             'required' => false,
@@ -1600,7 +1663,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         try {
             $index = $dbForProject->createDocument('indexes', new Document([
-                '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
+                '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
                 'databaseInternalId' => $db->getInternalId(),
@@ -1831,7 +1894,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE]), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -1870,26 +1933,49 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
-        $permissions = PermissionsProcessor::addDefaultsIfNeeded(
-            $permissions,
-            $user->getId(),
-            allowedPermissions: \array_filter(
-                Database::PERMISSIONS,
-                fn ($permission) => $permission !== Database::PERMISSION_CREATE
-            ),
+        /**
+         * Add permissions for current the user for any missing types
+         * from the allowed permissions for this resource type.
+         */
+        $allowedPermissions = \array_filter(
+            Database::PERMISSIONS,
+            fn ($permission) => $permission !== Database::PERMISSION_CREATE
         );
-        
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
-
-        if (!PermissionsProcessor::allowedForResourceType('document', $permissions)) {
-            throw new Exception('Invalid permission', 400, Exception::GENERAL_PERMISSION_INVALID);
+        if (\is_null($permissions)) {
+            $permissions = [];
+            if (!empty($user->getId())) {
+                foreach ($allowedPermissions as $permission) {
+                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                }
+            }
+        } else {
+            foreach ($allowedPermissions as $permission) {
+                // Default any missing allowed permissions to the current user
+                if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($user->getId())) {
+                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                }
+            }
         }
-        if (!PermissionsProcessor::allowedForUserType($permissions)) {
-            throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    if (!\str_starts_with($permission, $type)) {
+                        continue;
+                    }
+                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+                    }
+                }
+            }
         }
 
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
-        $data['$id'] = $documentId == 'unique()' ? $dbForProject->getId() : $documentId;
+        $data['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
         $data['$permissions'] = $permissions;
 
         try {
@@ -1944,7 +2030,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('cursor', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
     ->param('orderAttributes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes used to sort results. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' order attributes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
-    ->param('orderTypes', [], new ArrayList(new WhiteList(['DESC', 'ASC'], true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' order types are allowed.', true)
+    ->param('orderTypes', [], new ArrayList(new WhiteList([Database::ORDER_DESC, Database::ORDER_ASC], true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' order types are allowed.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
@@ -1972,48 +2058,46 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
-        $queries = \array_map(function ($query) {
-            $query = Query::parse($query);
-
-            if (\count($query->getValues()) > 100) {
-                throw new Exception("You cannot use more than 100 query values on attribute '{$query->getAttribute()}'", 400, Exception::GENERAL_QUERY_LIMIT_EXCEEDED);
-            }
-
-            return $query;
+        $filterQueries = \array_map(function ($query) {
+            return Query::parse($query);
         }, $queries);
 
-        if (!empty($orderAttributes)) {
-            $validator = new OrderAttributes($collection->getAttribute('attributes', []), $collection->getAttribute('indexes', []), true);
-            if (!$validator->isValid($orderAttributes)) {
-                throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
-            }
+        $otherQueries = [];
+        $otherQueries[] = Query::limit($limit);
+        $otherQueries[] = Query::offset($offset);
+        foreach ($orderTypes as $i => $orderType) {
+            $otherQueries[] = $orderType === Database::ORDER_DESC ? Query::orderDesc($orderAttributes[$i] ?? '') : Query::orderAsc($orderAttributes[$i] ?? '');
         }
 
-        if (!empty($queries)) {
-            $validator = new QueriesValidator(new QueryValidator($collection->getAttribute('attributes', [])), $collection->getAttribute('indexes', []), true);
-            if (!$validator->isValid($queries)) {
-                throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
-            }
-        }
-
-        $cursorDocument = null;
         if (!empty($cursor)) {
             if ($documentSecurity) {
-                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor));
-            } else {
                 $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
+            } else {
+                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor));
             }
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
+
+            $otherQueries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+        }
+
+        $allQueries = \array_merge($filterQueries, $otherQueries);
+
+        if (!empty($allQueries)) {
+            $attributes = $collection->getAttribute('attributes', []);
+            $validator = new QueriesValidator(new QueryValidator($attributes), $attributes, $collection->getAttribute('indexes', []), true);
+            if (!$validator->isValid($allQueries)) {
+                throw new Exception($validator->getDescription(), 400, Exception::GENERAL_QUERY_INVALID);
+            }
         }
 
         if ($documentSecurity) {
-            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection);
-            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
+            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $allQueries);
+            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
         } else {
-            $documents = Authorization::skip(fn() => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $limit, $offset, $orderAttributes, $orderTypes, $cursorDocument ?? null, $cursorDirection));
-            $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT));
+            $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $allQueries));
+            $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         }
 
         /**
@@ -2255,8 +2339,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception('Document not found', 404, Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
-
         if ($documentSecurity) {
             $valid |= $validator->isValid($document->getUpdate());
         }
@@ -2264,11 +2346,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
+        // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            if (!\is_null($permissions)) {
-                if (!PermissionsProcessor::allowedForUserType($permissions)) {
-                    throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    if (!\str_starts_with($permission, $type)) {
+                        continue;
+                    }
+                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+                    }
                 }
             }
         }
@@ -2477,9 +2567,11 @@ App::get('/v1/databases/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -2499,11 +2591,11 @@ App::get('/v1/databases/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
-                    // TODO@kodumbeats explore performance if query is ordered by time ASC
+                    // Added 3'rd level to Index [period, metric, time] because of order by.
                     $stats[$metric] = array_reverse($stats[$metric]);
                 }
             });
@@ -2589,9 +2681,11 @@ App::get('/v1/databases/:databaseId/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -2611,7 +2705,7 @@ App::get('/v1/databases/:databaseId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -2702,9 +2796,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -2724,7 +2820,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }

@@ -2,6 +2,7 @@
 
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\ID;
 
 $providers = Config::getParam('providers', []);
 $auth = Config::getParam('auth', []);
@@ -17,12 +18,12 @@ $auth = Config::getParam('auth', []);
 
 $collections = [
     'databases' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'databases',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('databases'),
         'name' => 'Databases',
         'attributes' => [
             [
-                '$id' => 'name',
+                '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'size' => 256,
                 'required' => true,
@@ -31,7 +32,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'search',
+                '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -44,7 +45,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_fulltext_search',
+                '$id' => ID::custom('_fulltext_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
@@ -53,12 +54,12 @@ $collections = [
         ],
     ],
     'collections' => [
-        '$collection' => 'databases',
-        '$id' => 'collections',
+        '$collection' => ID::custom('databases'),
+        '$id' => ID::custom('collections'),
         'name' => 'Collections',
         'attributes' => [
             [
-                '$id' => 'databaseInternalId',
+                '$id' => ID::custom('databaseInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -69,7 +70,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'databaseId',
+                '$id' => ID::custom('databaseId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,
@@ -80,7 +81,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => 'name',
+                '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'size' => 256,
                 'required' => true,
@@ -89,7 +90,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'enabled',
+                '$id' => ID::custom('enabled'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
                 'size' => 0,
@@ -100,7 +101,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => 'documentSecurity',
+                '$id' => ID::custom('documentSecurity'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
                 'size' => 0,
@@ -111,7 +112,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => 'attributes',
+                '$id' => ID::custom('attributes'),
                 'type' => Database::VAR_STRING,
                 'size' => 1000000,
                 'required' => false,
@@ -120,7 +121,7 @@ $collections = [
                 'filters' => ['subQueryAttributes'],
             ],
             [
-                '$id' => 'indexes',
+                '$id' => ID::custom('indexes'),
                 'type' => Database::VAR_STRING,
                 'size' => 1000000,
                 'required' => false,
@@ -129,7 +130,7 @@ $collections = [
                 'filters' => ['subQueryIndexes'],
             ],
             [
-                '$id' => 'search',
+                '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -142,7 +143,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_fulltext_search',
+                '$id' => ID::custom('_fulltext_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
@@ -152,12 +153,12 @@ $collections = [
     ],
 
     'attributes' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'attributes',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('attributes'),
         'name' => 'Attributes',
         'attributes' => [
             [
-                '$id' => 'databaseInternalId',
+                '$id' => ID::custom('databaseInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -168,7 +169,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'databaseId',
+                '$id' => ID::custom('databaseId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -179,7 +180,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'collectionInternalId',
+                '$id' => ID::custom('collectionInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -190,7 +191,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'collectionId',
+                '$id' => ID::custom('collectionId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -201,7 +202,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'key',
+                '$id' => ID::custom('key'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -212,7 +213,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'type',
+                '$id' => ID::custom('type'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -223,7 +224,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'status',
+                '$id' => ID::custom('status'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16,
@@ -234,7 +235,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'size',
+                '$id' => ID::custom('size'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -245,7 +246,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'required',
+                '$id' => ID::custom('required'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -256,7 +257,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'default',
+                '$id' => ID::custom('default'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -267,7 +268,7 @@ $collections = [
                 'filters' => ['casting'],
             ],
             [
-                '$id' => 'signed',
+                '$id' => ID::custom('signed'),
                 'type' => Database::VAR_BOOLEAN,
                 'size' => 0,
                 'signed' => true,
@@ -277,7 +278,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'array',
+                '$id' => ID::custom('array'),
                 'type' => Database::VAR_BOOLEAN,
                 'size' => 0,
                 'signed' => true,
@@ -287,7 +288,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'format',
+                '$id' => ID::custom('format'),
                 'type' => Database::VAR_STRING,
                 'size' => 64,
                 'signed' => true,
@@ -297,7 +298,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'formatOptions',
+                '$id' => ID::custom('formatOptions'),
                 'type' => Database::VAR_STRING,
                 'size' => 16384,
                 'signed' => true,
@@ -307,7 +308,7 @@ $collections = [
                 'filters' => ['json', 'range', 'enum'],
             ],
             [
-                '$id' => 'filters',
+                '$id' => ID::custom('filters'),
                 'type' => Database::VAR_STRING,
                 'size' => 64,
                 'signed' => true,
@@ -319,7 +320,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_db_collection',
+                '$id' => ID::custom('_key_db_collection'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['databaseInternalId', 'collectionInternalId'],
                 'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
@@ -329,12 +330,12 @@ $collections = [
     ],
 
     'indexes' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'indexes',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('indexes'),
         'name' => 'Indexes',
         'attributes' => [
             [
-                '$id' => 'databaseInternalId',
+                '$id' => ID::custom('databaseInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -345,7 +346,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'databaseId',
+                '$id' => ID::custom('databaseId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -356,7 +357,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'collectionInternalId',
+                '$id' => ID::custom('collectionInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -367,7 +368,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'collectionId',
+                '$id' => ID::custom('collectionId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -378,7 +379,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'key',
+                '$id' => ID::custom('key'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -389,7 +390,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'type',
+                '$id' => ID::custom('type'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16,
@@ -400,7 +401,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'status',
+                '$id' => ID::custom('status'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16,
@@ -411,7 +412,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'attributes',
+                '$id' => ID::custom('attributes'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -422,7 +423,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'lengths',
+                '$id' => ID::custom('lengths'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -433,7 +434,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'orders',
+                '$id' => ID::custom('orders'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 4,
@@ -446,7 +447,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_db_collection',
+                '$id' => ID::custom('_key_db_collection'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['databaseInternalId', 'collectionInternalId'],
                 'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
@@ -456,12 +457,12 @@ $collections = [
     ],
 
     'projects' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'projects',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('projects'),
         'name' => 'Projects',
         'attributes' => [
             [
-                '$id' => 'teamInternalId',
+                '$id' => ID::custom('teamInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -472,7 +473,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'teamId',
+                '$id' => ID::custom('teamId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -483,7 +484,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'name',
+                '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,
@@ -494,7 +495,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'description',
+                '$id' => ID::custom('description'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -505,7 +506,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'logo',
+                '$id' => ID::custom('logo'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -516,7 +517,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'url',
+                '$id' => ID::custom('url'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -527,7 +528,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'version',
+                '$id' => ID::custom('version'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16,
@@ -538,7 +539,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'legalName',
+                '$id' => ID::custom('legalName'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -549,7 +550,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'legalCountry',
+                '$id' => ID::custom('legalCountry'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -560,7 +561,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'legalState',
+                '$id' => ID::custom('legalState'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -571,7 +572,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'legalCity',
+                '$id' => ID::custom('legalCity'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -582,7 +583,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'legalAddress',
+                '$id' => ID::custom('legalAddress'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -593,7 +594,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'legalTaxId',
+                '$id' => ID::custom('legalTaxId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -604,7 +605,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'services',
+                '$id' => ID::custom('services'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -615,7 +616,7 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => 'auths',
+                '$id' => ID::custom('auths'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -626,7 +627,7 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => 'authProviders',
+                '$id' => ID::custom('authProviders'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -637,7 +638,7 @@ $collections = [
                 'filters' => ['json', 'encrypt'],
             ],
             [
-                '$id' => 'platforms',
+                '$id' => ID::custom('platforms'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -648,7 +649,7 @@ $collections = [
                 'filters' => ['subQueryPlatforms'],
             ],
             [
-                '$id' => 'webhooks',
+                '$id' => ID::custom('webhooks'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -659,7 +660,7 @@ $collections = [
                 'filters' => ['subQueryWebhooks'],
             ],
             [
-                '$id' => 'keys',
+                '$id' => ID::custom('keys'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -670,7 +671,7 @@ $collections = [
                 'filters' => ['subQueryKeys'],
             ],
             [
-                '$id' => 'domains',
+                '$id' => ID::custom('domains'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -681,7 +682,7 @@ $collections = [
                 'filters' => ['subQueryDomains'],
             ],
             [
-                '$id' => 'search',
+                '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -694,7 +695,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_search',
+                '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
@@ -704,12 +705,12 @@ $collections = [
     ],
 
     'platforms' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'platforms',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('platforms'),
         'name' => 'platforms',
         'attributes' => [
             [
-                '$id' => 'projectInternalId',
+                '$id' => ID::custom('projectInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -720,7 +721,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'projectId',
+                '$id' => ID::custom('projectId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -731,7 +732,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'type',
+                '$id' => ID::custom('type'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16,
@@ -742,7 +743,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'name',
+                '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -753,7 +754,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'key',
+                '$id' => ID::custom('key'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -764,7 +765,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'store',
+                '$id' => ID::custom('store'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -775,7 +776,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'hostname',
+                '$id' => ID::custom('hostname'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -788,7 +789,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_project',
+                '$id' => ID::custom('_key_project'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
@@ -798,12 +799,12 @@ $collections = [
     ],
 
     'domains' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'domains',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('domains'),
         'name' => 'domains',
         'attributes' => [
             [
-                '$id' => 'projectInternalId',
+                '$id' => ID::custom('projectInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -814,7 +815,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'projectId',
+                '$id' => ID::custom('projectId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -825,18 +826,18 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'updated',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('updated'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
             [
-                '$id' => 'domain',
+                '$id' => ID::custom('domain'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -847,7 +848,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'tld',
+                '$id' => ID::custom('tld'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -858,7 +859,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'registerable',
+                '$id' => ID::custom('registerable'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -869,7 +870,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'verification',
+                '$id' => ID::custom('verification'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -880,7 +881,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'certificateId',
+                '$id' => ID::custom('certificateId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -893,7 +894,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_project',
+                '$id' => ID::custom('_key_project'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
@@ -903,12 +904,12 @@ $collections = [
     ],
 
     'keys' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'keys',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('keys'),
         'name' => 'keys',
         'attributes' => [
             [
-                '$id' => 'projectInternalId',
+                '$id' => ID::custom('projectInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -919,7 +920,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'projectId',
+                '$id' => ID::custom('projectId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -930,7 +931,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'name',
+                '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -941,7 +942,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'scopes',
+                '$id' => ID::custom('scopes'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -952,7 +953,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'secret',
+                '$id' => ID::custom('secret'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 512, // var_dump of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
@@ -963,20 +964,20 @@ $collections = [
                 'filters' => ['encrypt'],
             ],
             [
-                '$id' => 'expire',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('expire'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => false,
                 'required' => false,
-                'default' => 0,
+                'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
         ],
         'indexes' => [
             [
-                '$id' => '_key_project',
+                '$id' => ID::custom('_key_project'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
@@ -986,12 +987,12 @@ $collections = [
     ],
 
     'webhooks' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'webhooks',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('webhooks'),
         'name' => 'webhooks',
         'attributes' => [
             [
-                '$id' => 'projectInternalId',
+                '$id' => ID::custom('projectInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1002,7 +1003,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'projectId',
+                '$id' => ID::custom('projectId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1013,7 +1014,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'name',
+                '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1024,7 +1025,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'url',
+                '$id' => ID::custom('url'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1035,7 +1036,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'httpUser',
+                '$id' => ID::custom('httpUser'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1046,7 +1047,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'httpPass',
+                '$id' => ID::custom('httpPass'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY, // TODO will the length suffice after encryption?
@@ -1057,7 +1058,7 @@ $collections = [
                 'filters' => ['encrypt'],
             ],
             [
-                '$id' => 'security',
+                '$id' => ID::custom('security'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -1068,7 +1069,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'events',
+                '$id' => ID::custom('events'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1079,7 +1080,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'signatureKey',
+                '$id' => ID::custom('signatureKey'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -1092,7 +1093,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_project',
+                '$id' => ID::custom('_key_project'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
@@ -1102,12 +1103,12 @@ $collections = [
     ],
 
     'users' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'users',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('users'),
         'name' => 'Users',
         'attributes' => [
             [
-                '$id' => 'name',
+                '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1118,7 +1119,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'email',
+                '$id' => ID::custom('email'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 320,
@@ -1129,7 +1130,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'phone',
+                '$id' => ID::custom('phone'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16, // leading '+' and 15 digitts maximum by E.164 format
@@ -1140,7 +1141,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'status',
+                '$id' => ID::custom('status'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -1151,7 +1152,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'password',
+                '$id' => ID::custom('password'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1162,18 +1163,18 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'passwordUpdate',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('passwordUpdate'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
             [
-                '$id' => 'prefs',
+                '$id' => ID::custom('prefs'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 65535,
@@ -1184,18 +1185,18 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => 'registration',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('registration'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
             [
-                '$id' => 'emailVerification',
+                '$id' => ID::custom('emailVerification'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -1206,7 +1207,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'phoneVerification',
+                '$id' => ID::custom('phoneVerification'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -1217,7 +1218,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'reset',
+                '$id' => ID::custom('reset'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -1228,7 +1229,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'sessions',
+                '$id' => ID::custom('sessions'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1239,7 +1240,7 @@ $collections = [
                 'filters' => ['subQuerySessions'],
             ],
             [
-                '$id' => 'tokens',
+                '$id' => ID::custom('tokens'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1250,7 +1251,7 @@ $collections = [
                 'filters' => ['subQueryTokens'],
             ],
             [
-                '$id' => 'memberships',
+                '$id' => ID::custom('memberships'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1261,7 +1262,7 @@ $collections = [
                 'filters' => ['subQueryMemberships'],
             ],
             [
-                '$id' => 'search',
+                '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1274,21 +1275,21 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_email',
+                '$id' => ID::custom('_key_email'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['email'],
                 'lengths' => [320],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_phone',
+                '$id' => ID::custom('_key_phone'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['phone'],
                 'lengths' => [16],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_search',
+                '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
@@ -1298,12 +1299,12 @@ $collections = [
     ],
 
     'tokens' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'tokens',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('tokens'),
         'name' => 'Tokens',
         'attributes' => [
             [
-                '$id' => 'userInternalId',
+                '$id' => ID::custom('userInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1314,7 +1315,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'userId',
+                '$id' => ID::custom('userId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1325,7 +1326,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'type',
+                '$id' => ID::custom('type'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -1336,7 +1337,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'secret',
+                '$id' => ID::custom('secret'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 512, // https://www.tutorialspoint.com/how-long-is-the-sha256-hash-in-mysql (512 for encryption)
@@ -1347,18 +1348,18 @@ $collections = [
                 'filters' => ['encrypt'],
             ],
             [
-                '$id' => 'expire',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('expire'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
             [
-                '$id' => 'userAgent',
+                '$id' => ID::custom('userAgent'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1369,7 +1370,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'ip',
+                '$id' => ID::custom('ip'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 45, // https://stackoverflow.com/a/166157/2299554
@@ -1382,7 +1383,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_user',
+                '$id' => ID::custom('_key_user'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
@@ -1392,12 +1393,12 @@ $collections = [
     ],
 
     'sessions' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'sessions',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('sessions'),
         'name' => 'Sessions',
         'attributes' => [
             [
-                '$id' => 'userInternalId',
+                '$id' => ID::custom('userInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1408,7 +1409,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'userId',
+                '$id' => ID::custom('userId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1419,7 +1420,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'provider',
+                '$id' => ID::custom('provider'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,
@@ -1430,7 +1431,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'providerUid',
+                '$id' => ID::custom('providerUid'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -1441,7 +1442,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'providerAccessToken',
+                '$id' => ID::custom('providerAccessToken'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1452,18 +1453,18 @@ $collections = [
                 'filters' => ['encrypt'],
             ],
             [
-                '$id' => 'providerAccessTokenExpiry',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('providerAccessTokenExpiry'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
             [
-                '$id' => 'providerRefreshToken',
+                '$id' => ID::custom('providerRefreshToken'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1474,7 +1475,7 @@ $collections = [
                 'filters' => ['encrypt'],
             ],
             [
-                '$id' => 'secret',
+                '$id' => ID::custom('secret'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 512, // https://www.tutorialspoint.com/how-long-is-the-sha256-hash-in-mysql (512 for encryption)
@@ -1485,18 +1486,18 @@ $collections = [
                 'filters' => ['encrypt'],
             ],
             [
-                '$id' => 'expire',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('expire'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
             [
-                '$id' => 'userAgent',
+                '$id' => ID::custom('userAgent'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1507,7 +1508,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'ip',
+                '$id' => ID::custom('ip'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 45, // https://stackoverflow.com/a/166157/2299554
@@ -1518,7 +1519,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'countryCode',
+                '$id' => ID::custom('countryCode'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2,
@@ -1529,7 +1530,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'osCode',
+                '$id' => ID::custom('osCode'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1540,7 +1541,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'osName',
+                '$id' => ID::custom('osName'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1551,7 +1552,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'osVersion',
+                '$id' => ID::custom('osVersion'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1562,7 +1563,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'clientType',
+                '$id' => ID::custom('clientType'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1573,7 +1574,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'clientCode',
+                '$id' => ID::custom('clientCode'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1584,7 +1585,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'clientName',
+                '$id' => ID::custom('clientName'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1595,7 +1596,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'clientVersion',
+                '$id' => ID::custom('clientVersion'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1606,7 +1607,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'clientEngine',
+                '$id' => ID::custom('clientEngine'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1617,7 +1618,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'clientEngineVersion',
+                '$id' => ID::custom('clientEngineVersion'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1628,7 +1629,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'deviceName',
+                '$id' => ID::custom('deviceName'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1639,7 +1640,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'deviceBrand',
+                '$id' => ID::custom('deviceBrand'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1650,7 +1651,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'deviceModel',
+                '$id' => ID::custom('deviceModel'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1663,14 +1664,14 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_provider_providerUid',
+                '$id' => ID::custom('_key_provider_providerUid'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider', 'providerUid'],
                 'lengths' => [100, 100],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_user',
+                '$id' => ID::custom('_key_user'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
@@ -1680,12 +1681,12 @@ $collections = [
     ],
 
     'teams' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'teams',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('teams'),
         'name' => 'Teams',
         'attributes' => [
             [
-                '$id' => 'name',
+                '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,
@@ -1696,7 +1697,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'total',
+                '$id' => ID::custom('total'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -1707,7 +1708,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'search',
+                '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1720,7 +1721,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_search',
+                '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
@@ -1730,12 +1731,12 @@ $collections = [
     ],
 
     'memberships' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'memberships',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('memberships'),
         'name' => 'Memberships',
         'attributes' => [
             [
-                '$id' => 'userInternalId',
+                '$id' => ID::custom('userInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1746,7 +1747,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'userId',
+                '$id' => ID::custom('userId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1757,7 +1758,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'teamInternalId',
+                '$id' => ID::custom('teamInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1768,7 +1769,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'teamId',
+                '$id' => ID::custom('teamId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1779,7 +1780,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'roles',
+                '$id' => ID::custom('roles'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,
@@ -1790,29 +1791,29 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'invited',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('invited'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
             [
-                '$id' => 'joined',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('joined'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
             [
-                '$id' => 'confirm',
+                '$id' => ID::custom('confirm'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -1823,7 +1824,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'secret',
+                '$id' => ID::custom('secret'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1834,7 +1835,7 @@ $collections = [
                 'filters' => ['encrypt'],
             ],
             [
-                '$id' => 'search',
+                '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -1847,28 +1848,28 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_unique',
+                '$id' => ID::custom('_key_unique'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['teamInternalId', 'userInternalId'],
                 'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_user',
+                '$id' => ID::custom('_key_user'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_team',
+                '$id' => ID::custom('_key_team'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['teamInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_search',
+                '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
@@ -1878,12 +1879,12 @@ $collections = [
     ],
 
     'functions' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'functions',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('functions'),
         'name' => 'Functions',
         'attributes' => [
             [
-                '$id' => 'execute',
+                '$id' => ID::custom('execute'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,
@@ -1894,7 +1895,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'name',
+                '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -1906,7 +1907,7 @@ $collections = [
             ],
             [
                 'array' => false,
-                '$id' => 'status',
+                '$id' => ID::custom('status'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1916,7 +1917,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'runtime',
+                '$id' => ID::custom('runtime'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -1927,7 +1928,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'deployment',
+                '$id' => ID::custom('deployment'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1938,7 +1939,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'vars',
+                '$id' => ID::custom('vars'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 8192,
@@ -1949,7 +1950,7 @@ $collections = [
                 'filters' => ['json', 'encrypt'],
             ],
             [
-                '$id' => 'events',
+                '$id' => ID::custom('events'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -1960,7 +1961,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'schedule',
+                '$id' => ID::custom('schedule'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,
@@ -1971,7 +1972,29 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'schedulePrevious',
+                '$id' => ID::custom('schedulePrevious'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('scheduleNext'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('timeout'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -1982,29 +2005,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'scheduleNext',
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'timeout',
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'search',
+                '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -2017,7 +2018,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_search',
+                '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [2048],
@@ -2027,12 +2028,12 @@ $collections = [
     ],
 
     'deployments' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'deployments',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('deployments'),
         'name' => 'Deployments',
         'attributes' => [
             [
-                '$id' => 'resourceId',
+                '$id' => ID::custom('resourceId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2043,7 +2044,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'resourceType',
+                '$id' => ID::custom('resourceType'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2054,7 +2055,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'buildId',
+                '$id' => ID::custom('buildId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2066,7 +2067,7 @@ $collections = [
             ],
             [
                 'array' => false,
-                '$id' => 'entrypoint',
+                '$id' => ID::custom('entrypoint'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2076,7 +2077,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'path',
+                '$id' => ID::custom('path'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2087,7 +2088,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'size',
+                '$id' => ID::custom('size'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2098,7 +2099,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'metadata',
+                '$id' => ID::custom('metadata'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384, // https://tools.ietf.org/html/rfc4288#section-4.2
@@ -2109,7 +2110,7 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => 'chunksTotal',
+                '$id' => ID::custom('chunksTotal'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2120,7 +2121,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'chunksUploaded',
+                '$id' => ID::custom('chunksUploaded'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2131,7 +2132,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'search',
+                '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -2142,7 +2143,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'activate',
+                '$id' => ID::custom('activate'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
@@ -2155,21 +2156,21 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_resource',
+                '$id' => ID::custom('_key_resource'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_resource_type',
+                '$id' => ID::custom('_key_resource_type'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceType'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_search',
+                '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
@@ -2179,12 +2180,34 @@ $collections = [
     ],
 
     'builds' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'builds',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('builds'),
         'name' => 'Builds',
         'attributes' => [
             [
-                '$id' => 'startTime',
+                '$id' => ID::custom('startTime'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('endTime'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('duration'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2195,29 +2218,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'endTime',
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'duration',
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'deploymentId',
+                '$id' => ID::custom('deploymentId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2228,7 +2229,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'runtime',
+                '$id' => ID::custom('runtime'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2239,7 +2240,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'status',
+                '$id' => ID::custom('status'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 256,
@@ -2250,7 +2251,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'outputPath',
+                '$id' => ID::custom('outputPath'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2261,7 +2262,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'stderr',
+                '$id' => ID::custom('stderr'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 1000000,
@@ -2272,7 +2273,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'stdout',
+                '$id' => ID::custom('stdout'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 1000000,
@@ -2283,7 +2284,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'sourceType',
+                '$id' => ID::custom('sourceType'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2294,7 +2295,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'source',
+                '$id' => ID::custom('source'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2307,7 +2308,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_deployment',
+                '$id' => ID::custom('_key_deployment'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['deploymentId'],
                 'lengths' => [Database::LENGTH_KEY],
@@ -2317,12 +2318,12 @@ $collections = [
     ],
 
     'executions' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'executions',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('executions'),
         'name' => 'Executions',
         'attributes' => [
             [
-                '$id' => 'functionId',
+                '$id' => ID::custom('functionId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2333,7 +2334,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'deploymentId',
+                '$id' => ID::custom('deploymentId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2345,7 +2346,7 @@ $collections = [
             ],
             [
                 'array' => false,
-                '$id' => 'trigger',
+                '$id' => ID::custom('trigger'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,
@@ -2355,7 +2356,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'status',
+                '$id' => ID::custom('status'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,
@@ -2366,7 +2367,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'response',
+                '$id' => ID::custom('response'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 1000000,
@@ -2377,7 +2378,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'stderr',
+                '$id' => ID::custom('stderr'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 1000000,
@@ -2388,7 +2389,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'statusCode',
+                '$id' => ID::custom('statusCode'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2399,7 +2400,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'time',
+                '$id' => ID::custom('time'),
                 'type' => Database::VAR_FLOAT,
                 'format' => '',
                 'size' => 0,
@@ -2410,7 +2411,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'search',
+                '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -2423,14 +2424,14 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_function',
+                '$id' => ID::custom('_key_function'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['functionId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_fulltext_search',
+                '$id' => ID::custom('_fulltext_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
@@ -2440,12 +2441,12 @@ $collections = [
     ],
 
     'certificates' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'certificates',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('certificates'),
         'name' => 'Certificates',
         'attributes' => [
             [
-                '$id' => 'domain',
+                '$id' => ID::custom('domain'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 // The maximum total length of a domain name or number is 255 characters.
@@ -2459,7 +2460,29 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'issueDate',
+                '$id' => ID::custom('issueDate'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('renewDate'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('attempts'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2470,29 +2493,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'renewDate',
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'attempts',
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'log',
+                '$id' => ID::custom('log'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -2503,11 +2504,11 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'updated',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('updated'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
@@ -2516,7 +2517,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_domain',
+                '$id' => ID::custom('_key_domain'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['domain'],
                 'lengths' => [255],
@@ -2526,12 +2527,12 @@ $collections = [
     ],
 
     'buckets' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'buckets',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('buckets'),
         'name' => 'Buckets',
         'attributes' => [
             [
-                '$id' => 'enabled',
+                '$id' => ID::custom('enabled'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
                 'size' => 0,
@@ -2541,7 +2542,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => 'name',
+                '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => 128,
@@ -2551,7 +2552,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => 'fileSecurity',
+                '$id' => ID::custom('fileSecurity'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
                 'size' => 1,
@@ -2561,7 +2562,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => 'maximumFileSize',
+                '$id' => ID::custom('maximumFileSize'),
                 'type' => Database::VAR_INTEGER,
                 'signed' => false,
                 'size' => 8,
@@ -2571,7 +2572,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => 'allowedFileExtensions',
+                '$id' => ID::custom('allowedFileExtensions'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => 64,
@@ -2581,7 +2582,7 @@ $collections = [
                 'array' => true,
             ],
             [
-                '$id' => 'encryption',
+                '$id' => ID::custom('encryption'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
                 'size' => 0,
@@ -2591,7 +2592,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => 'antivirus',
+                '$id' => ID::custom('antivirus'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
                 'size' => 0,
@@ -2601,7 +2602,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => 'search',
+                '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -2614,14 +2615,14 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_fulltext_name',
+                '$id' => ID::custom('_fulltext_name'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['name'],
                 'lengths' => [1024],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_search',
+                '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [2048],
@@ -2631,12 +2632,12 @@ $collections = [
     ],
 
     'stats' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'stats',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('stats'),
         'name' => 'Stats',
         'attributes' => [
             [
-                '$id' => 'metric',
+                '$id' => ID::custom('metric'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 255,
@@ -2647,7 +2648,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'value',
+                '$id' => ID::custom('value'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 8,
@@ -2658,18 +2659,18 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'time',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('time'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => false,
-                'required' => true,
+                'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
             [
-                '$id' => 'period',
+                '$id' => ID::custom('period'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 4,
@@ -2680,7 +2681,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'type',
+                '$id' => ID::custom('type'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 1,
@@ -2693,23 +2694,23 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_time',
+                '$id' => ID::custom('_key_time'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['time'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],
             ],
             [
-                '$id' => '_key_metric',
+                '$id' => ID::custom('_key_period_time'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['metric'],
+                'attributes' => ['period', 'time'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_metric_period',
+                '$id' => ID::custom('_key_metric_period_time'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['metric', 'period'],
+                'attributes' => ['metric', 'period', 'time'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],
             ],
@@ -2717,12 +2718,12 @@ $collections = [
     ],
 
     'realtime' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'realtime',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('realtime'),
         'name' => 'Realtime Connections',
         'attributes' => [
             [
-                '$id' => 'container',
+                '$id' => ID::custom('container'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2733,18 +2734,18 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'timestamp',
-                'type' => Database::VAR_INTEGER,
+                '$id' => ID::custom('timestamp'),
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
-                'signed' => true,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
             [
-                '$id' => 'value',
+                '$id' => ID::custom('value'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -2757,7 +2758,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_timestamp',
+                '$id' => ID::custom('_key_timestamp'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['timestamp'],
                 'lengths' => [],
@@ -2766,13 +2767,13 @@ $collections = [
         ]
     ],
     'files' => [
-        '$collection' => 'buckets',
-        '$id' => 'files',
+        '$collection' => ID::custom('buckets'),
+        '$id' => ID::custom('files'),
         '$name' => 'Files',
         'attributes' => [
             [
                 'array' => false,
-                '$id' => 'bucketId',
+                '$id' => ID::custom('bucketId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2782,7 +2783,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'name',
+                '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2793,7 +2794,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'path',
+                '$id' => ID::custom('path'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2804,7 +2805,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'signature',
+                '$id' => ID::custom('signature'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2815,7 +2816,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'mimeType',
+                '$id' => ID::custom('mimeType'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 127, // https://tools.ietf.org/html/rfc4288#section-4.2
@@ -2826,7 +2827,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'metadata',
+                '$id' => ID::custom('metadata'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384, // https://tools.ietf.org/html/rfc4288#section-4.2
@@ -2837,7 +2838,7 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => 'sizeOriginal',
+                '$id' => ID::custom('sizeOriginal'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 8,
@@ -2848,7 +2849,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'sizeActual',
+                '$id' => ID::custom('sizeActual'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 8,
@@ -2859,7 +2860,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'algorithm',
+                '$id' => ID::custom('algorithm'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 255,
@@ -2870,7 +2871,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'comment',
+                '$id' => ID::custom('comment'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2881,7 +2882,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'openSSLVersion',
+                '$id' => ID::custom('openSSLVersion'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 64,
@@ -2892,7 +2893,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'openSSLCipher',
+                '$id' => ID::custom('openSSLCipher'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 64,
@@ -2903,7 +2904,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'openSSLTag',
+                '$id' => ID::custom('openSSLTag'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2914,7 +2915,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'openSSLIV',
+                '$id' => ID::custom('openSSLIV'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2925,7 +2926,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'chunksTotal',
+                '$id' => ID::custom('chunksTotal'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2936,7 +2937,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'chunksUploaded',
+                '$id' => ID::custom('chunksUploaded'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
@@ -2947,7 +2948,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'search',
+                '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -2960,14 +2961,14 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_search',
+                '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [2048],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_bucket',
+                '$id' => ID::custom('_key_bucket'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['bucketId'],
                 'lengths' => [Database::LENGTH_KEY],

@@ -6,6 +6,7 @@ use Appwrite\Auth\Auth;
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\ID;
 
 class MessagingChannelsTest extends TestCase
 {
@@ -49,10 +50,10 @@ class MessagingChannelsTest extends TestCase
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
                 $user = new Document([
-                    '$id' => 'user' . $this->connectionsCount,
+                    '$id' => ID::custom('user' . $this->connectionsCount),
                     'memberships' => [
                         [
-                            'teamId' => 'team' . $i,
+                            'teamId' => ID::custom('team' . $i),
                             'roles' => [
                                 empty($index % 2) ? 'admin' : 'member'
                             ]
@@ -146,7 +147,7 @@ class MessagingChannelsTest extends TestCase
     }
 
     /**
-     * Tests Wildcard (role:all) Permissions on every channel.
+     * Tests Wildcard ("any") Permissions on every channel.
      */
     public function testWildcardPermission(): void
     {

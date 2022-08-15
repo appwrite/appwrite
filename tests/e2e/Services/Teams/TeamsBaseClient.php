@@ -3,6 +3,8 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 
 trait TeamsBaseClient
 {
@@ -112,7 +114,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertIsInt($response['body']['joined']);
+        $this->assertEquals(false, DateTime::isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
         $lastEmail = $this->getLastEmail();
@@ -246,7 +248,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertIsInt($response['body']['joined']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
         $data['session'] = $session;
@@ -269,7 +271,7 @@ trait TeamsBaseClient
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 
@@ -303,7 +305,7 @@ trait TeamsBaseClient
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 
@@ -340,7 +342,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => 'sdasd',
+            'userId' => ID::custom('sdasd'),
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -351,7 +353,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => '',
+            'userId' => ID::custom(''),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);

@@ -6,6 +6,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 
 class StorageCustomServerTest extends Scope
 {
@@ -22,13 +24,13 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
-        $this->assertIsInt($bucket['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($bucket['body']['$createdAt']));
         $this->assertIsArray($bucket['body']['$permissions']);
         $this->assertIsArray($bucket['body']['allowedFileExtensions']);
         $this->assertEquals('Test Bucket', $bucket['body']['name']);
@@ -44,7 +46,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => 'bucket1',
+            'bucketId' => ID::custom('bucket1'),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
         ]);
@@ -58,7 +60,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => '',
             'fileSecurity' => true,
         ]);
@@ -179,16 +181,15 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => 'Test Bucket Updated',
             'enabled' => false,
             'fileSecurity' => true,
         ]);
         $this->assertEquals(200, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
-        $this->assertIsInt($bucket['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($bucket['body']['$createdAt']));
         $this->assertIsArray($bucket['body']['$permissions']);
-
         $this->assertIsArray($bucket['body']['allowedFileExtensions']);
         $this->assertEquals('Test Bucket Updated', $bucket['body']['name']);
         $this->assertEquals(false, $bucket['body']['enabled']);
