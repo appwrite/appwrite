@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "55e1dfca29bbf789b3d748f5ca995495",
+    "content-hash": "b252bbca91fb272469ad1aab83cbfe93",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1733,19 +1733,14 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.8.0",
+            "version": "dev-refactor-permissions",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "8350d498c95bdcc803b7e39575ea04fd5c7561b9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8350d498c95bdcc803b7e39575ea04fd5c7561b9",
-                "reference": "8350d498c95bdcc803b7e39575ea04fd5c7561b9",
-                "shasum": ""
+                "reference": "c5e5bdaa190e1c9993d35a04c78a46870a1265bb"
             },
             "require": {
+                "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/database": ">=0.11 <1.0"
@@ -1760,7 +1755,6 @@
                     "Utopia\\Abuse\\": "src/Abuse"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1772,17 +1766,13 @@
             ],
             "description": "A simple abuse library to manage application usage limits",
             "keywords": [
-                "Abuse",
+                "abuse",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.8.0"
-            },
-            "time": "2022-08-08T12:48:24+00:00"
+            "time": "2022-08-14T23:58:51+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1841,22 +1831,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.9.0",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "2c52de04e7ffeb2256a09d9213e87b001b7e66d2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/2c52de04e7ffeb2256a09d9213e87b001b7e66d2",
-                "reference": "2c52de04e7ffeb2256a09d9213e87b001b7e66d2",
-                "shasum": ""
+                "reference": "458da3e60ea222bf9791f4891591d7f2ee16e4bb"
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": ">=0.11 <1.0"
+                "utopia-php/database": "0.20.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1868,7 +1852,6 @@
                     "Utopia\\Audit\\": "src/Audit"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1880,17 +1863,13 @@
             ],
             "description": "A simple audit library to manage application users logs",
             "keywords": [
-                "Audit",
+                "audit",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.9.0"
-            },
-            "time": "2022-08-08T12:46:24+00:00"
+            "time": "2022-08-14T19:59:21+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2051,17 +2030,11 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.19.0",
+            "version": "0.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "207d9f2665bf2124797351dfdcc928a46a301b04"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/207d9f2665bf2124797351dfdcc928a46a301b04",
-                "reference": "207d9f2665bf2124797351dfdcc928a46a301b04",
-                "shasum": ""
+                "reference": "cd89b41564223cddf7d87a41bbaf736a0c89f327"
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2085,7 +2058,11 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Database"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -2107,11 +2084,7 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.19.0"
-            },
-            "time": "2022-08-01T11:51:01+00:00"
+            "time": "2022-08-14T15:22:34+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5348,7 +5321,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/abuse": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5370,5 +5345,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
