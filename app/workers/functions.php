@@ -15,7 +15,9 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\ID;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 require_once __DIR__ . '/../init.php';
 
@@ -238,9 +240,9 @@ class FunctionsV1 extends Worker
             $executionId = ID::unique();
             $execution = $dbForProject->createDocument('executions', new Document([
                 '$id' => $executionId,
-                '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user(ID::custom($user->getId())))],
-                'functionId' => ID::custom($functionId),
-                'deploymentId' => ID::custom($deploymentId),
+                '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
+                'functionId' => $functionId,
+                'deploymentId' => $deploymentId,
                 'trigger' => $trigger,
                 'status' => 'waiting',
                 'statusCode' => 0,
@@ -327,7 +329,7 @@ class FunctionsV1 extends Worker
 
         /** Trigger realtime event */
         $allEvents = Event::generateEvents('functions.[functionId].executions.[executionId].update', [
-            'functionId' => ID::custom($function->getId()),
+            'functionId' => $function->getId(),
             'executionId' => $execution->getId()
         ]);
         $target = Realtime::fromPayload(

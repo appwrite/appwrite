@@ -858,9 +858,9 @@ class DatabasesCustomServerTest extends Scope
                 'lastName' => 'Holland',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ],
         ]);
 
@@ -874,9 +874,9 @@ class DatabasesCustomServerTest extends Scope
                 'lastName' => 'Jackson',
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ],
         ]);
 

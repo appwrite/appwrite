@@ -95,9 +95,9 @@ trait DatabasesBase
                     'title' => 'Captain America',
                 ],
                 'permissions' => [
-                    Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                    Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                    Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
                 ],
             ]);
 
@@ -873,9 +873,9 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -895,9 +895,9 @@ trait DatabasesBase
                 ]
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -917,9 +917,9 @@ trait DatabasesBase
                 ],
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -932,9 +932,9 @@ trait DatabasesBase
                 'releaseYear' => 2020, // Missing title, expect an 400 error
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -1529,9 +1529,9 @@ trait DatabasesBase
                 '$createdAt' => 5 // Should be ignored
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ],
         ]);
 
@@ -1601,7 +1601,7 @@ trait DatabasesBase
                 'actors' => [],
             ],
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
                 Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
             ]

@@ -99,11 +99,11 @@ App::post('/v1/account')
         try {
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
             $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
-                '$id' => ID::custom($userId),
+                '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
-                    Permission::update(Role::user(ID::custom($userId))),
-                    Permission::delete(Role::user(ID::custom($userId))),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
                 ],
                 'email' => $email,
                 'emailVerification' => false,
@@ -189,8 +189,8 @@ App::post('/v1/account/sessions/email')
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
-                'userId' => ID::custom($profile->getId()),
-                'userInternalId' => ID::custom($profile->getInternalId()),
+                'userId' => $profile->getId(),
+                'userInternalId' => $profile->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
@@ -207,9 +207,9 @@ App::post('/v1/account/sessions/email')
         Authorization::setRole('user:' . $profile->getId());
 
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
-            Permission::read(Role::user(ID::custom($profile->getId()))),
-            Permission::update(Role::user(ID::custom($profile->getId()))),
-            Permission::delete(Role::user(ID::custom($profile->getId()))),
+            Permission::read(Role::user($profile->getId())),
+            Permission::update(Role::user($profile->getId())),
+            Permission::delete(Role::user($profile->getId())),
         ]));
 
         $dbForProject->deleteCachedDocument('users', $profile->getId());
@@ -526,8 +526,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $session = new Document(array_merge([
             '$id' => ID::unique(),
-            'userId' => ID::custom($user->getId()),
-            'userInternalId' => ID::custom($user->getInternalId()),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
             'provider' => $provider,
             'providerUid' => $oauth2ID,
             'providerAccessToken' => $accessToken,
@@ -558,9 +558,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
-            Permission::read(Role::user(ID::custom($user->getId()))),
-            Permission::update(Role::user(ID::custom($user->getId()))),
-            Permission::delete(Role::user(ID::custom($user->getId()))),
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
         ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -662,8 +662,8 @@ App::post('/v1/account/sessions/magic-url')
                 '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
-                    Permission::update(Role::user(ID::custom($userId))),
-                    Permission::delete(Role::user(ID::custom($userId))),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
                 ],
                 'email' => $email,
                 'emailVerification' => false,
@@ -698,9 +698,9 @@ App::post('/v1/account/sessions/magic-url')
 
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
-                Permission::read(Role::user(ID::custom($user->getId()))),
-                Permission::update(Role::user(ID::custom($user->getId()))),
-                Permission::delete(Role::user(ID::custom($user->getId()))),
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -807,9 +807,9 @@ App::put('/v1/account/sessions/magic-url')
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
-                Permission::read(Role::user(ID::custom($user->getId()))),
-                Permission::update(Role::user(ID::custom($user->getId()))),
-                Permission::delete(Role::user(ID::custom($user->getId()))),
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -912,8 +912,8 @@ App::post('/v1/account/sessions/phone')
                 '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
-                    Permission::update(Role::user(ID::custom($userId))),
-                    Permission::delete(Role::user(ID::custom($userId))),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
                 ],
                 'email' => null,
                 'phone' => $number,
@@ -950,9 +950,9 @@ App::post('/v1/account/sessions/phone')
 
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
-                Permission::read(Role::user(ID::custom($user->getId()))),
-                Permission::update(Role::user(ID::custom($user->getId()))),
-                Permission::delete(Role::user(ID::custom($user->getId()))),
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -1046,9 +1046,9 @@ App::put('/v1/account/sessions/phone')
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
-                Permission::read(Role::user(ID::custom($user->getId()))),
-                Permission::update(Role::user(ID::custom($user->getId()))),
-                Permission::delete(Role::user(ID::custom($user->getId()))),
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -1194,9 +1194,9 @@ App::post('/v1/account/sessions/anonymous')
         Authorization::setRole('user:' . $user->getId());
 
         $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
-                Permission::read(Role::user(ID::custom($user->getId()))),
-                Permission::update(Role::user(ID::custom($user->getId()))),
-                Permission::delete(Role::user(ID::custom($user->getId()))),
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -2021,9 +2021,9 @@ App::post('/v1/account/recovery')
 
         $recovery = $dbForProject->createDocument('tokens', $recovery
             ->setAttribute('$permissions', [
-                Permission::read(Role::user(ID::custom($profile->getId()))),
-                Permission::update(Role::user(ID::custom($profile->getId()))),
-                Permission::delete(Role::user(ID::custom($profile->getId()))),
+                Permission::read(Role::user($profile->getId())),
+                Permission::update(Role::user($profile->getId())),
+                Permission::delete(Role::user($profile->getId())),
             ]));
 
         $dbForProject->deleteCachedDocument('users', $profile->getId());
@@ -2183,9 +2183,9 @@ App::post('/v1/account/verification')
 
         $verification = $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
-                Permission::read(Role::user(ID::custom($user->getId()))),
-                Permission::update(Role::user(ID::custom($user->getId()))),
-                Permission::delete(Role::user(ID::custom($user->getId()))),
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -2339,9 +2339,9 @@ App::post('/v1/account/verification/phone')
 
         $verification = $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
-                Permission::read(Role::user(ID::custom($user->getId()))),
-                Permission::update(Role::user(ID::custom($user->getId()))),
-                Permission::delete(Role::user(ID::custom($user->getId()))),
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());

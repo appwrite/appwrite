@@ -99,10 +99,10 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         $attribute = new Document([
             '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
             'key' => $key,
-            'databaseInternalId' => ID::custom($db->getInternalId()),
-            'databaseId' => ID::custom($db->getId()),
-            'collectionInternalId' => ID::custom($collection->getInternalId()),
-            'collectionId' => ID::custom($collectionId),
+            'databaseInternalId' => $db->getInternalId(),
+            'databaseId' => $db->getId(),
+            'collectionInternalId' => $collection->getInternalId(),
+            'collectionId' => $collectionId,
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
@@ -196,7 +196,7 @@ App::post('/v1/databases')
 
             foreach ($collections['attributes'] as $attribute) {
                 $attributes[] = new Document([
-                    '$id' => ID::custom($attribute['$id']),
+                    '$id' => $attribute['$id'],
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
@@ -210,7 +210,7 @@ App::post('/v1/databases')
 
             foreach ($collections['indexes'] as $index) {
                 $indexes[] = new Document([
-                    '$id' => ID::custom($index['$id']),
+                    '$id' => $index['$id'],
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],

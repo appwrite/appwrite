@@ -575,9 +575,9 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -605,9 +605,9 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 

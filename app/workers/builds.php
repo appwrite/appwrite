@@ -84,7 +84,7 @@ class BuildsV1 extends Worker
                 '$id' => $buildId,
                 '$permissions' => [],
                 'startTime' => $startTime,
-                'deploymentId' => ID::custom($deployment->getId()),
+                'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
@@ -124,7 +124,7 @@ class BuildsV1 extends Worker
 
         /** Trigger Realtime */
         $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
-            'functionId' => ID::custom($function->getId()),
+            'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId()
         ]);
         $target = Realtime::fromPayload(

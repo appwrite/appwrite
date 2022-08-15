@@ -444,7 +444,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         ]));
 
         $stats->set($project->getId(), [
-            'projectId' => ID::custom($project->getId()),
+            'projectId' => $project->getId(),
             'teamId' => $project->getAttribute('teamId')
         ]);
         $stats->incr($project->getId(), 'connections');

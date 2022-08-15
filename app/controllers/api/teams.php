@@ -65,9 +65,9 @@ App::post('/v1/teams')
         $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
             '$id' => $teamId,
             '$permissions' => [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::read(Role::team($teamId)),
+                Permission::update(Role::team($teamId), 'owner'),
+                Permission::delete(Role::team($teamId), 'owner'),
             ],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
@@ -79,17 +79,17 @@ App::post('/v1/teams')
             $membership = new Document([
                 '$id' => $membershipId,
                 '$permissions' => [
-                    Permission::read(Role::user(ID::custom($user->getId()))),
-                    Permission::read(Role::team(ID::custom($team->getId()))),
-                    Permission::update(Role::user(ID::custom($user->getId()))),
-                    Permission::update(Role::team(ID::custom($team->getId()), 'owner')),
-                    Permission::delete(Role::user(ID::custom($user->getId()))),
-                    Permission::delete(Role::team(ID::custom($team->getId()), 'owner')),
+                    Permission::read(Role::user($user->getId())),
+                    Permission::read(Role::team($team->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::update(Role::team($team->getId(), 'owner')),
+                    Permission::delete(Role::user($user->getId())),
+                    Permission::delete(Role::team($team->getId(), 'owner')),
                 ],
-                'userId' => ID::custom($user->getId()),
+                'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'teamId' => ID::custom($team->getId()),
-                'teamInternalId' => ID::custom($team->getInternalId()),
+                'teamId' => $team->getId(),
+                'teamInternalId' => $team->getInternalId(),
                 'roles' => $roles,
                 'invited' => DateTime::now(),
                 'joined' => DateTime::now(),
@@ -392,15 +392,15 @@ App::post('/v1/teams/:teamId/memberships')
             '$id' => $membershipId,
             '$permissions' => [
                 Permission::read(Role::any()),
-                Permission::update(Role::user(ID::custom($invitee->getId()))),
-                Permission::update(Role::team(ID::custom($team->getId()), 'owner')),
-                Permission::delete(Role::user(ID::custom($invitee->getId()))),
-                Permission::delete(Role::team(ID::custom($team->getId()), 'owner')),
+                Permission::update(Role::user($invitee->getId())),
+                Permission::update(Role::team($team->getId(), 'owner')),
+                Permission::delete(Role::user($invitee->getId())),
+                Permission::delete(Role::team($team->getId(), 'owner')),
             ],
-            'userId' => ID::custom($invitee->getId()),
-            'userInternalId' => ID::custom($invitee->getInternalId()),
-            'teamId' => ID::custom($team->getId()),
-            'teamInternalId' => ID::custom($team->getInternalId()),
+            'userId' => $invitee->getId(),
+            'userInternalId' => $invitee->getInternalId(),
+            'teamId' => $team->getId(),
+            'teamInternalId' => $team->getInternalId(),
             'roles' => $roles,
             'invited' => DateTime::now(),
             'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
@@ -735,8 +735,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
             '$id' => ID::unique(),
-            'userId' => ID::custom($user->getId()),
-            'userInternalId' => ID::custom($user->getInternalId()),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
             'provider' => Auth::SESSION_PROVIDER_EMAIL,
             'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
@@ -748,9 +748,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
-                Permission::read(Role::user(ID::custom($user->getId()))),
-                Permission::update(Role::user(ID::custom($user->getId()))),
-                Permission::delete(Role::user(ID::custom($user->getId()))),
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -914,7 +914,7 @@ App::get('/v1/teams/:teamId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => ID::custom($log['userId']),
+                'userId' => $log['userId'],
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,

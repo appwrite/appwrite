@@ -99,8 +99,8 @@ App::post('/v1/projects')
                 Permission::delete(Role::team(ID::custom($teamId), 'developer')),
             ],
             'name' => $name,
-            'teamInternalId' => ID::custom($team->getInternalId()),
-            'teamId' => ID::custom($team->getId()),
+            'teamInternalId' => $team->getInternalId(),
+            'teamId' => $team->getId(),
             'description' => $description,
             'logo' => $logo,
             'url' => $url,
@@ -141,7 +141,7 @@ App::post('/v1/projects')
 
             foreach ($collection['attributes'] as $attribute) {
                 $attributes[] = new Document([
-                    '$id' => ID::custom($attribute['$id']),
+                    '$id' => $attribute['$id'],
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
@@ -155,7 +155,7 @@ App::post('/v1/projects')
 
             foreach ($collection['indexes'] as $index) {
                 $indexes[] = new Document([
-                    '$id' => ID::custom($index['$id']),
+                    '$id' => $index['$id'],
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],
@@ -612,8 +612,8 @@ App::post('/v1/projects/:projectId/webhooks')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'projectInternalId' => ID::custom($project->getInternalId()),
-            'projectId' => ID::custom($project->getId()),
+            'projectInternalId' => $project->getInternalId(),
+            'projectId' => $project->getId(),
             'name' => $name,
             'events' => $events,
             'url' => $url,
@@ -861,7 +861,7 @@ App::post('/v1/projects/:projectId/keys')
                 Permission::delete(Role::any()),
             ],
             'projectInternalId' => $project->getInternalId(),
-            'projectId' => ID::custom($project->getId()),
+            'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
             'expire' => $expire,

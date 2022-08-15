@@ -84,7 +84,7 @@ App::post('/v1/storage/buckets')
 
             foreach ($files['attributes'] as $attribute) {
                 $attributes[] = new Document([
-                    '$id' => ID::custom($attribute['$id']),
+                    '$id' => $attribute['$id'],
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
@@ -98,7 +98,7 @@ App::post('/v1/storage/buckets')
 
             foreach ($files['indexes'] as $index) {
                 $indexes[] = new Document([
-                    '$id' => ID::custom($index['$id']),
+                    '$id' => $index['$id'],
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],
@@ -108,7 +108,7 @@ App::post('/v1/storage/buckets')
 
             $dbForProject->createDocument('buckets', new Document([
                 '$id' => $bucketId,
-                '$collection' => ID::custom('buckets'),
+                '$collection' => 'buckets',
                 '$permissions' => $permissions,
                 'name' => $name,
                 'maximumFileSize' => $maximumFileSize,
@@ -539,7 +539,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     $doc = new Document([
                         '$id' => $fileId,
                         '$permissions' => $permissions,
-                        'bucketId' => ID::custom($bucket->getId()),
+                        'bucketId' => $bucket->getId(),
                         'name' => $fileName,
                         'path' => $path,
                         'signature' => $fileHash,

@@ -48,10 +48,10 @@ class DatabasesPermissionsTeamTest extends Scope
             'collectionId' => ID::custom('collection1'),
             'name' => 'Collection 1',
             'permissions' => [
-                Permission::read(Role::team(ID::custom($teams['team1']['$id']))),
-                Permission::create(Role::team(ID::custom($teams['team1']['$id']), 'admin')),
-                Permission::update(Role::team(ID::custom($teams['team1']['$id']), 'admin')),
-                Permission::delete(Role::team(ID::custom($teams['team1']['$id']), 'admin')),
+                Permission::read(Role::team($teams['team1']['$id'])),
+                Permission::create(Role::team($teams['team1']['$id'], 'admin')),
+                Permission::update(Role::team($teams['team1']['$id'], 'admin')),
+                Permission::delete(Role::team($teams['team1']['$id'], 'admin')),
             ],
         ]);
 
@@ -67,10 +67,10 @@ class DatabasesPermissionsTeamTest extends Scope
             'collectionId' => ID::custom('collection2'),
             'name' => 'Collection 2',
             'permissions' => [
-                Permission::read(Role::team(ID::custom($teams['team2']['$id']))),
-                Permission::create(Role::team(ID::custom($teams['team2']['$id']), 'owner')),
-                Permission::update(Role::team(ID::custom($teams['team2']['$id']), 'owner')),
-                Permission::delete(Role::team(ID::custom($teams['team2']['$id']), 'owner')),
+                Permission::read(Role::team($teams['team2']['$id'])),
+                Permission::create(Role::team($teams['team2']['$id'], 'owner')),
+                Permission::update(Role::team($teams['team2']['$id'], 'owner')),
+                Permission::delete(Role::team($teams['team2']['$id'], 'owner')),
             ]
         ]);
 

@@ -82,9 +82,9 @@ class DatabasesCustomClientTest extends Scope
             ],
             'permissions' => [
                 Permission::read(Role::user(ID::custom('user2'))),
-                Permission::read(Role::user(ID::custom($userId))),
-                Permission::update(Role::user(ID::custom($userId))),
-                Permission::delete(Role::user(ID::custom($userId))),
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
             ],
         ]);
 
