@@ -2,7 +2,6 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
-use Appwrite\Event\Audit;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -240,15 +239,15 @@ App::put('/v1/storage/buckets/:bucketId')
         $antivirus ??= $bucket->getAttribute('antivirus', true);
 
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
-            ->setAttribute('name', $name)
-            ->setAttribute('$read', $read)
-            ->setAttribute('$write', $write)
-            ->setAttribute('maximumFileSize', $maximumFileSize)
-            ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
-            ->setAttribute('enabled', (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN))
-            ->setAttribute('encryption', (bool) filter_var($encryption, FILTER_VALIDATE_BOOLEAN))
-            ->setAttribute('permission', $permission)
-            ->setAttribute('antivirus', (bool) filter_var($antivirus, FILTER_VALIDATE_BOOLEAN)));
+                ->setAttribute('name', $name)
+                ->setAttribute('$read', $read)
+                ->setAttribute('$write', $write)
+                ->setAttribute('maximumFileSize', $maximumFileSize)
+                ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
+                ->setAttribute('enabled', (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN))
+                ->setAttribute('encryption', (bool) filter_var($encryption, FILTER_VALIDATE_BOOLEAN))
+                ->setAttribute('permission', $permission)
+                ->setAttribute('antivirus', (bool) filter_var($antivirus, FILTER_VALIDATE_BOOLEAN)));
 
         $events
             ->setParam('bucketId', $bucket->getId())
@@ -877,7 +876,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'hit')
                 ->send($data)
-                ;
+            ;
         }
 
         $source = $deviceFiles->read($path);
