@@ -560,7 +560,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
 
-                    $file = Authorization::skip(fn () => $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc));
+                    $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                 } else {
                     $file = $file
                         ->setAttribute('$permissions', $permissions)
@@ -575,7 +575,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('metadata', $metadata)
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
-                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                    $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                 }
             } catch (StructureException $exception) {
                 throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
@@ -613,13 +613,13 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'metadata' => $metadata,
                     ]);
 
-                    $file = Authorization::skip(fn () => $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc));
+                    $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
                 } else {
                     $file = $file
                         ->setAttribute('chunksUploaded', $chunksUploaded)
                         ->setAttribute('metadata', $metadata);
 
-                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                    $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                 }
             } catch (StructureException $exception) {
                 throw new Exception($exception->getMessage(), 400, Exception::DOCUMENT_INVALID_STRUCTURE);
@@ -687,11 +687,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         $queries[] = Query::offset($offset);
         $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
         if (!empty($cursor)) {
-            if ($bucket->getAttribute('fileSecurity', false)) {
-                $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
-            } else {
-                $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor));
-            }
+            $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("File '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);

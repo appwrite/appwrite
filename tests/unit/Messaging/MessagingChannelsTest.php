@@ -147,7 +147,7 @@ class MessagingChannelsTest extends TestCase
     }
 
     /**
-     * Tests Wildcard (role:all) Permissions on every channel.
+     * Tests Wildcard ("any") Permissions on every channel.
      */
     public function testWildcardPermission(): void
     {

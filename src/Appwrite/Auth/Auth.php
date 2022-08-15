@@ -17,7 +17,7 @@ class Auth
     public const USER_ROLE_ADMIN = 'admin';
     public const USER_ROLE_DEVELOPER = 'developer';
     public const USER_ROLE_OWNER = 'owner';
-    public const USER_ROLE_APP = 'app';
+    public const USER_ROLE_APPS = 'apps';
     public const USER_ROLE_SYSTEM = 'system';
 
     /**
@@ -290,7 +290,7 @@ class Auth
      */
     public static function isAppUser(array $roles): bool
     {
-        if (in_array(self::USER_ROLE_APP, $roles)) {
+        if (in_array(self::USER_ROLE_APPS, $roles)) {
             return true;
         }
 

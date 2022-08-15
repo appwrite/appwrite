@@ -290,7 +290,7 @@ App::init()
                     'name' => $project->getAttribute('name', 'Untitled'),
                 ]);
 
-                $role = Auth::USER_ROLE_APP;
+                $role = Auth::USER_ROLE_APPS;
                 $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
                 $expire = $key->getAttribute('expire');
@@ -299,7 +299,7 @@ App::init()
                     throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
                 }
 
-                Authorization::setRole(Auth::USER_ROLE_APP);
+                Authorization::setRole(Auth::USER_ROLE_APPS);
                 Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
             }
         }

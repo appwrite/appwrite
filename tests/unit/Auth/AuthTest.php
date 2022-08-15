@@ -18,7 +18,7 @@ class AuthTest extends TestCase
     public function tearDown(): void
     {
         Authorization::cleanRoles();
-        Authorization::setRole('role:all');
+        Authorization::setRole('any');
     }
 
     public function testCookieName(): void
@@ -176,11 +176,11 @@ class AuthTest extends TestCase
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_ADMIN]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_DEVELOPER]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER]));
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APP]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS]));
         $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_SYSTEM]));
 
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APP, Auth::USER_ROLE_APP]));
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APP, Auth::USER_ROLE_GUESTS]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_APPS]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_GUESTS]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_ADMIN, Auth::USER_ROLE_DEVELOPER]));
     }
@@ -193,11 +193,11 @@ class AuthTest extends TestCase
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_ADMIN]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_DEVELOPER]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER]));
-        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APP]));
+        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_SYSTEM]));
 
-        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APP, Auth::USER_ROLE_APP]));
-        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APP, Auth::USER_ROLE_GUESTS]));
+        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_APPS]));
+        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_GUESTS]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_ADMIN, Auth::USER_ROLE_DEVELOPER]));
     }
@@ -282,7 +282,7 @@ class AuthTest extends TestCase
 
     public function testAppUserRoles(): void
     {
-        Authorization::setRole(Auth::USER_ROLE_APP);
+        Authorization::setRole(Auth::USER_ROLE_APPS);
         $user  = new Document([
             '$id' => ID::custom('123'),
             'memberships' => [

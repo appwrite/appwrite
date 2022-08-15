@@ -80,7 +80,7 @@ return [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins, []),
     ],
-    Auth::USER_ROLE_APP => [
+    Auth::USER_ROLE_APPS => [
         'label' => 'Application',
         'scopes' => ['health.read'],
     ],

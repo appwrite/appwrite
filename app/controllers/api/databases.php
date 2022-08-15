@@ -611,7 +611,9 @@ App::get('/v1/databases/:databaseId/collections')
                 throw new Exception("Collection '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER
+                ? Query::cursorAfter($cursorDocument)
+                : Query::cursorBefore($cursorDocument);
         }
 
         $usage
@@ -2051,9 +2053,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         if (!empty($cursor)) {
             if ($documentSecurity) {
-                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor));
-            } else {
                 $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
+            } else {
+                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor));
             }
             if ($cursorDocument->isEmpty()) {
                 throw new Exception("Document '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);

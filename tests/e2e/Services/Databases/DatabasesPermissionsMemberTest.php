@@ -145,7 +145,7 @@ class DatabasesPermissionsMemberTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         /**
-         * Check role:all collection
+         * Check "any" collection
          */
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['public']  . '/documents', [
             'origin' => 'http://localhost',
