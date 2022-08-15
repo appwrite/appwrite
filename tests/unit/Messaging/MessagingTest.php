@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Messaging;
 
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
@@ -16,7 +16,7 @@ class MessagingTest extends TestCase
     {
     }
 
-    public function testUser()
+    public function testUser(): void
     {
         $realtime = new Realtime();
 
@@ -134,7 +134,7 @@ class MessagingTest extends TestCase
         $this->assertEmpty($realtime->subscriptions);
     }
 
-    public function testConvertChannelsGuest()
+    public function testConvertChannelsGuest(): void
     {
         $user = new Document([
             '$id' => ''
@@ -157,7 +157,7 @@ class MessagingTest extends TestCase
         $this->assertArrayNotHasKey('account.456', $channels);
     }
 
-    public function testConvertChannelsUser()
+    public function testConvertChannelsUser(): void
     {
         $user  = new Document([
             '$id' => '123',

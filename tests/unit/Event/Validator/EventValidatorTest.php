@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Event\Validator;
 
 use Appwrite\Event\Validator\Event;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +20,7 @@ class EventValidatorTest extends TestCase
     {
     }
 
-    public function testValues()
+    public function testValues(): void
     {
         /**
          * Test for SUCCESS

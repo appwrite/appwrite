@@ -10,7 +10,7 @@ class None extends Model
     /**
      * @var bool
      */
-    protected $none = true;
+    protected bool $none = true;
 
     /**
      * Get Name

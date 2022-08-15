@@ -30,7 +30,6 @@ class AttributeEnum extends Attribute
                 'default' => null,
                 'example' => 'element',
                 'array' => true,
-                'require' => true,
             ])
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
@@ -45,8 +44,6 @@ class AttributeEnum extends Attribute
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'example' => 'element',
-                'array' => false,
-                'require' => false,
             ])
         ;
     }

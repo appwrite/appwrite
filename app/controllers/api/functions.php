@@ -112,7 +112,7 @@ App::get('/v1/functions')
             $cursorFunction = $dbForProject->getDocument('functions', $cursor);
 
             if ($cursorFunction->isEmpty()) {
-                throw new Exception("Function '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Function '{$cursor}' for the 'cursor' value not found.");
             }
         }
 
@@ -126,33 +126,6 @@ App::get('/v1/functions')
             'functions' => $dbForProject->find('functions', $queries, $limit, $offset, [], [$orderType], $cursorFunction ?? null, $cursorDirection),
             'total' => $dbForProject->count('functions', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FUNCTION_LIST);
-    });
-
-App::get('/v1/functions/runtimes')
-    ->groups(['api', 'functions'])
-    ->desc('List runtimes')
-    ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'listRuntimes')
-    ->label('sdk.description', '/docs/references/functions/list-runtimes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_RUNTIME_LIST)
-    ->inject('response')
-    ->action(function (Response $response) {
-
-        $runtimes = Config::getParam('runtimes');
-
-        $runtimes = array_map(function ($key) use ($runtimes) {
-            $runtimes[$key]['$id'] = $key;
-            return $runtimes[$key];
-        }, array_keys($runtimes));
-
-        $response->dynamic(new Document([
-            'total' => count($runtimes),
-            'runtimes' => $runtimes
-        ]), Response::MODEL_RUNTIME_LIST);
     });
 
 App::get('/v1/functions/:functionId')
@@ -173,7 +146,7 @@ App::get('/v1/functions/:functionId')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
@@ -198,7 +171,7 @@ App::get('/v1/functions/:functionId/usage')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $usage = [];
@@ -307,7 +280,7 @@ App::put('/v1/functions/:functionId')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $original = $function->getAttribute('schedule', '');
@@ -368,19 +341,19 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($build->isEmpty()) {
-            throw new Exception('Build not found', 404, Exception::BUILD_NOT_FOUND);
+            throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
         if ($build->getAttribute('status') !== 'ready') {
-            throw new Exception('Build not ready', 400, Exception::BUILD_NOT_READY);
+            throw new Exception(Exception::BUILD_NOT_READY);
         }
 
         $schedule = $function->getAttribute('schedule', '');
@@ -430,11 +403,11 @@ App::delete('/v1/functions/:functionId')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         if (!$dbForProject->deleteDocument('functions', $function->getId())) {
-            throw new Exception('Failed to remove function from DB', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove function from DB');
         }
 
         $deletes
@@ -478,7 +451,7 @@ App::post('/v1/functions/:functionId/deployments')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $file = $request->getFiles('code');
@@ -487,7 +460,7 @@ App::post('/v1/functions/:functionId/deployments')
         $upload = new Upload();
 
         if (empty($file)) {
-            throw new Exception('No file sent', 400, Exception::STORAGE_FILE_EMPTY);
+            throw new Exception(Exception::STORAGE_FILE_EMPTY, 'No file sent');
         }
 
         // Make sure we handle a single file and multiple files the same way
@@ -496,7 +469,7 @@ App::post('/v1/functions/:functionId/deployments')
         $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         if (!$fileExt->isValid($file['name'])) { // Check if file type is allowed
-            throw new Exception('File type not allowed', 400, Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
         }
 
         $contentRange = $request->getHeader('content-range');
@@ -510,7 +483,7 @@ App::post('/v1/functions/:functionId/deployments')
             $fileSize = $request->getContentRangeSize();
             $deploymentId = $request->getHeader('x-appwrite-id', $deploymentId);
             if (is_null($start) || is_null($end) || is_null($fileSize)) {
-                throw new Exception('Invalid content-range header', 400, Exception::STORAGE_INVALID_CONTENT_RANGE);
+                throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
             if ($end === $fileSize) {
@@ -524,11 +497,11 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         if (!$fileSizeValidator->isValid($fileSize)) { // Check if file size is exceeding allowed limit
-            throw new Exception('File size not allowed', 400, Exception::STORAGE_INVALID_FILE_SIZE);
+            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE);
         }
 
         if (!$upload->isValid($fileTmpName)) {
-            throw new Exception('Invalid file', 403, Exception::STORAGE_INVALID_FILE);
+            throw new Exception(Exception::STORAGE_INVALID_FILE);
         }
 
         // Save to storage
@@ -549,7 +522,7 @@ App::post('/v1/functions/:functionId/deployments')
         $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
 
         if (empty($chunksUploaded)) {
-            throw new Exception('Failed moving file', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
         }
 
         $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
@@ -656,14 +629,14 @@ App::get('/v1/functions/:functionId/deployments')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         if (!empty($cursor)) {
             $cursorDeployment = $dbForProject->getDocument('deployments', $cursor);
 
             if ($cursorDeployment->isEmpty()) {
-                throw new Exception("Tag '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Tag '{$cursor}' for the 'cursor' value not found.");
             }
         }
 
@@ -712,17 +685,17 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
-            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
@@ -752,21 +725,21 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
-            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         if ($deviceFunctions->delete($deployment->getAttribute('path', ''))) {
             if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception('Failed to remove deployment from DB', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
             }
         }
 
@@ -818,7 +791,7 @@ App::post('/v1/functions/:functionId/executions')
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $runtimes = Config::getParam('runtimes', []);
@@ -826,33 +799,33 @@ App::post('/v1/functions/:functionId/executions')
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
         if (\is_null($runtime)) {
-            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400, Exception::FUNCTION_RUNTIME_UNSUPPORTED);
+            throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
         $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
-            throw new Exception('Deployment not found. Create a deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found. Create a deployment before trying to execute a function', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
         }
 
         /** Check if build has completed */
         $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
         if ($build->isEmpty()) {
-            throw new Exception('Build not found', 404, Exception::BUILD_NOT_FOUND);
+            throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
         if ($build->getAttribute('status') !== 'ready') {
-            throw new Exception('Build not ready', 400, Exception::BUILD_NOT_READY);
+            throw new Exception(Exception::BUILD_NOT_READY);
         }
 
         $validator = new Authorization('execute');
 
         if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
-            throw new Exception($validator->getDescription(), 401, Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
         }
 
         $executionId = $dbForProject->getId();
@@ -1000,14 +973,14 @@ App::get('/v1/functions/:functionId/executions')
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         if (!empty($cursor)) {
             $cursorExecution = $dbForProject->getDocument('executions', $cursor);
 
             if ($cursorExecution->isEmpty()) {
-                throw new Exception("Execution '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Execution '{$cursor}' for the 'cursor' value not found.");
             }
         }
 
@@ -1048,17 +1021,17 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $execution = $dbForProject->getDocument('executions', $executionId);
 
         if ($execution->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Execution not found', 404, Exception::EXECUTION_NOT_FOUND);
+            throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
         if ($execution->isEmpty()) {
-            throw new Exception('Execution not found', 404, Exception::EXECUTION_NOT_FOUND);
+            throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);
@@ -1070,7 +1043,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'retryBuild')
     ->label('sdk.description', '/docs/references/functions/retry-build.md')
@@ -1089,21 +1062,21 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         if ($deployment->isEmpty()) {
-            throw new Exception('Deployment not found', 404, Exception::DEPLOYMENT_NOT_FOUND);
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
         $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
 
         if ($build->isEmpty()) {
-            throw new Exception('Build not found', 404, Exception::BUILD_NOT_FOUND);
+            throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
         if ($build->getAttribute('status') !== 'failed') {
-            throw new Exception('Build not failed', 400, Exception::BUILD_IN_PROGRESS);
+            throw new Exception(Exception::BUILD_IN_PROGRESS, 'Build not failed');
         }
 
         $events
@@ -1120,4 +1093,31 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             ->trigger();
 
         $response->noContent();
+    });
+
+App::get('/v1/functions/runtimes')
+    ->groups(['api', 'functions'])
+    ->desc('List runtimes')
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'listRuntimes')
+    ->label('sdk.description', '/docs/references/functions/list-runtimes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_RUNTIME_LIST)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        $runtimes = Config::getParam('runtimes');
+
+        $runtimes = array_map(function ($key) use ($runtimes) {
+            $runtimes[$key]['$id'] = $key;
+            return $runtimes[$key];
+        }, array_keys($runtimes));
+
+        $response->dynamic(new Document([
+            'total' => count($runtimes),
+            'runtimes' => $runtimes
+        ]), Response::MODEL_RUNTIME_LIST);
     });

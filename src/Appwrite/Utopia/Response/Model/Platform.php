@@ -10,7 +10,7 @@ class Platform extends Model
     /**
      * @var bool
      */
-    protected $public = false;
+    protected bool $public = false;
 
     public function __construct()
     {
