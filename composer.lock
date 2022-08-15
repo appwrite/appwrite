@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "31918539abb7d1e82ca84ed8fc21969e",
+    "content-hash": "b252bbca91fb272469ad1aab83cbfe93",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1733,16 +1733,17 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-feat-update-database-queries",
+            "version": "dev-refactor-permissions",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "5c200defd69155c956fc127e8e1771ef820f9dad"
+                "reference": "c5e5bdaa190e1c9993d35a04c78a46870a1265bb"
             },
             "require": {
+                "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "dev-feat-query-gen-2.3"
+                "utopia-php/database": ">=0.11 <1.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1771,7 +1772,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-08-10T19:51:33+00:00"
+            "time": "2022-08-14T23:58:51+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1830,16 +1831,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-feat-update-database-queries",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "165d4f74fedf31c98c038eb92a0516472885a78a"
+                "reference": "458da3e60ea222bf9791f4891591d7f2ee16e4bb"
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "dev-feat-query-gen-2.3"
+                "utopia-php/database": "0.20.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1868,7 +1869,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-08-10T20:15:22+00:00"
+            "time": "2022-08-14T19:59:21+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2029,11 +2030,11 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-query-gen-2.3",
+            "version": "0.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "d6ba28d373e2cad2fc5d916564fd245e17bea38f"
+                "reference": "cd89b41564223cddf7d87a41bbaf736a0c89f327"
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2083,7 +2084,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-08-11T19:26:25+00:00"
+            "time": "2022-08-14T15:22:34+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5321,9 +5322,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/abuse": 20,
-        "utopia-php/audit": 20,
-        "utopia-php/database": 20
+        "utopia-php/abuse": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

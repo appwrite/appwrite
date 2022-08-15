@@ -50,7 +50,7 @@ class Log extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Log creation date in Datetime.',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('osCode', [
                 'type' => self::TYPE_STRING,

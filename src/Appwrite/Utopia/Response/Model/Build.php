@@ -49,13 +49,13 @@ class Build extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'The deployment creation date in Datetime.',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('endTime', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'The time the build was finished in Datetime.',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_INTEGER,

@@ -12,6 +12,7 @@ abstract class Model
     public const TYPE_BOOLEAN = 'boolean';
     public const TYPE_JSON = 'json';
     public const TYPE_DATETIME = 'datetime';
+    public const TYPE_DATETIME_EXAMPLE = '2020-10-15T06:38:00.000Z';
 
     /**
      * @var bool
