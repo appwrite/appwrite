@@ -1301,7 +1301,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime')
     ->alias('/v1/database/collections/:collectionId/attributes/datetime', ['databaseId' => 'default'])
-    ->desc('Create datetime Attribute')
+    ->desc('Create DateTime Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1403,7 +1403,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         Response::MODEL_ATTRIBUTE_ENUM,
         Response::MODEL_ATTRIBUTE_URL,
         Response::MODEL_ATTRIBUTE_IP,
-        Response::MODEL_ATTRIBUTE_STRING,])// needs to be last, since its condition would dominate any other string attribute
+        Response::MODEL_ATTRIBUTE_DATETIME,
+        Response::MODEL_ATTRIBUTE_STRING])// needs to be last, since its condition would dominate any other string attribute
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')

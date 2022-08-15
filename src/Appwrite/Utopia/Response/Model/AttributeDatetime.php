@@ -21,7 +21,7 @@ class AttributeDatetime extends Attribute
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Attribute type.',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME,
             ])
             ->addRule('format', [
                 'type' => self::TYPE_DATETIME,
@@ -43,8 +43,7 @@ class AttributeDatetime extends Attribute
     }
 
     public array $conditions = [
-        'type' => self::TYPE_DATETIME,
-        'format' => \APP_DATABASE_ATTRIBUTE_DATETIME
+        'type' => self::TYPE_DATETIME
     ];
 
     /**
