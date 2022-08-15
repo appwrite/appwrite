@@ -57,7 +57,7 @@ class TimeSeries extends Calculator
         ],
 
         'collections.$all.requests.create' => [
-            'table' => 'appwrite_usage_dollections_{scope}_requests_create',
+            'table' => 'appwrite_usage_collections_{scope}_requests_create',
         ],
         'collections.$all.requests.read' => [
             'table' => 'appwrite_usage_collections_{scope}_requests_read',
