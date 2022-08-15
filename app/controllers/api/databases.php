@@ -5,6 +5,7 @@ use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
+use Utopia\Database\Permission;
 use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\ID;
 use Utopia\Validator\Boolean;
@@ -524,8 +525,6 @@ App::post('/v1/databases/:databaseId/collections')
 
         $collectionId = $collectionId == 'unique()' ? ID::unique() : $collectionId;
 
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
-
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
                 '$id' => $collectionId,
@@ -793,7 +792,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         }
 
         $permissions ??= $collection->getPermissions() ?? [];
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
+
         $enabled ??= $collection->getAttribute('enabled', true);
 
         try {
@@ -1938,22 +1937,41 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
          * Add permissions for current the user for any missing types
          * from the allowed permissions for this resource type.
          */
-        $permissions = PermissionsProcessor::addDefaultsIfNeeded(
-            $permissions,
-            $user->getId(),
-            allowedPermissions: \array_filter(
-                Database::PERMISSIONS,
-                fn ($permission) => $permission !== Database::PERMISSION_CREATE
-            ),
+        $allowedPermissions = \array_filter(
+            Database::PERMISSIONS,
+            fn ($permission) => $permission !== Database::PERMISSION_CREATE
         );
-
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
-
-        if (!PermissionsProcessor::allowedForResourceType('document', $permissions)) {
-            throw new Exception('Invalid permission', 400, Exception::GENERAL_PERMISSION_INVALID);
+        if (\is_null($permissions)) {
+            $permissions = [];
+            if (!empty($userId)) {
+                foreach ($allowedPermissions as $permission) {
+                    $permissions[] = (new Permission($permission, 'user', $userId))->toString();
+                }
+            }
+        } else {
+            foreach ($allowedPermissions as $permission) {
+                // Default any missing allowed permissions to the current user
+                if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($userId)) {
+                    $permissions[] = (new Permission($permission, 'user', $userId))->toString();
+                }
+            }
         }
-        if (!PermissionsProcessor::allowedForUserType($permissions)) {
-            throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    if (!\str_starts_with($permission, $type)) {
+                        continue;
+                    }
+                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+                    }
+                }
+            }
         }
 
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
@@ -2321,8 +2339,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception('Document not found', 404, Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
-
         if ($documentSecurity) {
             $valid |= $validator->isValid($document->getUpdate());
         }
@@ -2330,11 +2346,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
+        // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            if (!\is_null($permissions)) {
-                if (!PermissionsProcessor::allowedForUserType($permissions)) {
-                    throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    if (!\str_starts_with($permission, $type)) {
+                        continue;
+                    }
+                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+                    }
                 }
             }
         }

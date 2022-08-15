@@ -21,6 +21,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\ID;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
@@ -378,22 +379,40 @@ App::post('/v1/storage/buckets/:bucketId/files')
          * Add permissions for current the user for any missing types
          * from the allowed permissions for this resource type.
          */
-        $permissions = PermissionsProcessor::addDefaultsIfNeeded(
-            $permissions,
-            $user->getId(),
-            allowedPermissions: \array_filter(
-                Database::PERMISSIONS,
-                fn ($permission) => $permission !== Database::PERMISSION_CREATE
-            ),
+        $allowedPermissions = \array_filter(
+            Database::PERMISSIONS,
+            fn ($permission) => $permission !== Database::PERMISSION_CREATE
         );
-
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
-
-        if (!PermissionsProcessor::allowedForResourceType('file', $permissions)) {
-            throw new Exception('Invalid permission', 400, Exception::GENERAL_PERMISSION_INVALID);
+        if (\is_null($permissions)) {
+            $permissions = [];
+            if (!empty($userId)) {
+                foreach ($allowedPermissions as $permission) {
+                    $permissions[] = (new Permission($permission, 'user', $userId))->toString();
+                }
+            }
+        } else {
+            foreach ($allowedPermissions as $permission) {
+                // Default any missing allowed permissions to the current user
+                if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($userId)) {
+                    $permissions[] = (new Permission($permission, 'user', $userId))->toString();
+                }
+            }
         }
-        if (!PermissionsProcessor::allowedForUserType($permissions)) {
-            throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    if (!\str_starts_with($permission, $type)) {
+                        continue;
+                    }
+                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+                    }
+                }
+            }
         }
 
         $file = $request->getFiles('file');
@@ -1288,10 +1307,20 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
 
-        $permissions = PermissionsProcessor::handleAggregates($permissions);
-
-        if (!PermissionsProcessor::allowedForUserType($permissions)) {
-            throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    if (!\str_starts_with($permission, $type)) {
+                        continue;
+                    }
+                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+                    }
+                }
+            }
         }
 
         $file->setAttribute('$permissions', $permissions);
