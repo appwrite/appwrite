@@ -1943,16 +1943,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         );
         if (\is_null($permissions)) {
             $permissions = [];
-            if (!empty($userId)) {
+            if (!empty($user->getId())) {
                 foreach ($allowedPermissions as $permission) {
-                    $permissions[] = (new Permission($permission, 'user', $userId))->toString();
+                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                 }
             }
         } else {
             foreach ($allowedPermissions as $permission) {
                 // Default any missing allowed permissions to the current user
-                if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($userId)) {
-                    $permissions[] = (new Permission($permission, 'user', $userId))->toString();
+                if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($user->getId())) {
+                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                 }
             }
         }
