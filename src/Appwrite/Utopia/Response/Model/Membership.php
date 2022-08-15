@@ -20,13 +20,13 @@ class Membership extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Membership creation date in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Membership update date in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
@@ -62,13 +62,13 @@ class Membership extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Date, the user has been invited to join the team in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('joined', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Date, the user has accepted the invitation to join the team in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('confirm', [
                 'type' => self::TYPE_BOOLEAN,

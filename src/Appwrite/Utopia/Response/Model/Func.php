@@ -22,13 +22,13 @@ class Func extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Function creation date in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Function update date in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('execute', [
                 'type' => self::TYPE_STRING,
@@ -84,13 +84,13 @@ class Func extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Function next scheduled execution date in Datetime.',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('schedulePrevious', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Function Previous scheduled execution date in Datetime.',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('timeout', [
                 'type' => self::TYPE_INTEGER,
