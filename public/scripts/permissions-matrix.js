@@ -41,7 +41,7 @@
                     let [type, enabled] = entry;
                     type = this.parseOutputPermission(type);
                     if (enabled) {
-                        this.rawPermissions.push(`${type}(${role})`);
+                        this.rawPermissions.push(this.buildPermission(type, role));
                     }
                 });
                 this.permissions.push({
@@ -61,13 +61,14 @@
                             return;
                         }
                         const parsedKey = this.parseOutputPermission(key);
+                        const permissionString = this.buildPermission(parsedKey, permission.role);
                         if (permission[key]) {
-                            if (!this.rawPermissions.includes(`${parsedKey}(${permission.role})`)) {
-                                this.rawPermissions.push(`${parsedKey}(${permission.role})`);
+                            if (!this.rawPermissions.includes(permissionString)) {
+                                this.rawPermissions.push(permissionString);
                             }
                         } else {
                             this.rawPermissions = this.rawPermissions.filter(p => {
-                                return !p.includes(`${parsedKey}(${permission.role})`);
+                                return !p.includes(permissionString);
                             });
                         }
                     });
@@ -82,8 +83,14 @@
             parsePermission(permission) {
                 let parts = permission.split('(');
                 let type = parts[0];
-                let role = parts[1].replace(')', '').replace(' ', '');
+                let role = parts[1]
+                    .replace(')', '')
+                    .replace(' ', '')
+                    .replaceAll('"', '');
                 return {type, role};
+            },
+            buildPermission(type, role) {
+                return `${type}("${role}")`
             },
             parseInputPermission(key) {
                 // Can't bind to a property named delete
