@@ -2811,6 +2811,13 @@ $collections = [
                 'lengths' => [],
                 'orders' => [],
             ],
+            [
+                '$id' => '_key_resource',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resource'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
     'files' => [

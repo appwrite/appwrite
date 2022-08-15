@@ -130,22 +130,12 @@ App::init()
 
         if ($useCache) {
             $key = md5($request->getURI() . implode('*', $request->getParams()));
-            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
+            $cache = new Cache(
+                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+            );
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
             if (!empty($data)) {
-                $cacheLog = Authorization::skip(fn() => $dbForProject->getDocument('cache', $key));
-
-                if ($cacheLog->isEmpty()) {
-                    Authorization::skip(fn() => $dbForProject->createDocument('cache', new Document([
-                        '$id' => $key,
-                        'accessedAt' => \time(),
-                    ])));
-                } elseif (date('Y/m/d', time()) > date('Y/m/d', $cacheLog->getAttribute('accessedAt'))) {
-                    $cacheLog->setAttribute('accessedAt', \time());
-                    Authorization::skip(fn() => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
-                }
-
                 $data = json_decode($data, true);
 
                 $response
@@ -379,10 +369,10 @@ App::shutdown()
         && $project->getId()
         && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
         && !empty($route->getLabel('sdk.namespace', null))
-    ) { // Don't calculate console usage on admin mode
+        ) {
             $usage
-                ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-                ->setParam('networkResponseSize', $response->getSize())
-                ->submit();
+            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
+            ->setParam('networkResponseSize', $response->getSize())
+            ->submit();
     }
     });
