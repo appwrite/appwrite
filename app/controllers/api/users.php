@@ -485,7 +485,7 @@ App::patch('/v1/users/:userId/email')
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         } catch (Duplicate $th) {
-            throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
 
@@ -727,7 +727,7 @@ App::delete('/v1/users/:userId')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         // clone user object to send to workers
