@@ -256,8 +256,6 @@ class Auth
      * @param int $length
      *
      * @return string
-     *
-     * @throws \Exception
      */
     public static function passwordGenerator(int $length = 20): string
     {
@@ -272,8 +270,6 @@ class Auth
      * @param int $length
      *
      * @return string
-     *
-     * @throws \Exception
      */
     public static function tokenGenerator(int $length = 128): string
     {
@@ -288,8 +284,6 @@ class Auth
      * @param int $length
      *
      * @return string
-     *
-     * @throws \Exception
      */
     public static function codeGenerator(int $length = 6): string
     {
