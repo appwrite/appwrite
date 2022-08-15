@@ -521,111 +521,9 @@ params=formData;break;}
 return new Promise(function(resolve,reject){let request=new XMLHttpRequest(),key;request.withCredentials=true;request.open(method,path,true);for(key in headers){if(headers.hasOwnProperty(key)){request.setRequestHeader(key,headers[key]);}}
 request.onload=function(){if(4===request.readyState&&399>=request.status){let data=request.response;let contentType=this.getResponseHeader('content-type');contentType=contentType.substring(0,contentType.indexOf(';'));switch(contentType){case'application/json':data=JSON.parse(data);break;}
 resolve(data);}else{reject(new Error(request.statusText));}};if(progress){request.addEventListener('progress',progress);request.upload.addEventListener('progress',progress,false);}
-request.onerror=function(){reject(new Error("Network Error"));};request.send(params);})};return{'get':function(path,headers={},params={}){return call('GET',path+((params.length>0)?'?'+buildQuery(params):''),headers,{});},'post':function(path,headers={},params={},progress=null){return call('POST',path,headers,params,progress);},'put':function(path,headers={},params={},progress=null){return call('PUT',headers,params,progress);},'patch':function(path,headers={},params={},progress=null){return call('PATCH',path,headers,params,progress);},'delete':function(path,headers={},params={},progress=null){return call('DELETE',path,headers,params,progress);},'addGlobalParam':addGlobalParam,'addGlobalHeader':addGlobalHeader}}(window.document);let analytics={create:function(id,source,activity,url){return http.post('/analytics',{'content-type':'application/json'},{id:id,source:source,activity:activity,url:url,version:env.VERSION,setup:env.SETUP});},};return{analytics:analytics,};},true);})(window);(function(window){"use strict";window.ls.container.set('console',function(window){var client=new Appwrite.Client();var endpoint=window.location.origin+'/v1';client.setEndpoint(endpoint).setProject('console').setLocale(APP_ENV.LOCALE);return{client:client,account:new Appwrite.Account(client),avatars:new Appwrite.Avatars(client),databases:new Appwrite.Databases(client),functions:new Appwrite.Functions(client),health:new Appwrite.Health(client),locale:new Appwrite.Locale(client),projects:new Appwrite.Projects(client),storage:new Appwrite.Storage(client),teams:new Appwrite.Teams(client),users:new Appwrite.Users(client)}},true);})(window);(function(window){"use strict";window.ls.container.set('date',function(){function format(format,timestamp){var jsdate,f
-var txtWords=['Sun','Mon','Tues','Wednes','Thurs','Fri','Satur','January','February','March','April','May','June','July','August','September','October','November','December']
-var formatChr=/\\?(.?)/gi
-var formatChrCb=function(t,s){return f[t]?f[t]():s}
-var _pad=function(n,c){n=String(n)
-while(n.length<c){n='0'+n}
-return n}
-f={d:function(){return _pad(f.j(),2)},D:function(){return f.l().slice(0,3)},j:function(){return jsdate.getDate()},l:function(){return txtWords[f.w()]+'day'},N:function(){return f.w()||7},S:function(){var j=f.j()
-var i=j%10
-if(i<=3&&parseInt((j%100)/10,10)===1){i=0}
-return['st','nd','rd'][i-1]||'th'},w:function(){return jsdate.getDay()},z:function(){var a=new Date(f.Y(),f.n()-1,f.j())
-var b=new Date(f.Y(),0,1)
-return Math.round((a-b)/864e5)},W:function(){var a=new Date(f.Y(),f.n()-1,f.j()-f.N()+3)
-var b=new Date(a.getFullYear(),0,4)
-return _pad(1+Math.round((a-b)/864e5/7),2)},F:function(){return txtWords[6+f.n()]},m:function(){return _pad(f.n(),2)},M:function(){return f.F().slice(0,3)},n:function(){return jsdate.getMonth()+1},t:function(){return(new Date(f.Y(),f.n(),0)).getDate()},L:function(){var j=f.Y()
-return j%4===0&j%100!==0|j%400===0},o:function(){var n=f.n()
-var W=f.W()
-var Y=f.Y()
-return Y+(n===12&&W<9?1:n===1&&W>9?-1:0)},Y:function(){return jsdate.getFullYear()},y:function(){return f.Y().toString().slice(-2)},a:function(){return jsdate.getHours()>11?'pm':'am'},A:function(){return f.a().toUpperCase()},B:function(){var H=jsdate.getUTCHours()*36e2
-var i=jsdate.getUTCMinutes()*60
-var s=jsdate.getUTCSeconds()
-return _pad(Math.floor((H+i+s+36e2)/86.4)%1e3,3)},g:function(){return f.G()%12||12},G:function(){return jsdate.getHours()},h:function(){return _pad(f.g(),2)},H:function(){return _pad(f.G(),2)},i:function(){return _pad(jsdate.getMinutes(),2)},s:function(){return _pad(jsdate.getSeconds(),2)},u:function(){return _pad(jsdate.getMilliseconds()*1000,6)},e:function(){var msg='Not supported (see source code of date() for timezone on how to add support)'
-throw new Error(msg)},I:function(){var a=new Date(f.Y(),0)
-var c=Date.UTC(f.Y(),0)
-var b=new Date(f.Y(),6)
-var d=Date.UTC(f.Y(),6)
-return((a-c)!==(b-d))?1:0},O:function(){var tzo=jsdate.getTimezoneOffset()
-var a=Math.abs(tzo)
-return(tzo>0?'-':'+')+_pad(Math.floor(a/60)*100+a%60,4)},P:function(){var O=f.O()
-return(O.substr(0,3)+':'+O.substr(3,2))},T:function(){return'UTC'},Z:function(){return-jsdate.getTimezoneOffset()*60},c:function(){return'Y-m-d\\TH:i:sP'.replace(formatChr,formatChrCb)},r:function(){return'D, d M Y H:i:s O'.replace(formatChr,formatChrCb)},U:function(){return jsdate/1000|0}}
-var _date=function(format,timestamp){jsdate=(timestamp===undefined?new Date():(timestamp instanceof Date)?new Date(timestamp):new Date(timestamp*1000))
-return format.replace(formatChr,formatChrCb)}
-return _date(format,timestamp)}
-function strtotime(text,now){var parsed
-var match
-var today
-var year
-var date
-var days
-var ranges
-var len
-var times
-var regex
-var i
-var fail=false
-if(!text){return fail}
-text=text.replace(/^\s+|\s+$/g,'').replace(/\s{2,}/g,' ').replace(/[\t\r\n]/g,'').toLowerCase()
-var pattern=new RegExp(['^(\\d{1,4})','([\\-\\.\\/:])','(\\d{1,2})','([\\-\\.\\/:])','(\\d{1,4})','(?:\\s(\\d{1,2}):(\\d{2})?:?(\\d{2})?)?','(?:\\s([A-Z]+)?)?$'].join(''))
-match=text.match(pattern)
-if(match&&match[2]===match[4]){if(match[1]>1901){switch(match[2]){case'-':if(match[3]>12||match[5]>31){return fail}
-return new Date(match[1],parseInt(match[3],10)-1,match[5],match[6]||0,match[7]||0,match[8]||0,match[9]||0)/1000
-case'.':return fail
-case'/':if(match[3]>12||match[5]>31){return fail}
-return new Date(match[1],parseInt(match[3],10)-1,match[5],match[6]||0,match[7]||0,match[8]||0,match[9]||0)/1000}}else if(match[5]>1901){switch(match[2]){case'-':if(match[3]>12||match[1]>31){return fail}
-return new Date(match[5],parseInt(match[3],10)-1,match[1],match[6]||0,match[7]||0,match[8]||0,match[9]||0)/1000
-case'.':if(match[3]>12||match[1]>31){return fail}
-return new Date(match[5],parseInt(match[3],10)-1,match[1],match[6]||0,match[7]||0,match[8]||0,match[9]||0)/1000
-case'/':if(match[1]>12||match[3]>31){return fail}
-return new Date(match[5],parseInt(match[1],10)-1,match[3],match[6]||0,match[7]||0,match[8]||0,match[9]||0)/1000}}else{switch(match[2]){case'-':if(match[3]>12||match[5]>31||(match[1]<70&&match[1]>38)){return fail}
-year=match[1]>=0&&match[1]<=38?+match[1]+2000:match[1]
-return new Date(year,parseInt(match[3],10)-1,match[5],match[6]||0,match[7]||0,match[8]||0,match[9]||0)/1000
-case'.':if(match[5]>=70){if(match[3]>12||match[1]>31){return fail}
-return new Date(match[5],parseInt(match[3],10)-1,match[1],match[6]||0,match[7]||0,match[8]||0,match[9]||0)/1000}
-if(match[5]<60&&!match[6]){if(match[1]>23||match[3]>59){return fail}
-today=new Date()
-return new Date(today.getFullYear(),today.getMonth(),today.getDate(),match[1]||0,match[3]||0,match[5]||0,match[9]||0)/1000}
-return fail
-case'/':if(match[1]>12||match[3]>31||(match[5]<70&&match[5]>38)){return fail}
-year=match[5]>=0&&match[5]<=38?+match[5]+2000:match[5]
-return new Date(year,parseInt(match[1],10)-1,match[3],match[6]||0,match[7]||0,match[8]||0,match[9]||0)/1000
-case':':if(match[1]>23||match[3]>59||match[5]>59){return fail}
-today=new Date()
-return new Date(today.getFullYear(),today.getMonth(),today.getDate(),match[1]||0,match[3]||0,match[5]||0)/1000}}}
-if(text==='now'){return now===null||isNaN(now)?new Date().getTime()/1000|0:now|0}
-if(!isNaN(parsed=Date.parse(text))){return parsed/1000|0}
-pattern=new RegExp(['^([0-9]{4}-[0-9]{2}-[0-9]{2})','[ t]','([0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?)','([\\+-][0-9]{2}(:[0-9]{2})?|z)'].join(''))
-match=text.match(pattern)
-if(match){if(match[4]==='z'){match[4]='Z'}else if(match[4].match(/^([+-][0-9]{2})$/)){match[4]=match[4]+':00'}
-if(!isNaN(parsed=Date.parse(match[1]+'T'+match[2]+match[4]))){return parsed/1000|0}}
-date=now?new Date(now*1000):new Date()
-days={'sun':0,'mon':1,'tue':2,'wed':3,'thu':4,'fri':5,'sat':6}
-ranges={'yea':'FullYear','mon':'Month','day':'Date','hou':'Hours','min':'Minutes','sec':'Seconds'}
-function lastNext(type,range,modifier){var diff
-var day=days[range]
-if(typeof day!=='undefined'){diff=day-date.getDay()
-if(diff===0){diff=7*modifier}else if(diff>0&&type==='last'){diff-=7}else if(diff<0&&type==='next'){diff+=7}
-date.setDate(date.getDate()+diff)}}
-function process(val){var splt=val.split(' ')
-var type=splt[0]
-var range=splt[1].substring(0,3)
-var typeIsNumber=/\d+/.test(type)
-var ago=splt[2]==='ago'
-var num=(type==='last'?-1:1)*(ago?-1:1)
-if(typeIsNumber){num*=parseInt(type,10)}
-if(ranges.hasOwnProperty(range)&&!splt[1].match(/^mon(day|\.)?$/i)){return date['set'+ranges[range]](date['get'+ranges[range]]()+num)}
-if(range==='wee'){return date.setDate(date.getDate()+(num*7))}
-if(type==='next'||type==='last'){lastNext(type,range,num)}else if(!typeIsNumber){return false}
-return true}
-times='(years?|months?|weeks?|days?|hours?|minutes?|min|seconds?|sec'+'|sunday|sun\\.?|monday|mon\\.?|tuesday|tue\\.?|wednesday|wed\\.?'+'|thursday|thu\\.?|friday|fri\\.?|saturday|sat\\.?)'
-regex='([+-]?\\d+\\s'+times+'|'+'(last|next)\\s'+times+')(\\sago)?'
-match=text.match(new RegExp(regex,'gi'))
-if(!match){return fail}
-for(i=0,len=match.length;i<len;i++){if(!process(match[i])){return fail}}
-return(date.getTime()/1000)}
-return{format:format,strtotime:strtotime}}(),true);})(window);(function(window){"use strict";window.ls.container.set('env',function(){return APP_ENV;},true);})(window);(function(window){"use strict";window.ls.container.set('form',function(){function cast(value,from,to,){if(value&&Array.isArray(value)&&to!=='array'){value=value.map(element=>cast(element,from,to));return value;}
+request.onerror=function(){reject(new Error("Network Error"));};request.send(params);})};return{'get':function(path,headers={},params={}){return call('GET',path+((params.length>0)?'?'+buildQuery(params):''),headers,{});},'post':function(path,headers={},params={},progress=null){return call('POST',path,headers,params,progress);},'put':function(path,headers={},params={},progress=null){return call('PUT',headers,params,progress);},'patch':function(path,headers={},params={},progress=null){return call('PATCH',path,headers,params,progress);},'delete':function(path,headers={},params={},progress=null){return call('DELETE',path,headers,params,progress);},'addGlobalParam':addGlobalParam,'addGlobalHeader':addGlobalHeader}}(window.document);let analytics={create:function(id,source,activity,url){return http.post('/analytics',{'content-type':'application/json'},{id:id,source:source,activity:activity,url:url,version:env.VERSION,setup:env.SETUP});},};return{analytics:analytics,};},true);})(window);(function(window){"use strict";window.ls.container.set('console',function(window){var client=new Appwrite.Client();var endpoint=window.location.origin+'/v1';client.setEndpoint(endpoint).setProject('console').setLocale(APP_ENV.LOCALE);return{client:client,account:new Appwrite.Account(client),avatars:new Appwrite.Avatars(client),databases:new Appwrite.Databases(client),functions:new Appwrite.Functions(client),health:new Appwrite.Health(client),locale:new Appwrite.Locale(client),projects:new Appwrite.Projects(client),storage:new Appwrite.Storage(client),teams:new Appwrite.Teams(client),users:new Appwrite.Users(client)}},true);})(window);(function(window){"use strict";window.ls.container.set('date',function(){function format(format,datetime){if(!datetime){return null;}
+return new Intl.DateTimeFormat('en-US',{timeZone:'UTC',hourCycle:'h24',...format}).format(new Date(datetime));}
+return{format:format,}}(),true);})(window);(function(window){"use strict";window.ls.container.set('env',function(){return APP_ENV;},true);})(window);(function(window){"use strict";window.ls.container.set('form',function(){function cast(value,from,to,){if(value&&Array.isArray(value)&&to!=='array'){value=value.map(element=>cast(element,from,to));return value;}
 switch(to){case'int':case'integer':value=parseInt(value);break;case'numeric':value=Number(value);break;case'float':value=parseFloat(value);break;case'string':value=value.toString();if(value.length===0){value=null;}
 break;case'json':value=(value)?JSON.parse(value):[];break;case'array':if(value&&value.constructor&&value.constructor===Array){break;}
 if(from==='csv'){if(value.length===0){value=[];}else{value=value.split(',');}}else{value=[value];}
@@ -657,7 +555,7 @@ return false;};return{isRTL:isRTL,};},true);})(window);(function(window){"use st
 let size=element.dataset["size"]||80;let name=$value.name||$value||"";name=(typeof name!=='string')?'--':name;return def="/v1/avatars/initials?project=console"+"&name="+
 encodeURIComponent(name)+"&width="+
 size+"&height="+
-size;}).add("selectedCollection",function($value,router){return $value===router.params.collectionId?"selected":"";}).add("selectedDocument",function($value,router){return $value===router.params.documentId?"selected":"";}).add("localeString",function($value){$value=parseInt($value);return!Number.isNaN($value)?$value.toLocaleString():"";}).add("date",function($value,date){return $value?date.format("Y-m-d",$value):"";}).add("dateTime",function($value,date){return $value?date.format("Y-m-d H:i",$value):"";}).add("dateText",function($value,date){return $value?date.format("d M Y",$value):"";}).add("timeSince",function($value){$value=$value*1000;let seconds=Math.floor((Date.now()-$value)/1000);let unit="second";let direction="ago";if(seconds<0){seconds=-seconds;direction="from now";}
+size;}).add("selectedCollection",function($value,router){return $value===router.params.collectionId?"selected":"";}).add("selectedDocument",function($value,router){return $value===router.params.documentId?"selected":"";}).add("localeString",function($value){$value=parseInt($value);return!Number.isNaN($value)?$value.toLocaleString():"";}).add("dateTime",function($value,date){return $value?date.format({year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'},$value):"";}).add("date",function($value,date){return $value?date.format({year:'numeric',month:'short',day:'2-digit',},$value):"";}).add("timeSince",function($value){$value=new Date($value).getTime();let now=new Date();now.setMinutes(now.getMinutes()+now.getTimezoneOffset());let timestamp=new Date(now.toISOString()).getTime();let seconds=Math.floor((timestamp-$value)/1000);let unit="second";let direction="ago";if(seconds<0){seconds=-seconds;direction="from now";}
 let value=seconds;if(seconds>=31536000){value=Math.floor(seconds/31536000);unit="year";}
 else if(seconds>=86400){value=Math.floor(seconds/86400);unit="day";}
 else if(seconds>=3600){value=Math.floor(seconds/3600);unit="hour";}
@@ -761,9 +659,9 @@ button.addEventListener("click",function(){var clone=document.createElement(elem
 clone.innerHTML=template;clone.className=element.className;var input=clone.querySelector("input, select, textarea");view.render(clone);if(debug){console.log('Debug: clone: ',clone);console.log('Debug: target: ',target);}
 if(target){target.appendChild(clone);}else{button.parentNode.insertBefore(clone,button);}
 if(input){input.focus();}
-Array.prototype.slice.call(clone.querySelectorAll("[data-remove]")).map(function(obj){obj.addEventListener("click",function(){clone.parentNode.removeChild(clone);obj.scrollIntoView({behavior:"smooth"});});});Array.prototype.slice.call(clone.querySelectorAll("[data-up]")).map(function(obj){obj.addEventListener("click",function(){if(clone.previousElementSibling){clone.parentNode.insertBefore(clone,clone.previousElementSibling);obj.scrollIntoView({behavior:"smooth"});}});});Array.prototype.slice.call(clone.querySelectorAll("[data-down]")).map(function(obj){obj.addEventListener("click",function(){if(clone.nextElementSibling){clone.parentNode.insertBefore(clone.nextElementSibling,clone);obj.scrollIntoView({behavior:"smooth"});}});});});element.parentNode.insertBefore(button,element.nextSibling);element.parentNode.removeChild(element);button.form.addEventListener('reset',function(event){target.innerHTML='';if(first){button.click();}});if(first){button.click();}}});})(window);(function(window){"use strict";window.ls.container.get("view").add({selector:"data-forms-add",repeat:false,controller:function(element,view,container,document){for(var i=0;i<element.children.length;i++){let button=document.createElement("button");let template=element.children[i].cloneNode(true);let as=element.getAttribute('data-ls-as');let counter=0;button.type="button";button.innerText="Add";button.classList.add("reverse");button.classList.add("margin-end-small");button.addEventListener('click',function(){container.addNamespace(as,'new-'+counter++);console.log(container.namespaces,container.get(as),as);container.set(as,null,true,true);let child=template.cloneNode(true);view.render(child);element.appendChild(child);element.style.visibility='visible';let inputs=child.querySelectorAll('input,textarea');for(let index=0;index<inputs.length;++index){if(inputs[index].type!=='hidden'){inputs[index].focus();break;}}});element.after(button);}}});})(window);(function(window){"use strict";window.ls.container.get("view").add({selector:"data-forms-chart",controller:function(element,container,date,document){let wrapper=document.createElement("div");let child=document.createElement("canvas");let sources=element.getAttribute('data-forms-chart');let width=element.getAttribute('data-width')||500;let height=element.getAttribute('data-height')||175;let showXAxis=element.getAttribute('data-show-x-axis')||false;let showYAxis=element.getAttribute('data-show-y-axis')||false;let colors=(element.getAttribute('data-colors')||'blue,green,orange,red').split(',');let themes={'blue':'#29b5d9','green':'#4eb55b','orange':'#fba233','red':'#dc3232','create':'#00b680','read':'#009cde','update':'#696fd7','delete':'#da5d95',};let range={'24h':'H:i','7d':'d F Y','30d':'d F Y','90d':'d F Y'}
+Array.prototype.slice.call(clone.querySelectorAll("[data-remove]")).map(function(obj){obj.addEventListener("click",function(){clone.parentNode.removeChild(clone);obj.scrollIntoView({behavior:"smooth"});});});Array.prototype.slice.call(clone.querySelectorAll("[data-up]")).map(function(obj){obj.addEventListener("click",function(){if(clone.previousElementSibling){clone.parentNode.insertBefore(clone,clone.previousElementSibling);obj.scrollIntoView({behavior:"smooth"});}});});Array.prototype.slice.call(clone.querySelectorAll("[data-down]")).map(function(obj){obj.addEventListener("click",function(){if(clone.nextElementSibling){clone.parentNode.insertBefore(clone.nextElementSibling,clone);obj.scrollIntoView({behavior:"smooth"});}});});});element.parentNode.insertBefore(button,element.nextSibling);element.parentNode.removeChild(element);button.form.addEventListener('reset',function(event){target.innerHTML='';if(first){button.click();}});if(first){button.click();}}});})(window);(function(window){"use strict";window.ls.container.get("view").add({selector:"data-forms-add",repeat:false,controller:function(element,view,container,document){for(var i=0;i<element.children.length;i++){let button=document.createElement("button");let template=element.children[i].cloneNode(true);let as=element.getAttribute('data-ls-as');let counter=0;button.type="button";button.innerText="Add";button.classList.add("reverse");button.classList.add("margin-end-small");button.addEventListener('click',function(){container.addNamespace(as,'new-'+counter++);console.log(container.namespaces,container.get(as),as);container.set(as,null,true,true);let child=template.cloneNode(true);view.render(child);element.appendChild(child);element.style.visibility='visible';let inputs=child.querySelectorAll('input,textarea');for(let index=0;index<inputs.length;++index){if(inputs[index].type!=='hidden'){inputs[index].focus();break;}}});element.after(button);}}});})(window);(function(window){"use strict";window.ls.container.get("view").add({selector:"data-forms-chart",controller:function(element,container,date,document){let wrapper=document.createElement("div");let child=document.createElement("canvas");let sources=element.getAttribute('data-forms-chart');let width=element.getAttribute('data-width')||500;let height=element.getAttribute('data-height')||175;let showXAxis=element.getAttribute('data-show-x-axis')||false;let showYAxis=element.getAttribute('data-show-y-axis')||false;let colors=(element.getAttribute('data-colors')||'blue,green,orange,red').split(',');let themes={'blue':'#29b5d9','green':'#4eb55b','orange':'#fba233','red':'#dc3232','create':'#00b680','read':'#009cde','update':'#696fd7','delete':'#da5d95',};let range={'24h':{hour:'2-digit',minute:'2-digit'},'7d':{year:'numeric',month:'short',day:'2-digit',},'30d':{year:'numeric',month:'short',day:'2-digit',},'90d':{year:'numeric',month:'short',day:'2-digit',}}
 let ticksCount=5;element.parentNode.insertBefore(wrapper,element.nextSibling);wrapper.classList.add('content');child.width=width;child.height=height;sources=sources.split(',');wrapper.appendChild(child);let chart=null;let check=function(){let config={type:"line",data:{labels:[],datasets:[]},options:{animation:{duration:0},responsive:true,hover:{mode:"nearest",intersect:false},scales:{x:{display:showXAxis},y:{display:showYAxis,min:0,ticks:{count:ticksCount,fontColor:"#8f8f8f"},}},plugins:{title:{display:false,text:"Stats"},legend:{display:false},tooltip:{mode:"index",intersect:false,caretPadding:0},}}};let highest=0;for(let i=0;i<sources.length;i++){let label=sources[i].substring(0,sources[i].indexOf('='));let path=sources[i].substring(sources[i].indexOf('=')+1);let usage=container.get('usage');let data=usage[path];let value=JSON.parse(element.value);config.data.labels[i]=label;config.data.datasets[i]={};config.data.datasets[i].label=label;config.data.datasets[i].borderColor=themes[colors[i]];config.data.datasets[i].backgroundColor=themes[colors[i]]+'36';config.data.datasets[i].borderWidth=2;config.data.datasets[i].data=[0,0,0,0,0,0,0];config.data.datasets[i].fill=true;if(!data){return;}
-let dateFormat=(value.range&&range[value.range])?range[value.range]:'d F Y';for(let x=0;x<data.length;x++){if(data[x].value>highest){highest=data[x].value;}
+let dateFormat=(value.range&&range[value.range])?range[value.range]:{year:'numeric',month:'short',day:'2-digit',};for(let x=0;x<data.length;x++){if(data[x].value>highest){highest=data[x].value;}
 config.data.datasets[i].data[x]=data[x].value;config.data.labels[x]=date.format(dateFormat,data[x].date);}}
 if(highest==0){config.options.scales.y.ticks.stepSize=1;config.options.scales.y.max=ticksCount;}else{highest=Math.ceil(highest/ticksCount)*ticksCount;config.options.scales.y.ticks.stepSize=highest/ticksCount;config.options.scales.y.max=highest;}
 if(chart){chart.destroy();}
