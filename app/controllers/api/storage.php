@@ -803,8 +803,9 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->alias('/v1/storage/files/:fileId/preview', ['bucketId' => 'default'])
     ->desc('Get File Preview')
     ->groups(['api', 'storage'])
-    ->label('cache', true)
     ->label('scope', 'files.read')
+    ->label('cache', true)
+    ->label('cache.resource', 'file/{request.fileId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFilePreview')
@@ -1377,8 +1378,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('usage')
     ->inject('mode')
     ->inject('deviceFiles')
-    ->inject('project')
-    ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Database $dbForProject, Event $events, Audit $audits, Stats $usage, string $mode, Device $deviceFiles, Document $project) {
+    ->inject('deletes')
+    ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Database $dbForProject, Event $events, Audit $audits, Stats $usage, string $mode, Device $deviceFiles, Delete $deletes) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if (
@@ -1417,9 +1418,11 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($deviceDeleted) {
-            $key = md5($request->getURI() . implode('*', $request->getParams()));
-            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
-            $cache->purge($key);
+            $deletes
+                ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
+                ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
+                ->setResource('file/' . $fileId)
+            ;
 
             if ($bucket->getAttribute('permission') === 'bucket') {
                 $deleted = Authorization::skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));

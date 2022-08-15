@@ -35,7 +35,6 @@ class DeletesV1 extends Worker
     {
         $project = new Document($this->args['project'] ?? []);
         $type = $this->args['type'] ?? '';
-
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 $document = new Document($this->args['document'] ?? []);
@@ -110,10 +109,12 @@ class DeletesV1 extends Worker
                 $this->deleteUsageStats($this->args['timestamp1d'], $this->args['timestamp30m']);
                 break;
 
-            case DELETE_TYPE_CACHE:
-                $this->deleteCache($this->args['timestamp']);
+            case DELETE_TYPE_CACHE_BY_RESOURCE:
+                $this->deleteCacheByResource($project->getId());
                 break;
-
+            case DELETE_TYPE_CACHE_BY_TIMESTAMP:
+                $this->deleteCacheByTimestamp();
+                break;
             default:
                 Console::error('No delete operation for type: ' . $type);
                 break;
@@ -124,13 +125,26 @@ class DeletesV1 extends Worker
     {
     }
 
-
     /**
-     * @param int $timestamp
+     * @param string $projectId
      */
-    protected function deleteCache(int $timestamp): void
+    protected function deleteCacheByResource(string $projectId): void
     {
-        $this->deleteForProjectIds(function (string $projectId) use ($timestamp) {
+        $this->deleteCacheFiles([
+                new Query('resource', Query::TYPE_EQUAL, [$this->args['resource']])
+            ]);
+    }
+
+    protected function deleteCacheByTimestamp(): void
+    {
+        $this->deleteCacheFiles([
+            new Query('accessedAt', Query::TYPE_LESSER, [$this->args['timestamp']])
+            ]);
+    }
+
+    protected function deleteCacheFiles($query): void
+    {
+        $this->deleteForProjectIds(function (string $projectId) use ($query) {
 
             $dbForProject = $this->getProjectDB($projectId);
             $cache = new Cache(
@@ -139,7 +153,7 @@ class DeletesV1 extends Worker
 
             $this->deleteByGroup(
                 'cache',
-                [new Query('accessedAt', Query::TYPE_LESSER, [$timestamp])],
+                $query,
                 $dbForProject,
                 function (Document $document) use ($cache, $projectId) {
                     $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();

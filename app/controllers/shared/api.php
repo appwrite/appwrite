@@ -232,9 +232,11 @@ App::shutdown()
     ->inject('dbForProject')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) {
 
+        $responsePayload = $response->getPayload();
+
         if (!empty($events->getEvent())) {
             if (empty($events->getPayload())) {
-                $events->setPayload($response->getPayload());
+                $events->setPayload($responsePayload);
             }
             /**
              * Trigger functions.
@@ -303,30 +305,70 @@ App::shutdown()
         }
 
         $route = $utopia->match($request);
+        $requestParams = $route->getParamsValues();
+        $user = $audits->getUser();
+
+        $parseLabel = function ($label) use ($responsePayload, $requestParams, $user) {
+            preg_match_all('/{(.*?)}/', $label, $matches);
+            foreach ($matches[1] ?? [] as $pos => $match) {
+                $find = $matches[0][$pos];
+                $parts = explode('.', $match);
+
+                if (count($parts) !== 2) {
+                    throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
+                }
+
+                $namespace = $parts[0];
+                $replace = $parts[1];
+
+                $params = match ($namespace) {
+                    'user' => (array)$user,
+                    'request' => $requestParams,
+                    default => $responsePayload,
+                };
+
+                if (array_key_exists($replace, $params)) {
+                    $label = \str_replace($find, $params[$replace], $label);
+                }
+            }
+
+            return $label;
+        };
 
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
+            $resource = null;
             $data = $response->getPayload();
             if (!empty($data['payload'])) {
+
+                $pattern = $route->getLabel('cache.resource', null);
+                if (!empty($pattern)) {
+                    $resource = $parseLabel($pattern);
+                }
+
                 $key = md5($request->getURI() . implode('*', $request->getParams()));
+
+                $data = json_encode([
+                    'content-type' => $response->getContentType(),
+                    'payload' => base64_encode($data['payload']),
+                ]) ;
+
+                $signature = md5($data);
                 $cacheLog = $dbForProject->getDocument('cache', $key);
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
+                    'resource' => $resource,
                     'accessedAt' => \time(),
+                    'signature' => $signature,
                     ])));
                 } elseif (date('Y/m/d', \time()) > date('Y/m/d', $cacheLog->getAttribute('accessedAt'))) {
                     $cacheLog->setAttribute('accessedAt', \time());
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
 
-                $data = [
-                    'content-type' => $response->getContentType(),
-                    'payload' => base64_encode($data['payload']),
-                ] ;
-
                 $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
-                $cache->save($key, json_encode($data));
+                $cache->save($key, $data);
             }
         }
 

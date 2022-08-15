@@ -143,7 +143,8 @@ const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_SESSIONS = 'sessions';
-const DELETE_TYPE_CACHE = 'cache';
+const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
+const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';

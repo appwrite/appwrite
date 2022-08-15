@@ -131,7 +131,7 @@ $cli
         {
 
             (new Delete())
-                ->setType(DELETE_TYPE_CACHE)
+                ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
                 ->setTimestamp(time() - $interval)
                 ->trigger();
         }
