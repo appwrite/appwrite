@@ -133,7 +133,6 @@ App::init()
             $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
-
             if (!empty($data)) {
                 $cacheLog = Authorization::skip(fn() => $dbForProject->getDocument('cache', $key));
 
@@ -345,15 +344,15 @@ App::shutdown()
                 $resource = $parseLabel($pattern);
             }
 
-                $key = md5($request->getURI() . implode('*', $request->getParams()));
+            $key = md5($request->getURI() . implode('*', $request->getParams()));
 
-                $data = json_encode([
-                    'content-type' => $response->getContentType(),
-                    'payload' => base64_encode($data['payload']),
-                ]) ;
+            $data = json_encode([
+                'content-type' => $response->getContentType(),
+                'payload' => base64_encode($data['payload']),
+            ]) ;
 
-                $signature = md5($data);
-            $cacheLog = $dbForProject->getDocument('cache', $key);
+            $signature = md5($data);
+            $cacheLog  = $dbForProject->getDocument('cache', $key);
             if ($cacheLog->isEmpty()) {
                 Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
@@ -366,16 +365,20 @@ App::shutdown()
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
             }
 
-                $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId()));
+            if ($signature !== $cacheLog->getAttribute('signature')) {
+                $cache = new Cache(
+                    new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                );
                 $cache->save($key, $data);
+            }
         }
     }
 
     if (
-            App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
-            && $project->getId()
-            && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
-            && !empty($route->getLabel('sdk.namespace', null))
+        App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
+        && $project->getId()
+        && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
+        && !empty($route->getLabel('sdk.namespace', null))
     ) { // Don't calculate console usage on admin mode
             $usage
                 ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
