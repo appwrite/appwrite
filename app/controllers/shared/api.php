@@ -307,8 +307,8 @@ App::shutdown()
                     throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
                 }
 
-                $namespace = $parts[0];
-                $replace = $parts[1];
+                $namespace = $parts[0] ?? '';
+                $replace = $parts[1] ?? '';
 
                 $params = match ($namespace) {
                     'user' => (array)$user,
