@@ -20,6 +20,7 @@ use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
+use Appwrite\Utopia\Response\Filters\V15 as ResponseV15;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -189,6 +190,9 @@ App::init()
                     break;
                 case version_compare($responseFormat, '0.14.0', '<='):
                     Response::setFilter(new ResponseV14());
+                    break;
+                case version_compare($responseFormat, '0.15.0', '<='):
+                    Response::setFilter(new ResponseV15());
                     break;
                 default:
                     Response::setFilter(null);
