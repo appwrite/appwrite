@@ -825,7 +825,7 @@ trait AccountBase
         $this->assertEquals('Account Verification', $lastEmail['subject']);
 
         $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
         $this->assertNotFalse($expireTime);
 
         $secretTest = strpos($lastEmail['text'], 'secret=' . $response['body']['secret'], 0);
@@ -1128,7 +1128,7 @@ trait AccountBase
 
         $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
 
         $this->assertNotFalse($expireTime);
 
@@ -1281,7 +1281,7 @@ trait AccountBase
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
 
         $this->assertNotFalse($expireTime);
 
