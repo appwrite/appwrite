@@ -157,6 +157,42 @@ App::get('/v1/users/:userId')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
+App::patch('/v1/users/:userId/prefs')
+    ->desc('Update User Preferences')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.prefs')
+    ->label('scope', 'users.write')
+    ->label('audits.resource', 'user/{request.userId}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updatePrefs')
+    ->label('sdk.description', '/docs/references/users/update-user-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, array $prefs, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+        }
+
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
+
+        $usage->setParam('users.update', 1);
+
+        $events->setParam('userId', $user->getId());
+
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+    });
+
 App::get('/v1/users/:userId/prefs')
     ->desc('Get User Preferences')
     ->groups(['api', 'users'])
@@ -446,7 +482,7 @@ App::patch('/v1/users/:userId/verification/phone')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND, 'User not found');
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('phoneVerification', $phoneVerification));
@@ -811,7 +847,7 @@ App::delete('/v1/users/:userId')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND, 'User not found');
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         // clone user object to send to workers
