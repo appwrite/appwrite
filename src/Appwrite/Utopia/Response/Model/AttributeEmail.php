@@ -37,8 +37,6 @@ class AttributeEmail extends Attribute
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'example' => 'default@example.com',
-                'array' => false,
-                'require' => false,
             ])
         ;
     }

@@ -12,16 +12,14 @@
  * @license The MIT License (MIT) <http://www.opensource.org/licenses/mit-license.php>
  */
 
-namespace Appwrite\Network\Validator;
+namespace Tests\Unit\Network\Validators;
 
+use Appwrite\Network\Validator\Email;
 use PHPUnit\Framework\TestCase;
 
 class EmailTest extends TestCase
 {
-    /**
-     * @var Email
-     */
-    protected $email = null;
+    protected ?Email $email = null;
 
     public function setUp(): void
     {
@@ -33,9 +31,8 @@ class EmailTest extends TestCase
         $this->email = null;
     }
 
-    public function testIsValid()
+    public function testIsValid(): void
     {
-        // Assertions
         $this->assertEquals(true, $this->email->isValid('email@domain.com'));
         $this->assertEquals(true, $this->email->isValid('firstname.lastname@domain.com'));
         $this->assertEquals(true, $this->email->isValid('email@subdomain.domain.com'));
