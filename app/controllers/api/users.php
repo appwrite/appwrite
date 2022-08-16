@@ -734,7 +734,6 @@ App::patch('/v1/users/:userId/prefs')
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
         $response->dynamic($user, Response::MODEL_USER);
-
     });
 
 App::delete('/v1/users/:userId/sessions/:sessionId')

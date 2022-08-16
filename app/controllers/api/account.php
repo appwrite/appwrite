@@ -1407,11 +1407,11 @@ App::post('/v1/account/sessions/anonymous')
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
-            throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user.');
+            throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user');
         }
 
         if (!$user->isEmpty()) {
-            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS, 'Cannot create an anonymous user when logged in.');
+            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS, 'Cannot create an anonymous user when logged in');
         }
 
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -1420,7 +1420,7 @@ App::post('/v1/account/sessions/anonymous')
             $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
             if ($total >= $limit) {
-                throw new Exception(Exception::USER_COUNT_EXCEEDED, 'Project registration is restricted. Contact your administrator for more information.');
+                throw new Exception(Exception::USER_COUNT_EXCEEDED);
             }
         }
 
