@@ -700,8 +700,6 @@ App::patch('/v1/users/:userId/verification')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/verification/phone')
-    ->desc('Update Phone Verification')
 App::patch('/v1/users/:userId/prefs')
     ->desc('Update User Preferences')
     ->groups(['api', 'users'])
