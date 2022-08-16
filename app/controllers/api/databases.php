@@ -6,6 +6,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
 use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\ID;
 use Utopia\Validator\Boolean;
@@ -1967,7 +1968,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         } else {
             foreach ($allowedPermissions as $permission) {
-                // Default any missing allowed permissions to the current user
+                // If the permission is not set, add it for the current user.
                 if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($user->getId())) {
                     $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                 }
@@ -1975,15 +1976,20 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
+        // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
-
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
-                    if (!\str_starts_with($permission, $type)) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() != $type) {
                         continue;
                     }
-                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    $role = (new Role(
+                        $permission->getRole(),
+                        $permission->getIdentifier(),
+                        $permission->getDimension()
+                    ))->toString();
                     if (!Authorization::isRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
                     }
@@ -2188,8 +2194,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        if ($documentSecurity && !$validator->isValid($document->getRead())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if ($documentSecurity) {
+            $valid |= $validator->isValid($document->getRead());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
 
         /**
@@ -2359,20 +2368,27 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        if ($documentSecurity && !$validator->isValid($document->getUpdate())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if ($documentSecurity) {
+            $valid |= $validator->isValid($document->getUpdate());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
-
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
-                    if (!\str_starts_with($permission, $type)) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() != $type) {
                         continue;
                     }
-                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    $role = (new Role(
+                        $permission->getRole(),
+                        $permission->getIdentifier(),
+                        $permission->getDimension()
+                    ))->toString();
                     if (!Authorization::isRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
                     }
@@ -2484,8 +2500,11 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        if ($documentSecurity && !$validator->isValid($document->getDelete())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if ($documentSecurity) {
+            $valid |= $validator->isValid($document->getDelete());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
 
         $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);

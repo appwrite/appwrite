@@ -23,6 +23,7 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -394,8 +395,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
          */
         $permissions = PermissionsProcessor::aggregate($permissions, 'file');
 
-        \var_dump($permissions);
-        
         /**
          * Add permissions for current the user for any missing types
          * from the allowed permissions for this resource type.
@@ -413,24 +412,27 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
         } else {
             foreach ($allowedPermissions as $permission) {
-                // Default any missing allowed permissions to the current user
+                // If the permission is not set, add it for the current user
                 if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($user->getId())) {
                     $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                 }
             }
         }
-        
-        \var_dump($permissions);
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
-                    if (!\str_starts_with($permission, $type)) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() != $type) {
                         continue;
                     }
-                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    $role = (new Role(
+                        $permission->getRole(),
+                        $permission->getIdentifier(),
+                        $permission->getDimension()
+                    ))->toString();
                     if (!Authorization::isRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
                     }
@@ -794,8 +796,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($fileSecurity && !$validator->isValid($file->getRead())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity) {
+            $valid = $validator->isValid($file->getRead());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
 
         $usage
@@ -875,8 +880,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($fileSecurity && !$validator->isValid($file->getRead())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity) {
+            $valid = $validator->isValid($file->getRead());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
 
         $path = $file->getAttribute('path');
@@ -1027,8 +1035,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($fileSecurity && !$validator->isValid($file->getRead())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity) {
+            $valid |= $validator->isValid($file->getRead());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
 
         $path = $file->getAttribute('path', '');
@@ -1162,8 +1173,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($fileSecurity && !$validator->isValid($file->getRead())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity) {
+            $valid |= !$validator->isValid($file->getRead());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
 
         $mimes = Config::getParam('storage-mimes');
@@ -1311,19 +1325,28 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($fileSecurity && !$validator->isValid($file->getUpdate())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity) {
+            $valid |= $validator->isValid($file->getUpdate());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
 
+        // Users can only manage their own roles, API keys and Admin users can manage any
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
-                    if (!\str_starts_with($permission, $type)) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() != $type) {
                         continue;
                     }
-                    $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
+                    $role = (new Role(
+                        $permission->getRole(),
+                        $permission->getIdentifier(),
+                        $permission->getDimension()
+                    ))->toString();
                     if (!Authorization::isRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
                     }
@@ -1399,8 +1422,11 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($fileSecurity && !$validator->isValid($file->getDelete())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity) {
+            $valid |= $validator->isValid($file->getDelete());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
 
         $deviceDeleted = false;
