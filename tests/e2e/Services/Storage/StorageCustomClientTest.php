@@ -44,7 +44,7 @@ class StorageCustomClientTest extends Scope
         $bucketId = $bucket['body']['$id'];
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucketId);
-        
+
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
