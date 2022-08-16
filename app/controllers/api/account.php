@@ -20,7 +20,6 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use MaxMind\Db\Reader;
 use Utopia\App;
-use Appwrite\Event\Audit;
 use Appwrite\Event\Phone as EventPhone;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
@@ -916,7 +915,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
     });
 
-
 App::post('/v1/account/sessions/magic-url')
     ->desc('Create Magic URL Session')
     ->groups(['api', 'account'])
@@ -1138,134 +1136,6 @@ App::put('/v1/account/sessions/magic-url')
         }
 
         $protocol = $request->getProtocol();
-
-        $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
-
-        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
-
-        $session
-            ->setAttribute('current', true)
-            ->setAttribute('countryName', $countryName)
-        ;
-
-        $response->dynamic($session, Response::MODEL_SESSION);
-    });
-
-App::post('/v1/account/sessions/anonymous')
-    ->desc('Create Anonymous Session')
-    ->groups(['api', 'account', 'auth'])
-    ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->label('scope', 'public')
-    ->label('auth.type', 'anonymous')
-    ->label('audits.resource', 'user/{response.userId}')
-    ->label('sdk.auth', [])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createAnonymousSession')
-    ->label('sdk.description', '/docs/references/account/create-session-anonymous.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SESSION)
-    ->label('abuse-limit', 50)
-    ->label('abuse-key', 'ip:{ip}')
-    ->inject('request')
-    ->inject('response')
-    ->inject('locale')
-    ->inject('user')
-    ->inject('project')
-    ->inject('dbForProject')
-    ->inject('geodb')
-    ->inject('usage')
-    ->inject('events')
-    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Stats $usage, Event $events) {
-
-        $protocol = $request->getProtocol();
-
-        if ('console' === $project->getId()) {
-            throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user');
-        }
-
-        if (!$user->isEmpty()) {
-            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS, 'Cannot create an anonymous user when logged in');
-        }
-
-        $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
-
-        if ($limit !== 0) {
-            $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
-
-            if ($total >= $limit) {
-                throw new Exception(Exception::USER_COUNT_EXCEEDED);
-            }
-        }
-
-        $userId = $dbForProject->getId();
-        $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
-            '$id' => $userId,
-            '$read' => ['role:all'],
-            '$write' => ['user:' . $userId],
-            'email' => null,
-            'emailVerification' => false,
-            'status' => true,
-            'password' => null,
-            'passwordUpdate' => 0,
-            'registration' => \time(),
-            'reset' => false,
-            'name' => null,
-            'prefs' => new \stdClass(),
-            'sessions' => null,
-            'tokens' => null,
-            'memberships' => null,
-            'search' => $userId
-        ])));
-
-        // Create session token
-
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
-        $secret = Auth::tokenGenerator();
-        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $session = new Document(array_merge(
-            [
-                '$id' => $dbForProject->getId(),
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
-                'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-                'expire' => $expiry,
-                'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            ],
-            $detector->getOS(),
-            $detector->getClient(),
-            $detector->getDevice()
-        ));
-
-        Authorization::setRole('user:' . $user->getId());
-
-        $session = $dbForProject->createDocument('sessions', $session
-                ->setAttribute('$read', ['user:' . $user->getId()])
-                ->setAttribute('$write', ['user:' . $user->getId()]));
-
-        $dbForProject->deleteCachedDocument('users', $user->getId());
-
-        $usage
-            ->setParam('users.sessions.create', 1)
-            ->setParam('provider', 'anonymous')
-        ;
-
-        $events
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
-
-        if (!Config::getParam('domainVerification')) {
-            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
-        }
 
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
@@ -1513,7 +1383,7 @@ App::post('/v1/account/sessions/anonymous')
     ->label('scope', 'public')
     ->label('auth.type', 'anonymous')
     ->label('audits.resource', 'user/{response.userId}')
-    ->label('audits.userId', '{user.userId}')
+    ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createAnonymousSession')
@@ -1802,38 +1672,6 @@ App::get('/v1/account/sessions/:sessionId')
         }
 
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
-    });
-
-App::patch('/v1/account/name')
-    ->desc('Update Account Name')
-    ->groups(['api', 'account'])
-    ->label('event', 'users.[userId].update.name')
-    ->label('scope', 'account')
-    ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'updateName')
-    ->label('sdk.description', '/docs/references/account/update-name.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
-    ->inject('response')
-    ->inject('user')
-    ->inject('dbForProject')
-    ->inject('usage')
-    ->inject('events')
-    ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Stats $usage, Event $events) {
-
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user
-            ->setAttribute('name', $name)
-            ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email', ''), $user->getAttribute('phone', '')])));
-
-        $usage->setParam('users.update', 1);
-        $events->setParam('userId', $user->getId());
-
-        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::patch('/v1/account/password')
@@ -2450,7 +2288,6 @@ App::post('/v1/account/verification')
     ->label('scope', 'account')
     ->label('event', 'users.[userId].verification.[tokenId].create')
     ->label('audits.resource', 'user/{response.userId}')
-    ->label('audits.userId', '{user.userId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createVerification')

@@ -265,8 +265,8 @@ App::shutdown()
                     throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
                 }
 
-                $namespace = $parts[0];
-                $replace = $parts[1];
+                $namespace = $parts[0] ?? '';
+                $replace = $parts[1] ?? '';
 
                 $params = match ($namespace) {
                     'user' => (array)$user,
@@ -297,7 +297,7 @@ App::shutdown()
         $audits->setUser($user);
     }
 
-    if (!empty($audits->getResource())) {
+    if (!empty($audits->getResource()) && !empty($audits->getUser()->getId())) {
         /**
          * audits.payload is switched to default true
          * in order to auto audit payload for all endpoints
