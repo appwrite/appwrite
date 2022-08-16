@@ -1520,7 +1520,7 @@ App::patch('/v1/account/password')
     ->action(function (string $password, string $oldPassword, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         // Check old password only if its an existing user.
-        if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
+        if ($user->getAttribute('passwordUpdate') !== null && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 

@@ -2185,7 +2185,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 
         if ($document->isEmpty()) {
-            throw new Exception('No document found', 404, Exception::DOCUMENT_NOT_FOUND);
+            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
         if ($documentSecurity) {
@@ -2332,7 +2332,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data) && \is_null($permissions)) {
-            throw new Exception('Missing payload or permissions', 400, Exception::DOCUMENT_MISSING_PAYLOAD);
+            throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
         }
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));

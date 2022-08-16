@@ -1336,7 +1336,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
                     }
                     $role = \str_replace([$type, '(', ')', '"', ' '], '', $permission);
                     if (!Authorization::isRole($role)) {
-                        throw new Exception('Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')', 400, Exception::USER_UNAUTHORIZED);
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
                     }
                 }
             }
