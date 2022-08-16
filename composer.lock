@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fac90be29602ad95f48f3acb1081e3bf",
+    "content-hash": "2f6f3345f11d895ad531ca078e8f89fa",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1733,23 +1733,23 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-refactor-permissions",
+            "version": "dev-timezone-filter",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "42fb9a3c15500d586037efd963ece689972de865"
+                "reference": "038a59f5c0f051868a749cde131e3dcec60b8ea9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/42fb9a3c15500d586037efd963ece689972de865",
-                "reference": "42fb9a3c15500d586037efd963ece689972de865",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/038a59f5c0f051868a749cde131e3dcec60b8ea9",
+                "reference": "038a59f5c0f051868a749cde131e3dcec60b8ea9",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.20.0"
+                "utopia-php/database": "dev-datetime-tz-filter as 0.20.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1781,9 +1781,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/refactor-permissions"
+                "source": "https://github.com/utopia-php/abuse/tree/timezone-filter"
             },
-            "time": "2022-08-15T07:28:30+00:00"
+            "time": "2022-08-15T21:16:19+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1842,22 +1842,22 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-refactor-permissions",
+            "version": "dev-timezone-filter",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "bfe1590fa06d5e2df4973cb0c5a14917f916dbc9"
+                "reference": "8f15e0b456537fa406187602b10c76293bdbcd3a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/bfe1590fa06d5e2df4973cb0c5a14917f916dbc9",
-                "reference": "bfe1590fa06d5e2df4973cb0c5a14917f916dbc9",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/8f15e0b456537fa406187602b10c76293bdbcd3a",
+                "reference": "8f15e0b456537fa406187602b10c76293bdbcd3a",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.20.0"
+                "utopia-php/database": "dev-datetime-tz-filter as 0.20.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1889,9 +1889,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/refactor-permissions"
+                "source": "https://github.com/utopia-php/audit/tree/timezone-filter"
             },
-            "time": "2022-08-14T19:42:25+00:00"
+            "time": "2022-08-15T20:32:23+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2833,12 +2833,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "409e9a6f24a2ad4be7fd45bc424ff5d845c7eb51"
+                "reference": "807e7890aed597ef47e01be8ad11c3b561b7c1e8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/409e9a6f24a2ad4be7fd45bc424ff5d845c7eb51",
-                "reference": "409e9a6f24a2ad4be7fd45bc424ff5d845c7eb51",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/807e7890aed597ef47e01be8ad11c3b561b7c1e8",
+                "reference": "807e7890aed597ef47e01be8ad11c3b561b7c1e8",
                 "shasum": ""
             },
             "require": {
@@ -2876,7 +2876,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/master"
             },
-            "time": "2022-08-10T12:49:03+00:00"
+            "time": "2022-08-15T22:33:25+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5357,15 +5357,15 @@
         },
         {
             "package": "utopia-php/abuse",
-            "version": "dev-refactor-permissions",
-            "alias": "0.7.0",
-            "alias_normalized": "0.7.0.0"
+            "version": "dev-timezone-filter",
+            "alias": "0.9.0",
+            "alias_normalized": "0.9.0.0"
         },
         {
             "package": "utopia-php/audit",
-            "version": "dev-refactor-permissions",
-            "alias": "0.8.0",
-            "alias_normalized": "0.8.0.0"
+            "version": "dev-timezone-filter",
+            "alias": "0.10.1",
+            "alias_normalized": "0.10.1.0"
         },
         {
             "package": "utopia-php/database",
