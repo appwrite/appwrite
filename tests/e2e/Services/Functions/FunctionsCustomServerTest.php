@@ -965,7 +965,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('Node.js', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('17.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
+        $this->assertEquals('18.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
         $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
