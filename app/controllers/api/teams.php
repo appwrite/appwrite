@@ -836,7 +836,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
          */
         $validator = new Authorization('delete');
         if (!$validator->isValid($membership->getDelete())) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         try {
