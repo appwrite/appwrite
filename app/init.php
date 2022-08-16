@@ -63,6 +63,7 @@ use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Backblaze;
@@ -419,6 +420,10 @@ Database::addFilter(
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function () {
     return new Email();
 }, Database::VAR_STRING);
+
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_DATETIME, function () {
+    return new DatetimeValidator();
+}, Database::VAR_DATETIME);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function ($attribute) {
     $elements = $attribute['formatOptions']['elements'];

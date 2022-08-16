@@ -282,6 +282,11 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
                         break;
+                    case 'Utopia\Database\Validator\DatetimeValidator':
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'datetime';
+                        $node['schema']['x-example'] = '2022-06-15T13:45:30.496';
+                        break;
                     case 'Appwrite\Network\Validator\Email':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'email';
@@ -447,6 +452,7 @@ class OpenAPI3 extends Format
 
                 switch ($rule['type']) {
                     case 'string':
+                    case 'datetime':
                         $type = 'string';
                         break;
 

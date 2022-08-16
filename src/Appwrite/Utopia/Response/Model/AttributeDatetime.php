@@ -43,8 +43,7 @@ class AttributeDatetime extends Attribute
     }
 
     public array $conditions = [
-        'type' => self::TYPE_DATETIME,
-        'format' => \APP_DATABASE_ATTRIBUTE_DATETIME
+        'type' => self::TYPE_DATETIME
     ];
 
     /**
