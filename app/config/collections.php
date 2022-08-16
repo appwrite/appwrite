@@ -2410,6 +2410,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'stdout',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 1000000,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'statusCode',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
