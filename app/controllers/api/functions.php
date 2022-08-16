@@ -969,8 +969,10 @@ App::post('/v1/functions/:functionId/executions')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        $execution->setAttribute('stdout', ($isPrivilegedUser || $isAppUser) ? $executionResponse['stdout'] : '');
-        $execution->setAttribute('stderr', ($isPrivilegedUser || $isAppUser) ? $executionResponse['stderr'] : '');
+        if(!$isPrivilegedUser && !$isAppUser) {
+            $execution->setAttribute('stdout', '');
+            $execution->setAttribute('stderr', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1026,7 +1028,7 @@ App::get('/v1/functions/:functionId/executions')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        if ($isPrivilegedUser || $isAppUser) {
+        if (!$isPrivilegedUser && !$isAppUser) {
             $results = array_map(function ($execution) {
                 $execution->setAttribute('stdout', '');
                 $execution->setAttribute('stderr', '');
@@ -1076,8 +1078,10 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        $execution->setAttribute('stdout', ($isPrivilegedUser || $isAppUser) ? $execution->getAttribute('stdout') : '');
-        $execution->setAttribute('stderr', ($isPrivilegedUser || $isAppUser) ? $execution->getAttribute('stderr') : '');
+        if(!$isPrivilegedUser && !$isAppUser) {
+            $execution->setAttribute('stdout', '');
+            $execution->setAttribute('stderr', '');
+        }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
