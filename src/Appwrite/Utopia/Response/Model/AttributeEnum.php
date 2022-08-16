@@ -36,7 +36,6 @@ class AttributeEnum extends Attribute
                 'description' => 'String format.',
                 'default' => 'enum',
                 'example' => 'enum',
-                'array' => false,
                 'required' => true,
             ])
             ->addRule('default', [

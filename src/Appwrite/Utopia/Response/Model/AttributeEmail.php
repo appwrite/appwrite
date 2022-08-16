@@ -29,7 +29,6 @@ class AttributeEmail extends Attribute
                 'description' => 'String format.',
                 'default' => 'email',
                 'example' => 'email',
-                'array' => false,
                 'required' => true,
             ])
             ->addRule('default', [

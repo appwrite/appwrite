@@ -29,7 +29,6 @@ class AttributeIP extends Attribute
                 'description' => 'String format.',
                 'default' => 'ip',
                 'example' => 'ip',
-                'array' => false,
                 'required' => true,
             ])
             ->addRule('default', [
