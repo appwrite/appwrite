@@ -265,10 +265,102 @@ trait UsersBase
     }
 
     /**
+     * Tests all optional parameters of createUser (email, phone, anonymous..)
+     *
+     * @depends testCreateUser
+     */
+    public function testCreateUserTypes(array $data): void {
+        /**
+         * Test for SUCCESS
+        */
+
+        // Email + password
+        $response = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'email' => 'emailuser@appwrite.io',
+            'password' => 'emailUserPassword',
+        ]);
+
+        $this->assertNotEmpty($response['body']['email']);
+        $this->assertNotEmpty($response['body']['password']);
+        $this->assertEmpty($response['body']['phone']);
+
+        // Phone
+        $response = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'phone' => '+123456789012',
+        ]);
+
+        $this->assertEmpty($response['body']['email']);
+        $this->assertEmpty($response['body']['password']);
+        $this->assertNotEmpty($response['body']['phone']);
+
+        // Anonymous
+        $response = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+        ]);
+        
+        $this->assertEmpty($response['body']['email']);
+        $this->assertEmpty($response['body']['password']);
+        $this->assertEmpty($response['body']['phone']);
+
+        // Email-only
+        $response = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'email' => 'emailonlyuser@appwrite.io',
+        ]);
+        
+        $this->assertNotEmpty($response['body']['email']);
+        $this->assertEmpty($response['body']['password']);
+        $this->assertEmpty($response['body']['phone']);
+
+        // Password-only
+        $response = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'password' => 'passwordOnlyUser',
+        ]);
+        
+        $this->assertEmpty($response['body']['email']);
+        $this->assertNotEmpty($response['body']['password']);
+        $this->assertEmpty($response['body']['phone']);
+
+        // Password and phone
+        $response = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'password' => 'passwordOnlyUser',
+            'phone' => '+123456789013',
+        ]);
+        
+        $this->assertEmpty($response['body']['email']);
+        $this->assertNotEmpty($response['body']['password']);
+        $this->assertNotEmpty($response['body']['phone']);
+    }
+
+    /**
      * @depends testCreateUser
      */
     public function testListUsers(array $data): void
     {
+        $totalUsers = 15;
+
         /**
          * Test for SUCCESS listUsers
          */
@@ -280,7 +372,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
-        $this->assertCount(9, $response['body']['users']);
+        $this->assertCount($totalUsers, $response['body']['users']);
 
         $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
         $this->assertEquals($response['body']['users'][1]['$id'], 'user1');
@@ -295,7 +387,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
-        $this->assertCount(8, $response['body']['users']);
+        $this->assertCount($totalUsers - 1, $response['body']['users']);
         $this->assertEquals($response['body']['users'][0]['$id'], 'user1');
 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
