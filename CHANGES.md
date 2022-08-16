@@ -59,7 +59,7 @@
   - Added Endpoint to update Account Phone Number (`PATCH:/v1/account/phone`)
   - Added Endpoint to create Account Phone Verification (`POST:/v1/account/verification/phone`)
   - Added Endpoint to confirm Account Phone Verification (`PUT:/v1/account/verification/phone`)
-  - Added `_APP_SMS_PROVIDER` and `_APP_SMS_FROM` Environment Variable
+  - Added `_APP_PHONE_PROVIDER` and `_APP_PHONE_FROM` Environment Variable
   - Added `phone` and `phoneVerification` Attribute to User
 - Added `$createdAt` and `$updatedAt` Attributes by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3382
   - Bucket
