@@ -547,7 +547,7 @@ App::post('/v1/execution')
                     $stdout = $executorResponse['stdout'];
                     $res = $executorResponse['response'];
                     if (is_array($res)) {
-                        $res = json_encode($res);
+                        $res = json_encode($res, JSON_UNESCAPED_UNICODE);
                     }
                     break;
                 default:
@@ -657,7 +657,7 @@ $http->on('start', function ($http) {
     /**
      * Warmup: make sure images are ready to run fast 🚀
      */
-    $runtimes = new Runtimes('v1');
+    $runtimes = new Runtimes('v2');
     $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
     $runtimes = $runtimes->getAll(true, $allowList);
     foreach ($runtimes as $runtime) {

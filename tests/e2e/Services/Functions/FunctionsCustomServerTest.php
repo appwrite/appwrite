@@ -866,6 +866,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
+        $this->assertStringContainsString('Amazing Function Log', $executions['body']['stdout']);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -893,7 +894,7 @@ class FunctionsCustomServerTest extends Scope
 
     public function testCreateCustomNodeExecution()
     {
-        $name = 'node-17.0';
+        $name = 'node-18.0';
         $folder = 'node';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
