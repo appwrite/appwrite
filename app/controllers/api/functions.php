@@ -942,7 +942,7 @@ App::post('/v1/functions/:functionId/executions')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        if(!$isPrivilegedUser && !$isAppUser) {
+        if (!$isPrivilegedUser && !$isAppUser) {
             $execution->setAttribute('stdout', '');
             $execution->setAttribute('stderr', '');
         }
@@ -1051,7 +1051,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        if(!$isPrivilegedUser && !$isAppUser) {
+        if (!$isPrivilegedUser && !$isAppUser) {
             $execution->setAttribute('stdout', '');
             $execution->setAttribute('stderr', '');
         }
