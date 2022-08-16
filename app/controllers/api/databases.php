@@ -2188,11 +2188,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        if ($documentSecurity) {
-            $valid |= $validator->isValid($document->getRead());
-        }
-        if (!$valid) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        if ($documentSecurity && !$validator->isValid($document->getRead())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         /**
@@ -2362,10 +2359,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        if ($documentSecurity) {
-            $valid |= $validator->isValid($document->getUpdate());
-        }
-        if (!$valid) {
+        if ($documentSecurity && !$validator->isValid($document->getUpdate())) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
@@ -2490,11 +2484,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        if ($documentSecurity) {
-            $valid |= $validator->isValid($document->getDelete());
-        }
-        if (!$valid) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        if ($documentSecurity && !$validator->isValid($document->getDelete())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);

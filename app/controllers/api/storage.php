@@ -394,6 +394,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
          */
         $permissions = PermissionsProcessor::aggregate($permissions, 'file');
 
+        \var_dump($permissions);
+        
         /**
          * Add permissions for current the user for any missing types
          * from the allowed permissions for this resource type.
@@ -417,6 +419,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 }
             }
         }
+        
+        \var_dump($permissions);
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
@@ -790,11 +794,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($fileSecurity) {
-            $valid |= $validator->isValid($file->getRead());
-        }
-        if (!$valid) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity && !$validator->isValid($file->getRead())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         $usage
@@ -874,11 +875,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($fileSecurity) {
-            $valid |= $validator->isValid($file->getRead());
-        }
-        if (!$valid) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity && !$validator->isValid($file->getRead())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         $path = $file->getAttribute('path');
@@ -1029,11 +1027,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($bucket->getAttribute('fileSecurity', false)) {
-            $valid |= $validator->isValid($file->getRead());
-        }
-        if (!$valid) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity && !$validator->isValid($file->getRead())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         $path = $file->getAttribute('path', '');
@@ -1167,11 +1162,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($fileSecurity) {
-            $valid |= $validator->isValid($file->getRead());
-        }
-        if (!$valid) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity && !$validator->isValid($file->getRead())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         $mimes = Config::getParam('storage-mimes');
@@ -1319,11 +1311,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($fileSecurity) {
-            $valid |= $validator->isValid($file->getUpdate());
-        }
-        if (!$valid) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity && !$validator->isValid($file->getUpdate())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
@@ -1410,11 +1399,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        if ($fileSecurity) {
-            $valid |= $validator->isValid($file->getDelete());
-        }
-        if (!$valid) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+        if ($fileSecurity && !$validator->isValid($file->getDelete())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         $deviceDeleted = false;
