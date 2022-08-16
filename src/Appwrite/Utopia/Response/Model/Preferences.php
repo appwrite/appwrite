@@ -7,11 +7,6 @@ use Appwrite\Utopia\Response;
 class Preferences extends Any
 {
     /**
-     * @var bool
-     */
-    protected $any = true;
-
-    /**
      * Get Name
      *
      * @return string

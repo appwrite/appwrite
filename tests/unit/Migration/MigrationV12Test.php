@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Migration;
 
 use ReflectionClass;
 use Appwrite\Migration\Version\V12;
@@ -16,7 +16,7 @@ class MigrationV12Test extends MigrationTest
         $this->method->setAccessible(true);
     }
 
-    public function testMigrationProjects()
+    public function testMigrationProjects(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'project',
@@ -30,7 +30,7 @@ class MigrationV12Test extends MigrationTest
         $this->assertEquals($document->getAttribute('search'), 'project Appwrite');
     }
 
-    public function testMigrationUsers()
+    public function testMigrationUsers(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'user',
@@ -42,7 +42,7 @@ class MigrationV12Test extends MigrationTest
         $this->assertEquals($document->getAttribute('search'), 'user test@appwrite.io Torsten Dittmann');
     }
 
-    public function testMigrationTeams()
+    public function testMigrationTeams(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'team',
@@ -53,7 +53,7 @@ class MigrationV12Test extends MigrationTest
         $this->assertEquals($document->getAttribute('search'), 'team Appwrite');
     }
 
-    public function testMigrationFunctions()
+    public function testMigrationFunctions(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'function',
@@ -65,7 +65,7 @@ class MigrationV12Test extends MigrationTest
         $this->assertEquals($document->getAttribute('search'), 'function My Function php-8.0');
     }
 
-    public function testMigrationExecutions()
+    public function testMigrationExecutions(): void
     {
         $document = $this->fixDocument(new Document([
             '$id' => 'execution',
