@@ -31,24 +31,30 @@ use MaxMind\Db\Reader;
 use Utopia\Validator\Integer;
 
 /** TODO: Remove function when we move to using utopia/platform */
-function createUser(string $hash, mixed $hashOptions, string $userId, string $email, string $password, string $name, Database $dbForProject, Stats $usage, Event $events): Document
+function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Database $dbForProject, Stats $usage, Event $events): Document
 {
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
-    $email = \strtolower($email);
+
+    if (!empty($email)) {
+        $email = \strtolower($email);
+    }
 
     try {
         $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+
         $user = $dbForProject->createDocument('users', new Document([
             '$id' => $userId,
             '$read' => ['role:all'],
             '$write' => ['user:' . $userId],
             'email' => $email,
             'emailVerification' => false,
+            'phone' => $phone,
+            'phoneVerification' => false,
             'status' => true,
-            'password' => $hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password,
+            'password' => (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null,
             'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
             'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions,
-            'passwordUpdate' => \time(),
+            'passwordUpdate' => (!empty($password)) ? \time() : 0,
             'registration' => \time(),
             'reset' => false,
             'name' => $name,
@@ -56,7 +62,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, string $em
             'sessions' => null,
             'tokens' => null,
             'memberships' => null,
-            'search' => implode(' ', [$userId, $email, $name])
+            'search' => implode(' ', [$userId, $email, $phone, $name])
         ]));
     } catch (Duplicate $th) {
         throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -86,15 +92,16 @@ App::post('/v1/users')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Password(), 'Plain text user password. Must be at least 8 chars.')
+    ->param('email', null, new Email(), 'User email.', true)
+    ->param('phone', null, new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('password', null, new Password(), 'Plain text user password. Must be at least 8 chars.', true)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
-        $user = createUser('plaintext', '{}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
@@ -121,7 +128,7 @@ App::post('/v1/users/bcrypt')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
-        $user = createUser('bcrypt', '{}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
@@ -148,7 +155,7 @@ App::post('/v1/users/md5')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
-        $user = createUser('md5', '{}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
@@ -175,7 +182,7 @@ App::post('/v1/users/argon2')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
-        $user = createUser('argon2', '{}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
@@ -209,7 +216,7 @@ App::post('/v1/users/sha')
             $options = '{"version":"' . $passwordVersion . '"}';
         }
 
-        $user = createUser('sha', $options, $userId, $email, $password, $name, $dbForProject, $usage, $events);
+        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
@@ -236,7 +243,7 @@ App::post('/v1/users/phpass')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
-        $user = createUser('phpass', '{}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
@@ -276,7 +283,7 @@ App::post('/v1/users/scrypt')
             'length' => $passwordLength
         ];
 
-        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, $name, $dbForProject, $usage, $events);
+        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
@@ -306,7 +313,7 @@ App::post('/v1/users/scrypt-modified')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
-        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, $name, $dbForProject, $usage, $events);
+        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);

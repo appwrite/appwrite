@@ -1,13 +1,13 @@
 <?php
 
-namespace Appwrite\Auth\Phone;
+namespace Appwrite\SMS\Adapter;
 
-use Appwrite\Auth\Phone;
+use Appwrite\SMS\Adapter;
 
 // Reference Material
 // https://www.twilio.com/docs/sms/api
 
-class Twilio extends Phone
+class Twilio extends Adapter
 {
     /**
      * @var string

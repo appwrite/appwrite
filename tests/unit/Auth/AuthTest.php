@@ -189,6 +189,14 @@ class AuthTest extends TestCase
         $this->assertEquals(\mb_strlen(Auth::tokenGenerator(5)), 10);
     }
 
+    public function testCodeGenerator(): void
+    {
+        $this->assertEquals(6, \strlen(Auth::codeGenerator()));
+        $this->assertEquals(\mb_strlen(Auth::codeGenerator(256)), 256);
+        $this->assertEquals(\mb_strlen(Auth::codeGenerator(10)), 10);
+        $this->assertTrue(is_numeric(Auth::codeGenerator(5)));
+    }
+
     public function testSessionVerify(): void
     {
         $secret = 'secret1';

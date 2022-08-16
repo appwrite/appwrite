@@ -2,9 +2,9 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Phone;
+use Appwrite\SMS\Adapter\Mock;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Auth\Validator\Phone as ValidatorPhone;
+use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
@@ -863,7 +863,7 @@ App::post('/v1/account/sessions/phone')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('number', '', new ValidatorPhone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -871,9 +871,8 @@ App::post('/v1/account/sessions/phone')
     ->inject('audits')
     ->inject('events')
     ->inject('messaging')
-    ->inject('phone')
-    ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging, Phone $phone) {
-        if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging) {
+        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -881,7 +880,7 @@ App::post('/v1/account/sessions/phone')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $user = $dbForProject->findOne('users', [new Query('phone', Query::TYPE_EQUAL, [$number])]);
+        $user = $dbForProject->findOne('users', [new Query('phone', Query::TYPE_EQUAL, [$phone])]);
 
         if (!$user) {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -901,7 +900,7 @@ App::post('/v1/account/sessions/phone')
                 '$read' => ['role:all'],
                 '$write' => ['user:' . $userId],
                 'email' => null,
-                'phone' => $number,
+                'phone' => $phone,
                 'emailVerification' => false,
                 'phoneVerification' => false,
                 'status' => true,
@@ -913,11 +912,11 @@ App::post('/v1/account/sessions/phone')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
-                'search' => implode(' ', [$userId, $number])
+                'search' => implode(' ', [$userId, $phone])
             ])));
         }
 
-        $secret = $phone->generateSecretDigits();
+        $secret = (App::getEnv('_APP_SMS_PROVIDER') === 'sms://mock') ? Mock::$digits : Auth::codeGenerator();
 
         $expire = \time() + Auth::TOKEN_EXPIRATION_PHONE;
 
@@ -941,7 +940,7 @@ App::post('/v1/account/sessions/phone')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $messaging
-            ->setRecipient($number)
+            ->setRecipient($phone)
             ->setMessage($secret)
             ->trigger();
 
@@ -1582,7 +1581,7 @@ App::patch('/v1/account/phone')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ACCOUNT)
-    ->param('number', '', new ValidatorPhone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('response')
     ->inject('user')
@@ -2268,17 +2267,16 @@ App::post('/v1/account/verification/phone')
     ->label('abuse-key', 'userId:{userId}')
     ->inject('request')
     ->inject('response')
-    ->inject('phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
     ->inject('messaging')
-    ->action(function (Request $request, Response $response, Phone $phone, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
 
-        if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
-            throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
+        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED);
         }
 
         if (empty($user->getAttribute('phone'))) {
@@ -2291,7 +2289,7 @@ App::post('/v1/account/verification/phone')
 
         $verificationSecret = Auth::tokenGenerator();
 
-        $secret = $phone->generateSecretDigits();
+        $secret = (App::getEnv('_APP_SMS_PROVIDER') === 'sms://mock') ? Mock::$digits : Auth::codeGenerator();
         $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
 
         $verification = new Document([

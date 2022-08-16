@@ -256,8 +256,6 @@ class Auth
      * @param int $length
      *
      * @return string
-     *
-     * @throws \Exception
      */
     public static function passwordGenerator(int $length = 20): string
     {
@@ -272,12 +270,30 @@ class Auth
      * @param int $length
      *
      * @return string
-     *
-     * @throws \Exception
      */
     public static function tokenGenerator(int $length = 128): string
     {
         return \bin2hex(\random_bytes($length));
+    }
+
+    /**
+     * Code Generator.
+     *
+     * Generate random code string
+     *
+     * @param int $length
+     *
+     * @return string
+     */
+    public static function codeGenerator(int $length = 6): string
+    {
+        $value = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $value .= random_int(0, 9);
+        }
+
+        return $value;
     }
 
     /**
