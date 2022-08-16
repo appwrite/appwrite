@@ -47,7 +47,6 @@ App::post('/v1/account')
     ->label('scope', 'public')
     ->label('auth.type', 'emailPassword')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'create')
@@ -916,7 +915,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     });
 
 App::post('/v1/account/sessions/magic-url')
-    ->desc('Create Magic URL session')
+    ->desc('Create Magic URL Session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('auth.type', 'magic-url')
@@ -941,10 +940,10 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('events')
     ->inject('mails')
-    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
+    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Mail $mails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED);
         }
 
         $roles = Authorization::getRoles();
@@ -1033,6 +1032,11 @@ App::post('/v1/account/sessions/magic-url')
 
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
+
+        $audits
+            ->setResource('user/' . $user->getId())
+            ->setUser($user)
+        ;
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1175,12 +1179,13 @@ App::post('/v1/account/sessions/phone')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
+    ->inject('audits')
     ->inject('events')
     ->inject('messaging')
     ->inject('phone')
-    ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Event $events, EventPhone $messaging, Phone $phone) {
+    ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging, Phone $phone) {
         if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
-            throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED);
         }
 
         $roles = Authorization::getRoles();
@@ -1261,6 +1266,11 @@ App::post('/v1/account/sessions/phone')
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
+        $audits
+            ->setResource('user/' . $user->getId())
+            ->setUser($user)
+        ;
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($token, Response::MODEL_TOKEN)
@@ -1268,12 +1278,10 @@ App::post('/v1/account/sessions/phone')
     });
 
 App::put('/v1/account/sessions/phone')
-    ->desc('Create Phone session (confirmation)')
+    ->desc('Create Phone Session (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->label('audits.resource', 'user/{response.userId}')
-    ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePhoneSession')
@@ -1407,11 +1415,11 @@ App::post('/v1/account/sessions/anonymous')
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
-            throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user');
+            throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user.');
         }
 
         if (!$user->isEmpty()) {
-            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS, 'Cannot create an anonymous user when logged in');
+            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS, 'Cannot create an anonymous user when logged in.');
         }
 
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -1420,7 +1428,7 @@ App::post('/v1/account/sessions/anonymous')
             $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
             if ($total >= $limit) {
-                throw new Exception(Exception::USER_COUNT_EXCEEDED);
+                throw new Exception(Exception::USER_COUNT_EXCEEDED, 'Project registration is restricted. Contact your administrator for more information.');
             }
         }
 
@@ -1632,65 +1640,6 @@ App::get('/v1/account/sessions')
         ]), Response::MODEL_SESSION_LIST);
     });
 
-App::get('/v1/account/logs')
-    ->desc('Get Account Logs')
-    ->groups(['api', 'account'])
-    ->label('scope', 'account')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'getLogs')
-    ->label('sdk.description', '/docs/references/account/get-logs.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->inject('response')
-    ->inject('user')
-    ->inject('locale')
-    ->inject('geodb')
-    ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (int $limit, int $offset, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Stats $usage) {
-
-        $audit = new EventAudit($dbForProject);
-
-        $logs = $audit->getLogsByUser($user->getId(), $limit, $offset);
-
-        $output = [];
-
-        foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
-
-            $detector = new Detector($log['userAgent']);
-
-            $output[$i] = new Document(array_merge(
-                $log->getArrayCopy(),
-                $log['data'],
-                $detector->getOS(),
-                $detector->getClient(),
-                $detector->getDevice()
-            ));
-
-            $record = $geodb->get($log['ip']);
-
-            if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            } else {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
-            }
-        }
-
-        $usage->setParam('users.read', 1);
-
-        $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getId()),
-            'logs' => $output,
-        ]), Response::MODEL_LOG_LIST);
-    });
-
 App::get('/v1/account/sessions/:sessionId')
     ->desc('Get Session By ID')
     ->groups(['api', 'account'])
@@ -1739,7 +1688,6 @@ App::patch('/v1/account/password')
     ->label('event', 'users.[userId].update.password')
     ->label('scope', 'account')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePassword')
@@ -1781,7 +1729,6 @@ App::patch('/v1/account/email')
     ->label('event', 'users.[userId].update.email')
     ->label('scope', 'account')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateEmail')
@@ -1833,7 +1780,6 @@ App::patch('/v1/account/phone')
     ->label('event', 'users.[userId].update.phone')
     ->label('scope', 'account')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePhone')
