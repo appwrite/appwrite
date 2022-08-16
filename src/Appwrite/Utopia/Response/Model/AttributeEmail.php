@@ -30,7 +30,7 @@ class AttributeEmail extends Attribute
                 'default' => 'email',
                 'example' => 'email',
                 'array' => false,
-                'require' => true,
+                'required' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,

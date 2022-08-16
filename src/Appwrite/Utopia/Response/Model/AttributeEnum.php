@@ -37,7 +37,7 @@ class AttributeEnum extends Attribute
                 'default' => 'enum',
                 'example' => 'enum',
                 'array' => false,
-                'require' => true,
+                'required' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,

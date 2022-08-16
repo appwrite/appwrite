@@ -30,7 +30,7 @@ class AttributeIP extends Attribute
                 'default' => 'ip',
                 'example' => 'ip',
                 'array' => false,
-                'require' => true,
+                'required' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
