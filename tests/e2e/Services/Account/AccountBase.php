@@ -50,7 +50,7 @@ trait AccountBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 409);
-        
+
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',

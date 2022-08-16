@@ -269,7 +269,8 @@ trait UsersBase
      *
      * @depends testCreateUser
      */
-    public function testCreateUserTypes(array $data): void {
+    public function testCreateUserTypes(array $data): void
+    {
         /**
          * Test for SUCCESS
         */
@@ -308,7 +309,7 @@ trait UsersBase
         ], $this->getHeaders()), [
             'userId' => 'unique()',
         ]);
-        
+
         $this->assertEmpty($response['body']['email']);
         $this->assertEmpty($response['body']['password']);
         $this->assertEmpty($response['body']['phone']);
@@ -321,7 +322,7 @@ trait UsersBase
             'userId' => 'unique()',
             'email' => 'emailonlyuser@appwrite.io',
         ]);
-        
+
         $this->assertNotEmpty($response['body']['email']);
         $this->assertEmpty($response['body']['password']);
         $this->assertEmpty($response['body']['phone']);
@@ -334,7 +335,7 @@ trait UsersBase
             'userId' => 'unique()',
             'password' => 'passwordOnlyUser',
         ]);
-        
+
         $this->assertEmpty($response['body']['email']);
         $this->assertNotEmpty($response['body']['password']);
         $this->assertEmpty($response['body']['phone']);
@@ -348,7 +349,7 @@ trait UsersBase
             'password' => 'passwordOnlyUser',
             'phone' => '+123456789013',
         ]);
-        
+
         $this->assertEmpty($response['body']['email']);
         $this->assertNotEmpty($response['body']['password']);
         $this->assertNotEmpty($response['body']['phone']);

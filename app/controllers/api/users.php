@@ -35,13 +35,13 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
 {
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
 
-    if(!empty($email)) {
+    if (!empty($email)) {
         $email = \strtolower($email);
     }
 
     try {
         $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
-        
+
         $user = $dbForProject->createDocument('users', new Document([
             '$id' => $userId,
             '$read' => ['role:all'],
