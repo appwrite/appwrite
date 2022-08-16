@@ -18,6 +18,32 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
+$parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
+    preg_match_all('/{(.*?)}/', $label, $matches);
+    foreach ($matches[1] ?? [] as $pos => $match) {
+        $find = $matches[0][$pos];
+        $parts = explode('.', $match);
+
+        if (count($parts) !== 2) {
+            throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
+        }
+
+        $namespace = $parts[0] ?? '';
+        $replace = $parts[1] ?? '';
+
+        $params = match ($namespace) {
+            'user' => (array)$user,
+            'request' => $requestParams,
+            default => $responsePayload,
+        };
+
+        if (array_key_exists($replace, $params)) {
+            $label = \str_replace($find, $params[$replace], $label);
+        }
+    }
+    return $label;
+};
+
 App::init()
     ->groups(['api'])
     ->inject('utopia')
@@ -34,7 +60,6 @@ App::init()
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) {
-
         $route = $utopia->match($request);
 
         if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
@@ -131,7 +156,6 @@ App::init()
     ->inject('request')
     ->inject('project')
     ->action(function (App $utopia, Request $request, Document $project) {
-
         $route = $utopia->match($request);
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -192,8 +216,7 @@ App::shutdown()
     ->inject('database')
     ->inject('mode')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) {
-
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) use ($parseLabel) {
         $responsePayload = $response->getPayload();
 
         if (!empty($events->getEvent())) {
@@ -255,81 +278,54 @@ App::shutdown()
         $requestParams = $route->getParamsValues();
         $user = $audits->getUser();
 
-        $parseLabel = function ($label) use ($responsePayload, $requestParams, $user) {
-            preg_match_all('/{(.*?)}/', $label, $matches);
-            foreach ($matches[1] ?? [] as $pos => $match) {
-                $find = $matches[0][$pos];
-                $parts = explode('.', $match);
+        $pattern = $route->getLabel('audits.resource', null);
+        if (!empty($pattern)) {
+            $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+            if (!empty($resource) && $resource !== $pattern) {
+                $audits->setResource($resource);
+            }
+        }
 
-                if (count($parts) !== 2) {
-                    throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
-                }
+        $pattern = $route->getLabel('audits.userId', null);
+        if (!empty($pattern)) {
+            $userId = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+            $user = $dbForProject->getDocument('users', $userId);
+            $audits->setUser($user);
+        }
 
-                $namespace = $parts[0] ?? '';
-                $replace = $parts[1] ?? '';
-
-                $params = match ($namespace) {
-                    'user' => (array)$user,
-                    'request' => $requestParams,
-                    default => $responsePayload,
-                };
-
-                if (array_key_exists($replace, $params)) {
-                    $label = \str_replace($find, $params[$replace], $label);
-                }
+        if (!empty($audits->getResource()) && !empty($audits->getUser()->getId())) {
+            /**
+             * audits.payload is switched to default true
+             * in order to auto audit payload for all endpoints
+             */
+            $pattern = $route->getLabel('audits.payload', true);
+            if (!empty($pattern)) {
+                $audits->setPayload($responsePayload);
             }
 
-            return $label;
-        };
-
-    $pattern = $route->getLabel('audits.resource', null);
-    if (!empty($pattern)) {
-        $resource = $parseLabel($pattern);
-        if (!empty($resource) && $resource !== $pattern) {
-            $audits->setResource($resource);
-        }
-    }
-
-    $pattern = $route->getLabel('audits.userId', null);
-    if (!empty($pattern)) {
-        $userId = $parseLabel($pattern);
-        $user = $dbForProject->getDocument('users', $userId);
-        $audits->setUser($user);
-    }
-
-    if (!empty($audits->getResource()) && !empty($audits->getUser()->getId())) {
-        /**
-         * audits.payload is switched to default true
-         * in order to auto audit payload for all endpoints
-         */
-        $pattern = $route->getLabel('audits.payload', true);
-        if (!empty($pattern)) {
-            $audits->setPayload($responsePayload);
+            foreach ($events->getParams() as $key => $value) {
+                $audits->setParam($key, $value);
+            }
+            $audits->trigger();
         }
 
-        foreach ($events->getParams() as $key => $value) {
-            $audits->setParam($key, $value);
+        if (!empty($deletes->getType())) {
+            $deletes->trigger();
         }
-        $audits->trigger();
-    }
 
-    if (!empty($deletes->getType())) {
-        $deletes->trigger();
-    }
+        if (!empty($database->getType())) {
+            $database->trigger();
+        }
 
-    if (!empty($database->getType())) {
-        $database->trigger();
-    }
-
-    if (
-        App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
-        && $project->getId()
-        && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
-        && !empty($route->getLabel('sdk.namespace', null))
-    ) { // Don't calculate console usage on admin mode
+        if (
+            App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
+            && $project->getId()
+            && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
+            && !empty($route->getLabel('sdk.namespace', null))
+        ) { // Don't calculate console usage on admin mode
             $usage
-            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-            ->setParam('networkResponseSize', $response->getSize())
-            ->submit();
-    }
+                ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
+                ->setParam('networkResponseSize', $response->getSize())
+                ->submit();
+        }
     });
