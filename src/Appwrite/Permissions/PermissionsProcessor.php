@@ -7,7 +7,6 @@ use Utopia\Database\Permission;
 
 class PermissionsProcessor
 {
-
     public static function aggregate(?array $permissions, string $resource): ?array
     {
         if (\is_null($permissions)) {
@@ -60,5 +59,4 @@ class PermissionsProcessor
 
         return $aggregates;
     }
-
 }

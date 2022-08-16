@@ -530,7 +530,7 @@ App::post('/v1/databases/:databaseId/collections')
          * accounting for the resource type given that some types not allowed specific permissions.
          */
         $permissions = PermissionsProcessor::aggregate($permissions, 'collection');
-        
+
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
                 '$id' => $collectionId,
@@ -798,12 +798,12 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         }
 
         $permissions ??= $collection->getPermissions() ?? [];
-        
+
         /**
          * Map aggregate permissions into the multiple permissions they represent.
          */
         $permissions = PermissionsProcessor::aggregate($permissions, 'collection');
-        
+
         $enabled ??= $collection->getAttribute('enabled', true);
 
         try {

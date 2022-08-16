@@ -80,7 +80,7 @@ App::post('/v1/storage/buckets')
          * accounting for the resource type given that some types not allowed specific permissions.
          */
         $permissions = PermissionsProcessor::aggregate($permissions, 'bucket');
-        
+
         try {
             $files = Config::getParam('collections', [])['files'] ?? [];
             if (empty($files)) {
@@ -273,7 +273,7 @@ App::put('/v1/storage/buckets/:bucketId')
          * accounting for the resource type given that some types not allowed specific permissions.
          */
         $permissions = PermissionsProcessor::aggregate($permissions, 'bucket');
-        
+
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
                 ->setAttribute('name', $name)
                 ->setAttribute('$permissions', $permissions)
