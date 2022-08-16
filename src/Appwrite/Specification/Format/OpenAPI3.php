@@ -48,7 +48,7 @@ class OpenAPI3 extends Format
             }
         }
     }
-    
+
     public function parse(): array
     {
         /**
