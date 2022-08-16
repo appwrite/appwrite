@@ -37,8 +37,6 @@ class AttributeIP extends Attribute
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'example' => '192.0.2.0',
-                'array' => false,
-                'require' => false,
             ])
         ;
     }

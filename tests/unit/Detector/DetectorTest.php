@@ -1,16 +1,13 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Detector;
 
 use Appwrite\Detector\Detector;
 use PHPUnit\Framework\TestCase;
 
 class DetectorTest extends TestCase
 {
-    /**
-     * @var Detector
-     */
-    protected $object = null;
+    protected ?Detector $object = null;
 
     public function setUp(): void
     {
@@ -21,7 +18,7 @@ class DetectorTest extends TestCase
     {
     }
 
-    public function testGetOS()
+    public function testGetOS(): void
     {
         $this->assertEquals($this->object->getOS(), [
             'osCode' => 'WIN',
@@ -30,7 +27,7 @@ class DetectorTest extends TestCase
         ]);
     }
 
-    public function testGetClient()
+    public function testGetClient(): void
     {
         $this->assertEquals($this->object->getClient(), [
             'clientType' => 'browser',
@@ -42,7 +39,7 @@ class DetectorTest extends TestCase
         ]);
     }
 
-    public function testGetDevice()
+    public function testGetDevice(): void
     {
         $this->assertEquals($this->object->getDevice(), [
             'deviceName' => 'desktop',

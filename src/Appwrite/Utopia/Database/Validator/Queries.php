@@ -9,7 +9,7 @@ class Queries extends ValidatorQueries
 {
     /**
      * Expression constructor
-     * 
+     *
      * This Queries Validator that filters indexes for only available indexes
      *
      * @param QueryValidator $validator
