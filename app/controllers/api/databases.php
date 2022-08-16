@@ -525,6 +525,12 @@ App::post('/v1/databases/:databaseId/collections')
 
         $collectionId = $collectionId == 'unique()' ? ID::unique() : $collectionId;
 
+        /**
+         * Map aggregate permissions into the multiple permissions they represent,
+         * accounting for the resource type given that some types not allowed specific permissions.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'collection');
+        
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
                 '$id' => $collectionId,
@@ -792,7 +798,12 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         }
 
         $permissions ??= $collection->getPermissions() ?? [];
-
+        
+        /**
+         * Map aggregate permissions into the multiple permissions they represent.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'collection');
+        
         $enabled ??= $collection->getAttribute('enabled', true);
 
         try {
@@ -1934,6 +1945,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         /**
+         * Map aggregate permissions into the multiple permissions they represent,
+         * accounting for the resource type given that some types not allowed specific permissions.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'document');
+
+        /**
          * Add permissions for current the user for any missing types
          * from the allowed permissions for this resource type.
          */
@@ -2362,6 +2379,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 }
             }
         }
+
+        /**
+         * Map aggregate permissions into the multiple permissions they represent,
+         * accounting for the resource type given that some types not allowed specific permissions.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'document');
 
         if (\is_null($permissions)) {
             $permissions = $document->getPermissions() ?? [];

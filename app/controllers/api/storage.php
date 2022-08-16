@@ -74,6 +74,13 @@ App::post('/v1/storage/buckets')
     ->action(function (string $bucketId, string $name, ?array $permissions, string $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
+
+        /**
+         * Map aggregate permissions into the multiple permissions they represent,
+         * accounting for the resource type given that some types not allowed specific permissions.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'bucket');
+        
         try {
             $files = Config::getParam('collections', [])['files'] ?? [];
             if (empty($files)) {
@@ -261,6 +268,12 @@ App::put('/v1/storage/buckets/:bucketId')
         $encryption ??= $bucket->getAttribute('encryption', true);
         $antivirus ??= $bucket->getAttribute('antivirus', true);
 
+        /**
+         * Map aggregate permissions into the multiple permissions they represent,
+         * accounting for the resource type given that some types not allowed specific permissions.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'bucket');
+        
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
                 ->setAttribute('name', $name)
                 ->setAttribute('$permissions', $permissions)
@@ -374,6 +387,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
         if (!$validator->isValid($bucket->getCreate())) {
             throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
         }
+
+        /**
+         * Map aggregate permissions into the multiple permissions they represent,
+         * accounting for the resource type given that some types not allowed specific permissions.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'file');
 
         /**
          * Add permissions for current the user for any missing types
@@ -1322,6 +1341,12 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
                 }
             }
         }
+
+        /**
+         * Map aggregate permissions into the multiple permissions they represent,
+         * accounting for the resource type given that some types not allowed specific permissions.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'file');
 
         $file->setAttribute('$permissions', $permissions);
 
