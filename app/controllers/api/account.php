@@ -47,6 +47,7 @@ App::post('/v1/account')
     ->label('scope', 'public')
     ->label('auth.type', 'emailPassword')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'create')
@@ -189,6 +190,7 @@ App::get('/v1/account/logs')
     ->inject('geodb')
     ->inject('dbForProject')
     ->inject('usage')
+
     ->action(function (int $limit, int $offset, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Stats $usage) {
 
         $audit = new EventAudit($dbForProject);
@@ -940,7 +942,7 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('events')
     ->inject('mails')
-    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Audit $audits, Event $events, Mail $mails) {
+    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED);
@@ -1032,11 +1034,6 @@ App::post('/v1/account/sessions/magic-url')
 
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
-
-        $audits
-            ->setResource('user/' . $user->getId())
-            ->setUser($user)
-        ;
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1179,11 +1176,10 @@ App::post('/v1/account/sessions/phone')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('events')
     ->inject('messaging')
     ->inject('phone')
-    ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging, Phone $phone) {
+    ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Event $events, EventPhone $messaging, Phone $phone) {
         if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED);
         }
@@ -1265,11 +1261,6 @@ App::post('/v1/account/sessions/phone')
 
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
-
-        $audits
-            ->setResource('user/' . $user->getId())
-            ->setUser($user)
-        ;
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1688,6 +1679,7 @@ App::patch('/v1/account/password')
     ->label('event', 'users.[userId].update.password')
     ->label('scope', 'account')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePassword')
