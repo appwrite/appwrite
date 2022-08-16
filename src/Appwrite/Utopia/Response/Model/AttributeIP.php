@@ -27,8 +27,8 @@ class AttributeIP extends Attribute
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',
-                'default' => APP_DATABASE_ATTRIBUTE_IP,
-                'example' => APP_DATABASE_ATTRIBUTE_IP,
+                'default' => 'ip',
+                'example' => 'ip',
                 'array' => false,
                 'require' => true,
             ])
@@ -37,8 +37,6 @@ class AttributeIP extends Attribute
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'example' => '192.0.2.0',
-                'array' => false,
-                'require' => false,
             ])
         ;
     }

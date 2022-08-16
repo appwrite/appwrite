@@ -20,13 +20,13 @@ class Deployment extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Deployment creation date in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Deployment update date in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
@@ -66,9 +66,9 @@ class Deployment extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The deployment status.',
+                'description' => 'The deployment status. Possible values are "processing", "building", "pending", "ready", and "failed".',
                 'default' => '',
-                'example' => 'enabled',
+                'example' => 'ready',
             ])
             ->addRule('buildStdout', [
                 'type' => self::TYPE_STRING,

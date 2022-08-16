@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6628dccfb632303caa5de412afd21854",
+    "content-hash": "b252bbca91fb272469ad1aab83cbfe93",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1733,19 +1733,14 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-origin/timestamp-to-datetime",
+            "version": "dev-refactor-permissions",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "48b93d69550b6f99e9f3f1f9c8348406d89aa6c0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/48b93d69550b6f99e9f3f1f9c8348406d89aa6c0",
-                "reference": "48b93d69550b6f99e9f3f1f9c8348406d89aa6c0",
-                "shasum": ""
+                "reference": "c5e5bdaa190e1c9993d35a04c78a46870a1265bb"
             },
             "require": {
+                "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/database": ">=0.11 <1.0"
@@ -1760,7 +1755,6 @@
                     "Utopia\\Abuse\\": "src/Abuse"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1772,17 +1766,13 @@
             ],
             "description": "A simple abuse library to manage application usage limits",
             "keywords": [
-                "Abuse",
+                "abuse",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/origin/timestamp-to-datetime"
-            },
-            "time": "2022-08-02T16:41:45+00:00"
+            "time": "2022-08-14T23:58:51+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1841,22 +1831,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-origin/unix-to-datetime",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "670fd68fe069b6bcdda64c9b0df16d2a8411c4ba"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/670fd68fe069b6bcdda64c9b0df16d2a8411c4ba",
-                "reference": "670fd68fe069b6bcdda64c9b0df16d2a8411c4ba",
-                "shasum": ""
+                "reference": "458da3e60ea222bf9791f4891591d7f2ee16e4bb"
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": ">=0.11 <1.0"
+                "utopia-php/database": "0.20.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1868,7 +1852,6 @@
                     "Utopia\\Audit\\": "src/Audit"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1880,30 +1863,26 @@
             ],
             "description": "A simple audit library to manage application users logs",
             "keywords": [
-                "Audit",
+                "audit",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/origin/unix-to-datetime"
-            },
-            "time": "2022-08-02T16:38:13+00:00"
+            "time": "2022-08-14T19:59:21+00:00"
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.6.0",
+            "version": "0.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "8ea1353a4bbab617e23c865a7c97b60d8074aee3"
+                "reference": "9889235a6d3da6cbb1f435201529da4d27c30e79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/8ea1353a4bbab617e23c865a7c97b60d8074aee3",
-                "reference": "8ea1353a4bbab617e23c865a7c97b60d8074aee3",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/9889235a6d3da6cbb1f435201529da4d27c30e79",
+                "reference": "9889235a6d3da6cbb1f435201529da4d27c30e79",
                 "shasum": ""
             },
             "require": {
@@ -1941,9 +1920,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.6.0"
+                "source": "https://github.com/utopia-php/cache/tree/0.6.1"
             },
-            "time": "2022-04-04T12:30:05+00:00"
+            "time": "2022-08-10T08:12:46+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -2051,17 +2030,11 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.19.0",
+            "version": "0.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "207d9f2665bf2124797351dfdcc928a46a301b04"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/207d9f2665bf2124797351dfdcc928a46a301b04",
-                "reference": "207d9f2665bf2124797351dfdcc928a46a301b04",
-                "shasum": ""
+                "reference": "cd89b41564223cddf7d87a41bbaf736a0c89f327"
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2085,7 +2058,11 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Database"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -2107,11 +2084,7 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.19.0"
-            },
-            "time": "2022-08-01T11:51:01+00:00"
+            "time": "2022-08-14T15:22:34+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2169,16 +2142,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.19.21",
+            "version": "0.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "3b7bd8e4acf84fd7d560ced8e0142221d302575d"
+                "reference": "beb5e861c7d0a6256a1272e6b9d70b060ca8629a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/3b7bd8e4acf84fd7d560ced8e0142221d302575d",
-                "reference": "3b7bd8e4acf84fd7d560ced8e0142221d302575d",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/beb5e861c7d0a6256a1272e6b9d70b060ca8629a",
+                "reference": "beb5e861c7d0a6256a1272e6b9d70b060ca8629a",
                 "shasum": ""
             },
             "require": {
@@ -2212,9 +2185,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.19.21"
+                "source": "https://github.com/utopia-php/framework/tree/0.20.0"
             },
-            "time": "2022-05-12T18:42:28+00:00"
+            "time": "2022-07-30T09:55:28+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2828,29 +2801,29 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.19.5",
+            "version": "0.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "04de540cf683e2b08b3192c137dde7f2c37003d9"
+                "reference": "af7dd08848a78a0d38befa3e63083eb0186806f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/04de540cf683e2b08b3192c137dde7f2c37003d9",
-                "reference": "04de540cf683e2b08b3192c137dde7f2c37003d9",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/af7dd08848a78a0d38befa3e63083eb0186806f7",
+                "reference": "af7dd08848a78a0d38befa3e63083eb0186806f7",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-json": "*",
                 "ext-mbstring": "*",
-                "matthiasmullie/minify": "^1.3",
+                "matthiasmullie/minify": "^1.3.68",
                 "php": ">=7.0.0",
-                "twig/twig": "^3.3"
+                "twig/twig": "^3.4.1"
             },
             "require-dev": {
                 "brianium/paratest": "^6.4",
-                "phpunit/phpunit": "^9.5.13"
+                "phpunit/phpunit": "^9.5.21"
             },
             "type": "library",
             "autoload": {
@@ -2872,9 +2845,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.19.5"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.20.0"
             },
-            "time": "2022-07-06T11:05:57+00:00"
+            "time": "2022-08-02T10:09:48+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5271,16 +5244,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.4.1",
+            "version": "v3.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "e939eae92386b69b49cfa4599dd9bead6bf4a342"
+                "reference": "e07cdd3d430cd7e453c31b36eb5ad6c0c5e43077"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/e939eae92386b69b49cfa4599dd9bead6bf4a342",
-                "reference": "e939eae92386b69b49cfa4599dd9bead6bf4a342",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/e07cdd3d430cd7e453c31b36eb5ad6c0c5e43077",
+                "reference": "e07cdd3d430cd7e453c31b36eb5ad6c0c5e43077",
                 "shasum": ""
             },
             "require": {
@@ -5331,7 +5304,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.4.1"
+                "source": "https://github.com/twigphp/Twig/tree/v3.4.2"
             },
             "funding": [
                 {
@@ -5343,27 +5316,13 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-05-17T05:48:52+00:00"
+            "time": "2022-08-12T06:47:24+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/abuse",
-            "version": "dev-origin/timestamp-to-datetime",
-            "alias": "0.7.2",
-            "alias_normalized": "0.7.2.0"
-        },
-        {
-            "package": "utopia-php/audit",
-            "version": "dev-origin/unix-to-datetime",
-            "alias": "0.8.2",
-            "alias_normalized": "0.8.2.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/abuse": 20,
-        "utopia-php/audit": 20
+        "utopia-php/abuse": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

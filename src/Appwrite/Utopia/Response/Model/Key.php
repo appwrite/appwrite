@@ -10,7 +10,7 @@ class Key extends Model
     /**
      * @var bool
      */
-    protected $public = false;
+    protected bool $public = false;
 
     public function __construct()
     {
@@ -25,13 +25,13 @@ class Key extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Key creation date in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Key update date in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
@@ -43,7 +43,7 @@ class Key extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Key expiration date in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('scopes', [
                 'type' => self::TYPE_STRING,

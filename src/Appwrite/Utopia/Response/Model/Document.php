@@ -46,13 +46,13 @@ class Document extends Any
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Document creation date in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Document update date in Datetime',
                 'default' => '',
-                'example' => '1975-12-06 13:30:59',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$read', [
                 'type' => self::TYPE_STRING,

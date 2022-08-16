@@ -10,17 +10,20 @@ class Queries extends ValidatorQueries
     /**
      * Expression constructor
      *
+     * This Queries Validator that filters indexes for only available indexes
+     *
+     * @param QueryValidator $validator
      * @param Document[] $attributes
      * @param Document[] $indexes
      * @param bool $strict
      */
-    public function __construct($attributes, $indexes, $strict)
+    public function __construct($validator, $attributes = [], $indexes = [], $strict = true)
     {
         // Remove failed/stuck/processing indexes
-        $indexes = \array_filter($indexes, function ($index) {
+        $availableIndexes = \array_filter($indexes, function ($index) {
             return $index->getAttribute('status') === 'available';
         });
 
-        parent::__construct($attributes, $indexes, $strict);
+        parent::__construct($validator, $attributes, $availableIndexes, $strict);
     }
 }

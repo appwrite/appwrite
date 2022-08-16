@@ -23,6 +23,7 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\E2E\\": "tests/e2e",
+            "Tests\\Unit\\": "tests/unit",
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
@@ -42,15 +43,15 @@
         "ext-sockets": "*",
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.10.*",
-        "utopia-php/framework": "0.19.*",
+        "utopia-php/framework": "0.20.*",
         "utopia-php/logger": "0.3.*",
-        "utopia-php/abuse": "dev-origin/timestamp-to-datetime as 0.7.2",
+        "utopia-php/abuse": "dev-refactor-permissions",
         "utopia-php/analytics": "0.2.*",
-        "utopia-php/audit": "dev-origin/unix-to-datetime as 0.8.2",
+        "utopia-php/audit": "0.10.*",
         "utopia-php/cache": "0.6.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.19.*",
+        "utopia-php/database": "0.20.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
@@ -73,10 +74,22 @@
         {
             "url": "https://github.com/appwrite/runtimes.git",
             "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/database.git",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/abuse.git",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/audit.git",
+            "type": "git"
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.19.5",
+        "appwrite/sdk-generator": "0.20.0",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",
         "swoole/ide-helper": "4.8.9",

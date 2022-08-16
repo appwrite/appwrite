@@ -12,8 +12,9 @@
  * @license The MIT License (MIT) <http://www.opensource.org/licenses/mit-license.php>
  */
 
-namespace Appwrite\Network\Validator;
+namespace Tests\Unit\Network\Validators;
 
+use Appwrite\Network\Validator\URL;
 use PHPUnit\Framework\TestCase;
 
 class URLTest extends TestCase

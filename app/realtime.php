@@ -209,7 +209,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             $payload = [];
 
             $list = Authorization::skip(fn () => $database->find('realtime', [
-                new Query('timestamp', Query::TYPE_GREATER, [DateTime::addSeconds(new \DateTime(), -15)])
+                Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
             ]));
 
             /**

@@ -5,6 +5,7 @@ namespace Appwrite\Migration;
 use Swoole\Runtime;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
+use Utopia\Database\Query;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Exception;
@@ -116,7 +117,11 @@ abstract class Migration
             Console::log('Migrating Collection ' . $collection['$id'] . ':');
 
             do {
-                $documents = $this->projectDB->find($collection['$id'], limit: $this->limit, cursor: $nextDocument);
+                $queries = [Query::limit($this->limit)];
+                if ($nextDocument !== null) {
+                    $queries[] = Query::cursorAfter($nextDocument);
+                }
+                $documents = $this->projectDB->find($collection['$id'], $queries);
                 $count = count($documents);
                 $sum += $count;
 

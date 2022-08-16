@@ -10,7 +10,7 @@ class Any extends Model
     /**
      * @var bool
      */
-    protected $any = true;
+    protected bool $any = true;
 
     /**
      * Get Name
