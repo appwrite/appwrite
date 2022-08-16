@@ -526,7 +526,7 @@ App::patch('/v1/users/:userId/name')
 
         $user
             ->setAttribute('name', $name)
-            ->setAttribute('search', \implode(' ', [$user->getId(), $user->getAttribute('email'), $name]));
+            ->setAttribute('search', \implode(' ', [$user->getId(), $user->getAttribute('email', ''), $name, $user->getAttribute('phone', '')]));
         ;
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -606,7 +606,7 @@ App::patch('/v1/users/:userId/email')
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false)
-            ->setAttribute('search', \implode(' ', [$user->getId(), $email, $user->getAttribute('name')]))
+            ->setAttribute('search', \implode(' ', [$user->getId(), $email, $user->getAttribute('name', ''), $user->getAttribute('phone', '')]))
         ;
 
         try {
@@ -649,6 +649,7 @@ App::patch('/v1/users/:userId/phone')
         $user
             ->setAttribute('phone', $number)
             ->setAttribute('phoneVerification', false)
+            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $number]));
         ;
 
         try {
@@ -701,23 +702,25 @@ App::patch('/v1/users/:userId/verification')
 
 App::patch('/v1/users/:userId/verification/phone')
     ->desc('Update Phone Verification')
+App::patch('/v1/users/:userId/prefs')
+    ->desc('Update User Preferences')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.verification')
+    ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'users.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updatePhoneVerification')
-    ->label('sdk.description', '/docs/references/users/update-user-phone-verification.md')
+    ->label('sdk.method', 'updatePrefs')
+    ->label('sdk.description', '/docs/references/users/update-user-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('phoneVerification', false, new Boolean(), 'User phone verification status.')
+    ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $userId, bool $phoneVerification, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $userId, array $prefs, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -725,12 +728,13 @@ App::patch('/v1/users/:userId/verification/phone')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('phoneVerification', $phoneVerification));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
         $usage->setParam('users.update', 1);
 
         $events->setParam('userId', $user->getId());
 
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
         $response->dynamic($user, Response::MODEL_USER);
 
     });

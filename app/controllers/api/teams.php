@@ -495,7 +495,7 @@ App::get('/v1/teams/:teamId/memberships')
     });
 
 App::get('/v1/teams/:teamId/memberships/:membershipId')
-    ->desc('List Team Membership')
+    ->desc('Get Team Membership')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
