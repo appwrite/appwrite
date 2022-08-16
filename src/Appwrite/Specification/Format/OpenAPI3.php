@@ -17,21 +17,38 @@ class OpenAPI3 extends Format
     protected function getNestedModels(Model $model, array &$usedModels): void
     {
         foreach ($model->getRules() as $rule) {
-            if (
-                in_array($model->getType(), $usedModels)
-                && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float', 'double'])
-            ) {
-                $usedModels[] = $rule['type'];
-                foreach ($this->models as $m) {
-                    if ($m->getType() === $rule['type']) {
-                        $this->getNestedModels($m, $usedModels);
-                        return;
+            if (!in_array($model->getType(), $usedModels)) {
+                continue;
+            }
+
+            if (\is_array($rule['type'])) {
+                foreach ($rule['type'] as $ruleType) {
+                    if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
+                        $usedModels[] = $ruleType;
+
+                        foreach ($this->models as $m) {
+                            if ($m->getType() === $ruleType) {
+                                $this->getNestedModels($m, $usedModels);
+                                continue;
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
+                    $usedModels[] = $rule['type'];
+
+                    foreach ($this->models as $m) {
+                        if ($m->getType() === $rule['type']) {
+                            $this->getNestedModels($m, $usedModels);
+                            continue;
+                        }
                     }
                 }
             }
         }
     }
-
+    
     public function parse(): array
     {
         /**
