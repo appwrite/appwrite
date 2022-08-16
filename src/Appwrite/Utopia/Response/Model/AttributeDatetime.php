@@ -21,11 +21,7 @@ class AttributeDatetime extends Attribute
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Attribute type.',
                 'default' => '',
-<<<<<<< HEAD
-                'example' => self::TYPE_DATETIME,
-=======
                 'example' => self::TYPE_DATETIME_EXAMPLE,
->>>>>>> fd76332aca89626d227d6ea812eb675338558a87
             ])
             ->addRule('format', [
                 'type' => self::TYPE_DATETIME,
