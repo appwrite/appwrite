@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Auth;
 
 use Appwrite\Auth\Auth;
 use Utopia\Database\DateTime;
@@ -11,10 +11,6 @@ use Utopia\Database\Database;
 
 class AuthTest extends TestCase
 {
-    public function setUp(): void
-    {
-    }
-
     /**
      * Reset Roles
      */
@@ -24,7 +20,7 @@ class AuthTest extends TestCase
         Authorization::setRole('role:all');
     }
 
-    public function testCookieName()
+    public function testCookieName(): void
     {
         $name = 'cookie-name';
 
@@ -32,7 +28,7 @@ class AuthTest extends TestCase
         $this->assertEquals(Auth::$cookieName, $name);
     }
 
-    public function testEncodeDecodeSession()
+    public function testEncodeDecodeSession(): void
     {
         $id = 'id';
         $secret = 'secret';
@@ -42,13 +38,13 @@ class AuthTest extends TestCase
         $this->assertEquals(Auth::decodeSession($session), ['id' => $id, 'secret' => $secret]);
     }
 
-    public function testHash()
+    public function testHash(): void
     {
         $secret = 'secret';
         $this->assertEquals(Auth::hash($secret), '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b');
     }
 
-    public function testPassword()
+    public function testPassword(): void
     {
         $secret = 'secret';
         $static = '$2y$08$PDbMtV18J1KOBI9tIYabBuyUwBrtXPGhLxCy9pWP6xkldVOKLrLKy';
@@ -58,19 +54,19 @@ class AuthTest extends TestCase
         $this->assertEquals(Auth::passwordVerify($secret, $static), true);
     }
 
-    public function testPasswordGenerator()
+    public function testPasswordGenerator(): void
     {
         $this->assertEquals(\mb_strlen(Auth::passwordGenerator()), 40);
         $this->assertEquals(\mb_strlen(Auth::passwordGenerator(5)), 10);
     }
 
-    public function testTokenGenerator()
+    public function testTokenGenerator(): void
     {
         $this->assertEquals(\mb_strlen(Auth::tokenGenerator()), 256);
         $this->assertEquals(\mb_strlen(Auth::tokenGenerator(5)), 10);
     }
 
-    public function testSessionVerify()
+    public function testSessionVerify(): void
     {
         $secret = 'secret1';
         $hash = Auth::hash($secret);
@@ -114,7 +110,7 @@ class AuthTest extends TestCase
         $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret'), false);
     }
 
-    public function testTokenVerify()
+    public function testTokenVerify(): void
     {
         $secret = 'secret1';
         $hash = Auth::hash($secret);
@@ -171,7 +167,7 @@ class AuthTest extends TestCase
         $this->assertEquals(Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
     }
 
-    public function testIsPrivilegedUser()
+    public function testIsPrivilegedUser(): void
     {
         $this->assertEquals(false, Auth::isPrivilegedUser([]));
         $this->assertEquals(false, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_GUEST]));
@@ -188,7 +184,7 @@ class AuthTest extends TestCase
         $this->assertEquals(true, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_OWNER, 'role:' . Auth::USER_ROLE_ADMIN, 'role:' . Auth::USER_ROLE_DEVELOPER]));
     }
 
-    public function testIsAppUser()
+    public function testIsAppUser(): void
     {
         $this->assertEquals(false, Auth::isAppUser([]));
         $this->assertEquals(false, Auth::isAppUser(['role:' . Auth::USER_ROLE_GUEST]));
@@ -205,7 +201,7 @@ class AuthTest extends TestCase
         $this->assertEquals(false, Auth::isAppUser(['role:' . Auth::USER_ROLE_OWNER, 'role:' . Auth::USER_ROLE_ADMIN, 'role:' . Auth::USER_ROLE_DEVELOPER]));
     }
 
-    public function testGuestRoles()
+    public function testGuestRoles(): void
     {
         $user = new Document([
             '$id' => ''
@@ -216,7 +212,7 @@ class AuthTest extends TestCase
         $this->assertContains('role:guest', $roles);
     }
 
-    public function testUserRoles()
+    public function testUserRoles(): void
     {
         $user  = new Document([
             '$id' => '123',
@@ -249,7 +245,7 @@ class AuthTest extends TestCase
         $this->assertContains('team:def/guest', $roles);
     }
 
-    public function testPrivilegedUserRoles()
+    public function testPrivilegedUserRoles(): void
     {
         Authorization::setRole('role:' . Auth::USER_ROLE_OWNER);
         $user  = new Document([
@@ -283,7 +279,7 @@ class AuthTest extends TestCase
         $this->assertContains('team:def/guest', $roles);
     }
 
-    public function testAppUserRoles()
+    public function testAppUserRoles(): void
     {
         Authorization::setRole('role:' . Auth::USER_ROLE_APP);
         $user  = new Document([
