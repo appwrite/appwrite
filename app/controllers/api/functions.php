@@ -1073,9 +1073,9 @@ App::post('/v1/functions/:functionId/executions')
         // TODO revise this later using route label
         $usage
         ->setParam('functionId', $function->getId())
-        ->setParam('functionExecution', 1)
-        ->setParam('functionStatus', $execution->getAttribute('status', ''))
-        ->setParam('functionExecutionTime', $execution->getAttribute('time')); // ms
+        ->setParam('executions.{scope}.compute', 1)
+        ->setParam('executionStatus', $execution->getAttribute('status', ''))
+        ->setParam('executionTime', $execution->getAttribute('time')); // ms
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
