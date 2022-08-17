@@ -2,9 +2,9 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Phone;
+use Appwrite\SMS\Adapter\Mock;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Auth\Validator\Phone as ValidatorPhone;
+use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
@@ -53,7 +53,7 @@ App::post('/v1/account')
     ->label('sdk.description', '/docs/references/account/create.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
@@ -67,7 +67,6 @@ App::post('/v1/account')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
-
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
@@ -101,7 +100,9 @@ App::post('/v1/account')
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
-                'password' => Auth::passwordHash($password),
+                'password' => Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
+                'hash' => Auth::DEFAULT_ALGO,
+                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                 'passwordUpdate' => \time(),
                 'registration' => \time(),
                 'reset' => false,
@@ -129,7 +130,7 @@ App::post('/v1/account')
         $events->setParam('userId', $user->getId());
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::post('/v1/account/sessions/email')
@@ -166,8 +167,8 @@ App::post('/v1/account/sessions/email')
         $profile = $dbForProject->findOne('users', [
             new Query('email', Query::TYPE_EQUAL, [$email])]);
 
-        if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
-            throw new Exception(Exception::USER_INVALID_CREDENTIALS); // Wrong password or username
+        if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
+            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
         if (false === $profile->getAttribute('status')) { // Account is blocked
@@ -197,6 +198,15 @@ App::post('/v1/account/sessions/email')
         ));
 
         Authorization::setRole('user:' . $profile->getId());
+
+        // Re-hash if not using recommended algo
+        if ($profile->getAttribute('hash') !== Auth::DEFAULT_ALGO) {
+            $profile
+                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+                ->setAttribute('hash', Auth::DEFAULT_ALGO)
+                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
+            $dbForProject->updateDocument('users', $profile->getId(), $profile);
+        }
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$read', ['user:' . $profile->getId()])
@@ -483,7 +493,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'email' => $email,
                         'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
-                        'password' => Auth::passwordHash(Auth::passwordGenerator()),
+                        'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
+                        'hash' => Auth::DEFAULT_ALGO,
+                        'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                         'passwordUpdate' => 0,
                         'registration' => \time(),
                         'reset' => false,
@@ -649,6 +661,8 @@ App::post('/v1/account/sessions/magic-url')
                 'emailVerification' => false,
                 'status' => true,
                 'password' => null,
+                'hash' => Auth::DEFAULT_ALGO,
+                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                 'passwordUpdate' => 0,
                 'registration' => \time(),
                 'reset' => false,
@@ -849,7 +863,7 @@ App::post('/v1/account/sessions/phone')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('number', '', new ValidatorPhone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -857,9 +871,8 @@ App::post('/v1/account/sessions/phone')
     ->inject('audits')
     ->inject('events')
     ->inject('messaging')
-    ->inject('phone')
-    ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging, Phone $phone) {
-        if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Audit $audits, Event $events, EventPhone $messaging) {
+        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -867,7 +880,7 @@ App::post('/v1/account/sessions/phone')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $user = $dbForProject->findOne('users', [new Query('phone', Query::TYPE_EQUAL, [$number])]);
+        $user = $dbForProject->findOne('users', [new Query('phone', Query::TYPE_EQUAL, [$phone])]);
 
         if (!$user) {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -887,7 +900,7 @@ App::post('/v1/account/sessions/phone')
                 '$read' => ['role:all'],
                 '$write' => ['user:' . $userId],
                 'email' => null,
-                'phone' => $number,
+                'phone' => $phone,
                 'emailVerification' => false,
                 'phoneVerification' => false,
                 'status' => true,
@@ -899,11 +912,11 @@ App::post('/v1/account/sessions/phone')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
-                'search' => implode(' ', [$userId, $number])
+                'search' => implode(' ', [$userId, $phone])
             ])));
         }
 
-        $secret = $phone->generateSecretDigits();
+        $secret = (App::getEnv('_APP_SMS_PROVIDER') === 'sms://mock') ? Mock::$digits : Auth::codeGenerator();
 
         $expire = \time() + Auth::TOKEN_EXPIRATION_PHONE;
 
@@ -927,7 +940,7 @@ App::post('/v1/account/sessions/phone')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $messaging
-            ->setRecipient($number)
+            ->setRecipient($phone)
             ->setMessage($secret)
             ->trigger();
 
@@ -1118,6 +1131,8 @@ App::post('/v1/account/sessions/anonymous')
             'emailVerification' => false,
             'status' => true,
             'password' => null,
+            'hash' => Auth::DEFAULT_ALGO,
+            'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
             'passwordUpdate' => 0,
             'registration' => \time(),
             'reset' => false,
@@ -1248,15 +1263,13 @@ App::get('/v1/account')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->inject('response')
     ->inject('user')
     ->inject('usage')
     ->action(function (Response $response, Document $user, Stats $usage) {
-
         $usage->setParam('users.read', 1);
-
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::get('/v1/account/prefs')
@@ -1431,7 +1444,7 @@ App::patch('/v1/account/name')
     ->label('sdk.description', '/docs/references/account/update-name.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->inject('response')
     ->inject('user')
@@ -1453,7 +1466,7 @@ App::patch('/v1/account/name')
         $usage->setParam('users.update', 1);
         $events->setParam('userId', $user->getId());
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::patch('/v1/account/password')
@@ -1467,7 +1480,7 @@ App::patch('/v1/account/password')
     ->label('sdk.description', '/docs/references/account/update-password.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
     ->inject('response')
@@ -1477,19 +1490,16 @@ App::patch('/v1/account/password')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $password, string $oldPassword, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
-
         // Check old password only if its an existing user.
-        if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
+        if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $user = $dbForProject->updateDocument(
-            'users',
-            $user->getId(),
-            $user
-                ->setAttribute('password', Auth::passwordHash($password))
-                ->setAttribute('passwordUpdate', \time())
-        );
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user
+                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+                ->setAttribute('hash', Auth::DEFAULT_ALGO)
+                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+                ->setAttribute('passwordUpdate', \time()));
 
         $audits
             ->setResource('user/' . $user->getId())
@@ -1499,7 +1509,7 @@ App::patch('/v1/account/password')
         $usage->setParam('users.update', 1);
         $events->setParam('userId', $user->getId());
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::patch('/v1/account/email')
@@ -1513,7 +1523,7 @@ App::patch('/v1/account/email')
     ->label('sdk.description', '/docs/references/account/update-email.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('response')
@@ -1523,12 +1533,11 @@ App::patch('/v1/account/email')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $email, string $password, Response $response, Document $user, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
-
         $isAnonymousUser = Auth::isAnonymousUser($user); // Check if request is from an anonymous account for converting
 
         if (
             !$isAnonymousUser &&
-            !Auth::passwordVerify($password, $user->getAttribute('password'))
+            !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
@@ -1536,7 +1545,9 @@ App::patch('/v1/account/email')
         $email = \strtolower($email);
 
         $user
-            ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password) : $user->getAttribute('password', ''))
+            ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS) : $user->getAttribute('password', ''))
+            ->setAttribute('hash', $isAnonymousUser ? Auth::DEFAULT_ALGO : $user->getAttribute('hash', ''))
+            ->setAttribute('hashOptions', $isAnonymousUser ? Auth::DEFAULT_ALGO_OPTIONS : $user->getAttribute('hashOptions', ''))
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
             ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $email, $user->getAttribute('phone', '')]));
@@ -1555,7 +1566,7 @@ App::patch('/v1/account/email')
         $usage->setParam('users.update', 1);
         $events->setParam('userId', $user->getId());
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::patch('/v1/account/phone')
@@ -1569,8 +1580,8 @@ App::patch('/v1/account/phone')
     ->label('sdk.description', '/docs/references/account/update-phone.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('number', '', new ValidatorPhone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
+    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('response')
     ->inject('user')
@@ -1584,7 +1595,7 @@ App::patch('/v1/account/phone')
 
         if (
             !$isAnonymousUser &&
-            !Auth::passwordVerify($password, $user->getAttribute('password'))
+            !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
@@ -1608,7 +1619,7 @@ App::patch('/v1/account/phone')
         $usage->setParam('users.update', 1);
         $events->setParam('userId', $user->getId());
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::patch('/v1/account/prefs')
@@ -1622,7 +1633,7 @@ App::patch('/v1/account/prefs')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('user')
@@ -1638,7 +1649,7 @@ App::patch('/v1/account/prefs')
         $usage->setParam('users.update', 1);
         $events->setParam('userId', $user->getId());
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::patch('/v1/account/status')
@@ -1652,7 +1663,7 @@ App::patch('/v1/account/status')
     ->label('sdk.description', '/docs/references/account/update-status.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1666,11 +1677,11 @@ App::patch('/v1/account/status')
 
         $audits
             ->setResource('user/' . $user->getId())
-            ->setPayload($response->output($user, Response::MODEL_USER));
+            ->setPayload($response->output($user, Response::MODEL_ACCOUNT));
 
         $events
             ->setParam('userId', $user->getId())
-            ->setPayload($response->output($user, Response::MODEL_USER));
+            ->setPayload($response->output($user, Response::MODEL_ACCOUNT));
 
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
@@ -1678,7 +1689,7 @@ App::patch('/v1/account/status')
 
         $usage->setParam('users.delete', 1);
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::delete('/v1/account/sessions/:sessionId')
@@ -2041,7 +2052,6 @@ App::put('/v1/account/recovery')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Database $dbForProject, Audit $audits, Stats $usage, Event $events) {
-
         if ($password !== $passwordAgain) {
             throw new Exception(Exception::USER_PASSWORD_MISMATCH);
         }
@@ -2062,7 +2072,9 @@ App::put('/v1/account/recovery')
         Authorization::setRole('user:' . $profile->getId());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
-                ->setAttribute('password', Auth::passwordHash($password))
+                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+                ->setAttribute('hash', Auth::DEFAULT_ALGO)
+                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
                 ->setAttribute('passwordUpdate', \time())
                 ->setAttribute('emailVerification', true));
 
@@ -2255,17 +2267,16 @@ App::post('/v1/account/verification/phone')
     ->label('abuse-key', 'userId:{userId}')
     ->inject('request')
     ->inject('response')
-    ->inject('phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('audits')
     ->inject('events')
     ->inject('usage')
     ->inject('messaging')
-    ->action(function (Request $request, Response $response, Phone $phone, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Audit $audits, Event $events, Stats $usage, EventPhone $messaging) {
 
-        if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
-            throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
+        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED);
         }
 
         if (empty($user->getAttribute('phone'))) {
@@ -2278,7 +2289,7 @@ App::post('/v1/account/verification/phone')
 
         $verificationSecret = Auth::tokenGenerator();
 
-        $secret = $phone->generateSecretDigits();
+        $secret = (App::getEnv('_APP_SMS_PROVIDER') === 'sms://mock') ? Mock::$digits : Auth::codeGenerator();
         $expire = \time() + Auth::TOKEN_EXPIRATION_CONFIRM;
 
         $verification = new Document([
