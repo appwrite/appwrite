@@ -787,7 +787,7 @@ App::patch('/v1/users/:userId/password')
     ->inject('events')
     ->action(function (string $userId, string $password, Response $response, Database $dbForProject, Event $events) {
 
-      $user = $dbForProject->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
