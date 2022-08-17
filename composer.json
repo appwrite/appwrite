@@ -23,6 +23,7 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\E2E\\": "tests/e2e",
+            "Tests\\Unit\\": "tests/unit",
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },

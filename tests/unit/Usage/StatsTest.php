@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Stats;
 
 use Appwrite\Usage\Stats;
 use PHPUnit\Framework\TestCase;
@@ -28,13 +28,13 @@ class StatsTest extends TestCase
     {
     }
 
-    public function testNamespace()
+    public function testNamespace(): void
     {
         $this->object->setNamespace('appwritetest.usage');
         $this->assertEquals('appwritetest.usage', $this->object->getNamespace());
     }
 
-    public function testParams()
+    public function testParams(): void
     {
         $this->object
             ->setParam('projectId', 'appwrite_test')
@@ -50,7 +50,7 @@ class StatsTest extends TestCase
         $this->assertEquals(null, $this->object->getParam('networkRequestSize'));
     }
 
-    public function testReset()
+    public function testReset(): void
     {
         $this->object
             ->setParam('projectId', 'appwrite_test')

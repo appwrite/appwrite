@@ -18,6 +18,32 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
+$parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
+    preg_match_all('/{(.*?)}/', $label, $matches);
+    foreach ($matches[1] ?? [] as $pos => $match) {
+        $find = $matches[0][$pos];
+        $parts = explode('.', $match);
+
+        if (count($parts) !== 2) {
+            throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
+        }
+
+        $namespace = $parts[0] ?? '';
+        $replace = $parts[1] ?? '';
+
+        $params = match ($namespace) {
+            'user' => (array)$user,
+            'request' => $requestParams,
+            default => $responsePayload,
+        };
+
+        if (array_key_exists($replace, $params)) {
+            $label = \str_replace($find, $params[$replace], $label);
+        }
+    }
+    return $label;
+};
+
 App::init()
     ->groups(['api'])
     ->inject('utopia')
@@ -38,7 +64,7 @@ App::init()
         $route = $utopia->match($request);
 
         if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
-            throw new Exception('Missing or unknown project ID', 400, Exception::PROJECT_UNKNOWN);
+            throw new Exception(Exception::PROJECT_UNKNOWN);
         }
 
         /*
@@ -87,7 +113,7 @@ App::init()
                     && $abuse->check()) // Abuse is not disabled
                 && (!$isAppUser && !$isPrivilegedUser)
             ) { // User is not an admin or API key
-                throw new Exception('Too many requests', 429, Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
         }
 
@@ -145,36 +171,36 @@ App::init()
         switch ($route->getLabel('auth.type', '')) {
             case 'emailPassword':
                 if (($auths['emailPassword'] ?? true) === false) {
-                    throw new Exception('Email / Password authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email / Password authentication is disabled for this project');
                 }
                 break;
 
             case 'magic-url':
                 if ($project->getAttribute('usersAuthMagicURL', true) === false) {
-                    throw new Exception('Magic URL authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Magic URL authentication is disabled for this project');
                 }
                 break;
 
             case 'anonymous':
                 if (($auths['anonymous'] ?? true) === false) {
-                    throw new Exception('Anonymous authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Anonymous authentication is disabled for this project');
                 }
                 break;
 
             case 'invites':
                 if (($auths['invites'] ?? true) === false) {
-                    throw new Exception('Invites authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Invites authentication is disabled for this project');
                 }
                 break;
 
             case 'jwt':
                 if (($auths['JWT'] ?? true) === false) {
-                    throw new Exception('JWT authentication is disabled for this project', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'JWT authentication is disabled for this project');
                 }
                 break;
 
             default:
-                throw new Exception('Unsupported authentication route', 501, Exception::USER_AUTH_METHOD_UNSUPPORTED);
+                throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
                 break;
         }
     });
@@ -192,8 +218,7 @@ App::shutdown()
     ->inject('database')
     ->inject('mode')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) {
-
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) use ($parseLabel) {
         $responsePayload = $response->getPayload();
 
         if (!empty($events->getEvent())) {
@@ -255,36 +280,9 @@ App::shutdown()
         $requestParams = $route->getParamsValues();
         $user = $audits->getUser();
 
-        $parseLabel = function ($label) use ($responsePayload, $requestParams, $user) {
-            preg_match_all('/{(.*?)}/', $label, $matches);
-            foreach ($matches[1] ?? [] as $pos => $match) {
-                $find = $matches[0][$pos];
-                $parts = explode('.', $match);
-
-                if (count($parts) !== 2) {
-                    throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
-                }
-
-                $namespace = $parts[0];
-                $replace = $parts[1];
-
-                $params = match ($namespace) {
-                    'user' => (array)$user,
-                    'request' => $requestParams,
-                    default => $responsePayload,
-                };
-
-                if (array_key_exists($replace, $params)) {
-                    $label = \str_replace($find, $params[$replace], $label);
-                }
-            }
-
-            return $label;
-        };
-
         $pattern = $route->getLabel('audits.resource', null);
         if (!empty($pattern)) {
-            $resource = $parseLabel($pattern);
+            $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
             if (!empty($resource) && $resource !== $pattern) {
                 $audits->setResource($resource);
             }
@@ -292,12 +290,12 @@ App::shutdown()
 
         $pattern = $route->getLabel('audits.userId', null);
         if (!empty($pattern)) {
-            $userId = $parseLabel($pattern);
+            $userId = $parseLabel($pattern, $responsePayload, $requestParams, $user);
             $user = $dbForProject->getDocument('users', $userId);
             $audits->setUser($user);
         }
 
-        if (!empty($audits->getResource())) {
+        if (!empty($audits->getResource()) && !empty($audits->getUser()->getId())) {
             /**
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints

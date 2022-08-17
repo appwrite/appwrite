@@ -630,7 +630,7 @@ services:
       - _APP_REDIS_PASS
 
   mariadb:
-    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.8.3 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     restart: unless-stopped
@@ -646,7 +646,7 @@ services:
     command: 'mysqld --innodb-flush-method=fsync'
 
   redis:
-    image: redis:6.2-alpine
+    image: redis:7.0.4-alpine
     container_name: appwrite-redis
     <<: *x-logging
     restart: unless-stopped
