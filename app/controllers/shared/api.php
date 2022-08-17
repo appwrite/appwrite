@@ -139,13 +139,10 @@ App::init()
 
         $usage
             ->setParam('projectId', $project->getId())
-            ->setParam('httpRequest', 1)
-            ->setParam('httpUrl', $request->getHostname() . $request->getURI())
+            ->setParam('project.{scope}.network.requests', 1)
             ->setParam('httpMethod', $request->getMethod())
-            ->setParam('httpPath', $route->getPath())
-            ->setParam('networkRequestSize', 0)
-            ->setParam('networkResponseSize', 0)
-            ->setParam('storage', 0);
+            ->setParam('project.{scope}.network.inbound', 0)
+            ->setParam('project.{scope}.network.outbound', 0);
 
         $deletes->setProject($project);
         $database->setProject($project);
@@ -356,9 +353,15 @@ App::shutdown()
                 }
             }
 
+            $fileSize = 0;
+            $file = $request->getFiles('file');
+            if(!empty($file)) {
+                $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+            }
+
             $usage
-            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-            ->setParam('networkResponseSize', $response->getSize())
-            ->submit();
+                ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
+                ->setParam('project.{scope}.network.outbound', $response->getSize())
+                ->submit();
         }
     });

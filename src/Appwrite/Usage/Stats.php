@@ -80,26 +80,22 @@ class Stats
     public function submit(): void
     {
         $projectId = $this->params['projectId'] ?? '';
-
-        $storage = $this->params['storage'] ?? 0;
-
-        $networkRequestSize = $this->params['networkRequestSize'] ?? 0;
-        $networkResponseSize = $this->params['networkResponseSize'] ?? 0;
-
-        $httpMethod = $this->params['httpMethod'] ?? '';
-        $httpRequest = $this->params['httpRequest'] ?? 0;
-
         $tags = ",projectId={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
-
+        
         // the global namespace is prepended to every key (optional)
         $this->statsd->setNamespace($this->namespace);
-
+        
+        $httpRequest = $this->params['project.{scope}.network.requests'] ?? 0;
+        $httpMethod = $this->params['httpMethod'] ?? '';
         if ($httpRequest >= 1) {
             $this->statsd->increment('project.{scope}.network.requests' . $tags . ',method=' . \strtolower($httpMethod));
         }
-        $this->statsd->count('project.{scope}.network.inbound' . $tags, $networkRequestSize);
-        $this->statsd->count('project.{scope}.network.outbound' . $tags, $networkResponseSize);
-        $this->statsd->count('project.{scope}.network.bandwidth' . $tags, $networkRequestSize + $networkResponseSize);
+
+        $inbound = $this->params['networkRequestSize'] ?? 0;
+        $outbound = $this->params['networkResponseSize'] ?? 0;
+        $this->statsd->count('project.{scope}.network.inbound' . $tags, $inbound);
+        $this->statsd->count('project.{scope}.network.outbound' . $tags, $outbound);
+        $this->statsd->count('project.{scope}.network.bandwidth' . $tags, $inbound + $outbound);
 
         $usersMetrics = [
             'users.{scope}.requests.create',
@@ -169,11 +165,6 @@ class Stats
                 $sessionTags = $tags . ",provider=" . ($this->params['provider'] ?? '');
                 $this->statsd->count($metric . $sessionTags, $value);
             }
-        }
-
-        if ($storage >= 1) {
-            $storageTags = $tags . ",bucketId=" . ($this->params['bucketId'] ?? '');
-            $this->statsd->count('storage.all' . $storageTags, $storage);
         }
 
         $functionId = $this->params['functionId'] ?? '';
