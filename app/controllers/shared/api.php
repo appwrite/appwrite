@@ -43,7 +43,6 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
             $label = \str_replace($find, $params[$replace], $label);
         }
     }
-
     return $label;
 };
 
@@ -70,7 +69,7 @@ App::init()
             throw new Exception(Exception::PROJECT_UNKNOWN);
         }
 
-        /*
+        /**
         * Abuse Check
         */
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
@@ -282,7 +281,7 @@ App::shutdown()
                 $bucket = $events->getContext('bucket');
 
                 $target = Realtime::fromPayload(
-                    // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                     event: $allEvents[0],
                     payload: $payload,
                     project: $project,
@@ -305,7 +304,38 @@ App::shutdown()
             }
         }
 
-        if (!empty($audits->getResource())) {
+        $route = $utopia->match($request);
+        $requestParams = $route->getParamsValues();
+        $user = $audits->getUser();
+
+        /**
+         * Audit labels
+         */
+        $pattern = $route->getLabel('audits.resource', null);
+        if (!empty($pattern)) {
+            $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+            if (!empty($resource) && $resource !== $pattern) {
+                $audits->setResource($resource);
+            }
+        }
+
+        $pattern = $route->getLabel('audits.userId', null);
+        if (!empty($pattern)) {
+            $userId = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+            $user = $dbForProject->getDocument('users', $userId);
+            $audits->setUser($user);
+        }
+
+        if (!empty($audits->getResource()) && !empty($audits->getUser()->getId())) {
+            /**
+             * audits.payload is switched to default true
+             * in order to auto audit payload for all endpoints
+             */
+            $pattern = $route->getLabel('audits.payload', true);
+            if (!empty($pattern)) {
+                $audits->setPayload($responsePayload);
+            }
+
             foreach ($events->getParams() as $key => $value) {
                 $audits->setParam($key, $value);
             }
@@ -320,10 +350,9 @@ App::shutdown()
             $database->trigger();
         }
 
-        $route = $utopia->match($request);
-        $requestParams = $route->getParamsValues();
-        $user = $audits->getUser();
-
+        /**
+         * Cache label
+         */
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
             $resource = null;
