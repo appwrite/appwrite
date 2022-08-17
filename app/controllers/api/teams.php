@@ -67,6 +67,10 @@ App::post('/v1/teams')
         ])));
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
+            if (!\in_array('owner', $roles)) {
+                $roles[] = 'owner';
+            }
+
             $membershipId = $dbForProject->getId();
             $membership = new Document([
                 '$id' => $membershipId,
@@ -426,9 +430,9 @@ App::post('/v1/teams/:teamId/memberships')
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic(
             $membership
-                ->setAttribute('teamName', $team->getAttribute('name'))
-                ->setAttribute('userName', $user->getAttribute('name'))
-                ->setAttribute('userEmail', $user->getAttribute('email')),
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $invitee->getAttribute('name'))
+            ->setAttribute('userEmail', $invitee->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });
@@ -686,7 +690,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         $membership // Attach user to team
-        ->setAttribute('joined', \time())
+            ->setAttribute('joined', \time())
             ->setAttribute('confirm', true)
         ;
 
@@ -749,9 +753,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $response->dynamic(
             $membership
-                ->setAttribute('teamName', $team->getAttribute('name'))
-                ->setAttribute('userName', $user->getAttribute('name'))
-                ->setAttribute('userEmail', $user->getAttribute('email')),
+            ->setAttribute('teamName', $team->getAttribute('name'))
+            ->setAttribute('userName', $user->getAttribute('name'))
+            ->setAttribute('userEmail', $user->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });
