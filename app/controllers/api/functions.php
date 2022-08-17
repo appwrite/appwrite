@@ -951,6 +951,7 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('status', $executionResponse['status']);
             $execution->setAttribute('statusCode', $executionResponse['statusCode']);
             $execution->setAttribute('response', $executionResponse['response']);
+            $execution->setAttribute('stdout', $executionResponse['stdout']);
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
@@ -970,6 +971,14 @@ App::post('/v1/functions/:functionId/executions')
             ->setParam('functionExecution', 1)
             ->setParam('functionStatus', $execution->getAttribute('status', ''))
             ->setParam('functionExecutionTime', $execution->getAttribute('time') * 1000); // ms
+
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $execution->setAttribute('stdout', '');
+            $execution->setAttribute('stderr', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1022,6 +1031,17 @@ App::get('/v1/functions/:functionId/executions')
         $results = $dbForProject->find('executions', $queries, $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
         $total = $dbForProject->count('executions', $queries, APP_LIMIT_COUNT);
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $results = array_map(function ($execution) {
+                $execution->setAttribute('stdout', '');
+                $execution->setAttribute('stderr', '');
+                return $execution;
+            }, $results);
+        }
+
         $response->dynamic(new Document([
             'executions' => $results,
             'total' => $total,
@@ -1059,6 +1079,14 @@ App::get('/v1/functions/:functionId/executions/:executionId')
 
         if ($execution->isEmpty()) {
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
+        }
+
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $execution->setAttribute('stdout', '');
+            $execution->setAttribute('stderr', '');
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);

@@ -866,6 +866,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
+        $this->assertStringContainsString('Amazing Function Log', $executions['body']['stdout']);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -893,7 +894,7 @@ class FunctionsCustomServerTest extends Scope
 
     public function testCreateCustomNodeExecution()
     {
-        $name = 'node-17.0';
+        $name = 'node-18.0';
         $folder = 'node';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
@@ -964,7 +965,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('Node.js', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('17.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
+        $this->assertEquals('18.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
         $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);

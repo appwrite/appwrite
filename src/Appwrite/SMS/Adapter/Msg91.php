@@ -1,13 +1,13 @@
 <?php
 
-namespace Appwrite\Auth\Phone;
+namespace Appwrite\SMS\Adapter;
 
-use Appwrite\Auth\Phone;
+use Appwrite\SMS\Adapter;
 
 // Reference Material
 // https://docs.msg91.com/p/tf9GTextN/e/Irz7-x1PK/MSG91
 
-class Msg91 extends Phone
+class Msg91 extends Adapter
 {
     /**
      * @var string
@@ -16,10 +16,10 @@ class Msg91 extends Phone
 
     /**
      * For Flow based sending SMS sender ID should not be set in flow
-     * In environment _APP_PHONE_PROVIDER format is 'phone://[senderID]:[authKey]@msg91'.
-     * _APP_PHONE_FROM value is flow ID created in Msg91
-     * Eg. _APP_PHONE_PROVIDER = phone://DINESH:5e1e93cad6fc054d8e759a5b@msg91
-     * _APP_PHONE_FROM = 3968636f704b303135323339
+     * In environment _APP_SMS_PROVIDER format is 'sms://[senderID]:[authKey]@msg91'.
+     * _APP_SMS_FROM value is flow ID created in Msg91
+     * Eg. _APP_SMS_PROVIDER = sms://DINESH:5e1e93cad6fc054d8e759a5b@msg91
+     * _APP_SMS_FROM = 3968636f704b303135323339
      * @param string $from-> utilized from for flow id
      * @param string $to
      * @param string $message
