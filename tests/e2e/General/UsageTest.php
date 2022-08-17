@@ -429,7 +429,7 @@ class UsageTest extends Scope
     }
 
     /** @depends testDatabaseStats */
-    /* public function testFunctionsStats(array $data): void
+    public function testFunctionsStats(array $data): void
     {
         $functionId = '';
         $requestsCount = $data['requestsCount'];
@@ -481,7 +481,7 @@ class UsageTest extends Scope
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
         $this->assertIsInt($deployment['body']['$createdAt']);
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
@@ -518,32 +518,18 @@ class UsageTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'async' => true,
+            'async' => false,
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertEquals($functionId, $execution['body']['functionId']);
-        $executionId = $execution['body']['$id'];
         $executions++;
-
-        //wait for execution to complete
-        sleep(10);
-
-        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $execution['headers']['status-code']);
-        $this->assertEquals($executionId, $execution['body']['$id']);
-        $this->assertEquals($functionId, $execution['body']['functionId']);
-        $this->assertEquals('completed', $execution['body']['status']);
 
         $compute += (int) ($execution['body']['time'] * 1000);
         $executionTime += (int) ($execution['body']['time'] * 1000);
 
-        sleep(45);
+        sleep(25);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
             'content-type' => 'application/json',
@@ -553,16 +539,21 @@ class UsageTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(4, count($response['body']));
+        $this->assertEquals(9, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
-        $this->assertIsArray($response['body']['functionsExecutions']);
-        $this->assertIsArray($response['body']['functionsFailures']);
-        $this->assertIsArray($response['body']['functionsCompute']);
+        $this->assertIsArray($response['body']['executionsTotal']);
+        $this->assertIsArray($response['body']['executionsFailure']);
+        $this->assertIsArray($response['body']['executionsSuccess']);
+        $this->assertIsArray($response['body']['executionsTime']);
+        $this->assertIsArray($response['body']['buildsTotal']);
+        $this->assertIsArray($response['body']['buildsFailure']);
+        $this->assertIsArray($response['body']['buildsSuccess']);
+        $this->assertIsArray($response['body']['buildsTime']);
         $response = $response['body'];
 
-        $this->assertEquals($executions, $response['functionsExecutions'][array_key_last($response['functionsExecutions'])]['value']);
-        $this->assertGreaterThan($compute, $response['functionsCompute'][array_key_last($response['functionsCompute'])]['value']);
-        $this->assertEquals($failures, $response['functionsFailures'][array_key_last($response['functionsFailures'])]['value']);
+        $this->assertEquals($executions, $response['executionsTotal'][array_key_last($response['executionsTotal'])]['value']);
+        $this->assertEquals($compute, $response['executionsTime'][array_key_last($response['executionsTime'])]['value']);
+        $this->assertEquals($failures, $response['executionsFailure'][array_key_last($response['executionsFailure'])]['value']);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/usage', array_merge([
             'content-type' => 'application/json',
@@ -572,21 +563,24 @@ class UsageTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(6, count($response['body']));
+        $this->assertEquals(9, count($response['body']));
         $this->assertEquals($response['body']['range'], '30d');
-        $this->assertIsArray($response['body']['functionsExecutions']);
-        $this->assertIsArray($response['body']['functionsFailures']);
-        $this->assertIsArray($response['body']['functionsCompute']);
-        $this->assertIsArray($response['body']['functionsExecutionTime']);
-        $this->assertIsArray($response['body']['functionsBuildTime']);
+        $this->assertIsArray($response['body']['executionsTotal']);
+        $this->assertIsArray($response['body']['executionsFailure']);
+        $this->assertIsArray($response['body']['executionsSuccess']);
+        $this->assertIsArray($response['body']['executionsTime']);
+        $this->assertIsArray($response['body']['buildsTotal']);
+        $this->assertIsArray($response['body']['buildsFailure']);
+        $this->assertIsArray($response['body']['buildsSuccess']);
+        $this->assertIsArray($response['body']['buildsTime']);
         $response = $response['body'];
 
-        $this->assertEquals($executions, $response['functionsExecutions'][array_key_last($response['functionsExecutions'])]['value']);
-        $this->assertGreaterThan($compute, $response['functionsCompute'][array_key_last($response['functionsCompute'])]['value']);
-        $this->assertEquals($executionTime, $response['functionsExecutionTime'][array_key_last($response['functionsExecutionTime'])]['value']);
-        $this->assertGreaterThan(0, $response['functionsBuildTime'][array_key_last($response['functionsBuildTime'])]['value']);
-        $this->assertEquals($failures, $response['functionsFailures'][array_key_last($response['functionsFailures'])]['value']);
-    } */
+        $this->assertEquals($executions, $response['executionsTotal'][array_key_last($response['executionsTotal'])]['value']);
+        $this->assertEquals($compute, $response['executionsTime'][array_key_last($response['executionsTime'])]['value']);
+        $this->assertEquals($executionTime, $response['executionsTime'][array_key_last($response['executionsTime'])]['value']);
+        $this->assertGreaterThan(0, $response['buildsTime'][array_key_last($response['buildsTime'])]['value']);
+        $this->assertEquals($failures, $response['executionsFailure'][array_key_last($response['executionsFailure'])]['value']);
+    }
 
     protected function tearDown(): void
     {
