@@ -294,8 +294,7 @@ App::init()
                 $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
                 $expire = $key->getAttribute('expire');
-
-                if (!empty($expire) && $expire < DateTime::now()) {
+                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
                     throw new AppwriteException(AppwriteException:: PROJECT_KEY_EXPIRED);
                 }
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d49d34cbdc70504ea61c5548bd60278a",
+    "content-hash": "175fe4abafd8bde4053b91eea905c328",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1733,17 +1733,23 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-refactor-permissions",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "496cba1f2e7f50a6faebdb77b9178a99d755b49a"
+                "reference": "b5beadce6581291e4385b0cc86f1be2a79bb2ef0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/b5beadce6581291e4385b0cc86f1be2a79bb2ef0",
+                "reference": "b5beadce6581291e4385b0cc86f1be2a79bb2ef0",
+                "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "dev-refactor-permissions"
+                "utopia-php/database": "0.22.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1755,6 +1761,7 @@
                     "Utopia\\Abuse\\": "src/Abuse"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1766,13 +1773,17 @@
             ],
             "description": "A simple abuse library to manage application usage limits",
             "keywords": [
-                "abuse",
+                "Abuse",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "time": "2022-08-16T05:16:56+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/abuse/issues",
+                "source": "https://github.com/utopia-php/abuse/tree/0.10.0"
+            },
+            "time": "2022-08-17T14:31:54+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1831,16 +1842,22 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-refactor-permissions",
+            "version": "0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "cd3f0f2fd4716e32333397fedd8e7f07932361ec"
+                "reference": "a06f784f8e8b69bcae4f1a5bca58d41bda76c250"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/a06f784f8e8b69bcae4f1a5bca58d41bda76c250",
+                "reference": "a06f784f8e8b69bcae4f1a5bca58d41bda76c250",
+                "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "dev-refactor-permissions"
+                "utopia-php/database": "0.22.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1852,6 +1869,7 @@
                     "Utopia\\Audit\\": "src/Audit"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1863,13 +1881,17 @@
             ],
             "description": "A simple audit library to manage application users logs",
             "keywords": [
-                "audit",
+                "Audit",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "time": "2022-08-16T05:16:47+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/audit/issues",
+                "source": "https://github.com/utopia-php/audit/tree/0.11.0"
+            },
+            "time": "2022-08-17T15:08:58+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2030,11 +2052,17 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-refactor-permissions",
+            "version": "0.22.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "3bce574ea6915d8cbf2a9e2e725a90784cf6b07e"
+                "reference": "22c45ae83612e907203b7571cd8e3115ae3ae4c5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/22c45ae83612e907203b7571cd8e3115ae3ae4c5",
+                "reference": "22c45ae83612e907203b7571cd8e3115ae3ae4c5",
+                "shasum": ""
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2058,11 +2086,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Database"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2084,7 +2108,11 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-08-16T09:05:39+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/0.22.0"
+            },
+            "time": "2022-08-17T12:55:37+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2805,12 +2833,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "807e7890aed597ef47e01be8ad11c3b561b7c1e8"
+                "reference": "987f2933b97bd04f702ea08685f2be28a08a841c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/807e7890aed597ef47e01be8ad11c3b561b7c1e8",
-                "reference": "807e7890aed597ef47e01be8ad11c3b561b7c1e8",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/987f2933b97bd04f702ea08685f2be28a08a841c",
+                "reference": "987f2933b97bd04f702ea08685f2be28a08a841c",
                 "shasum": ""
             },
             "require": {
@@ -2848,7 +2876,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/master"
             },
-            "time": "2022-08-15T22:33:25+00:00"
+            "time": "2022-08-17T12:50:44+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -2922,16 +2950,16 @@
         },
         {
             "name": "matthiasmullie/minify",
-            "version": "1.3.68",
+            "version": "1.3.69",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matthiasmullie/minify.git",
-                "reference": "c00fb02f71b2ef0a5f53fe18c5a8b9aa30f48297"
+                "reference": "a61c949cccd086808063611ef9698eabe42ef22f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/c00fb02f71b2ef0a5f53fe18c5a8b9aa30f48297",
-                "reference": "c00fb02f71b2ef0a5f53fe18c5a8b9aa30f48297",
+                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/a61c949cccd086808063611ef9698eabe42ef22f",
+                "reference": "a61c949cccd086808063611ef9698eabe42ef22f",
                 "shasum": ""
             },
             "require": {
@@ -2980,7 +3008,7 @@
             ],
             "support": {
                 "issues": "https://github.com/matthiasmullie/minify/issues",
-                "source": "https://github.com/matthiasmullie/minify/tree/1.3.68"
+                "source": "https://github.com/matthiasmullie/minify/tree/1.3.69"
             },
             "funding": [
                 {
@@ -2988,7 +3016,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-04-19T08:28:56+00:00"
+            "time": "2022-08-01T09:00:18+00:00"
         },
         {
             "name": "matthiasmullie/path-converter",
@@ -5330,9 +5358,6 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/abuse": 20,
-        "utopia-php/audit": 20,
-        "utopia-php/database": 20,
         "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,
@@ -5358,5 +5383,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }

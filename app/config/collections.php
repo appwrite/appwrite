@@ -834,7 +834,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('domain'),
@@ -972,7 +972,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
         ],
         'indexes' => [
@@ -1171,7 +1171,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('prefs'),
@@ -1193,7 +1193,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('emailVerification'),
@@ -1356,7 +1356,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('userAgent'),
@@ -1461,7 +1461,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('providerRefreshToken'),
@@ -1494,7 +1494,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('userAgent'),
@@ -1799,7 +1799,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('joined'),
@@ -1810,7 +1810,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('confirm'),
@@ -1980,7 +1980,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('scheduleNext'),
@@ -1991,7 +1991,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('timeout'),
@@ -2193,7 +2193,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('endTime'),
@@ -2204,7 +2204,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('duration'),
@@ -2468,7 +2468,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('renewDate'),
@@ -2479,7 +2479,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('attempts'),
@@ -2512,7 +2512,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
         ],
         'indexes' => [
@@ -2667,7 +2667,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('period'),
@@ -2742,7 +2742,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => ID::custom('value'),

@@ -946,7 +946,7 @@ trait DatabasesBase
         $this->assertCount(2, $document1['body']['actors']);
         $this->assertEquals($document1['body']['actors'][0], 'Chris Evans');
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
-        $this->assertEquals($document1['body']['birthDay'], '1975-06-12 12:12:55.000');
+        $this->assertEquals($document1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertEquals($document2['body']['title'], 'Spider-Man: Far From Home');
@@ -969,7 +969,7 @@ trait DatabasesBase
         $this->assertCount(2, $document3['body']['actors']);
         $this->assertEquals($document3['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document3['body']['actors'][1], 'Zendaya Maree Stoermer');
-        $this->assertEquals($document3['body']['birthDay'], '1975-06-12 18:12:55.000');// UTC for NY
+        $this->assertEquals($document3['body']['birthDay'], '1975-06-12T18:12:55.000+00:00');// UTC for NY
 
         $this->assertEquals(400, $document4['headers']['status-code']);
 
@@ -1503,8 +1503,8 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals($documents['headers']['status-code'], 200);
-        $this->assertEquals('1975-06-12 12:12:55.000', $documents['body']['documents'][0]['birthDay']);
-        $this->assertEquals('1975-06-12 18:12:55.000', $documents['body']['documents'][1]['birthDay']);
+        $this->assertEquals('1975-06-12T12:12:55.000+00:00', $documents['body']['documents'][0]['birthDay']);
+        $this->assertEquals('1975-06-12T18:12:55.000+00:00', $documents['body']['documents'][1]['birthDay']);
         $this->assertCount(2, $documents['body']['documents']);
 
         return [];
