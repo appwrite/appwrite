@@ -853,10 +853,11 @@ App::post('/v1/account/sessions/phone')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('messaging')
-    ->inject('phone')
-    ->action(function (string $userId, string $number, Request $request, Response $response, Document $project, Database $dbForProject, Event $events, EventPhone $messaging) {
-        if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
-            throw new Exception(Exception::GENERAL_PHONE_DISABLED);
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Event $events, EventPhone $messaging) {
+
+        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
+        }
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -1461,8 +1462,6 @@ App::patch('/v1/account/password')
     ->action(function (string $password, string $oldPassword, Response $response, Document $user, Database $dbForProject, Stats $usage, Event $events) {
 
         // Check old password only if its an existing user.
-        if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
-            throw new Exception(Exception::USER_INVALID_CREDENTIALS, 'Invalid credentials');
         if ($user->getAttribute('passwordUpdate') !== 0 && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
@@ -2217,7 +2216,6 @@ App::post('/v1/account/verification/phone')
     ->inject('usage')
     ->inject('messaging')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events, Stats $usage, EventPhone $messaging) {
-    ->action(function (Request $request, Response $response, Phone $phone, Document $user, Database $dbForProject, Event $events, Stats $usage, EventPhone $messaging) {
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED);
