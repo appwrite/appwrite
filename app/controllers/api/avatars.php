@@ -301,7 +301,7 @@ App::get('/v1/avatars/qr')
     ->desc('Get QR Code')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
-    ->label('cache', true)
+    ->label('cache', false)
     ->label('cache.resource', 'avatar/qr')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'avatars')
@@ -336,7 +336,7 @@ App::get('/v1/avatars/qr')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->file($image->output('png', 9))
+            ->send($image->output('png', 9))
         ;
     });
 
