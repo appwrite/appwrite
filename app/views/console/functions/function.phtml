@@ -585,7 +585,23 @@ sort($patterns);
                             <span class="text-one-liner" data-ls-bind="{{variable.key}}"></span>
                         </div>
 
-                        <p class="margin-bottom-no"><small data-ls-bind="{{variable.$id}}"></small></p>
+                        <div data-ui-modal class="modal box close" data-button-text="Show Value" data-button-class="link pull-start margin-end-small margin-top-tiny">
+                        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                        <h1>Variable Value</h1>
+
+                        <form>
+                            <div class="input-copy">
+                                <textarea disabled data-forms-copy data-ls-bind="{{variable.value}}"></textarea>
+                            </div>
+
+                            <hr />
+
+                            <div>
+                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
 
                         <div class="phones-only-inline tablets-only-inline margin-top-small">
                             <button class="link" data-ls-ui-trigger="variable-update-{{variable.$id}}">Update</button>
