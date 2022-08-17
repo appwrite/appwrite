@@ -14,6 +14,8 @@ use Utopia\App;
 use Appwrite\Extend\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -149,6 +151,31 @@ App::init()
 
         $deletes->setProject($project);
         $database->setProject($project);
+
+        $useCache = $route->getLabel('cache', false);
+
+        if ($useCache) {
+            $key = md5($request->getURI() . implode('*', $request->getParams()));
+            $cache = new Cache(
+                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+            );
+            $timestamp = 60 * 60 * 24 * 30;
+            $data = $cache->load($key, $timestamp);
+            if (!empty($data)) {
+                $data = json_decode($data, true);
+
+                $response
+                    ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
+                    ->addHeader('X-Appwrite-Cache', 'hit')
+                    ->setContentType($data['content-type'])
+                    ->send(base64_decode($data['payload']))
+                ;
+
+                $route->setIsActive(false);
+            } else {
+                $response->addHeader('X-Appwrite-Cache', 'miss');
+            }
+        }
     });
 
 App::init()
@@ -219,6 +246,7 @@ App::shutdown()
     ->inject('mode')
     ->inject('dbForProject')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) use ($parseLabel) {
+
         $responsePayload = $response->getPayload();
 
         if (!empty($events->getEvent())) {
@@ -319,15 +347,59 @@ App::shutdown()
             $database->trigger();
         }
 
+        $route = $utopia->match($request);
+        $requestParams = $route->getParamsValues();
+        $user = $audits->getUser();
+
+        $useCache = $route->getLabel('cache', false);
+        if ($useCache) {
+            $resource = null;
+            $data = $response->getPayload();
+            if (!empty($data['payload'])) {
+                $pattern = $route->getLabel('cache.resource', null);
+                if (!empty($pattern)) {
+                    $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+                }
+
+                $key = md5($request->getURI() . implode('*', $request->getParams()));
+
+                $data = json_encode([
+                'content-type' => $response->getContentType(),
+                'payload' => base64_encode($data['payload']),
+                ]) ;
+
+                $signature = md5($data);
+                $cacheLog  = $dbForProject->getDocument('cache', $key);
+                if ($cacheLog->isEmpty()) {
+                    Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
+                    '$id' => $key,
+                    'resource' => $resource,
+                    'accessedAt' => \time(),
+                    'signature' => $signature,
+                    ])));
+                } elseif (date('Y/m/d', \time()) > date('Y/m/d', $cacheLog->getAttribute('accessedAt'))) {
+                    $cacheLog->setAttribute('accessedAt', \time());
+                    Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+                }
+
+                if ($signature !== $cacheLog->getAttribute('signature')) {
+                    $cache = new Cache(
+                        new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                    );
+                    $cache->save($key, $data);
+                }
+            }
+        }
+
         if (
             App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
             && $project->getId()
             && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
             && !empty($route->getLabel('sdk.namespace', null))
-        ) { // Don't calculate console usage on admin mode
+        ) {
             $usage
-                ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-                ->setParam('networkResponseSize', $response->getSize())
-                ->submit();
+            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
+            ->setParam('networkResponseSize', $response->getSize())
+            ->submit();
         }
     });
