@@ -142,16 +142,13 @@ App::get('/v1/users/:userId')
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $userId, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
         }
-
-        $usage->setParam('users.read', 1);
 
         $response->dynamic($user, Response::MODEL_USER);
     });

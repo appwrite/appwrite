@@ -244,15 +244,13 @@ App::patch('/v1/account/name')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
             ->setAttribute('name', $name)
             ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email')])));
 
-        $usage->setParam('users.update', 1);
         $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
