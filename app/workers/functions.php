@@ -88,7 +88,7 @@ class FunctionsV1 extends Worker
 
                         Console::success('Triggered function: ' . $events[0]);
                     } catch (\Throwable $th) {
-                        Console::error("Failed to execute " . $function->getAttribute('id') . " with error: " . $th->getMessage());
+                        Console::error("Failed to execute " . $function->getId() . " with error: " . $th->getMessage());
                     }
                 }
             }
