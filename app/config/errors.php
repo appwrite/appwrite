@@ -107,7 +107,7 @@ return [
     ],
     Exception::USER_ALREADY_EXISTS => [
         'name' => Exception::USER_ALREADY_EXISTS,
-        'description' => 'A user with the same email ID already exists in your project.',
+        'description' => 'A user with the same email already exists in your project.',
         'code' => 409,
     ],
     Exception::USER_BLOCKED => [
@@ -127,12 +127,12 @@ return [
     ],
     Exception::USER_EMAIL_NOT_WHITELISTED => [
         'name' => Exception::USER_EMAIL_NOT_WHITELISTED,
-        'description' => 'The user\'s email is not part of the whitelist. Please check the _APP_CONSOLE_WHITELIST_EMAILS environment variable of your Appwrite server.',
+        'description' => 'Console registration is restricted to specific emails. Contact your administrator for more information.',
         'code' => 401,
     ],
     Exception::USER_IP_NOT_WHITELISTED => [
         'name' => Exception::USER_IP_NOT_WHITELISTED,
-        'description' => 'The user\'s IP address is not part of the whitelist. Please check the _APP_CONSOLE_WHITELIST_IPS environment variable of your Appwrite server.',
+        'description' => 'Console registration is restricted to specific IPs. Contact your administrator for more information.',
         'code' => 401,
     ],
     Exception::USER_INVALID_CREDENTIALS => [
@@ -157,7 +157,7 @@ return [
     ],
     Exception::USER_EMAIL_ALREADY_EXISTS => [
         'name' => Exception::USER_EMAIL_ALREADY_EXISTS,
-        'description' => 'Another user with the same email already exists in the current project.',
+        'description' => 'A user with the same email already exists in the current project.',
         'code' => 409,
     ],
     Exception::USER_PASSWORD_MISMATCH => [
@@ -190,6 +190,11 @@ return [
         'description' => 'The current user does not have a phone number associated with their account.',
         'code' => 400,
     ],
+    Exception::USER_MISSING_ID => [
+        'name' => Exception::USER_MISSING_ID,
+        'description' => 'Missing ID from OAuth2 provider.',
+        'code' => 400,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
@@ -199,7 +204,7 @@ return [
     ],
     Exception::TEAM_INVITE_ALREADY_EXISTS => [
         'name' => Exception::TEAM_INVITE_ALREADY_EXISTS,
-        'description' => 'The current user has already received an invitation to join the team.',
+        'description' => 'User has already been invited or is already a member of this team',
         'code' => 409,
     ],
     Exception::TEAM_INVITE_NOT_FOUND => [
@@ -223,12 +228,16 @@ return [
         'code' => 401,
     ],
 
-
     /** Membership */
     Exception::MEMBERSHIP_NOT_FOUND => [
         'name' => Exception::MEMBERSHIP_NOT_FOUND,
         'description' => 'Membership with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::MEMBERSHIP_ALREADY_CONFIRMED => [
+        'name' => Exception::MEMBERSHIP_ALREADY_CONFIRMED,
+        'description' => 'Membership already confirmed',
+        'code' => 409,
     ],
 
     /** Avatars */
@@ -276,7 +285,7 @@ return [
     ],
     Exception::STORAGE_FILE_TYPE_UNSUPPORTED => [
         'name' => Exception::STORAGE_FILE_TYPE_UNSUPPORTED,
-        'description' => 'The file type is not supported.',
+        'description' => 'The given file extension is not supported.',
         'code' => 400,
     ],
     Exception::STORAGE_INVALID_FILE_SIZE => [
@@ -330,7 +339,7 @@ return [
     ],
     Exception::BUILD_NOT_READY => [
         'name' => Exception::BUILD_NOT_READY,
-        'description' => 'Build with the requested ID is builing and not ready for execution.',
+        'description' => 'Build with the requested ID is building and not ready for execution.',
         'code' => 400,
     ],
     Exception::BUILD_IN_PROGRESS => [
@@ -351,6 +360,19 @@ return [
         'name' => Exception::EXECUTION_NOT_FOUND,
         'description' => 'Execution with the requested ID could not be found.',
         'code' => 404,
+    ],
+
+    /** Databases */
+    Exception::DATABASE_NOT_FOUND => [
+        'name' => Exception::DATABASE_NOT_FOUND,
+        'description' => 'Database not found',
+        'code' => 404
+    ],
+
+    Exception::DATABASE_ALREADY_EXISTS => [
+        'name' => Exception::DATABASE_ALREADY_EXISTS,
+        'description' => 'Database already exists',
+        'code' => 409
     ],
 
     /** Collections */
@@ -474,18 +496,23 @@ return [
     ],
     Exception::PROJECT_INVALID_SUCCESS_URL => [
         'name' => Exception::PROJECT_INVALID_SUCCESS_URL,
-        'description' => 'Invalid URL received for OAuth success redirect.',
+        'description' => 'Invalid redirect URL for OAuth success.',
         'code' => 400,
     ],
     Exception::PROJECT_INVALID_FAILURE_URL => [
         'name' => Exception::PROJECT_INVALID_FAILURE_URL,
-        'description' => 'Invalid URL received for OAuth failure redirect.',
+        'description' => 'Invalid redirect URL for OAuth failure.',
         'code' => 400,
     ],
-    Exception::PROJECT_MISSING_USER_ID => [
-        'name' => Exception::PROJECT_MISSING_USER_ID,
-        'description' => 'Failed to obtain user ID from the OAuth provider.',
+    Exception::PROJECT_RESERVED_PROJECT => [
+        'name' => Exception::PROJECT_RESERVED_PROJECT,
+        'description' => 'The project ID is reserved. Please choose another project ID.',
         'code' => 400,
+    ],
+    Exception::PROJECT_KEY_EXPIRED => [
+        'name' => Exception::PROJECT_KEY_EXPIRED,
+        'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
+        'code' => 401,
     ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
@@ -516,5 +543,5 @@ return [
         'name' => Exception::DOMAIN_VERIFICATION_FAILED,
         'description' => 'Domain verification for the requested domain has failed.',
         'code' => 401,
-    ]
+    ],
 ];

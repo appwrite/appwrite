@@ -595,9 +595,9 @@ App::get('/console/version')
             if ($version && isset($version['version'])) {
                 return $response->json(['version' => $version['version']]);
             } else {
-                throw new Exception('Failed to check for a newer version', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to check for a newer version');
             }
         } catch (\Throwable $th) {
-            throw new Exception('Failed to check for a newer version', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to check for a newer version');
         }
     });
