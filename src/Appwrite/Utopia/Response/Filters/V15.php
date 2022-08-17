@@ -59,67 +59,62 @@ class V15 extends Filter
         unset($content['date']);
     }
 
-    protected function parseRemoveAttributes(array $content, array $attributes)
+    protected function downgradePermissionSelector(string $permSelector)
     {
-        foreach ($attributes as $attribute) {
-            unset($content[$attribute]);
+        switch ($permSelector)
+        {
+            case 'any':
+                return 'role:all';
+            case 'users':
+                return 'role:user';
+            case 'guests':
+                return 'role:guest';
         }
 
-        return $content;
+        return $permSelector;
     }
 
-    protected function parseRemoveAttributesList(array $content, string $property, array $attributes)
+    protected function downgradePermissions(array $permissions)
     {
-        $documents = $content[$property];
-        $parsedResponse = [];
-        foreach ($documents as $document) {
-            $parsedResponse[] = $this->parseRemoveAttributes($document, $attributes);
+        $result = [
+            'read' => [],
+            'write' => []
+        ];
+
+        $splitPermissions = [];
+
+        // split up the permisisons
+        foreach ($permissions as $permission) {
+            $permission_type = explode('(', $permission)[0];
+            $permission_value = explode(')', explode('(', $permission)[1])[0];
+            $splitPermissions[$permission_type][] = $permission_value;
         }
-        $content[$property] = $parsedResponse;
 
-        return $content;
-    }
+        // downgrade the permissions
+        foreach ($permissions as $permission) {
+            // permission = "read('any')" = ["read" => "role:all"]
+            $permission_type = explode('(', $permission)[0];
+            $permission_value = explode(')', explode('(', $permission)[1])[0];
 
-    protected function parseCreatedAt(array $content)
-    {
-        $content['dateCreated'] = $content['$createdAt'];
-        unset($content['$createdAt']);
-        unset($content['$updatedAt']);
-
-        return $content;
-    }
-
-    protected function parseCreatedAtList(array $content, string $property)
-    {
-        $documents = $content[$property];
-        $parsedResponse = [];
-        foreach ($documents as $document) {
-            $parsedResponse[] = $this->parseCreatedAt($document);
+            // Old type permissions meant that 'write' is equivalent to 'create', 'update' and 'delete'
+            switch ($permission_type)
+            {
+                case 'update':
+                case 'delete':
+                case 'write':
+                case 'create':
+                    if (!in_array(downgradePermissionSelector($permission_value), $result['write'])) {
+                        $result['write'][] = downgradePermissionSelector($permission_value);
+                    }
+                    break;
+                case 'read':
+                    if (!in_array(downgradePermissionSelector($permission_value), $result['read'])) {
+                        $result['read'][] = downgradePermissionSelector($permission_value);
+                    }
+                    break;                
+            }
         }
-        $content[$property] = $parsedResponse;
 
-        return $content;
-    }
-
-    protected function parseCreatedAtAndUpdatedAt(array $content)
-    {
-        $content['dateCreated'] = $content['$createdAt'];
-        $content['dateUpdated'] = $content['$updatedAt'];
-        unset($content['$createdAt']);
-        unset($content['$updatedAt']);
-
-        return $content;
-    }
-
-    protected function parseCreatedAtAndUpdatedAtList(array $content, string $property)
-    {
-        $documents = $content[$property];
-        $parsedResponse = [];
-        foreach ($documents as $document) {
-            $parsedResponse[] = $this->parseCreatedAtAndUpdatedAt($document);
-        }
-        $content[$property] = $parsedResponse;
-
-        return $content;
+        return $result;
     }
 }
