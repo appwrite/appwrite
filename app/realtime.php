@@ -14,6 +14,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\ID;
+use Utopia\Database\Role;
 use Utopia\Logger\Log;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -203,7 +204,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
-        if ($realtime->hasSubscriber('console', 'users', 'project')) {
+        if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
             [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $payload = [];
@@ -254,12 +255,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
          */
-        if ($realtime->hasSubscriber('console', 'guests', 'tests')) {
+        if ($realtime->hasSubscriber('console', Role::guests()->toString(), 'tests')) {
             $payload = ['response' => 'WS:/v1/realtime:passed'];
 
             $event = [
                 'project' => 'console',
-                'roles' => ['guests'],
+                'roles' => [Role::guests()->toString()],
                 'data' => [
                     'events' => ['test.event'],
                     'channels' => ['tests'],
