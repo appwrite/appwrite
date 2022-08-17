@@ -12,6 +12,7 @@ class Delete extends Event
     protected ?int $timestamp1d = null;
     protected ?int $timestamp30m = null;
     protected ?Document $document = null;
+    protected ?string $resource = null;
 
     public function __construct()
     {
@@ -94,6 +95,29 @@ class Delete extends Event
     }
 
     /**
+     * Returns the resource for the delete event.
+     *
+     * @return string
+     */
+    public function getResource(): string
+    {
+        return $this->resource;
+    }
+
+    /**
+     * Sets the resource for the delete event.
+     *
+     * @param string $resource
+     * @return self
+     */
+    public function setResource(string $resource): self
+    {
+        $this->resource = $resource;
+
+        return $this;
+    }
+
+    /**
      * Returns the set document for the delete event.
      *
      * @return null|Document
@@ -102,6 +126,7 @@ class Delete extends Event
     {
         return $this->document;
     }
+
 
     /**
      * Executes this event and sends it to the deletes worker.
@@ -117,7 +142,8 @@ class Delete extends Event
             'document' => $this->document,
             'timestamp' => $this->timestamp,
             'timestamp1d' => $this->timestamp1d,
-            'timestamp30m' => $this->timestamp30m
+            'timestamp30m' => $this->timestamp30m,
+            'resource' => $this->resource,
         ]);
     }
 }
