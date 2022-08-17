@@ -74,18 +74,22 @@ class FunctionsV1 extends Worker
 
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
-                    $this->execute(
-                        project: $project,
-                        function: $function,
-                        dbForProject: $database,
-                        trigger: 'event',
-                        // Pass first, most verbose event pattern
-                        event: $events[0],
-                        eventData: $payload,
-                        user: $user
-                    );
+                    try {
+                        $this->execute(
+                            project: $project,
+                            function: $function,
+                            dbForProject: $database,
+                            trigger: 'event',
+                            // Pass first, most verbose event pattern
+                            event: $events[0],
+                            eventData: $payload,
+                            user: $user
+                        );
 
-                    Console::success('Triggered function: ' . $events[0]);
+                        Console::success('Triggered function: ' . $events[0]);
+                    } catch (\Throwable $th) {
+                        Console::error("Failed to execute " . $function->getAttribute('id') . " with error: " . $th->getMessage());
+                    }
                 }
             }
 
