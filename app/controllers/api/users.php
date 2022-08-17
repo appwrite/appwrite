@@ -28,6 +28,56 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\Boolean;
 use MaxMind\Db\Reader;
+use Utopia\Validator\Integer;
+
+/** TODO: Remove function when we move to using utopia/platform */
+function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Database $dbForProject, Stats $usage, Event $events): Document
+{
+    $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
+
+    if (!empty($email)) {
+        $email = \strtolower($email);
+    }
+
+    try {
+        $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+
+        $user = $dbForProject->createDocument('users', new Document([
+            '$id' => $userId,
+            '$read' => ['role:all'],
+            '$write' => ['user:' . $userId],
+            'email' => $email,
+            'emailVerification' => false,
+            'phone' => $phone,
+            'phoneVerification' => false,
+            'status' => true,
+            'password' => (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null,
+            'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
+            'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions,
+            'passwordUpdate' => (!empty($password)) ? \time() : 0,
+            'registration' => \time(),
+            'reset' => false,
+            'name' => $name,
+            'prefs' => new \stdClass(),
+            'sessions' => null,
+            'tokens' => null,
+            'memberships' => null,
+            'search' => implode(' ', [$userId, $email, $phone, $name])
+        ]));
+    } catch (Duplicate $th) {
+        throw new Exception(Exception::USER_ALREADY_EXISTS);
+    }
+
+    $usage
+        ->setParam('users.create', 1)
+    ;
+
+    $events
+        ->setParam('userId', $user->getId())
+    ;
+
+    return $user;
+}
 
 App::post('/v1/users')
     ->desc('Create User')
@@ -42,48 +92,228 @@ App::post('/v1/users')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', null, new Email(), 'User email.', true)
+    ->param('phone', null, new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('password', null, new Password(), 'Plain text user password. Must be at least 8 chars.', true)
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/bcrypt')
+    ->desc('Create User with Bcrypt Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createBcryptUser')
+    ->label('sdk.description', '/docs/references/users/create-bcrypt-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('password', '', new Password(), 'User password hashed using Bcrypt.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
 
-        $email = \strtolower($email);
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
 
-        try {
-            $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
-            $user = $dbForProject->createDocument('users', new Document([
-                '$id' => $userId,
-                '$read' => ['role:all'],
-                '$write' => ['user:' . $userId],
-                'email' => $email,
-                'emailVerification' => false,
-                'status' => true,
-                'password' => Auth::passwordHash($password),
-                'passwordUpdate' => \time(),
-                'registration' => \time(),
-                'reset' => false,
-                'name' => $name,
-                'prefs' => new \stdClass(),
-                'sessions' => null,
-                'tokens' => null,
-                'memberships' => null,
-                'search' => implode(' ', [$userId, $email, $name])
-            ]));
-        } catch (Duplicate $th) {
-            throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
+App::post('/v1/users/md5')
+    ->desc('Create User with MD5 Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createMD5User')
+    ->label('sdk.description', '/docs/references/users/create-md5-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using MD5.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/argon2')
+    ->desc('Create User with Argon2 Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createArgon2User')
+    ->label('sdk.description', '/docs/references/users/create-argon2-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using Argon2.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/sha')
+    ->desc('Create User with SHA Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createSHAUser')
+    ->label('sdk.description', '/docs/references/users/create-sha-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using SHA.')
+    ->param('passwordVersion', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Optional SHA version used to hash password. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true)
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $options = '{}';
+
+        if (!empty($passwordVersion)) {
+            $options = '{"version":"' . $passwordVersion . '"}';
         }
 
-        $usage
-            ->setParam('users.create', 1)
-        ;
+        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
 
-        $events
-            ->setParam('userId', $user->getId())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/phpass')
+    ->desc('Create User with PHPass Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createPHPassUser')
+    ->label('sdk.description', '/docs/references/users/create-phpass-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using PHPass.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/scrypt')
+    ->desc('Create User with Scrypt Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createScryptUser')
+    ->label('sdk.description', '/docs/references/users/create-scrypt-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using Scrypt.')
+    ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.')
+    ->param('passwordCpu', '', new Integer(), 'Optional CPU cost used to hash password.')
+    ->param('passwordMemory', '', new Integer(), 'Optional memory cost used to hash password.')
+    ->param('passwordParallel', '', new Integer(), 'Optional parallelization cost used to hash password.')
+    ->param('passwordLength', '', new Integer(), 'Optional hash length used to hash password.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $options = [
+            'salt' => $passwordSalt,
+            'costCpu' => $passwordCpu,
+            'costMemory' => $passwordMemory,
+            'costParallel' => $passwordParallel,
+            'length' => $passwordLength
+        ];
+
+        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::post('/v1/users/scrypt-modified')
+    ->desc('Create User with Scrypt Modified Password')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'users.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createScryptModifiedUser')
+    ->label('sdk.description', '/docs/references/users/create-scrypt-modified-user.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password hashed using Scrypt Modified.')
+    ->param('passwordSalt', '', new Text(128), 'Salt used to hash password.')
+    ->param('passwordSaltSeparator', '', new Text(128), 'Salt separator used to hash password.')
+    ->param('passwordSignerKey', '', new Text(128), 'Signer key used to hash password.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('usage')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $dbForProject, $usage, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
@@ -115,7 +345,7 @@ App::get('/v1/users')
             $cursorUser = $dbForProject->getDocument('users', $cursor);
 
             if ($cursorUser->isEmpty()) {
-                throw new Exception("User '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "User '{$cursor}' for the 'cursor' value not found.");
             }
         }
 
@@ -155,7 +385,7 @@ App::get('/v1/users/:userId')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $usage
@@ -184,7 +414,7 @@ App::get('/v1/users/:userId/prefs')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $prefs = $user->getAttribute('prefs', new \stdClass());
@@ -216,7 +446,7 @@ App::get('/v1/users/:userId/sessions')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -259,7 +489,7 @@ App::get('/v1/users/:userId/memberships')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $memberships = array_map(function ($membership) use ($dbForProject, $user) {
@@ -303,7 +533,7 @@ App::get('/v1/users/:userId/logs')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $audit = new Audit($dbForProject);
@@ -384,7 +614,7 @@ App::patch('/v1/users/:userId/status')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
@@ -423,7 +653,7 @@ App::patch('/v1/users/:userId/verification')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
@@ -462,7 +692,7 @@ App::patch('/v1/users/:userId/verification/phone')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('phoneVerification', $phoneVerification));
@@ -501,7 +731,7 @@ App::patch('/v1/users/:userId/name')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $user
@@ -541,15 +771,16 @@ App::patch('/v1/users/:userId/password')
     ->inject('audits')
     ->inject('events')
     ->action(function (string $userId, string $password, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
-
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $user
-            ->setAttribute('password', Auth::passwordHash($password))
+            ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+            ->setAttribute('hash', Auth::DEFAULT_ALGO)
+            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
             ->setAttribute('passwordUpdate', \time());
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -588,7 +819,7 @@ App::patch('/v1/users/:userId/email')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $email = \strtolower($email);
@@ -602,7 +833,7 @@ App::patch('/v1/users/:userId/email')
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         } catch (Duplicate $th) {
-            throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
 
@@ -640,7 +871,7 @@ App::patch('/v1/users/:userId/phone')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $user
@@ -652,7 +883,7 @@ App::patch('/v1/users/:userId/phone')
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         } catch (Duplicate $th) {
-            throw new Exception('Email already exists', 409, Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
 
@@ -690,7 +921,7 @@ App::patch('/v1/users/:userId/prefs')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
@@ -728,13 +959,13 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
         if ($session->isEmpty()) {
-            throw new Exception('Session not found', 404, Exception::USER_SESSION_NOT_FOUND);
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
         $dbForProject->deleteDocument('sessions', $session->getId());
@@ -775,7 +1006,7 @@ App::delete('/v1/users/:userId/sessions')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -822,7 +1053,7 @@ App::delete('/v1/users/:userId')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         // clone user object to send to workers

@@ -23,12 +23,12 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Phone\Mock;
-use Appwrite\Auth\Phone\Telesign;
-use Appwrite\Auth\Phone\TextMagic;
-use Appwrite\Auth\Phone\Twilio;
-use Appwrite\Auth\Phone\Msg91;
-use Appwrite\Auth\Phone\Vonage;
+use Appwrite\SMS\Adapter\Mock;
+use Appwrite\SMS\Adapter\Telesign;
+use Appwrite\SMS\Adapter\TextMagic;
+use Appwrite\SMS\Adapter\Twilio;
+use Appwrite\SMS\Adapter\Msg91;
+use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
@@ -450,7 +450,7 @@ $register->set('logger', function () {
     }
 
     if (!Logger::hasProvider($providerName)) {
-        throw new Exception("Logging provider not supported. Logging disabled.", 500, Exception::GENERAL_SERVER_ERROR);
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
     $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
@@ -820,7 +820,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         try {
             $payload = $jwt->decode($authJWT);
         } catch (JWTException $error) {
-            throw new Exception('Failed to verify JWT. ' . $error->getMessage(), 401, Exception::USER_JWT_INVALID);
+            throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
         }
 
         $jwtUserId = $payload['userId'] ?? '';
@@ -984,8 +984,8 @@ App::setResource('geodb', function ($register) {
     return $register->get('geodb');
 }, ['register']);
 
-App::setResource('phone', function () {
-    $dsn = new DSN(App::getEnv('_APP_PHONE_PROVIDER'));
+App::setResource('sms', function () {
+    $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
     $user = $dsn->getUser();
     $secret = $dsn->getPassword();
 
