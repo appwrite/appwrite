@@ -69,7 +69,7 @@ App::init()
             throw new Exception(Exception::PROJECT_UNKNOWN);
         }
 
-        /*
+        /**
         * Abuse Check
         */
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
@@ -308,6 +308,9 @@ App::shutdown()
         $requestParams = $route->getParamsValues();
         $user = $audits->getUser();
 
+        /**
+         * Audit labels
+         */
         $pattern = $route->getLabel('audits.resource', null);
         if (!empty($pattern)) {
             $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
@@ -347,10 +350,9 @@ App::shutdown()
             $database->trigger();
         }
 
-        $route = $utopia->match($request);
-        $requestParams = $route->getParamsValues();
-        $user = $audits->getUser();
-
+        /**
+         * Cache label
+         */
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
             $resource = null;

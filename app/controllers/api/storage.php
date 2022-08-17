@@ -1353,15 +1353,13 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
-    ->inject('request')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('usage')
     ->inject('mode')
     ->inject('deviceFiles')
-    ->inject('project')
     ->inject('deletes')
-    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, Stats $usage, string $mode, Device $deviceFiles, Document $project, Delete $deletes) {
+    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, Stats $usage, string $mode, Device $deviceFiles, Delete $deletes) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if (
