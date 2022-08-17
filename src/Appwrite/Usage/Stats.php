@@ -81,10 +81,10 @@ class Stats
     {
         $projectId = $this->params['projectId'] ?? '';
         $tags = ",projectId={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
-        
+
         // the global namespace is prepended to every key (optional)
         $this->statsd->setNamespace($this->namespace);
-        
+
         $httpRequest = $this->params['project.{scope}.network.requests'] ?? 0;
         $httpMethod = $this->params['httpMethod'] ?? '';
         if ($httpRequest >= 1) {

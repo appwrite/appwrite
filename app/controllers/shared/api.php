@@ -355,7 +355,7 @@ App::shutdown()
 
             $fileSize = 0;
             $file = $request->getFiles('file');
-            if(!empty($file)) {
+            if (!empty($file)) {
                 $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
             }
 
