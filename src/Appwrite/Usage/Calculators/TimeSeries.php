@@ -189,6 +189,12 @@ class TimeSeries extends Calculator
         'executions.$all.compute.total' => [
             'table' => 'appwrite_usage_executions_{scope}_compute',
         ],
+        'builds.$all.compute.time' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute_time',
+        ],
+        'executions.$all.compute.time' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute_time',
+        ],
         'builds.$all.compute.total' => [
             'table' => 'appwrite_usage_builds_{scope}_compute',
         ],
