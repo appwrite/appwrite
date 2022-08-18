@@ -1294,6 +1294,7 @@ App::get('/v1/account/logs')
     ->desc('Get Account Logs')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getLogs')
@@ -1308,8 +1309,7 @@ App::get('/v1/account/logs')
     ->inject('locale')
     ->inject('geodb')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (int $limit, int $offset, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Stats $usage) {
+    ->action(function (int $limit, int $offset, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
 
         $audit = new EventAudit($dbForProject);
 
@@ -1340,8 +1340,6 @@ App::get('/v1/account/logs')
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
             }
         }
-
-        $usage->setParam('users.read', 1);
 
         $response->dynamic(new Document([
             'total' => $audit->countLogsByUser($user->getId()),
@@ -1395,6 +1393,7 @@ App::patch('/v1/account/name')
     ->label('event', 'users.[userId].update.name')
     ->label('scope', 'account')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateName')
@@ -1406,15 +1405,13 @@ App::patch('/v1/account/name')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
             ->setAttribute('name', $name)
             ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email', ''), $user->getAttribute('phone', '')])));
 
-        $usage->setParam('users.update', 1);
         $events->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
