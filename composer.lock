@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "175fe4abafd8bde4053b91eea905c328",
+    "content-hash": "2f1a02a792c6acdd73486f527582834b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2829,16 +2829,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-master",
+            "version": "dev-feat-examples-update",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "987f2933b97bd04f702ea08685f2be28a08a841c"
+                "reference": "225e8a18e6d5495b0da84ad67121e4d577b8afb7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/987f2933b97bd04f702ea08685f2be28a08a841c",
-                "reference": "987f2933b97bd04f702ea08685f2be28a08a841c",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/225e8a18e6d5495b0da84ad67121e4d577b8afb7",
+                "reference": "225e8a18e6d5495b0da84ad67121e4d577b8afb7",
                 "shasum": ""
             },
             "require": {
@@ -2853,7 +2853,6 @@
                 "brianium/paratest": "^6.4",
                 "phpunit/phpunit": "^9.5.21"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2874,9 +2873,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/master"
+                "source": "https://github.com/appwrite/sdk-generator/tree/feat-examples-update"
             },
-            "time": "2022-08-17T12:50:44+00:00"
+            "time": "2022-08-18T11:50:52+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5348,14 +5347,7 @@
             "time": "2022-08-12T06:47:24+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "appwrite/sdk-generator",
-            "version": "9999999-dev",
-            "alias": "0.19.5",
-            "alias_normalized": "0.19.5.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
         "appwrite/sdk-generator": 20

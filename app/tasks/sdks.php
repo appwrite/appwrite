@@ -10,7 +10,7 @@ use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
-use Appwrite\SDK\Language\Dart;
+use Appwrite\Extend\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
 use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
@@ -19,6 +19,7 @@ use Appwrite\SDK\Language\Kotlin;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\SwiftClient;
+use Utopia\App;
 
 $cli
     ->task('sdks')
@@ -137,6 +138,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'dart':
                         $config = new Dart();
+                        $config->setApp(new App('UTC'));
                         $config->setPackageName('dart_appwrite');
                         $warning = $warning . "\n\n > This is the Dart SDK for integrating with Appwrite from your Dart server-side code. If you're looking for the Flutter SDK you should check [appwrite/sdk-for-flutter](https://github.com/appwrite/sdk-for-flutter)";
                         break;
