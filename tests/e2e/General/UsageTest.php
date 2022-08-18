@@ -496,7 +496,7 @@ class UsageTest extends Scope
         $executionTime += (int) ($execution['body']['time'] * 1000);
         if ($execution['body']['status'] == 'failed') {
             $failures++;
-        } elseif ($execution['body']['status'] == 'success') {
+        } elseif ($execution['body']['status'] == 'completed') {
             $executions++;
         }
 
@@ -509,7 +509,7 @@ class UsageTest extends Scope
         $this->assertEquals($functionId, $execution['body']['functionId']);
         if ($execution['body']['status'] == 'failed') {
             $failures++;
-        } elseif ($execution['body']['status'] == 'success') {
+        } elseif ($execution['body']['status'] == 'completed') {
             $executions++;
         }
         $executionTime += (int) ($execution['body']['time'] * 1000);
