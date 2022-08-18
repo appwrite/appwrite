@@ -1231,7 +1231,7 @@ App::get('/v1/account')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
 
-        $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::get('/v1/account/prefs')
