@@ -823,6 +823,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_MAINTENANCE_RETENTION_CACHE',
+                'description' => 'The maximum duration (in seconds) upto which to retain cached files. The default value is 2592000 seconds (30 days).',
+                'introduction' => '0.16.0',
+                'default' => '2592000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_RETENTION_EXECUTION',
                 'description' => 'The maximum duration (in seconds) upto which to retain execution logs. The default value is 1209600 seconds (14 days).',
                 'introduction' => '0.7.0',

@@ -479,6 +479,24 @@ class Response extends SwooleResponse
     }
 
     /**
+     * Output response
+     *
+     * Generate HTTP response output including the response header (+cookies) and body and prints them.
+     *
+     * @param string $body
+     *
+     * @return void
+     */
+    public function file(string $body = ''): void
+    {
+        $this->payload = [
+            'payload' => $body
+        ];
+
+        $this->send($body);
+    }
+
+    /**
      * YAML
      *
      * This helper is for sending YAML HTTP response.
@@ -508,7 +526,6 @@ class Response extends SwooleResponse
     {
         return $this->payload;
     }
-
 
     /**
      * Function to set a response filter

@@ -9,8 +9,6 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Cache\Adapter\Filesystem;
-use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -34,6 +32,7 @@ use Utopia\Storage\Validator\Upload;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
+use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -328,7 +327,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->inject('deletes')
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $read, ?array $write, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal, Delete $deletes) {
+
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if (
@@ -617,6 +618,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
             ->setContext('bucket', $bucket)
         ;
 
+        $deletes
+            ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
+            ->setResource('file/' . $file->getId())
+        ;
+
         $metadata = null; // was causing leaks as it was passed by reference
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -758,6 +764,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->desc('Get File Preview')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
+    ->label('cache', true)
+    ->label('cache.resource', 'file/{request.fileId}')
     ->label('usage.metric', 'files.{scope}.requests.read')
     ->label('usage.params', ['bucketId' => 'request.bucketId'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -818,9 +826,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
 
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-        $key = \md5($fileId . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
-
         if ($bucket->getAttribute('permission') === 'bucket') {
             // skip authorization
             $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
@@ -837,7 +842,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $algorithm = $file->getAttribute('algorithm');
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
-
         if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) App::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
             if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
@@ -850,7 +854,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-            $key = \md5($path . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
             $deviceFiles = $deviceLocal;
         }
 
@@ -861,23 +864,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId)); // Limit file number or size
-        $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
-
         if (empty($output)) {
             // when file extension is not provided and the mime type is not one of our supported outputs
             // we fallback to `jpg` output format
             $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
         }
 
-        if ($data) {
-            return $response
-                ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
-                ->addHeader('Expires', $date)
-                ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data)
-            ;
-        }
 
         $source = $deviceFiles->read($path);
 
@@ -922,13 +914,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $data = $image->output($output, $quality);
 
-        $cache->save($key, $data);
+        $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
         $response
-            ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
-            ->addHeader('Expires', $date)
-            ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send($data)
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->setContentType($contentType)
+            ->file($data)
         ;
 
         unset($image);
@@ -1330,8 +1321,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('events')
     ->inject('mode')
     ->inject('deviceFiles')
-    ->inject('project')
-    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, string $mode, Device $deviceFiles, Document $project) {
+    ->inject('deletes')
+    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, string $mode, Device $deviceFiles, Delete $deletes) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if (
@@ -1370,10 +1361,10 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($deviceDeleted) {
-            //delete related cache
-            $cacheDir = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $bucketId . DIRECTORY_SEPARATOR . $fileId;
-            $deviceLocal = new Local($cacheDir);
-            $deviceLocal->delete($cacheDir, true);
+            $deletes
+                ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
+                ->setResource('file/' . $fileId)
+            ;
 
             if ($bucket->getAttribute('permission') === 'bucket') {
                 $deleted = Authorization::skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
