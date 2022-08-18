@@ -15,7 +15,6 @@ class UsageTest extends Scope
     use SideServer;
     use FunctionsBase;
 
-    protected array $headers = [];
     protected string $projectId;
 
     protected function setUp(): void
@@ -428,19 +427,17 @@ class UsageTest extends Scope
         return $data;
     }
 
+
     /** @depends testDatabaseStats */
     public function testFunctionsStats(array $data): void
     {
+        $headers = $data['headers'];
         $functionId = '';
-        $requestsCount = $data['requestsCount'];
         $executionTime = 0;
         $executions = 0;
         $failures = 0;
 
-        $response1 = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $response1 = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
             'functionId' => 'unique()',
             'name' => 'Test',
             'runtime' => 'php-8.0',
@@ -462,16 +459,10 @@ class UsageTest extends Scope
         $this->assertEquals(201, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
 
-        $requestsCount++;
+        $code = realpath(__DIR__ . '/../../resources/functions') . "/php/code.tar.gz";
+        $this->packageCode('php');
 
-        $folder = 'php';
-        $code = realpath(__DIR__ . '/../../resources/functions') . "/$folder/code.tar.gz";
-        $this->packageCode($folder);
-
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge($headers, ['content-type' => 'multipart/form-data',]), [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
             'activate' => true
@@ -487,10 +478,7 @@ class UsageTest extends Scope
         // Wait for deployment to build.
         sleep(30);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, $headers, []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -498,10 +486,7 @@ class UsageTest extends Scope
         $this->assertIsInt($response['body']['$updatedAt']);
         $this->assertEquals($deploymentId, $response['body']['deployment']);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', $headers, [
             'async' => false,
         ]);
 
@@ -509,28 +494,29 @@ class UsageTest extends Scope
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertEquals($functionId, $execution['body']['functionId']);
         $executionTime += (int) ($execution['body']['time'] * 1000);
-        $executions++;
+        if($execution['body']['status'] == 'failed') {
+            $failures++;
+        } else if ($execution['body']['status'] == 'success') {
+            $executions++;
+        }
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', $headers, [
             'async' => false,
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertEquals($functionId, $execution['body']['functionId']);
-        $executions++;
-
+        if($execution['body']['status'] == 'failed') {
+            $failures++;
+        } else if ($execution['body']['status'] == 'success') {
+            $executions++;
+        }
         $executionTime += (int) ($execution['body']['time'] * 1000);
 
         sleep(25);
 
-        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', $headers, [
             'range' => '30d'
         ]);
 
@@ -551,10 +537,7 @@ class UsageTest extends Scope
         $this->assertEquals($executionTime, $response['executionsTime'][array_key_last($response['executionsTime'])]['value']);
         $this->assertEquals($failures, $response['executionsFailure'][array_key_last($response['executionsFailure'])]['value']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/functions/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
+        $response = $this->client->call(Client::METHOD_GET, '/functions/usage', $headers, [
             'range' => '30d'
         ]);
 
