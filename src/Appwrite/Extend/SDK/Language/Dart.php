@@ -65,16 +65,3 @@ class Dart extends DartBase {
         return $this;
     }
 }
-
-/**
- * 
- * Future result = {{ service.name | caseCamel }}.{{ method.name | caseCamel }}({% for parameter in method.parameters.all %}
-{% if loop.first %}
-
-{% endif %}
-{% if parameter.required %}
-    {{ parameter.name | caseCamel | overrideIdentifier }}: {{ parameter | paramExample | replace({'<field-name>': (parameter.name | caseCamel) }) | raw }},
-{% endif %}
-{% endfor %}{% if method.parameters.all | length > 0 %}  {% endif %});
-
- */
