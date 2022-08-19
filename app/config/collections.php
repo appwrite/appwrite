@@ -977,14 +977,14 @@ $collections = [
             ],
             [
                 '$id' => 'accessedAt',
-                'type' => Database::,
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => false,
                 'required' => false,
                 'default' => 0,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => 'sdks',
@@ -2847,14 +2847,14 @@ $collections = [
             ],
             [
                 '$id' => 'accessedAt',
-                'type' => Database::VAR_DATETIME,
+                'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
                 'signed' => false,
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => ['datetime'],
+                'filters' => [],
             ],
             [
                 '$id' => 'signature',
