@@ -1,1 +1,1 @@
-Create a new function variable. These variables can be accessed within functions using the `env` object recieved through the payload of an execution.
+Create a new function variable. These variables can be accessed within functions using the `env` object received through the payload of an execution.
