@@ -2,28 +2,103 @@
 
 namespace Appwrite\Utopia\Database\Validator;
 
+use Utopia\Validator;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Queries as ValidatorQueries;
+use Utopia\Database\Validator\Query as QueryValidator;
+use Utopia\Database\Query;
 
-class Queries extends ValidatorQueries
+class Queries extends Validator
 {
     /**
-     * Expression constructor
+     * @var string
+     */
+    protected $message = 'Invalid queries';
+
+    /**
+     * @var QueryValidator
+     */
+    protected $validator;
+
+    /**
+     * Queries constructor
      *
-     * This Queries Validator that filters indexes for only available indexes
-     *
-     * @param QueryValidator $validator
-     * @param Document[] $attributes
-     * @param Document[] $indexes
+     * @param Validator $validator used to validate each query
+     * @param Document[] $attributes allowed attributes to be queried
+     * @param Document[] $indexes available for strict query matching
      * @param bool $strict
      */
-    public function __construct($validator, $attributes = [], $indexes = [], $strict = true)
+    public function __construct(Validator $validator)
     {
-        // Remove failed/stuck/processing indexes
-        $availableIndexes = \array_filter($indexes, function ($index) {
-            return $index->getAttribute('status') === 'available';
-        });
+        $this->validator = $validator;
+    }
 
-        parent::__construct($validator, $attributes, $availableIndexes, $strict);
+    /**
+     * Get Description.
+     *
+     * Returns validator description
+     *
+     * @return string
+     */
+    public function getDescription(): string
+    {
+        return $this->message;
+    }
+
+    /**
+     * Is valid.
+     *
+     * Returns false if:
+     * 1. any query in $value is invalid based on $validator
+     *
+     * Otherwise, returns true.
+     *
+     * @param mixed $value
+     * @return bool
+     */
+    public function isValid($value): bool
+    {
+        $queries = [];
+        foreach ($value as $query) {
+            if (!$query instanceof Query) {
+                try {
+                    $query = Query::parse($query);
+                } catch (\Throwable $th) {
+                    $this->message = 'Invalid query: ${query}';
+                    return false;
+                }
+            }
+
+            if (!$this->validator->isValid($query)) {
+                $this->message = 'Query not valid: ' . $this->validator->getDescription();
+                return false;
+            }
+
+            $queries[] = $query;
+        }
+
+        return true;
+    }
+    /**
+     * Is array
+     *
+     * Function will return true if object is array.
+     *
+     * @return bool
+     */
+    public function isArray(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get Type
+     *
+     * Returns validator type.
+     *
+     * @return string
+     */
+    public function getType(): string
+    {
+        return self::TYPE_OBJECT;
     }
 }

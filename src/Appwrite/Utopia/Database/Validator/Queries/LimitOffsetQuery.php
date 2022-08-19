@@ -3,9 +3,10 @@
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Query as QueryValidator;
+use Utopia\Validator\Range;
+use Utopia\Validator;
 
-class LimitOffsetQuery extends QueryValidator
+class LimitOffsetQuery extends Validator
 {
     /**
      * @var string
@@ -29,10 +30,44 @@ class LimitOffsetQuery extends QueryValidator
     }
 
     /**
+     * Get Description.
+     *
+     * Returns validator description
+     *
+     * @return string
+     */
+    public function getDescription(): string
+    {
+        return $this->message;
+    }
+
+    protected function isValidLimit($limit): bool
+    {
+        $validator = new Range(0, $this->maxLimit);
+        if ($validator->isValid($limit)) {
+            return true;
+        }
+
+        $this->message = 'Invalid limit: ' . $validator->getDescription();
+        return false;
+    }
+
+    protected function isValidOffset($offset): bool
+    {
+        $validator = new Range(0, $this->maxOffset);
+        if ($validator->isValid($offset)) {
+            return true;
+        }
+
+        $this->message = 'Invalid offset: ' . $validator->getDescription();
+        return false;
+    }
+
+    /**
      * Is valid.
      *
      * Returns true if method is limit or offset and values are within range.
-     * 
+     *
      * @param Query $value
      *
      * @return bool
@@ -54,5 +89,29 @@ class LimitOffsetQuery extends QueryValidator
                 $this->message = 'Query method invalid: ' . $method;
                 return false;
         }
+    }
+
+    /**
+     * Is array
+     *
+     * Function will return true if object is array.
+     *
+     * @return bool
+     */
+    public function isArray(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Get Type
+     *
+     * Returns validator type.
+     *
+     * @return string
+     */
+    public function getType(): string
+    {
+        return self::TYPE_OBJECT;
     }
 }

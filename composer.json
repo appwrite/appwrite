@@ -88,9 +88,6 @@
         "ext-phpiredis": "*"
     },
     "config": {
-        "optimize-autoloader": true,
-        "allow-plugins": false,
-        "preferred-install": "dist",
         "platform": {
             "php": "8.0"
         }
