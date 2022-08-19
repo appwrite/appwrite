@@ -417,7 +417,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
-        $this->assertCount(2, $response['body']['users']);
+        $this->assertCount($totalUsers, $response['body']['users']);
         $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
         $this->assertEquals($response['body']['users'][0]['status'], $user1['status']);
         $this->assertEquals($response['body']['users'][1]['$id'], $user1['$id']);
@@ -471,7 +471,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
-        $this->assertCount(2, $response['body']['users']);
+        $this->assertCount($totalUsers, $response['body']['users']);
         $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
         $this->assertEquals($response['body']['users'][0]['status'], $user1['status']);
         $this->assertEquals($response['body']['users'][1]['$id'], $user1['$id']);
@@ -498,8 +498,8 @@ trait UsersBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
-        $this->assertEmpty($response['body']['users']);
-        $this->assertCount(0, $response['body']['users']);
+        $this->assertIsArray($response['body']['users']);
+        $this->assertCount($totalUsers, $response['body']['users']);
 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
