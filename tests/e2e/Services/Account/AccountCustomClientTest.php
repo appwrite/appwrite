@@ -2,11 +2,12 @@
 
 namespace Tests\E2E\Services\Account;
 
-use Appwrite\Auth\Phone\Mock;
+use Appwrite\SMS\Adapter\Mock;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\DateTime;
 
 use function sleep;
 
@@ -446,7 +447,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -538,7 +539,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('123456', $response['body']['providerAccessToken']);
         $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
-        $this->assertGreaterThan(\time() + 14400 - 5, $response['body']['providerAccessTokenExpiry']); // 5 seconds allowed networking delay
+        $this->assertGreaterThan(DateTime::addSeconds(new \DateTime(), 14400 - 5), $response['body']['providerAccessTokenExpiry']); // 5 seconds allowed networking delay
 
         $initialExpiry = $response['body']['providerAccessTokenExpiry'];
 
@@ -690,13 +691,13 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'userId' => 'unique()',
-            'number' => $number,
+            'phone' => $number,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $this->assertIsNumeric($response['body']['expire']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
 
@@ -713,7 +714,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $data['token'] = Mock::$defaultDigits;
+        $data['token'] = Mock::$digits;
         $data['id'] = $userId;
         $data['number'] = $number;
 
@@ -784,7 +785,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['phone'], $number);
         $this->assertTrue($response['body']['phoneVerification']);
 
@@ -835,7 +836,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -869,7 +870,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'number' => $newPhone,
+            'phone' => $newPhone,
             'password' => 'new-password'
         ]);
 
@@ -877,7 +878,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['phone'], $newPhone);
 
         /**
@@ -926,7 +927,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $this->assertIsNumeric($response['body']['expire']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['expire']));
 
         return $data;
     }
@@ -949,7 +950,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'userId' => $id,
-            'secret' => Mock::$defaultDigits,
+            'secret' => Mock::$digits,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -964,7 +965,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'userId' => 'ewewe',
-            'secret' => Mock::$defaultDigits,
+            'secret' => Mock::$digits,
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);

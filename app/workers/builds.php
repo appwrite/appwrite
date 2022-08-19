@@ -6,7 +6,8 @@ use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Cron\CronExpression;
 use Executor\Executor;
-use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Storage\Storage;
@@ -75,8 +76,7 @@ class BuildsV1 extends Worker
         }
 
         $buildId = $deployment->getAttribute('buildId', '');
-        $build = null;
-        $startTime = \time();
+        $startTime = DateTime::now();
         if (empty($buildId)) {
             $buildId = $dbForProject->getId();
             $build = $dbForProject->createDocument('builds', new Document([
@@ -92,7 +92,7 @@ class BuildsV1 extends Worker
                 'sourceType' => App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL),
                 'stdout' => '',
                 'stderr' => '',
-                'endTime' => 0,
+                'endTime' => null,
                 'duration' => 0
             ]));
             $deployment->setAttribute('buildId', $buildId);
@@ -184,13 +184,14 @@ class BuildsV1 extends Worker
             /** Update function schedule */
             $schedule = $function->getAttribute('schedule', '');
             $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
-            $function->setAttribute('scheduleNext', (int)$next);
+            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
+            $function->setAttribute('scheduleNext', $next);
             $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
         } catch (\Throwable $th) {
-            $endtime = \time();
+            $endtime = DateTime::now();
+            $interval = (new \DateTime($endtime))->diff(new \DateTime($startTime));
             $build->setAttribute('endTime', $endtime);
-            $build->setAttribute('duration', $endtime - $startTime);
+            $build->setAttribute('duration', $interval->format('%s'));
             $build->setAttribute('status', 'failed');
             $build->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());

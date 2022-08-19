@@ -10,6 +10,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\DateTime;
 
 class StorageCustomClientTest extends Scope
 {
@@ -49,7 +50,7 @@ class StorageCustomClientTest extends Scope
         $fileId = $file['body']['$id'];
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($fileId);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -138,7 +139,7 @@ class StorageCustomClientTest extends Scope
         $this->assertNotEmpty($file['body']['$id']);
         $this->assertContains('user:' . $this->getUser()['$id'], $file['body']['$read']);
         $this->assertContains('user:' . $this->getUser()['$id'], $file['body']['$write']);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);

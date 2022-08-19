@@ -101,6 +101,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'disqus' => [
+        'name' => 'Disqus',
+        'developers' => 'https://disqus.com/api/docs/auth/',
+        'icon' => 'icon-disqus',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'dropbox' => [
         'name' => 'Dropbox',
         'developers' => 'https://www.dropbox.com/developers/documentation',
@@ -210,6 +220,16 @@ return [ // Ordered by ABC.
         'form' => false,
         'beta' => false,
         'mock' => false
+    ],
+    'podio' => [
+        'name' => 'Podio',
+        'developers' => 'https://developers.podio.com/doc/oauth-authorization',
+        'icon' => 'icon-podio',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
     ],
     'salesforce' => [
         'name' => 'Salesforce',

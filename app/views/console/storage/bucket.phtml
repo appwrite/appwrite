@@ -190,7 +190,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                                 <span data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
                                                             </div>
                                                             <div class="margin-bottom">
-                                                                <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Created at: <span data-ls-bind="{{file.$createdAt|dateText}}"></span>
+                                                                <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Created at: <span data-ls-bind="{{file.$createdAt|date}}"></span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -211,7 +211,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                             <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
                                         </td>
                                         <td data-title="Created: ">
-                                            <span class="text-fade text-size-small" data-ls-bind="{{file.$createdAt|dateText}}"></span>
+                                            <span class="text-fade text-size-small" data-ls-bind="{{file.$createdAt|date}}"></span>
                                         </td>
                                         <td data-title="" class="cell-options-more" style="overflow: visible">
                                            <div class="drop-list end" data-ls-ui-open="" data-button-aria="File Options" data-button-class="icon-dot-3 reset-inner-button" data-blur="1">
@@ -481,8 +481,8 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                     View as JSON
                                 </button>
                             </li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-bucket.$updatedAt|dateText}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-bucket.$createdAt|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-bucket.$updatedAt|date}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-bucket.$createdAt|date}}"></span></li>
                         </ul>
 
                         <form name="storage.deleteBucket" class="margin-bottom"

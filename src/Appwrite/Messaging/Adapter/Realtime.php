@@ -2,6 +2,7 @@
 
 namespace Appwrite\Messaging\Adapter;
 
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter;
 use Utopia\App;
@@ -146,7 +147,7 @@ class Realtime extends Adapter
             'data' => [
                 'events' => $events,
                 'channels' => $channels,
-                'timestamp' => time(),
+                'timestamp' => DateTime::now(),
                 'payload' => $payload
             ]
         ]));

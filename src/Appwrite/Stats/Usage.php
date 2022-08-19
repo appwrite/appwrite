@@ -191,12 +191,10 @@ class Usage
     protected array $periods = [
         [
             'key' => '30m',
-            'multiplier' => 1800,
             'startTime' => '-24 hours',
         ],
         [
             'key' => '1d',
-            'multiplier' => 86400,
             'startTime' => '-90 days',
         ],
     ];
@@ -213,7 +211,7 @@ class Usage
      * Create or update each metric in the stats collection for the given project
      *
      * @param string $projectId
-     * @param int $time
+     * @param string $time
      * @param string $period
      * @param string $metric
      * @param int $value
@@ -221,7 +219,7 @@ class Usage
      *
      * @return void
      */
-    private function createOrUpdateMetric(string $projectId, int $time, string $period, string $metric, int $value, int $type): void
+    private function createOrUpdateMetric(string $projectId, string $time, string $period, string $metric, int $value, int $type): void
     {
         $id = \md5("{$time}_{$period}_{$metric}");
         $this->database->setNamespace('_console');
@@ -246,6 +244,8 @@ class Usage
                     $document->setAttribute('value', $value)
                 );
             }
+
+            $time = (new \DateTime($time))->getTimestamp();  //todo: What about this timestamp?
             $this->latestTime[$metric][$period] = $time;
         } catch (\Exception $e) { // if projects are deleted this might fail
             if (is_callable($this->errorHandler)) {
@@ -311,7 +311,7 @@ class Usage
                         }
                     }
 
-                    $time = \strtotime($point['time']);
+                    $time = $point['time']; //todo: check is this datetime format?
                     $value = (!empty($point['value'])) ? $point['value'] : 0;
 
                     $this->createOrUpdateMetric(

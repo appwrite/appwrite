@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
 class BaseList extends Model
@@ -10,12 +9,12 @@ class BaseList extends Model
     /**
      * @var string
      */
-    protected $name = '';
+    protected string $name = '';
 
     /**
      * @var string
      */
-    protected $type = '';
+    protected string $type = '';
 
     /**
      * @param string $name

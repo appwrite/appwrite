@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\DateTime;
 
 class StorageCustomServerTest extends Scope
 {
@@ -28,7 +29,7 @@ class StorageCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
-        $this->assertIsInt($bucket['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($bucket['body']['$createdAt']));
         $this->assertIsArray($bucket['body']['$read']);
         $this->assertIsArray($bucket['body']['$write']);
         $this->assertIsArray($bucket['body']['allowedFileExtensions']);
@@ -187,7 +188,7 @@ class StorageCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
-        $this->assertIsInt($bucket['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($bucket['body']['$createdAt']));
         $this->assertIsArray($bucket['body']['$read']);
         $this->assertIsArray($bucket['body']['$write']);
         $this->assertIsArray($bucket['body']['allowedFileExtensions']);

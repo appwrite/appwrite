@@ -7,13 +7,13 @@
          convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="false"
-        >
+>
     <extensions>
         <extension class="Appwrite\Tests\TestHook" />
     </extensions>
     <testsuites>
         <testsuite name="unit">
-            <directory>./tests/unit/</directory>
+            <directory>./tests/unit</directory>
         </testsuite>
         <testsuite name="e2e">
             <file>./tests/e2e/Client.php</file>

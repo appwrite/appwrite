@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response;
@@ -16,6 +15,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Logger\Log;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
@@ -151,7 +151,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                     '$read' => [],
                     '$write' => [],
                     'container' => $containerId,
-                    'timestamp' => time(),
+                    'timestamp' => DateTime::now(),
                     'value' => '{}'
                 ]);
 
@@ -181,7 +181,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
             [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $statsDocument
-                ->setAttribute('timestamp', time())
+                ->setAttribute('timestamp', DateTime::now())
                 ->setAttribute('value', json_encode($payload));
 
             Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
@@ -209,7 +209,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             $payload = [];
 
             $list = Authorization::skip(fn () => $database->find('realtime', [
-                new Query('timestamp', Query::TYPE_GREATER, [(time() - 15)])
+                Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
             ]));
 
             /**
@@ -236,7 +236,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'data' => [
                         'events' => ['stats.connections'],
                         'channels' => ['project'],
-                        'timestamp' => time(),
+                        'timestamp' => DateTime::now(),
                         'payload' => [
                             $projectId => $payload[$projectId]
                         ]
@@ -263,7 +263,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 'data' => [
                     'events' => ['test.event'],
                     'channels' => ['tests'],
-                    'timestamp' => time(),
+                    'timestamp' => DateTime::now(),
                     'payload' => $payload
                 ]
             ];
@@ -433,7 +433,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $realtime->subscribe($project->getId(), $connection, $roles, $channels);
 
-        $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_USER);
+        $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
 
         $server->send([$connection], json_encode([
             'type' => 'connected',
@@ -548,7 +548,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 
-                $user = $response->output($user, Response::MODEL_USER);
+                $user = $response->output($user, Response::MODEL_ACCOUNT);
                 $server->send([$connection], json_encode([
                     'type' => 'response',
                     'data' => [
