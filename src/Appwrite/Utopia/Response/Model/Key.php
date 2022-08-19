@@ -59,10 +59,11 @@ class Key extends Model
                 'example' => '919c2d18fb5d4...a2ae413da83346ad2',
             ])
             ->addRule('accessedAt', [
-                'type' => self::TYPE_INTEGER,
+                'type' => self::TYPE_DATETIME_EXAMPLE,
                 'description' => 'Most recent access date in Unix timestamp.',
                 'default' => null,
-                'example' => '1653990687',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE
             ])
             ->addRule('sdks', [
                 'type' => self::TYPE_STRING,
