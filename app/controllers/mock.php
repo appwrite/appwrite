@@ -396,6 +396,7 @@ App::get('/v1/mock/tests/general/empty')
         $response->noContent();
     });
 
+/** Endpoint to test if required headers are sent from the SDK */
 App::get('/v1/mock/tests/general/headers')
     ->desc('Get headers')
     ->groups(['mock'])
