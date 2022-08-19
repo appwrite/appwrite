@@ -23,7 +23,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
-use Appwrite\Event\Phone as EventPhone;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
