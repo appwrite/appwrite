@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5c846e4b9f655c018d30cad74cb5ecca",
+    "content-hash": "d404d30f1318f2b9a9171acdef966900",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2833,12 +2833,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "3203428b4139e0ac2c0e46f1e5dff11c6a084f17"
+                "reference": "034ee359ba97c0d5a4727639463b645802332bf6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3203428b4139e0ac2c0e46f1e5dff11c6a084f17",
-                "reference": "3203428b4139e0ac2c0e46f1e5dff11c6a084f17",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/034ee359ba97c0d5a4727639463b645802332bf6",
+                "reference": "034ee359ba97c0d5a4727639463b645802332bf6",
                 "shasum": ""
             },
             "require": {
@@ -2853,7 +2853,6 @@
                 "brianium/paratest": "^6.4",
                 "phpunit/phpunit": "^9.5.21"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2876,7 +2875,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-new-headers"
             },
-            "time": "2022-08-10T12:49:12+00:00"
+            "time": "2022-08-19T09:16:17+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5348,14 +5347,7 @@
             "time": "2022-08-12T06:47:24+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "appwrite/sdk-generator",
-            "version": "9999999-dev",
-            "alias": "0.19.5",
-            "alias_normalized": "0.19.5.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
         "appwrite/sdk-generator": 20
@@ -5383,5 +5375,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
