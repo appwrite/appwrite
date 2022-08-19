@@ -1969,7 +1969,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         } else {
             foreach ($allowedPermissions as $permission) {
                 /**
-                 * If an allowed permission was not passed in the request, 
+                 * If an allowed permission was not passed in the request,
                  * and there is a current user, add it for the current user.
                  */
                 if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($user->getId())) {

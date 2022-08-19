@@ -247,8 +247,8 @@ App::init()
         /*
         * ACL Check
         */
-        $role = ($user->isEmpty()) 
-            ? Role::guests()->toString() 
+        $role = ($user->isEmpty())
+            ? Role::guests()->toString()
             : Role::users()->toString();
 
         // Add user roles
