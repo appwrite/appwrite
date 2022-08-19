@@ -29,16 +29,13 @@ class AttributeIP extends Attribute
                 'description' => 'String format.',
                 'default' => 'ip',
                 'example' => 'ip',
-                'array' => false,
-                'require' => true,
+                'required' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'example' => '192.0.2.0',
-                'array' => false,
-                'require' => false,
             ])
         ;
     }

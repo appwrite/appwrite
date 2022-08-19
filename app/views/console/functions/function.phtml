@@ -260,8 +260,8 @@ sort($patterns);
                                     View as JSON
                                 </button>
                             </li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.$updatedAt|dateText}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.$createdAt|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.$updatedAt|date}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.$createdAt|date}}"></span></li>
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"
@@ -392,10 +392,10 @@ sort($patterns);
                                     <tr>
                                         <th width="30"></th>
                                         <th width="160">Created</th>
-                                        <th width="150">Status</th>
-                                        <th width="120">Trigger</th>
-                                        <th width="80">Runtime</th>
-                                        <th></th>
+                                        <th width="100">Status</th>
+                                        <th width="80">Trigger</th>
+                                        <th width="60">Runtime</th>
+                                        <th width=""></th>
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-function-executions.executions" data-ls-as="execution">
@@ -416,29 +416,44 @@ sort($patterns);
                                         <td data-title="Trigger: ">
                                             <span data-ls-bind="{{execution.trigger}}"></span>
                                         </td>
-                                        <td data-title="Runtime: ">
+                                        <td data-title="Time: ">
                                             <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>
                                             <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'processing'">-</span>
                                         </td>
                                         <td data-title="">
-                                            <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
+                                            <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="" style="display: flex;">
+                                                <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Stderr</button>
+                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button>
+                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-response-{{execution.$id}}">Response</button>
 
-                                                <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
-                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
+                                                <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-response-{{execution.$id}}">Response</button>
+                                                <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button>
+                                                <button class="phones-only-inline tablets-only-inline link text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Stderr</button>
 
-                                                <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
-                                                <button class="phones-only-inline tablets-only-inline link text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
-
-                                                <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stdout-{{execution.$id}}">
+                                                <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-response-{{execution.$id}}">
                                                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                                    <h1>STDOUT</h1>
+                                                    <h1>RESPONSE</h1>
 
                                                     <div class="margin-bottom ide" data-ls-if="({{execution.response.length}})">
                                                         <pre data-ls-bind="{{execution.response}}"></pre>
                                                     </div>
 
                                                     <div class="margin-bottom" data-ls-if="(!{{execution.response.length}})">
+                                                        <p>No Response was logged.</p>
+                                                    </div>
+                                                </div>
+
+                                                <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stdout-{{execution.$id}}">
+                                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                    <h1>STDOUT</h1>
+
+                                                    <div class="margin-bottom ide" data-ls-if="({{execution.stdout.length}})">
+                                                        <pre data-ls-bind="{{execution.stdout}}"></pre>
+                                                    </div>
+
+                                                    <div class="margin-bottom" data-ls-if="(!{{execution.stdout.length}})">
                                                         <p>No output was logged.</p>
                                                     </div>
                                                 </div>
@@ -687,7 +702,7 @@ sort($patterns);
 
                                     <label for="execute">Execute Access <span class="tooltip small" data-tooltip="Choose who can execute this function using the client API."><i class="icon-info-circled"></i></span> <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
                                     <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.execute}}" placeholder="User ID, Team ID or Role" />
-                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
 
                                     <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
                                     <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="<?php echo $this->escape($timeout); ?>" data-cast-to="integer" />
@@ -769,8 +784,8 @@ sort($patterns);
                                     View as JSON
                                 </button>
                             </li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.$updatedAt|dateText}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.$createdAt|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.$updatedAt|date}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.$createdAt|date}}"></span></li>
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"

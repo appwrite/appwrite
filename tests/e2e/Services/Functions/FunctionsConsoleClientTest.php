@@ -6,6 +6,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Database\ID;
 
 class FunctionsConsoleClientTest extends Scope
 {
@@ -18,9 +19,9 @@ class FunctionsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['user:' . $this->getUser()['$id']],
+            'execute' => ["user:{$this->getUser()['$id']}"],
             'runtime' => 'php-8.0',
             'events' => [
                 'users.*.create',
@@ -36,7 +37,7 @@ class FunctionsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test Failure',
             'execute' => ['some-random-string'],
             'runtime' => 'php-8.0'

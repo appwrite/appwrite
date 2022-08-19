@@ -11,26 +11,34 @@ abstract class Model
     public const TYPE_FLOAT = 'double';
     public const TYPE_BOOLEAN = 'boolean';
     public const TYPE_JSON = 'json';
+    public const TYPE_DATETIME = 'datetime';
+    public const TYPE_DATETIME_EXAMPLE = '2020-10-15T06:38:00.000+00:00';
 
     /**
      * @var bool
      */
-    protected $none = false;
+    protected bool $none = false;
 
     /**
      * @var bool
      */
-    protected $any = false;
+    protected bool $any = false;
 
     /**
      * @var bool
      */
-    protected $public = true;
+    protected bool $public = true;
 
     /**
      * @var array
      */
-    protected $rules = [];
+    protected array $rules = [];
+
+    /**
+     * @var array
+     */
+    public array $conditions = [];
+
 
     /**
      * Filter Document Structure
@@ -76,13 +84,27 @@ abstract class Model
     protected function addRule(string $key, array $options): self
     {
         $this->rules[$key] = array_merge([
-            'require' => true,
-            'type' => '',
+            'required' => true,
+            'array' => false,
             'description' => '',
-            'default' => null,
-            'example' => '',
-            'array' => false
+            'example' => ''
         ], $options);
+
+        return $this;
+    }
+
+    /**
+     * Delete an existing Rule
+     * If rule exists, it will be removed
+     *
+     * @param string $key
+     * @param array $options
+     */
+    protected function removeRule(string $key): self
+    {
+        if (isset($this->rules[$key])) {
+            unset($this->rules[$key]);
+        }
 
         return $this;
     }
@@ -92,7 +114,7 @@ abstract class Model
         $list = [];
 
         foreach ($this->rules as $key => $rule) {
-            if ($rule['require'] ?? false) {
+            if ($rule['required'] ?? false) {
                 $list[] = $key;
             }
         }

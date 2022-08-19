@@ -9,6 +9,8 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\ID;
+use Utopia\Database\Role;
 
 class FunctionsCustomClientTest extends Scope
 {
@@ -25,7 +27,7 @@ class FunctionsCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
             'events' => [
                 'users.*.create',
@@ -50,9 +52,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['user:' . $this->getUser()['$id']],
+            'execute' => ["user:{$this->getUser()['$id']}"],
             'runtime' => 'php-8.0',
             'events' => [
                 'users.*.create',
@@ -167,9 +169,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['role:all'],
+            'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
             'timeout' => 10,
         ]);
@@ -226,7 +228,7 @@ class FunctionsCustomClientTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         // Wait for deployment to be built.
-        sleep(5);
+        sleep(10);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
@@ -285,7 +287,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [],
             'runtime' => 'php-8.0',
@@ -379,9 +381,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['role:all'],
+            'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
             'timeout' => 10,
         ]);
@@ -473,6 +475,9 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals($this->getUser()['$id'], $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertNotEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($projectId, $output['APPWRITE_FUNCTION_PROJECT_ID']);
+        // Client should never see logs and errors
+        $this->assertEmpty($execution['body']['stdout']);
+        $this->assertEmpty($execution['body']['stderr']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [

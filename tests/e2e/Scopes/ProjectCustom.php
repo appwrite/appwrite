@@ -3,6 +3,7 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
+use Utopia\Database\ID;
 
 trait ProjectCustom
 {
@@ -26,7 +27,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Demo Project Team',
         ]);
         $this->assertEquals(201, $team['headers']['status-code']);
@@ -39,7 +40,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Demo Project',
             'teamId' => $team['body']['$id'],
             'description' => 'Demo Project Description',

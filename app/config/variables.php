@@ -394,8 +394,8 @@ return [
         'description' => '',
         'variables' => [
             [
-                'name' => '_APP_PHONE_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'phone://[USER]:[SECRET]@[PROVIDER]'. \n\nAvailable providers are twilio, text-magic and telesign.",
+                'name' => '_APP_SMS_PROVIDER',
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'. \n\nAvailable providers are twilio, text-magic and telesign.",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
@@ -403,7 +403,7 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_PHONE_FROM',
+                'name' => '_APP_SMS_FROM',
                 'description' => 'Phone number used for sending out messages. Must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789).',
                 'introduction' => '0.15.0',
                 'default' => '',
@@ -800,6 +800,15 @@ return [
                 'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_CACHE',
+                'description' => 'The maximum duration (in seconds) upto which to retain cached files. The default value is 2592000 seconds (30 days).',
+                'introduction' => '0.16.0',
+                'default' => '2592000',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

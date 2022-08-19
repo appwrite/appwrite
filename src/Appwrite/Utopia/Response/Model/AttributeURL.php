@@ -29,7 +29,6 @@ class AttributeURL extends Attribute
                 'description' => 'String format.',
                 'default' => 'url',
                 'example' => 'url',
-                'array' => false,
                 'required' => true,
             ])
             ->addRule('default', [
@@ -37,8 +36,6 @@ class AttributeURL extends Attribute
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'example' => 'http://example.com',
-                'array' => false,
-                'require' => false,
             ])
         ;
     }

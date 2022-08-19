@@ -2,21 +2,44 @@
 
 namespace Appwrite\Auth;
 
+use Appwrite\Auth\Hash\Argon2;
+use Appwrite\Auth\Hash\Bcrypt;
+use Appwrite\Auth\Hash\Md5;
+use Appwrite\Auth\Hash\Phpass;
+use Appwrite\Auth\Hash\Scrypt;
+use Appwrite\Auth\Hash\Scryptmodified;
+use Appwrite\Auth\Hash\Sha;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
 class Auth
 {
+    public const SUPPORTED_ALGOS = [
+        'argon2',
+        'bcrypt',
+        'md5',
+        'sha',
+        'phpass',
+        'scrypt',
+        'scryptMod',
+        'plaintext'
+    ];
+
+    public const DEFAULT_ALGO = 'argon2';
+    public const DEFAULT_ALGO_OPTIONS = ['memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3];
+
     /**
      * User Roles.
      */
-    public const USER_ROLE_ALL = 'all';
-    public const USER_ROLE_GUEST = 'guest';
-    public const USER_ROLE_MEMBER = 'member';
+    public const USER_ROLE_ANY = 'any';
+    public const USER_ROLE_GUESTS = 'guests';
+    public const USER_ROLE_USERS = 'users';
     public const USER_ROLE_ADMIN = 'admin';
     public const USER_ROLE_DEVELOPER = 'developer';
     public const USER_ROLE_OWNER = 'owner';
-    public const USER_ROLE_APP = 'app';
+    public const USER_ROLE_APPS = 'apps';
     public const USER_ROLE_SYSTEM = 'system';
 
     /**
@@ -133,26 +156,98 @@ class Auth
      *
      * One way string hashing for user passwords
      *
-     * @param $string
+     * @param string $string
+     * @param string $algo hashing algorithm to use
+     * @param array $options algo-specific options
      *
      * @return bool|string|null
      */
-    public static function passwordHash($string)
+    public static function passwordHash(string $string, string $algo, array $options = [])
     {
-        return \password_hash($string, PASSWORD_BCRYPT, array('cost' => 8));
+        // Plain text not supported, just an alias. Switch to recommended algo
+        if ($algo === 'plaintext') {
+            $algo = Auth::DEFAULT_ALGO;
+            $options = Auth::DEFAULT_ALGO_OPTIONS;
+        }
+
+        if (!\in_array($algo, Auth::SUPPORTED_ALGOS)) {
+            throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+        }
+
+        switch ($algo) {
+            case 'argon2':
+                $hasher = new Argon2($options);
+                return $hasher->hash($string);
+            case 'bcrypt':
+                $hasher = new Bcrypt($options);
+                return $hasher->hash($string);
+            case 'md5':
+                $hasher = new Md5($options);
+                return $hasher->hash($string);
+            case 'sha':
+                $hasher = new Sha($options);
+                return $hasher->hash($string);
+            case 'phpass':
+                $hasher = new Phpass($options);
+                return $hasher->hash($string);
+            case 'scrypt':
+                $hasher = new Scrypt($options);
+                return $hasher->hash($string);
+            case 'scryptMod':
+                $hasher = new Scryptmodified($options);
+                return $hasher->hash($string);
+            default:
+                throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+        }
     }
 
     /**
      * Password verify.
      *
-     * @param $plain
-     * @param $hash
+     * @param string $plain
+     * @param string $hash
+     * @param string $algo hashing algorithm used to hash
+     * @param array $options algo-specific options
      *
      * @return bool
      */
-    public static function passwordVerify($plain, $hash)
+    public static function passwordVerify(string $plain, string $hash, string $algo, array $options = [])
     {
-        return \password_verify($plain, $hash);
+        // Plain text not supported, just an alias. Switch to recommended algo
+        if ($algo === 'plaintext') {
+            $algo = Auth::DEFAULT_ALGO;
+            $options = Auth::DEFAULT_ALGO_OPTIONS;
+        }
+
+        if (!\in_array($algo, Auth::SUPPORTED_ALGOS)) {
+            throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+        }
+
+        switch ($algo) {
+            case 'argon2':
+                $hasher = new Argon2($options);
+                return $hasher->verify($plain, $hash);
+            case 'bcrypt':
+                $hasher = new Bcrypt($options);
+                return $hasher->verify($plain, $hash);
+            case 'md5':
+                $hasher = new Md5($options);
+                return $hasher->verify($plain, $hash);
+            case 'sha':
+                $hasher = new Sha($options);
+                return $hasher->verify($plain, $hash);
+            case 'phpass':
+                $hasher = new Phpass($options);
+                return $hasher->verify($plain, $hash);
+            case 'scrypt':
+                $hasher = new Scrypt($options);
+                return $hasher->verify($plain, $hash);
+            case 'scryptMod':
+                $hasher = new Scryptmodified($options);
+                return $hasher->verify($plain, $hash);
+            default:
+                throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+        }
     }
 
     /**
@@ -163,8 +258,6 @@ class Auth
      * @param int $length
      *
      * @return string
-     *
-     * @throws \Exception
      */
     public static function passwordGenerator(int $length = 20): string
     {
@@ -179,12 +272,30 @@ class Auth
      * @param int $length
      *
      * @return string
-     *
-     * @throws \Exception
      */
     public static function tokenGenerator(int $length = 128): string
     {
         return \bin2hex(\random_bytes($length));
+    }
+
+    /**
+     * Code Generator.
+     *
+     * Generate random code string
+     *
+     * @param int $length
+     *
+     * @return string
+     */
+    public static function codeGenerator(int $length = 6): string
+    {
+        $value = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $value .= random_int(0, 9);
+        }
+
+        return $value;
     }
 
     /**
@@ -206,7 +317,7 @@ class Auth
                 $token->isSet('expire') &&
                 $token->getAttribute('type') == $type &&
                 $token->getAttribute('secret') === self::hash($secret) &&
-                $token->getAttribute('expire') >= \time()
+                DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
                 return (string)$token->getId();
             }
@@ -225,7 +336,7 @@ class Auth
                 $token->isSet('expire') &&
                 $token->getAttribute('type') == Auth::TOKEN_TYPE_PHONE &&
                 $token->getAttribute('secret') === $secret &&
-                $token->getAttribute('expire') >= \time()
+                DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
                 return (string) $token->getId();
             }
@@ -251,9 +362,9 @@ class Auth
                 $session->isSet('expire') &&
                 $session->isSet('provider') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
-                $session->getAttribute('expire') >= \time()
+                DateTime::formatTz($session->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
-                return (string)$session->getId();
+                return $session->getId();
             }
         }
 
@@ -270,9 +381,9 @@ class Auth
     public static function isPrivilegedUser(array $roles): bool
     {
         if (
-            in_array('role:' . self::USER_ROLE_OWNER, $roles) ||
-            in_array('role:' . self::USER_ROLE_DEVELOPER, $roles) ||
-            in_array('role:' . self::USER_ROLE_ADMIN, $roles)
+            in_array(self::USER_ROLE_OWNER, $roles) ||
+            in_array(self::USER_ROLE_DEVELOPER, $roles) ||
+            in_array(self::USER_ROLE_ADMIN, $roles)
         ) {
             return true;
         }
@@ -289,7 +400,7 @@ class Auth
      */
     public static function isAppUser(array $roles): bool
     {
-        if (in_array('role:' . self::USER_ROLE_APP, $roles)) {
+        if (in_array(self::USER_ROLE_APPS, $roles)) {
             return true;
         }
 
@@ -308,19 +419,19 @@ class Auth
 
         if (!self::isPrivilegedUser(Authorization::getRoles()) && !self::isAppUser(Authorization::getRoles())) {
             if ($user->getId()) {
-                $roles[] = 'user:' . $user->getId();
-                $roles[] = 'role:' . Auth::USER_ROLE_MEMBER;
+                $roles[] = Role::user($user->getId())->toString();
+                $roles[] = Role::users()->toString();
             } else {
-                return ['role:' . Auth::USER_ROLE_GUEST];
+                return [Role::guests()->toString()];
             }
         }
 
         foreach ($user->getAttribute('memberships', []) as $node) {
             if (isset($node['teamId']) && isset($node['roles'])) {
-                $roles[] = 'team:' . $node['teamId'];
+                $roles[] = Role::team($node['teamId'])->toString();
 
                 foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                    $roles[] = 'team:' . $node['teamId'] . '/' . $nodeRole;
+                    $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
                 }
             }
         }

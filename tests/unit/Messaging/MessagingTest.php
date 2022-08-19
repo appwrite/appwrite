@@ -1,10 +1,13 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Messaging;
 
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class MessagingTest extends TestCase
 {
@@ -16,20 +19,28 @@ class MessagingTest extends TestCase
     {
     }
 
-    public function testUser()
+    public function testUser(): void
     {
         $realtime = new Realtime();
 
         $realtime->subscribe(
             '1',
             1,
-            ['user:123', 'role:member', 'team:abc', 'team:abc/administrator', 'team:abc/moderator', 'team:def', 'team:def/guest'],
+            [
+                Role::user(ID::custom('123'))->toString(),
+                Role::users()->toString(),
+                Role::team(ID::custom('abc'))->toString(),
+                Role::team(ID::custom('abc'), 'administrator')->toString(),
+                Role::team(ID::custom('abc'), 'moderator')->toString(),
+                Role::team(ID::custom('def'))->toString(),
+                Role::team(ID::custom('def'), 'guest')->toString(),
+            ],
             ['files' => 0, 'documents' => 0, 'documents.789' => 0, 'account.123' => 0]
         );
 
         $event = [
             'project' => '1',
-            'roles' => ['role:all'],
+            'roles' => [Role::any()->toString()],
             'data' => [
                 'channels' => [
                     0 => 'account.123',
@@ -42,68 +53,68 @@ class MessagingTest extends TestCase
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['role:member'];
+        $event['roles'] = [Role::users()->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['user:123'];
+        $event['roles'] = [Role::user(ID::custom('123'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['team:abc'];
+        $event['roles'] = [Role::team(ID::custom('abc'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['team:abc/administrator'];
+        $event['roles'] = [Role::team(ID::custom('abc'), 'administrator')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['team:abc/moderator'];
+        $event['roles'] = [Role::team(ID::custom('abc'), 'moderator')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['team:def'];
+        $event['roles'] = [Role::team(ID::custom('def'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['team:def/guest'];
+        $event['roles'] = [Role::team(ID::custom('def'), 'guest')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['user:456'];
+        $event['roles'] = [Role::user(ID::custom('456'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['team:def/member'];
+        $event['roles'] = [Role::team(ID::custom('def'), 'member')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['role:all'];
+        $event['roles'] = [Role::any()->toString()];
         $event['data']['channels'] = ['documents.123'];
 
         $receivers = $realtime->getSubscribers($event);
@@ -134,7 +145,7 @@ class MessagingTest extends TestCase
         $this->assertEmpty($realtime->subscriptions);
     }
 
-    public function testConvertChannelsGuest()
+    public function testConvertChannelsGuest(): void
     {
         $user = new Document([
             '$id' => ''
@@ -157,20 +168,20 @@ class MessagingTest extends TestCase
         $this->assertArrayNotHasKey('account.456', $channels);
     }
 
-    public function testConvertChannelsUser()
+    public function testConvertChannelsUser(): void
     {
         $user  = new Document([
-            '$id' => '123',
+            '$id' => ID::custom('123'),
             'memberships' => [
                 [
-                    'teamId' => 'abc',
+                    'teamId' => ID::custom('abc'),
                     'roles' => [
                         'administrator',
                         'moderator'
                     ]
                 ],
                 [
-                    'teamId' => 'def',
+                    'teamId' => ID::custom('def'),
                     'roles' => [
                         'guest'
                     ]
@@ -196,7 +207,7 @@ class MessagingTest extends TestCase
         $this->assertArrayNotHasKey('account.456', $channels);
     }
 
-    public function testFromPayloadCollectionLevelPermissions(): void
+    public function testFromPayloadPermissions(): void
     {
         /**
          * Test Collection Level Permissions
@@ -204,24 +215,29 @@ class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'databases.database_id.collections.collection_id.documents.document_id.create',
             payload: new Document([
-                '$id' => 'test',
-                '$collection' => 'collection',
-                '$read' => ['role:admin'],
-                '$write' => ['role:admin']
-            ]),
-            collection: new Document([
-                '$id' => 'collection',
-                '$read' => ['role:all'],
-                '$write' => ['role:all'],
-                'permission' => 'collection'
+                '$id' => ID::custom('test'),
+                '$collection' => ID::custom('collection'),
+                '$permissions' => [
+                    Permission::read(Role::team('123abc')),
+                    Permission::update(Role::team('123abc')),
+                    Permission::delete(Role::team('123abc')),
+                ],
             ]),
             database: new Document([
-                '$id' => 'database',
+                '$id' => ID::custom('database'),
+            ]),
+            collection: new Document([
+                '$id' => ID::custom('collection'),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
             ])
         );
 
-        $this->assertContains('role:all', $result['roles']);
-        $this->assertNotContains('role:admin', $result['roles']);
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+        $this->assertNotContains(Role::team('123abc')->toString(), $result['roles']);
 
         /**
          * Test Document Level Permissions
@@ -229,70 +245,87 @@ class MessagingTest extends TestCase
         $result = Realtime::fromPayload(
             event: 'databases.database_id.collections.collection_id.documents.document_id.create',
             payload: new Document([
-                '$id' => 'test',
-                '$collection' => 'collection',
-                '$read' => ['role:all'],
-                '$write' => ['role:all']
-            ]),
-            collection: new Document([
-                '$id' => 'collection',
-                '$read' => ['role:admin'],
-                '$write' => ['role:admin'],
-                'permission' => 'document'
+                '$id' => ID::custom('test'),
+                '$collection' => ID::custom('collection'),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
             ]),
             database: new Document([
-                '$id' => 'database',
+                '$id' => ID::custom('database'),
+            ]),
+            collection: new Document([
+                '$id' => ID::custom('collection'),
+                '$permissions' => [
+                    Permission::read(Role::team('123abc')),
+                    Permission::update(Role::team('123abc')),
+                    Permission::delete(Role::team('123abc')),
+                ],
+                'documentSecurity' => true,
             ])
         );
 
-        $this->assertContains('role:all', $result['roles']);
-        $this->assertNotContains('role:admin', $result['roles']);
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+        $this->assertContains(Role::team('123abc')->toString(), $result['roles']);
     }
 
     public function testFromPayloadBucketLevelPermissions(): void
     {
         /**
-         * Test Collection Level Permissions
+         * Test Bucket Level Permissions
          */
         $result = Realtime::fromPayload(
             event: 'buckets.bucket_id.files.file_id.create',
             payload: new Document([
-                '$id' => 'test',
-                '$collection' => 'bucket',
-                '$read' => ['role:admin'],
-                '$write' => ['role:admin']
+                '$id' => ID::custom('test'),
+                '$collection' => ID::custom('bucket'),
+                '$permissions' => [
+                    Permission::read(Role::team('123abc')),
+                    Permission::update(Role::team('123abc')),
+                    Permission::delete(Role::team('123abc')),
+                ],
             ]),
             bucket: new Document([
-                '$id' => 'bucket',
-                '$read' => ['role:all'],
-                '$write' => ['role:all'],
-                'permission' => 'bucket'
+                '$id' => ID::custom('bucket'),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
             ])
         );
 
-        $this->assertContains('role:all', $result['roles']);
-        $this->assertNotContains('role:admin', $result['roles']);
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+        $this->assertNotContains(Role::team('123abc')->toString(), $result['roles']);
 
         /**
-         * Test Document Level Permissions
+         * Test File Level Permissions
          */
         $result = Realtime::fromPayload(
             event: 'buckets.bucket_id.files.file_id.create',
             payload: new Document([
-                '$id' => 'test',
-                '$collection' => 'bucket',
-                '$read' => ['role:all'],
-                '$write' => ['role:all']
+                '$id' => ID::custom('test'),
+                '$collection' => ID::custom('bucket'),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
             ]),
             bucket: new Document([
-                '$id' => 'bucket',
-                '$read' => ['role:admin'],
-                '$write' => ['role:admin'],
-                'permission' => 'file'
+                '$id' => ID::custom('bucket'),
+                '$permissions' => [
+                    Permission::read(Role::team('123abc')),
+                    Permission::update(Role::team('123abc')),
+                    Permission::delete(Role::team('123abc')),
+                ],
+                'fileSecurity' => true
             ])
         );
 
-        $this->assertContains('role:all', $result['roles']);
-        $this->assertNotContains('role:admin', $result['roles']);
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+        $this->assertContains(Role::team('123abc')->toString(), $result['roles']);
     }
 }

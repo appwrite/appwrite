@@ -7,8 +7,8 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 
 require_once __DIR__ . '/../init.php';
@@ -73,7 +73,7 @@ class CertificatesV1 extends Worker
         $domain = new Domain($document->getAttribute('domain', ''));
 
         // Get current certificate
-        $certificate = $this->dbForConsole->findOne('certificates', [new Query('domain', Query::TYPE_EQUAL, [$domain->get()])]);
+        $certificate = $this->dbForConsole->findOne('certificates', [Query::equal('domain', [$domain->get()])]);
 
         // If we don't have certificate for domain yet, let's create new document. At the end we save it
         if (!$certificate) {
@@ -116,7 +116,7 @@ class CertificatesV1 extends Worker
             // Update certificate info stored in database
             $certificate->setAttribute('renewDate', $this->getRenewDate($domain->get()));
             $certificate->setAttribute('attempts', 0);
-            $certificate->setAttribute('issueDate', \time());
+            $certificate->setAttribute('issueDate', DateTime::now());
         } catch (Throwable $e) {
             // Set exception as log in certificate document
             $certificate->setAttribute('log', $e->getMessage());
@@ -129,7 +129,7 @@ class CertificatesV1 extends Worker
             $this->notifyError($domain->get(), $e->getMessage(), $attempts);
         } finally {
             // All actions result in new updatedAt date
-            $certificate->setAttribute('updated', \time());
+            $certificate->setAttribute('updated', DateTime::now());
 
             // Save all changes we made to certificate document into database
             $this->saveCertificateDocument($domain->get(), $certificate);
@@ -151,7 +151,7 @@ class CertificatesV1 extends Worker
     private function saveCertificateDocument(string $domain, Document $certificate): void
     {
         // Check if update or insert required
-        $certificateDocument = $this->dbForConsole->findOne('certificates', [new Query('domain', Query::TYPE_EQUAL, [$domain])]);
+        $certificateDocument = $this->dbForConsole->findOne('certificates', [Query::equal('domain', [$domain])]);
         if (!empty($certificateDocument) && !$certificateDocument->isEmpty()) {
             // Merge new data with current data
             $certificate = new Document(\array_merge($certificateDocument->getArrayCopy(), $certificate->getArrayCopy()));
@@ -176,7 +176,7 @@ class CertificatesV1 extends Worker
         if (!empty($envDomain) && $envDomain !== 'localhost') {
             return $envDomain;
         } else {
-            $domainDocument = $this->dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
+            $domainDocument = $this->dbForConsole->findOne('domains', [Query::orderAsc('_id')]);
             if ($domainDocument) {
                 return $domainDocument->getAttribute('domain');
             }
@@ -296,10 +296,9 @@ class CertificatesV1 extends Worker
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         $certData = openssl_x509_parse(file_get_contents($certPath));
-        $validTo = $certData['validTo_time_t'] ?? 0;
-        $expiryInAdvance = (60 * 60 * 24 * 30); // 30 days
-
-        return $validTo - $expiryInAdvance;
+        $validTo = $certData['validTo_time_t'] ?? null;
+        $dt = (new \DateTime())->setTimestamp($validTo);
+        return DateTime::addSeconds($dt, -60 * 60 * 24 * 30); // -30 days
     }
 
     /**
@@ -395,11 +394,12 @@ class CertificatesV1 extends Worker
     private function updateDomainDocuments(string $certificateId, string $domain): void
     {
         $domains = $this->dbForConsole->find('domains', [
-            new Query('domain', Query::TYPE_EQUAL, [$domain])
-        ], 1000);
+            Query::equal('domain', [$domain]),
+            Query::limit(1000),
+        ]);
 
         foreach ($domains as $domainDocument) {
-            $domainDocument->setAttribute('updated', \time());
+            $domainDocument->setAttribute('updated', DateTime::now());
             $domainDocument->setAttribute('certificateId', $certificateId);
 
             $this->dbForConsole->updateDocument('domains', $domainDocument->getId(), $domainDocument);

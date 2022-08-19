@@ -23,12 +23,12 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Phone\Mock;
-use Appwrite\Auth\Phone\Telesign;
-use Appwrite\Auth\Phone\TextMagic;
-use Appwrite\Auth\Phone\Twilio;
-use Appwrite\Auth\Phone\Msg91;
-use Appwrite\Auth\Phone\Vonage;
+use Appwrite\SMS\Adapter\Mock;
+use Appwrite\SMS\Adapter\Telesign;
+use Appwrite\SMS\Adapter\TextMagic;
+use Appwrite\SMS\Adapter\Twilio;
+use Appwrite\SMS\Adapter\Msg91;
+use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
@@ -43,6 +43,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
+use Utopia\Database\ID;
 use Utopia\Logger\Logger;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
@@ -63,6 +64,7 @@ use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Backblaze;
@@ -93,6 +95,7 @@ const APP_VERSION_STABLE = '0.15.3';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
+const APP_DATABASE_ATTRIBUTE_DATETIME = 'datetime';
 const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
@@ -143,6 +146,8 @@ const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_SESSIONS = 'sessions';
+const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
+const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -267,9 +272,10 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('attributes', [
-                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
-                new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
-            ], $database->getAttributeLimit(), 0, []);
+                Query::equal('collectionInternalId', [$document->getInternalId()]),
+                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+                Query::limit($database->getAttributeLimit()),
+            ]);
     }
 );
 
@@ -281,9 +287,10 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('indexes', [
-                new Query('collectionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
-                new Query('databaseInternalId', Query::TYPE_EQUAL, [$document->getAttribute('databaseInternalId')])
-            ], 64);
+                Query::equal('collectionInternalId', [$document->getInternalId()]),
+                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+                Query::limit(64),
+            ]);
     }
 );
 
@@ -295,8 +302,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('platforms', [
-                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY);
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -308,8 +316,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('domains', [
-                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY);
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -321,8 +330,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('keys', [
-                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY);
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -334,8 +344,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('webhooks', [
-                new Query('projectInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY);
+                Query::equal('projectInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 
@@ -346,8 +357,9 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database->find('sessions', [
-            new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-        ], APP_LIMIT_SUBQUERY));
+            Query::equal('userInternalId', [$document->getInternalId()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
     }
 );
 
@@ -359,8 +371,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn() => $database
             ->find('tokens', [
-                new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY));
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
     }
 );
 
@@ -372,8 +385,9 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn() => $database
             ->find('memberships', [
-                new Query('userInternalId', Query::TYPE_EQUAL, [$document->getInternalId()])
-            ], APP_LIMIT_SUBQUERY));
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
     }
 );
 
@@ -423,6 +437,10 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_EMAIL, function () {
     return new Email();
 }, Database::VAR_STRING);
 
+Structure::addFormat(APP_DATABASE_ATTRIBUTE_DATETIME, function () {
+    return new DatetimeValidator();
+}, Database::VAR_DATETIME);
+
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function ($attribute) {
     $elements = $attribute['formatOptions']['elements'];
     return new WhiteList($elements, true);
@@ -461,7 +479,7 @@ $register->set('logger', function () {
     }
 
     if (!Logger::hasProvider($providerName)) {
-        throw new Exception("Logging provider not supported. Logging disabled.", 500, Exception::GENERAL_SERVER_ERROR);
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
     }
 
     $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
@@ -724,7 +742,7 @@ App::setResource('usage', function ($register) {
 
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
-        '$collection' => 'platforms',
+        '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
         'type' => 'web',
         'hostname' => $request->getHostname(),
@@ -800,7 +818,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     if (APP_MODE_ADMIN !== $mode) {
         if ($project->isEmpty()) {
-            $user = new Document(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
         } else {
             $user = $dbForProject->getDocument('users', Auth::$unique);
         }
@@ -812,14 +830,14 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
     ) { // Validate user has valid login token
-        $user = new Document(['$id' => '', '$collection' => 'users']);
+        $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
     }
 
     if (APP_MODE_ADMIN === $mode) {
         if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
-            $user = new Document(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
         }
     }
 
@@ -831,7 +849,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         try {
             $payload = $jwt->decode($authJWT);
         } catch (JWTException $error) {
-            throw new Exception('Failed to verify JWT. ' . $error->getMessage(), 401, Exception::USER_JWT_INVALID);
+            throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
         }
 
         $jwtUserId = $payload['userId'] ?? '';
@@ -842,7 +860,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document(['$id' => '', '$collection' => 'users']);
+            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
         }
     }
 
@@ -867,10 +885,10 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 
 App::setResource('console', function () {
     return new Document([
-        '$id' => 'console',
-        '$internalId' => 'console',
+        '$id' => ID::custom('console'),
+        '$internalId' => ID::custom('console'),
         'name' => 'Appwrite',
-        '$collection' => 'projects',
+        '$collection' => ID::custom('projects'),
         'description' => 'Appwrite core engine',
         'logo' => '',
         'teamId' => -1,
@@ -878,7 +896,7 @@ App::setResource('console', function () {
         'keys' => [],
         'platforms' => [
             [
-                '$collection' => 'platforms',
+                '$collection' => ID::custom('platforms'),
                 'name' => 'Localhost',
                 'type' => 'web',
                 'hostname' => 'localhost',
@@ -995,8 +1013,8 @@ App::setResource('geodb', function ($register) {
     return $register->get('geodb');
 }, ['register']);
 
-App::setResource('phone', function () {
-    $dsn = new DSN(App::getEnv('_APP_PHONE_PROVIDER'));
+App::setResource('sms', function () {
+    $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
     $user = $dsn->getUser();
     $secret = $dsn->getPassword();
 

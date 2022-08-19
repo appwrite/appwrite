@@ -10,6 +10,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\DateTime;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class StorageCustomClientTest extends Scope
 {
@@ -27,11 +31,14 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
-            'permission' => 'bucket',
-            'read' => ['role:all'],
-            'write' => ['role:member'],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
+            ],
         ]);
 
         $bucketId = $bucket['body']['$id'];
@@ -42,14 +49,14 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
         $fileId = $file['body']['$id'];
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($fileId);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -89,7 +96,7 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -117,11 +124,15 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
-            'permission' => 'file',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
+            'fileSecurity' => true,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
@@ -130,15 +141,16 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertContains('user:' . $this->getUser()['$id'], $file['body']['$read']);
-        $this->assertContains('user:' . $this->getUser()['$id'], $file['body']['$write']);
-        $this->assertIsInt($file['body']['$createdAt']);
+        $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $file['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $file['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $file['body']['$permissions']);
+        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
         $this->assertEquals('permissions.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -158,49 +170,57 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
-            'folderId' => 'xyz',
-            'read' => ['user:notme']
+            'folderId' => ID::custom('xyz'),
+            'permissions' => [
+                Permission::read(Role::user(ID::custom('notme'))),
+            ],
         ]);
 
-        $this->assertEquals(400, $file['headers']['status-code']);
-        $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertEquals(401, $file['headers']['status-code']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
-            'folderId' => 'xyz',
-            'write' => ['user:notme']
+            'folderId' => ID::custom('xyz'),
+            'permissions' => [
+                Permission::update(Role::user(ID::custom('notme'))),
+                Permission::delete(Role::user(ID::custom('notme'))),
+            ]
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 400);
-        $this->assertStringStartsWith('Write permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertEquals(401, $file['headers']['status-code']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => 'unique()',
+            'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
-            'folderId' => 'xyz',
-            'read' => ['user:notme'],
-            'write' => ['user:notme']
+            'folderId' => ID::custom('xyz'),
+            'permissions' => [
+                Permission::read(Role::user(ID::custom('notme'))),
+                Permission::update(Role::user(ID::custom('notme'))),
+                Permission::delete(Role::user(ID::custom('notme'))),
+            ],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 400);
-        $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertEquals(401, $file['headers']['status-code']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
     }
 
@@ -216,40 +236,49 @@ class StorageCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['user:notme']
+            'permissions' => [
+                Permission::read(Role::user(ID::custom('notme'))),
+            ],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 400);
-        $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertEquals(401, $file['headers']['status-code']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
 
         $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'write' => ['user:notme']
+            'permissions' => [
+                Permission::update(Role::user(ID::custom('notme'))),
+                Permission::delete(Role::user(ID::custom('notme'))),
+            ]
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 400);
-        $this->assertStringStartsWith('Write permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertEquals(401, $file['headers']['status-code']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
 
         $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'read' => ['user:notme'],
-            'write' => ['user:notme']
+            'permissions' => [
+                Permission::read(Role::user(ID::custom('notme'))),
+                 Permission::create(Role::user(ID::custom('notme'))),
+                    Permission::update(Role::user(ID::custom('notme'))),
+                    Permission::delete(Role::user(ID::custom('notme'))),
+            ],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 400);
-        $this->assertStringStartsWith('Read permissions must be one of:', $file['body']['message']);
-        $this->assertStringContainsString('role:all', $file['body']['message']);
-        $this->assertStringContainsString('role:member', $file['body']['message']);
+        $this->assertEquals(401, $file['headers']['status-code']);
+        $this->assertStringStartsWith('Permissions must be one of:', $file['body']['message']);
+        $this->assertStringContainsString('any', $file['body']['message']);
+        $this->assertStringContainsString('users', $file['body']['message']);
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
     }
 }

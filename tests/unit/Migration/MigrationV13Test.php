@@ -1,11 +1,11 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Migration;
 
-use Appwrite\Event\Validator\Event;
 use ReflectionClass;
 use Appwrite\Migration\Version\V13;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
 
 class MigrationV13Test extends MigrationTest
 {
@@ -17,22 +17,22 @@ class MigrationV13Test extends MigrationTest
         $this->method->setAccessible(true);
     }
 
-    public function testMigrateFunctions()
+    public function testMigrateFunctions(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'func',
-            '$collection' => 'functions',
+            '$id' => ID::custom('func'),
+            '$collection' => ID::custom('functions'),
             'events' => ['account.create', 'users.create']
         ]));
 
         $this->assertEquals($document->getAttribute('events'), ['users.*.create']);
     }
 
-    public function testMigrationWebhooks()
+    public function testMigrationWebhooks(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'webh',
-            '$collection' => 'webhooks',
+            '$id' => ID::custom('webh'),
+            '$collection' => ID::custom('webhooks'),
             'events' => ['account.create', 'users.create']
         ]));
 

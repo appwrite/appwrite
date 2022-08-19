@@ -3,6 +3,8 @@
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
+use Utopia\Database\ID;
+use Utopia\Database\DateTime;
 
 trait AccountBase
 {
@@ -20,7 +22,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -31,7 +33,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 
@@ -43,7 +45,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -56,7 +58,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => '',
             'password' => '',
         ]);
@@ -68,7 +70,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => '',
         ]);
@@ -80,7 +82,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => '',
             'password' => $password,
         ]);
@@ -195,7 +197,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 
@@ -340,7 +342,7 @@ trait AccountBase
         $this->assertIsNumeric($response['body']['total']);
         $this->assertContains($response['body']['logs'][1]['event'], ["users.{$userId}.create", "users.{$userId}.sessions.{$sessionId}.create"]);
         $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
-        $this->assertIsNumeric($response['body']['logs'][1]['time']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['logs'][1]['time']));
 
         $this->assertEquals('Windows', $response['body']['logs'][1]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][1]['osCode']);
@@ -362,7 +364,7 @@ trait AccountBase
 
         $this->assertContains($response['body']['logs'][2]['event'], ["users.{$userId}.create", "users.{$userId}.sessions.{$sessionId}.create"]);
         $this->assertEquals($response['body']['logs'][2]['ip'], filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP));
-        $this->assertIsNumeric($response['body']['logs'][2]['time']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['logs'][2]['time']));
 
         $this->assertEquals('Windows', $response['body']['logs'][2]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][2]['osCode']);
@@ -474,7 +476,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $newName);
 
@@ -540,7 +542,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -630,7 +632,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $newEmail);
 
         /**
@@ -663,7 +665,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' =>  $data['email'],
             'password' =>  $data['password'],
             'name' =>  $data['name'],
@@ -672,7 +674,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $data['email']);
         $this->assertEquals($response['body']['name'], $data['name']);
 
@@ -814,7 +816,7 @@ trait AccountBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $this->assertIsNumeric($response['body']['expire']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['expire']));
 
         $lastEmail = $this->getLastEmail();
 
@@ -823,9 +825,7 @@ trait AccountBase
         $this->assertEquals('Account Verification', $lastEmail['subject']);
 
         $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-
-        $expireTime = strpos($lastEmail['text'], 'expire=' . $response['body']['expire'], 0);
-
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
         $this->assertNotFalse($expireTime);
 
         $secretTest = strpos($lastEmail['text'], 'secret=' . $response['body']['secret'], 0);
@@ -899,7 +899,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'userId' => 'ewewe',
+            'userId' => ID::custom('ewewe'),
             'secret' => $verification,
         ]);
 
@@ -1118,7 +1118,7 @@ trait AccountBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $this->assertIsNumeric($response['body']['expire']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['expire']));
 
         $lastEmail = $this->getLastEmail();
 
@@ -1128,7 +1128,7 @@ trait AccountBase
 
         $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . $response['body']['expire'], 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
 
         $this->assertNotFalse($expireTime);
 
@@ -1214,7 +1214,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'ewewe',
+            'userId' => ID::custom('ewewe'),
             'secret' => $recovery,
             'password' => $newPassowrd,
             'passwordAgain' => $newPassowrd,
@@ -1263,7 +1263,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             // 'url' => 'http://localhost/magiclogin',
         ]);
@@ -1271,7 +1271,7 @@ trait AccountBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $this->assertIsNumeric($response['body']['expire']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
 
@@ -1281,7 +1281,7 @@ trait AccountBase
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . $response['body']['expire'], 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
 
         $this->assertNotFalse($expireTime);
 
@@ -1301,7 +1301,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'url' => 'localhost/magiclogin',
         ]);
@@ -1313,7 +1313,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'url' => 'http://remotehost/magiclogin',
         ]);
@@ -1377,7 +1377,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertTrue($response['body']['emailVerification']);
 
@@ -1389,7 +1389,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'ewewe',
+            'userId' => ID::custom('ewewe'),
             'secret' => $token,
         ]);
 
@@ -1437,7 +1437,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsNumeric($response['body']['registration']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([

@@ -220,29 +220,26 @@ if(typeof cursor!=='undefined'){payload['cursor']=cursor;}
 if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirection;}
 if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-createCollection(databaseId,collectionId,name,permission,read,write){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+createCollection(databaseId,collectionId,name,permissions,documentSecurity){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof permission==='undefined'){throw new AppwriteException('Missing required parameter: "permission"');}
-if(typeof read==='undefined'){throw new AppwriteException('Missing required parameter: "read"');}
-if(typeof write==='undefined'){throw new AppwriteException('Missing required parameter: "write"');}
+if(typeof permissions==='undefined'){throw new AppwriteException('Missing required parameter: "permissions"');}
+if(typeof documentSecurity==='undefined'){throw new AppwriteException('Missing required parameter: "documentSecurity"');}
 let path='/databases/{databaseId}/collections'.replace('{databaseId}',databaseId);let payload={};if(typeof collectionId!=='undefined'){payload['collectionId']=collectionId;}
 if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof permission!=='undefined'){payload['permission']=permission;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
+if(typeof documentSecurity!=='undefined'){payload['documentSecurity']=documentSecurity;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getCollection(databaseId,collectionId){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 let path='/databases/{databaseId}/collections/{collectionId}'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-updateCollection(databaseId,collectionId,name,permission,read,write,enabled){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+updateCollection(databaseId,collectionId,name,documentSecurity,permissions,enabled){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof permission==='undefined'){throw new AppwriteException('Missing required parameter: "permission"');}
+if(typeof documentSecurity==='undefined'){throw new AppwriteException('Missing required parameter: "documentSecurity"');}
 let path='/databases/{databaseId}/collections/{collectionId}'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof permission!=='undefined'){payload['permission']=permission;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
+if(typeof documentSecurity!=='undefined'){payload['documentSecurity']=documentSecurity;}
 if(typeof enabled!=='undefined'){payload['enabled']=enabled;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('put',uri,{'content-type':'application/json',},payload);});}
 deleteCollection(databaseId,collectionId){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
@@ -256,6 +253,15 @@ if(typeof collectionId==='undefined'){throw new AppwriteException('Missing requi
 if(typeof key==='undefined'){throw new AppwriteException('Missing required parameter: "key"');}
 if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
 let path='/databases/{databaseId}/collections/{collectionId}/attributes/boolean'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};if(typeof key!=='undefined'){payload['key']=key;}
+if(typeof required!=='undefined'){payload['required']=required;}
+if(typeof xdefault!=='undefined'){payload['default']=xdefault;}
+if(typeof array!=='undefined'){payload['array']=array;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createDatetimeAttribute(databaseId,collectionId,key,required,xdefault,array){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof key==='undefined'){throw new AppwriteException('Missing required parameter: "key"');}
+if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
+let path='/databases/{databaseId}/collections/{collectionId}/attributes/datetime'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};if(typeof key!=='undefined'){payload['key']=key;}
 if(typeof required!=='undefined'){payload['required']=required;}
 if(typeof xdefault!=='undefined'){payload['default']=xdefault;}
 if(typeof array!=='undefined'){payload['array']=array;}
@@ -349,25 +355,23 @@ if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirect
 if(typeof orderAttributes!=='undefined'){payload['orderAttributes']=orderAttributes;}
 if(typeof orderTypes!=='undefined'){payload['orderTypes']=orderTypes;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-createDocument(databaseId,collectionId,documentId,data,read,write){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+createDocument(databaseId,collectionId,documentId,data,permissions){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof documentId==='undefined'){throw new AppwriteException('Missing required parameter: "documentId"');}
 if(typeof data==='undefined'){throw new AppwriteException('Missing required parameter: "data"');}
 let path='/databases/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};if(typeof documentId!=='undefined'){payload['documentId']=documentId;}
 if(typeof data!=='undefined'){payload['data']=data;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getDocument(databaseId,collectionId,documentId){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof documentId==='undefined'){throw new AppwriteException('Missing required parameter: "documentId"');}
 let path='/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId).replace('{documentId}',documentId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-updateDocument(databaseId,collectionId,documentId,data,read,write){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+updateDocument(databaseId,collectionId,documentId,data,permissions){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof documentId==='undefined'){throw new AppwriteException('Missing required parameter: "documentId"');}
 let path='/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId).replace('{documentId}',documentId);let payload={};if(typeof data!=='undefined'){payload['data']=data;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}
 deleteDocument(databaseId,collectionId,documentId){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
@@ -713,14 +717,13 @@ if(typeof cursor!=='undefined'){payload['cursor']=cursor;}
 if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirection;}
 if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-createBucket(bucketId,name,permission,read,write,enabled,maximumFileSize,allowedFileExtensions,encryption,antivirus){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+createBucket(bucketId,name,fileSecurity,permissions,enabled,maximumFileSize,allowedFileExtensions,encryption,antivirus){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof permission==='undefined'){throw new AppwriteException('Missing required parameter: "permission"');}
+if(typeof fileSecurity==='undefined'){throw new AppwriteException('Missing required parameter: "fileSecurity"');}
 let path='/storage/buckets';let payload={};if(typeof bucketId!=='undefined'){payload['bucketId']=bucketId;}
 if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof permission!=='undefined'){payload['permission']=permission;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
+if(typeof fileSecurity!=='undefined'){payload['fileSecurity']=fileSecurity;}
 if(typeof enabled!=='undefined'){payload['enabled']=enabled;}
 if(typeof maximumFileSize!=='undefined'){payload['maximumFileSize']=maximumFileSize;}
 if(typeof allowedFileExtensions!=='undefined'){payload['allowedFileExtensions']=allowedFileExtensions;}
@@ -729,13 +732,12 @@ if(typeof antivirus!=='undefined'){payload['antivirus']=antivirus;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getBucket(bucketId){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 let path='/storage/buckets/{bucketId}'.replace('{bucketId}',bucketId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-updateBucket(bucketId,name,permission,read,write,enabled,maximumFileSize,allowedFileExtensions,encryption,antivirus){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+updateBucket(bucketId,name,fileSecurity,permissions,enabled,maximumFileSize,allowedFileExtensions,encryption,antivirus){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof permission==='undefined'){throw new AppwriteException('Missing required parameter: "permission"');}
+if(typeof fileSecurity==='undefined'){throw new AppwriteException('Missing required parameter: "fileSecurity"');}
 let path='/storage/buckets/{bucketId}'.replace('{bucketId}',bucketId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof permission!=='undefined'){payload['permission']=permission;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
+if(typeof fileSecurity!=='undefined'){payload['fileSecurity']=fileSecurity;}
 if(typeof enabled!=='undefined'){payload['enabled']=enabled;}
 if(typeof maximumFileSize!=='undefined'){payload['maximumFileSize']=maximumFileSize;}
 if(typeof allowedFileExtensions!=='undefined'){payload['allowedFileExtensions']=allowedFileExtensions;}
@@ -752,13 +754,12 @@ if(typeof cursor!=='undefined'){payload['cursor']=cursor;}
 if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirection;}
 if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-createFile(bucketId,fileId,file,read,write,onProgress=(progress)=>{}){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+createFile(bucketId,fileId,file,permissions,onProgress=(progress)=>{}){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
 if(typeof file==='undefined'){throw new AppwriteException('Missing required parameter: "file"');}
 let path='/storage/buckets/{bucketId}/files'.replace('{bucketId}',bucketId);let payload={};if(typeof fileId!=='undefined'){payload['fileId']=fileId;}
 if(typeof file!=='undefined'){payload['file']=file;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
 const uri=new URL(this.client.config.endpoint+path);if(!(file instanceof File)){throw new AppwriteException('Parameter "file" has to be a File.');}
 const size=file.size;if(size<=Service.CHUNK_SIZE){return yield this.client.call('post',uri,{'content-type':'multipart/form-data',},payload);}
 let id=undefined;let response=undefined;const headers={'content-type':'multipart/form-data',};let counter=0;const totalCounters=Math.ceil(size/Service.CHUNK_SIZE);if(fileId!='unique()'){try{response=yield this.client.call('GET',new URL(this.client.config.endpoint+path+'/'+fileId),headers);counter=response.chunksUploaded;}
@@ -770,10 +771,9 @@ return response;});}
 getFile(bucketId,fileId){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
 let path='/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-updateFile(bucketId,fileId,read,write){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+updateFile(bucketId,fileId,permissions){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
-let path='/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+let path='/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('put',uri,{'content-type':'application/json',},payload);});}
 deleteFile(bucketId,fileId){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
@@ -881,6 +881,79 @@ if(typeof password==='undefined'){throw new AppwriteException('Missing required 
 let path='/users';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
 if(typeof email!=='undefined'){payload['email']=email;}
 if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createArgon2User(userId,email,password,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+let path='/users/argon2';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createBcryptUser(userId,email,password,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+let path='/users/bcrypt';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createMD5User(userId,email,password,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+let path='/users/md5';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createPHPassUser(userId,email,password,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+let path='/users/phpass';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createScryptUser(userId,email,password,passwordSalt,passwordCpu,passwordMemory,passwordParallel,passwordLength,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+if(typeof passwordSalt==='undefined'){throw new AppwriteException('Missing required parameter: "passwordSalt"');}
+if(typeof passwordCpu==='undefined'){throw new AppwriteException('Missing required parameter: "passwordCpu"');}
+if(typeof passwordMemory==='undefined'){throw new AppwriteException('Missing required parameter: "passwordMemory"');}
+if(typeof passwordParallel==='undefined'){throw new AppwriteException('Missing required parameter: "passwordParallel"');}
+if(typeof passwordLength==='undefined'){throw new AppwriteException('Missing required parameter: "passwordLength"');}
+let path='/users/scrypt';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof passwordSalt!=='undefined'){payload['passwordSalt']=passwordSalt;}
+if(typeof passwordCpu!=='undefined'){payload['passwordCpu']=passwordCpu;}
+if(typeof passwordMemory!=='undefined'){payload['passwordMemory']=passwordMemory;}
+if(typeof passwordParallel!=='undefined'){payload['passwordParallel']=passwordParallel;}
+if(typeof passwordLength!=='undefined'){payload['passwordLength']=passwordLength;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createScryptModifiedUser(userId,email,password,passwordSalt,passwordSaltSeparator,passwordSignerKey,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+if(typeof passwordSalt==='undefined'){throw new AppwriteException('Missing required parameter: "passwordSalt"');}
+if(typeof passwordSaltSeparator==='undefined'){throw new AppwriteException('Missing required parameter: "passwordSaltSeparator"');}
+if(typeof passwordSignerKey==='undefined'){throw new AppwriteException('Missing required parameter: "passwordSignerKey"');}
+let path='/users/scrypt-modified';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof passwordSalt!=='undefined'){payload['passwordSalt']=passwordSalt;}
+if(typeof passwordSaltSeparator!=='undefined'){payload['passwordSaltSeparator']=passwordSaltSeparator;}
+if(typeof passwordSignerKey!=='undefined'){payload['passwordSignerKey']=passwordSignerKey;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createSHAUser(userId,email,password,passwordVersion,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+let path='/users/sha';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof passwordVersion!=='undefined'){payload['passwordVersion']=passwordVersion;}
 if(typeof name!=='undefined'){payload['name']=name;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getUsage(range,provider){return __awaiter(this,void 0,void 0,function*(){let path='/users/usage';let payload={};if(typeof range!=='undefined'){payload['range']=range;}
