@@ -1478,11 +1478,6 @@ App::patch('/v1/account/password')
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
                 ->setAttribute('passwordUpdate', DateTime::now()));
 
-        $audits
-            ->setResource('user/' . $user->getId())
-            ->setUser($user)
-        ;
-
         $usage->setParam('users.update', 1);
         $events->setParam('userId', $user->getId());
 

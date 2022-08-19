@@ -1267,6 +1267,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createDatetimeAttribute')
@@ -1283,10 +1284,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('audits')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, EventAudit $audits, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1296,7 +1296,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             'default' => $default,
             'array' => $array,
             'filters' => ['datetime']
-        ]), $response, $dbForProject, $database, $audits, $events, $usage);
+        ]), $response, $dbForProject, $database, $events, $usage);
 
         $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
