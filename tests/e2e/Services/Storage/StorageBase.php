@@ -491,7 +491,7 @@ trait StorageBase
 
         $this->assertEquals(204, $file['headers']['status-code']);
         $this->assertEmpty($file['body']);
-
+        sleep(1);
         //upload again using the same ID
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',

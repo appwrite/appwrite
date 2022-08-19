@@ -128,6 +128,7 @@ App::post('/v1/projects')
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
+
             $attributes = [];
             $indexes = [];
 
@@ -154,7 +155,6 @@ App::post('/v1/projects')
                     'orders' => $index['orders'],
                 ]);
             }
-
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
@@ -540,7 +540,7 @@ App::delete('/v1/projects/:projectId')
     ->inject('deletes')
     ->action(function (string $projectId, string $password, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
 
-        if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
+        if (!Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 

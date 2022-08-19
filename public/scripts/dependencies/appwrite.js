@@ -695,7 +695,7 @@
          * stored as is, and replaces any previous value. The maximum allowed prefs
          * size is 64kB and throws error if exceeded.
          *
-         * @param {Partial<Preferences>} prefs
+         * @param {object} prefs
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -1459,7 +1459,8 @@
          *
          * You can use this endpoint to show different country flags icons to your
          * users. The code argument receives the 2 letter country code. Use width,
-         * height and quality arguments to change the output settings.
+         * height and quality arguments to change the output settings. Country codes
+         * follow the [ISO 3166-1](http://en.wikipedia.org/wiki/ISO_3166-1) standard.
          *
          * When one dimension is specified and the other is 0, the image is scaled
          * with preserved aspect ratio. If both dimensions are 0, the API provides an
@@ -1860,7 +1861,7 @@
          *
          * Create a new Collection. Before using this route, you should create a new
          * database resource using either a [server
-         * integration](/docs/server/database#databaseCreateCollection) API or
+         * integration](/docs/server/databases#databasesCreateCollection) API or
          * directly from your database console.
          *
          * @param {string} databaseId
@@ -2588,7 +2589,7 @@
          *
          * Create a new Document. Before using this route, you should create a new
          * collection resource using either a [server
-         * integration](/docs/server/database#databaseCreateCollection) API or
+         * integration](/docs/server/databases#databasesCreateCollection) API or
          * directly from your database console.
          *
          * @param {string} databaseId
@@ -5289,8 +5290,8 @@
          *
          * Create a new file. Before using this route, you should create a new bucket
          * resource using either a [server
-         * integration](/docs/server/database#storageCreateBucket) API or directly
-         * from your Appwrite console.
+         * integration](/docs/server/storage#storageCreateBucket) API or directly from
+         * your Appwrite console.
          *
          * Larger files should be uploaded using multiple requests with the
          * [content-range](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range)
@@ -6176,6 +6177,388 @@
                 }
                 if (typeof password !== 'undefined') {
                     payload['password'] = password;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with Argon2 Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [Argon2](https://en.wikipedia.org/wiki/Argon2) algorithm. Use the [POST
+         * /users](/docs/server/users#usersCreate) endpoint to create users with a
+         * plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createArgon2User(userId, email, password, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                let path = '/users/argon2';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with Bcrypt Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [Bcrypt](https://en.wikipedia.org/wiki/Bcrypt) algorithm. Use the [POST
+         * /users](/docs/server/users#usersCreate) endpoint to create users with a
+         * plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createBcryptUser(userId, email, password, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                let path = '/users/bcrypt';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with MD5 Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [MD5](https://en.wikipedia.org/wiki/MD5) algorithm. Use the [POST
+         * /users](/docs/server/users#usersCreate) endpoint to create users with a
+         * plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createMD5User(userId, email, password, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                let path = '/users/md5';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with PHPass Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [PHPass](https://www.openwall.com/phpass/) algorithm. Use the [POST
+         * /users](/docs/server/users#usersCreate) endpoint to create users with a
+         * plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createPHPassUser(userId, email, password, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                let path = '/users/phpass';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with Scrypt Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [Scrypt](https://github.com/Tarsnap/scrypt) algorithm. Use the [POST
+         * /users](/docs/server/users#usersCreate) endpoint to create users with a
+         * plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} passwordSalt
+         * @param {number} passwordCpu
+         * @param {number} passwordMemory
+         * @param {number} passwordParallel
+         * @param {number} passwordLength
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createScryptUser(userId, email, password, passwordSalt, passwordCpu, passwordMemory, passwordParallel, passwordLength, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                if (typeof passwordSalt === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordSalt"');
+                }
+                if (typeof passwordCpu === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordCpu"');
+                }
+                if (typeof passwordMemory === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordMemory"');
+                }
+                if (typeof passwordParallel === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordParallel"');
+                }
+                if (typeof passwordLength === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordLength"');
+                }
+                let path = '/users/scrypt';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof passwordSalt !== 'undefined') {
+                    payload['passwordSalt'] = passwordSalt;
+                }
+                if (typeof passwordCpu !== 'undefined') {
+                    payload['passwordCpu'] = passwordCpu;
+                }
+                if (typeof passwordMemory !== 'undefined') {
+                    payload['passwordMemory'] = passwordMemory;
+                }
+                if (typeof passwordParallel !== 'undefined') {
+                    payload['passwordParallel'] = passwordParallel;
+                }
+                if (typeof passwordLength !== 'undefined') {
+                    payload['passwordLength'] = passwordLength;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with Scrypt Modified Password
+         *
+         * Create a new user. Password provided must be hashed with the [Scrypt
+         * Modified](https://gist.github.com/Meldiron/eecf84a0225eccb5a378d45bb27462cc)
+         * algorithm. Use the [POST /users](/docs/server/users#usersCreate) endpoint
+         * to create users with a plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} passwordSalt
+         * @param {string} passwordSaltSeparator
+         * @param {string} passwordSignerKey
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createScryptModifiedUser(userId, email, password, passwordSalt, passwordSaltSeparator, passwordSignerKey, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                if (typeof passwordSalt === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordSalt"');
+                }
+                if (typeof passwordSaltSeparator === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordSaltSeparator"');
+                }
+                if (typeof passwordSignerKey === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordSignerKey"');
+                }
+                let path = '/users/scrypt-modified';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof passwordSalt !== 'undefined') {
+                    payload['passwordSalt'] = passwordSalt;
+                }
+                if (typeof passwordSaltSeparator !== 'undefined') {
+                    payload['passwordSaltSeparator'] = passwordSaltSeparator;
+                }
+                if (typeof passwordSignerKey !== 'undefined') {
+                    payload['passwordSignerKey'] = passwordSignerKey;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with SHA Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [SHA](https://en.wikipedia.org/wiki/Secure_Hash_Algorithm) algorithm. Use
+         * the [POST /users](/docs/server/users#usersCreate) endpoint to create users
+         * with a plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} passwordVersion
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createSHAUser(userId, email, password, passwordVersion, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                let path = '/users/sha';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof passwordVersion !== 'undefined') {
+                    payload['passwordVersion'] = passwordVersion;
                 }
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;

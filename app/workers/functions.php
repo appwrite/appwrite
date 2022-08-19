@@ -293,6 +293,7 @@ class FunctionsV1 extends Worker
                 ->setAttribute('status', $executionResponse['status'])
                 ->setAttribute('statusCode', $executionResponse['statusCode'])
                 ->setAttribute('response', $executionResponse['response'])
+                ->setAttribute('stdout', $executionResponse['stdout'])
                 ->setAttribute('stderr', $executionResponse['stderr'])
                 ->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
