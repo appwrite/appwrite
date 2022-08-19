@@ -433,7 +433,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->param('enabled', null, new Boolean(), 'Provider status. Set to \'false\' to disable new session creation.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?string $enabled, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?bool $enabled, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -443,15 +443,15 @@ App::patch('/v1/projects/:projectId/oauth2')
 
         $providers = $project->getAttribute('authProviders', []);
 
-        if($appId !== null) {
+        if ($appId !== null) {
             $providers[$provider . 'Appid'] = $appId;
         }
 
-        if($secret !== null) {
+        if ($secret !== null) {
             $providers[$provider . 'Secret'] = $secret;
         }
 
-        if($enabled !== null) {
+        if ($enabled !== null) {
             $providers[$provider . 'Enabled'] = $enabled;
         }
 
