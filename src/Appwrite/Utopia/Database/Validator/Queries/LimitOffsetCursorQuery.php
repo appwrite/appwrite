@@ -41,7 +41,7 @@ class LimitOffsetCursorQuery extends LimitOffsetQuery
      *
      * Returns true if:
      * 1. method is limit or offset and values are within range
-     * 2. method is cursorBefore or cursorAfter and value is not null.
+     * 2. method is cursorBefore or cursorAfter and value is not null
      *
      * Otherwise, returns false
      * 
