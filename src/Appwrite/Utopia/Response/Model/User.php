@@ -35,6 +35,33 @@ class User extends Model
                 'default' => '',
                 'example' => 'John Doe',
             ])
+            ->addRule('password', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Hashed user password.',
+                'default' => '',
+                'example' => '$argon2id$v=19$m=2048,t=4,p=3$aUZjLnliVWRINmFNTWMudg$5S+x+7uA31xFnrHFT47yFwcJeaP0w92L/4LdgrVRXxE',
+            ])
+            ->addRule('hash', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Password hashing algorithm.',
+                'default' => '',
+                'example' => 'argon2',
+            ])
+            ->addRule('hashOptions', [
+                'type' => [
+                    Response::MODEL_ALGO_ARGON2,
+                    Response::MODEL_ALGO_SCRYPT,
+                    Response::MODEL_ALGO_SCRYPT_MODIFIED,
+                    Response::MODEL_ALGO_BCRYPT,
+                    Response::MODEL_ALGO_PHPASS,
+                    Response::MODEL_ALGO_SHA,
+                    Response::MODEL_ALGO_MD5, // keep least secure at the bottom. this order will be used in docs
+                ],
+                'description' => 'Password hashing algorithm configuration.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => false,
+            ])
             ->addRule('registration', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'User registration date in Datetime.',

@@ -434,7 +434,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $realtime->subscribe($project->getId(), $connection, $roles, $channels);
 
-        $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_USER);
+        $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
 
         $server->send([$connection], json_encode([
             'type' => 'connected',
@@ -549,7 +549,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 
-                $user = $response->output($user, Response::MODEL_USER);
+                $user = $response->output($user, Response::MODEL_ACCOUNT);
                 $server->send([$connection], json_encode([
                     'type' => 'response',
                     'data' => [

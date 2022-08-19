@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\ID;
@@ -1160,7 +1161,29 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
+                'filters' => ['encrypt'],
+            ],
+            [
+                '$id' => 'hash', // Hashing algorithm used to hash the password
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'default' => Auth::DEFAULT_ALGO,
+                'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('hashOptions'), // Configuration of hashing algorithm
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65535,
+                'signed' => true,
+                'required' => false,
+                'default' => Auth::DEFAULT_ALGO_OPTIONS,
+                'array' => false,
+                'filters' => ['json'],
             ],
             [
                 '$id' => ID::custom('passwordUpdate'),
@@ -2389,6 +2412,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('stdout'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 1000000,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('statusCode'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
@@ -2765,6 +2799,62 @@ $collections = [
                 'orders' => [Database::ORDER_DESC],
             ],
         ]
+    ],
+    'cache' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'cache',
+        'name' => 'Cache',
+        'attributes' => [
+            [
+                '$id' => 'resource',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'accessedAt',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'signature',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+         ],
+        'indexes' => [
+            [
+                '$id' => '_key_accessedAt',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => '_key_resource',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resource'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+        ],
     ],
     'files' => [
         '$collection' => ID::custom('buckets'),

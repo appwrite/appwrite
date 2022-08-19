@@ -50,7 +50,7 @@ return [
     ],
     Exception::GENERAL_PHONE_DISABLED => [
         'name' => Exception::GENERAL_PHONE_DISABLED,
-        'description' => 'Phone provider is not configured. Please check the _APP_PHONE_PROVIDER environment variable of your Appwrite server.',
+        'description' => 'Phone provider is not configured. Please check the _APP_SMS_PROVIDER environment variable of your Appwrite server.',
         'code' => 503,
     ],
     Exception::GENERAL_ARGUMENT_INVALID => [

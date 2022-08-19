@@ -103,11 +103,9 @@ services:
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
-      # - ./debug:/tmp
       - ./dev:/usr/local/dev
     depends_on:
       - mariadb
@@ -173,10 +171,11 @@ services:
       - _APP_STATSD_PORT
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
-      - _APP_PHONE_PROVIDER
-      - _APP_PHONE_SECRET
+      - _APP_SMS_PROVIDER
+      - _APP_SMS_FROM
 
   appwrite-realtime:
     entrypoint: realtime
@@ -207,7 +206,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      # - ./vendor:/usr/src/code/vendor
     depends_on:
       - mariadb
       - redis
@@ -330,7 +328,7 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      # - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
+      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
       - mariadb
@@ -545,8 +543,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_PHONE_PROVIDER
-      - _APP_PHONE_FROM
+      - _APP_SMS_PROVIDER
+      - _APP_SMS_FROM
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -580,6 +578,7 @@ services:
       - _APP_DB_PASS
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
 
@@ -639,7 +638,7 @@ services:
       - _APP_REDIS_PASS
 
   mariadb:
-    image: mariadb:10.8.3 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     networks:
