@@ -1733,17 +1733,23 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.9.0",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "34156bb5292d704bb8bc8141bb5151126ed4830a"
+                "reference": "b5beadce6581291e4385b0cc86f1be2a79bb2ef0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/b5beadce6581291e4385b0cc86f1be2a79bb2ef0",
+                "reference": "b5beadce6581291e4385b0cc86f1be2a79bb2ef0",
+                "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.20.0"
+                "utopia-php/database": "0.22.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1755,6 +1761,7 @@
                     "Utopia\\Abuse\\": "src/Abuse"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1766,13 +1773,17 @@
             ],
             "description": "A simple abuse library to manage application usage limits",
             "keywords": [
-                "abuse",
+                "Abuse",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "time": "2022-08-15T07:35:56+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/abuse/issues",
+                "source": "https://github.com/utopia-php/abuse/tree/0.10.0"
+            },
+            "time": "2022-08-17T14:31:54+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1831,16 +1842,22 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.10.0",
+            "version": "0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "458da3e60ea222bf9791f4891591d7f2ee16e4bb"
+                "reference": "a06f784f8e8b69bcae4f1a5bca58d41bda76c250"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/a06f784f8e8b69bcae4f1a5bca58d41bda76c250",
+                "reference": "a06f784f8e8b69bcae4f1a5bca58d41bda76c250",
+                "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.20.0"
+                "utopia-php/database": "0.22.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1852,6 +1869,7 @@
                     "Utopia\\Audit\\": "src/Audit"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1863,13 +1881,17 @@
             ],
             "description": "A simple audit library to manage application users logs",
             "keywords": [
-                "audit",
+                "Audit",
                 "framework",
                 "php",
                 "upf",
                 "utopia"
             ],
-            "time": "2022-08-14T19:59:21+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/audit/issues",
+                "source": "https://github.com/utopia-php/audit/tree/0.11.0"
+            },
+            "time": "2022-08-17T15:08:58+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2030,11 +2052,17 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.20.0",
+            "version": "0.22.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "cd89b41564223cddf7d87a41bbaf736a0c89f327"
+                "reference": "22c45ae83612e907203b7571cd8e3115ae3ae4c5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/22c45ae83612e907203b7571cd8e3115ae3ae4c5",
+                "reference": "22c45ae83612e907203b7571cd8e3115ae3ae4c5",
+                "shasum": ""
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2058,11 +2086,7 @@
                     "Utopia\\Database\\": "src/Database"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Database"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2084,7 +2108,11 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-08-14T15:22:34+00:00"
+            "support": {
+                "issues": "https://github.com/utopia-php/database/issues",
+                "source": "https://github.com/utopia-php/database/tree/0.22.0"
+            },
+            "time": "2022-08-17T12:55:37+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2825,6 +2853,7 @@
                 "brianium/paratest": "^6.4",
                 "phpunit/phpunit": "^9.5.21"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -5319,7 +5348,14 @@
             "time": "2022-08-12T06:47:24+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "appwrite/sdk-generator",
+            "version": "9999999-dev",
+            "alias": "0.19.5",
+            "alias_normalized": "0.19.5.0"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": {
         "appwrite/sdk-generator": 20
@@ -5341,7 +5377,9 @@
         "ext-zlib": "*",
         "ext-sockets": "*"
     },
-    "platform-dev": [],
+    "platform-dev": {
+        "ext-fileinfo": "*"
+    },
     "platform-overrides": {
         "php": "8.0"
     },

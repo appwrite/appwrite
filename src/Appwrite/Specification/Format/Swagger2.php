@@ -5,6 +5,8 @@ namespace Appwrite\Specification\Format;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Validator;
 
 class Swagger2 extends Format
@@ -334,7 +336,15 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["role:all"]';
+                        $node['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        break;
+                    case 'Utopia\Database\Validator\Roles':
+                        $node['type'] = $validator->getType();
+                        $node['collectionFormat'] = 'multi';
+                        $node['items'] = [
+                            'type' => 'string',
+                        ];
+                        $node['x-example'] = '["' . Role::any()->toString() . '"]';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['type'] = $validator->getType();

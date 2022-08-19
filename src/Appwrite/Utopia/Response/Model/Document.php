@@ -54,18 +54,11 @@ class Document extends Any
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
-            ->addRule('$read', [
+            ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Document read permissions.',
+                'description' => 'Document permissions.',
                 'default' => '',
-                'example' => 'role:all',
-                'array' => true,
-            ])
-            ->addRule('$write', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Document write permissions.',
-                'default' => '',
-                'example' => 'user:608f9da25e7e1',
+                'example' => ['read("any")'],
                 'array' => true,
             ])
         ;

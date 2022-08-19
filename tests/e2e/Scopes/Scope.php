@@ -4,6 +4,7 @@ namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\ID;
 
 abstract class Scope extends TestCase
 {
@@ -87,7 +88,7 @@ abstract class Scope extends TestCase
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -107,7 +108,7 @@ abstract class Scope extends TestCase
         $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_console'];
 
         self::$root = [
-            '$id' => $root['body']['$id'],
+            '$id' => ID::custom($root['body']['$id']),
             'name' => $root['body']['name'],
             'email' => $root['body']['email'],
             'session' => $session,
@@ -139,7 +140,7 @@ abstract class Scope extends TestCase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -159,7 +160,7 @@ abstract class Scope extends TestCase
         $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
         self::$user[$this->getProject()['$id']] = [
-            '$id' => $user['body']['$id'],
+            '$id' => ID::custom($user['body']['$id']),
             'name' => $user['body']['name'],
             'email' => $user['body']['email'],
             'session' => $session,

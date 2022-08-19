@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 
 trait TeamsBaseClient
 {
@@ -341,7 +342,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => 'sdasd',
+            'userId' => ID::custom('sdasd'),
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -352,7 +353,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => '',
+            'userId' => ID::custom(''),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);

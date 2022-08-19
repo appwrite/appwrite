@@ -5,6 +5,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Utopia\App;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Domains\Domain;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
@@ -289,9 +290,22 @@ App::get('/console/databases/collection')
             ])
         ;
 
+        $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $permissions
+            ->setParam('method', 'databases.getCollection')
+            ->setParam('events', 'databases.updateCollection')
+            ->setParam('data', 'project-collection')
+            ->setParam('params', [
+                'collection-id' => '{{router.params.id}}',
+                'database-id' => '{{router.params.databaseId}}'
+            ]);
+
         $page = new View(__DIR__ . '/../../views/console/databases/collection.phtml');
 
-        $page->setParam('logs', $logs);
+        $page
+            ->setParam('permissions', $permissions)
+            ->setParam('logs', $logs)
+        ;
 
         $layout
             ->setParam('title', APP_NAME . ' - Database Collection')
@@ -326,12 +340,28 @@ App::get('/console/databases/document')
             ])
         ;
 
+        $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+
+        $permissions
+            ->setParam('method', 'databases.getDocument')
+            ->setParam('data', 'project-document')
+            ->setParam('permissions', \array_filter(
+                Database::PERMISSIONS,
+                fn ($perm) => $perm != Database::PERMISSION_CREATE
+            ))
+            ->setParam('params', [
+                'collection-id' => '{{router.params.collection}}',
+                'database-id' => '{{router.params.databaseId}}',
+                'document-id' => '{{router.params.id}}',
+            ]);
+
         $page = new View(__DIR__ . '/../../views/console/databases/document.phtml');
 
         $page
             ->setParam('new', false)
             ->setParam('database', $databaseId)
             ->setParam('collection', $collection)
+            ->setParam('permissions', $permissions)
             ->setParam('logs', $logs)
         ;
 
@@ -349,12 +379,27 @@ App::get('/console/databases/document/new')
     ->inject('layout')
     ->action(function (string $databaseId, string $collection, View $layout) {
 
+        $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+
+        $permissions
+            ->setParam('data', 'project-document')
+            ->setParam('permissions', \array_filter(
+                Database::PERMISSIONS,
+                fn ($perm) => $perm != Database::PERMISSION_CREATE
+            ))
+            ->setParam('params', [
+                'collection-id' => '{{router.params.collection}}',
+                'database-id' => '{{router.params.databaseId}}',
+                'document-id' => '{{router.params.id}}',
+            ]);
+
         $page = new View(__DIR__ . '/../../views/console/databases/document.phtml');
 
         $page
             ->setParam('new', true)
             ->setParam('database', $databaseId)
             ->setParam('collection', $collection)
+            ->setParam('permissions', $permissions)
             ->setParam('logs', new View())
         ;
 
@@ -392,11 +437,49 @@ App::get('/console/storage/bucket')
     ->inject('layout')
     ->action(function (string $id, Response $response, View $layout) {
 
+        $bucketPermissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $bucketPermissions
+            ->setParam('method', 'databases.getBucket')
+            ->setParam('events', 'load,databases.updateBucket')
+            ->setParam('data', 'project-bucket')
+            ->setParam('form', 'bucketPermissions')
+            ->setParam('params', [
+                'bucket-id' => '{{router.params.id}}',
+            ]);
+
+        $fileCreatePermissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $fileCreatePermissions
+            ->setParam('data', 'project-document')
+            ->setParam('form', 'fileCreatePermissions')
+            ->setParam('permissions', \array_filter(
+                Database::PERMISSIONS,
+                fn ($perm) => $perm != Database::PERMISSION_CREATE
+            ))
+            ->setParam('params', [
+                'bucket-id' => '{{router.params.id}}',
+            ]);
+
+        $fileUpdatePermissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $fileUpdatePermissions
+            ->setParam('method', 'storage.getFile')
+            ->setParam('data', 'project-document')
+            ->setParam('form', 'fileUpdatePermissions')
+            ->setParam('permissions', \array_filter(
+                Database::PERMISSIONS,
+                fn ($perm) => $perm != Database::PERMISSION_CREATE
+            ))
+            ->setParam('params', [
+                'bucket-id' => '{{router.params.id}}',
+            ]);
+
         $page = new View(__DIR__ . '/../../views/console/storage/bucket.phtml');
         $page
             ->setParam('home', App::getEnv('_APP_HOME', 0))
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
             ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
+            ->setParam('bucketPermissions', $bucketPermissions)
+            ->setParam('fileCreatePermissions', $fileCreatePermissions)
+            ->setParam('fileUpdatePermissions', $fileUpdatePermissions)
         ;
 
         $layout

@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
+use Utopia\Database\Role;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
@@ -248,7 +249,9 @@ App::init()
         /*
         * ACL Check
         */
-        $role = ($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER;
+        $role = ($user->isEmpty())
+            ? Role::guests()->toString()
+            : Role::users()->toString();
 
         // Add user roles
         $memberships = $user->find('teamId', $project->getAttribute('teamId', null), 'memberships');
@@ -292,16 +295,15 @@ App::init()
                     'name' => $project->getAttribute('name', 'Untitled'),
                 ]);
 
-                $role = Auth::USER_ROLE_APP;
+                $role = Auth::USER_ROLE_APPS;
                 $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
                 $expire = $key->getAttribute('expire');
-
-                if (!empty($expire) && $expire < DateTime::now()) {
+                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
                     throw new AppwriteException(AppwriteException:: PROJECT_KEY_EXPIRED);
                 }
 
-                Authorization::setRole('role:' . Auth::USER_ROLE_APP);
+                Authorization::setRole(Auth::USER_ROLE_APPS);
                 Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
 
                 if (time() > $key->getAttribute('accessedAt', 0) + APP_KEY_ACCCESS) {
@@ -327,7 +329,7 @@ App::init()
             }
         }
 
-        Authorization::setRole('role:' . $role);
+        Authorization::setRole($role);
 
         foreach (Auth::getRoles($user) as $authRole) {
             Authorization::setRole($authRole);

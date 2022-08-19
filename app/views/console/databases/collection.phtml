@@ -1,6 +1,7 @@
 <?php
 
 $logs = $this->getParam('logs', null);
+$permissions = $this->getParam('permissions', null);
 
 ?>
 <div
@@ -489,8 +490,8 @@ $logs = $this->getParam('logs', null);
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart background-image-no border-no margin-bottom-no">
-                                <input 
-                                    type="hidden" 
+                                <input
+                                    type="hidden"
                                     data-ls-bind="{{usage}}"
                                     data-forms-chart="Created=documentsCreate,Read=documentsRead,Updated=documentsUpdate,Deleted=documentsDelete"
                                     data-show-y-axis="true"
@@ -513,6 +514,8 @@ $logs = $this->getParam('logs', null);
 
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
+                        <form id="<?php echo $permissions->getParam('form', 'permissions') ?>"></form>
+
                         <form
                             data-analytics
                             data-analytics-activity
@@ -531,8 +534,6 @@ $logs = $this->getParam('logs', null);
                             data-failure-param-alert-text="Failed to update collection"
                             data-failure-param-alert-classname="error">
 
-                            <label>&nbsp;</label>
-
                             <div class="box">
                                 <label for="collection-name">Name</label>
                                 <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" maxlength="128" />
@@ -541,36 +542,25 @@ $logs = $this->getParam('logs', null);
                                     <input name="enabled" type="hidden" data-forms-switch data-cast-to="boolean" data-ls-bind="{{project-collection.enabled}}" /> &nbsp; Enabled <span class="tooltip" data-tooltip="Mark whether collection is enabled"><i class="icon-info-circled"></i></span>
                                 </div>
 
+                                <hr class="margin-top-small" />
+
                                 <label class="margin-bottom-small">Permissions</label>
 
-                                <p class="text-fade text-size-small">Choose the permissions model for this collection.</p>
+                                <p class="text-fade text-size-small">Configure the permissions for this collection.</p>
 
                                 <hr class="margin-top-small" />
 
-                                <div class="row">
-                                    <div class="col span-1"><input name="permission" value="collection" type="radio" class="margin-top-tiny" data-ls-bind="{{project-collection.permission}}" /></div>
-                                    <div class="col span-11">
-                                        <b>Collection Level</b>
-                                        <p class="text-fade margin-top-tiny">With Collection Level permissions, you assign permissions only once in the collection.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level, permissions assigned to collection takes the precedence and documents permissions are ignored.</p>
-                                        <div data-ls-if="{{project-collection.permission}} === 'collection'">
-                                            <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                            <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$read}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                <?php echo $permissions->render(); ?>
 
-                                            <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                            <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$write}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <hr class="margin-top-no" />
+
+                                <label class="margin-bottom-small">Document Security</label>
 
                                 <div class="row">
-                                    <div class="col span-1"><input name="permission" value="document" type="radio" class="margin-top-no" data-ls-bind="{{project-collection.permission}}" /></div>
+                                    <div class="col span-1"><input name="documentSecurity" value="false" type="checkbox" class="margin-top-no" data-ls-bind="{{project-collection.documentSecurity}}" /></div>
                                     <div class="col span-11">
-                                        <b>Document Level</b>
-                                        <p class="text-fade margin-top-tiny">With Document Level permissions, you have granular access control over every document. Users will only be able to access documents for which they have explicit permissions.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level, document permissions take precedence and collection permissions are ignored.</p>
+                                        <b>Enabled</b>
+                                        <p class="text-fade margin-top-tiny">With Document Security enabled, users will be able to access documents for which they have been granted <b>either</b> Document or Collection permissions.</p>
                                     </div>
                                 </div>
 
@@ -592,9 +582,9 @@ $logs = $this->getParam('logs', null);
                     </div>
 
                     <ul class="margin-bottom-large text-fade text-size-small">
-                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> 
-                            <button data-ls-ui-trigger="open-json" 
-                                class="link text-size-small" 
+                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i>
+                            <button data-ls-ui-trigger="open-json"
+                                class="link text-size-small"
                                 data-analytics
                                 data-analytics-event="click"
                                 data-analytics-category="console"

@@ -6,6 +6,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class DatabasesPermissionsGuestTest extends Scope
 {
@@ -20,7 +23,7 @@ class DatabasesPermissionsGuestTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'InvalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -28,11 +31,15 @@ class DatabasesPermissionsGuestTest extends Scope
 
         $databaseId = $database['body']['$id'];
         $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Movies',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
         ]);
 
         $collection = ['id' => $movies['body']['$id']];
@@ -49,36 +56,36 @@ class DatabasesPermissionsGuestTest extends Scope
     }
 
     /**
-     * [string[] $read, string[] $write]
+     * [string[] $permissions]
      */
     public function readDocumentsProvider()
     {
         return [
-            [['role:all'], []],
-            [['role:member'], []],
-            [[] ,['role:all']],
-            [['role:all'], ['role:all']],
-            [['role:member'], ['role:member']],
-            [['role:all'], ['role:member']],
+            [[Permission::read(Role::any())]],
+            [[Permission::read(Role::users())]],
+            [[Permission::update(Role::any()), Permission::delete(Role::any())]],
+            [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())]],
+            [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())]],
+            [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())]],
         ];
     }
 
     /**
      * @dataProvider readDocumentsProvider
      */
-    public function testReadDocuments($read, $write)
+    public function testReadDocuments($permissions)
     {
         $data = $this->createCollection();
         $collectionId = $data['collectionId'];
         $databaseId = $data['databaseId'];
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $this->getServerHeader(), [
-            'documentId' => 'unique()',
+            'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
             ],
-            'read' => $read,
-            'write' => $write,
+            'permissions' => $permissions,
         ]);
+
         $this->assertEquals(201, $response['headers']['status-code']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId  . '/documents', [
@@ -87,7 +94,13 @@ class DatabasesPermissionsGuestTest extends Scope
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $this->assertContains('role:all', $document['$read']);
+            foreach ($document['$permissions'] as $permission) {
+                $permission = Permission::parse($permission);
+                if ($permission->getPermission() != 'read') {
+                     continue;
+                }
+                $this->assertEquals($permission->getRole(), Role::any()->toString());
+            }
         }
     }
 }

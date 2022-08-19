@@ -13,6 +13,8 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\ID;
+use Utopia\Database\Role;
 use Utopia\Logger\Log;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -134,7 +136,7 @@ function getDatabase(Registry &$register, string $namespace)
 
 $server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
     sleep(5); // wait for the initial database schema to be ready
-    Console::success('Server started succefully');
+    Console::success('Server started successfully');
 
     /**
      * Create document for this worker to share stats across Containers.
@@ -146,10 +148,9 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
             try {
                 $attempts++;
                 $document = new Document([
-                    '$id' => $database->getId(),
-                    '$collection' => 'realtime',
-                    '$read' => [],
-                    '$write' => [],
+                    '$id' => ID::unique(),
+                    '$collection' => ID::custom('realtime'),
+                    '$permissions' => [],
                     'container' => $containerId,
                     'timestamp' => DateTime::now(),
                     'value' => '{}'
@@ -203,7 +204,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
-        if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
+        if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
             [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $payload = [];
@@ -254,12 +255,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
          */
-        if ($realtime->hasSubscriber('console', 'role:guest', 'tests')) {
+        if ($realtime->hasSubscriber('console', Role::guests()->toString(), 'tests')) {
             $payload = ['response' => 'WS:/v1/realtime:passed'];
 
             $event = [
                 'project' => 'console',
-                'roles' => ['role:guest'],
+                'roles' => [Role::guests()->toString()],
                 'data' => [
                     'events' => ['test.event'],
                     'channels' => ['tests'],

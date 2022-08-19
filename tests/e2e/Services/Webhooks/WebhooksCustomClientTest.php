@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 
 class WebhooksCustomClientTest extends Scope
 {
@@ -28,7 +29,7 @@ class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -86,7 +87,7 @@ class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,

@@ -1,10 +1,14 @@
 <?php
 
+use Appwrite\Permissions\PermissionsProcessor;
 use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;
@@ -94,7 +98,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     try {
         $attribute = new Document([
-            '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
+            '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
             'key' => $key,
             'databaseInternalId' => $db->getInternalId(),
             'databaseId' => $db->getId(),
@@ -168,7 +172,7 @@ App::post('/v1/databases')
     ->inject('events')
     ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
-        $databaseId = $databaseId == 'unique()' ? $dbForProject->getId() : $databaseId;
+        $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
         try {
             $dbForProject->createDocument('databases', new Document([
@@ -340,7 +344,7 @@ App::get('/v1/databases/:databaseId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => $log['userId'],
+                'userId' => ID::custom($log['userId']),
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
@@ -485,14 +489,13 @@ App::post('/v1/databases/:databaseId/collections')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('permission', null, new WhiteList(['document', 'collection']), 'Specifies the permissions model used in this collection, which accepts either \'collection\' or \'document\'. For \'collection\' level permission, the permissions specified in read and write params are applied to all documents in the collection. For \'document\' level permissions, read and write permissions are specified in each document. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
-    ->param('read', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
-    ->param('write', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
+    ->param('documentSecurity', false, new Boolean(true), 'Specifies the permissions model used in this collection, which accepts either \'collection\' or \'document\'. For \'collection\' level permission, the permissions specified in read and write params are applied to all documents in the collection. For \'document\' level permissions, read and write permissions are specified in each document. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?string $permission, ?array $read, ?array $write, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -500,16 +503,21 @@ App::post('/v1/databases/:databaseId/collections')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collectionId = $collectionId == 'unique()' ? $dbForProject->getId() : $collectionId;
+        $collectionId = $collectionId == 'unique()' ? ID::unique() : $collectionId;
+
+        /**
+         * Map aggregate permissions into the multiple permissions they represent,
+         * accounting for the resource type given that some types not allowed specific permissions.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'collection');
 
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
                 '$id' => $collectionId,
                 'databaseInternalId' => $database->getInternalId(),
                 'databaseId' => $databaseId,
-                '$read' => $read ?? [], // Collection permissions for collection documents (based on permission model)
-                '$write' => $write ?? [], // Collection permissions for collection documents (based on permission model)
-                'permission' => $permission, // Permissions model type (document vs collection)
+                '$permissions' => $permissions ?? [],
+                'documentSecurity' => $documentSecurity,
                 'enabled' => true,
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
@@ -583,7 +591,9 @@ App::get('/v1/databases/:databaseId/collections')
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Collection '{$cursor}' for the 'cursor' value not found.");
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER
+                ? Query::cursorAfter($cursorDocument)
+                : Query::cursorBefore($cursorDocument);
         }
 
         $usage
@@ -620,6 +630,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
@@ -740,40 +751,44 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('permission', null, new WhiteList(['document', 'collection']), 'Permissions type model to use for reading documents in this collection. You can use collection-level permission set once on the collection using the `read` and `write` params, or you can set document-level permission where each document read and write params will decide who has access to read and write to each document individually. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
-    ->param('read', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('documentSecurity', false, new Boolean(true), 'Whether to enable document-level permission where each document\'s permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('enabled', true, new Boolean(), 'Is collection enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $name, string $permission, ?array $read, ?array $write, bool $enabled, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, Stats $usage, Event $events) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $read ??= $collection->getRead() ?? []; // By default inherit read permissions
-        $write ??= $collection->getWrite() ?? []; // By default inherit write permissions
+        $permissions ??= $collection->getPermissions() ?? [];
+
+        /**
+         * Map aggregate permissions into the multiple permissions they represent.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'collection');
+
         $enabled ??= $collection->getAttribute('enabled', true);
 
         try {
             $collection = $dbForProject->updateDocument('database_' . $database->getInternalId(), $collectionId, $collection
-                ->setAttribute('$write', $write)
-                ->setAttribute('$read', $read)
                 ->setAttribute('name', $name)
-                ->setAttribute('permission', $permission)
+                ->setAttribute('$permissions', $permissions)
+                ->setAttribute('documentSecurity', $documentSecurity)
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', implode(' ', [$collectionId, $name])));
-        } catch (AuthorizationException $exception) {
+        } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
@@ -1619,7 +1634,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         try {
             $index = $dbForProject->createDocument('indexes', new Document([
-                '$id' => $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key,
+                '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
                 'key' => $key,
                 'status' => 'processing', // processing, available, failed, deleting, stuck
                 'databaseInternalId' => $db->getInternalId(),
@@ -1841,21 +1856,15 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection). Make sure to define attributes before creating documents.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
-    ->param('read', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with read permissions. By default only the current user is granted with read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with write permissions. By default only the current user is granted with write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE]), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, Document $user, Stats $usage, Event $events, string $mode) {
+    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Stats $usage, Event $events, string $mode) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
-        if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
-        }
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
@@ -1866,11 +1875,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is not allowed for creating new documents, try update instead');
         }
 
-        /**
-         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
-         *
-         * @var Document $collection
-         */
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
@@ -1879,42 +1889,72 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        // Check collection permissions when enforced
-        if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization('write');
-            if (!$validator->isValid($collection->getWrite())) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
+        $validator = new Authorization('create');
+        if (!$validator->isValid($collection->getCreate())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        /**
+         * Map aggregate permissions into the multiple permissions they represent,
+         * accounting for the resource type given that some types not allowed specific permissions.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'document');
+
+        /**
+         * Add permissions for current the user for any missing types
+         * from the allowed permissions for this resource type.
+         */
+        $allowedPermissions = \array_filter(
+            Database::PERMISSIONS,
+            fn ($permission) => $permission !== Database::PERMISSION_CREATE
+        );
+        if (\is_null($permissions)) {
+            $permissions = [];
+            if (!empty($user->getId())) {
+                foreach ($allowedPermissions as $permission) {
+                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                }
+            }
+        } else {
+            foreach ($allowedPermissions as $permission) {
+                /**
+                 * If an allowed permission was not passed in the request,
+                 * and there is a current user, add it for the current user.
+                 */
+                if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($user->getId())) {
+                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                }
+            }
+        }
+
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() != $type) {
+                        continue;
+                    }
+                    $role = (new Role(
+                        $permission->getRole(),
+                        $permission->getIdentifier(),
+                        $permission->getDimension()
+                    ))->toString();
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+                    }
+                }
             }
         }
 
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
-        $data['$id'] = $documentId == 'unique()' ? $dbForProject->getId() : $documentId;
-        $data['$read'] = (is_null($read) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $read ?? []; //  By default set read permissions for user
-        $data['$write'] = (is_null($write) && !$user->isEmpty()) ? ['user:' . $user->getId()] : $write ?? []; //  By default set write permissions for user
-
-        // Users can only add their roles to documents, API keys and Admin users can add any
-        $roles = Authorization::getRoles();
-
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            foreach ($data['$read'] as $read) {
-                if (!Authorization::isRole($read)) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Read permissions must be one of: (' . \implode(', ', $roles) . ')');
-                }
-            }
-            foreach ($data['$write'] as $write) {
-                if (!Authorization::isRole($write)) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED, 'Write permissions must be one of: (' . \implode(', ', $roles) . ')');
-                }
-            }
-        }
+        $data['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
+        $data['$permissions'] = $permissions;
 
         try {
-            if ($collection->getAttribute('permission') === 'collection') {
-                /** @var Document $document */
-                $document = Authorization::skip(fn() => $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data)));
-            } else {
-                $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data));
-            }
+            $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data));
             $document->setAttribute('$collection', $collectionId);
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
@@ -1972,11 +2012,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
-        /**
-         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
-         *
-         * @var Utopia\Database\Document $collection
-         */
+
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
@@ -1985,12 +2021,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        // Check collection permissions when enforced
-        if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization('read');
-            if (!$validator->isValid($collection->getRead())) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
+        $documentSecurity = $collection->getAttribute('documentSecurity', false);
+        $validator = new Authorization('read');
+        $valid = $validator->isValid($collection->getRead());
+        if (!$valid && !$documentSecurity) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         $filterQueries = \array_map(function ($query) {
@@ -2011,10 +2046,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         if (!empty($cursor)) {
-            $cursorDocument = $collection->getAttribute('permission') === 'collection'
-                ? Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor))
-                : $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
-
+            if ($documentSecurity) {
+                $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
+            } else {
+                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor));
+            }
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Document '{$cursor}' for the 'cursor' value not found.");
             }
@@ -2032,13 +2068,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        if ($collection->getAttribute('permission') === 'collection') {
-            /** @var Document[] $documents */
-            $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $allQueries));
-            $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
-        } else {
+        if ($documentSecurity) {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $allQueries);
             $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+        } else {
+            $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $allQueries));
+            $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         }
 
         /**
@@ -2084,9 +2119,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
-        /**
-         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
-         */
+
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
@@ -2095,29 +2128,30 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             }
         }
 
-        // Check collection permissions when enforced
-        if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization('read');
-            if (!$validator->isValid($collection->getRead())) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
+        $documentSecurity = $collection->getAttribute('documentSecurity', false);
+        $validator = new Authorization('read');
+        $valid = $validator->isValid($collection->getRead());
+        if (!$valid && !$documentSecurity) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($collection->getAttribute('permission') === 'collection') {
-            /** @var Document $document */
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
-        } else {
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+
+        if ($document->isEmpty()) {
+            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+        }
+
+        if ($documentSecurity) {
+            $valid |= $validator->isValid($document->getRead());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
 
         /**
          * Reset $collection attribute to remove prefix.
          */
         $document->setAttribute('$collection', $collectionId);
-
-        if ($document->isEmpty()) {
-            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
-        }
 
         $usage
             ->setParam('databases.documents.read', 1)
@@ -2240,23 +2274,26 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->param('collectionId', null, new UID(), 'Collection ID.')
     ->param('documentId', null, new UID(), 'Document ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
-    ->param('read', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with read permissions. By default inherits the existing read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
-    ->param('write', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with write permissions. By default inherits the existing write permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $read, ?array $write, Response $response, Database $dbForProject, Stats $usage, Event $events, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Stats $usage, Event $events, string $mode) {
+
+        $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
+
+        if (empty($data) && \is_null($permissions)) {
+            throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
+        }
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
-        /**
-         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
-         */
+
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
@@ -2265,75 +2302,73 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             }
         }
 
-        // Check collection permissions when enforced
-        if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization('write');
-            if (!$validator->isValid($collection->getWrite())) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
-
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
-        } else {
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        $documentSecurity = $collection->getAttribute('documentSecurity', false);
+        $validator = new Authorization('update');
+        $valid = $validator->isValid($collection->getUpdate());
+        if (!$valid && !$documentSecurity) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
+        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
-
-        if (empty($data) && empty($read) && empty($write)) {
-            throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD, 'Missing payload or read/write permissions');
+        if ($documentSecurity) {
+            $valid |= $validator->isValid($document->getUpdate());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
 
-        if (!\is_array($data)) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Data param should be a valid JSON object');
+        // Users can only manage their own roles, API keys and Admin users can manage any
+        $roles = Authorization::getRoles();
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
+            foreach (Database::PERMISSIONS as $type) {
+                foreach ($permissions as $permission) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() != $type) {
+                        continue;
+                    }
+                    $role = (new Role(
+                        $permission->getRole(),
+                        $permission->getIdentifier(),
+                        $permission->getDimension()
+                    ))->toString();
+                    if (!Authorization::isRole($role)) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+                    }
+                }
+            }
+        }
+
+        /**
+         * Map aggregate permissions into the multiple permissions they represent,
+         * accounting for the resource type given that some types not allowed specific permissions.
+         */
+        $permissions = PermissionsProcessor::aggregate($permissions, 'document');
+
+        if (\is_null($permissions)) {
+            $permissions = $document->getPermissions() ?? [];
         }
 
         $data = \array_merge($document->getArrayCopy(), $data);
-
-        $data['$collection'] = $collection->getId(); // Make sure user don't switch collectionID
-        $data['$createdAt'] = $document->getCreatedAt(); // Make sure user don't switch createdAt
-        $data['$id'] = $document->getId(); // Make sure user don't switch document unique ID
-        $data['$read'] = (is_null($read)) ? ($document->getRead() ?? []) : $read; // By default inherit read permissions
-        $data['$write'] = (is_null($write)) ? ($document->getWrite() ?? []) : $write; // By default inherit write permissions
-
-        // Users can only add their roles to documents, API keys and Admin users can add any
-        $roles = Authorization::getRoles();
-
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-            if (!is_null($read)) {
-                foreach ($data['$read'] as $read) {
-                    if (!Authorization::isRole($read)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Read permissions must be one of: (' . \implode(', ', $roles) . ')');
-                    }
-                }
-            }
-            if (!is_null($write)) {
-                foreach ($data['$write'] as $write) {
-                    if (!Authorization::isRole($write)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Write permissions must be one of: (' . \implode(', ', $roles) . ')');
-                    }
-                }
-            }
-        }
+        $data['$collection'] = $collection->getId();            // Make sure user doesn't switch collectionID
+        $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
+        $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
+        $data['$permissions'] = $permissions;
 
         try {
-            if ($collection->getAttribute('permission') === 'collection') {
-                /** @var Document $document */
-                $document = Authorization::skip(fn() => $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), new Document($data)));
-            } else {
-                $document = $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), new Document($data));
-            }
+            $document = $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), new Document($data));
+
             /**
              * Reset $collection attribute to remove prefix.
              */
             $document->setAttribute('$collection', $collectionId);
-        } catch (AuthorizationException $exception) {
+        } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (DuplicateException $exception) {
+        } catch (DuplicateException) {
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
@@ -2385,9 +2420,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
-        /**
-         * Skip Authorization to get the collection. Needed in case of empty permissions for document level permissions.
-         */
+
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
@@ -2396,30 +2429,27 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             }
         }
 
-        // Check collection permissions when enforced
-        if ($collection->getAttribute('permission') === 'collection') {
-            $validator = new Authorization('write');
-            if (!$validator->isValid($collection->getWrite())) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
+        $documentSecurity = $collection->getAttribute('documentSecurity', false);
+        $validator = new Authorization('delete');
+        $valid = $validator->isValid($collection->getDelete());
+        if (!$valid && !$documentSecurity) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($collection->getAttribute('permission') === 'collection') {
-            /** @var Document $document */
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
-        } else {
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
-        }
+        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        if ($collection->getAttribute('permission') === 'collection') {
-            Authorization::skip(fn() => $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
-        } else {
-            $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        if ($documentSecurity) {
+            $valid |= $validator->isValid($document->getDelete());
+            if (!$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         }
+
+        $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 
         $dbForProject->deleteCachedDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 

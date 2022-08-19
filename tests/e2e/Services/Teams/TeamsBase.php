@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Teams;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 
 trait TeamsBase
 {
@@ -17,7 +18,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -31,7 +32,7 @@ trait TeamsBase
         $teamUid = $response1['body']['$id'];
         $teamName = $response1['body']['name'];
 
-        $teamId = \uniqid();
+        $teamId = ID::unique();
         $response2 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -52,7 +53,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Newcastle'
         ]);
 
@@ -251,7 +252,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Demo'
         ]);
 
@@ -266,7 +267,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Demo New'
         ]);
 
@@ -300,7 +301,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Demo'
         ]);
 

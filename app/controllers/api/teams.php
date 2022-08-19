@@ -21,8 +21,11 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\DateTime;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
@@ -57,22 +60,31 @@ App::post('/v1/teams')
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
-        $teamId = $teamId == 'unique()' ? $dbForProject->getId() : $teamId;
+        $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
         $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
-            '$id' => $teamId ,
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner'],
+            '$id' => $teamId,
+            '$permissions' => [
+                Permission::read(Role::team($teamId)),
+                Permission::update(Role::team($teamId), 'owner'),
+                Permission::delete(Role::team($teamId), 'owner'),
+            ],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'search' => implode(' ', [$teamId, $name]),
         ])));
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
-            $membershipId = $dbForProject->getId();
+            $membershipId = ID::unique();
             $membership = new Document([
                 '$id' => $membershipId,
-                '$read' => ['user:' . $user->getId(), 'team:' . $team->getId()],
-                '$write' => ['user:' . $user->getId(), 'team:' . $team->getId() . '/owner'],
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::read(Role::team($team->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::update(Role::team($team->getId(), 'owner')),
+                    Permission::delete(Role::user($user->getId())),
+                    Permission::delete(Role::team($team->getId(), 'owner')),
+                ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'teamId' => $team->getId(),
@@ -321,11 +333,15 @@ App::post('/v1/teams/:teamId/memberships')
             }
 
             try {
-                $userId = $dbForProject->getId();
+                $userId = ID::unique();
                 $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
-                    '$read' => ['user:' . $userId, 'role:all'],
-                    '$write' => ['user:' . $userId],
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::read(Role::user($userId)),
+                        Permission::update(Role::user($userId)),
+                        Permission::delete(Role::user($userId)),
+                    ],
                     'email' => $email,
                     'emailVerification' => false,
                     'status' => true,
@@ -360,11 +376,16 @@ App::post('/v1/teams/:teamId/memberships')
 
         $secret = Auth::tokenGenerator();
 
-        $membershipId = $dbForProject->getId();
+        $membershipId = ID::unique();
         $membership = new Document([
             '$id' => $membershipId,
-            '$read' => ['role:all'],
-            '$write' => ['user:' . $invitee->getId(), 'team:' . $team->getId() . '/owner'],
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::user($invitee->getId())),
+                Permission::update(Role::team($team->getId(), 'owner')),
+                Permission::delete(Role::user($invitee->getId())),
+                Permission::delete(Role::team($team->getId(), 'owner')),
+            ],
             'userId' => $invitee->getId(),
             'userInternalId' => $invitee->getInternalId(),
             'teamId' => $team->getId(),
@@ -688,14 +709,14 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         // Log user in
 
-        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
-            '$id' => $dbForProject->getId(),
+            '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'provider' => Auth::SESSION_PROVIDER_EMAIL,
@@ -708,12 +729,15 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $session = $dbForProject->createDocument('sessions', $session
-            ->setAttribute('$read', ['user:' . $user->getId()])
-            ->setAttribute('$write', ['user:' . $user->getId()]));
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        Authorization::setRole('user:' . $userId);
+        Authorization::setRole(Role::user($userId)->toString());
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
@@ -785,6 +809,14 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        /**
+         * Force document security
+         */
+        $validator = new Authorization('delete');
+        if (!$validator->isValid($membership->getDelete())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         try {

@@ -10,6 +10,7 @@ use Tests\E2E\Services\Projects\ProjectsBase;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 
 class ProjectsConsoleClientTest extends Scope
 {
@@ -26,7 +27,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Project Test',
         ]);
 
@@ -38,7 +39,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
         ]);
@@ -60,7 +61,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => '',
             'teamId' => $team['body']['$id'],
         ]);
@@ -71,7 +72,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Project Test',
         ]);
 
@@ -137,7 +138,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Project Test 2',
         ]);
 
@@ -149,7 +150,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Project Test 2',
             'teamId' => $team['body']['$id'],
         ]);
@@ -316,7 +317,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Project Test 2',
         ]);
 
@@ -337,7 +338,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => '',
         ]);
 
@@ -395,7 +396,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'provider' => 'unknown',
-            'appId' => 'AppId',
+            'appId' => ID::custom('AppId'),
             'secret' => 'Secret',
         ]);
 
@@ -421,7 +422,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $originalEmail,
             'password' => $originalPassword,
             'name' => $originalName,
@@ -474,7 +475,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -487,7 +488,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'cookie' => 'a_session_' . $id . '=' . $session,
         ]), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -581,7 +582,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -607,7 +608,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -625,7 +626,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Project Test',
         ]);
         $this->assertEquals(201, $team['headers']['status-code']);
@@ -636,7 +637,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
         ]);
@@ -769,7 +770,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -859,7 +860,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $keySecret,
         ]), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Arsenal'
         ]);
 

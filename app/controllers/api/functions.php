@@ -9,6 +9,9 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
 use Appwrite\Stats\Stats;
 use Utopia\Storage\Device;
@@ -34,7 +37,7 @@ use Utopia\Config\Config;
 use Cron\CronExpression;
 use Executor\Executor;
 use Utopia\CLI\Console;
-use Utopia\Database\Validator\Permissions;
+use Utopia\Database\Validator\Roles;
 use Utopia\Validator\Boolean;
 
 include_once __DIR__ . '/../shared/api.php';
@@ -54,7 +57,7 @@ App::post('/v1/functions')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
+    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
@@ -65,7 +68,7 @@ App::post('/v1/functions')
     ->inject('events')
     ->action(function (string $functionId, string $name, array $execute, string $runtime, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Event $eventsInstance) {
 
-        $functionId = ($functionId == 'unique()') ? $dbForProject->getId() : $functionId;
+        $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
             '$id' => $functionId,
             'execute' => $execute,
@@ -301,7 +304,7 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
+    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -508,7 +511,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $contentRange = $request->getHeader('content-range');
-        $deploymentId = $dbForProject->getId();
+        $deploymentId = ID::unique();
         $chunk = 1;
         $chunks = 1;
 
@@ -582,8 +585,11 @@ App::post('/v1/functions/:functionId/deployments')
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
-                    '$read' => ['role:all'],
-                    '$write' => ['role:all'],
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -611,8 +617,11 @@ App::post('/v1/functions/:functionId/deployments')
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
-                    '$read' => ['role:all'],
-                    '$write' => ['role:all'],
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -869,13 +878,12 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
         }
 
-        $executionId = $dbForProject->getId();
+        $executionId = ID::unique();
 
         /** @var Document $execution */
         $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
-            '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
-            '$write' => [],
+            '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event

@@ -17,8 +17,11 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
 use Utopia\Database\DateTime;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\UID;
@@ -80,7 +83,7 @@ App::post('/v1/projects')
             $auths[$method['key'] ?? ''] = true;
         }
 
-        $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
+        $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
@@ -88,8 +91,13 @@ App::post('/v1/projects')
 
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            '$permissions' => [
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            ],
             'name' => $name,
             'teamInternalId' => $team->getInternalId(),
             'teamId' => $team->getId(),
@@ -102,7 +110,7 @@ App::post('/v1/projects')
             'legalState' => $legalState,
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
-            'legalTaxId' => $legalTaxId,
+            'legalTaxId' => ID::custom($legalTaxId),
             'services' => new stdClass(),
             'platforms' => null,
             'authProviders' => [],
@@ -598,9 +606,12 @@ App::post('/v1/projects/:projectId/webhooks')
         $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
         $webhook = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'name' => $name,
@@ -843,9 +854,12 @@ App::post('/v1/projects/:projectId/keys')
         }
 
         $key = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'name' => $name,
@@ -1042,9 +1056,12 @@ App::post('/v1/projects/:projectId/platforms')
         }
 
         $platform = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'type' => $type,
@@ -1255,9 +1272,12 @@ App::post('/v1/projects/:projectId/domains')
         $domain = new Domain($domain);
 
         $domain = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'updated' => DateTime::now(),

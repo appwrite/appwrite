@@ -13,6 +13,9 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Locale\Locale;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
@@ -40,12 +43,17 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
     }
 
     try {
-        $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+        $userId = $userId == 'unique()'
+            ? ID::unique()
+            : ID::custom($userId);
 
         $user = $dbForProject->createDocument('users', new Document([
             '$id' => $userId,
-            '$read' => ['role:all'],
-            '$write' => ['user:' . $userId],
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
+            ],
             'email' => $email,
             'emailVerification' => false,
             'phone' => $phone,

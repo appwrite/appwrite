@@ -8,6 +8,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 
 use function sleep;
 
@@ -71,7 +72,7 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -152,7 +153,7 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -231,7 +232,7 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -411,7 +412,7 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password
         ]);
@@ -690,7 +691,7 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'phone' => $number,
         ]);
 
@@ -709,7 +710,7 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()'
+            'userId' => ID::unique()
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -738,7 +739,7 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'ewewe',
+            'userId' => ID::custom('ewewe'),
             'secret' => $token,
         ]);
 
@@ -964,7 +965,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'userId' => 'ewewe',
+            'userId' => ID::custom('ewewe'),
             'secret' => Mock::$digits,
         ]);
 

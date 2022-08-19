@@ -10,6 +10,7 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -26,7 +27,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
             'runtime' => 'php-8.0',
             'vars' => [
@@ -124,7 +125,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test 2',
             'runtime' => 'php-8.0',
             'vars' => [
@@ -712,7 +713,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [],
@@ -797,7 +798,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [],
@@ -907,7 +908,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
@@ -1012,7 +1013,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
@@ -1117,7 +1118,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
@@ -1222,7 +1223,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
@@ -1327,7 +1328,7 @@ class FunctionsCustomServerTest extends Scope
     //         'content-type' => 'application/json',
     //         'x-appwrite-project' => $this->getProject()['$id'],
     //     ], $this->getHeaders()), [
-    //         'functionId' => 'unique()',
+    //         'functionId' => ID::unique(),
     //         'name' => 'Test '.$name,
     //         'runtime' => $name,
     //         'vars' => [

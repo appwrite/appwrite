@@ -11,6 +11,7 @@ use Appwrite\Auth\Hash\Scryptmodified;
 use Appwrite\Auth\Hash\Sha;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
 class Auth
@@ -32,13 +33,13 @@ class Auth
     /**
      * User Roles.
      */
-    public const USER_ROLE_ALL = 'all';
-    public const USER_ROLE_GUEST = 'guest';
-    public const USER_ROLE_MEMBER = 'member';
+    public const USER_ROLE_ANY = 'any';
+    public const USER_ROLE_GUESTS = 'guests';
+    public const USER_ROLE_USERS = 'users';
     public const USER_ROLE_ADMIN = 'admin';
     public const USER_ROLE_DEVELOPER = 'developer';
     public const USER_ROLE_OWNER = 'owner';
-    public const USER_ROLE_APP = 'app';
+    public const USER_ROLE_APPS = 'apps';
     public const USER_ROLE_SYSTEM = 'system';
 
     /**
@@ -316,7 +317,7 @@ class Auth
                 $token->isSet('expire') &&
                 $token->getAttribute('type') == $type &&
                 $token->getAttribute('secret') === self::hash($secret) &&
-                $token->getAttribute('expire') >= DateTime::now()
+                DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
                 return (string)$token->getId();
             }
@@ -335,7 +336,7 @@ class Auth
                 $token->isSet('expire') &&
                 $token->getAttribute('type') == Auth::TOKEN_TYPE_PHONE &&
                 $token->getAttribute('secret') === $secret &&
-                $token->getAttribute('expire') >= DateTime::now()
+                DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
                 return (string) $token->getId();
             }
@@ -361,7 +362,7 @@ class Auth
                 $session->isSet('expire') &&
                 $session->isSet('provider') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
-                $session->getAttribute('expire') >= DateTime::now()
+                DateTime::formatTz($session->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
                 return $session->getId();
             }
@@ -380,9 +381,9 @@ class Auth
     public static function isPrivilegedUser(array $roles): bool
     {
         if (
-            in_array('role:' . self::USER_ROLE_OWNER, $roles) ||
-            in_array('role:' . self::USER_ROLE_DEVELOPER, $roles) ||
-            in_array('role:' . self::USER_ROLE_ADMIN, $roles)
+            in_array(self::USER_ROLE_OWNER, $roles) ||
+            in_array(self::USER_ROLE_DEVELOPER, $roles) ||
+            in_array(self::USER_ROLE_ADMIN, $roles)
         ) {
             return true;
         }
@@ -399,7 +400,7 @@ class Auth
      */
     public static function isAppUser(array $roles): bool
     {
-        if (in_array('role:' . self::USER_ROLE_APP, $roles)) {
+        if (in_array(self::USER_ROLE_APPS, $roles)) {
             return true;
         }
 
@@ -418,19 +419,19 @@ class Auth
 
         if (!self::isPrivilegedUser(Authorization::getRoles()) && !self::isAppUser(Authorization::getRoles())) {
             if ($user->getId()) {
-                $roles[] = 'user:' . $user->getId();
-                $roles[] = 'role:' . Auth::USER_ROLE_MEMBER;
+                $roles[] = Role::user($user->getId())->toString();
+                $roles[] = Role::users()->toString();
             } else {
-                return ['role:' . Auth::USER_ROLE_GUEST];
+                return [Role::guests()->toString()];
             }
         }
 
         foreach ($user->getAttribute('memberships', []) as $node) {
             if (isset($node['teamId']) && isset($node['roles'])) {
-                $roles[] = 'team:' . $node['teamId'];
+                $roles[] = Role::team($node['teamId'])->toString();
 
                 foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                    $roles[] = 'team:' . $node['teamId'] . '/' . $nodeRole;
+                    $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
                 }
             }
         }

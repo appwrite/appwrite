@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Role;
 
 class Execution extends Model
 {
@@ -28,11 +29,11 @@ class Execution extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
-            ->addRule('$read', [
+            ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Execution read permissions.',
+                'description' => 'Execution roles.',
                 'default' => '',
-                'example' => 'role:all',
+                'example' => [Role::any()->toString()],
                 'array' => true,
             ])
             ->addRule('functionId', [

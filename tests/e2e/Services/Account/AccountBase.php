@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Account;
 
 use Tests\E2E\Client;
+use Utopia\Database\ID;
 use Utopia\Database\DateTime;
 
 trait AccountBase
@@ -21,7 +22,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -44,7 +45,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -57,7 +58,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => '',
             'password' => '',
         ]);
@@ -69,7 +70,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => '',
         ]);
@@ -81,7 +82,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => '',
             'password' => $password,
         ]);
@@ -664,7 +665,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' =>  $data['email'],
             'password' =>  $data['password'],
             'name' =>  $data['name'],
@@ -824,7 +825,7 @@ trait AccountBase
         $this->assertEquals('Account Verification', $lastEmail['subject']);
 
         $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
         $this->assertNotFalse($expireTime);
 
         $secretTest = strpos($lastEmail['text'], 'secret=' . $response['body']['secret'], 0);
@@ -898,7 +899,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'userId' => 'ewewe',
+            'userId' => ID::custom('ewewe'),
             'secret' => $verification,
         ]);
 
@@ -1127,7 +1128,7 @@ trait AccountBase
 
         $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
 
         $this->assertNotFalse($expireTime);
 
@@ -1213,7 +1214,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'ewewe',
+            'userId' => ID::custom('ewewe'),
             'secret' => $recovery,
             'password' => $newPassowrd,
             'passwordAgain' => $newPassowrd,
@@ -1262,7 +1263,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             // 'url' => 'http://localhost/magiclogin',
         ]);
@@ -1280,7 +1281,7 @@ trait AccountBase
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
 
         $this->assertNotFalse($expireTime);
 
@@ -1300,7 +1301,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'url' => 'localhost/magiclogin',
         ]);
@@ -1312,7 +1313,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'url' => 'http://remotehost/magiclogin',
         ]);
@@ -1388,7 +1389,7 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'ewewe',
+            'userId' => ID::custom('ewewe'),
             'secret' => $token,
         ]);
 
