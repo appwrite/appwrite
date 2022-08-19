@@ -63,7 +63,7 @@ class Func extends Model
             ])
             ->addRule('vars', [
                 'type' => Response::MODEL_VARIABLE,
-                'description' => 'Function environment variables.',
+                'description' => 'Function variables.',
                 'default' => [],
                 'example' => [],
                 'array' => true
