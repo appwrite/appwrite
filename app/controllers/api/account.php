@@ -123,9 +123,9 @@ App::post('/v1/account')
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
 
-        Authorization::unsetRole(Auth::USER_ROLE_GUESTS);
-        Authorization::setRole('user:' . $user->getId());
-        Authorization::setRole(Auth::USER_ROLE_USERS);
+        Authorization::unsetRole(Role::guests()->toString());
+        Authorization::setRole(Role::user($user->getId())->toString());
+        Authorization::setRole(Role::users()->toString());
 
         $audits
             ->setResource('user/' . $user->getId())
@@ -204,7 +204,7 @@ App::post('/v1/account/sessions/email')
             $detector->getDevice()
         ));
 
-        Authorization::setRole('user:' . $profile->getId());
+        Authorization::setRole(Role::user($profile->getId())->toString());
 
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             Permission::read(Role::user($profile->getId())),
@@ -553,7 +553,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->setAttribute('status', true)
         ;
 
-        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -694,7 +694,7 @@ App::post('/v1/account/sessions/magic-url')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
@@ -803,7 +803,7 @@ App::put('/v1/account/sessions/magic-url')
             $detector->getDevice()
         ));
 
-        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
@@ -946,7 +946,7 @@ App::post('/v1/account/sessions/phone')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
@@ -1042,7 +1042,7 @@ App::put('/v1/account/sessions/phone')
             $detector->getDevice()
         ));
 
-        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $session = $dbForProject->createDocument('sessions', $session
             ->setAttribute('$permissions', [
@@ -1191,7 +1191,7 @@ App::post('/v1/account/sessions/anonymous')
             $detector->getDevice()
         ));
 
-        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
@@ -2017,7 +2017,7 @@ App::post('/v1/account/recovery')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole('user:' . $profile->getId());
+        Authorization::setRole(Role::user($profile->getId())->toString());
 
         $recovery = $dbForProject->createDocument('tokens', $recovery
             ->setAttribute('$permissions', [
@@ -2103,7 +2103,7 @@ App::put('/v1/account/recovery')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        Authorization::setRole('user:' . $profile->getId());
+        Authorization::setRole(Role::user($profile->getId())->toString());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
                 ->setAttribute('password', Auth::passwordHash($password))
@@ -2179,7 +2179,7 @@ App::post('/v1/account/verification')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $verification = $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
@@ -2259,7 +2259,7 @@ App::put('/v1/account/verification')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        Authorization::setRole('user:' . $profile->getId());
+        Authorization::setRole(Role::user($profile->getId())->toString());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
 
@@ -2335,7 +2335,7 @@ App::post('/v1/account/verification/phone')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $verification = $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
@@ -2407,7 +2407,7 @@ App::put('/v1/account/verification/phone')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        Authorization::setRole('user:' . $profile->getId());
+        Authorization::setRole(Role::user($profile->getId())->toString());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('phoneVerification', true));
 

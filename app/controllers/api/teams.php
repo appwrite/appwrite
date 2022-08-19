@@ -727,7 +727,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         // Log user in
 
-        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
@@ -755,7 +755,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        Authorization::setRole('user:' . $userId);
+        Authorization::setRole(Role::user($userId)->toString());
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 

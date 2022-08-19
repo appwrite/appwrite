@@ -10,6 +10,7 @@ use Tests\E2E\Scopes\SideClient;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\ID;
+use Utopia\Database\Role;
 
 class FunctionsCustomClientTest extends Scope
 {
@@ -148,7 +149,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['any'],
+            'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
@@ -333,7 +334,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['any'],
+            'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',

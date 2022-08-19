@@ -4,6 +4,7 @@ namespace Appwrite\Auth;
 
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
 class Auth
@@ -309,19 +310,19 @@ class Auth
 
         if (!self::isPrivilegedUser(Authorization::getRoles()) && !self::isAppUser(Authorization::getRoles())) {
             if ($user->getId()) {
-                $roles[] = 'user:' . $user->getId();
-                $roles[] = Auth::USER_ROLE_USERS;
+                $roles[] = Role::user($user->getId())->toString();
+                $roles[] = Role::users()->toString();
             } else {
-                return [Auth::USER_ROLE_GUESTS];
+                return [Role::guests()->toString()];
             }
         }
 
         foreach ($user->getAttribute('memberships', []) as $node) {
             if (isset($node['teamId']) && isset($node['roles'])) {
-                $roles[] = 'team:' . $node['teamId'];
+                $roles[] = Role::team($node['teamId'])->toString();
 
                 foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                    $roles[] = 'team:' . $node['teamId'] . '/' . $nodeRole;
+                    $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
                 }
             }
         }

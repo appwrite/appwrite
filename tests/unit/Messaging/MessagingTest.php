@@ -26,13 +26,21 @@ class MessagingTest extends TestCase
         $realtime->subscribe(
             '1',
             1,
-            ['user:123', 'users', 'team:abc', 'team:abc/administrator', 'team:abc/moderator', 'team:def', 'team:def/guest'],
+            [
+                Role::user(ID::custom('123'))->toString(),
+                Role::users()->toString(),
+                Role::team(ID::custom('abc'))->toString(),
+                Role::team(ID::custom('abc'), 'administrator')->toString(),
+                Role::team(ID::custom('abc'), 'moderator')->toString(),
+                Role::team(ID::custom('def'))->toString(),
+                Role::team(ID::custom('def'), 'guest')->toString(),
+            ],
             ['files' => 0, 'documents' => 0, 'documents.789' => 0, 'account.123' => 0]
         );
 
         $event = [
             'project' => '1',
-            'roles' => ['any'],
+            'roles' => [Role::any()->toString()],
             'data' => [
                 'channels' => [
                     0 => 'account.123',
@@ -45,68 +53,68 @@ class MessagingTest extends TestCase
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['users'];
+        $event['roles'] = [Role::users()->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['user:123'];
+        $event['roles'] = [Role::user(ID::custom('123'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['team:abc'];
+        $event['roles'] = [Role::team(ID::custom('abc'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['team:abc/administrator'];
+        $event['roles'] = [Role::team(ID::custom('abc'), 'administrator')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['team:abc/moderator'];
+        $event['roles'] = [Role::team(ID::custom('abc'), 'moderator')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['team:def'];
+        $event['roles'] = [Role::team(ID::custom('def'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['team:def/guest'];
+        $event['roles'] = [Role::team(ID::custom('def'), 'guest')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['user:456'];
+        $event['roles'] = [Role::user(ID::custom('456'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['team:def/member'];
+        $event['roles'] = [Role::team(ID::custom('def'), 'member')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['any'];
+        $event['roles'] = [Role::any()->toString()];
         $event['data']['channels'] = ['documents.123'];
 
         $receivers = $realtime->getSubscribers($event);
@@ -199,7 +207,7 @@ class MessagingTest extends TestCase
         $this->assertArrayNotHasKey('account.456', $channels);
     }
 
-    public function testFromPayloadCollectionLevelPermissions(): void
+    public function testFromPayloadPermissions(): void
     {
         /**
          * Test Collection Level Permissions
@@ -210,9 +218,9 @@ class MessagingTest extends TestCase
                 '$id' => ID::custom('test'),
                 '$collection' => ID::custom('collection'),
                 '$permissions' => [
-                    'read(admin)',
-                    'update(admin)',
-                    'delete(admin)',
+                    Permission::read(Role::team('123abc')),
+                    Permission::update(Role::team('123abc')),
+                    Permission::delete(Role::team('123abc')),
                 ],
             ]),
             database: new Document([
@@ -228,8 +236,8 @@ class MessagingTest extends TestCase
             ])
         );
 
-        $this->assertContains('any', $result['roles']);
-        $this->assertNotContains('role:admin', $result['roles']);
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+        $this->assertNotContains(Role::team('123abc')->toString(), $result['roles']);
 
         /**
          * Test Document Level Permissions
@@ -251,16 +259,16 @@ class MessagingTest extends TestCase
             collection: new Document([
                 '$id' => ID::custom('collection'),
                 '$permissions' => [
-                    'read(admin)',
-                    'update(admin)',
-                    'delete(admin)',
+                    Permission::read(Role::team('123abc')),
+                    Permission::update(Role::team('123abc')),
+                    Permission::delete(Role::team('123abc')),
                 ],
                 'documentSecurity' => true,
             ])
         );
 
-        $this->assertContains('any', $result['roles']);
-        $this->assertContains('admin', $result['roles']);
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+        $this->assertContains(Role::team('123abc')->toString(), $result['roles']);
     }
 
     public function testFromPayloadBucketLevelPermissions(): void
@@ -274,9 +282,9 @@ class MessagingTest extends TestCase
                 '$id' => ID::custom('test'),
                 '$collection' => ID::custom('bucket'),
                 '$permissions' => [
-                    'read(admin)',
-                    'update(admin)',
-                    'delete(admin)',
+                    Permission::read(Role::team('123abc')),
+                    Permission::update(Role::team('123abc')),
+                    Permission::delete(Role::team('123abc')),
                 ],
             ]),
             bucket: new Document([
@@ -289,8 +297,8 @@ class MessagingTest extends TestCase
             ])
         );
 
-        $this->assertContains('any', $result['roles']);
-        $this->assertNotContains('admin', $result['roles']);
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+        $this->assertNotContains(Role::team('123abc')->toString(), $result['roles']);
 
         /**
          * Test File Level Permissions
@@ -309,15 +317,15 @@ class MessagingTest extends TestCase
             bucket: new Document([
                 '$id' => ID::custom('bucket'),
                 '$permissions' => [
-                    'read(admin)',
-                    'update(admin)',
-                    'delete(admin)',
+                    Permission::read(Role::team('123abc')),
+                    Permission::update(Role::team('123abc')),
+                    Permission::delete(Role::team('123abc')),
                 ],
                 'fileSecurity' => true
             ])
         );
 
-        $this->assertContains('any', $result['roles']);
-        $this->assertContains('admin', $result['roles']);
+        $this->assertContains(Role::any()->toString(), $result['roles']);
+        $this->assertContains(Role::team('123abc')->toString(), $result['roles']);
     }
 }

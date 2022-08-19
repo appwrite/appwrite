@@ -6,6 +6,7 @@ use Appwrite\Auth\Auth;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\ID;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
@@ -18,7 +19,7 @@ class AuthTest extends TestCase
     public function tearDown(): void
     {
         Authorization::cleanRoles();
-        Authorization::setRole('any');
+        Authorization::setRole(Role::any()->toString());
     }
 
     public function testCookieName(): void
@@ -171,8 +172,8 @@ class AuthTest extends TestCase
     public function testIsPrivilegedUser(): void
     {
         $this->assertEquals(false, Auth::isPrivilegedUser([]));
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_GUESTS]));
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_USERS]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Role::guests()->toString()]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Role::users()->toString()]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_ADMIN]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_DEVELOPER]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER]));
@@ -180,16 +181,16 @@ class AuthTest extends TestCase
         $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_SYSTEM]));
 
         $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_APPS]));
-        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS]));
-        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_GUESTS]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS, Role::guests()->toString()]));
+        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER, Role::guests()->toString()]));
         $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_ADMIN, Auth::USER_ROLE_DEVELOPER]));
     }
 
     public function testIsAppUser(): void
     {
         $this->assertEquals(false, Auth::isAppUser([]));
-        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_GUESTS]));
-        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_USERS]));
+        $this->assertEquals(false, Auth::isAppUser([Role::guests()->toString()]));
+        $this->assertEquals(false, Auth::isAppUser([Role::users()->toString()]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_ADMIN]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_DEVELOPER]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER]));
@@ -197,8 +198,8 @@ class AuthTest extends TestCase
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_SYSTEM]));
 
         $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_APPS]));
-        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_GUESTS]));
-        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_GUESTS]));
+        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS, Role::guests()->toString()]));
+        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER, Role::guests()->toString()]));
         $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_ADMIN, Auth::USER_ROLE_DEVELOPER]));
     }
 
@@ -210,7 +211,7 @@ class AuthTest extends TestCase
 
         $roles = Auth::getRoles($user);
         $this->assertCount(1, $roles);
-        $this->assertContains('guests', $roles);
+        $this->assertContains(Role::guests()->toString(), $roles);
     }
 
     public function testUserRoles(): void

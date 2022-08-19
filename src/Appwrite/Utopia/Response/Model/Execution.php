@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Role;
 
 class Execution extends Model
 {
@@ -32,7 +33,7 @@ class Execution extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Execution roles.',
                 'default' => '',
-                'example' => ['any'],
+                'example' => [Role::any()->toString()],
                 'array' => true,
             ])
             ->addRule('functionId', [
