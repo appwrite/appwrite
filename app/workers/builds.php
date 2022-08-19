@@ -185,7 +185,7 @@ class BuildsV1 extends Worker
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
                 $function->setAttribute('deployment', $deployment->getId());
-                $function = $dbForProject->updateDocument('functions', $function->getId(), $function);               
+                $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
             }
 
             /** Update function schedule */
