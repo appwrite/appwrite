@@ -51,7 +51,7 @@
         "utopia-php/cache": "0.6.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.22.*",
+        "utopia-php/database": "0.23.0 as 0.22.0",
         "utopia-php/locale": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
@@ -88,6 +88,9 @@
         "ext-phpiredis": "*"
     },
     "config": {
+        "optimize-autoloader": true,
+        "allow-plugins": false,
+        "preferred-install": "dist",
         "platform": {
             "php": "8.0"
         }

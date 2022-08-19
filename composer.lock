@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "175fe4abafd8bde4053b91eea905c328",
+    "content-hash": "1858c544a5b5ae59bc6ff146a375a683",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2052,16 +2052,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.22.0",
+            "version": "0.23.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "22c45ae83612e907203b7571cd8e3115ae3ae4c5"
+                "reference": "e4a23f8e26a3d96f292e549cebe0ff6937ec5d71"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/22c45ae83612e907203b7571cd8e3115ae3ae4c5",
-                "reference": "22c45ae83612e907203b7571cd8e3115ae3ae4c5",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/e4a23f8e26a3d96f292e549cebe0ff6937ec5d71",
+                "reference": "e4a23f8e26a3d96f292e549cebe0ff6937ec5d71",
                 "shasum": ""
             },
             "require": {
@@ -2110,9 +2110,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.22.0"
+                "source": "https://github.com/utopia-php/database/tree/0.23.0"
             },
-            "time": "2022-08-17T12:55:37+00:00"
+            "time": "2022-08-18T19:08:33+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5354,6 +5354,12 @@
             "version": "9999999-dev",
             "alias": "0.19.5",
             "alias_normalized": "0.19.5.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "0.23.0.0",
+            "alias": "0.22.0",
+            "alias_normalized": "0.22.0.0"
         }
     ],
     "minimum-stability": "stable",
