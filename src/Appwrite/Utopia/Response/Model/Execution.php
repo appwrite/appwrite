@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Role;
 
 class Execution extends Model
 {
@@ -32,7 +33,7 @@ class Execution extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Execution roles.',
                 'default' => '',
-                'example' => ['any'],
+                'example' => [Role::any()->toString()],
                 'array' => true,
             ])
             ->addRule('functionId', [
@@ -65,9 +66,15 @@ class Execution extends Model
                 'default' => '',
                 'example' => '',
             ])
+            ->addRule('stdout', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The script stdout output string. Logs the last 4,000 characters of the execution stdout output. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'default' => '',
+                'example' => '',
+            ])
             ->addRule('stderr', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The script stderr output string. Logs the last 4,000 characters of the execution stderr output',
+                'description' => 'The script stderr output string. Logs the last 4,000 characters of the execution stderr output. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
             ])

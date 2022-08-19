@@ -9,6 +9,7 @@ class Delete extends Event
 {
     protected string $type = '';
     protected ?Document $document = null;
+    protected ?string $resource = null;
     protected ?string $datetime = null;
     protected ?string $datetime1d = null;
     protected ?string $datetime30m = null;
@@ -91,6 +92,29 @@ class Delete extends Event
     }
 
     /**
+     * Returns the resource for the delete event.
+     *
+     * @return string
+     */
+    public function getResource(): string
+    {
+        return $this->resource;
+    }
+
+    /**
+     * Sets the resource for the delete event.
+     *
+     * @param string $resource
+     * @return self
+     */
+    public function setResource(string $resource): self
+    {
+        $this->resource = $resource;
+
+        return $this;
+    }
+
+    /**
      * Returns the set document for the delete event.
      *
      * @return null|Document
@@ -99,6 +123,7 @@ class Delete extends Event
     {
         return $this->document;
     }
+
 
     /**
      * Executes this event and sends it to the deletes worker.
@@ -112,9 +137,10 @@ class Delete extends Event
             'project' => $this->project,
             'type' => $this->type,
             'document' => $this->document,
+            'resource' => $this->resource,
             'datetime' => $this->datetime,
             'datetime1d' => $this->datetime1d,
-            'datetime30m' => $this->datetime30m
+            'datetime30m' => $this->datetime30m,
         ]);
     }
 }

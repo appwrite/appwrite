@@ -95,10 +95,11 @@ class DatabasesPermissionsGuestTest extends Scope
 
         foreach ($documents['body']['documents'] as $document) {
             foreach ($document['$permissions'] as $permission) {
-                if (!\str_starts_with($permission, 'read')) {
+                $permission = Permission::parse($permission);
+                if ($permission->getPermission() != 'read') {
                      continue;
                 }
-                $this->assertTrue(\str_contains($permission, 'any'));
+                $this->assertEquals($permission->getRole(), Role::any()->toString());
             }
         }
     }

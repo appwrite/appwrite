@@ -23,12 +23,12 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Phone\Mock;
-use Appwrite\Auth\Phone\Telesign;
-use Appwrite\Auth\Phone\TextMagic;
-use Appwrite\Auth\Phone\Twilio;
-use Appwrite\Auth\Phone\Msg91;
-use Appwrite\Auth\Phone\Vonage;
+use Appwrite\SMS\Adapter\Mock;
+use Appwrite\SMS\Adapter\Telesign;
+use Appwrite\SMS\Adapter\TextMagic;
+use Appwrite\SMS\Adapter\Twilio;
+use Appwrite\SMS\Adapter\Msg91;
+use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
@@ -146,6 +146,8 @@ const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_SESSIONS = 'sessions';
+const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
+const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -998,8 +1000,8 @@ App::setResource('geodb', function ($register) {
     return $register->get('geodb');
 }, ['register']);
 
-App::setResource('phone', function () {
-    $dsn = new DSN(App::getEnv('_APP_PHONE_PROVIDER'));
+App::setResource('sms', function () {
+    $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
     $user = $dsn->getUser();
     $secret = $dsn->getPassword();
 

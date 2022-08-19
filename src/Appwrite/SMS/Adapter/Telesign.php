@@ -1,13 +1,13 @@
 <?php
 
-namespace Appwrite\Auth\Phone;
+namespace Appwrite\SMS\Adapter;
 
-use Appwrite\Auth\Phone;
+use Appwrite\SMS\Adapter;
 
 // Reference Material
 // https://developer.telesign.com/enterprise/docs/sms-api-send-an-sms
 
-class Telesign extends Phone
+class Telesign extends Adapter
 {
     /**
      * @var string

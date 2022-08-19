@@ -5,6 +5,8 @@ namespace Appwrite\Specification\Format;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Validator;
 
 class Swagger2 extends Format
@@ -17,15 +19,32 @@ class Swagger2 extends Format
     protected function getNestedModels(Model $model, array &$usedModels): void
     {
         foreach ($model->getRules() as $rule) {
-            if (
-                in_array($model->getType(), $usedModels)
-                && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float', 'double'])
-            ) {
-                $usedModels[] = $rule['type'];
-                foreach ($this->models as $m) {
-                    if ($m->getType() === $rule['type']) {
-                        $this->getNestedModels($m, $usedModels);
-                        return;
+            if (!in_array($model->getType(), $usedModels)) {
+                continue;
+            }
+
+            if (\is_array($rule['type'])) {
+                foreach ($rule['type'] as $ruleType) {
+                    if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float'])) {
+                        $usedModels[] = $ruleType;
+
+                        foreach ($this->models as $m) {
+                            if ($m->getType() === $ruleType) {
+                                $this->getNestedModels($m, $usedModels);
+                                continue;
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
+                    $usedModels[] = $rule['type'];
+
+                    foreach ($this->models as $m) {
+                        if ($m->getType() === $rule['type']) {
+                            $this->getNestedModels($m, $usedModels);
+                            continue;
+                        }
                     }
                 }
             }
@@ -317,7 +336,7 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["read(any)"]';
+                        $node['x-example'] = '["' . Permission::read(Role::any()) . '"]';
                         break;
                     case 'Utopia\Database\Validator\Roles':
                         $node['type'] = $validator->getType();
@@ -325,7 +344,7 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["any"]';
+                        $node['x-example'] = '["' . Role::any()->toString() . '"]';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['type'] = $validator->getType();

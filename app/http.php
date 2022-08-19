@@ -258,7 +258,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     try {
         Authorization::cleanRoles();
-        Authorization::setRole('any');
+        Authorization::setRole(Role::any()->toString());
 
         $app->run($request, $response);
     } catch (\Throwable $th) {

@@ -398,7 +398,7 @@ class WebhooksCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['any'],
+            'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
             'timeout' => 10,
         ]);
@@ -447,7 +447,7 @@ class WebhooksCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Test',
             'runtime' => 'php-8.0',
-            'execute' => ['any'],
+            'execute' => [Role::any()->toString()],
             'vars' => [
                 'key1' => 'value1',
             ]
