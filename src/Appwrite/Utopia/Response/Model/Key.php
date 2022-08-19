@@ -62,7 +62,6 @@ class Key extends Model
                 'type' => self::TYPE_DATETIME_EXAMPLE,
                 'description' => 'Most recent access date in Unix timestamp.',
                 'default' => null,
-                'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE
             ])
             ->addRule('sdks', [

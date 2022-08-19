@@ -987,7 +987,7 @@ $collections = [
                 'filters' => ['datetime'],
             ],
             [
-                '$id' => 'sdks',
+                '$id' => ID::custom('sdks'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
