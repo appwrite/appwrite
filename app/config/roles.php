@@ -81,7 +81,7 @@ return [
         'scopes' => \array_merge($member, $admins, []),
     ],
     Auth::USER_ROLE_APPS => [
-        'label' => 'Application',
+        'label' => 'Applications',
         'scopes' => ['health.read'],
     ],
 ];

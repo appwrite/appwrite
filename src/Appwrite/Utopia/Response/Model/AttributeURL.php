@@ -29,7 +29,6 @@ class AttributeURL extends Attribute
                 'description' => 'String format.',
                 'default' => 'url',
                 'example' => 'url',
-                'array' => false,
                 'required' => true,
             ])
             ->addRule('default', [

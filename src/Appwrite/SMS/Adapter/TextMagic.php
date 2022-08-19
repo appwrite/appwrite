@@ -1,18 +1,18 @@
 <?php
 
-namespace Appwrite\Auth\Phone;
+namespace Appwrite\SMS\Adapter;
 
-use Appwrite\Auth\Phone;
+use Appwrite\SMS\Adapter;
 
 // Reference Material
-// https://developer.vonage.com/api/sms
+// https://www.textmagic.com/docs/api/start/
 
-class Vonage extends Phone
+class TextMagic extends Adapter
 {
     /**
      * @var string
      */
-    private string $endpoint = 'https://rest.nexmo.com/sms/json';
+    private string $endpoint = 'https://rest.textmagic.com/api/v2';
 
     /**
      * @param string $from
@@ -23,19 +23,20 @@ class Vonage extends Phone
     public function send(string $from, string $to, string $message): void
     {
         $to = ltrim($to, '+');
-        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+        $from = ltrim($from, '+');
 
         $this->request(
             method: 'POST',
-            url: $this->endpoint,
-            headers: $headers,
+            url: $this->endpoint . '/messages',
             payload: \http_build_query([
                 'text' => $message,
                 'from' => $from,
-                'to' => $to,
-                'api_key' => $this->user,
-                'api_secret' => $this->secret
-            ])
+                'phones' => $to
+            ]),
+            headers: [
+                "X-TM-Username: {$this->user}",
+                "X-TM-Key: {$this->secret}",
+            ]
         );
     }
 }

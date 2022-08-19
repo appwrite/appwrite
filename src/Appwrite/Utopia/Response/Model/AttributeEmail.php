@@ -29,8 +29,7 @@ class AttributeEmail extends Attribute
                 'description' => 'String format.',
                 'default' => 'email',
                 'example' => 'email',
-                'array' => false,
-                'require' => true,
+                'required' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,

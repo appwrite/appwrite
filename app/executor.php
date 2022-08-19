@@ -494,6 +494,7 @@ App::post('/v1/execution')
             $executionStart = \microtime(true);
             $stdout = '';
             $stderr = '';
+            $res = '';
             $statusCode = 0;
             $errNo = -1;
             $executorResponse = '';
@@ -521,6 +522,7 @@ App::post('/v1/execution')
             ]);
 
             $executorResponse = \curl_exec($ch);
+            $executorResponse = json_decode($executorResponse, true);
 
             $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -544,13 +546,19 @@ App::post('/v1/execution')
 
             switch (true) {
                 case $statusCode >= 500:
-                    $stderr = $executorResponse ?? 'Internal Runtime error.';
+                    $stderr = ($executorResponse ?? [])['stderr'] ?? 'Internal Runtime error.';
+                    $stdout = ($executorResponse ?? [])['stdout'] ?? 'Internal Runtime error.';
                     break;
                 case $statusCode >= 100:
-                    $stdout = $executorResponse;
+                    $stdout = $executorResponse['stdout'];
+                    $res = $executorResponse['response'];
+                    if (is_array($res)) {
+                        $res = json_encode($res, JSON_UNESCAPED_UNICODE);
+                    }
                     break;
                 default:
-                    $stderr = $executorResponse ?? 'Execution failed.';
+                    $stderr = ($executorResponse ?? [])['stderr'] ?? 'Execution failed.';
+                    $stdout = ($executorResponse ?? [])['stdout'] ?? '';
                     break;
             }
 
@@ -563,7 +571,8 @@ App::post('/v1/execution')
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'response' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
+                'response' => \mb_strcut($res, 0, 1000000), // Limit to 1MB
+                'stdout' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
                 'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
                 'time' => $executionTime,
             ];
@@ -654,7 +663,7 @@ $http->on('start', function ($http) {
     /**
      * Warmup: make sure images are ready to run fast 🚀
      */
-    $runtimes = new Runtimes('v1');
+    $runtimes = new Runtimes('v2');
     $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
     $runtimes = $runtimes->getAll(true, $allowList);
     foreach ($runtimes as $runtime) {

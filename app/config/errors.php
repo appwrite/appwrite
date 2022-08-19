@@ -50,7 +50,7 @@ return [
     ],
     Exception::GENERAL_PHONE_DISABLED => [
         'name' => Exception::GENERAL_PHONE_DISABLED,
-        'description' => 'Phone provider is not configured. Please check the _APP_PHONE_PROVIDER environment variable of your Appwrite server.',
+        'description' => 'Phone provider is not configured. Please check the _APP_SMS_PROVIDER environment variable of your Appwrite server.',
         'code' => 503,
     ],
     Exception::GENERAL_ARGUMENT_INVALID => [
@@ -87,11 +87,6 @@ return [
         'name' => Exception::GENERAL_PROTOCOL_UNSUPPORTED,
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
-    ],
-    Exception::GENERAL_PERMISSION_INVALID => [
-        'name' => Exception::GENERAL_PERMISSION_INVALID,
-        'description' => 'The provided permissions are invalid for this resource type. Documents and files cannot contain a `create` permission.',
-        'code' => 400,
     ],
 
     /** User Errors */

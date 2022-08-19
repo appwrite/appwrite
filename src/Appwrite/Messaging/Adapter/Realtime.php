@@ -6,6 +6,8 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter;
 use Utopia\App;
+use Utopia\Database\ID;
+use Utopia\Database\Role;
 
 class Realtime extends Adapter
 {
@@ -187,7 +189,7 @@ class Realtime extends Adapter
                      */
                     if (
                         \array_key_exists($channel, $this->subscriptions[$event['project']][$role])
-                        && (\in_array($role, $event['roles']) || \in_array('any', $event['roles']))
+                        && (\in_array($role, $event['roles']) || \in_array(Role::any()->toString(), $event['roles']))
                     ) {
                         /**
                          * Saving all connections that are allowed to receive this event.
@@ -256,27 +258,25 @@ class Realtime extends Adapter
             case 'users':
                 $channels[] = 'account';
                 $channels[] = 'account.' . $parts[1];
-                $roles = ['user:' . $parts[1]];
-
+                $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
             case 'teams':
                 if ($parts[2] === 'memberships') {
                     $permissionsChanged = $parts[4] ?? false;
                     $channels[] = 'memberships';
                     $channels[] = 'memberships.' . $parts[3];
-                    $roles = ['team:' . $parts[1]];
                 } else {
                     $permissionsChanged = $parts[2] === 'create';
                     $channels[] = 'teams';
                     $channels[] = 'teams.' . $parts[1];
-                    $roles = ['team:' . $parts[1]];
                 }
+                $roles = [Role::team(ID::custom($parts[1]))->toString()];
                 break;
             case 'databases':
                 if (in_array($parts[4] ?? [], ['attributes', 'indexes'])) {
                     $channels[] = 'console';
                     $projectId = 'console';
-                    $roles = ['team:' . $project->getAttribute('teamId')];
+                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 } elseif (($parts[4] ?? '') === 'documents') {
                     if ($database->isEmpty()) {
                         throw new \Exception('Database needs to be passed to Realtime for Document events in the Database.');
@@ -288,7 +288,8 @@ class Realtime extends Adapter
                     $channels[] = 'documents';
                     $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getCollection() . '.documents';
                     $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getCollection() . '.documents.' . $payload->getId();
-                    $roles = ($collection->getAttribute('documentSecurity', false))
+
+                    $roles = $collection->getAttribute('documentSecurity', false)
                         ? \array_merge($collection->getRead(), $payload->getRead())
                         : $collection->getRead();
                 }
@@ -301,6 +302,7 @@ class Realtime extends Adapter
                     $channels[] = 'files';
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files';
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
+
                     $roles = $bucket->getAttribute('fileSecurity', false)
                         ? \array_merge($bucket->getRead(), $payload->getRead())
                         : $bucket->getRead();
@@ -319,7 +321,8 @@ class Realtime extends Adapter
                     }
                 } elseif ($parts[2] === 'deployments') {
                     $channels[] = 'console';
-                    $roles = ['team:' . $project->getAttribute('teamId')];
+
+                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 
                 break;
