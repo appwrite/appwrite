@@ -2027,15 +2027,34 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $filterQueries = \array_map(function ($query) {
-            $query = Query::parse($query);
-
-            if (\count($query->getValues()) > 100) {
-                throw new Exception(Exception::GENERAL_QUERY_LIMIT_EXCEEDED, "You cannot use more than 100 query values on attribute '{$query->getAttribute()}'");
+        if (!empty($queries)) {
+            $attributes = array_merge(
+                $collection->getAttribute('attributes', []),
+                [
+                    new Document([
+                        'key' => '$id',
+                        'type' => Database::VAR_STRING,
+                        'array' => false,
+                    ]),
+                    new Document([
+                        'key' => '$createdAt',
+                        'type' => Database::VAR_DATETIME,
+                        'array' => false,
+                    ]),
+                    new Document([
+                        'key' => '$updatedAt',
+                        'type' => Database::VAR_DATETIME,
+                        'array' => false,
+                    ]),
+                ]
+            );
+            $validator = new IndexedQueries(new LimitOffsetCursorFilterOrderQuery(attributes: $attributes), $attributes, $collection->getAttribute('indexes', []));
+            if (!$validator->isValid($queries)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
+        }
 
-            return $query;
-        }, $queries);
+        $filterQueries = Query::parseQueries($queries);
 
         $otherQueries = [];
         $otherQueries[] = Query::limit($limit);
@@ -2058,14 +2077,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $allQueries = \array_merge($filterQueries, $otherQueries);
-
-        if (!empty($allQueries)) {
-            $attributes = $collection->getAttribute('attributes', []);
-            $validator = new IndexedQueries(new LimitOffsetCursorFilterOrderQuery(attributes: $attributes), $attributes, $collection->getAttribute('indexes', []));
-            if (!$validator->isValid($allQueries)) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-            }
-        }
 
         if ($documentSecurity) {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $allQueries);
