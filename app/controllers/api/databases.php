@@ -2415,21 +2415,21 @@ App::get('/v1/databases/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'databasesCount' => $stats['databases.$all.count.total'],
-                'documentsCount' => $stats['documents.$all.count.total'],
-                'collectionsCount' => $stats['collections.$all.count.total'],
-                'documentsCreate' =>  $stats['documents.$all.requests.create'],
-                'documentsRead' =>  $stats['documents.$all.requests.read'],
-                'documentsUpdate' => $stats['documents.$all.requests.update'],
-                'documentsDelete' => $stats['documents.$all.requests.delete'],
-                'collectionsCreate' => $stats['collections.$all.requests.create'],
-                'collectionsRead' =>  $stats['collections.$all.requests.read'],
-                'collectionsUpdate' => $stats['collections.$all.requests.update'],
-                'collectionsDelete' => $stats['collections.$all.requests.delete'],
-                'databasesCreate' => $stats['databases.$all.requests.create'],
-                'databasesRead' =>  $stats['databases.$all.requests.read'],
-                'databasesUpdate' => $stats['databases.$all.requests.update'],
-                'databasesDelete' => $stats['databases.$all.requests.delete'],
+                'databasesCount' => $stats['databases.$all.count.total'] ?? [],
+                'documentsCount' => $stats['documents.$all.count.total'] ?? [],
+                'collectionsCount' => $stats['collections.$all.count.total'] ?? [],
+                'documentsCreate' =>  $stats['documents.$all.requests.create'] ?? [],
+                'documentsRead' =>  $stats['documents.$all.requests.read'] ?? [],
+                'documentsUpdate' => $stats['documents.$all.requests.update'] ?? [],
+                'documentsDelete' => $stats['documents.$all.requests.delete'] ?? [],
+                'collectionsCreate' => $stats['collections.$all.requests.create'] ?? [],
+                'collectionsRead' =>  $stats['collections.$all.requests.read'] ?? [],
+                'collectionsUpdate' => $stats['collections.$all.requests.update'] ?? [],
+                'collectionsDelete' => $stats['collections.$all.requests.delete'] ?? [],
+                'databasesCreate' => $stats['databases.$all.requests.create'] ?? [],
+                'databasesRead' =>  $stats['databases.$all.requests.read'] ?? [],
+                'databasesUpdate' => $stats['databases.$all.requests.update'] ?? [],
+                'databasesDelete' => $stats['databases.$all.requests.delete'] ?? [],
             ]);
         }
 
@@ -2527,16 +2527,16 @@ App::get('/v1/databases/:databaseId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'collectionsCount' => $stats["collections.{$databaseId}.count.total"],
-                'collectionsCreate' => $stats["collections.{$databaseId}.requests.create"],
-                'collectionsRead' =>  $stats["collections.{$databaseId}.requests.read"],
-                'collectionsUpdate' => $stats["collections.{$databaseId}.requests.update"],
-                'collectionsDelete' => $stats["collections.{$databaseId}.requests.delete"],
-                'documentsCount' => $stats["documents.{$databaseId}.count.total"],
-                'documentsCreate' =>  $stats["documents.{$databaseId}.requests.create"],
-                'documentsRead' =>  $stats["documents.{$databaseId}.requests.read"],
-                'documentsUpdate' => $stats["documents.{$databaseId}.requests.update"],
-                'documentsDelete' => $stats["documents.{$databaseId}.requests.delete"],
+                'collectionsCount' => $stats["collections.{$databaseId}.count.total"] ?? [],
+                'collectionsCreate' => $stats["collections.{$databaseId}.requests.create"] ?? [],
+                'collectionsRead' =>  $stats["collections.{$databaseId}.requests.read"] ?? [],
+                'collectionsUpdate' => $stats["collections.{$databaseId}.requests.update"] ?? [],
+                'collectionsDelete' => $stats["collections.{$databaseId}.requests.delete"] ?? [],
+                'documentsCount' => $stats["documents.{$databaseId}.count.total"] ?? [],
+                'documentsCreate' =>  $stats["documents.{$databaseId}.requests.create"] ?? [],
+                'documentsRead' =>  $stats["documents.{$databaseId}.requests.read"] ?? [],
+                'documentsUpdate' => $stats["documents.{$databaseId}.requests.update"] ?? [],
+                'documentsDelete' => $stats["documents.{$databaseId}.requests.delete"] ?? [],
             ]);
         }
 
@@ -2639,11 +2639,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'documentsCount' => $stats["documents.{$databaseId}/{$collectionId}.count.total"],
-                'documentsCreate' => $stats["documents.{$databaseId}/{$collectionId}.requests.create"],
-                'documentsRead' => $stats["documents.{$databaseId}/{$collectionId}.requests.read"],
-                'documentsUpdate' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.update"],
-                'documentsDelete' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.delete"]
+                'documentsCount' => $stats["documents.{$databaseId}/{$collectionId}.count.total"] ?? [],
+                'documentsCreate' => $stats["documents.{$databaseId}/{$collectionId}.requests.create"] ?? [],
+                'documentsRead' => $stats["documents.{$databaseId}/{$collectionId}.requests.read"] ?? [],
+                'documentsUpdate' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.update"] ?? [],
+                'documentsDelete' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.delete" ?? []]
             ]);
         }
 

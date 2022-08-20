@@ -273,14 +273,14 @@ App::get('/v1/functions/:functionId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'executionsTotal' => $stats["executions.$functionId.compute.total"],
-                'executionsFailure' => $stats["executions.$functionId.compute.failure"],
-                'executionsSuccesse' => $stats["executions.$functionId.compute.success"],
-                'executionsTime' => $stats["executions.$functionId.compute.time"],
-                'buildsTotal' => $stats["builds.$functionId.compute.total"],
-                'buildsFailure' => $stats["builds.$functionId.compute.failure"],
-                'buildsSuccess' => $stats["builds.$functionId.compute.success"],
-                'buildsTime' => $stats["builds.$functionId.compute.time"]
+                'executionsTotal' => $stats["executions.$functionId.compute.total"] ?? [],
+                'executionsFailure' => $stats["executions.$functionId.compute.failure"] ?? [],
+                'executionsSuccesse' => $stats["executions.$functionId.compute.success"] ?? [],
+                'executionsTime' => $stats["executions.$functionId.compute.time"] ?? [],
+                'buildsTotal' => $stats["builds.$functionId.compute.total"] ?? [],
+                'buildsFailure' => $stats["builds.$functionId.compute.failure"] ?? [],
+                'buildsSuccess' => $stats["builds.$functionId.compute.success"] ?? [],
+                'buildsTime' => $stats["builds.$functionId.compute.time" ?? []]
             ]);
         }
 
@@ -374,14 +374,14 @@ App::get('/v1/functions/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'executionsTotal' => $stats[$metrics[0]],
-                'executionsFailure' => $stats[$metrics[1]],
-                'executionsSuccess' => $stats[$metrics[2]],
-                'executionsTime' => $stats[$metrics[3]],
-                'buildsTotal' => $stats[$metrics[4]],
-                'buildsFailure' => $stats[$metrics[5]],
-                'buildsSuccess' => $stats[$metrics[6]],
-                'buildsTime' => $stats[$metrics[7]],
+                'executionsTotal' => $stats[$metrics[0]] ?? [],
+                'executionsFailure' => $stats[$metrics[1]] ?? [],
+                'executionsSuccess' => $stats[$metrics[2]] ?? [],
+                'executionsTime' => $stats[$metrics[3]] ?? [],
+                'buildsTotal' => $stats[$metrics[4]] ?? [],
+                'buildsFailure' => $stats[$metrics[5]] ?? [],
+                'buildsSuccess' => $stats[$metrics[6]] ?? [],
+                'buildsTime' => $stats[$metrics[7]] ?? [],
             ]);
         }
 

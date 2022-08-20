@@ -325,13 +325,13 @@ App::get('/v1/projects/:projectId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'requests' => $stats[$metrics[0]],
-                'network' => $stats[$metrics[1]],
-                'storage' => $stats[$metrics[2]],
-                'users' => $stats[$metrics[3]],
-                'collections' => $stats[$metrics[4]],
-                'documents' => $stats[$metrics[5]],
-                'executions' => $stats[$metrics[6]],
+                'requests' => $stats[$metrics[0]] ?? [],
+                'network' => $stats[$metrics[1]] ?? [],
+                'storage' => $stats[$metrics[2]] ?? [],
+                'users' => $stats[$metrics[3]] ?? [],
+                'collections' => $stats[$metrics[4]] ?? [],
+                'documents' => $stats[$metrics[5]] ?? [],
+                'executions' => $stats[$metrics[6]] ?? [],
             ]);
         }
 

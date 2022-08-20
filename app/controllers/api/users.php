@@ -1144,14 +1144,14 @@ App::get('/v1/users/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'usersCount' => $stats['users.$all.requests.count'],
-                'usersCreate' => $stats['users.$all.requests.create'],
-                'usersRead' => $stats['users.$all.requests.read'],
-                'usersUpdate' => $stats['users.$all.requests.update'],
-                'usersDelete' => $stats['users.$all.requests.delete'],
-                'sessionsCreate' => $stats['sessions.$all.requests.create'],
-                'sessionsProviderCreate' => $stats["sessions.$provider.requests.create"],
-                'sessionsDelete' => $stats['sessions.$all.requests.delete']
+                'usersCount' => $stats['users.$all.requests.count'] ?? [],
+                'usersCreate' => $stats['users.$all.requests.create'] ?? [],
+                'usersRead' => $stats['users.$all.requests.read'] ?? [],
+                'usersUpdate' => $stats['users.$all.requests.update'] ?? [],
+                'usersDelete' => $stats['users.$all.requests.delete'] ?? [],
+                'sessionsCreate' => $stats['sessions.$all.requests.create'] ?? [],
+                'sessionsProviderCreate' => $stats["sessions.$provider.requests.create"] ?? [],
+                'sessionsDelete' => $stats['sessions.$all.requests.delete' ?? []]
             ]);
         }
 
