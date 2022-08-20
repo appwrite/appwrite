@@ -103,11 +103,19 @@ class IndexedQueries extends Queries
      */
     public function isValid($value): bool
     {
-        if (!$this->isValid($value)) {
+        if (!parent::isValid($value)) {
             return false;
         }
 
-        $queries = Query::parseQueries($value);
+        $queries = [];
+        foreach ($value as $query) {
+            if (!$query instanceof Query) {
+                $query = Query::parse($query);
+            }
+
+            $queries[] = $query;
+        }
+
         $grouped = Query::groupByType($queries);
         /** @var Query[] */ $filters = $grouped['filters'];
         /** @var string[] */ $orderAttributes = $grouped['orderAttributes'];

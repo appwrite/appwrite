@@ -44,7 +44,7 @@ class LimitOffsetCursorQuery extends LimitOffsetQuery
      * 2. method is cursorBefore or cursorAfter and value is not null
      *
      * Otherwise, returns false
-     * 
+     *
      * @param Query $value
      *
      * @return bool

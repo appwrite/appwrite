@@ -25,7 +25,6 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
-use Utopia\Database\Validator\Query as QueryValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -38,8 +37,8 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Appwrite\Utopia\Database\Validator\Queries as QueriesValidator;
-use Appwrite\Utopia\Database\Validator\OrderAttributes;
+use Appwrite\Utopia\Database\Validator\IndexedQueries;
+use Appwrite\Utopia\Database\Validator\Queries\LimitOffsetCursorFilterOrderQuery;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
@@ -2062,7 +2061,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         if (!empty($allQueries)) {
             $attributes = $collection->getAttribute('attributes', []);
-            $validator = new QueriesValidator(new QueryValidator($attributes), $attributes, $collection->getAttribute('indexes', []), true);
+            $validator = new IndexedQueries(new LimitOffsetCursorFilterOrderQuery(attributes: $attributes), $attributes, $collection->getAttribute('indexes', []));
             if (!$validator->isValid($allQueries)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
