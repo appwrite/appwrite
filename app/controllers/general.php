@@ -306,7 +306,7 @@ App::init()
                 Authorization::setRole(Auth::USER_ROLE_APPS);
                 Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
 
-                $accessedAt = $key->getAttribute('accessedAt', ''); 
+                $accessedAt = $key->getAttribute('accessedAt', '');
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
                     $key->setAttribute('accessedAt', DateTime::now());
                     $dbForConsole->updateDocument('keys', $key->getId(), $key);
