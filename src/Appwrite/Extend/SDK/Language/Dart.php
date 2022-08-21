@@ -11,7 +11,16 @@ class Dart extends DartBase {
 
     private App $app;
 
-    
+    public function getFiles(): array {
+        $files = parent::getFiles();
+        $files[] = [
+            'scope'         => 'default',
+            'destination'   => '/lib/tuery.dart',
+            'template'      => 'dart/tuery.dart.twig',
+            'minify'        => false,
+        ];
+        return $files;
+    }
 
     public function permissionHelperExample(array $param) {
         return '[Permission.read(Role.users()), Permission.update(Role.any())]';

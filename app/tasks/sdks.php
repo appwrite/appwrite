@@ -170,7 +170,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 Console::info("Generating {$language['name']} SDK...");
 
-                $sdk = new SDK($config, new Swagger2($spec));
+                $sdk = new SDK($config, new Swagger2($spec), __DIR__ . '/../sdks/templates');
 
                 $sdk
                     ->setName($language['name'])

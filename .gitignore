@@ -3,11 +3,11 @@
 /node_modules/
 /tests/resources/storage/
 /tests/resources/functions/**/code.tar.gz
-/app/sdks/*
 /.idea/
 .DS_Store
 .php_cs.cache
 debug/
-app/sdks
+/app/sdks/*
+!/app/sdks/templates/
 dev/yasd_init.php
 .phpunit.result.cache
