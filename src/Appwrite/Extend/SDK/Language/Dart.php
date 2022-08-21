@@ -15,8 +15,8 @@ class Dart extends DartBase {
         $files = parent::getFiles();
         $files[] = [
             'scope'         => 'default',
-            'destination'   => '/lib/tuery.dart',
-            'template'      => 'dart/tuery.dart.twig',
+            'destination'   => '/lib/query.dart',
+            'template'      => '@appwrite/dart/query.dart.twig',
             'minify'        => false,
         ];
         return $files;

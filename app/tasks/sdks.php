@@ -3,7 +3,7 @@
 use Utopia\Config\Config;
 use Utopia\CLI\Console;
 use Appwrite\Spec\Swagger2;
-use Appwrite\SDK\SDK;
+use Appwrite\Extend\SDK\SDK;
 use Appwrite\SDK\Language\CLI;
 use Appwrite\SDK\Language\PHP;
 use Appwrite\SDK\Language\Web;
