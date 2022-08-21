@@ -404,7 +404,7 @@ App::shutdown()
                 foreach ($usageParams as $param) {
                     $param = $parseLabel($param, $responsePayload, $requestParams, $user);
                     $parts = explode(':', $param);
-                    if(count($parts) != 2) {
+                    if (count($parts) != 2) {
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Usage params not properly set');
                     }
                     $usage->setParam($parts[0], $parts[1]);
