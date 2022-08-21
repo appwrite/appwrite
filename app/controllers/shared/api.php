@@ -397,33 +397,17 @@ App::shutdown()
             && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
             $metric = $route->getLabel('usage.metric', '');
-            $usageParams = $route->getLabel('usage.params', []);
+            $usageParams = $route->getLabel('usage.params', '');
 
             if (!empty($metric)) {
                 $usage->setParam($metric, 1);
-                foreach ($usageParams as $param => $value) {
-                    $parts = explode('.', $value);
-                    $namespace = $parts[0] ?? '';
-                    $key = $parts[1] ?? '';
-
-                    $params = [];
-                    switch ($namespace) {
-                        case 'response':
-                            $params = $responsePayload;
-                            break;
-                        case 'request':
-                            $params = $requestParams;
-                            break;
-                        case 'value':
-                            $usage->setParam($param, $key);
-                            break;
-                        default:
-                            $params = $responsePayload;
+                foreach ($usageParams as $param) {
+                    $param = $parseLabel($param, $responsePayload, $requestParams, $user);
+                    $parts = explode(':', $param);
+                    if(count($parts) != 2) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Usage params not properly set');
                     }
-
-                    if (array_key_exists($key, $params)) {
-                        $usage->setParam($param, $params[$key]);
-                    }
+                    $usage->setParam($parts[0], $parts[1]);
                 }
             }
 
