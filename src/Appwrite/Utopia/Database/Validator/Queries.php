@@ -25,9 +25,9 @@ class Queries extends Validator
      * @param Validator $validator used to validate each query
      * @param bool $strict
      */
-    public function __construct(Validator $validator)
+    public function __construct(...$validators)
     {
-        $this->validator = $validator;
+        $this->validators = $validators;
     }
 
     /**
