@@ -23,8 +23,7 @@ class SchemaBuilder
         App $utopia,
         string $projectId,
         Database $dbForProject
-    ): Schema
-    {
+    ): Schema {
         App::setResource('current', static fn() => $utopia);
 
         /** @var Registry $register */
@@ -53,7 +52,7 @@ class SchemaBuilder
             $apiSchema = $register->get($apiSchemaKey);
         } else {
             $apiSchema = &self::buildAPISchema($utopia);
-            $register->set($apiSchemaKey, static function&() use (&$apiSchema) {
+            $register->set($apiSchemaKey, static function &() use (&$apiSchema) {
                 return $apiSchema;
             });
             $register->set($apiVersionKey, static fn() => $appVersion);
@@ -63,7 +62,7 @@ class SchemaBuilder
             $collectionSchema = $register->get($collectionSchemaKey);
         } else {
             $collectionSchema = &self::buildCollectionSchema($utopia, $dbForProject);
-            $register->set($collectionSchemaKey, static function&() use (&$collectionSchema) {
+            $register->set($collectionSchemaKey, static function &() use (&$collectionSchema) {
                 return $collectionSchema;
             });
             $register->set($collectionsDirtyKey, static fn() => false);
@@ -185,8 +184,7 @@ class SchemaBuilder
     public static function &buildCollectionSchema(
         App $utopia,
         Database $dbForProject
-    ): array
-    {
+    ): array {
         $collections = [];
         $queryFields = [];
         $mutationFields = [];
@@ -197,11 +195,11 @@ class SchemaBuilder
         $wg = new WaitGroup();
 
         while (
-        !empty($attrs = Authorization::skip(fn() => $dbForProject->find(
-            'attributes',
-            limit: $limit,
-            offset: $offset
-        )))
+            !empty($attrs = Authorization::skip(fn() => $dbForProject->find(
+                'attributes',
+                limit: $limit,
+                offset: $offset
+            )))
         ) {
             $wg->add();
             $count += count($attrs);

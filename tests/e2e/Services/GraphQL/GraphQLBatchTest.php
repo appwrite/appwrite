@@ -7,7 +7,8 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 
-class GraphQLBatchTest extends Scope {
+class GraphQLBatchTest extends Scope
+{
     use ProjectCustom;
     use SideClient;
 
@@ -139,7 +140,8 @@ class GraphQLBatchTest extends Scope {
         $this->assertEquals(2, \count($response['body']['data']['accountCreate']['_id']));
     }
 
-    public function testArrayBatchedMixed() {
+    public function testArrayBatchedMixed()
+    {
         $projectId = $this->getProject()['$id'];
         $email = 'tester' . \uniqid() . '@example.com';
         $graphQLPayload = [
@@ -172,10 +174,10 @@ class GraphQLBatchTest extends Scope {
         $this->assertEquals(194, $response['body']['data']['localeGetCountries']['total']);
         $this->assertEquals(7, $response['body']['data']['localeGetContinents']['total']);
         $this->assertEquals('Tester 1', $response['body']['data']['accountCreate']['name']);
-
     }
 
-    public function testArrayBatchedMixedOfSameType() {
+    public function testArrayBatchedMixedOfSameType()
+    {
         $projectId = $this->getProject()['$id'];
         $email = 'tester' . \uniqid() . '@example.com';
         $query = 'query { localeGetCountries { total countries { code } } }';
