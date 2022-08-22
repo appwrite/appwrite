@@ -38,8 +38,8 @@ class TranscodingV1 extends Worker
     const STREAM_HLS = 'hls';
     const STREAM_MPEG_DASH = 'dash';
 
-    //protected string $basePath = '/tmp/';
-    protected string $basePath = '/usr/src/code/tests/tmp/';
+    protected string $basePath = '/tmp/';
+    //protected string $basePath = '/usr/src/code/tests/tmp/';
 
     protected string $inDir;
 

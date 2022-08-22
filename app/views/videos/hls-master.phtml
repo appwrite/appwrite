@@ -1,9 +1,9 @@
 #EXTM3U
 #EXT-X-VERSION:3
-<?php foreach ($this->getParam('paramsSubtitles', []) as $subtitle): ?>
+<?php foreach ($this->getParam('subtitles', []) as $subtitle): ?>
 #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="<?php echo $subtitle['name']; ?>",DEFAULT=<?php echo $subtitle['default']; ?>,AUTOSELECT=NO,FORCED=NO,LANGUAGE="<?php echo $subtitle['code']; ?>",URI="<?php echo $subtitle['uri']; ?>"<?php echo PHP_EOL?>
 <?php endforeach; ?>
-<?php foreach ($this->getParam('paramsRenditions', []) as $rendition): ?>
+<?php foreach ($this->getParam('renditions', []) as $rendition): ?>
 #EXT-X-STREAM-INF:BANDWIDTH="<?php echo $rendition['bandwidth']; ?>",RESOLUTION="<?php echo $rendition['resolution']; ?>",NAME="<?php echo $rendition['name']; ?>"<?php if($rendition['subs'] !== null): echo $rendition['subs'];  endif?><?php echo PHP_EOL?>
 <?php echo $rendition['uri'] ?><?php echo PHP_EOL?>
 <?php endforeach; ?>

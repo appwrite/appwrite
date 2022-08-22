@@ -78,7 +78,7 @@ function validateFilePermissions(Database $dbForProject, string $bucketId, strin
 App::post('/v1/videos/profiles')
     ->desc('Create video profile')
     ->groups(['api', 'video'])
-    ->label('scope', 'videos.read')
+    ->label('scope', 'videos.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'video')
     ->label('sdk.method', 'createProfile')
@@ -481,7 +481,7 @@ App::delete('/v1/videos/:videoId')
     ->inject('mode')
     ->inject('user')
     ->inject('deletes')
-    ->action(function (string $videoId, string $renditionId, Response $response, Document $project, Database $dbForProject, string $mode, Document $user, Delete $deletes) {
+    ->action(function (string $videoId, Response $response, Document $project, Database $dbForProject, string $mode, Document $user, Delete $deletes) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
 
@@ -699,8 +699,8 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
         ]));
 
-        if ($video->isEmpty()) {
-            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+        if (empty($video)) {
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
         }
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
@@ -718,11 +718,12 @@ App::get('/v1/videos/:videoId/streams/:streamId')
 
         $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/streams/' . $streamId;
         $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$video->getId()])]));
+        $_renditions = [];
+        $_subtitles = [];
 
         if ($streamId === 'hls') {
-            $paramsSubtitles = [];
             foreach ($subtitles ?? [] as $subtitle) {
-                $paramsSubtitles[] = [
+                $_subtitles[] = [
                     'name' => $subtitle->getAttribute('name'),
                     'code' => $subtitle->getAttribute('code'),
                     'default' => !empty($subtitle->getAttribute('default')) ? 'YES' : 'NO',
@@ -730,9 +731,8 @@ App::get('/v1/videos/:videoId/streams/:streamId')
                 ];
             }
 
-            $paramsRenditions = [];
-            foreach ($renditions ?? [] as $rendition) {
-                $paramsRenditions[] = [
+            foreach ($renditions as $rendition) {
+                $_renditions[] = [
                     'bandwidth' => ($rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate')),
                     'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
                     'name' => $rendition->getAttribute('name'),
@@ -742,17 +742,15 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             }
 
             $template = new View(__DIR__ . '/../../views/videos/hls-master.phtml');
-            $template->setParam('paramsSubtitles', $paramsSubtitles);
-            $template->setParam('paramsRenditions', $paramsRenditions);
-            $response->setContentType('application/x-mpegurl')
+            $template->setParam('subtitles', $_subtitles);
+            $template->setParam('renditions', $_renditions);
+            $response
+                ->setContentType('application/x-mpegurl')
                 ->send($template->render(false))
             ;
         } else {
-            $adaptationsSubs = [];
-            $adaptations = [];
             $adaptationId = 0;
-
-            foreach ($renditions ?? [] as $rendition) {
+            foreach ($renditions as $rendition) {
                 $metadata = $rendition->getAttribute('metadata');
                 $xml = simplexml_load_string($metadata['mpd']);
                 if (empty($xml)) {
@@ -789,9 +787,9 @@ App::get('/v1/videos/:videoId/streams/:streamId')
                     }
 
                      $attributes = (array)$adaptation->attributes();
-                     $adaptations[] =  [
+                     $_renditions[] =  [
                         'attributes' => $attributes['@attributes'] ?? [],
-                        'group' => $adaptationId,
+                        'id' => $adaptationId,
                         'baseUrl' => $baseUrl . '/renditions/' . $rendition->getId() . '/' . 'segments/',
                         'representation' => $representation,
                      ];
@@ -801,7 +799,7 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             }
 
             foreach ($subtitles ?? [] as $subtitle) {
-                $adaptationsSubs[] = [
+                $_subtitles[] = [
                     'id' => $adaptationId,
                     'baseUrl' => $baseUrl . '/subtitles/' . $subtitle->getId(),
                     'code' => $subtitle->getAttribute('code'),
@@ -811,9 +809,10 @@ App::get('/v1/videos/:videoId/streams/:streamId')
 
             $template = new View(__DIR__ . '/../../views/videos/dash.phtml');
             $template->setParam('mpd', $mpd);
-            $template->setParam('adaptations', $adaptations);
-            $template->setParam('subtitles', $adaptationsSubs);
-            $response->setContentType('application/dash+xml')
+            $template->setParam('renditions', $_renditions);
+            $template->setParam('subtitles', $_subtitles);
+            $response
+                ->setContentType('application/dash+xml')
                 ->send($template->render(false))
             ;
         }

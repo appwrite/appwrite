@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "146f386b4e68ae554d321a1035e6d47a",
+    "content-hash": "99f061223091ababd6f4925a24faf2b4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -131,17 +131,11 @@
         },
         {
             "name": "aminyazdanpanah/php-ffmpeg-video-streaming",
-            "version": "v1.2.15",
+            "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/aminyazdanpanah/PHP-FFmpeg-video-streaming.git",
-                "reference": "ea5ffdb3ffd6459c846e3b2ccb7b47f793aaa254"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/aminyazdanpanah/PHP-FFmpeg-video-streaming/zipball/ea5ffdb3ffd6459c846e3b2ccb7b47f793aaa254",
-                "reference": "ea5ffdb3ffd6459c846e3b2ccb7b47f793aaa254",
-                "shasum": ""
+                "url": "https://github.com/shimonewman/PHP-FFmpeg-video-streaming.git",
+                "reference": "cb46fc8b9c7e3712922b4bb0a9b56c753b7ac9e6"
             },
             "require": {
                 "php": "^7.2 || ^8.0",
@@ -161,6 +155,7 @@
                 "google/cloud-storage": "Allow sending stream content to Google services like Google Storage",
                 "microsoft/azure-storage-blob": "Allow sending stream content to Google services like Google Storage"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "files": [
@@ -170,7 +165,11 @@
                     "Streaming\\": "src"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\FFMpegStreaming\\": "tests"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -184,14 +183,13 @@
             "description": "📼 PHP FFMpeg - Video Streaming - DASH, HLS http://video.aminyazdanpanah.com",
             "homepage": "https://github.com/aminyazdanpanah/PHP-FFmpeg-video-streaming",
             "keywords": [
-                "DRM",
-                "MPD",
                 "adaptive-http-streaming",
                 "amazons3",
                 "clearkey",
                 "cloud",
                 "clouds",
                 "dash",
+                "drm",
                 "dynamic-adaptive-streaming-over-http",
                 "encoding",
                 "encryption",
@@ -203,17 +201,15 @@
                 "m3u8",
                 "microsoft-azure",
                 "mp4",
+                "mpd",
                 "mpeg-dash",
                 "s3",
                 "streaming",
                 "video",
+                "video-streaming",
                 "video-streaming"
             ],
-            "support": {
-                "issues": "https://github.com/aminyazdanpanah/PHP-FFmpeg-video-streaming/issues",
-                "source": "https://github.com/aminyazdanpanah/PHP-FFmpeg-video-streaming/tree/v1.2.15"
-            },
-            "time": "2022-01-14T17:19:59+00:00"
+            "time": "2022-08-21T13:11:21+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -4633,23 +4629,23 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.15",
+            "version": "9.2.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "2e9da11878c4202f97915c1cb4bb1ca318a63f5f"
+                "reference": "2593003befdcc10db5e213f9f28814f5aa8ac073"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/2e9da11878c4202f97915c1cb4bb1ca318a63f5f",
-                "reference": "2e9da11878c4202f97915c1cb4bb1ca318a63f5f",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/2593003befdcc10db5e213f9f28814f5aa8ac073",
+                "reference": "2593003befdcc10db5e213f9f28814f5aa8ac073",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
                 "ext-libxml": "*",
                 "ext-xmlwriter": "*",
-                "nikic/php-parser": "^4.13.0",
+                "nikic/php-parser": "^4.14",
                 "php": ">=7.3",
                 "phpunit/php-file-iterator": "^3.0.3",
                 "phpunit/php-text-template": "^2.0.2",
@@ -4698,7 +4694,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.15"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.16"
             },
             "funding": [
                 {
@@ -4706,7 +4702,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-03-07T09:28:20+00:00"
+            "time": "2022-08-20T05:26:47+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -6293,7 +6289,8 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/storage": 20
+        "utopia-php/storage": 20,
+        "aminyazdanpanah/php-ffmpeg-video-streaming": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
