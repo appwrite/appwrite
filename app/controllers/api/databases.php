@@ -1928,7 +1928,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach (Database::PERMISSIONS as $type) {
