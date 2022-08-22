@@ -22,10 +22,9 @@ class Queries extends Validator
     /**
      * Queries constructor
      *
-     * @param Validator $validator used to validate each query
-     * @param bool $strict
+     * @param $validators - a list of validators
      */
-    public function __construct(...$validators)
+    public function __construct(Validator ...$validators)
     {
         $this->validators = $validators;
     }
@@ -66,9 +65,11 @@ class Queries extends Validator
                 }
             }
 
-            if (!$this->validator->isValid($query)) {
-                $this->message = 'Query not valid: ' . $this->validator->getDescription();
-                return false;
+            foreach ($this->validators as $validator) {
+                if (!$validator->isValid($query)) {
+                    $this->message = 'Query not valid: ' . $this->validator->getDescription();
+                    return false;
+                }
             }
 
             $queries[] = $query;
