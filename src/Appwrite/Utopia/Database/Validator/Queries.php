@@ -23,8 +23,6 @@ class Queries extends Validator
      * Queries constructor
      *
      * @param Validator $validator used to validate each query
-     * @param Document[] $attributes allowed attributes to be queried
-     * @param Document[] $indexes available for strict query matching
      * @param bool $strict
      */
     public function __construct(Validator $validator)
