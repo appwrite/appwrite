@@ -24,11 +24,13 @@ class Queries extends Validator
      *
      * @param $validators - a list of validators
      */
-    public function __construct(Limit $limit = null, Offset $offset = null, Order $order)
+    public function __construct(Limit $limit = null, Offset $offset = null, Order $order = null, Cursor $cursor = null, Filter $filter = null)
     {
         $this->limit = $limit;
         $this->offset = $offset;
         $this->order = $order;
+        $this->filter = $filter;
+        $this->cursor = $cursor;
     }
 
     /**
