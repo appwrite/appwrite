@@ -1858,7 +1858,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
         } catch (DuplicateException $exception) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS, $exception->getMessage());
         }
 
         $events
@@ -2269,7 +2269,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         } catch (AuthorizationException $exception) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (DuplicateException $exception) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS, $exception->getMessage());
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
         }
