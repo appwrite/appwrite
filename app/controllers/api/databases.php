@@ -1675,15 +1675,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         $indexes = $collection->getAttribute('indexes');
 
         // Search for index
-        $indexIndex = array_search($key, array_column($indexes, 'key'));
+        $indexIndex = \array_search($key, \array_map(fn($index) => $index->getAttribute('key'), $indexes));
+
+        \var_dump($indexIndex);
 
         if ($indexIndex === false) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
         }
 
-        $index = new Document([\array_merge($indexes[$indexIndex], [
-            'collectionId' => $database->getInternalId() . '_' . $collectionId,
-        ])]);
+        $index = $indexes[$indexIndex];
 
         $usage
             ->setParam('databaseId', $databaseId)
