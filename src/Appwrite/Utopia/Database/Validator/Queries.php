@@ -79,7 +79,7 @@ class Queries extends Validator
                     return false;
             }
             
-            if (!$validator->isValid($query)) {
+            if ($validator && !$validator->isValid($query)) {
                 $this->message = 'Query not valid: ' . $this->validator->getDescription();
                 return false;
             }
