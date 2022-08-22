@@ -22,14 +22,15 @@ class Queries extends Validator
     /**
      * Queries constructor
      *
-     * @param Validator $validator used to validate each query
-     * @param Document[] $attributes allowed attributes to be queried
-     * @param Document[] $indexes available for strict query matching
-     * @param bool $strict
+     * @param $validators - a list of validators
      */
-    public function __construct(Validator $validator)
+    public function __construct(Limit $limit = null, Offset $offset = null, Order $order = null, Cursor $cursor = null, Filter $filter = null)
     {
-        $this->validator = $validator;
+        $this->limit = $limit;
+        $this->offset = $offset;
+        $this->order = $order;
+        $this->filter = $filter;
+        $this->cursor = $cursor;
     }
 
     /**
@@ -68,7 +69,19 @@ class Queries extends Validator
                 }
             }
 
-            if (!$this->validator->isValid($query)) {
+            $method = $query->getMethod();
+            switch ($method) {
+                case Query::TYPE_LIMIT:
+                    $validator = $this->limit;
+                case Query::TYPE_OFFSET:
+                    $validator = $this->offset;
+                case Query::TYPE_ORDER:
+                    $validator = $this->order;
+                default:
+                    return false;
+            }
+            
+            if ($validator && !$validator->isValid($query)) {
                 $this->message = 'Query not valid: ' . $this->validator->getDescription();
                 return false;
             }

@@ -1,12 +1,12 @@
 <?php
 
-namespace Appwrite\Utopia\Database\Validator\Queries;
+namespace Appwrite\Utopia\Database\Validator\Query;
 
-use Appwrite\Utopia\Database\Validator\Queries\LimitOffsetCursorQuery;
+use Utopia\Validator;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 
-class LimitOffsetCursorFilterQuery extends LimitOffsetCursorQuery
+class Filter extends Validator
 {
     /**
      * @var string
@@ -21,19 +21,15 @@ class LimitOffsetCursorFilterQuery extends LimitOffsetCursorQuery
     /**
      * Query constructor
      *
-     * @param int $maxLimit
-     * @param int $maxOffset
      * @param int $maxValuesCount
      */
-    public function __construct(int $maxLimit = 100, int $maxOffset = 5000, array $attributes = [], int $maxValuesCount = 100)
+    public function __construct(array $attributes = [], int $maxValuesCount = 100)
     {
         foreach ($attributes as $attribute) {
             $this->schema[$attribute->getAttribute('key')] = $attribute->getArrayCopy();
         }
 
         $this->maxValuesCount = $maxValuesCount;
-
-        parent::__construct($maxLimit, $maxOffset);
     }
 
     protected function isValidAttribute($attribute): bool
@@ -78,30 +74,10 @@ class LimitOffsetCursorFilterQuery extends LimitOffsetCursorQuery
         return true;
     }
 
-    protected function isValidContains(string $attribute, array $values): bool
-    {
-        if (!$this->isValidAttributeAndValues($attribute, $values)) {
-            return false;
-        }
-
-        $attributeSchema = $this->schema[$attribute];
-
-        // Contains method only supports array attributes
-        if (!$attributeSchema['array']) {
-            $this->message = 'Query method only supported on array attributes: ' . Query::TYPE_CONTAINS;
-            return false;
-        }
-
-        return true;
-    }
-
     /**
      * Is valid.
      *
-     * Returns true if:
-     * 1. method is limit or offset and values are within range
-     * 2. method is cursorBefore or cursorAfter and value is not null
-     * 3. method is a filter method, attribute exists, and value matches attribute type
+     * Returns true if method is a filter method, attribute exists, and value matches attribute type
      *
      * Otherwise, returns false
      *
@@ -116,9 +92,10 @@ class LimitOffsetCursorFilterQuery extends LimitOffsetCursorQuery
         $attribute = $query->getAttribute();
 
         switch ($method) {
-            case Query::TYPE_CONTAINS:
-                $values = $query->getValues();
-                return $this->isValidContains($attribute, $values);
+            // Do we support contains ? 
+            // case Query::TYPE_CONTAINS:
+            //     $values = $query->getValues();
+            //     return $this->isValidContains($attribute, $values);
 
             case Query::TYPE_EQUAL:
             case Query::TYPE_NOTEQUAL:
@@ -131,7 +108,7 @@ class LimitOffsetCursorFilterQuery extends LimitOffsetCursorQuery
                 return $this->isValidAttributeAndValues($attribute, $values);
 
             default:
-                return parent::isValid($query);
+                return false;
         }
     }
 }

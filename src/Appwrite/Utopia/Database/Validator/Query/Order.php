@@ -1,11 +1,11 @@
 <?php
 
-namespace Appwrite\Utopia\Database\Validator\Queries;
+namespace Appwrite\Utopia\Database\Validator\Query;
 
-use Appwrite\Utopia\Database\Validator\Queries\LimitOffsetCursorFilterQuery;
 use Utopia\Database\Query;
+use Utopia\Validator;
 
-class LimitOffsetCursorFilterOrderQuery extends LimitOffsetCursorFilterQuery
+class Order extends Validator
 {
     /**
      * @var string
@@ -20,29 +20,29 @@ class LimitOffsetCursorFilterOrderQuery extends LimitOffsetCursorFilterQuery
     /**
      * Query constructor
      *
-     * @param int $maxLimit
-     * @param int $maxOffset
-     * @param int $maxValuesCount
      */
-    public function __construct(int $maxLimit = 100, int $maxOffset = 5000, array $attributes = [], int $maxValuesCount = 100)
+    public function __construct(array $attributes = [])
     {
         foreach ($attributes as $attribute) {
             $this->schema[$attribute->getAttribute('key')] = $attribute->getArrayCopy();
         }
+    }
 
-        $this->maxValuesCount = $maxValuesCount;
+    protected function isValidAttribute($attribute): bool
+    {
+        // Search for attribute in schema
+        if (!isset($this->schema[$attribute])) {
+            $this->message = 'Attribute not found in schema: ' . $attribute;
+            return false;
+        }
 
-        parent::__construct($maxLimit, $maxOffset);
+        return true;
     }
 
     /**
      * Is valid.
      *
-     * Returns true if:
-     * 1. method is limit or offset and values are within range
-     * 2. method is cursorBefore or cursorAfter and value is not null
-     * 3. method is a filter method, attribute exists, and value matches attribute type
-     * 4. method is orderAsc or orderDesc and attribute exists or is empty string
+     * Returns true if method is ORDER_ASC or ORDER_DESC and attributes are valid
      *
      * Otherwise, returns false
      *
