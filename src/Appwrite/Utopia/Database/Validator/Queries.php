@@ -24,9 +24,11 @@ class Queries extends Validator
      *
      * @param $validators - a list of validators
      */
-    public function __construct(Validator ...$validators)
+    public function __construct(Limit $limit = null, Offset $offset = null, Order $order)
     {
-        $this->validators = $validators;
+        $this->limit = $limit;
+        $this->offset = $offset;
+        $this->order = $order;
     }
 
     /**
@@ -65,11 +67,21 @@ class Queries extends Validator
                 }
             }
 
-            foreach ($this->validators as $validator) {
-                if (!$validator->isValid($query)) {
-                    $this->message = 'Query not valid: ' . $this->validator->getDescription();
+            $method = $query->getMethod();
+            switch ($method) {
+                case Query::TYPE_LIMIT:
+                    $validator = $this->limit;
+                case Query::TYPE_OFFSET:
+                    $validator = $this->offset;
+                case Query::TYPE_ORDER:
+                    $validator = $this->order;
+                default:
                     return false;
-                }
+            }
+            
+            if (!$validator->isValid($query)) {
+                $this->message = 'Query not valid: ' . $this->validator->getDescription();
+                return false;
             }
 
             $queries[] = $query;
