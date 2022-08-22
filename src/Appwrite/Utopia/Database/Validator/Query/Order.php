@@ -2,16 +2,12 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
+use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Query;
 use Utopia\Validator;
 
-class Order extends Validator
+class Order extends Base
 {
-    /**
-     * @var string
-     */
-    protected $message = 'Invalid query';
-
     /**
      * @var array
      */
@@ -62,6 +58,11 @@ class Order extends Validator
             return $this->isValidAttribute($attribute);
         }
 
-        return parent::isValid($query);
+        return false;
+    }
+
+    public function getMethodType(): string
+    {
+        return self::METHOD_TYPE_ORDER;
     }
 }

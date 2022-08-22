@@ -7,9 +7,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Collection;
 class Users extends Collection
 {
     public const ALLOWED_ATTRIBUTES = [
-        '$id',
-        '$createdAt',
-        '$updatedAt',
         'name',
         'email',
         'phone',
@@ -18,6 +15,7 @@ class Users extends Collection
         'registration',
         'emailVerification',
         'phoneVerification',
+        'search',
     ];
 
     /**

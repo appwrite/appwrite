@@ -2,17 +2,12 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
+use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Query;
 use Utopia\Validator\Range;
-use Utopia\Validator;
 
-class Offset extends Validator
+class Offset extends Base
 {
-    /**
-     * @var string
-     */
-    protected $message = 'Invalid query';
-
     protected int $maxOffset;
 
     /**
@@ -23,18 +18,6 @@ class Offset extends Validator
     public function __construct(int $maxOffset = 5000)
     {
         $this->maxOffset = $maxOffset;
-    }
-
-    /**
-     * Get Description.
-     *
-     * Returns validator description
-     *
-     * @return string
-     */
-    public function getDescription(): string
-    {
-        return $this->message;
     }
 
     protected function isValidOffset($offset): bool
@@ -61,7 +44,7 @@ class Offset extends Validator
     {
         // Validate method
         $method = $query->getMethod();
-        
+
         if ($method !== Query::TYPE_OFFSET) {
             $this->message = 'Query method invalid: ' . $method;
             return false;
@@ -71,27 +54,8 @@ class Offset extends Validator
         return $this->isValidOffset($offset);
     }
 
-    /**
-     * Is array
-     *
-     * Function will return true if object is array.
-     *
-     * @return bool
-     */
-    public function isArray(): bool
+    public function getMethodType(): string
     {
-        return false;
-    }
-
-    /**
-     * Get Type
-     *
-     * Returns validator type.
-     *
-     * @return string
-     */
-    public function getType(): string
-    {
-        return self::TYPE_OBJECT;
+        return self::METHOD_TYPE_OFFSET;
     }
 }

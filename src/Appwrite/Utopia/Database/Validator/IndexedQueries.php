@@ -2,11 +2,10 @@
 
 namespace Appwrite\Utopia\Database\Validator;
 
-use Appwrite\Utopia\Database\Validator\Queries;
+use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Query as QueryValidator;
 
 class IndexedQueries extends Queries
 {
@@ -25,18 +24,13 @@ class IndexedQueries extends Queries
      *
      * This Queries Validator filters indexes for only available indexes
      *
-     * @param QueryValidator $validator
      * @param Document[] $attributes
      * @param Document[] $indexes
+     * @param Base ...$validators
      * @param bool $strict
      */
-    public function __construct($validator, $attributes = [], $indexes = [])
+    public function __construct($attributes = [], $indexes = [], Base ...$validators)
     {
-        // Remove failed/stuck/processing indexes
-        $availableIndexes = \array_filter($indexes, function ($index) {
-            return $index->getAttribute('status') === 'available';
-        });
-
         $this->attributes = $attributes;
 
         $this->indexes[] = new Document([
@@ -58,7 +52,7 @@ class IndexedQueries extends Queries
             $this->indexes[] = $index;
         }
 
-        parent::__construct($validator);
+        parent::__construct(...$validators);
     }
 
     /**

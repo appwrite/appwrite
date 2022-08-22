@@ -2,9 +2,8 @@
 
 namespace Appwrite\Utopia\Database\Validator;
 
+use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Validator;
-use Utopia\Database\Document;
-use Utopia\Database\Validator\Query as QueryValidator;
 use Utopia\Database\Query;
 
 class Queries extends Validator
@@ -15,22 +14,18 @@ class Queries extends Validator
     protected $message = 'Invalid queries';
 
     /**
-     * @var QueryValidator
+     * @var Base[]
      */
-    protected $validator;
+    protected $validators;
 
     /**
      * Queries constructor
      *
-     * @param $validators - a list of validators
+     * @param Base ...$validators a list of validators
      */
-    public function __construct(Limit $limit = null, Offset $offset = null, Order $order = null, Cursor $cursor = null, Filter $filter = null)
+    public function __construct(Base ...$validators)
     {
-        $this->limit = $limit;
-        $this->offset = $offset;
-        $this->order = $order;
-        $this->filter = $filter;
-        $this->cursor = $cursor;
+        $this->validators = $validators;
     }
 
     /**
@@ -58,7 +53,6 @@ class Queries extends Validator
      */
     public function isValid($value): bool
     {
-        $queries = [];
         foreach ($value as $query) {
             if (!$query instanceof Query) {
                 try {
@@ -70,23 +64,52 @@ class Queries extends Validator
             }
 
             $method = $query->getMethod();
+            $methodType = '';
             switch ($method) {
                 case Query::TYPE_LIMIT:
-                    $validator = $this->limit;
+                    $methodType = Base::METHOD_TYPE_LIMIT;
+                    break;
                 case Query::TYPE_OFFSET:
-                    $validator = $this->offset;
-                case Query::TYPE_ORDER:
-                    $validator = $this->order;
+                    $methodType = Base::METHOD_TYPE_OFFSET;
+                    break;
+                case Query::TYPE_CURSORAFTER:
+                case Query::TYPE_CURSORBEFORE:
+                    $methodType = Base::METHOD_TYPE_CURSOR;
+                    break;
+                case Query::TYPE_ORDERASC:
+                case Query::TYPE_ORDERDESC:
+                    $methodType = Base::METHOD_TYPE_ORDER;
+                    break;
+                case Query::TYPE_EQUAL:
+                case Query::TYPE_NOTEQUAL:
+                case Query::TYPE_LESSER:
+                case Query::TYPE_LESSEREQUAL:
+                case Query::TYPE_GREATER:
+                case Query::TYPE_GREATEREQUAL:
+                case Query::TYPE_SEARCH:
+                    $methodType = Base::METHOD_TYPE_FILTER;
+                    break;
                 default:
-                    return false;
-            }
-            
-            if ($validator && !$validator->isValid($query)) {
-                $this->message = 'Query not valid: ' . $this->validator->getDescription();
-                return false;
+                    break;
             }
 
-            $queries[] = $query;
+            $methodIsValid = false;
+            foreach ($this->validators as $validator) {
+                if ($validator->getMethodType() !== $methodType) {
+                    continue;
+                }
+                if (!$validator->isValid($query)) {
+                    $this->message = 'Query not valid: ' . $validator->getDescription();
+                    return false;
+                }
+
+                $methodIsValid = true;
+            }
+
+            if (!$methodIsValid) {
+                $this->message = 'Query method not valid: ' . $method;
+                return false;
+            }
         }
 
         return true;

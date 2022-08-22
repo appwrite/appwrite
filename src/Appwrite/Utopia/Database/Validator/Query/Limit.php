@@ -2,17 +2,12 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
+use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Query;
 use Utopia\Validator\Range;
-use Utopia\Validator;
 
-class Limit extends Validator
+class Limit extends Base
 {
-    /**
-     * @var string
-     */
-    protected $message = 'Invalid query';
-
     protected int $maxLimit;
 
     /**
@@ -23,18 +18,6 @@ class Limit extends Validator
     public function __construct(int $maxLimit = 100)
     {
         $this->maxLimit = $maxLimit;
-    }
-
-    /**
-     * Get Description.
-     *
-     * Returns validator description
-     *
-     * @return string
-     */
-    public function getDescription(): string
-    {
-        return $this->message;
     }
 
     protected function isValidLimit($limit): bool
@@ -62,7 +45,7 @@ class Limit extends Validator
         // Validate method
         $method = $query->getMethod();
 
-        if ($method !== Query::LIMIT) {
+        if ($method !== Query::TYPE_LIMIT) {
             $this->message = 'Query method invalid: ' . $method;
             return false;
         }
@@ -71,27 +54,8 @@ class Limit extends Validator
         return $this->isValidLimit($limit);
     }
 
-    /**
-     * Is array
-     *
-     * Function will return true if object is array.
-     *
-     * @return bool
-     */
-    public function isArray(): bool
+    public function getMethodType(): string
     {
-        return false;
-    }
-
-    /**
-     * Get Type
-     *
-     * Returns validator type.
-     *
-     * @return string
-     */
-    public function getType(): string
-    {
-        return self::TYPE_OBJECT;
+        return self::METHOD_TYPE_LIMIT;
     }
 }

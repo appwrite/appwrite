@@ -38,7 +38,11 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\IndexedQueries;
-use Appwrite\Utopia\Database\Validator\Queries\LimitOffsetCursorFilterOrderQuery;
+use Appwrite\Utopia\Database\Validator\Query\Cursor as CursorQueryValidator;
+use Appwrite\Utopia\Database\Validator\Query\Filter as FilterQueryValidator;
+use Appwrite\Utopia\Database\Validator\Query\Limit as LimitQueryValidator;
+use Appwrite\Utopia\Database\Validator\Query\Offset as OffsetQueryValidator;
+use Appwrite\Utopia\Database\Validator\Query\Order as OrderQueryValidator;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
@@ -2048,7 +2052,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                     ]),
                 ]
             );
-            $validator = new IndexedQueries(new LimitOffsetCursorFilterOrderQuery(attributes: $attributes), $attributes, $collection->getAttribute('indexes', []));
+            $validator = new IndexedQueries(
+                $attributes,
+                $collection->getAttribute('indexes', []),
+                new CursorQueryValidator(),
+                new FilterQueryValidator($attributes),
+                new LimitQueryValidator(),
+                new OffsetQueryValidator(),
+                new OrderQueryValidator(),
+            );
             if (!$validator->isValid($queries)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }

@@ -2,17 +2,12 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
-use Utopia\Validator;
+use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 
-class Cursor extends Validator
+class Cursor extends Base
 {
-    /**
-     * @var string
-     */
-    protected $message = 'Invalid query';
-
     /**
      * Is valid.
      *
@@ -40,5 +35,10 @@ class Cursor extends Validator
         }
 
         return false;
+    }
+
+    public function getMethodType(): string
+    {
+        return self::METHOD_TYPE_CURSOR;
     }
 }

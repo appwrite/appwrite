@@ -2,11 +2,11 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
-use Utopia\Validator;
+use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 
-class Filter extends Validator
+class Filter extends Base
 {
     /**
      * @var string
@@ -92,11 +92,6 @@ class Filter extends Validator
         $attribute = $query->getAttribute();
 
         switch ($method) {
-            // Do we support contains ? 
-            // case Query::TYPE_CONTAINS:
-            //     $values = $query->getValues();
-            //     return $this->isValidContains($attribute, $values);
-
             case Query::TYPE_EQUAL:
             case Query::TYPE_NOTEQUAL:
             case Query::TYPE_LESSER:
@@ -110,5 +105,10 @@ class Filter extends Validator
             default:
                 return false;
         }
+    }
+
+    public function getMethodType(): string
+    {
+        return self::METHOD_TYPE_FILTER;
     }
 }
