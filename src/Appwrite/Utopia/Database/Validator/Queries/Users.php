@@ -15,6 +15,7 @@ class Users extends Collection
         'registration',
         'emailVerification',
         'phoneVerification',
+        'search',
     ];
 
     /**

@@ -25,7 +25,6 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
-use Utopia\Database\Validator\Query as QueryValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -38,8 +37,12 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Appwrite\Utopia\Database\Validator\Queries as QueriesValidator;
-use Appwrite\Utopia\Database\Validator\OrderAttributes;
+use Appwrite\Utopia\Database\Validator\IndexedQueries;
+use Appwrite\Utopia\Database\Validator\Query\Cursor as CursorQueryValidator;
+use Appwrite\Utopia\Database\Validator\Query\Filter as FilterQueryValidator;
+use Appwrite\Utopia\Database\Validator\Query\Limit as LimitQueryValidator;
+use Appwrite\Utopia\Database\Validator\Query\Offset as OffsetQueryValidator;
+use Appwrite\Utopia\Database\Validator\Query\Order as OrderQueryValidator;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
@@ -2028,15 +2031,42 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $filterQueries = \array_map(function ($query) {
-            $query = Query::parse($query);
-
-            if (\count($query->getValues()) > 100) {
-                throw new Exception(Exception::GENERAL_QUERY_LIMIT_EXCEEDED, "You cannot use more than 100 query values on attribute '{$query->getAttribute()}'");
+        if (!empty($queries)) {
+            $attributes = array_merge(
+                $collection->getAttribute('attributes', []),
+                [
+                    new Document([
+                        'key' => '$id',
+                        'type' => Database::VAR_STRING,
+                        'array' => false,
+                    ]),
+                    new Document([
+                        'key' => '$createdAt',
+                        'type' => Database::VAR_DATETIME,
+                        'array' => false,
+                    ]),
+                    new Document([
+                        'key' => '$updatedAt',
+                        'type' => Database::VAR_DATETIME,
+                        'array' => false,
+                    ]),
+                ]
+            );
+            $validator = new IndexedQueries(
+                $attributes,
+                $collection->getAttribute('indexes', []),
+                new CursorQueryValidator(),
+                new FilterQueryValidator($attributes),
+                new LimitQueryValidator(),
+                new OffsetQueryValidator(),
+                new OrderQueryValidator(),
+            );
+            if (!$validator->isValid($queries)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
+        }
 
-            return $query;
-        }, $queries);
+        $filterQueries = Query::parseQueries($queries);
 
         $otherQueries = [];
         $otherQueries[] = Query::limit($limit);
@@ -2059,14 +2089,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $allQueries = \array_merge($filterQueries, $otherQueries);
-
-        if (!empty($allQueries)) {
-            $attributes = $collection->getAttribute('attributes', []);
-            $validator = new QueriesValidator(new QueryValidator($attributes), $attributes, $collection->getAttribute('indexes', []), true);
-            if (!$validator->isValid($allQueries)) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-            }
-        }
 
         if ($documentSecurity) {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $allQueries);
