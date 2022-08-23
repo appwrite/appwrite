@@ -10,7 +10,7 @@ class Deployments extends Collection
         '$id',
         '$createdAt',
         '$updatedAt',
-        
+
         'entrypoint',
         'size',
         'buildId',

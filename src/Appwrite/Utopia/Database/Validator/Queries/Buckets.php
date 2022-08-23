@@ -10,7 +10,7 @@ class Buckets extends Collection
         '$id',
         '$createdAt',
         '$updatedAt',
-        
+
         'enabled',
         'name',
         'fileSecurity',

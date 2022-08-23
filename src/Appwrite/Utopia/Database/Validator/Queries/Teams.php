@@ -10,7 +10,7 @@ class Teams extends Collection
         '$id',
         '$createdAt',
         '$updatedAt',
-        
+
         'name',
         'total'
     ];

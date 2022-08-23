@@ -10,7 +10,7 @@ class Executions extends Collection
         '$id',
         '$createdAt',
         '$updatedAt',
-        
+
         'trigger',
         'status',
         'statusCode',

@@ -1376,7 +1376,7 @@ App::get('/v1/account/logs')
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? 25;
         $offset = $grouped['offset'] ?? 0;
-        
+
         $audit = new EventAudit($dbForProject);
 
         $logs = $audit->getLogsByUser($user->getId(), $limit, $offset);

@@ -162,7 +162,7 @@ App::get('/v1/storage/buckets')
     ->inject('dbForProject')
     ->inject('usage')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject, Stats $usage) {
-        
+
         $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {

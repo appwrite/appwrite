@@ -10,7 +10,7 @@ class Functions extends Collection
         '$id',
         '$createdAt',
         '$updatedAt',
-        
+
         'name',
         'status',
         'runtime',

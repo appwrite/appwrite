@@ -10,7 +10,7 @@ class Collections extends Collection
         '$id',
         '$createdAt',
         '$updatedAt',
-        
+
         'name',
         'enabled',
         'documentSecurity'

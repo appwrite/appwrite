@@ -10,7 +10,7 @@ class Databases extends Collection
         '$id',
         '$createdAt',
         '$updatedAt',
-        
+
         'name'
     ];
 

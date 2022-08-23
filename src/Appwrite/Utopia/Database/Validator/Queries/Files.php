@@ -10,7 +10,7 @@ class Files extends Collection
         '$id',
         '$createdAt',
         '$updatedAt',
-        
+
         'name',
         'signature',
         'mimeType',

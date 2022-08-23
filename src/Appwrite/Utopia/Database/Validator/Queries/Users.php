@@ -10,7 +10,7 @@ class Users extends Collection
         '$id',
         '$createdAt',
         '$updatedAt',
-        
+
         'name',
         'email',
         'phone',

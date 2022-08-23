@@ -343,7 +343,7 @@ App::get('/v1/databases/:databaseId/logs')
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
-        
+
         $output = [];
 
         foreach ($logs as $i => &$log) {

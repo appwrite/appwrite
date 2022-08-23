@@ -877,7 +877,7 @@ App::get('/v1/teams/:teamId/logs')
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? 25;
         $offset = $grouped['offset'] ?? 0;
-        
+
         $audit = new Audit($dbForProject);
         $resource = 'team/' . $team->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
