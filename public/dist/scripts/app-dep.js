@@ -866,6 +866,79 @@ if(typeof email!=='undefined'){payload['email']=email;}
 if(typeof password!=='undefined'){payload['password']=password;}
 if(typeof name!=='undefined'){payload['name']=name;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createArgon2User(userId,email,password,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+let path='/users/argon2';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createBcryptUser(userId,email,password,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+let path='/users/bcrypt';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createMD5User(userId,email,password,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+let path='/users/md5';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createPHPassUser(userId,email,password,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+let path='/users/phpass';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createScryptUser(userId,email,password,passwordSalt,passwordCpu,passwordMemory,passwordParallel,passwordLength,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+if(typeof passwordSalt==='undefined'){throw new AppwriteException('Missing required parameter: "passwordSalt"');}
+if(typeof passwordCpu==='undefined'){throw new AppwriteException('Missing required parameter: "passwordCpu"');}
+if(typeof passwordMemory==='undefined'){throw new AppwriteException('Missing required parameter: "passwordMemory"');}
+if(typeof passwordParallel==='undefined'){throw new AppwriteException('Missing required parameter: "passwordParallel"');}
+if(typeof passwordLength==='undefined'){throw new AppwriteException('Missing required parameter: "passwordLength"');}
+let path='/users/scrypt';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof passwordSalt!=='undefined'){payload['passwordSalt']=passwordSalt;}
+if(typeof passwordCpu!=='undefined'){payload['passwordCpu']=passwordCpu;}
+if(typeof passwordMemory!=='undefined'){payload['passwordMemory']=passwordMemory;}
+if(typeof passwordParallel!=='undefined'){payload['passwordParallel']=passwordParallel;}
+if(typeof passwordLength!=='undefined'){payload['passwordLength']=passwordLength;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createScryptModifiedUser(userId,email,password,passwordSalt,passwordSaltSeparator,passwordSignerKey,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+if(typeof passwordSalt==='undefined'){throw new AppwriteException('Missing required parameter: "passwordSalt"');}
+if(typeof passwordSaltSeparator==='undefined'){throw new AppwriteException('Missing required parameter: "passwordSaltSeparator"');}
+if(typeof passwordSignerKey==='undefined'){throw new AppwriteException('Missing required parameter: "passwordSignerKey"');}
+let path='/users/scrypt-modified';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof passwordSalt!=='undefined'){payload['passwordSalt']=passwordSalt;}
+if(typeof passwordSaltSeparator!=='undefined'){payload['passwordSaltSeparator']=passwordSaltSeparator;}
+if(typeof passwordSignerKey!=='undefined'){payload['passwordSignerKey']=passwordSignerKey;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createSHAUser(userId,email,password,passwordVersion,name){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
+if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
+let path='/users/sha';let payload={};if(typeof userId!=='undefined'){payload['userId']=userId;}
+if(typeof email!=='undefined'){payload['email']=email;}
+if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof passwordVersion!=='undefined'){payload['passwordVersion']=passwordVersion;}
+if(typeof name!=='undefined'){payload['name']=name;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getUsage(range,provider){return __awaiter(this,void 0,void 0,function*(){let path='/users/usage';let payload={};if(typeof range!=='undefined'){payload['range']=range;}
 if(typeof provider!=='undefined'){payload['provider']=provider;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}

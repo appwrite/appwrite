@@ -10,6 +10,7 @@ use Tests\E2E\Scopes\SideClient;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\ID;
+use Utopia\Database\Role;
 
 class FunctionsCustomClientTest extends Scope
 {
@@ -148,7 +149,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['any'],
+            'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
@@ -333,7 +334,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['any'],
+            'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
@@ -398,6 +399,9 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals($this->getUser()['$id'], $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertNotEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($projectId, $output['APPWRITE_FUNCTION_PROJECT_ID']);
+        // Client should never see logs and errors
+        $this->assertEmpty($execution['body']['stdout']);
+        $this->assertEmpty($execution['body']['stderr']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [

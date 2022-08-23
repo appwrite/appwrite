@@ -1,10 +1,8 @@
 <?php
 
-namespace Appwrite\Auth;
+namespace Appwrite\SMS;
 
-use Appwrite\Extend\Exception;
-
-abstract class Phone
+abstract class Adapter
 {
     /**
      * @var string
@@ -69,20 +67,9 @@ abstract class Phone
         \curl_close($ch);
 
         if ($code >= 400) {
-            throw new Exception($response);
+            throw new \Exception($response);
         }
 
         return $response;
-    }
-
-    /**
-     * Generate 6 random digits for phone verification.
-     *
-     * @param int $digits
-     * @return string
-     */
-    public function generateSecretDigits(int $digits = 6): string
-    {
-        return substr(str_shuffle("0123456789"), 0, $digits);
     }
 }

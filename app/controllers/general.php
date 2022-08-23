@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
+use Utopia\Database\Role;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
@@ -246,7 +247,9 @@ App::init()
         /*
         * ACL Check
         */
-        $role = ($user->isEmpty()) ? Auth::USER_ROLE_GUESTS : Auth::USER_ROLE_USERS;
+        $role = ($user->isEmpty())
+            ? Role::guests()->toString()
+            : Role::users()->toString();
 
         // Add user roles
         $memberships = $user->find('teamId', $project->getAttribute('teamId', null), 'memberships');

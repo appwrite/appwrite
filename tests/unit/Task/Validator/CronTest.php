@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Validator;
+namespace Tests\Unit\Task\Validator;
 
 use Appwrite\Task\Validator\Cron;
 use PHPUnit\Framework\TestCase;

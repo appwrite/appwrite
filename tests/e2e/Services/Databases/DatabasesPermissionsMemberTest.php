@@ -155,12 +155,17 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $hasPermissions = \array_reduce(['any', 'users', 'user:' . $users['user1']['$id']], function (bool $carry, string $role) use ($document) {
+            $hasPermissions = \array_reduce([
+                Role::any()->toString(),
+                Role::users()->toString(),
+                Role::user($users['user1']['$id'])->toString(),
+            ], function (bool $carry, string $role) use ($document) {
                 if ($carry) {
                     return true;
                 }
                 foreach ($document['$permissions'] as $permission) {
-                    if (\str_starts_with($permission, 'read') && \str_contains($permission, $role)) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() == 'read' && $permission->getRole() == $role) {
                         return true;
                     }
                 }
@@ -181,12 +186,17 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
 
         foreach ($documents['body']['documents'] as $document) {
-            $hasPermissions = \array_reduce(['any', 'users', 'user:' . $users['user1']['$id']], function (bool $carry, string $role) use ($document) {
+            $hasPermissions = \array_reduce([
+                Role::any()->toString(),
+                Role::users()->toString(),
+                Role::user($users['user1']['$id'])->toString(),
+            ], function (bool $carry, string $role) use ($document) {
                 if ($carry) {
                     return true;
                 }
                 foreach ($document['$permissions'] as $permission) {
-                    if (\str_starts_with($permission, 'read') && \str_contains($permission, $role)) {
+                    $permission = Permission::parse($permission);
+                    if ($permission->getPermission() == 'read' && $permission->getRole() == $role) {
                         return true;
                     }
                 }

@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\Account;
 
-use Appwrite\Auth\Phone\Mock;
+use Appwrite\SMS\Adapter\Mock;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -693,7 +693,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'userId' => ID::unique(),
-            'number' => $number,
+            'phone' => $number,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -716,7 +716,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $data['token'] = Mock::$defaultDigits;
+        $data['token'] = Mock::$digits;
         $data['id'] = $userId;
         $data['number'] = $number;
 
@@ -872,7 +872,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'number' => $newPhone,
+            'phone' => $newPhone,
             'password' => 'new-password'
         ]);
 
@@ -952,7 +952,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'userId' => $id,
-            'secret' => Mock::$defaultDigits,
+            'secret' => Mock::$digits,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -967,7 +967,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'userId' => ID::custom('ewewe'),
-            'secret' => Mock::$defaultDigits,
+            'secret' => Mock::$digits,
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);

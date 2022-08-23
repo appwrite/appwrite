@@ -47,6 +47,7 @@ App::post('/v1/functions')
     ->desc('Create Function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].create')
+    ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'create')
@@ -293,6 +294,7 @@ App::put('/v1/functions/:functionId')
     ->desc('Update Function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].update')
+    ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'update')
@@ -356,6 +358,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->desc('Update Function Deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
+    ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'updateDeployment')
@@ -421,6 +424,7 @@ App::delete('/v1/functions/:functionId')
     ->desc('Delete Function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].delete')
+    ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'delete')
@@ -458,6 +462,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->desc('Create Deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
+    ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createDeployment')
@@ -751,6 +756,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->desc('Delete Deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].delete')
+    ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'deleteDeployment')
@@ -966,6 +972,7 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('status', $executionResponse['status']);
             $execution->setAttribute('statusCode', $executionResponse['statusCode']);
             $execution->setAttribute('response', $executionResponse['response']);
+            $execution->setAttribute('stdout', $executionResponse['stdout']);
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
@@ -985,6 +992,14 @@ App::post('/v1/functions/:functionId/executions')
             ->setParam('functionExecution', 1)
             ->setParam('functionStatus', $execution->getAttribute('status', ''))
             ->setParam('functionExecutionTime', $execution->getAttribute('time') * 1000); // ms
+
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $execution->setAttribute('stdout', '');
+            $execution->setAttribute('stderr', '');
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1043,6 +1058,17 @@ App::get('/v1/functions/:functionId/executions')
         $results = $dbForProject->find('executions', \array_merge($filterQueries, $queries));
         $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $results = array_map(function ($execution) {
+                $execution->setAttribute('stdout', '');
+                $execution->setAttribute('stderr', '');
+                return $execution;
+            }, $results);
+        }
+
         $response->dynamic(new Document([
             'executions' => $results,
             'total' => $total,
@@ -1082,6 +1108,14 @@ App::get('/v1/functions/:functionId/executions/:executionId')
             throw new Exception(Exception::EXECUTION_NOT_FOUND);
         }
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+        if (!$isPrivilegedUser && !$isAppUser) {
+            $execution->setAttribute('stdout', '');
+            $execution->setAttribute('stderr', '');
+        }
+
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
@@ -1090,6 +1124,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->desc('Retry Build')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
+    ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'retryBuild')

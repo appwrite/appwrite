@@ -1,6 +1,8 @@
 <?php
 
 use Utopia\App;
+use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -32,7 +34,6 @@ class DeletesV1 extends Worker
     {
         $project = new Document($this->args['project'] ?? []);
         $type = $this->args['type'] ?? '';
-
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 $document = new Document($this->args['document'] ?? []);
@@ -106,6 +107,13 @@ class DeletesV1 extends Worker
             case DELETE_TYPE_USAGE:
                 $this->deleteUsageStats($this->args['dateTime1d'], $this->args['dateTime30m']);
                 break;
+
+            case DELETE_TYPE_CACHE_BY_RESOURCE:
+                $this->deleteCacheByResource($project->getId());
+                break;
+            case DELETE_TYPE_CACHE_BY_TIMESTAMP:
+                $this->deleteCacheByTimestamp();
+                break;
             default:
                 Console::error('No delete operation for type: ' . $type);
                 break;
@@ -114,6 +122,49 @@ class DeletesV1 extends Worker
 
     public function shutdown(): void
     {
+    }
+
+    /**
+     * @param string $projectId
+     */
+    protected function deleteCacheByResource(string $projectId): void
+    {
+        $this->deleteCacheFiles([
+                new Query('resource', Query::TYPE_EQUAL, [$this->args['resource']])
+            ]);
+    }
+
+    protected function deleteCacheByTimestamp(): void
+    {
+        $this->deleteCacheFiles([
+                new Query('accessedAt', Query::TYPE_LESSER, [$this->args['timestamp']])
+            ]);
+    }
+
+    protected function deleteCacheFiles($query): void
+    {
+        $this->deleteForProjectIds(function (string $projectId) use ($query) {
+
+            $dbForProject = $this->getProjectDB($projectId);
+            $cache = new Cache(
+                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
+            );
+
+            $this->deleteByGroup(
+                'cache',
+                $query,
+                $dbForProject,
+                function (Document $document) use ($cache, $projectId) {
+                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+
+                    if ($cache->purge($document->getId())) {
+                        Console::success('Deleting cache file: ' . $path);
+                    } else {
+                        Console::error('Failed to delete cache file: ' . $path);
+                    }
+                }
+            );
+        });
     }
 
     /**
