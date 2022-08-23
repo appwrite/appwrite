@@ -48,6 +48,7 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Stats\Stats;
+use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
@@ -270,9 +271,9 @@ App::get('/v1/databases')
             $cursor->setValue($cursorDocument);
         }
 
-        $usage->setParam('databases.read', 1);
-
         $filterQueries = Query::groupByType($queries)['filters'];
+
+        $usage->setParam('databases.read', 1);
 
         $response->dynamic(new Document([
             'databases' => $dbForProject->find('databases', $queries),
@@ -562,16 +563,12 @@ App::get('/v1/databases/:databaseId/collections')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('queries', [], new Collections(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Collections::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of collection to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
-    ->action(function (string $databaseId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject, Stats $usage) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -579,34 +576,37 @@ App::get('/v1/databases/:databaseId/collections')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $filterQueries = [];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $filterQueries[] = Query::search('search', $search);
+            $queries[] = Query::search('search', $search);
         }
 
-        $queries = [];
-        $queries[] = Query::limit($limit);
-        $queries[] = Query::offset($offset);
-        $queries[] = $orderType === 'ASC' ? Query::orderAsc('') : Query::orderDesc('');
-        if (!empty($cursor)) {
-            $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $cursor);
+        // Set default limit
+        $queries[] = Query::limit(25);
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
+        if ($cursor !== null) {
+            /** @var Query $cursor */
+            $collectionId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Collection '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Collection '{$collectionId}' for the 'cursor' value not found.");
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER
-                ? Query::cursorAfter($cursorDocument)
-                : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
 
         $usage
             ->setParam('databaseId', $databaseId)
             ->setParam('databases.collections.read', 1);
 
         $response->dynamic(new Document([
-            'collections' => $dbForProject->find('database_' . $database->getInternalId(), \array_merge($filterQueries, $queries)),
+            'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries),
             'total' => $dbForProject->count('database_' . $database->getInternalId(), $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
