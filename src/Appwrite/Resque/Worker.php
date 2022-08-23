@@ -277,7 +277,6 @@ abstract class Worker
         return $this->getDevice(APP_STORAGE_VIDEOS . '/app-' . $projectId);
     }
 
-
     /**
      * Get Builds Storage Device
      * @param string $projectId of the project
