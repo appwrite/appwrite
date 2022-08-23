@@ -2012,7 +2012,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
-    ->param('queries', [], new Documents(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('usage')
@@ -2038,6 +2038,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $valid = $validator->isValid($collection->getRead());
         if (!$valid && !$documentSecurity) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        // Validate queries
+        $validator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
+        $valid = $validator->isValid($collection->getRead());
+        if (!$valid) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
         }
 
         $queries = Query::parseQueries($queries);

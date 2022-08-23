@@ -67,11 +67,6 @@ class Base extends IndexedQueries
                 'attributes' => [$attribute]
             ]);
         }
-        $indexes[] = new Document([
-            'status' => 'available',
-            'type' => Database::INDEX_FULLTEXT,
-            'attributes' => ['search']
-        ]);
 
         $validators = [
             new Limit(),
