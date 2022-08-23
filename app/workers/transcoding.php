@@ -29,27 +29,27 @@ class TranscodingV1 extends Worker
     /**
      * Rendition Status
      */
-    const STATUS_START     = 'started';
-    const STATUS_END       = 'ended';
-    const STATUS_UPLOADING = 'uploading';
-    const STATUS_READY     = 'ready';
-    const STATUS_ERROR     = 'error';
+    private const STATUS_START     = 'started';
+    private const STATUS_END       = 'ended';
+    private const STATUS_UPLOADING = 'uploading';
+    private const STATUS_READY     = 'ready';
+    private const STATUS_ERROR     = 'error';
 
-    const STREAM_HLS = 'hls';
-    const STREAM_MPEG_DASH = 'dash';
+    private const STREAM_HLS = 'hls';
+    private const STREAM_MPEG_DASH = 'dash';
 
-    protected string $basePath = '/tmp/';
+    private string $basePath = '/tmp/';
     //protected string $basePath = '/usr/src/code/tests/tmp/';
 
-    protected string $inDir;
+    private string $inDir;
 
-    protected string $outDir;
+    private string $outDir;
 
-    protected string $outPath;
+    private string $outPath;
 
-    protected string $renditionName;
+    private string $renditionName;
 
-    protected Database $database;
+    private Database $database;
 
     public function getName(): string
     {
