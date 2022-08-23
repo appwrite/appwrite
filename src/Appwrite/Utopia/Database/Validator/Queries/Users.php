@@ -2,15 +2,11 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Appwrite\Utopia\Database\Validator\Queries\Collection;
+use Appwrite\Utopia\Database\Validator\Queries\Base;
 
-class Users extends Collection
+class Users extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
-        '$id',
-        '$createdAt',
-        '$updatedAt',
-
         'name',
         'email',
         'phone',

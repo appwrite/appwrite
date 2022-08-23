@@ -12,7 +12,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
-class Collection extends IndexedQueries
+class Base extends IndexedQueries
 {
     /**
      * Expression constructor
@@ -49,12 +49,12 @@ class Collection extends IndexedQueries
             'array' => false,
         ]);
         $attributes[] = new Document([
-            '$id' => '$createdAt',
+            'key' => '$createdAt',
             'type' => Database::VAR_DATETIME,
             'array' => false,
         ]);
         $attributes[] = new Document([
-            '$id' => '$updatedAt',
+            'key' => '$updatedAt',
             'type' => Database::VAR_DATETIME,
             'array' => false,
         ]);
