@@ -174,10 +174,9 @@ class Exception extends \Exception
     public const VIDEO_PROFILE_NOT_FOUND            = 'video_profile_not_found';
     public const VIDEO_PROFILE_ALREADY_EXISTS       = 'video_profile_already_exists';
     public const VIDEO_RENDITION_NOT_FOUND          = 'video_rendition_not_found';
-    public const VIDEO_RENDITION_ALREADY_EXISTS     = 'video_rendition_already_exists';
     public const VIDEO_SUBTITLE_NOT_FOUND           = 'video_subtitle_not_found';
     public const VIDEO_NOT_FOUND                    = 'video_not_found';
-    public const VIDEO_RENDITION_SEGMENT_NOT_FOUND  = 'video_rendition_segment_not__found';
+    public const VIDEO_RENDITION_SEGMENT_NOT_FOUND  = 'video_rendition_segment_not_found';
     public const VIDEO_SUBTITLE_SEGMENT_NOT_FOUND   = 'video_subtitle_segment_not_found';
 
 

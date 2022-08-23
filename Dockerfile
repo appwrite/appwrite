@@ -50,8 +50,7 @@ RUN \
   yaml-dev \
   imagemagick \
   imagemagick-dev \
-  libmaxminddb-dev \
-  ffmpeg
+  libmaxminddb-dev
 
 RUN docker-php-ext-install sockets
 

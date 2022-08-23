@@ -128,7 +128,7 @@ class TranscodingV1 extends Worker
         $general = $this->getVideoSourceInfo($ffprobe->streams($inPath));
         if (!empty($general)) {
             foreach ($general as $key => $value) {
-                $sourceVideo->setAttribute($key, $value);
+                $sourceVideo->setAttribute($key, (string)$value);
             }
 
             Authorization::skip(fn() => $this->database->updateDocument(
@@ -237,7 +237,7 @@ class TranscodingV1 extends Worker
             $general = $this->transcode($profile['stream'], $video, $format, $representation, $subs);
             if (!empty($general)) {
                 foreach ($general as $key => $value) {
-                    $query->setAttribute($key, $value);
+                    $query->setAttribute($key, (string)$value);
                 }
             }
 
@@ -485,14 +485,14 @@ class TranscodingV1 extends Worker
     {
             return [
                 'duration' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('duration') : '0',
-                'height' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('height') : 0,
-                'width' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('width') : 0,
+                'height' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('height') : '0',
+                'width' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('width') : '0',
                 'videoCodec'   => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('codec_name') : '',
-                'videoFramerate' => $streams->videos()->count() > 0  ? $streams->videos()->first()->get('avg_frame_rate') : '',
-                'videoBitrate' =>  $streams->videos()->count() > 0 ? (int)$streams->videos()->first()->get('bit_rate') : 0,
+                'videoFramerate' => $streams->videos()->count() > 0  ? $streams->videos()->first()->get('avg_frame_rate') : '0',
+                'videoBitrate' =>  $streams->videos()->count() > 0 ? $streams->videos()->first()->get('bit_rate') : '0',
                  'audioCodec' =>   $streams->audios()->count() > 0 ? $streams->audios()->first()->get('codec_name')  : '',
-                'audioSamplerate' => $streams->audios()->count() > 0 ? (int)$streams->audios()->first()->get('sample_rate') : 0,
-                'audioBitrate'   =>  $streams->audios()->count() > 0 ? (int)$streams->audios()->first()->get('bit_rate') : 0,
+                'audioSamplerate' => $streams->audios()->count() > 0 ? $streams->audios()->first()->get('sample_rate') : '0',
+                'audioBitrate'   =>  $streams->audios()->count() > 0 ? $streams->audios()->first()->get('bit_rate') : '0',
              ];
     }
 
@@ -514,12 +514,12 @@ class TranscodingV1 extends Worker
             if ($streams['codec_type'] === 'video') {
                 $info['duration'] = !empty($streams['duration']) ? $streams['duration'] : '0';
                 $info['videoCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] : '';
-                $info['videoBitrate'] = !empty($streams['bit_rate']) ? (int)$streams['bit_rate'] : $representation->getKiloBitrate();
-                $info['videoFramerate'] = !empty($streams['avg_frame_rate']) ? $streams['avg_frame_rate'] : '';
+                $info['videoBitrate'] = !empty($streams['bit_rate']) ? $streams['bit_rate'] : $representation->getKiloBitrate();
+                $info['videoFramerate'] = !empty($streams['avg_frame_rate']) ? $streams['avg_frame_rate'] : '0';
             } elseif ($streams['codec_type'] === 'audio') {
                 $info['audioCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] : '' ;
-                $info['audioSamplerate'] = !empty($streams['sample_rate']) ? (int)$streams['sample_rate'] : 0;
-                $info['audioBitrate'] = !empty($streams['bit_rate']) ? (int)$streams['bit_rate'] : $representation->getAudioKiloBitrate();
+                $info['audioSamplerate'] = !empty($streams['sample_rate']) ? $streams['sample_rate'] : '0';
+                $info['audioBitrate'] = !empty($streams['bit_rate']) ? $streams['bit_rate'] : $representation->getAudioKiloBitrate();
             }
         }
         return $info;

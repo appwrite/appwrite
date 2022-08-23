@@ -12,7 +12,7 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require_once __DIR__ . '/../vendor/autoload.php';
 }
 
-ini_set('memory_limit', '1024M');
+ini_set('memory_limit', '512M');
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
@@ -845,7 +845,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Document $console */
 
     $projectId = 'dev';
-    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+    //$projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
 
     if ($projectId === 'console') {
         return $console;

@@ -1443,5 +1443,3 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
 
         $response->noContent();
     });
-
-

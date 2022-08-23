@@ -828,6 +828,5 @@ class VideoCustomServerTest extends Scope
 
         $this->assertTrue($isVideo);
         $this->assertTrue($isAudio);
-
     }
 }

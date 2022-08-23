@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class VideoRendition extends Model
+class Rendition extends Model
 {
     public function __construct()
     {
@@ -139,6 +139,6 @@ class VideoRendition extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_VIDEO_RENDITION;
+        return Response::MODEL_RENDITION;
     }
 }
