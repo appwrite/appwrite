@@ -23,6 +23,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Swoole\Request;
 use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
+use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Database\Validator\Queries\Functions;
 use Utopia\App;
 use Utopia\Database\Database;
@@ -1023,14 +1024,11 @@ App::get('/v1/functions/:functionId/executions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION_LIST)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of executions to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('queries', [], new Executions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('cursor', '', new UID(), 'ID of the execution used as the starting point for the query, excluding the execution itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, int $limit, int $offset, string $search, string $cursor, string $cursorDirection, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1038,29 +1036,35 @@ App::get('/v1/functions/:functionId/executions')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $filterQueries = [
-            Query::equal('functionId', [$function->getId()])
-        ];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $filterQueries[] = Query::search('search', $search);
+            $queries[] = Query::search('search', $search);
         }
 
-        $queries = [];
-        $queries[] = Query::limit($limit);
-        $queries[] = Query::offset($offset);
-        $queries[] = Query::orderDesc('');
-        if (!empty($cursor)) {
-            $cursorDocument = $dbForProject->getDocument('executions', $cursor);
+        // Set default limit
+        $queries[] = Query::limit(25);
+
+        // Set internal queries
+        $queries[] = Query::equal('functionId', [$function->getId()]);
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
+        if ($cursor !== null) {
+            /** @var Query $cursor */
+            $executionId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('executions', $executionId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Tag '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Execution '{$executionId}' for the 'cursor' value not found.");
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
 
-        $results = $dbForProject->find('executions', \array_merge($filterQueries, $queries));
+        $filterQueries = Query::groupByType($queries)['filters'];
+
+        $results = $dbForProject->find('executions', $queries);
         $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);
 
         $roles = Authorization::getRoles();
