@@ -1906,16 +1906,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                 }
             }
-        } else {
-            foreach ($allowedPermissions as $permission) {
-                /**
-                 * If an allowed permission was not passed in the request,
-                 * and there is a current user, add it for the current user.
-                 */
-                if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($user->getId())) {
-                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
-                }
-            }
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
