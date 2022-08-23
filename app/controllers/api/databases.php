@@ -1677,8 +1677,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         // Search for index
         $indexIndex = \array_search($key, \array_map(fn($index) => $index->getAttribute('key'), $indexes));
 
-        \var_dump($indexIndex);
-
         if ($indexIndex === false) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
         }
