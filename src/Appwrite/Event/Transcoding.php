@@ -61,7 +61,6 @@ class Transcoding extends Event
         return $this->profileId;
     }
 
-
     /**
      * Executes the function event and sends it to the functions worker.
      *
