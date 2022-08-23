@@ -505,11 +505,8 @@ App::post('/v1/databases/:databaseId/collections')
 
         $collectionId = $collectionId == 'unique()' ? ID::unique() : $collectionId;
 
-        /**
-         * Map aggregate permissions into the multiple permissions they represent,
-         * accounting for the resource type given that some types not allowed specific permissions.
-         */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'collection');
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions);
 
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
@@ -774,10 +771,8 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         $permissions ??= $collection->getPermissions() ?? [];
 
-        /**
-         * Map aggregate permissions into the multiple permissions they represent.
-         */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'collection');
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions);
 
         $enabled ??= $collection->getAttribute('enabled', true);
 
@@ -1894,20 +1889,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        /**
-         * Map aggregate permissions into the multiple permissions they represent,
-         * accounting for the resource type given that some types not allowed specific permissions.
-         */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'document');
+        $allowedPermissions = [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ];
 
-        /**
-         * Add permissions for current the user for any missing types
-         * from the allowed permissions for this resource type.
-         */
-        $allowedPermissions = \array_filter(
-            Database::PERMISSIONS,
-            fn ($permission) => $permission !== Database::PERMISSION_CREATE
-        );
+        // Map aggregate permissions to into the set of individual permissions they represent.
+        $permissions = Permission::aggregate($permissions, $allowedPermissions);
+
+        // Add permissions for current the user if none were provided.
         if (\is_null($permissions)) {
             $permissions = [];
             if (!empty($user->getId())) {
@@ -2342,11 +2333,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             }
         }
 
-        /**
-         * Map aggregate permissions into the multiple permissions they represent,
-         * accounting for the resource type given that some types not allowed specific permissions.
-         */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'document');
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions, [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ]);
 
         if (\is_null($permissions)) {
             $permissions = $document->getPermissions() ?? [];

@@ -4,7 +4,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Permissions\PermissionsProcessor;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Stats\Stats;
@@ -73,11 +72,8 @@ App::post('/v1/storage/buckets')
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
-        /**
-         * Map aggregate permissions into the multiple permissions they represent,
-         * accounting for the resource type given that some types not allowed specific permissions.
-         */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'bucket');
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions);
 
         try {
             $files = Config::getParam('collections', [])['files'] ?? [];
@@ -265,7 +261,8 @@ App::put('/v1/storage/buckets/:bucketId')
          * Map aggregate permissions into the multiple permissions they represent,
          * accounting for the resource type given that some types not allowed specific permissions.
          */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'bucket');
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions);
 
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
                 ->setAttribute('name', $name)
@@ -372,20 +369,16 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        /**
-         * Map aggregate permissions into the multiple permissions they represent,
-         * accounting for the resource type given that some types not allowed specific permissions.
-         */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'file');
+        $allowedPermissions = [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ];
 
-        /**
-         * Add permissions for current the user for any missing types
-         * from the allowed permissions for this resource type.
-         */
-        $allowedPermissions = \array_filter(
-            Database::PERMISSIONS,
-            fn ($permission) => $permission !== Database::PERMISSION_CREATE
-        );
+        // Map aggregate permissions to into the set of individual permissions they represent.
+        $permissions = Permission::aggregate($permissions, $allowedPermissions);
+
+        // Add permissions for current the user if none were provided.
         if (\is_null($permissions)) {
             $permissions = [];
             if (!empty($user->getId())) {
@@ -1328,11 +1321,12 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             }
         }
 
-        /**
-         * Map aggregate permissions into the multiple permissions they represent,
-         * accounting for the resource type given that some types not allowed specific permissions.
-         */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'file');
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions, [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ]);
 
         $file->setAttribute('$permissions', $permissions);
 

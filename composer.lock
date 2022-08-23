@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "175fe4abafd8bde4053b91eea905c328",
+    "content-hash": "0d6daae2c9fa0cb94684996f3121b6be",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2052,16 +2052,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.22.0",
+            "version": "dev-refactor-permissions",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "22c45ae83612e907203b7571cd8e3115ae3ae4c5"
+                "reference": "b703f87e8190d362d93b64ac20992fc4988eb36a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/22c45ae83612e907203b7571cd8e3115ae3ae4c5",
-                "reference": "22c45ae83612e907203b7571cd8e3115ae3ae4c5",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b703f87e8190d362d93b64ac20992fc4988eb36a",
+                "reference": "b703f87e8190d362d93b64ac20992fc4988eb36a",
                 "shasum": ""
             },
             "require": {
@@ -2110,9 +2110,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.22.0"
+                "source": "https://github.com/utopia-php/database/tree/refactor-permissions"
             },
-            "time": "2022-08-17T12:55:37+00:00"
+            "time": "2022-08-23T01:36:40+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2833,12 +2833,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "987f2933b97bd04f702ea08685f2be28a08a841c"
+                "reference": "1a67d9dcd2884a6a708176955f83e319ac53059e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/987f2933b97bd04f702ea08685f2be28a08a841c",
-                "reference": "987f2933b97bd04f702ea08685f2be28a08a841c",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/1a67d9dcd2884a6a708176955f83e319ac53059e",
+                "reference": "1a67d9dcd2884a6a708176955f83e319ac53059e",
                 "shasum": ""
             },
             "require": {
@@ -2876,7 +2876,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/master"
             },
-            "time": "2022-08-17T12:50:44+00:00"
+            "time": "2022-08-19T10:03:22+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -3526,23 +3526,23 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.15",
+            "version": "9.2.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "2e9da11878c4202f97915c1cb4bb1ca318a63f5f"
+                "reference": "2593003befdcc10db5e213f9f28814f5aa8ac073"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/2e9da11878c4202f97915c1cb4bb1ca318a63f5f",
-                "reference": "2e9da11878c4202f97915c1cb4bb1ca318a63f5f",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/2593003befdcc10db5e213f9f28814f5aa8ac073",
+                "reference": "2593003befdcc10db5e213f9f28814f5aa8ac073",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
                 "ext-libxml": "*",
                 "ext-xmlwriter": "*",
-                "nikic/php-parser": "^4.13.0",
+                "nikic/php-parser": "^4.14",
                 "php": ">=7.3",
                 "phpunit/php-file-iterator": "^3.0.3",
                 "phpunit/php-text-template": "^2.0.2",
@@ -3591,7 +3591,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.15"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.16"
             },
             "funding": [
                 {
@@ -3599,7 +3599,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-03-07T09:28:20+00:00"
+            "time": "2022-08-20T05:26:47+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -5354,10 +5354,17 @@
             "version": "9999999-dev",
             "alias": "0.19.5",
             "alias_normalized": "0.19.5.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "dev-refactor-permissions",
+            "alias": "0.22.0",
+            "alias_normalized": "0.22.0.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/database": 20,
         "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,
