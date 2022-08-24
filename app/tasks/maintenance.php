@@ -105,7 +105,7 @@ $cli
         Console::loop(function () use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
             $redis = $register->get('cache');
             $dbPool = $register->get('dbPool');
-            
+
             $database = $dbPool->getConsoleDB();
             $pdo = $dbPool->getPDO($database);
             $database = DatabasePool::wait(
