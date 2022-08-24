@@ -11,7 +11,6 @@ class Deployments extends Base
         'size',
         'buildId',
         'activate',
-        'status',
     ];
 
     /**
