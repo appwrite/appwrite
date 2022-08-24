@@ -986,9 +986,10 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['ASC'],
+            'queries' => [ 'orderAsc("releaseYear")' ],
         ]);
+
+        \var_dump($documents);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
@@ -1007,8 +1008,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['DESC'],
+            'queries' => [ 'orderDesc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);

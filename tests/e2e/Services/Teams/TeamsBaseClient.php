@@ -209,7 +209,7 @@ trait TeamsBaseClient
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $memberships['body']['memberships'][0]['$id']
+            'queries' => [ 'cursorAfter("' . $memberships['body']['memberships'][0]['$id'] . '")' ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

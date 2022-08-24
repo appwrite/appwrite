@@ -2042,7 +2042,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         // Validate queries
         $validator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
-        $valid = $validator->isValid($collection->getRead());
+        $valid = $validator->isValid($queries);
         if (!$valid) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
         }

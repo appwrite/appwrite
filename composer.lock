@@ -2874,7 +2874,7 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/feat-change-default-functionID"
+                "source": "https://github.com/appwrite/sdk-generator/tree/master"
             },
             "time": "2022-08-19T10:03:22+00:00"
         },

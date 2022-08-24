@@ -20,6 +20,6 @@ class TeamMemberships extends Base
      */
     public function __construct()
     {
-        parent::__construct('teamMemberships', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('memberships', self::ALLOWED_ATTRIBUTES);
     }
 }

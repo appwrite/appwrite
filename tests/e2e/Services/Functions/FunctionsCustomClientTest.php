@@ -293,7 +293,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'cursor' => $base['body']['executions'][0]['$id']
+            'queries' => [ 'cursorAfter("' . $base['body']['executions'][0]['$id'] . '")' ],
         ]);
 
         $this->assertCount(1, $executions['body']['executions']);
@@ -304,8 +304,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'cursor' => $base['body']['executions'][1]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $base['body']['executions'][1]['$id'] . '")' ],
         ]);
 
         // Cleanup : Delete function
