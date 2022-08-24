@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\ID;
 use Utopia\Database\Permission;
@@ -29,16 +29,72 @@ class DatabasesPermissionsMemberTest extends Scope
     public function permissionsProvider(): array
     {
         return [
-           [[Permission::read(Role::any())]],
-           [[Permission::read(Role::users())]],
-           [[Permission::read(Role::user(ID::custom('random')))]],
-           [[Permission::read(Role::user(ID::custom('lorem'))), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))]],
-           [[Permission::read(Role::user(ID::custom('dolor'))), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))]],
-           [[Permission::read(Role::user(ID::custom('dolor'))), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))]],
-           [[Permission::update(Role::any()), Permission::delete(Role::any())]],
-           [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())]],
-           [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())]],
-           [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())]],
+            [
+                'permissions' => [Permission::read(Role::any())],
+                'any' => 1,
+                'users' => 1,
+                'doconly' => 1,
+            ],
+            [
+                'permissions' => [Permission::read(Role::users())],
+                'any' => 2,
+                'users' => 2,
+                'doconly' => 2,
+            ],
+            [
+                'permissions' => [Permission::read(Role::user(ID::custom('random')))],
+                'any' => 3,
+                'users' => 3,
+                'doconly' => 2,
+            ],
+            [
+                'permissions' => [Permission::read(Role::user(ID::custom('lorem'))), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))],
+                'any' => 4,
+                'users' => 4,
+                'doconly' => 2,
+            ],
+            [
+                'permissions' => [Permission::read(Role::user(ID::custom('dolor'))), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))],
+                'any' => 5,
+                'users' => 5,
+                'doconly' => 2,
+            ],
+            [
+                'permissions' => [Permission::read(Role::user(ID::custom('dolor'))), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))],
+                'any' => 6,
+                'users' => 6,
+                'doconly' => 2,
+            ],
+            [
+                'permissions' => [Permission::update(Role::any()), Permission::delete(Role::any())],
+                'any' => 7,
+                'users' => 7,
+                'doconly' => 2,
+            ],
+            [
+                'permissions' => [Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())],
+                'any' => 8,
+                'users' => 8,
+                'doconly' => 3,
+            ],
+            [
+                'permissions' => [Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())],
+                'any' => 9,
+                'users' => 9,
+                'doconly' => 4,
+            ],
+            [
+                'permissions' => [Permission::read(Role::user(ID::custom('user1')))],
+                'any' => 10,
+                'users' => 10,
+                'doconly' => 5,
+            ],
+            [
+                'permissions' => [Permission::read(Role::user(ID::custom('user1'))), Permission::read(Role::user(ID::custom('user1')))],
+                'any' => 11,
+                'users' => 11,
+                'doconly' => 6,
+            ],
         ];
     }
 
@@ -74,7 +130,6 @@ class DatabasesPermissionsMemberTest extends Scope
             'documentSecurity' => true,
         ]);
         $this->assertEquals(201, $public['headers']['status-code']);
-
         $this->collections = ['public' => $public['body']['$id']];
 
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $this->collections['public'] . '/attributes/string', $this->getServerHeader(), [
@@ -96,10 +151,25 @@ class DatabasesPermissionsMemberTest extends Scope
             'documentSecurity' => true,
         ]);
         $this->assertEquals(201, $private['headers']['status-code']);
-
         $this->collections['private'] = $private['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $this->collections['private'] . '/attributes/string', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $this->collections['private'] . '/attributes/string', $this->getServerHeader(), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $response['headers']['status-code']);
+
+        $doconly = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
+            'collectionId' => ID::unique(),
+            'name' => 'Document Only Movies',
+            'permissions' => [],
+            'documentSecurity' => true,
+        ]);
+        $this->assertEquals(201, $private['headers']['status-code']);
+        $this->collections['doconly'] = $doconly['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $this->collections['doconly'] . '/attributes/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -118,9 +188,9 @@ class DatabasesPermissionsMemberTest extends Scope
     /**
      * Data provider params are passed before test dependencies
      * @dataProvider permissionsProvider
-     * @depends testSetupDatabase
+     * @depends      testSetupDatabase
      */
-    public function testReadDocuments($permissions, $data)
+    public function testReadDocuments($permissions, $anyCount, $usersCount, $docOnlyCount, $data)
     {
         $users = $data['users'];
         $collections = $data['collections'];
@@ -144,66 +214,52 @@ class DatabasesPermissionsMemberTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collections['doconly'] . '/documents', $this->getServerHeader(), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Lorem',
+            ],
+            'permissions' => $permissions
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         /**
-         * Check "any" collection
+         * Check "any" permission collection
          */
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['public']  . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['public'] . '/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users['user1']['session'],
         ]);
 
-        foreach ($documents['body']['documents'] as $document) {
-            $hasPermissions = \array_reduce([
-                Role::any()->toString(),
-                Role::users()->toString(),
-                Role::user($users['user1']['$id'])->toString(),
-            ], function (bool $carry, string $role) use ($document) {
-                if ($carry) {
-                    return true;
-                }
-                foreach ($document['$permissions'] as $permission) {
-                    $permission = Permission::parse($permission);
-                    if ($permission->getPermission() == 'read' && $permission->getRole() == $role) {
-                        return true;
-                    }
-                }
-                return false;
-            }, false);
-
-            $this->assertTrue($hasPermissions);
-        }
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals($anyCount, $documents['body']['total']);
 
         /**
-         * Check role:member collection
+         * Check "users" permission collection
          */
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['private']  . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['private'] . '/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users['user1']['session'],
         ]);
 
-        foreach ($documents['body']['documents'] as $document) {
-            $hasPermissions = \array_reduce([
-                Role::any()->toString(),
-                Role::users()->toString(),
-                Role::user($users['user1']['$id'])->toString(),
-            ], function (bool $carry, string $role) use ($document) {
-                if ($carry) {
-                    return true;
-                }
-                foreach ($document['$permissions'] as $permission) {
-                    $permission = Permission::parse($permission);
-                    if ($permission->getPermission() == 'read' && $permission->getRole() == $role) {
-                        return true;
-                    }
-                }
-                return false;
-            }, false);
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals($usersCount, $documents['body']['total']);
 
-            $this->assertTrue($hasPermissions);
-        }
+        /**
+         * Check "user:user1" document only permission collection
+         */
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['doconly'] . '/documents', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users['user1']['session'],
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals($docOnlyCount, $documents['body']['total']);
     }
 }
