@@ -82,7 +82,7 @@ App::post('/v1/functions')
             'scheduleNext' => null,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime]),
-            'vars' => []
+            'vars' => null
         ]));
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -1209,20 +1209,22 @@ App::post('/v1/functions/:functionId/variables')
         }
 
         $variable = new Document([
-            '$id' => $dbForProject->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'functionInternalId' => $function->getInternalId(),
             'functionId' => $function->getId(),
             'key' => $key,
-            'value' => $value,
-            'vars' => null
+            'value' => $value
         ]);
 
         try {
             $variable = $dbForProject->createDocument('variables', $variable);
         } catch (DuplicateException $th) {
-            throw new Exception('Variable name already used.', 409, Exception::VARIABLE_ALREADY_EXISTS);
+            throw new Exception('Variable key already used.', 409, Exception::VARIABLE_ALREADY_EXISTS);
         }
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
@@ -1340,7 +1342,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         try {
             $dbForProject->updateDocument('variables', $variable->getId(), $variable);
         } catch (DuplicateException $th) {
-            throw new Exception('Variable name already used.', 409, Exception::VARIABLE_ALREADY_EXISTS);
+            throw new Exception('Variable key already used.', 409, Exception::VARIABLE_ALREADY_EXISTS);
         }
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());

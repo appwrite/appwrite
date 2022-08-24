@@ -1965,7 +1965,7 @@ $collections = [
                 '$id' => ID::custom('vars'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 1000000,
+                'size' => 16384,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -3114,7 +3114,7 @@ $collections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => []
+                'filters' => [ 'encrypt' ]
             ]
         ],
         'indexes' => [
@@ -3131,6 +3131,13 @@ $collections = [
                 'attributes' => ['functionInternalId', 'key'],
                 'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_key',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['key'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
             ],
         ],
     ],
