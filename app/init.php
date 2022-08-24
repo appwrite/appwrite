@@ -399,7 +399,7 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('variables', [
-                new Query('functionInternalId', Query::TYPE_EQUAL, [$document->getInternalId()]),
+                Query::equal('functionInternalId', [$document->getInternalId()]),
             ], APP_LIMIT_SUBQUERY);
     }
 );

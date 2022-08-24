@@ -130,15 +130,15 @@ class DeletesV1 extends Worker
     protected function deleteCacheByResource(string $projectId): void
     {
         $this->deleteCacheFiles([
-                new Query('resource', Query::TYPE_EQUAL, [$this->args['resource']])
-            ]);
+            Query::equal('resource', [$this->args['resource']]),
+        ]);
     }
 
     protected function deleteCacheByTimestamp(): void
     {
         $this->deleteCacheFiles([
-                new Query('accessedAt', Query::TYPE_LESSER, [$this->args['timestamp']])
-            ]);
+            Query::lessThan('accessedAt', [$this->args['timestamp']]),
+        ]);
     }
 
     protected function deleteCacheFiles($query): void

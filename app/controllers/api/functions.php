@@ -1216,6 +1216,7 @@ App::post('/v1/functions/:functionId/variables')
             'functionId' => $function->getId(),
             'key' => $key,
             'value' => $value,
+            'vars' => null
         ]);
 
         try {
@@ -1283,8 +1284,8 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable = $dbForProject->findOne('variables', [
-            new Query('_uid', Query::TYPE_EQUAL, [$variableId]),
-            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()])
+            Query::equal('_uid', [$variableId]),
+            Query::equal('functionInternalId', [$function->getInternalId()]),
         ]);
 
         if ($variable === false || $variable->isEmpty()) {
@@ -1323,8 +1324,8 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable = $dbForProject->findOne('variables', [
-            new Query('_uid', Query::TYPE_EQUAL, [$variableId]),
-            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()])
+            Query::equal('_uid', [$variableId]),
+            Query::equal('functionInternalId', [$function->getInternalId()]),
         ]);
 
         if ($variable === false || $variable->isEmpty()) {
@@ -1369,8 +1370,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable = $dbForProject->findOne('variables', [
-            new Query('_uid', Query::TYPE_EQUAL, [$variableId]),
-            new Query('functionInternalId', Query::TYPE_EQUAL, [$function->getInternalId()])
+            Query::equal('_uid', [$variableId]),
+            Query::equal('functionInternalId', [$function->getInternalId()]),
         ]);
 
         if ($variable === false || $variable->isEmpty()) {
