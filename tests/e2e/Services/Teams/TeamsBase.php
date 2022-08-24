@@ -17,7 +17,8 @@ trait TeamsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'teamId' => 'unique()',
-            'name' => 'Arsenal'
+            'name' => 'Arsenal',
+            'roles' => ['player'],
         ]);
 
         $this->assertEquals(201, $response1['headers']['status-code']);

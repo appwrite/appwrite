@@ -67,6 +67,10 @@ App::post('/v1/teams')
         ])));
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
+            if (!\in_array('owner', $roles)) {
+                $roles[] = 'owner';
+            }
+
             $membershipId = $dbForProject->getId();
             $membership = new Document([
                 '$id' => $membershipId,
@@ -427,8 +431,8 @@ App::post('/v1/teams/:teamId/memberships')
         $response->dynamic(
             $membership
             ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email')),
+            ->setAttribute('userName', $invitee->getAttribute('name'))
+            ->setAttribute('userEmail', $invitee->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });
