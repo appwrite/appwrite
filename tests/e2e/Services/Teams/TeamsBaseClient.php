@@ -257,8 +257,6 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['memberships']);
         $this->assertCount(1, $response['body']['memberships']);
         $this->assertEquals($memberships['body']['memberships'][1]['$id'], $response['body']['memberships'][0]['$id']);
-
-        
     }
 
     /**
