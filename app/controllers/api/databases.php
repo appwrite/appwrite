@@ -39,7 +39,6 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries as QueriesValidator;
-use Appwrite\Utopia\Database\Validator\OrderAttributes;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
@@ -522,9 +521,9 @@ App::post('/v1/databases/:databaseId/collections')
             $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
             $dbForProject->createCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
-        } catch (DuplicateException $th) {
+        } catch (DuplicateException) {
             throw new Exception(Exception::COLLECTION_ALREADY_EXISTS);
-        } catch (LimitException $th) {
+        } catch (LimitException) {
             throw new Exception(Exception::COLLECTION_LIMIT_EXCEEDED);
         }
 
@@ -1870,7 +1869,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is not allowed for creating new documents, try update instead');
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -1884,7 +1883,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        $validator = new Authorization('create');
+        $validator = new Authorization(Database::PERMISSION_CREATE);
         if (!$validator->isValid($collection->getCreate())) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -2001,13 +2000,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization('read');
-        $valid = $validator->isValid($collection->getRead());
-        if (!$valid && !$documentSecurity) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-
         $filterQueries = \array_map(function ($query) {
             $query = Query::parse($query);
 
@@ -2023,6 +2015,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $otherQueries[] = Query::offset($offset);
         foreach ($orderTypes as $i => $orderType) {
             $otherQueries[] = $orderType === Database::ORDER_DESC ? Query::orderDesc($orderAttributes[$i] ?? '') : Query::orderAsc($orderAttributes[$i] ?? '');
+        }
+
+        $documentSecurity = $collection->getAttribute('documentSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_READ);
+        if (!$documentSecurity && !$validator->isValid($collection->getRead())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         if (!empty($cursor)) {
@@ -2109,23 +2107,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization('read');
-        $valid = $validator->isValid($collection->getRead());
-        if (!$valid && !$documentSecurity) {
+        $validator = new Authorization(Database::PERMISSION_READ);
+        if (!$documentSecurity && !$validator->isValid($collection->getRead())) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        if ($documentSecurity) {
+            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        } else {
+            $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+        }
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
-        }
-
-        if ($documentSecurity) {
-            $valid |= $validator->isValid($document->getRead());
-            if (!$valid) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
         }
 
         /**
@@ -2283,23 +2277,15 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         }
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization('update');
-        $valid = $validator->isValid($collection->getUpdate());
-        if (!$valid && !$documentSecurity) {
+        $validator = new Authorization(Database::PERMISSION_UPDATE);
+        if (!$documentSecurity && !$validator->isValid($collection->getUpdate())) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
-        }
-
-        if ($documentSecurity) {
-            $valid |= $validator->isValid($document->getUpdate());
-            if (!$valid) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
@@ -2341,14 +2327,16 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
 
         try {
-            $document = $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), new Document($data));
+            if ($documentSecurity) {
+                $document = $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), new Document($data));
+            } else {
+                $document = Authorization::skip(fn() => $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), new Document($data)));
+            }
 
             /**
              * Reset $collection attribute to remove prefix.
              */
             $document->setAttribute('$collection', $collectionId);
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (DuplicateException) {
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         } catch (StructureException $exception) {
@@ -2411,26 +2399,22 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         }
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization('delete');
-        $valid = $validator->isValid($collection->getDelete());
-        if (!$valid && !$documentSecurity) {
+        $validator = new Authorization(Database::PERMISSION_DELETE);
+        if (!$documentSecurity && !$validator->isValid($collection->getDelete())) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
         if ($documentSecurity) {
-            $valid |= $validator->isValid($document->getDelete());
-            if (!$valid) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
+             $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        } else {
+            Authorization::skip(fn() => $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
         }
-
-        $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 
         $dbForProject->deleteCachedDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 
