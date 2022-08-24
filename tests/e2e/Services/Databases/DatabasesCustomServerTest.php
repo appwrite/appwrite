@@ -58,7 +58,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderType' => 'DESC'
+            'queries' => [ 'orderDesc("$id")' ],
         ]);
 
         $this->assertEquals(2, $databases['body']['total']);
@@ -77,7 +77,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['databases'][0]['$id']
+            'queries' => [ 'cursorAfter("' . $base['body']['databases'][0]['$id'] . '")' ],
         ]);
 
         $this->assertCount(1, $databases['body']['databases']);
@@ -87,7 +87,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['databases'][1]['$id']
+            'queries' => [ 'cursorAfter("' . $base['body']['databases'][1]['$id'] . '")' ],
         ]);
 
         $this->assertCount(0, $databases['body']['databases']);
@@ -105,8 +105,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['databases'][1]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $base['body']['databases'][1]['$id'] . '")' ],
         ]);
 
         $this->assertCount(1, $databases['body']['databases']);
@@ -116,8 +115,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['databases'][0]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $base['body']['databases'][0]['$id'] . '")' ],
         ]);
 
         $this->assertCount(0, $databases['body']['databases']);
@@ -163,7 +161,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => 'unknown',
+            'queries' => [ 'cursorAfter("unknown")' ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -295,7 +293,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderType' => 'DESC'
+            'queries' => [ 'orderDesc("$id")' ],
         ]);
 
         $this->assertEquals(2, $collections['body']['total']);
@@ -314,7 +312,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['collections'][0]['$id']
+            'queries' => [ 'cursorAfter("' . $base['body']['collections'][0]['$id'] . '")' ],
         ]);
 
         $this->assertCount(1, $collections['body']['collections']);
@@ -324,7 +322,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['collections'][1]['$id']
+            'queries' => [ 'cursorAfter("' . $base['body']['collections'][1]['$id'] . '")' ],
         ]);
 
         $this->assertCount(0, $collections['body']['collections']);
@@ -342,8 +340,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['collections'][1]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $base['body']['collections'][1]['$id'] . '")' ],
         ]);
 
         $this->assertCount(1, $collections['body']['collections']);
@@ -353,8 +350,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['collections'][0]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $base['body']['collections'][0]['$id'] . '")' ],
         ]);
 
         $this->assertCount(0, $collections['body']['collections']);
@@ -400,7 +396,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => 'unknown',
+            'queries' => [ 'cursorAfter("unknown")' ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);

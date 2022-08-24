@@ -158,7 +158,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $functions['body']['functions'][0]['$id']
+            'queries' => [ 'cursorAfter("' . $functions['body']['functions'][0]['$id'] . '")' ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -169,8 +169,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $functions['body']['functions'][1]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $functions['body']['functions'][1]['$id'] . '")' ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -184,7 +183,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => 'unknown',
+            'queries' => [ 'cursorAfter("unknown")' ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);

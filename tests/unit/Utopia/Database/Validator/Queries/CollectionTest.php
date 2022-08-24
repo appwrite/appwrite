@@ -30,7 +30,6 @@ class CollectionTest extends TestCase
         $this->assertEquals(true, $validator->isValid(['limit(10)']), $validator->getDescription());
         $this->assertEquals(true, $validator->isValid(['offset(10)']), $validator->getDescription());
         $this->assertEquals(true, $validator->isValid(['orderAsc("name")']), $validator->getDescription());
-        $this->assertEquals(true, $validator->isValid(['search("search", "value")']), $validator->getDescription());
     }
 
     public function testMissingIndex(): void
@@ -38,6 +37,5 @@ class CollectionTest extends TestCase
         $validator = new Base('users', ['name']);
         $this->assertEquals(false, $validator->isValid(['equal("dne", "value")']), $validator->getDescription());
         $this->assertEquals(false, $validator->isValid(['orderAsc("dne")']), $validator->getDescription());
-        $this->assertEquals(false, $validator->isValid(['search("search", "value")']), $validator->getDescription());
     }
 }

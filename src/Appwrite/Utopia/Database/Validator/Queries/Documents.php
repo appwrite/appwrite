@@ -21,6 +21,22 @@ class Documents extends IndexedQueries
      */
     public function __construct(array $attributes, array $indexes)
     {
+        $attributes[] = new Document([
+            'key' => '$id',
+            'type' => Database::VAR_STRING,
+            'array' => false,
+        ]);
+        $attributes[] = new Document([
+            'key' => '$createdAt',
+            'type' => Database::VAR_DATETIME,
+            'array' => false,
+        ]);
+        $attributes[] = new Document([
+            'key' => '$updatedAt',
+            'type' => Database::VAR_DATETIME,
+            'array' => false,
+        ]);
+
         $validators = [
             new Limit(),
             new Offset(),
