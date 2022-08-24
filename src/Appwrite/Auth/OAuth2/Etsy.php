@@ -4,8 +4,18 @@ namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 
-class Linkedin extends OAuth2
+class Etsy extends OAuth2
 {
+    /**
+     * @var string
+     */
+    private string $endpoint = 'https://api.etsy.com/v3/public';
+
+    /**
+     * @var string
+     */
+    private string $version = '2022-07-14';
+
     /**
      * @var array
      */
@@ -20,29 +30,33 @@ class Linkedin extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'r_liteprofile',
-        'r_emailaddress',
+        "email_r",
+        "profile_r",
     ];
 
     /**
-     * Documentation.
-     *
-     * OAuth:
-     * https://developer.linkedin.com/docs/oauth2
-     *
-     * API/V2:
-     * https://developer.linkedin.com/docs/guide/v2
-     *
-     * Basic Profile Fields:
-     * https://developer.linkedin.com/docs/fields/basic-profile
+     * @var string
      */
+    private string $pkce = '';
+
+    /**
+     * @return string
+     */
+    private function getPKCE(): string
+    {
+        if (empty($this->pkce)) {
+            $this->pkce = \bin2hex(\random_bytes(rand(43, 128)));
+        }
+
+        return $this->pkce;
+    }
 
     /**
      * @return string
      */
     public function getName(): string
     {
-        return 'linkedin';
+        return 'etsy';
     }
 
     /**
@@ -50,12 +64,14 @@ class Linkedin extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://www.linkedin.com/oauth/v2/authorization?' . \http_build_query([
-            'response_type' => 'code',
+        return 'https://www.etsy.com/oauth/connect/oauth/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'scope' => \implode(' ', $this->getScopes()),
+            'response_type' => 'code',
             'state' => \json_encode($this->state),
+            'scope' => $this->scopes,
+            'code_challenge' => $this->getPKCE(),
+            'code_challenge_method' => 'S256',
         ]);
     }
 
@@ -67,19 +83,22 @@ class Linkedin extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
+            $headers = ['Content-Type: application/x-www-form-urlencoded'];
+
             $this->tokens = \json_decode($this->request(
                 'POST',
-                'https://www.linkedin.com/oauth/v2/accessToken',
-                ['Content-Type: application/x-www-form-urlencoded'],
+                $this->endpoint . '/oauth/token',
+                $headers,
                 \http_build_query([
                     'grant_type' => 'authorization_code',
-                    'code' => $code,
-                    'redirect_uri' => $this->callback,
                     'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
+                    'redirect_uri' => $this->callback,
+                    'code' => $code,
+                    'code_verifier' => $this->getPKCE(),
                 ])
             ), true);
         }
+
         return $this->tokens;
     }
 
@@ -90,53 +109,52 @@ class Linkedin extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
+        $headers = ['Content-Type: application/x-www-form-urlencoded'];
+
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://www.linkedin.com/oauth/v2/accessToken',
-            ['Content-Type: application/x-www-form-urlencoded'],
+            $this->endpoint . '/oauth/token',
+            $headers,
             \http_build_query([
                 'grant_type' => 'refresh_token',
-                'refresh_token' => $refreshToken,
-                'redirect_uri' => $this->callback,
                 'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                'refresh_token' => $refreshToken,
             ])
         ), true);
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
+
         return $this->tokens;
     }
 
     /**
-     * @param string $accessToken
+     * @param $accessToken
      *
      * @return string
      */
     public function getUserID(string $accessToken): string
     {
-        $user = $this->getUser($accessToken);
+        $components = explode('.', $accessToken);
 
-        return $user['id'] ?? '';
+        return $components[0];
     }
 
     /**
-     * @param string $accessToken
+     * @param $accessToken
      *
      * @return string
      */
     public function getUserEmail(string $accessToken): string
     {
-        $email = \json_decode($this->request('GET', 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', ['Authorization: Bearer ' . \urlencode($accessToken)]), true);
-
-        return $email['elements'][0]['handle~']['emailAddress'] ?? '';
+        return $this->getUser($accessToken)['primary_email'];
     }
 
     /**
      * Check if the OAuth email is verified
      *
-     * If present, the email is verified. This was verfied through a manual Linkedin sign up process
+     * OAuth is only allowed if account has been verified through Etsy, itself.
      *
      * @param string $accessToken
      *
@@ -150,24 +168,13 @@ class Linkedin extends OAuth2
     }
 
     /**
-     * @param string $accessToken
+     * @param $accessToken
      *
      * @return string
      */
     public function getUserName(string $accessToken): string
     {
-        $user = $this->getUser($accessToken);
-        $name = '';
-
-        if (isset($user['localizedFirstName'])) {
-            $name = $user['localizedFirstName'];
-        }
-
-        if (isset($user['localizedLastName'])) {
-            $name = (empty($name)) ? $user['localizedLastName'] : $name . ' ' . $user['localizedLastName'];
-        }
-
-        return $name;
+        return $this->getUser($accessToken)['login_name'];
     }
 
     /**
@@ -175,11 +182,18 @@ class Linkedin extends OAuth2
      *
      * @return array
      */
-    protected function getUser(string $accessToken)
+    protected function getUser(string $accessToken): array
     {
-        if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.linkedin.com/v2/me', ['Authorization: Bearer ' . \urlencode($accessToken)]), true);
+        if (!empty($this->user)) {
+            return $this->user;
         }
+
+        $headers = ['Authorization: Bearer ' . $accessToken];
+
+        $this->user = \json_decode($this->request(
+            'GET',
+            'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
+        ), true);
 
         return $this->user;
     }

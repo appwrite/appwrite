@@ -66,9 +66,9 @@ class Deployment extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The deployment status.',
+                'description' => 'The deployment status. Possible values are "processing", "building", "pending", "ready", and "failed".',
                 'default' => '',
-                'example' => 'enabled',
+                'example' => 'ready',
             ])
             ->addRule('buildStdout', [
                 'type' => self::TYPE_STRING,

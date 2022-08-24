@@ -28,7 +28,8 @@ trait TeamsBaseClient
         $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
         $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
-        $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
+        $this->assertContains('owner', $response['body']['memberships'][0]['roles']);
+        $this->assertContains('player', $response['body']['memberships'][0]['roles']);
 
         $membershipId = $response['body']['memberships'][0]['$id'];
 
@@ -45,7 +46,8 @@ trait TeamsBaseClient
         $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
         $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
-        $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
+        $this->assertContains('owner', $response['body']['memberships'][0]['roles']);
+        $this->assertContains('player', $response['body']['memberships'][0]['roles']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -60,7 +62,8 @@ trait TeamsBaseClient
         $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
         $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
-        $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
+        $this->assertContains('owner', $response['body']['memberships'][0]['roles']);
+        $this->assertContains('player', $response['body']['memberships'][0]['roles']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -107,6 +110,8 @@ trait TeamsBaseClient
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
+        $this->assertEquals($name, $response['body']['userName']);
+        $this->assertEquals($email, $response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(2, $response['body']['roles']);
