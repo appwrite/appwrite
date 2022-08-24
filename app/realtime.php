@@ -101,15 +101,13 @@ function getDatabase(Registry &$register, string $projectId)
     /** Get the console DB */
     $database = $dbPool->getConsoleDB();
     $pdo = $dbPool->getPDOFromPool($database);
-    $database = DatabasePool::getDatabase($pdo->getConnection(), $redis);
-    $database->setNamespace("_console");
+    $database = DatabasePool::getDatabase($pdo->getConnection(), $redis, '_console');
 
     if ($projectId !== 'console') {
         $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
         $database = $project->getAttribute('database', '');
         $pdo = $dbPool->getPDOFromPool($database);
-        $database = DatabasePool::getDatabase($pdo->getConnection(), $redis);
-        $database->setNamespace("_{$project->getInternalId()}");
+        $database = DatabasePool::getDatabase($pdo->getConnection(), $redis, "_{$project->getInternalId()}");
     }
 
     return [
@@ -477,15 +475,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         /** Get the console DB */
         $database = $dbPool->getConsoleDB();
         $pdo = $dbPool->getPDOFromPool($database);
-        $database = DatabasePool::getDatabase($pdo->getConnection(), $redis);
-        $database->setNamespace("_console");
+        $database = DatabasePool::getDatabase($pdo->getConnection(), $redis, '_console');
 
         if ($projectId !== 'console') {
             $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
             $database = $project->getAttribute('database', '');
             $pdo = $dbPool->getPDOFromPool($database);
-            $database = DatabasePool::getDatabase($pdo->getConnection(), $redis);
-            $database->setNamespace("_{$project->getInternalId()}");
+            $database = DatabasePool::getDatabase($pdo->getConnection(), $redis, "_{$project->getInternalId()}");
         }
 
         /*

@@ -14,6 +14,7 @@ use Appwrite\Database\PDOPool;
 use Swoole\Database\PDOConfig;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\CLI\Console;
 
 class DatabasePool
 {
@@ -114,21 +115,6 @@ class DatabasePool
     }
 
     /**
-     * Function to get a single PDO instance for a project
-     *
-     * @param string $projectId
-     *
-     * @return ?Database
-     */
-    public function getDB(string $database, ?\Redis $redis): ?Database
-    {
-        /** Get a PDO instance using the database name */
-        $pdo = $this->getPDO($database);
-        $database = self::getDatabase($pdo, $redis);
-        return $database;
-    }
-
-    /**
      * Get a PDO instance from the list of available database pools. Meant to be used in co-routines
      *
      * @param string $projectId
@@ -193,30 +179,26 @@ class DatabasePool
         return $this->consoleDB;
     }
 
-    public static function wait()
+    public static function wait(Database $database, string $collection)
     {
-        // $namespace = "_$internalID";
-        // $attempts = 0;
-        // do {
-        //     try {
-        //         $attempts++;
-        //         $pdo = $pool->get();
-        //         $database = $this->getDatabase($pdo, $redis);
-        //         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        //         $database->setNamespace($namespace);
+        $attempts = 0;
+        do {
+            try {
+                $attempts++;
+                if (!$database->exists($database->getDefaultDatabase(), $collection)) {
+                    throw new Exception('Collection not ready');
+                }
+                break; // leave loop if successful
+            } catch (\Exception $e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
+                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                }
+                sleep(DATABASE_RECONNECT_SLEEP);
+            }
+        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
 
-        //         // if (!$database->exists($database->getDefaultDatabase(), 'metadata')) {
-        //         //     throw new Exception('Collection not ready');
-        //         // }
-        //         break; // leave loop if successful
-        //     } catch (\Exception $e) {
-        //         Console::warning("Database not ready. Retrying connection ({$attempts})...");
-        //         if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-        //             throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-        //         }
-        //         sleep(DATABASE_RECONNECT_SLEEP);
-        //     }
-        // } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
+        return $database;
     }
 
     /**
@@ -224,14 +206,16 @@ class DatabasePool
      *
      * @param PDO|PDOProxy $pdo
      * @param \Redis $redis
+     * @param string $namespace
      *
      * @return Database
      */
-    public static function getDatabase(PDO|PDOProxy $pdo, \Redis $redis): Database
+    public static function getDatabase(PDO|PDOProxy $pdo, \Redis $redis, string $namespace = ''): Database
     {
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($pdo), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setNamespace($namespace);
         return $database;
     }
 }

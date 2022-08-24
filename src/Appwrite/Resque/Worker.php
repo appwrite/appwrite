@@ -2,6 +2,7 @@
 
 namespace Appwrite\Resque;
 
+use Appwrite\Database\DatabasePool;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -177,10 +178,9 @@ abstract class Worker
 
         $cache = $register->get('cache');
         $dbPool = $register->get('dbPool');
-        
-        $dbForProject = $dbPool->getDB($database, $cache);
         $namespace = "_$internalId";
-        $dbForProject->setNamespace($namespace);
+        $pdo = $dbPool->getPDO($database);
+        $dbForProject = DatabasePool::getDatabase($pdo, $cache, $namespace);
 
         return $dbForProject;
     }
@@ -199,9 +199,9 @@ abstract class Worker
             throw new \Exception('Database name not provided - cannot get database');
         }
 
-        $dbForConsole = $dbPool->getDB($database, $cache);
         $namespace = "_console";
-        $dbForConsole->setNamespace($namespace);
+        $pdo = $dbPool->getPDO($database);
+        $dbForConsole = DatabasePool::getDatabase($pdo, $cache, $namespace);
 
         return $dbForConsole;
     }

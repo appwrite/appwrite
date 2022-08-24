@@ -2,6 +2,7 @@
 
 global $cli, $register;
 
+use Appwrite\Database\DatabasePool;
 use Appwrite\Stats\Usage;
 use Appwrite\Stats\UsageDB;
 use InfluxDB\Database as InfluxDatabase;
@@ -27,8 +28,8 @@ function getDatabase(Registry &$register): Database
     do {
         try {
             $attempts++;
-            $database = $dbPool->getDB($database, $redis);
-            $database->setNamespace('_console');
+            $pdo = $dbPool->getPDO($database);
+            $database = DatabasePool::getDatabase($pdo, $redis, '_console');
 
             if (!$database->exists($database->getDefaultDatabase(), 'projects')) {
                 throw new Exception('Projects collection not ready');

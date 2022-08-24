@@ -120,8 +120,7 @@ App::post('/v1/projects')
             'database' => $pdo->getName()
         ]));
 
-        $dbForProject = DatabasePool::getDatabase($pdo->getConnection(), $cache);
-        $dbForProject->setNamespace("_{$project->getInternalId()}");
+        $dbForProject = DatabasePool::getDatabase($pdo->getConnection(), $cache, "_{$project->getInternalId()}");
         $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
         $audit = new Audit($dbForProject);
