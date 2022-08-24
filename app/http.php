@@ -173,6 +173,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 'antivirus' => true,
                 'fileSecurity' => true,
                 '$permissions' => [
+                    Permission::create(Role::any()),
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
