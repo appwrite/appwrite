@@ -471,7 +471,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $redis = $register->get('redisPool')->get();
         $dbPool = $register->get('dbPool');
         $projectId = $realtime->connections[$connection]['projectId'];
-        
+
         /** Get the console DB */
         $database = $dbPool->getConsoleDB();
         $pdo = $dbPool->getPDOFromPool($database);

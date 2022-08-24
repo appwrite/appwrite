@@ -5,7 +5,6 @@ namespace Appwrite\Database;
 use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool as SwoolePDOPool;
 
-
 class PDOPool
 {
     private SwoolePDOPool $pool;
@@ -40,7 +39,7 @@ class PDOPool
 
     public function reset(): void
     {
-        foreach($this->activeConnections as $connection) {
+        foreach ($this->activeConnections as $connection) {
             $this->pool->put($connection);
         }
         $this->activeConnections = [];
