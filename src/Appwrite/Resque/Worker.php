@@ -180,7 +180,10 @@ abstract class Worker
         $dbPool = $register->get('dbPool');
         $namespace = "_$internalId";
         $pdo = $dbPool->getPDO($database);
-        $dbForProject = DatabasePool::getDatabase($pdo, $cache, $namespace);
+        $dbForProject = DatabasePool::wait(
+            DatabasePool::getDatabase($pdo, $cache, $namespace),
+            'projects'
+        );
 
         return $dbForProject;
     }
@@ -201,7 +204,10 @@ abstract class Worker
 
         $namespace = "_console";
         $pdo = $dbPool->getPDO($database);
-        $dbForConsole = DatabasePool::getDatabase($pdo, $cache, $namespace);
+        $dbForConsole = DatabasePool::wait(
+            DatabasePool::getDatabase($pdo, $cache, $namespace),
+            '_metadata'
+        );
 
         return $dbForConsole;
     }
