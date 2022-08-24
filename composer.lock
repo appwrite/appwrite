@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5c02453019092f62ceec9490ee7f117b",
+    "content-hash": "175fe4abafd8bde4053b91eea905c328",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2052,16 +2052,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.22.0",
+            "version": "dev-refactor-permissions",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "22c45ae83612e907203b7571cd8e3115ae3ae4c5"
+                "reference": "44dda6914c7be148eb59ce11847386ce39f7b106"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/22c45ae83612e907203b7571cd8e3115ae3ae4c5",
-                "reference": "22c45ae83612e907203b7571cd8e3115ae3ae4c5",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/44dda6914c7be148eb59ce11847386ce39f7b106",
+                "reference": "44dda6914c7be148eb59ce11847386ce39f7b106",
                 "shasum": ""
             },
             "require": {
@@ -2110,9 +2110,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.22.0"
+                "source": "https://github.com/utopia-php/database/tree/refactor-permissions"
             },
-            "time": "2022-08-17T12:55:37+00:00"
+            "time": "2022-08-24T10:22:04+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5354,10 +5354,17 @@
             "version": "9999999-dev",
             "alias": "0.19.5",
             "alias_normalized": "0.19.5.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "dev-refactor-permissions",
+            "alias": "0.22.0",
+            "alias_normalized": "0.22.0.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/database": 20,
         "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,

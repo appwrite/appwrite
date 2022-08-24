@@ -39,7 +39,6 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries as QueriesValidator;
-use Appwrite\Utopia\Database\Validator\OrderAttributes;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
@@ -505,11 +504,8 @@ App::post('/v1/databases/:databaseId/collections')
 
         $collectionId = $collectionId == 'unique()' ? ID::unique() : $collectionId;
 
-        /**
-         * Map aggregate permissions into the multiple permissions they represent,
-         * accounting for the resource type given that some types not allowed specific permissions.
-         */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'collection');
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions);
 
         try {
             $dbForProject->createDocument('database_' . $database->getInternalId(), new Document([
@@ -525,9 +521,9 @@ App::post('/v1/databases/:databaseId/collections')
             $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
             $dbForProject->createCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
-        } catch (DuplicateException $th) {
+        } catch (DuplicateException) {
             throw new Exception(Exception::COLLECTION_ALREADY_EXISTS);
-        } catch (LimitException $th) {
+        } catch (LimitException) {
             throw new Exception(Exception::COLLECTION_LIMIT_EXCEEDED);
         }
 
@@ -774,10 +770,8 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         $permissions ??= $collection->getPermissions() ?? [];
 
-        /**
-         * Map aggregate permissions into the multiple permissions they represent.
-         */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'collection');
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions);
 
         $enabled ??= $collection->getAttribute('enabled', true);
 
@@ -1875,7 +1869,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is not allowed for creating new documents, try update instead');
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -1889,25 +1883,21 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        $validator = new Authorization('create');
+        $validator = new Authorization(Database::PERMISSION_CREATE);
         if (!$validator->isValid($collection->getCreate())) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        /**
-         * Map aggregate permissions into the multiple permissions they represent,
-         * accounting for the resource type given that some types not allowed specific permissions.
-         */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'document');
+        $allowedPermissions = [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ];
 
-        /**
-         * Add permissions for current the user for any missing types
-         * from the allowed permissions for this resource type.
-         */
-        $allowedPermissions = \array_filter(
-            Database::PERMISSIONS,
-            fn ($permission) => $permission !== Database::PERMISSION_CREATE
-        );
+        // Map aggregate permissions to into the set of individual permissions they represent.
+        $permissions = Permission::aggregate($permissions, $allowedPermissions);
+
+        // Add permissions for current the user if none were provided.
         if (\is_null($permissions)) {
             $permissions = [];
             if (!empty($user->getId())) {
@@ -1915,19 +1905,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                 }
             }
-        } else {
-            foreach ($allowedPermissions as $permission) {
-                /**
-                 * If an allowed permission was not passed in the request,
-                 * and there is a current user, add it for the current user.
-                 */
-                if (empty(\preg_grep("#^{$permission}\(.+\)$#", $permissions)) && !empty($user->getId())) {
-                    $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
-                }
-            }
         }
 
-        // Users can only manage their own roles, API keys and Admin users can manage any
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
@@ -2022,9 +2001,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization('read');
+        $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($collection->getRead());
-        if (!$valid && !$documentSecurity) {
+        if (!$documentSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
@@ -2046,11 +2025,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         if (!empty($cursor)) {
-            if ($documentSecurity) {
-                $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
-            } else {
-                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor));
-            }
+            $cursorDocument = $documentSecurity
+                ? $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor)
+                : Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor));
+
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Document '{$cursor}' for the 'cursor' value not found.");
             }
@@ -2068,7 +2046,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        if ($documentSecurity) {
+        if ($documentSecurity && !$valid) {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $allQueries);
             $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
         } else {
@@ -2129,23 +2107,20 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization('read');
+        $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($collection->getRead());
-        if (!$valid && !$documentSecurity) {
+        if (!$documentSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        if ($documentSecurity && !$valid) {
+            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        } else {
+            $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+        }
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
-        }
-
-        if ($documentSecurity) {
-            $valid |= $validator->isValid($document->getRead());
-            if (!$valid) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
         }
 
         /**
@@ -2303,23 +2278,16 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         }
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization('update');
+        $validator = new Authorization(Database::PERMISSION_UPDATE);
         $valid = $validator->isValid($collection->getUpdate());
-        if (!$valid && !$documentSecurity) {
+        if (!$documentSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
-        }
-
-        if ($documentSecurity) {
-            $valid |= $validator->isValid($document->getUpdate());
-            if (!$valid) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
@@ -2343,11 +2311,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             }
         }
 
-        /**
-         * Map aggregate permissions into the multiple permissions they represent,
-         * accounting for the resource type given that some types not allowed specific permissions.
-         */
-        $permissions = PermissionsProcessor::aggregate($permissions, 'document');
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions, [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ]);
 
         if (\is_null($permissions)) {
             $permissions = $document->getPermissions() ?? [];
@@ -2360,14 +2329,16 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
 
         try {
-            $document = $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), new Document($data));
+            if ($documentSecurity && !$valid) {
+                $document = $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), new Document($data));
+            } else {
+                $document = Authorization::skip(fn() => $dbForProject->updateDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document->getId(), new Document($data)));
+            }
 
             /**
              * Reset $collection attribute to remove prefix.
              */
             $document->setAttribute('$collection', $collectionId);
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (DuplicateException) {
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         } catch (StructureException $exception) {
@@ -2430,26 +2401,23 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         }
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization('delete');
+        $validator = new Authorization(Database::PERMISSION_DELETE);
         $valid = $validator->isValid($collection->getDelete());
-        if (!$valid && !$documentSecurity) {
+        if (!$documentSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        if ($documentSecurity) {
-            $valid |= $validator->isValid($document->getDelete());
-            if (!$valid) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
+        if ($documentSecurity && !$valid) {
+             $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+        } else {
+            Authorization::skip(fn() => $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
         }
-
-        $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 
         $dbForProject->deleteCachedDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
 

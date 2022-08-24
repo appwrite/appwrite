@@ -9,6 +9,7 @@ use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
+use Utopia\Database\Validator\Authorization;
 
 class DatabasesPermissionsGuestTest extends Scope
 {
@@ -88,19 +89,19 @@ class DatabasesPermissionsGuestTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
+        $roles = Authorization::getRoles();
+        Authorization::cleanRoles();
+
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId  . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        foreach ($documents['body']['documents'] as $document) {
-            foreach ($document['$permissions'] as $permission) {
-                $permission = Permission::parse($permission);
-                if ($permission->getPermission() != 'read') {
-                     continue;
-                }
-                $this->assertEquals($permission->getRole(), Role::any()->toString());
-            }
+        $this->assertEquals(1, $documents['body']['total']);
+        $this->assertEquals($permissions, $documents['body']['documents'][0]['$permissions']);
+
+        foreach ($roles as $role) {
+            Authorization::setRole($role);
         }
     }
 }
