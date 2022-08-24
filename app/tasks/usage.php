@@ -86,7 +86,7 @@ $cli
 
         $redis = $register->get('cache');
         $dbPool = $register->get('dbPool');
-        
+
         $database = $dbPool->getConsoleDB();
         $pdo = $dbPool->getPDO($database);
         $database = DatabasePool::wait(

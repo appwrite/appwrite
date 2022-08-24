@@ -100,7 +100,7 @@ function getDatabase(Registry &$register, string $projectId)
     $database = DatabasePool::wait(
         DatabasePool::getDatabase($pdo->getConnection(), $redis, '_console'),
         'realtime'
-    ); 
+    );
 
     if ($projectId !== 'console') {
         $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
@@ -109,7 +109,7 @@ function getDatabase(Registry &$register, string $projectId)
         $database = DatabasePool::wait(
             DatabasePool::getDatabase($pdo->getConnection(), $redis, "_{$project->getInternalId()}"),
             'realtime'
-        ); 
+        );
     }
 
     return [
