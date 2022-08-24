@@ -177,8 +177,8 @@ abstract class Worker
 
         $cache = $register->get('cache');
         $dbPool = $register->get('dbPool');
+        
         $dbForProject = $dbPool->getDB($database, $cache);
-
         $namespace = "_$internalId";
         $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $dbForProject->setNamespace($namespace);
@@ -201,7 +201,6 @@ abstract class Worker
         }
 
         $dbForConsole = $dbPool->getDB($database, $cache);
-        
         $namespace = "_console";
         $dbForConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $dbForConsole->setNamespace($namespace);

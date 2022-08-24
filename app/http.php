@@ -345,7 +345,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $swooleResponse->end(\json_encode($output));
     } finally {
         $dbPool->reset();
-        
         /** @var RedisPool $redisPool */
         $redisPool = $register->get('redisPool');
         $redisPool->put($redis);
