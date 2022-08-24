@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Database\DatabasePool;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response;
@@ -99,18 +100,15 @@ function getDatabase(Registry &$register, string $projectId)
 
     /** Get the console DB */
     $database = $dbPool->getConsoleDB();
-    $pdo = $dbPool->getDBFromPool($database);
-    $cache = new Cache(new RedisCache($redis));
-    $database = new Database(new MariaDB($pdo->getConnection()), $cache);
-    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+    $pdo = $dbPool->getPDOFromPool($database);
+    $database = DatabasePool::getDatabase($pdo->getConnection(), $redis);
     $database->setNamespace("_console");
 
     if ($projectId !== 'console') {
         $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
         $database = $project->getAttribute('database', '');
-        $pdo = $dbPool->getDBFromPool($database);
-        $database = new Database(new MariaDB($pdo->getConnection()), $cache);
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $pdo = $dbPool->getPDOFromPool($database);
+        $database = DatabasePool::getDatabase($pdo->getConnection(), $redis);
         $database->setNamespace("_{$project->getInternalId()}");
     }
 
@@ -478,18 +476,15 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         
         /** Get the console DB */
         $database = $dbPool->getConsoleDB();
-        $pdo = $dbPool->getDBFromPool($database);
-        $cache = new Cache(new RedisCache($redis));
-        $database = new Database(new MariaDB($pdo->getConnection()), $cache);
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $pdo = $dbPool->getPDOFromPool($database);
+        $database = DatabasePool::getDatabase($pdo->getConnection(), $redis);
         $database->setNamespace("_console");
 
         if ($projectId !== 'console') {
             $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
             $database = $project->getAttribute('database', '');
-            $pdo = $dbPool->getDBFromPool($database);
-            $database = new Database(new MariaDB($pdo->getConnection()), $cache);
-            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $pdo = $dbPool->getPDOFromPool($database);
+            $database = DatabasePool::getDatabase($pdo->getConnection(), $redis);
             $database->setNamespace("_{$project->getInternalId()}");
         }
 

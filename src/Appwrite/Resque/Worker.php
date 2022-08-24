@@ -180,7 +180,6 @@ abstract class Worker
         
         $dbForProject = $dbPool->getDB($database, $cache);
         $namespace = "_$internalId";
-        $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $dbForProject->setNamespace($namespace);
 
         return $dbForProject;
@@ -202,7 +201,6 @@ abstract class Worker
 
         $dbForConsole = $dbPool->getDB($database, $cache);
         $namespace = "_console";
-        $dbForConsole->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $dbForConsole->setNamespace($namespace);
 
         return $dbForConsole;

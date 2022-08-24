@@ -120,8 +120,7 @@ App::post('/v1/projects')
             'database' => $pdo->getName()
         ]));
 
-        $cache = new Cache(new Redis($cache));
-        $dbForProject = new Database(new MariaDB($pdo->getConnection()), $cache);
+        $dbForProject = DatabasePool::getDatabase($pdo->getConnection(), $cache);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
