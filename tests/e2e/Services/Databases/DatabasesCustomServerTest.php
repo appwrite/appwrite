@@ -50,10 +50,56 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($test1['body']['$id'], $databases['body']['databases'][0]['$id']);
         $this->assertEquals($test2['body']['$id'], $databases['body']['databases'][1]['$id']);
 
+        $base = array_reverse($databases['body']['databases']);
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'limit(1)' ],
+        ]);
+        $this->assertEquals(200, $databases['headers']['status-code']);
+        $this->assertCount(1, $databases['body']['databases']);
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'offset(1)' ],
+        ]);
+        $this->assertEquals(200, $databases['headers']['status-code']);
+        $this->assertCount(1, $databases['body']['databases']);
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("name", ["Test 1", "Test 2"])' ],
+        ]);
+        $this->assertEquals(200, $databases['headers']['status-code']);
+        $this->assertCount(2, $databases['body']['databases']);
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("name", "Test 2")' ],
+        ]);
+        $this->assertEquals(200, $databases['headers']['status-code']);
+        $this->assertCount(1, $databases['body']['databases']);
+
+        $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("$id", "first")' ],
+        ]);
+        $this->assertEquals(200, $databases['headers']['status-code']);
+        $this->assertCount(1, $databases['body']['databases']);
+
         /**
          * Test for Order
          */
-        $base = array_reverse($databases['body']['databases']);
         $databases = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -285,10 +331,51 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals($test1['body']['$id'], $collections['body']['collections'][0]['$id']);
         $this->assertEquals($test2['body']['$id'], $collections['body']['collections'][1]['$id']);
 
+        $base = array_reverse($collections['body']['collections']);
+
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'limit(1)' ]
+        ]);
+
+        $this->assertEquals(200, $collections['headers']['status-code']);
+        $this->assertCount(1, $collections['body']['collections']);
+
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'offset(1)' ]
+        ]);
+
+        $this->assertEquals(200, $collections['headers']['status-code']);
+        $this->assertCount(1, $collections['body']['collections']);
+
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("enabled", true)' ]
+        ]);
+
+        $this->assertEquals(200, $collections['headers']['status-code']);
+        $this->assertCount(2, $collections['body']['collections']);
+
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("enabled", false)' ]
+        ]);
+
+        $this->assertEquals(200, $collections['headers']['status-code']);
+        $this->assertCount(0, $collections['body']['collections']);
+
         /**
          * Test for Order
          */
-        $base = array_reverse($collections['body']['collections']);
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

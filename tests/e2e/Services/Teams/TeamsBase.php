@@ -132,9 +132,7 @@ trait TeamsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertGreaterThan(0, $response['body']['total']);
-        $this->assertIsInt($response['body']['total']);
-        $this->assertCount(2, $response['body']['teams']);
+        $this->assertEquals(2, count($response['body']['teams']));
 
         $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -144,9 +142,7 @@ trait TeamsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertGreaterThan(0, $response['body']['total']);
-        $this->assertIsInt($response['body']['total']);
-        $this->assertGreaterThan(2, $response['body']['teams']);
+        $this->assertGreaterThan(1, count($response['body']['teams']));
 
         $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -156,7 +152,7 @@ trait TeamsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(3, $response['body']['teams']);
+        $this->assertGreaterThan(2, count($response['body']['teams']));
 
         $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -166,7 +162,7 @@ trait TeamsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(2, $response['body']['teams']);
+        $this->assertEquals(2, count($response['body']['teams']));
 
         $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',
