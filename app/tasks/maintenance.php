@@ -1,9 +1,9 @@
 <?php
 
 global $cli;
-global $register;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Database\DatabasePool;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
@@ -104,7 +104,14 @@ $cli
 
         Console::loop(function () use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
             $redis = $register->get('cache');
-            $database = $register->get('dbPool')->getDB('console', $redis);
+            $dbPool = $register->get('dbPool');
+            
+            $database = $dbPool->getConsoleDB();
+            $pdo = $dbPool->getPDO($database);
+            $database = DatabasePool::wait(
+                DatabasePool::getDatabase($pdo, $redis, '_console'),
+                'certificates',
+            );
 
             $time = date('d-m-Y H:i:s', time());
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");

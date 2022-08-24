@@ -20,10 +20,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Appwrite\Utopia\Request;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Database;
 use Utopia\WebSocket\Server;
 use Utopia\WebSocket\Adapter;
 
@@ -101,13 +97,19 @@ function getDatabase(Registry &$register, string $projectId)
     /** Get the console DB */
     $database = $dbPool->getConsoleDB();
     $pdo = $dbPool->getPDOFromPool($database);
-    $database = DatabasePool::getDatabase($pdo->getConnection(), $redis, '_console');
+    $database = DatabasePool::wait(
+        DatabasePool::getDatabase($pdo->getConnection(), $redis, '_console'),
+        'realtime'
+    ); 
 
     if ($projectId !== 'console') {
         $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
         $database = $project->getAttribute('database', '');
         $pdo = $dbPool->getPDOFromPool($database);
-        $database = DatabasePool::getDatabase($pdo->getConnection(), $redis, "_{$project->getInternalId()}");
+        $database = DatabasePool::wait(
+            DatabasePool::getDatabase($pdo->getConnection(), $redis, "_{$project->getInternalId()}"),
+            'realtime'
+        ); 
     }
 
     return [
