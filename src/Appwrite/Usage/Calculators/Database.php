@@ -74,6 +74,16 @@ class Database extends Calculator
      */
     protected function createOrUpdateMetric(string $projectId, string $metric, string $period, int $time, int $value): void
     {
+        $date = new \DateTime();
+        if ($period === '30m') {
+            $minutes = $date->format('i') >= '30' ? "30" : "00";
+            $time = $date->format('Y-m-d H:' . $minutes . ':00');
+        } elseif ($period === '1d') {
+            $time = $date->format('Y-m-d 00:00:00');
+        } else {
+            throw new Exception("Period type not found", 500);
+        }
+
         $id = \md5("{$time}_{$period}_{$metric}");
         $this->database->setNamespace('_' . $projectId);
 
