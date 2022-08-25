@@ -693,9 +693,11 @@ App::get('/v1/storage/buckets/:bucketId/files')
         $queries[] = Query::offset($offset);
         $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
         if (!empty($cursor)) {
-            $cursorDocument = $fileSecurity
-                ? $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor)
-                : Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor));
+            if ($fileSecurity && !$valid) {
+                $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
+            } else {
+                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor));
+            }
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "File '{$cursor}' for the 'cursor' value not found.");
@@ -1260,11 +1262,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($fileSecurity && !$valid) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-        } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
-        }
+        // Read permission should not be required for update
+        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -1346,17 +1345,14 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         $fileSecurity = $bucket->getAttributes('fileSecurity', false);
-        $validator = new Authorization('delete');
+        $validator = new Authorization(Database::PERMISSION_DELETE);
         $valid = $validator->isValid($bucket->getDelete());
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($fileSecurity && !$valid) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-        } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
-        }
+        // Read permission should not be required for delete
+        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
         if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -1378,7 +1374,11 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                 ->setResource('file/' . $fileId)
             ;
 
-            $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            if ($fileSecurity && !$valid) {
+                $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            } else {
+                $deleted = Authorization::skip(fn() => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            }
 
             if (!$deleted) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove file from DB');
