@@ -738,7 +738,8 @@ App::patch('/v1/users/:userId/name')
 
         $user
             ->setAttribute('name', $name)
-            ->setAttribute('search', \implode(' ', [$user->getId(), $user->getAttribute('email', ''), $name, $user->getAttribute('phone', '')]));;
+            ->setAttribute('search', \implode(' ', [$user->getId(), $user->getAttribute('email', ''), $name, $user->getAttribute('phone', '')]));
+        ;
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -864,7 +865,8 @@ App::patch('/v1/users/:userId/phone')
         $user
             ->setAttribute('phone', $number)
             ->setAttribute('phoneVerification', false)
-            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $number]));;
+            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $number]));
+        ;
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
