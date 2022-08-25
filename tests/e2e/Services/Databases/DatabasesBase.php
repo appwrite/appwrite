@@ -988,8 +988,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['ASC'],
+            'queries' => [ 'orderAsc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1009,8 +1008,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['DESC'],
+            'queries' => [ 'orderDesc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1125,7 +1123,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['documents'][0]['$id']
+            'queries' => [ 'cursorAfter("' . $base['body']['documents'][0]['$id'] . '")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1137,7 +1135,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['documents'][2]['$id']
+            'queries' => [ 'cursorAfter("' . $base['body']['documents'][2]['$id'] . '")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1150,8 +1148,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['ASC'],
+            'queries' => [ 'orderAsc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $base['headers']['status-code']);
@@ -1164,9 +1161,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['ASC'],
-            'cursor' => $base['body']['documents'][1]['$id']
+            'queries' => [ 'cursorAfter("' . $base['body']['documents'][1]['$id'] . '")', 'orderAsc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1180,8 +1175,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['DESC'],
+            'queries' => [ 'orderDesc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $base['headers']['status-code']);
@@ -1194,9 +1188,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['DESC'],
-            'cursor' => $base['body']['documents'][1]['$id']
+            'queries' => [ 'cursorAfter("' . $base['body']['documents'][1]['$id'] . '")', 'orderDesc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1210,7 +1202,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => 'unknown'
+            'queries' => [ 'cursorAfter("unknown")' ],
         ]);
 
         $this->assertEquals(400, $documents['headers']['status-code']);
@@ -1242,8 +1234,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['documents'][2]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $base['body']['documents'][2]['$id'] . '")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1255,8 +1246,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $base['body']['documents'][0]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $base['body']['documents'][0]['$id'] . '")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1269,8 +1259,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['ASC'],
+            'queries' => [ 'orderAsc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $base['headers']['status-code']);
@@ -1283,10 +1272,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['ASC'],
-            'cursor' => $base['body']['documents'][1]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $base['body']['documents'][1]['$id'] . '")', 'orderAsc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1300,8 +1286,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['DESC'],
+            'queries' => [ 'orderDesc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $base['headers']['status-code']);
@@ -1314,10 +1299,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['DESC'],
-            'cursor' => $base['body']['documents'][1]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $base['body']['documents'][1]['$id'] . '")', 'orderDesc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1337,9 +1319,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'limit' => 1,
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['ASC'],
+            'queries' => [ 'limit(1)', 'orderAsc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1350,10 +1330,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'limit' => 2,
-            'offset' => 1,
-            'orderAttributes' => ['releaseYear'],
-            'orderTypes' => ['ASC'],
+            'queries' => [ 'limit(2)', 'offset(1)', 'orderAsc("releaseYear")' ],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0d6daae2c9fa0cb94684996f3121b6be",
+    "content-hash": "64351ec59c6d50023ef9f6195777709b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1733,23 +1733,23 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.10.0",
+            "version": "0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "b5beadce6581291e4385b0cc86f1be2a79bb2ef0"
+                "reference": "f1096b92a8c47b19b0c55096775c186cab0b0a97"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/b5beadce6581291e4385b0cc86f1be2a79bb2ef0",
-                "reference": "b5beadce6581291e4385b0cc86f1be2a79bb2ef0",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/f1096b92a8c47b19b0c55096775c186cab0b0a97",
+                "reference": "f1096b92a8c47b19b0c55096775c186cab0b0a97",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.22.0"
+                "utopia-php/database": "0.23.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1781,9 +1781,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.10.0"
+                "source": "https://github.com/utopia-php/abuse/tree/0.11.0"
             },
-            "time": "2022-08-17T14:31:54+00:00"
+            "time": "2022-08-19T08:47:17+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1842,22 +1842,22 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.11.0",
+            "version": "0.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "a06f784f8e8b69bcae4f1a5bca58d41bda76c250"
+                "reference": "fe5d2372d9c7f0e1abcf85eaf59ebeaa6f572168"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/a06f784f8e8b69bcae4f1a5bca58d41bda76c250",
-                "reference": "a06f784f8e8b69bcae4f1a5bca58d41bda76c250",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/fe5d2372d9c7f0e1abcf85eaf59ebeaa6f572168",
+                "reference": "fe5d2372d9c7f0e1abcf85eaf59ebeaa6f572168",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.22.0"
+                "utopia-php/database": "0.23.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1889,9 +1889,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.11.0"
+                "source": "https://github.com/utopia-php/audit/tree/0.12.0"
             },
-            "time": "2022-08-17T15:08:58+00:00"
+            "time": "2022-08-19T08:47:16+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -5358,8 +5358,8 @@
         {
             "package": "utopia-php/database",
             "version": "dev-refactor-permissions",
-            "alias": "0.22.0",
-            "alias_normalized": "0.22.0.0"
+            "alias": "0.23.0",
+            "alias_normalized": "0.23.0.0"
         }
     ],
     "minimum-stability": "stable",
