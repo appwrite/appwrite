@@ -109,11 +109,11 @@ class ProjectsConsoleClientTest extends Scope
             'search' => $id
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals($response['body']['total'], 1);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
         $this->assertIsArray($response['body']['projects']);
         $this->assertCount(1, $response['body']['projects']);
-        $this->assertEquals($response['body']['projects'][0]['name'], 'Project Test');
+        $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
@@ -122,8 +122,8 @@ class ProjectsConsoleClientTest extends Scope
             'search' => 'Project Test'
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals($response['body']['total'], 1);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
         $this->assertIsArray($response['body']['projects']);
         $this->assertCount(1, $response['body']['projects']);
         $this->assertEquals($response['body']['projects'][0]['$id'], $data['projectId']);
@@ -268,7 +268,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(count($response['body']), 8);
+        $this->assertEquals(8, count($response['body']));
         $this->assertNotEmpty($response['body']);
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['requests']);
@@ -478,7 +478,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -504,7 +504,7 @@ class ProjectsConsoleClientTest extends Scope
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/jwt', array_merge([
             'content-type' => 'application/json',
@@ -512,7 +512,7 @@ class ProjectsConsoleClientTest extends Scope
             'cookie' => 'a_session_' . $id . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -523,7 +523,7 @@ class ProjectsConsoleClientTest extends Scope
             'password' => $originalPassword,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/anonymous', array_merge([
             'origin' => 'http://localhost',
@@ -531,7 +531,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
         ]), []);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         // Cleanup
 
@@ -585,7 +585,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(501, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
@@ -611,7 +611,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         return $data;
     }

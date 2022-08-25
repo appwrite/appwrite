@@ -26,7 +26,7 @@ class UsersConsoleClientTest extends Scope
             'provider' => 'email'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/users/usage', array_merge([
             'content-type' => 'application/json',
@@ -36,7 +36,7 @@ class UsersConsoleClientTest extends Scope
             'provider' => 'some-random-provider'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
          * Test for SUCCESS
@@ -49,9 +49,9 @@ class UsersConsoleClientTest extends Scope
             'provider' => 'email'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 9);
-        $this->assertEquals($response['body']['range'], '24h');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(9, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsArray($response['body']['usersCount']);
         $this->assertIsArray($response['body']['usersCreate']);
         $this->assertIsArray($response['body']['usersRead']);
@@ -68,9 +68,9 @@ class UsersConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 9);
-        $this->assertEquals($response['body']['range'], '24h');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(9, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsArray($response['body']['usersCount']);
         $this->assertIsArray($response['body']['usersCreate']);
         $this->assertIsArray($response['body']['usersRead']);

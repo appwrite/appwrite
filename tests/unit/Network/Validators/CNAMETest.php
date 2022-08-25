@@ -23,10 +23,10 @@ class CNAMETest extends TestCase
 
     public function testValues()
     {
-        $this->assertEquals($this->object->isValid(''), false);
-        $this->assertEquals($this->object->isValid(null), false);
-        $this->assertEquals($this->object->isValid(false), false);
-        $this->assertEquals($this->object->isValid('cname-unit-test.appwrite.org'), true);
-        $this->assertEquals($this->object->isValid('test1.appwrite.org'), false);
+        $this->assertEquals(false, $this->object->isValid(''));
+        $this->assertEquals(false, $this->object->isValid(null));
+        $this->assertEquals(false, $this->object->isValid(false));
+        $this->assertEquals(true, $this->object->isValid('cname-unit-test.appwrite.org'));
+        $this->assertEquals(false, $this->object->isValid('test1.appwrite.org'));
     }
 }

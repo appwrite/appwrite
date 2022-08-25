@@ -26,8 +26,8 @@ class MigrationV12Test extends MigrationTest
             'search' => ''
         ]));
 
-        $this->assertEquals($document->getAttribute('version'), '0.13.0');
-        $this->assertEquals($document->getAttribute('search'), 'project Appwrite');
+        $this->assertEquals('0.13.0', $document->getAttribute('version'));
+        $this->assertEquals('project Appwrite', $document->getAttribute('search'));
     }
 
     public function testMigrationUsers()
@@ -39,7 +39,7 @@ class MigrationV12Test extends MigrationTest
             'name' => 'Torsten Dittmann'
         ]));
 
-        $this->assertEquals($document->getAttribute('search'), 'user test@appwrite.io Torsten Dittmann');
+        $this->assertEquals('user test@appwrite.io Torsten Dittmann', $document->getAttribute('search'));
     }
 
     public function testMigrationTeams()
@@ -50,7 +50,7 @@ class MigrationV12Test extends MigrationTest
             'name' => 'Appwrite'
         ]));
 
-        $this->assertEquals($document->getAttribute('search'), 'team Appwrite');
+        $this->assertEquals('team Appwrite', $document->getAttribute('search'));
     }
 
     public function testMigrationFunctions()
@@ -62,7 +62,7 @@ class MigrationV12Test extends MigrationTest
             'runtime' => 'php-8.0'
         ]));
 
-        $this->assertEquals($document->getAttribute('search'), 'function My Function php-8.0');
+        $this->assertEquals('function My Function php-8.0', $document->getAttribute('search'));
     }
 
     public function testMigrationExecutions()
@@ -73,6 +73,6 @@ class MigrationV12Test extends MigrationTest
             'functionId' => 'function'
         ]));
 
-        $this->assertEquals($document->getAttribute('search'), 'execution function');
+        $this->assertEquals('execution function', $document->getAttribute('search'));
     }
 }

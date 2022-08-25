@@ -66,7 +66,7 @@ class EventTest extends TestCase
         $this->assertEquals('eventValue1', $this->object->getParam('eventKey1'));
         $this->assertEquals('eventValue2', $this->object->getParam('eventKey2'));
         $this->assertEquals(null, $this->object->getParam('eventKey3'));
-        $this->assertEquals(\Resque::size($this->queue), 1);
+        $this->assertEquals(1, \Resque::size($this->queue));
     }
 
     public function testReset()

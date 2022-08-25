@@ -23,31 +23,31 @@ class DetectorTest extends TestCase
 
     public function testGetOS()
     {
-        $this->assertEquals($this->object->getOS(), [
+        $this->assertEquals([
             'osCode' => 'WIN',
             'osName' => 'Windows',
             'osVersion' => '7',
-        ]);
+        ], $this->object->getOS());
     }
 
     public function testGetClient()
     {
-        $this->assertEquals($this->object->getClient(), [
+        $this->assertEquals([
             'clientType' => 'browser',
             'clientCode' => 'FF',
             'clientName' => 'Firefox',
             'clientVersion' => '47.0',
             'clientEngine' => 'Gecko',
             'clientEngineVersion' => '47.0',
-        ]);
+        ], $this->object->getClient());
     }
 
     public function testGetDevice()
     {
-        $this->assertEquals($this->object->getDevice(), [
+        $this->assertEquals([
             'deviceName' => 'desktop',
             'deviceBrand' => '',
             'deviceModel' => '',
-        ]);
+        ], $this->object->getDevice());
     }
 }

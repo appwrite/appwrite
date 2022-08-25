@@ -25,7 +25,7 @@ class MigrationV13Test extends MigrationTest
             'events' => ['account.create', 'users.create']
         ]));
 
-        $this->assertEquals($document->getAttribute('events'), ['users.*.create']);
+        $this->assertEquals(['users.*.create'], $document->getAttribute('events'));
     }
 
     public function testMigrationWebhooks()
@@ -36,6 +36,6 @@ class MigrationV13Test extends MigrationTest
             'events' => ['account.create', 'users.create']
         ]));
 
-        $this->assertEquals($document->getAttribute('events'), ['users.*.create']);
+        $this->assertEquals(['users.*.create'], $document->getAttribute('events'));
     }
 }

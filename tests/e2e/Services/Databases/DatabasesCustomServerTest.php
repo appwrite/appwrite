@@ -392,7 +392,7 @@ class DatabasesCustomServerTest extends Scope
             'cursor' => 'unknown',
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         // This collection already exists
         $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
@@ -407,7 +407,7 @@ class DatabasesCustomServerTest extends Scope
             'permission' => 'document'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 409);
+        $this->assertEquals(409, $response['headers']['status-code']);
     }
 
     public function testDeleteAttribute(): array
@@ -441,8 +441,8 @@ class DatabasesCustomServerTest extends Scope
             'permission' => 'document'
         ]);
 
-        $this->assertEquals($actors['headers']['status-code'], 201);
-        $this->assertEquals($actors['body']['name'], 'Actors');
+        $this->assertEquals(201, $actors['headers']['status-code']);
+        $this->assertEquals('Actors', $actors['body']['name']);
 
         $firstName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
@@ -516,7 +516,7 @@ class DatabasesCustomServerTest extends Scope
 
         $unneededId = $unneeded['body']['key'];
 
-        $this->assertEquals($collection['headers']['status-code'], 200);
+        $this->assertEquals(200, $collection['headers']['status-code']);
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertCount(3, $collection['body']['attributes']);
         $this->assertEquals($collection['body']['attributes'][0]['key'], $firstName['body']['key']);
@@ -532,7 +532,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertEquals($attribute['headers']['status-code'], 204);
+        $this->assertEquals(204, $attribute['headers']['status-code']);
 
         sleep(2);
 
@@ -551,7 +551,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []);
 
-        $this->assertEquals($collection['headers']['status-code'], 200);
+        $this->assertEquals(200, $collection['headers']['status-code']);
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertCount(2, $collection['body']['attributes']);
         $this->assertEquals($collection['body']['attributes'][0]['key'], $firstName['body']['key']);
@@ -576,7 +576,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertEquals($index['headers']['status-code'], 204);
+        $this->assertEquals(204, $index['headers']['status-code']);
 
         // Wait for database worker to finish deleting index
         sleep(2);
@@ -660,7 +660,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertEquals($deleted['headers']['status-code'], 204);
+        $this->assertEquals(204, $deleted['headers']['status-code']);
 
         // wait for database worker to complete
         sleep(2);
@@ -686,7 +686,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertEquals($deleted['headers']['status-code'], 204);
+        $this->assertEquals(204, $deleted['headers']['status-code']);
 
         return $data;
     }
@@ -784,7 +784,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertEquals($deleted['headers']['status-code'], 204);
+        $this->assertEquals(204, $deleted['headers']['status-code']);
 
         // wait for database worker to complete
         sleep(2);
@@ -810,7 +810,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertEquals($deleted['headers']['status-code'], 204);
+        $this->assertEquals(204, $deleted['headers']['status-code']);
     }
 
     /**
@@ -848,21 +848,21 @@ class DatabasesCustomServerTest extends Scope
             'write' => ['user:' . $this->getUser()['$id']],
         ]);
 
-        $this->assertEquals($document1['headers']['status-code'], 201);
+        $this->assertEquals(201, $document1['headers']['status-code']);
         $this->assertIsArray($document1['body']['$read']);
         $this->assertIsArray($document1['body']['$write']);
         $this->assertCount(1, $document1['body']['$read']);
         $this->assertCount(1, $document1['body']['$write']);
-        $this->assertEquals($document1['body']['firstName'], 'Tom');
-        $this->assertEquals($document1['body']['lastName'], 'Holland');
+        $this->assertEquals('Tom', $document1['body']['firstName']);
+        $this->assertEquals('Holland', $document1['body']['lastName']);
 
-        $this->assertEquals($document2['headers']['status-code'], 201);
+        $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertIsArray($document2['body']['$read']);
         $this->assertIsArray($document2['body']['$write']);
         $this->assertCount(1, $document2['body']['$read']);
         $this->assertCount(1, $document2['body']['$write']);
-        $this->assertEquals($document2['body']['firstName'], 'Samuel');
-        $this->assertEquals($document2['body']['lastName'], 'Jackson');
+        $this->assertEquals('Samuel', $document2['body']['firstName']);
+        $this->assertEquals('Jackson', $document2['body']['lastName']);
 
         // Delete the actors collection
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
@@ -871,8 +871,8 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], $this->getHeaders()));
 
-        $this->assertEquals($response['headers']['status-code'], 204);
-        $this->assertEquals($response['body'], "");
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEquals("", $response['body']);
 
         // Try to get the collection and check if it has been deleted
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
@@ -880,7 +880,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()));
 
-        $this->assertEquals($response['headers']['status-code'], 404);
+        $this->assertEquals(404, $response['headers']['status-code']);
     }
 
     // Adds several minutes to test to replicate coverage in Utopia\Database unit tests
@@ -963,8 +963,8 @@ class DatabasesCustomServerTest extends Scope
             'permission' => 'document',
         ]);
 
-        $this->assertEquals($collection['headers']['status-code'], 201);
-        $this->assertEquals($collection['body']['name'], 'attributeRowWidthLimit');
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals('attributeRowWidthLimit', $collection['body']['name']);
 
         $collectionId = $collection['body']['$id'];
 
@@ -980,7 +980,7 @@ class DatabasesCustomServerTest extends Scope
                 'required' => true,
             ]);
 
-            $this->assertEquals($attribute['headers']['status-code'], 201);
+            $this->assertEquals(201, $attribute['headers']['status-code']);
         }
 
         sleep(5);
@@ -1025,8 +1025,8 @@ class DatabasesCustomServerTest extends Scope
             'permission' => 'document',
         ]);
 
-        $this->assertEquals($collection['headers']['status-code'], 201);
-        $this->assertEquals($collection['body']['name'], 'testLimitException');
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals('testLimitException', $collection['body']['name']);
 
         $collectionId = $collection['body']['$id'];
 
@@ -1043,7 +1043,7 @@ class DatabasesCustomServerTest extends Scope
                 'required' => true,
             ]);
 
-            $this->assertEquals($attribute['headers']['status-code'], 201);
+            $this->assertEquals(201, $attribute['headers']['status-code']);
         }
 
         sleep(20);
@@ -1054,8 +1054,8 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertEquals($collection['headers']['status-code'], 200);
-        $this->assertEquals($collection['body']['name'], 'testLimitException');
+        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertEquals('testLimitException', $collection['body']['name']);
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertIsArray($collection['body']['indexes']);
         $this->assertCount(64, $collection['body']['attributes']);
@@ -1092,8 +1092,8 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertEquals($collection['headers']['status-code'], 200);
-        $this->assertEquals($collection['body']['name'], 'testLimitException');
+        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertEquals('testLimitException', $collection['body']['name']);
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertIsArray($collection['body']['indexes']);
         $this->assertCount(64, $collection['body']['attributes']);

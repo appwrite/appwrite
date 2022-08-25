@@ -661,11 +661,11 @@ class RealtimeCustomClientTest extends Scope
             'required' => true,
         ]);
 
-        $this->assertEquals($name['headers']['status-code'], 201);
-        $this->assertEquals($name['body']['key'], 'name');
-        $this->assertEquals($name['body']['type'], 'string');
-        $this->assertEquals($name['body']['size'], 256);
-        $this->assertEquals($name['body']['required'], true);
+        $this->assertEquals(201, $name['headers']['status-code']);
+        $this->assertEquals('name', $name['body']['key']);
+        $this->assertEquals('string', $name['body']['type']);
+        $this->assertEquals(256, $name['body']['size']);
+        $this->assertEquals(true, $name['body']['required']);
 
         sleep(2);
 
@@ -710,7 +710,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
-        $this->assertEquals($response['data']['payload']['name'], 'Chris Evans');
+        $this->assertEquals('Chris Evans', $response['data']['payload']['name']);
 
         /**
          * Test Document Update
@@ -752,7 +752,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $this->assertEquals($response['data']['payload']['name'], 'Chris Evans 2');
+        $this->assertEquals('Chris Evans 2', $response['data']['payload']['name']);
 
         /**
          * Test Document Delete
@@ -802,7 +802,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
-        $this->assertEquals($response['data']['payload']['name'], 'Bradley Cooper');
+        $this->assertEquals('Bradley Cooper', $response['data']['payload']['name']);
 
         $client->close();
     }
@@ -871,11 +871,11 @@ class RealtimeCustomClientTest extends Scope
             'required' => true,
         ]);
 
-        $this->assertEquals($name['headers']['status-code'], 201);
-        $this->assertEquals($name['body']['key'], 'name');
-        $this->assertEquals($name['body']['type'], 'string');
-        $this->assertEquals($name['body']['size'], 256);
-        $this->assertEquals($name['body']['required'], true);
+        $this->assertEquals(201, $name['headers']['status-code']);
+        $this->assertEquals('name', $name['body']['key']);
+        $this->assertEquals('string', $name['body']['type']);
+        $this->assertEquals(256, $name['body']['size']);
+        $this->assertEquals(true, $name['body']['required']);
 
         sleep(2);
 
@@ -920,7 +920,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
-        $this->assertEquals($response['data']['payload']['name'], 'Chris Evans');
+        $this->assertEquals('Chris Evans', $response['data']['payload']['name']);
 
         /**
          * Test Document Update
@@ -961,7 +961,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        $this->assertEquals($response['data']['payload']['name'], 'Chris Evans 2');
+        $this->assertEquals('Chris Evans 2', $response['data']['payload']['name']);
 
         /**
          * Test Document Delete
@@ -1011,7 +1011,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
         $this->assertContains("databases.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
-        $this->assertEquals($response['data']['payload']['name'], 'Bradley Cooper');
+        $this->assertEquals('Bradley Cooper', $response['data']['payload']['name']);
 
         $client->close();
     }
@@ -1201,7 +1201,7 @@ class RealtimeCustomClientTest extends Scope
 
         $functionId = $function['body']['$id'] ?? '';
 
-        $this->assertEquals($function['headers']['status-code'], 201);
+        $this->assertEquals(201, $function['headers']['status-code']);
         $this->assertNotEmpty($function['body']['$id']);
 
         $folder = 'timeout';
@@ -1222,7 +1222,7 @@ class RealtimeCustomClientTest extends Scope
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals($deployment['headers']['status-code'], 201);
+        $this->assertEquals(201, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
 
         // Wait for deployment to be built.
@@ -1234,7 +1234,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
@@ -1242,7 +1242,7 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), []);
 
-        $this->assertEquals($execution['headers']['status-code'], 201);
+        $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
 
         $response = json_decode($client->receive(), true);
@@ -1370,7 +1370,7 @@ class RealtimeCustomClientTest extends Scope
             'name' => 'Manchester'
         ]);
 
-        $this->assertEquals($team['headers']['status-code'], 200);
+        $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertNotEmpty($team['body']['$id']);
 
         $response = json_decode($client->receive(), true);

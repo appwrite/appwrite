@@ -23,16 +23,16 @@ class PasswordTest extends TestCase
 
     public function testValues()
     {
-        $this->assertEquals($this->object->isValid(false), false);
-        $this->assertEquals($this->object->isValid(null), false);
-        $this->assertEquals($this->object->isValid(''), false);
-        $this->assertEquals($this->object->isValid('1'), false);
-        $this->assertEquals($this->object->isValid('12'), false);
-        $this->assertEquals($this->object->isValid('123'), false);
-        $this->assertEquals($this->object->isValid('1234'), false);
-        $this->assertEquals($this->object->isValid('12345'), false);
-        $this->assertEquals($this->object->isValid('123456'), false);
-        $this->assertEquals($this->object->isValid('1234567'), false);
-        $this->assertEquals($this->object->isValid('WUnOZcn0piQMN8Mh31xw4KQPF0gcNGVA'), true);
+        $this->assertEquals(false, $this->object->isValid(false));
+        $this->assertEquals(false, $this->object->isValid(null));
+        $this->assertEquals(false, $this->object->isValid(''));
+        $this->assertEquals(false, $this->object->isValid('1'));
+        $this->assertEquals(false, $this->object->isValid('12'));
+        $this->assertEquals(false, $this->object->isValid('123'));
+        $this->assertEquals(false, $this->object->isValid('1234'));
+        $this->assertEquals(false, $this->object->isValid('12345'));
+        $this->assertEquals(false, $this->object->isValid('123456'));
+        $this->assertEquals(false, $this->object->isValid('1234567'));
+        $this->assertEquals(true, $this->object->isValid('WUnOZcn0piQMN8Mh31xw4KQPF0gcNGVA'));
     }
 }

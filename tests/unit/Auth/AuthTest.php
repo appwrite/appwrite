@@ -43,7 +43,7 @@ class AuthTest extends TestCase
     public function testHash()
     {
         $secret = 'secret';
-        $this->assertEquals(Auth::hash($secret), '2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b');
+        $this->assertEquals('2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b', Auth::hash($secret));
     }
 
     public function testPassword()
@@ -52,20 +52,20 @@ class AuthTest extends TestCase
         $static = '$2y$08$PDbMtV18J1KOBI9tIYabBuyUwBrtXPGhLxCy9pWP6xkldVOKLrLKy';
         $dynamic = Auth::passwordHash($secret);
 
-        $this->assertEquals(Auth::passwordVerify($secret, $dynamic), true);
-        $this->assertEquals(Auth::passwordVerify($secret, $static), true);
+        $this->assertEquals(true, Auth::passwordVerify($secret, $dynamic));
+        $this->assertEquals(true, Auth::passwordVerify($secret, $static));
     }
 
     public function testPasswordGenerator()
     {
-        $this->assertEquals(\mb_strlen(Auth::passwordGenerator()), 40);
-        $this->assertEquals(\mb_strlen(Auth::passwordGenerator(5)), 10);
+        $this->assertEquals(40, \mb_strlen(Auth::passwordGenerator()));
+        $this->assertEquals(10, \mb_strlen(Auth::passwordGenerator(5)));
     }
 
     public function testTokenGenerator()
     {
-        $this->assertEquals(\mb_strlen(Auth::tokenGenerator()), 256);
-        $this->assertEquals(\mb_strlen(Auth::tokenGenerator(5)), 10);
+        $this->assertEquals(256, \mb_strlen(Auth::tokenGenerator()));
+        $this->assertEquals(10, \mb_strlen(Auth::tokenGenerator(5)));
     }
 
     public function testSessionVerify()
@@ -106,10 +106,10 @@ class AuthTest extends TestCase
             ]),
         ];
 
-        $this->assertEquals(Auth::sessionVerify($tokens1, $secret), 'token1');
-        $this->assertEquals(Auth::sessionVerify($tokens1, 'false-secret'), false);
-        $this->assertEquals(Auth::sessionVerify($tokens2, $secret), false);
-        $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret'), false);
+        $this->assertEquals('token1', Auth::sessionVerify($tokens1, $secret));
+        $this->assertEquals(false, Auth::sessionVerify($tokens1, 'false-secret'));
+        $this->assertEquals(false, Auth::sessionVerify($tokens2, $secret));
+        $this->assertEquals(false, Auth::sessionVerify($tokens2, 'false-secret'));
     }
 
     public function testTokenVerify()
@@ -161,12 +161,12 @@ class AuthTest extends TestCase
             ]),
         ];
 
-        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, $secret), 'token1');
-        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
-        $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, $secret), false);
-        $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
-        $this->assertEquals(Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_RECOVERY, $secret), false);
-        $this->assertEquals(Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
+        $this->assertEquals('token1', Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, $secret));
+        $this->assertEquals(false, Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'));
+        $this->assertEquals(false, Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, $secret));
+        $this->assertEquals(false, Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'));
+        $this->assertEquals(false, Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_RECOVERY, $secret));
+        $this->assertEquals(false, Auth::tokenVerify($tokens3, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'));
     }
 
     public function testIsPrivilegedUser()

@@ -35,7 +35,7 @@ class WebhooksCustomClientTest extends Scope
 
         $id = $account['body']['$id'];
 
-        $this->assertEquals($account['headers']['status-code'], 201);
+        $this->assertEquals(201, $account['headers']['status-code']);
         $this->assertNotEmpty($account['body']);
 
         $webhook = $this->getLastRequest();
@@ -44,9 +44,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -54,14 +54,14 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
+        $this->assertEquals(true, empty($webhook['headers']['X-Appwrite-Webhook-User-Id']));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], true);
+        $this->assertEquals(true, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $email);
-        $this->assertEquals($webhook['data']['emailVerification'], false);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals(false, $webhook['data']['emailVerification']);
+        $this->assertEquals([], $webhook['data']['prefs']);
 
         return [
             'id' => $id,
@@ -100,7 +100,7 @@ class WebhooksCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($accountSession['headers']['status-code'], 201);
+        $this->assertEquals(201, $accountSession['headers']['status-code']);
 
         $id = $account['body']['$id'];
         $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
@@ -112,7 +112,7 @@ class WebhooksCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($account['headers']['status-code'], 200);
+        $this->assertEquals(200, $account['headers']['status-code']);
 
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
@@ -120,9 +120,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.update.status', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -134,10 +134,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], false);
+        $this->assertEquals(false, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $email);
-        $this->assertEquals($webhook['data']['emailVerification'], false);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals(false, $webhook['data']['emailVerification']);
+        $this->assertEquals([], $webhook['data']['prefs']);
 
         return [];
     }
@@ -163,7 +163,7 @@ class WebhooksCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($accountSession['headers']['status-code'], 201);
+        $this->assertEquals(201, $accountSession['headers']['status-code']);
 
         $sessionId = $accountSession['body']['$id'];
         $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
@@ -174,9 +174,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.sessions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.sessions.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -190,20 +190,20 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
+        $this->assertEquals(true, empty($webhook['headers']['X-Appwrite-Webhook-User-Id']));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertIsInt($webhook['data']['expire']);
-        $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
+        $this->assertEquals('127.0.0.1', $webhook['data']['ip']);
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
         $this->assertNotEmpty($webhook['data']['osName']);
         $this->assertIsString($webhook['data']['osName']);
         $this->assertNotEmpty($webhook['data']['osVersion']);
         $this->assertIsString($webhook['data']['osVersion']);
-        $this->assertEquals($webhook['data']['clientType'], 'browser');
-        $this->assertEquals($webhook['data']['clientCode'], 'CH');
-        $this->assertEquals($webhook['data']['clientName'], 'Chrome');
+        $this->assertEquals('browser', $webhook['data']['clientType']);
+        $this->assertEquals('CH', $webhook['data']['clientCode']);
+        $this->assertEquals('Chrome', $webhook['data']['clientName']);
         $this->assertNotEmpty($webhook['data']['clientVersion']);
         $this->assertIsString($webhook['data']['clientVersion']);
         $this->assertNotEmpty($webhook['data']['clientEngine']);
@@ -214,7 +214,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsString($webhook['data']['deviceModel']);
         $this->assertIsString($webhook['data']['countryCode']);
         $this->assertIsString($webhook['data']['countryName']);
-        $this->assertEquals($webhook['data']['current'], true);
+        $this->assertEquals(true, $webhook['data']['current']);
 
         return array_merge($data, [
             'sessionId' => $sessionId,
@@ -246,7 +246,7 @@ class WebhooksCustomClientTest extends Scope
         $sessionId = $accountSession['body']['$id'];
         $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
-        $this->assertEquals($accountSession['headers']['status-code'], 201);
+        $this->assertEquals(201, $accountSession['headers']['status-code']);
 
         $accountSession = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $sessionId, array_merge([
             'origin' => 'http://localhost',
@@ -255,7 +255,7 @@ class WebhooksCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($accountSession['headers']['status-code'], 204);
+        $this->assertEquals(204, $accountSession['headers']['status-code']);
 
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
@@ -263,9 +263,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.sessions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.sessions.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -283,16 +283,16 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertIsInt($webhook['data']['expire']);
-        $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
+        $this->assertEquals('127.0.0.1', $webhook['data']['ip']);
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
         $this->assertNotEmpty($webhook['data']['osName']);
         $this->assertIsString($webhook['data']['osName']);
         $this->assertNotEmpty($webhook['data']['osVersion']);
         $this->assertIsString($webhook['data']['osVersion']);
-        $this->assertEquals($webhook['data']['clientType'], 'browser');
-        $this->assertEquals($webhook['data']['clientCode'], 'CH');
-        $this->assertEquals($webhook['data']['clientName'], 'Chrome');
+        $this->assertEquals('browser', $webhook['data']['clientType']);
+        $this->assertEquals('CH', $webhook['data']['clientCode']);
+        $this->assertEquals('Chrome', $webhook['data']['clientName']);
         $this->assertNotEmpty($webhook['data']['clientVersion']);
         $this->assertIsString($webhook['data']['clientVersion']);
         $this->assertNotEmpty($webhook['data']['clientEngine']);
@@ -303,7 +303,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsString($webhook['data']['deviceModel']);
         $this->assertIsString($webhook['data']['countryCode']);
         $this->assertIsString($webhook['data']['countryName']);
-        $this->assertEquals($webhook['data']['current'], true);
+        $this->assertEquals(true, $webhook['data']['current']);
 
         return $data;
     }
@@ -332,7 +332,7 @@ class WebhooksCustomClientTest extends Scope
         $sessionId = $accountSession['body']['$id'];
         $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
-        $this->assertEquals($accountSession['headers']['status-code'], 201);
+        $this->assertEquals(201, $accountSession['headers']['status-code']);
 
         $accountSession = $this->client->call(Client::METHOD_DELETE, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
@@ -341,7 +341,7 @@ class WebhooksCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($accountSession['headers']['status-code'], 204);
+        $this->assertEquals(204, $accountSession['headers']['status-code']);
 
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
@@ -349,9 +349,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.sessions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.sessions.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -369,16 +369,16 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertIsInt($webhook['data']['expire']);
-        $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
+        $this->assertEquals('127.0.0.1', $webhook['data']['ip']);
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
         $this->assertNotEmpty($webhook['data']['osName']);
         $this->assertIsString($webhook['data']['osName']);
         $this->assertNotEmpty($webhook['data']['osVersion']);
         $this->assertIsString($webhook['data']['osVersion']);
-        $this->assertEquals($webhook['data']['clientType'], 'browser');
-        $this->assertEquals($webhook['data']['clientCode'], 'CH');
-        $this->assertEquals($webhook['data']['clientName'], 'Chrome');
+        $this->assertEquals('browser', $webhook['data']['clientType']);
+        $this->assertEquals('CH', $webhook['data']['clientCode']);
+        $this->assertEquals('Chrome', $webhook['data']['clientName']);
         $this->assertNotEmpty($webhook['data']['clientVersion']);
         $this->assertIsString($webhook['data']['clientVersion']);
         $this->assertNotEmpty($webhook['data']['clientEngine']);
@@ -389,7 +389,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertIsString($webhook['data']['deviceModel']);
         $this->assertIsString($webhook['data']['countryCode']);
         $this->assertIsString($webhook['data']['countryName']);
-        $this->assertEquals($webhook['data']['current'], true);
+        $this->assertEquals(true, $webhook['data']['current']);
 
         $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -400,7 +400,7 @@ class WebhooksCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($accountSession['headers']['status-code'], 201);
+        $this->assertEquals(201, $accountSession['headers']['status-code']);
 
         $sessionId = $accountSession['body']['$id'];
         $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
@@ -430,7 +430,7 @@ class WebhooksCustomClientTest extends Scope
             'name' => $newName
         ]);
 
-        $this->assertEquals($account['headers']['status-code'], 200);
+        $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertIsArray($account['body']);
 
         $webhook = $this->getLastRequest();
@@ -440,9 +440,9 @@ class WebhooksCustomClientTest extends Scope
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.update.name', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -456,10 +456,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $newName);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], true);
+        $this->assertEquals(true, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $email);
-        $this->assertEquals($webhook['data']['emailVerification'], false);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals(false, $webhook['data']['emailVerification']);
+        $this->assertEquals([], $webhook['data']['prefs']);
 
         return $data;
     }
@@ -484,7 +484,7 @@ class WebhooksCustomClientTest extends Scope
             'oldPassword' => $password,
         ]);
 
-        $this->assertEquals($account['headers']['status-code'], 200);
+        $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertIsArray($account['body']);
 
         $webhook = $this->getLastRequest();
@@ -493,9 +493,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.update.password', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -507,12 +507,12 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals($webhook['data']['name'], 'New Name');
+        $this->assertEquals('New Name', $webhook['data']['name']);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], true);
+        $this->assertEquals(true, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $email);
-        $this->assertEquals($webhook['data']['emailVerification'], false);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals(false, $webhook['data']['emailVerification']);
+        $this->assertEquals([], $webhook['data']['prefs']);
 
         $data['password'] = 'new-password';
 
@@ -539,7 +539,7 @@ class WebhooksCustomClientTest extends Scope
             'password' => 'new-password',
         ]);
 
-        $this->assertEquals($account['headers']['status-code'], 200);
+        $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertIsArray($account['body']);
 
         $webhook = $this->getLastRequest();
@@ -548,9 +548,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.update.email', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -562,12 +562,12 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals($webhook['data']['name'], 'New Name');
+        $this->assertEquals('New Name', $webhook['data']['name']);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], true);
+        $this->assertEquals(true, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $newEmail);
-        $this->assertEquals($webhook['data']['emailVerification'], false);
-        $this->assertEquals($webhook['data']['prefs'], []);
+        $this->assertEquals(false, $webhook['data']['emailVerification']);
+        $this->assertEquals([], $webhook['data']['prefs']);
 
         $data['email'] = $newEmail;
 
@@ -595,7 +595,7 @@ class WebhooksCustomClientTest extends Scope
             ]
         ]);
 
-        $this->assertEquals($account['headers']['status-code'], 200);
+        $this->assertEquals(200, $account['headers']['status-code']);
         $this->assertIsArray($account['body']);
 
         $webhook = $this->getLastRequest();
@@ -604,9 +604,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.update.prefs', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -618,15 +618,15 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertEquals($webhook['data']['name'], 'New Name');
+        $this->assertEquals('New Name', $webhook['data']['name']);
         $this->assertIsInt($webhook['data']['registration']);
-        $this->assertEquals($webhook['data']['status'], true);
+        $this->assertEquals(true, $webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $email);
-        $this->assertEquals($webhook['data']['emailVerification'], false);
-        $this->assertEquals($webhook['data']['prefs'], [
+        $this->assertEquals(false, $webhook['data']['emailVerification']);
+        $this->assertEquals([
             'prefKey1' => 'prefValue1',
             'prefKey2' => 'prefValue2',
-        ]);
+        ], $webhook['data']['prefs']);
 
         return $data;
     }
@@ -659,9 +659,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.recovery.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.recovery.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -719,9 +719,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.recovery.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.recovery.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -735,7 +735,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
+        $this->assertEquals(true, empty($webhook['headers']['X-Appwrite-Webhook-User-Id']));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
@@ -775,9 +775,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.verification.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.verification.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -833,9 +833,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.verification.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('users.*.verification.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -891,9 +891,9 @@ class WebhooksCustomClientTest extends Scope
         $url     = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
-        $this->assertEquals($webhook['method'], 'POST');
-        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
-        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertEquals('POST', $webhook['method']);
+        $this->assertEquals('application/json', $webhook['headers']['Content-Type']);
+        $this->assertEquals('Appwrite-Server vdev. Please report abuse at security@appwrite.io', $webhook['headers']['User-Agent']);
         $this->assertStringContainsString('teams.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('teams.*.memberships.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString('teams.*.memberships.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -911,7 +911,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
+        $this->assertEquals(true, empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);

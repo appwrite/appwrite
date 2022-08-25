@@ -28,14 +28,14 @@ class IPTest extends TestCase
         $validator = new IP();
 
         // Assertions
-        $this->assertEquals($validator->isValid('2001:0db8:85a3:08d3:1319:8a2e:0370:7334'), true);
-        $this->assertEquals($validator->isValid('109.67.204.101'), true);
-        $this->assertEquals($validator->isValid(23.5), false);
-        $this->assertEquals($validator->isValid('23.5'), false);
-        $this->assertEquals($validator->isValid(null), false);
-        $this->assertEquals($validator->isValid(true), false);
-        $this->assertEquals($validator->isValid(false), false);
-        $this->assertEquals($validator->getType(), 'string');
+        $this->assertEquals(true, $validator->isValid('2001:0db8:85a3:08d3:1319:8a2e:0370:7334'));
+        $this->assertEquals(true, $validator->isValid('109.67.204.101'));
+        $this->assertEquals(false, $validator->isValid(23.5));
+        $this->assertEquals(false, $validator->isValid('23.5'));
+        $this->assertEquals(false, $validator->isValid(null));
+        $this->assertEquals(false, $validator->isValid(true));
+        $this->assertEquals(false, $validator->isValid(false));
+        $this->assertEquals('string', $validator->getType());
     }
 
     public function testIsValidIPALL()
@@ -43,13 +43,13 @@ class IPTest extends TestCase
         $validator = new IP(IP::ALL);
 
         // Assertions
-        $this->assertEquals($validator->isValid('2001:0db8:85a3:08d3:1319:8a2e:0370:7334'), true);
-        $this->assertEquals($validator->isValid('109.67.204.101'), true);
-        $this->assertEquals($validator->isValid(23.5), false);
-        $this->assertEquals($validator->isValid('23.5'), false);
-        $this->assertEquals($validator->isValid(null), false);
-        $this->assertEquals($validator->isValid(true), false);
-        $this->assertEquals($validator->isValid(false), false);
+        $this->assertEquals(true, $validator->isValid('2001:0db8:85a3:08d3:1319:8a2e:0370:7334'));
+        $this->assertEquals(true, $validator->isValid('109.67.204.101'));
+        $this->assertEquals(false, $validator->isValid(23.5));
+        $this->assertEquals(false, $validator->isValid('23.5'));
+        $this->assertEquals(false, $validator->isValid(null));
+        $this->assertEquals(false, $validator->isValid(true));
+        $this->assertEquals(false, $validator->isValid(false));
     }
 
     public function testIsValidIPV4()
@@ -57,13 +57,13 @@ class IPTest extends TestCase
         $validator = new IP(IP::V4);
 
         // Assertions
-        $this->assertEquals($validator->isValid('2001:0db8:85a3:08d3:1319:8a2e:0370:7334'), false);
-        $this->assertEquals($validator->isValid('109.67.204.101'), true);
-        $this->assertEquals($validator->isValid(23.5), false);
-        $this->assertEquals($validator->isValid('23.5'), false);
-        $this->assertEquals($validator->isValid(null), false);
-        $this->assertEquals($validator->isValid(true), false);
-        $this->assertEquals($validator->isValid(false), false);
+        $this->assertEquals(false, $validator->isValid('2001:0db8:85a3:08d3:1319:8a2e:0370:7334'));
+        $this->assertEquals(true, $validator->isValid('109.67.204.101'));
+        $this->assertEquals(false, $validator->isValid(23.5));
+        $this->assertEquals(false, $validator->isValid('23.5'));
+        $this->assertEquals(false, $validator->isValid(null));
+        $this->assertEquals(false, $validator->isValid(true));
+        $this->assertEquals(false, $validator->isValid(false));
     }
 
     public function testIsValidIPV6()
@@ -71,12 +71,12 @@ class IPTest extends TestCase
         $validator = new IP(IP::V6);
 
         // Assertions
-        $this->assertEquals($validator->isValid('2001:0db8:85a3:08d3:1319:8a2e:0370:7334'), true);
-        $this->assertEquals($validator->isValid('109.67.204.101'), false);
-        $this->assertEquals($validator->isValid(23.5), false);
-        $this->assertEquals($validator->isValid('23.5'), false);
-        $this->assertEquals($validator->isValid(null), false);
-        $this->assertEquals($validator->isValid(true), false);
-        $this->assertEquals($validator->isValid(false), false);
+        $this->assertEquals(true, $validator->isValid('2001:0db8:85a3:08d3:1319:8a2e:0370:7334'));
+        $this->assertEquals(false, $validator->isValid('109.67.204.101'));
+        $this->assertEquals(false, $validator->isValid(23.5));
+        $this->assertEquals(false, $validator->isValid('23.5'));
+        $this->assertEquals(false, $validator->isValid(null));
+        $this->assertEquals(false, $validator->isValid(true));
+        $this->assertEquals(false, $validator->isValid(false));
     }
 }

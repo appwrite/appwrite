@@ -92,9 +92,9 @@ class FunctionsConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 4);
-        $this->assertEquals($response['body']['range'], '24h');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(4, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsArray($response['body']['functionsExecutions']);
         $this->assertIsArray($response['body']['functionsFailures']);
         $this->assertIsArray($response['body']['functionsCompute']);

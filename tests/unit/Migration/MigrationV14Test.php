@@ -24,8 +24,8 @@ class MigrationV14Test extends MigrationTest
             'version' => '0.14.0'
         ]));
 
-        $this->assertEquals($document->getAttribute('version'), '0.15.0');
-        $this->assertEquals($document->getAttribute('version'), '0.15.0');
+        $this->assertEquals('0.15.0', $document->getAttribute('version'));
+        $this->assertEquals('0.15.0', $document->getAttribute('version'));
     }
 
     public function testMigrateKeys()
@@ -36,7 +36,7 @@ class MigrationV14Test extends MigrationTest
         ]));
 
         $this->assertArrayHasKey('expire', $document->getArrayCopy());
-        $this->assertEquals($document->getAttribute('expire'), 0);
+        $this->assertEquals(0, $document->getAttribute('expire'));
     }
 
     public function testMigrateWebhooks()
@@ -47,7 +47,7 @@ class MigrationV14Test extends MigrationTest
         ]));
 
         $this->assertArrayHasKey('signatureKey', $document->getArrayCopy());
-        $this->assertEquals(strlen($document->getAttribute('signatureKey')), 128);
+        $this->assertEquals(128, strlen($document->getAttribute('signatureKey')));
     }
 
     public function testMigrateUsers()
@@ -73,8 +73,8 @@ class MigrationV14Test extends MigrationTest
             'dateUpdated' => 987654321
         ]));
 
-        $this->assertEquals($document->getCreatedAt(), 123456789);
-        $this->assertEquals($document->getUpdatedAt(), 987654321);
+        $this->assertEquals(123456789, $document->getCreatedAt());
+        $this->assertEquals(987654321, $document->getUpdatedAt());
     }
 
     public function testMigrateFunctions()
@@ -88,8 +88,8 @@ class MigrationV14Test extends MigrationTest
             'dateUpdated' => 987654321
         ]));
 
-        $this->assertEquals($document->getCreatedAt(), 123456789);
-        $this->assertEquals($document->getUpdatedAt(), 987654321);
+        $this->assertEquals(123456789, $document->getCreatedAt());
+        $this->assertEquals(987654321, $document->getUpdatedAt());
     }
 
     public function testMigrateDeployments()
@@ -101,7 +101,7 @@ class MigrationV14Test extends MigrationTest
             'dateCreated' => 123456789,
         ]));
 
-        $this->assertEquals($document->getCreatedAt(), 123456789);
+        $this->assertEquals(123456789, $document->getCreatedAt());
     }
 
     public function testMigrateExecutions()
@@ -113,7 +113,7 @@ class MigrationV14Test extends MigrationTest
             'dateCreated' => 123456789,
         ]));
 
-        $this->assertEquals($document->getCreatedAt(), 123456789);
+        $this->assertEquals(123456789, $document->getCreatedAt());
     }
 
     public function testMigrateTeams()
@@ -125,7 +125,7 @@ class MigrationV14Test extends MigrationTest
             'dateCreated' => 123456789,
         ]));
 
-        $this->assertEquals($document->getCreatedAt(), 123456789);
+        $this->assertEquals(123456789, $document->getCreatedAt());
     }
 
     public function testMigrateAudits()
@@ -137,8 +137,8 @@ class MigrationV14Test extends MigrationTest
             'event' => 'collections.movies.create'
         ]));
 
-        $this->assertEquals($document->getAttribute('resource'), 'database/default/collection/movies');
-        $this->assertEquals($document->getAttribute('event'), 'databases.default.collections.movies.create');
+        $this->assertEquals('database/default/collection/movies', $document->getAttribute('resource'));
+        $this->assertEquals('databases.default.collections.movies.create', $document->getAttribute('event'));
 
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -147,8 +147,8 @@ class MigrationV14Test extends MigrationTest
             'event' => 'collections.movies.documents.avatar.create'
         ]));
 
-        $this->assertEquals($document->getAttribute('resource'), 'database/default/collection/movies/document/avatar');
-        $this->assertEquals($document->getAttribute('event'), 'databases.default.collections.movies.documents.avatar.create');
+        $this->assertEquals('database/default/collection/movies/document/avatar', $document->getAttribute('resource'));
+        $this->assertEquals('databases.default.collections.movies.documents.avatar.create', $document->getAttribute('event'));
     }
 
     public function testMigrateStats()
@@ -159,7 +159,7 @@ class MigrationV14Test extends MigrationTest
             'metric' => 'database.collections.62b2039844d4277495d0.documents.create'
         ]));
 
-        $this->assertEquals($document->getAttribute('metric'), 'databases.default.collections.62b2039844d4277495d0.documents.create');
+        $this->assertEquals('databases.default.collections.62b2039844d4277495d0.documents.create', $document->getAttribute('metric'));
 
         $document = $this->fixDocument(new Document([
             '$id' => 'appwrite',
@@ -167,6 +167,6 @@ class MigrationV14Test extends MigrationTest
             'metric' => 'users.create'
         ]));
 
-        $this->assertEquals($document->getAttribute('metric'), 'users.create');
+        $this->assertEquals('users.create', $document->getAttribute('metric'));
     }
 }

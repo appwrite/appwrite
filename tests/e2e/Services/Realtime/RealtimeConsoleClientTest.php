@@ -177,11 +177,11 @@ class RealtimeConsoleClientTest extends Scope
 
         $attributeKey = $name['body']['key'];
 
-        $this->assertEquals($name['headers']['status-code'], 201);
-        $this->assertEquals($name['body']['key'], 'name');
-        $this->assertEquals($name['body']['type'], 'string');
-        $this->assertEquals($name['body']['size'], 256);
-        $this->assertEquals($name['body']['required'], true);
+        $this->assertEquals(201, $name['headers']['status-code']);
+        $this->assertEquals('name', $name['body']['key']);
+        $this->assertEquals('string', $name['body']['type']);
+        $this->assertEquals(256, $name['body']['size']);
+        $this->assertEquals(true, $name['body']['required']);
         $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
@@ -266,7 +266,7 @@ class RealtimeConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($index['headers']['status-code'], 201);
+        $this->assertEquals(201, $index['headers']['status-code']);
         $indexKey = $index['body']['key'];
 
         $response = json_decode($client->receive(), true);
@@ -342,7 +342,7 @@ class RealtimeConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($attribute['headers']['status-code'], 204);
+        $this->assertEquals(204, $attribute['headers']['status-code']);
         $indexKey = 'key_name';
         $response = json_decode($client->receive(), true);
 
@@ -398,7 +398,7 @@ class RealtimeConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($attribute['headers']['status-code'], 204);
+        $this->assertEquals(204, $attribute['headers']['status-code']);
         $attributeKey = 'name';
         $response = json_decode($client->receive(), true);
 

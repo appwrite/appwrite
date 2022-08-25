@@ -36,11 +36,11 @@ class HostTest extends TestCase
     public function testIsValid()
     {
         // Assertions
-        $this->assertEquals($this->host->isValid('https://appwrite.io/link'), true);
-        $this->assertEquals($this->host->isValid('https://localhost'), true);
-        $this->assertEquals($this->host->isValid('localhost'), false);
-        $this->assertEquals($this->host->isValid('http://subdomain.appwrite.test/path'), true);
-        $this->assertEquals($this->host->isValid('http://test.subdomain.appwrite.test/path'), false);
-        $this->assertEquals($this->host->getType(), 'string');
+        $this->assertEquals(true, $this->host->isValid('https://appwrite.io/link'));
+        $this->assertEquals(true, $this->host->isValid('https://localhost'));
+        $this->assertEquals(false, $this->host->isValid('localhost'));
+        $this->assertEquals(true, $this->host->isValid('http://subdomain.appwrite.test/path'));
+        $this->assertEquals(false, $this->host->isValid('http://test.subdomain.appwrite.test/path'));
+        $this->assertEquals('string', $this->host->getType());
     }
 }

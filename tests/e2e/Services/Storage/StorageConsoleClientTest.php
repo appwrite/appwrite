@@ -25,7 +25,7 @@ class StorageConsoleClientTest extends Scope
             'range' => '32h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
          * Test for SUCCESS
@@ -37,9 +37,9 @@ class StorageConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 13);
-        $this->assertEquals($response['body']['range'], '24h');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(13, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsArray($response['body']['filesStorage']);
         $this->assertIsArray($response['body']['filesCount']);
     }
@@ -69,7 +69,7 @@ class StorageConsoleClientTest extends Scope
             'range' => '32h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         // TODO: Uncomment once we implement check for missing bucketId in the usage endpoint.
 
@@ -80,7 +80,7 @@ class StorageConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 404);
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         /**
          * Test for SUCCESS
@@ -92,9 +92,9 @@ class StorageConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 7);
-        $this->assertEquals($response['body']['range'], '24h');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(7, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
         $this->assertIsArray($response['body']['filesCount']);
         $this->assertIsArray($response['body']['filesCreate']);
         $this->assertIsArray($response['body']['filesRead']);

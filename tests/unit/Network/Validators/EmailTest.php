@@ -67,6 +67,6 @@ class EmailTest extends TestCase
         $this->assertEquals(false, $this->email->isValid('email@-domain.com')); // Leading dash in front of domain is invalid
         $this->assertEquals(false, $this->email->isValid('email@111.222.333.44444')); // Invalid IP format
         $this->assertEquals(false, $this->email->isValid('email@domain..com')); // Multiple dot in the domain portion is invalid
-        $this->assertEquals($this->email->getType(), 'string');
+        $this->assertEquals('string', $this->email->getType());
     }
 }
