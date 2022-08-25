@@ -291,7 +291,7 @@ sort($patterns);
             <li data-state="/console/functions/function/monitors?id={{router.params.id}}&project={{router.params.project}}">
 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="submit"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}"
@@ -302,9 +302,10 @@ sort($patterns);
                 <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="submit"
                     data-name="usage"
+                    data-param-range="30d"
                     data-param-function-id="{{router.params.id}}">
                     <button class="tick">30d</button>
                 </form>
@@ -312,7 +313,7 @@ sort($patterns);
                 <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="submit"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}"
@@ -325,44 +326,44 @@ sort($patterns);
                 <h2>Monitors</h2>
 
                 <div
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="load"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}">
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart background-image-no border-no margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Executions=functionsExecutions" data-height="140" data-show-y-axis="true" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Executions=executionsTotal" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li>Executions <span data-ls-bind="({{usage.functionsExecutions|statsGetLast|statsTotal}})"></span></li>
+                        <li>Executions <span data-ls-bind="({{usage.executionsTotal|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart background-image-no border-no margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="CPU Time (milliseconds)=functionsCompute" data-colors="orange" data-height="140" data-show-y-axis="true" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="CPU Time (milliseconds)=executionsTime" data-colors="orange" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="orange">CPU Time <span data-ls-bind="({{usage.functionsCompute|statsGetLast|seconds2hum}})"></span></li>
+                        <li class="orange">CPU Time <span data-ls-bind="({{usage.executionsTime|statsGetLast|seconds2hum}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart background-image-no border-no margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Failures=functionsFailures" data-colors="red" data-height="140" data-show-y-axis="true" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Failures=executionsFailure" data-colors="red" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="red">Errors <span data-ls-bind="({{usage.functionsFailures|statsGetLast|statsTotal}})"></span></li>
+                        <li class="red">Errors <span data-ls-bind="({{usage.executionsFailure|statsGetLast|statsTotal}})"></span></li>
                     </ul>
                 </div>
             </li>

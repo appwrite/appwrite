@@ -75,6 +75,7 @@ use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
 use Appwrite\Utopia\Response\Model\UsageDatabases;
+use Appwrite\Utopia\Response\Model\UsageFunction;
 use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
@@ -102,6 +103,7 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_BUCKETS = 'usageBuckets';
     public const MODEL_USAGE_STORAGE = 'usageStorage';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
+    public const MODEL_USAGE_FUNCTION = 'usageFunction';
     public const MODEL_USAGE_PROJECT = 'usageProject';
 
     // Database
@@ -325,6 +327,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageStorage())
             ->setModel(new UsageBuckets())
             ->setModel(new UsageFunctions())
+            ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
             // Verification
             // Recovery

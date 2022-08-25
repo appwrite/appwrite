@@ -4,7 +4,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
-use Appwrite\Stats\Stats;
+use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Executor\Executor;
@@ -359,9 +359,9 @@ class FunctionsV1 extends Worker
             $usage
                 ->setParam('projectId', $project->getId())
                 ->setParam('functionId', $function->getId())
-                ->setParam('functionExecution', 1)
-                ->setParam('functionStatus', $execution->getAttribute('status', ''))
-                ->setParam('functionExecutionTime', $execution->getAttribute('time') * 1000) // ms
+                ->setParam('executions.{scope}.compute', 1)
+                ->setParam('executionStatus', $execution->getAttribute('status', ''))
+                ->setParam('executionTime', $execution->getAttribute('time'))
                 ->setParam('networkRequestSize', 0)
                 ->setParam('networkResponseSize', 0)
                 ->submit();
