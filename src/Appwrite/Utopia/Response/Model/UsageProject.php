@@ -30,7 +30,7 @@ class UsageProject extends Model
                 'example' => new \stdClass(),
                 'array' => true
             ])
-            ->addRule('functions', [
+            ->addRule('executions', [
                 'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function executions.',
                 'default' => [],
