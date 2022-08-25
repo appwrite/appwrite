@@ -1921,7 +1921,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         $permission->getDimension()
                     ))->toString();
                     if (!Authorization::isRole($role)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
             }
@@ -2293,6 +2293,17 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions, [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ]);
+
+        if (\is_null($permissions)) {
+            $permissions = $document->getPermissions() ?? [];
+        }
+
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
@@ -2308,21 +2319,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         $permission->getDimension()
                     ))->toString();
                     if (!Authorization::isRole($role)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
             }
-        }
-
-        // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions, [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
-        ]);
-
-        if (\is_null($permissions)) {
-            $permissions = $document->getPermissions() ?? [];
         }
 
         $data = \array_merge($document->getArrayCopy(), $data);

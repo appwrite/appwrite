@@ -403,7 +403,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         $permission->getDimension()
                     ))->toString();
                     if (!Authorization::isRole($role)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
             }
@@ -1269,6 +1269,17 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
+        // Map aggregate permissions into the multiple permissions they represent.
+        $permissions = Permission::aggregate($permissions, [
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
+        ]);
+
+        if (\is_null($permissions)) {
+            $permissions = $file->getPermissions() ?? [];
+        }
+
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
@@ -1284,18 +1295,11 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
                         $permission->getDimension()
                     ))->toString();
                     if (!Authorization::isRole($role)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
             }
         }
-
-        // Map aggregate permissions into the multiple permissions they represent.
-        $permissions = Permission::aggregate($permissions, [
-            Database::PERMISSION_READ,
-            Database::PERMISSION_UPDATE,
-            Database::PERMISSION_DELETE,
-        ]);
 
         $file->setAttribute('$permissions', $permissions);
 
