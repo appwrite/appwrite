@@ -2253,10 +2253,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             Database::PERMISSION_DELETE,
         ]);
 
-        if (\is_null($permissions)) {
-            $permissions = $document->getPermissions() ?? [];
-        }
-
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
@@ -2276,6 +2272,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     }
                 }
             }
+        }
+
+        if (\is_null($permissions)) {
+            $permissions = $document->getPermissions() ?? [];
         }
 
         $data = \array_merge($document->getArrayCopy(), $data);
