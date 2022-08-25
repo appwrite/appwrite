@@ -56,7 +56,6 @@ class TranscodingV1 extends Worker
         return "Transcoding";
     }
 
-
     public function init(): void
     {
 

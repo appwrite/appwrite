@@ -525,7 +525,7 @@ class VideoCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1506, strlen($response['body']));
+        $this->assertEquals(1508, strlen($response['body']));
 
         $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/streams/dash', [
             'content-type' => 'application/json',
@@ -828,5 +828,19 @@ class VideoCustomServerTest extends Scope
 
         $this->assertTrue($isVideo);
         $this->assertTrue($isAudio);
+    }
+
+
+    public function testGetVideos()
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/videos', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThan(0, $response['body']['total']);
+        $this->assertGreaterThan(0, count($response['body']['videos']));
     }
 }
