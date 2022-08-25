@@ -298,7 +298,7 @@ class TimeSeries extends Calculator
      *
      * @return void
      */
-    private function createOrUpdateMetric(string $projectId, int $time, string $period, string $metric, int $value, int $type): void
+    private function createOrUpdateMetric(string $projectId, string $time, string $period, string $metric, int $value, int $type): void
     {
         $id = \md5("{$time}_{$period}_{$metric}");
         $this->database->setNamespace('_console');
@@ -347,9 +347,9 @@ class TimeSeries extends Calculator
     {
         $start = DateTime::createFromFormat('U', \strtotime($period['startTime']))->format(DateTime::RFC3339);
         if (!empty($this->latestTime[$metric][$period['key']])) {
-            $start = DateTime::createFromFormat('U', $this->latestTime[$metric][$period['key']])->format(DateTime::RFC3339);
+            $start = $this->latestTime[$metric][$period['key']];
         }
-        $end = DateTime::createFromFormat('U', \strtotime('now'))->format(DateTime::RFC3339);
+        $end = (new DateTime())->format(DateTime::RFC3339);
 
         $table = $options['table']; //Which influxdb table to query for this metric
         $groupBy = empty($options['groupBy']) ? '' : ', ' . implode(', ', array_map(fn($groupBy) => '"' . $groupBy . '" ', $options['groupBy'])); //Some sub level metrics may be grouped by other tags like collectionId, bucketId, etc
@@ -387,12 +387,11 @@ class TimeSeries extends Calculator
                         }
                     }
 
-                    $time = DateTime::createFromFormat('U', \strtotime($point['time']))->format(DateTime::RFC3339);
                     $value = (!empty($point['value'])) ? $point['value'] : 0;
 
                     $this->createOrUpdateMetric(
                         $projectId,
-                        $time,
+                        $point['time'],
                         $period['key'],
                         $metricUpdated,
                         $value,

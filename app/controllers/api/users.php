@@ -1109,7 +1109,7 @@ App::get('/v1/users/usage')
             ];
 
             $metrics = [
-                'users.$all.requests.count',
+                'users.$all.count.total',
                 'users.$all.requests.create',
                 'users.$all.requests.read',
                 'users.$all.requests.update',
@@ -1161,7 +1161,7 @@ App::get('/v1/users/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'usersCount' => $stats['users.$all.requests.count'] ?? [],
+                'usersCount' => $stats['users.$all.count.total'] ?? [],
                 'usersCreate' => $stats['users.$all.requests.create'] ?? [],
                 'usersRead' => $stats['users.$all.requests.read'] ?? [],
                 'usersUpdate' => $stats['users.$all.requests.update'] ?? [],
