@@ -104,7 +104,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'orderDesc("$id")' ],
+            'queries' => [ 'orderDesc("")' ],
         ]);
 
         $this->assertEquals(2, $databases['body']['total']);
@@ -380,7 +380,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'orderDesc("$id")' ],
+            'queries' => [ 'orderDesc("")' ],
         ]);
 
         $this->assertEquals(2, $collections['body']['total']);

@@ -155,8 +155,7 @@ App::get('/v1/storage/buckets')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
         $queries = Query::parseQueries($queries);
 
@@ -182,8 +181,6 @@ App::get('/v1/storage/buckets')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $usage->setParam('storage.buckets.read', 1);
 
         $response->dynamic(new Document([
             'buckets' => $dbForProject->find('buckets', $queries),
@@ -655,7 +652,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $bucketId, array $queries, string $search, Response $response, Database $dbForProject, Stats $usage, string $mode) {
+    ->action(function (string $bucketId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
