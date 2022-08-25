@@ -82,7 +82,7 @@ class Func extends Model
             ])
             ->addRule('scheduleNext', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function next scheduled execution date in Datetime.',
+                'description' => 'Function's next scheduled execution time in Datetime.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
