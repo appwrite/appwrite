@@ -14,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\ID;
@@ -571,6 +572,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
                     $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                 }
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
             } catch (StructureException $exception) {
                 throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
             } catch (DuplicateException) {
@@ -605,6 +608,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
                     $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                 }
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
             } catch (StructureException $exception) {
                 throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
             } catch (DuplicateException) {
@@ -741,7 +746,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($fileSecurity && !$valid) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            try {
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         } else {
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
@@ -820,7 +829,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $key = \md5($fileId . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
 
         if ($fileSecurity && !$valid) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            try {
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         } else {
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
@@ -954,7 +967,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         if ($fileSecurity && !$valid) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            try {
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         } else {
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
@@ -1085,7 +1102,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         }
 
         if ($fileSecurity && !$valid) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            try {
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         } else {
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
@@ -1270,7 +1291,15 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $file->setAttribute('$permissions', $permissions);
 
-        $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
+        if ($fileSecurity && !$valid) {
+            try {
+                $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+        } else {
+            $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+        }
 
         $events
             ->setParam('bucketId', $bucket->getId())
@@ -1325,6 +1354,11 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
+        // Make sure we don't delete the file before the document permission check occurs
+        if ($fileSecurity && !$valid && !$validator->isValid($file->getDelete())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
         $deviceDeleted = false;
         if ($file->getAttribute('chunksTotal') !== $file->getAttribute('chunksUploaded')) {
             $deviceDeleted = $deviceFiles->abort(
@@ -1341,8 +1375,13 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                 ->setResource('file/' . $fileId)
             ;
 
-            if ($fileSecurity && !$valid) {
-                $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            // Don't need to check valid here because we already ensured validity
+            if ($fileSecurity) {
+                try {
+                    $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                } catch (AuthorizationException) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
             } else {
                 $deleted = Authorization::skip(fn() => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
             }

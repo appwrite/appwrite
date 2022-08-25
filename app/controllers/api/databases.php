@@ -2067,7 +2067,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         if ($documentSecurity && !$valid) {
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+            try {
+                $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         } else {
             $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
         }
@@ -2080,7 +2084,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
          * Reset $collection attribute to remove prefix.
          */
         $document->setAttribute('$collection', $collectionId);
-
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -2292,6 +2295,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
              * Reset $collection attribute to remove prefix.
              */
             $document->setAttribute('$collection', $collectionId);
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (DuplicateException) {
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         } catch (StructureException $exception) {
@@ -2363,7 +2368,11 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         }
 
         if ($documentSecurity && !$valid) {
-             $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+            try {
+                $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         } else {
             Authorization::skip(fn() => $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
         }
