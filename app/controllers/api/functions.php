@@ -420,7 +420,6 @@ App::put('/v1/functions/:functionId')
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
-    ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
@@ -1319,7 +1318,7 @@ App::post('/v1/functions/:functionId/variables')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND, 'Function not found');
         }
 
         $variable = new Document([
@@ -1338,7 +1337,7 @@ App::post('/v1/functions/:functionId/variables')
         try {
             $variable = $dbForProject->createDocument('variables', $variable);
         } catch (DuplicateException $th) {
-            throw new Exception('Variable key already used.', 409, Exception::VARIABLE_ALREADY_EXISTS);
+            throw new Exception(Exception::VARIABLE_ALREADY_EXISTS, 'Variable key already used.');
         }
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
@@ -1366,7 +1365,7 @@ App::get('/v1/functions/:functionId/variables')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND, 'Function not found');
         }
 
         $variables = $function['vars'];
@@ -1396,7 +1395,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND, 'Function not found');
         }
 
         $variable = $dbForProject->findOne('variables', [
@@ -1405,7 +1404,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         ]);
 
         if ($variable === false || $variable->isEmpty()) {
-            throw new Exception('Variable not found', 404, Exception::VARIABLE_NOT_FOUND);
+            throw new Exception(Exception::VARIABLE_NOT_FOUND, 'Variable not found');
         }
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
@@ -1430,13 +1429,13 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $variableId, ?string $key, ?string $value, Response $response, Database $dbForProject) {
         if (empty($key) && empty($value)) {
-            throw new Exception('Missing key or value. Define at least one.', 400, Exception::VARIABLE_MISSING_PAYLOAD);
+            throw new Exception(Exception::VARIABLE_MISSING_PAYLOAD, 'Missing key or value. Define at least one.');
         }
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND, 'Function not found');
         }
 
         $variable = $dbForProject->findOne('variables', [
@@ -1445,7 +1444,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         ]);
 
         if ($variable === false || $variable->isEmpty()) {
-            throw new Exception('Variable not found', 404, Exception::VARIABLE_NOT_FOUND);
+            throw new Exception(Exception::VARIABLE_NOT_FOUND, 'Variable not found');
         }
 
         $variable
@@ -1456,7 +1455,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         try {
             $dbForProject->updateDocument('variables', $variable->getId(), $variable);
         } catch (DuplicateException $th) {
-            throw new Exception('Variable key already used.', 409, Exception::VARIABLE_ALREADY_EXISTS);
+            throw new Exception(Exception::VARIABLE_ALREADY_EXISTS, 'Variable key already used.');
         }
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
@@ -1482,7 +1481,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception('Function not found', 404, Exception::FUNCTION_NOT_FOUND);
+            throw new Exception(Exception::FUNCTION_NOT_FOUND, 'Function not found');
         }
 
         $variable = $dbForProject->findOne('variables', [
@@ -1491,7 +1490,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         ]);
 
         if ($variable === false || $variable->isEmpty()) {
-            throw new Exception('Variable not found', 404, Exception::VARIABLE_NOT_FOUND);
+            throw new Exception(Exception::VARIABLE_NOT_FOUND, 'Variable not found');
         }
 
         $dbForProject->deleteDocument('variables', $variable->getId());
