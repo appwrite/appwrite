@@ -70,8 +70,8 @@ App::post('/v1/teams')
             '$id' => $teamId,
             '$permissions' => [
                 Permission::read(Role::team($teamId)),
-                Permission::update(Role::team($teamId), 'owner'),
-                Permission::delete(Role::team($teamId), 'owner'),
+                Permission::update(Role::team($teamId, 'owner')),
+                Permission::delete(Role::team($teamId, 'owner')),
             ],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
@@ -819,14 +819,6 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
-        }
-
-        /**
-         * Force document security
-         */
-        $validator = new Authorization('delete');
-        if (!$validator->isValid($membership->getDelete())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         try {

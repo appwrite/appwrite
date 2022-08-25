@@ -643,23 +643,23 @@
          * /account/verification/phone](/docs/client/account#accountCreatePhoneVerification)
          * endpoint to send a confirmation SMS.
          *
-         * @param {string} number
+         * @param {string} phone
          * @param {string} password
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updatePhone(number, password) {
+        updatePhone(phone, password) {
             return __awaiter(this, void 0, void 0, function* () {
-                if (typeof number === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "number"');
+                if (typeof phone === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "phone"');
                 }
                 if (typeof password === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "password"');
                 }
                 let path = '/account/phone';
                 let payload = {};
-                if (typeof number !== 'undefined') {
-                    payload['number'] = number;
+                if (typeof phone !== 'undefined') {
+                    payload['phone'] = phone;
                 }
                 if (typeof password !== 'undefined') {
                     payload['password'] = password;
@@ -1051,25 +1051,25 @@
          * is valid for 15 minutes.
          *
          * @param {string} userId
-         * @param {string} number
+         * @param {string} phone
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createPhoneSession(userId, number) {
+        createPhoneSession(userId, phone) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
                 }
-                if (typeof number === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "number"');
+                if (typeof phone === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "phone"');
                 }
                 let path = '/account/sessions/phone';
                 let payload = {};
                 if (typeof userId !== 'undefined') {
                     payload['userId'] = userId;
                 }
-                if (typeof number !== 'undefined') {
-                    payload['number'] = number;
+                if (typeof phone !== 'undefined') {
+                    payload['phone'] = phone;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
@@ -1078,7 +1078,7 @@
             });
         }
         /**
-         * Create Phone session (confirmation)
+         * Create Phone Session (confirmation)
          *
          * Use this endpoint to complete creating a session with SMS. Use the
          * **userId** from the
@@ -3188,6 +3188,27 @@
             });
         }
         /**
+         * Get Functions Usage
+         *
+         *
+         * @param {string} range
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        getUsage(range) {
+            return __awaiter(this, void 0, void 0, function* () {
+                let path = '/functions/usage';
+                let payload = {};
+                if (typeof range !== 'undefined') {
+                    payload['range'] = range;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('get', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
          * Get Function
          *
          * Get a function by its unique ID.
@@ -3641,7 +3662,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getUsage(functionId, range) {
+        getFunctionUsage(functionId, range) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
@@ -6163,21 +6184,16 @@
          *
          * @param {string} userId
          * @param {string} email
+         * @param {string} phone
          * @param {string} password
          * @param {string} name
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        create(userId, email, password, name) {
+        create(userId, email, phone, password, name) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
-                }
-                if (typeof email === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "email"');
-                }
-                if (typeof password === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "password"');
                 }
                 let path = '/users';
                 let payload = {};
@@ -6186,6 +6202,9 @@
                 }
                 if (typeof email !== 'undefined') {
                     payload['email'] = email;
+                }
+                if (typeof phone !== 'undefined') {
+                    payload['phone'] = phone;
                 }
                 if (typeof password !== 'undefined') {
                     payload['password'] = password;

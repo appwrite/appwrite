@@ -40,7 +40,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\Stats\Stats;
+use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
 use Utopia\Database\ID;

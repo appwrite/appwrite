@@ -6,6 +6,7 @@ use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Cron\CronExpression;
 use Executor\Executor;
+use Appwrite\Usage\Stats;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\App;
@@ -214,6 +215,22 @@ class BuildsV1 extends Worker
                 channels: $target['channels'],
                 roles: $target['roles']
             );
+
+            /** Update usage stats */
+            global $register;
+            if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
+                $statsd = $register->get('statsd');
+                $usage = new Stats($statsd);
+                $usage
+                    ->setParam('projectId', $project->getId())
+                    ->setParam('functionId', $function->getId())
+                    ->setParam('builds.{scope}.compute', 1)
+                    ->setParam('buildStatus', $build->getAttribute('status', ''))
+                    ->setParam('buildTime', $build->getAttribute('duration'))
+                    ->setParam('networkRequestSize', 0)
+                    ->setParam('networkResponseSize', 0)
+                    ->submit();
+            }
         }
     }
 
