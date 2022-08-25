@@ -300,7 +300,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
-        sleep(30);
+        $i = 0;
+        do {
+            $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => ['equal("$id", "' . $deploymentId . '")'],
+            ]);
+            $deployment = $response['body']['deployments'][0];
+            $i++;
+        } while ($i < 100 && $deployment['status'] !== 'ready');
 
         return array_merge($data, ['deploymentId' => $deploymentId]);
     }
@@ -497,12 +507,14 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertEquals(0, $execution['body']['time']);
 
-        sleep(5);
-
-        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        $i = 0;
+        do {
+            $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $i++;
+        } while ($i < 100 && $execution['body']['status'] !== 'completed');
 
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
@@ -735,10 +747,21 @@ class FunctionsCustomServerTest extends Scope
             'activate' => true,
         ]);
 
+        $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(20);
+        $i = 0;
+        do {
+            $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => ['equal("$id", "' . $deploymentId . '")'],
+            ]);
+            $deployment = $response['body']['deployments'][0];
+            $i++;
+        } while ($i < 100 && $deployment['status'] !== 'ready');
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -751,7 +774,14 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $execution['headers']['status-code']);
 
-        sleep(10);
+        $i = 0;
+        do {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $i++;
+        } while ($i < 100 && $executions['body']['status'] !== 'failed');
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -823,7 +853,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(10);
+        $i = 0;
+        do {
+            $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => ['equal("$id", "' . $deploymentId . '")'],
+            ]);
+            $deployment = $response['body']['deployments'][0];
+            $i++;
+        } while ($i < 100 && $deployment['status'] !== 'ready');
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -845,7 +885,14 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
+        $i = 0;
+        do {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $i++;
+        } while ($i < 100 && $executions['body']['status'] !== 'completed');
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -936,7 +983,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(10);
+        $i = 0;
+        do {
+            $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => ['equal("$id", "' . $deploymentId . '")'],
+            ]);
+            $deployment = $response['body']['deployments'][0];
+            $i++;
+        } while ($i < 100 && $deployment['status'] !== 'ready');
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -951,12 +1008,14 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        $i = 0;
+        do {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $i++;
+        } while ($i < 100 && $executions['body']['status'] !== 'completed');
 
         $output = json_decode($executions['body']['response'], true);
 
@@ -1041,7 +1100,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(30);
+        $i = 0;
+        do {
+            $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => ['equal("$id", "' . $deploymentId . '")'],
+            ]);
+            $deployment = $response['body']['deployments'][0];
+            $i++;
+        } while ($i < 100 && $deployment['status'] !== 'ready');
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1056,12 +1125,14 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(30);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        $i = 0;
+        do {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $i++;
+        } while ($i < 100 && $executions['body']['status'] !== 'completed');
 
         $output = json_decode($executions['body']['response'], true);
 
@@ -1146,7 +1217,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(40);
+        $i = 0;
+        do {
+            $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => ['equal("$id", "' . $deploymentId . '")'],
+            ]);
+            $deployment = $response['body']['deployments'][0];
+            $i++;
+        } while ($i < 100 && $deployment['status'] !== 'ready');
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1161,12 +1242,14 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        $i = 0;
+        do {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $i++;
+        } while ($i < 100 && $executions['body']['status'] !== 'completed');
 
         $output = json_decode($executions['body']['response'], true);
 
@@ -1251,7 +1334,17 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(30);
+        $i = 0;
+        do {
+            $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => ['equal("$id", "' . $deploymentId . '")'],
+            ]);
+            $deployment = $response['body']['deployments'][0];
+            $i++;
+        } while ($i < 100 && $deployment['status'] !== 'ready');
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1266,12 +1359,14 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        $i = 0;
+        do {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $i++;
+        } while ($i < 100 && $executions['body']['status'] !== 'completed');
 
         $output = json_decode($executions['body']['response'], true);
 

@@ -1082,13 +1082,23 @@ class DatabasesCustomServerTest extends Scope
             $this->assertEquals(202, $attribute['headers']['status-code']);
         }
 
-        sleep(20);
-
-        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
+        $i = 0;
+        do {
+            $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+            $attributes = $collection['body']['attributes'];
+            $ready = true;
+            foreach ($attributes as $attribute) {
+                if ($attribute['status'] !== 'available') {
+                    $ready = false;
+                    break;
+                }
+            }
+            $i++;
+        } while ($i < 100 && !$ready);
 
         $this->assertEquals(200, $collection['headers']['status-code']);
         $this->assertEquals($collection['body']['name'], 'testLimitException');
@@ -1120,7 +1130,23 @@ class DatabasesCustomServerTest extends Scope
             $this->assertEquals("key_attribute{$i}", $index['body']['key']);
         }
 
-        sleep(5);
+        $i = 0;
+        do {
+            $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+            $indexes = $collection['body']['indexes'];
+            $ready = true;
+            foreach ($indexes as $index) {
+                if ($index['status'] !== 'available') {
+                    $ready = false;
+                    break;
+                }
+            }
+            $i++;
+        } while ($i < 100 && !$ready);
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',

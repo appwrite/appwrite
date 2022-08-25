@@ -429,7 +429,23 @@ trait DatabasesBase
         $this->assertEquals(null, $datetime['body']['default']);
 
         // wait for database worker to create attributes
-        sleep(30);
+        $i = 0;
+        do {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+            $attributes = $response['body']['attributes'];
+            $ready = true;
+            foreach ($attributes as $attribute) {
+                if ($attribute['status'] !== 'available') {
+                    $ready = false;
+                    break;
+                }
+            }
+            $i++;
+        } while ($i < 100 && !$ready);
 
         $stringResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $string['body']['key'], array_merge([
             'content-type' => 'application/json',
