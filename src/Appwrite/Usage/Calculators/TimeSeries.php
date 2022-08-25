@@ -387,7 +387,7 @@ class TimeSeries extends Calculator
                         }
                     }
 
-                    $time = \strtotime($point['time']);
+                    $time = DateTime::createFromFormat('U', \strtotime($point['time']))->format(DateTime::RFC3339);
                     $value = (!empty($point['value'])) ? $point['value'] : 0;
 
                     $this->createOrUpdateMetric(

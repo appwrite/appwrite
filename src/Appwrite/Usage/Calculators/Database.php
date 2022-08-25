@@ -4,6 +4,7 @@ namespace Appwrite\Usage\Calculators;
 
 use Exception;
 use Appwrite\Usage\Calculator;
+use DateTime;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
@@ -60,7 +61,7 @@ class Database extends Calculator
 
         // Required for billing
         if ($monthly) {
-            $time = strtotime("first day of the month");
+            $time = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-01\T00:00:00.000'))->format(DateTime::RFC3339);
             $this->createOrUpdateMetric($projectId, $metric, '1mo', $time, $value);
         }
     }
