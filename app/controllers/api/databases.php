@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Permissions\PermissionsProcessor;
 use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
@@ -2025,9 +2024,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         if (!empty($cursor)) {
-            $cursorDocument = $documentSecurity
-                ? $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor)
-                : Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor));
+            if ($documentSecurity && !$valid) {
+                $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
+            } else {
+                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor));
+            }
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Document '{$cursor}' for the 'cursor' value not found.");
@@ -2165,6 +2166,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
@@ -2284,6 +2286,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
+        // Read permission should not be required for update
         $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
@@ -2407,6 +2410,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
+        // Read permission should not be required for delete
         $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
