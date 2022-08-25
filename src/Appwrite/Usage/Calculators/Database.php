@@ -112,7 +112,7 @@ class Database extends Calculator
 
     /**
      * Foreach Document
-     * 
+     *
      * Call provided callback for each document in the collection
      *
      * @param string $projectId
@@ -163,7 +163,7 @@ class Database extends Calculator
 
     /**
      * Sum
-     * 
+     *
      * Calculate sum of a attribute of documents in collection
      *
      * @param string $projectId
@@ -198,7 +198,7 @@ class Database extends Calculator
 
     /**
      * Count
-     * 
+     *
      * Count number of documents in collection
      *
      * @param string $projectId
@@ -230,7 +230,7 @@ class Database extends Calculator
 
     /**
      * Deployments Total
-     * 
+     *
      * Total sum of storage used by deployments
      *
      * @param string $projectId
@@ -245,7 +245,7 @@ class Database extends Calculator
 
     /**
      * Users Stats
-     * 
+     *
      * Metric: users.count
      *
      * @param string $projectId
@@ -260,7 +260,7 @@ class Database extends Calculator
 
     /**
      * Storage Stats
-     * 
+     *
      * Metrics: buckets.$all.count.total, files.$all.count.total, files.bucketId,count.total,
      * files.$all.storage.size, files.bucketId.storage.size, project.$all.storage.size
      *
@@ -297,7 +297,7 @@ class Database extends Calculator
 
     /**
      * Database Stats
-     * 
+     *
      * Collect all database stats
      * Metrics: databases.$all.count.total, collections.$all.count.total, collections.databaseId.count.total,
      * documents.$all.count.all, documents.databaseId.count.total, documents.databaseId/collectionId.count.total
@@ -338,7 +338,7 @@ class Database extends Calculator
 
     /**
      * Collect Stats
-     * 
+     *
      * Collect all database related stats
      *
      * @return void
