@@ -46,7 +46,15 @@ class Database extends Calculator
     {
         foreach ($this->periods as $options) {
             $period = $options['key'];
-            $time = (int) (floor(time() / $options['multiplier']) * $options['multiplier']);
+            $date = new \DateTime();
+            if ($period === '30m') {
+                $minutes = $date->format('i') >= '30' ? "30" : "00";
+                $time = $date->format('Y-m-d H:' . $minutes . ':00');
+            } elseif ($period === '1d') {
+                $time = $date->format('Y-m-d 00:00:00');
+            } else {
+                throw new Exception("Period type not found", 500);
+            }
             $this->createOrUpdateMetric($projectId, $metric, $period, $time, $value);
         }
 
@@ -65,25 +73,15 @@ class Database extends Calculator
      * @param string $projectId
      * @param string $metric
      * @param string $period
-     * @param int $time
+     * @param string $time
      * @param int $value
      *
      * @return void
      * @throws Authorization
      * @throws Structure
      */
-    protected function createOrUpdateMetric(string $projectId, string $metric, string $period, int $time, int $value): void
+    protected function createOrUpdateMetric(string $projectId, string $metric, string $period, string $time, int $value): void
     {
-        $date = new \DateTime();
-        if ($period === '30m') {
-            $minutes = $date->format('i') >= '30' ? "30" : "00";
-            $time = $date->format('Y-m-d H:' . $minutes . ':00');
-        } elseif ($period === '1d') {
-            $time = $date->format('Y-m-d 00:00:00');
-        } else {
-            throw new Exception("Period type not found", 500);
-        }
-
         $id = \md5("{$time}_{$period}_{$metric}");
         $this->database->setNamespace('_' . $projectId);
 
