@@ -88,7 +88,7 @@ class Func extends Model
             ])
             ->addRule('schedulePrevious', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function Previous scheduled execution date in Datetime.',
+                'description' => 'Function's previous scheduled execution time in Datetime.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
