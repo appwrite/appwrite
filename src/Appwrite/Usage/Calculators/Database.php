@@ -6,6 +6,8 @@ use Exception;
 use Appwrite\Usage\Calculator;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization;
+use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
 
 class Database extends Calculator
@@ -34,14 +36,24 @@ class Database extends Calculator
      * @param string $projectId
      * @param string $metric
      * @param int $value
-     *
+     * @param bool $monthly
      * @return void
+     * @throws Authorization
+     * @throws Structure
      */
     protected function createPerPeriodMetric(string $projectId, string $metric, int $value, bool $monthly = false): void
     {
         foreach ($this->periods as $options) {
             $period = $options['key'];
-            $time = (int) (floor(time() / $options['multiplier']) * $options['multiplier']);
+            $date = new \DateTime();
+            if ($period === '30m') {
+                $minutes = $date->format('i') >= '30' ? "30" : "00";
+                $time = $date->format('Y-m-d H:' . $minutes . ':00');
+            } elseif ($period === '1d') {
+                $time = $date->format('Y-m-d 00:00:00');
+            } else {
+                throw new Exception("Period type not found", 500);
+            }
             $this->createOrUpdateMetric($projectId, $metric, $period, $time, $value);
         }
 
@@ -58,23 +70,16 @@ class Database extends Calculator
      *
      * @param string $projectId
      * @param string $metric
+     * @param string $period
+     * @param string $time
      * @param int $value
      *
      * @return void
-     * @throws Exception
+     * @throws Authorization
+     * @throws Structure
      */
-    protected function createOrUpdateMetric(string $projectId, string $metric, string $period, int $time, int $value): void
+    protected function createOrUpdateMetric(string $projectId, string $metric, string $period, string $time, int $value): void
     {
-        $date = new \DateTime();
-        if ($period === '30m') {
-            $minutes = $date->format('i') >= '30' ? "30" : "00";
-            $time = $date->format('Y-m-d H:' . $minutes . ':00');
-        } elseif ($period === '1d') {
-            $time = $date->format('Y-m-d 00:00:00');
-        } else {
-            throw new Exception("Period type not found", 500);
-        }
-
         $id = \md5("{$time}_{$period}_{$metric}");
         $this->database->setNamespace('_' . $projectId);
 
@@ -107,6 +112,7 @@ class Database extends Calculator
 
     /**
      * Foreach Document
+     * 
      * Call provided callback for each document in the collection
      *
      * @param string $projectId
@@ -115,6 +121,7 @@ class Database extends Calculator
      * @param callable $callback
      *
      * @return void
+     * @throws Exception
      */
     protected function foreachDocument(string $projectId, string $collection, array $queries, callable $callback): void
     {
@@ -156,13 +163,14 @@ class Database extends Calculator
 
     /**
      * Sum
+     * 
      * Calculate sum of a attribute of documents in collection
      *
      * @param string $projectId
      * @param string $collection
      * @param string $attribute
-     * @param string $metric
-     *
+     * @param string|null $metric
+     * @param int $multiplier
      * @return int
      * @throws Exception
      */
@@ -190,16 +198,17 @@ class Database extends Calculator
 
     /**
      * Count
+     * 
      * Count number of documents in collection
      *
      * @param string $projectId
      * @param string $collection
-     * @param string? $metric
+     * @param ?string $metric
      *
      * @return int
      * @throws Exception
      */
-    private function count(string $projectId, string $collection, string $metric = null): int
+    private function count(string $projectId, string $collection, ?string $metric = null): int
     {
         $this->database->setNamespace('_' . $projectId);
 
@@ -221,11 +230,13 @@ class Database extends Calculator
 
     /**
      * Deployments Total
+     * 
      * Total sum of storage used by deployments
      *
      * @param string $projectId
      *
      * @return int
+     * @throws Exception
      */
     private function deploymentsTotal(string $projectId): int
     {
@@ -234,11 +245,13 @@ class Database extends Calculator
 
     /**
      * Users Stats
+     * 
      * Metric: users.count
      *
      * @param string $projectId
      *
      * @return void
+     * @throws Exception
      */
     private function usersStats(string $projectId): void
     {
@@ -247,12 +260,15 @@ class Database extends Calculator
 
     /**
      * Storage Stats
+     * 
      * Metrics: buckets.$all.count.total, files.$all.count.total, files.bucketId,count.total,
      * files.$all.storage.size, files.bucketId.storage.size, project.$all.storage.size
      *
      * @param string $projectId
      *
      * @return void
+     * @throws Authorization
+     * @throws Structure
      */
     private function storageStats(string $projectId): void
     {
@@ -281,6 +297,7 @@ class Database extends Calculator
 
     /**
      * Database Stats
+     * 
      * Collect all database stats
      * Metrics: databases.$all.count.total, collections.$all.count.total, collections.databaseId.count.total,
      * documents.$all.count.all, documents.databaseId.count.total, documents.databaseId/collectionId.count.total
@@ -288,6 +305,8 @@ class Database extends Calculator
      * @param string $projectId
      *
      * @return void
+     * @throws Authorization
+     * @throws Structure
      */
     private function databaseStats(string $projectId): void
     {
@@ -319,9 +338,11 @@ class Database extends Calculator
 
     /**
      * Collect Stats
+     * 
      * Collect all database related stats
      *
      * @return void
+     * @throws Exception
      */
     public function collect(): void
     {
