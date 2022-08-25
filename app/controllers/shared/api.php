@@ -7,7 +7,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Stats\Stats;
+use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
 use Utopia\App;
@@ -145,13 +145,10 @@ App::init()
 
         $usage
             ->setParam('projectId', $project->getId())
-            ->setParam('httpRequest', 1)
-            ->setParam('httpUrl', $request->getHostname() . $request->getURI())
+            ->setParam('project.{scope}.network.requests', 1)
             ->setParam('httpMethod', $request->getMethod())
-            ->setParam('httpPath', $route->getPath())
-            ->setParam('networkRequestSize', 0)
-            ->setParam('networkResponseSize', 0)
-            ->setParam('storage', 0);
+            ->setParam('project.{scope}.network.inbound', 0)
+            ->setParam('project.{scope}.network.outbound', 0);
 
         $deletes->setProject($project);
         $database->setProject($project);
@@ -285,7 +282,7 @@ App::shutdown()
                 $bucket = $events->getContext('bucket');
 
                 $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
+                    // Pass first, most verbose event pattern
                     event: $allEvents[0],
                     payload: $payload,
                     project: $project,
@@ -402,10 +399,31 @@ App::shutdown()
             && $project->getId()
             && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
             && !empty($route->getLabel('sdk.namespace', null))
-        ) {
+        ) { // Don't calculate console usage on admin mode
+            $metric = $route->getLabel('usage.metric', '');
+            $usageParams = $route->getLabel('usage.params', '');
+
+            if (!empty($metric)) {
+                $usage->setParam($metric, 1);
+                foreach ($usageParams as $param) {
+                    $param = $parseLabel($param, $responsePayload, $requestParams, $user);
+                    $parts = explode(':', $param);
+                    if (count($parts) != 2) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Usage params not properly set');
+                    }
+                    $usage->setParam($parts[0], $parts[1]);
+                }
+            }
+
+            $fileSize = 0;
+            $file = $request->getFiles('file');
+            if (!empty($file)) {
+                $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+            }
+
             $usage
-            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-            ->setParam('networkResponseSize', $response->getSize())
-            ->submit();
+                ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
+                ->setParam('project.{scope}.network.outbound', $response->getSize())
+                ->submit();
         }
     });
