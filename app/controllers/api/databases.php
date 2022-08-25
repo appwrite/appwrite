@@ -242,8 +242,7 @@ App::get('/v1/databases')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
         $queries = Query::parseQueries($queries);
 
@@ -269,8 +268,6 @@ App::get('/v1/databases')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $usage->setParam('databases.read', 1);
 
         $response->dynamic(new Document([
             'databases' => $dbForProject->find('databases', $queries),
@@ -562,8 +559,7 @@ App::get('/v1/databases/:databaseId/collections')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -595,10 +591,6 @@ App::get('/v1/databases/:databaseId/collections')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
 
         $response->dynamic(new Document([
             'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries),
@@ -1302,9 +1294,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1314,7 +1305,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             'default' => $default,
             'array' => $array,
             'filters' => ['datetime']
-        ]), $response, $dbForProject, $database, $events, $usage);
+        ]), $response, $dbForProject, $database, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
@@ -1962,7 +1953,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Stats $usage, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 

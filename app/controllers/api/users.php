@@ -347,8 +347,7 @@ App::get('/v1/users')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
         $queries = Query::parseQueries($queries);
 
@@ -374,8 +373,6 @@ App::get('/v1/users')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-
-        $usage->setParam('users.read', 1);
 
         $response->dynamic(new Document([
             'users' => $dbForProject->find('users', $queries),
@@ -537,8 +534,7 @@ App::get('/v1/users/:userId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('usage')
-    ->action(function (string $userId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Stats $usage) {
+    ->action(function (string $userId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -738,7 +734,8 @@ App::patch('/v1/users/:userId/name')
 
         $user
             ->setAttribute('name', $name)
-            ->setAttribute('search', \implode(' ', [$user->getId(), $user->getAttribute('email', ''), $name, $user->getAttribute('phone', '')]));;
+            ->setAttribute('search', \implode(' ', [$user->getId(), $user->getAttribute('email', ''), $name, $user->getAttribute('phone', '')]));
+        ;
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -864,7 +861,8 @@ App::patch('/v1/users/:userId/phone')
         $user
             ->setAttribute('phone', $number)
             ->setAttribute('phoneVerification', false)
-            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $number]));;
+            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $number]));
+        ;
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
