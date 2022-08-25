@@ -54,7 +54,7 @@ class Session extends Model
             ])
             ->addRule('providerAccessTokenExpiry', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'The date of when the access token expires in datetime format.',
+                'description' => 'The date of when the access token expires in Datetime format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
