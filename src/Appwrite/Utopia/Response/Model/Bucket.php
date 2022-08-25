@@ -18,7 +18,7 @@ class Bucket extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Bucket creation date in Datetime',
+                'description' => 'Bucket creation time in Datetime',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
