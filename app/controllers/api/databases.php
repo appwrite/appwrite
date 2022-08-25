@@ -42,7 +42,6 @@ use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
-use Appwrite\Stats\Stats;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
 
@@ -53,7 +52,7 @@ use MaxMind\Db\Reader;
  * @return Document Newly created attribute document
  * @throws Exception
  */
-function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $database, Event $events, Stats $usage): Document
+function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $database, Event $events): Document
 {
     $key = $attribute->getAttribute('key');
     $type = $attribute->getAttribute('type', '');
@@ -125,10 +124,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
     $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
-    $usage
-        ->setParam('databaseId', $databaseId)
-        ->setParam('databases.collections.update', 1);
-
     $database
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
@@ -155,6 +150,7 @@ App::post('/v1/databases')
     ->label('event', 'databases.[databaseId].create')
     ->label('scope', 'databases.write')
     ->label('audits.resource', 'database/{response.$id}')
+    ->label('usage.metric', 'databases.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'create')
@@ -166,9 +162,8 @@ App::post('/v1/databases')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, Event $events) {
 
         $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
@@ -217,7 +212,6 @@ App::post('/v1/databases')
         }
 
         $events->setParam('databaseId', $database->getId());
-        $usage->setParam('databases.create', 1);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($database, Response::MODEL_DATABASE);
@@ -227,6 +221,7 @@ App::get('/v1/databases')
     ->desc('List Databases')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
+    ->label('usage.metric', 'databases.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'list')
@@ -242,8 +237,7 @@ App::get('/v1/databases')
     ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
         $filterQueries = [];
 
@@ -265,8 +259,6 @@ App::get('/v1/databases')
             $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
-        $usage->setParam('databases.read', 1);
-
         $response->dynamic(new Document([
             'databases' => $dbForProject->find('databases', \array_merge($filterQueries, $queries)),
             'total' => $dbForProject->count('databases', $filterQueries, APP_LIMIT_COUNT),
@@ -277,6 +269,7 @@ App::get('/v1/databases/:databaseId')
     ->desc('Get Database')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
+    ->label('usage.metric', 'databases.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'get')
@@ -287,16 +280,13 @@ App::get('/v1/databases/:databaseId')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $databaseId, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $databaseId, Response $response, Database $dbForProject) {
 
         $database =  $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
-
-        $usage->setParam('databases.read', 1);
 
         $response->dynamic($database, Response::MODEL_DATABASE);
     });
@@ -386,6 +376,7 @@ App::put('/v1/databases/:databaseId')
     ->label('scope', 'databases.write')
     ->label('event', 'databases.[databaseId].update')
     ->label('audits.resource', 'database/{response.$id}')
+    ->label('usage.metric', 'databases.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'update')
@@ -397,9 +388,8 @@ App::put('/v1/databases/:databaseId')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, Event $events) {
 
         $database =  $dbForProject->getDocument('databases', $databaseId);
 
@@ -417,7 +407,6 @@ App::put('/v1/databases/:databaseId')
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
         }
 
-        $usage->setParam('databases.update', 1);
         $events->setParam('databaseId', $database->getId());
 
         $response->dynamic($database, Response::MODEL_DATABASE);
@@ -429,6 +418,7 @@ App::delete('/v1/databases/:databaseId')
     ->label('scope', 'databases.write')
     ->label('event', 'databases.[databaseId].delete')
     ->label('audits.resource', 'database/{request.databaseId}')
+    ->label('usage.metric', 'databases.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'delete')
@@ -440,8 +430,7 @@ App::delete('/v1/databases/:databaseId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
-    ->inject('usage')
-    ->action(function (string $databaseId, Response $response, Database $dbForProject, Event $events, Delete $deletes, Stats $usage) {
+    ->action(function (string $databaseId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -465,8 +454,6 @@ App::delete('/v1/databases/:databaseId')
             ->setPayload($response->output($database, Response::MODEL_DATABASE))
         ;
 
-        $usage->setParam('databases.delete', 1);
-
         $response->noContent();
     });
 
@@ -477,6 +464,8 @@ App::post('/v1/databases/:databaseId/collections')
     ->label('event', 'databases.[databaseId].collections.[collectionId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
+    ->label('usage.metric', 'collections.{scope}.requests.create')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createCollection')
@@ -491,9 +480,8 @@ App::post('/v1/databases/:databaseId/collections')
     ->param('documentSecurity', false, new Boolean(true), 'Specifies the permissions model used in this collection, which accepts either \'collection\' or \'document\'. For \'collection\' level permission, the permissions specified in read and write params are applied to all documents in the collection. For \'document\' level permissions, read and write permissions are specified in each document. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, Response $response, Database $dbForProject, Event $events) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -531,10 +519,6 @@ App::post('/v1/databases/:databaseId/collections')
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId());
 
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.create', 1);
-
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
@@ -544,6 +528,8 @@ App::get('/v1/databases/:databaseId/collections')
     ->desc('List Collections')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('usage.metric', 'collections.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listCollections')
@@ -560,8 +546,7 @@ App::get('/v1/databases/:databaseId/collections')
     ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $databaseId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $databaseId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -591,10 +576,6 @@ App::get('/v1/databases/:databaseId/collections')
                 : Query::cursorBefore($cursorDocument);
         }
 
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
-
         $response->dynamic(new Document([
             'collections' => $dbForProject->find('database_' . $database->getInternalId(), \array_merge($filterQueries, $queries)),
             'total' => $dbForProject->count('database_' . $database->getInternalId(), $filterQueries, APP_LIMIT_COUNT),
@@ -606,6 +587,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->desc('Get Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('usage.metric', 'collections.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getCollection')
@@ -617,8 +600,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -632,10 +614,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
-
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
@@ -644,6 +622,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->desc('List Collection Logs')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('usage.metric', 'collections.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listCollectionLogs')
@@ -736,6 +716,8 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateCollection')
@@ -751,9 +733,8 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->param('enabled', true, new Boolean(), 'Is collection enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, Event $events) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -787,10 +768,6 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
         }
 
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.update', 1);
-
         $events
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
@@ -806,6 +783,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.delete')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteCollection')
@@ -818,8 +797,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
-    ->inject('usage')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Event $events, Delete $deletes, Stats $usage) {
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -851,10 +829,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
             ->setPayload($response->output($collection, Response::MODEL_COLLECTION))
         ;
 
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.delete', 1);
-
         $response->noContent();
     });
 
@@ -865,6 +839,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createStringAttribute')
@@ -882,9 +858,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         // Ensure attribute default is within required size
         $validator = new Text($size);
@@ -899,7 +874,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'required' => $required,
             'default' => $default,
             'array' => $array,
-        ]), $response, $dbForProject, $database, $events, $usage);
+        ]), $response, $dbForProject, $database, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
@@ -912,6 +887,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEmailAttribute')
@@ -928,9 +905,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -940,7 +916,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_EMAIL,
-        ]), $response, $dbForProject, $database, $events, $usage);
+        ]), $response, $dbForProject, $database, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
@@ -953,6 +929,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEnumAttribute')
@@ -970,9 +948,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         // use length of longest string as attribute size
         $size = 0;
@@ -997,7 +974,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_ENUM,
             'formatOptions' => ['elements' => $elements],
-        ]), $response, $dbForProject, $database, $events, $usage);
+        ]), $response, $dbForProject, $database, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
@@ -1010,6 +987,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIpAttribute')
@@ -1026,9 +1005,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1038,7 +1016,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_IP,
-        ]), $response, $dbForProject, $database, $events, $usage);
+        ]), $response, $dbForProject, $database, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
@@ -1051,6 +1029,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createUrlAttribute')
@@ -1067,9 +1047,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1079,7 +1058,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_URL,
-        ]), $response, $dbForProject, $database, $events, $usage);
+        ]), $response, $dbForProject, $database, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
@@ -1092,6 +1071,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIntegerAttribute')
@@ -1110,9 +1091,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
@@ -1142,7 +1122,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
                 'min' => $min,
                 'max' => $max,
             ],
-        ]), $response, $dbForProject, $database, $events, $usage);
+        ]), $response, $dbForProject, $database, $events);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
 
@@ -1162,6 +1142,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createFloatAttribute')
@@ -1181,8 +1163,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->inject('usage')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events, Stats $usage) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
@@ -1215,7 +1196,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
                 'min' => $min,
                 'max' => $max,
             ],
-        ]), $response, $dbForProject, $database, $events, $usage);
+        ]), $response, $dbForProject, $database, $events);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
 
@@ -1235,6 +1216,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createBooleanAttribute')
@@ -1251,9 +1234,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1262,7 +1244,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
             'required' => $required,
             'default' => $default,
             'array' => $array,
-        ]), $response, $dbForProject, $database, $events, $usage);
+        ]), $response, $dbForProject, $database, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
@@ -1316,6 +1298,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->desc('List Attributes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('usage.metric', 'collections.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listAttributes')
@@ -1327,8 +1311,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1343,10 +1326,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
         $attributes = $collection->getAttribute('attributes');
 
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
-
         $response->dynamic(new Document([
             'total' => \count($attributes),
             'attributes' => $attributes
@@ -1358,6 +1337,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->desc('Get Attribute')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('usage.metric', 'collections.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getAttribute')
@@ -1380,8 +1361,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1420,10 +1400,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
             default => Response::MODEL_ATTRIBUTE,
         };
 
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
-
         $response->dynamic($attribute, $model);
     });
 
@@ -1434,6 +1410,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteAttribute')
@@ -1447,8 +1425,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->inject('usage')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events, Stats $usage) {
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1481,10 +1458,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setDatabase($db)
             ->setDocument($attribute)
         ;
-
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.update', 1);
 
         // Select response model based on type and format
         $type = $attribute->getAttribute('type');
@@ -1524,6 +1497,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createIndex')
@@ -1540,9 +1515,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1652,10 +1626,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->setDocument($index)
         ;
 
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.update', 1);
-
         $events
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
@@ -1673,6 +1643,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->desc('List Indexes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('usage.metric', 'collections.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listIndexes')
@@ -1684,8 +1656,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1700,10 +1671,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $indexes = $collection->getAttribute('indexes');
 
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
-
         $response->dynamic(new Document([
             'total' => \count($indexes),
             'indexes' => $indexes,
@@ -1715,6 +1682,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->desc('Get Index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
+    ->label('usage.metric', 'collections.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getIndex')
@@ -1727,8 +1696,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->param('key', null, new Key(), 'Index Key.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, Stats $usage) {
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1754,10 +1722,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             'collectionId' => $database->getInternalId() . '_' . $collectionId,
         ])]);
 
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.read', 1);
-
         $response->dynamic($index, Response::MODEL_INDEX);
     });
 
@@ -1768,6 +1732,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteIndex')
@@ -1781,8 +1747,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->inject('usage')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events, Stats $usage) {
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1815,10 +1780,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             ->setDocument($index)
         ;
 
-        $usage
-            ->setParam('databaseId', $databaseId)
-            ->setParam('databases.collections.update', 1);
-
         $events
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
@@ -1838,6 +1799,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'documents.{scope}.requests.create')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createDocument')
@@ -1853,10 +1816,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
-    ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Stats $usage, Event $events, string $mode) {
+    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $events, string $mode) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -1948,12 +1910,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('database', $database)
         ;
 
-        $usage
-            ->setParam('databases.documents.create', 1)
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collectionId)
-        ;
-
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -1963,6 +1919,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->desc('List Documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
+    ->label('usage.metric', 'documents.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listDocuments')
@@ -1981,9 +1939,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('orderTypes', [], new ArrayList(new WhiteList([Database::ORDER_DESC, Database::ORDER_ASC], true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' order types are allowed.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, int $limit, int $offset, string $cursor, string $cursorDirection, array $orderAttributes, array $orderTypes, Response $response, Database $dbForProject, Stats $usage, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, int $limit, int $offset, string $cursor, string $cursorDirection, array $orderAttributes, array $orderTypes, Response $response, Database $dbForProject, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2060,12 +2017,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
          */
         $documents = array_map(fn(Document $document) => $document->setAttribute('$collection', $collectionId), $documents);
 
-        $usage
-            ->setParam('databases.documents.read', 1)
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collectionId)
-        ;
-
         $response->dynamic(new Document([
             'total' => $total,
             'documents' => $documents,
@@ -2077,6 +2028,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->desc('Get Document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
+    ->label('usage.metric', 'documents.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getDocument')
@@ -2089,9 +2042,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('documentId', null, new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, Stats $usage, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2129,11 +2081,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
          */
         $document->setAttribute('$collection', $collectionId);
 
-        $usage
-            ->setParam('databases.documents.read', 1)
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collectionId)
-        ;
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -2143,6 +2090,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->desc('List Document Logs')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
+    ->label('usage.metric', 'documents.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listDocumentLogs')
@@ -2240,6 +2189,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
+    ->label('usage.metric', 'documents.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateDocument')
@@ -2254,10 +2205,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Stats $usage, Event $events, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Event $events, string $mode) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -2356,12 +2306,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->setContext('database', $database)
         ;
 
-        $usage
-            ->setParam('databases.documents.update', 1)
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collectionId)
-        ;
-
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
@@ -2372,6 +2316,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->label('scope', 'documents.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
+    ->label('usage.metric', 'documents.{scope}.requests.delete')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteDocument')
@@ -2385,9 +2331,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
-    ->inject('usage')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, Event $events, Delete $deletes, Stats $usage, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, Event $events, Delete $deletes, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2433,12 +2378,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $deletes
             ->setType(DELETE_TYPE_AUDIT)
             ->setDocument($document)
-        ;
-
-        $usage
-            ->setParam('databases.documents.delete', 1)
-            ->setParam('databaseId', $databaseId)
-            ->setParam('collectionId', $collectionId)
         ;
 
         $events
@@ -2490,21 +2429,21 @@ App::get('/v1/databases/usage')
             ];
 
             $metrics = [
-                'databases.count',
-                'databases.documents.count',
-                'databases.collections.count',
-                'databases.create',
-                'databases.read',
-                'databases.update',
-                'databases.delete',
-                'databases.collections.create',
-                'databases.collections.read',
-                'databases.collections.update',
-                'databases.collections.delete',
-                'databases.documents.create',
-                'databases.documents.read',
-                'databases.documents.update',
-                'databases.documents.delete'
+                'databases.$all.count.total',
+                'documents.$all.count.total',
+                'collections.$all.count.total',
+                'databases.$all.requests.create',
+                'databases.$all.requests.read',
+                'databases.$all.requests.update',
+                'databases.$all.requests.delete',
+                'collections.$all.requests.create',
+                'collections.$all.requests.read',
+                'collections.$all.requests.update',
+                'collections.$all.requests.delete',
+                'documents.$all.requests.create',
+                'documents.$all.requests.read',
+                'documents.$all.requests.update',
+                'documents.$all.requests.delete'
             ];
 
             $stats = [];
@@ -2550,21 +2489,21 @@ App::get('/v1/databases/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'databasesCount' => $stats["databases.count"],
-                'documentsCount' => $stats["databases.documents.count"],
-                'collectionsCount' => $stats["databases.collections.count"],
-                'documentsCreate' =>  $stats["databases.documents.create"],
-                'documentsRead' =>  $stats["databases.documents.read"],
-                'documentsUpdate' => $stats["databases.documents.update"],
-                'documentsDelete' => $stats["databases.documents.delete"],
-                'collectionsCreate' => $stats["databases.collections.create"],
-                'collectionsRead' =>  $stats["databases.collections.read"],
-                'collectionsUpdate' => $stats["databases.collections.update"],
-                'collectionsDelete' => $stats["databases.collections.delete"],
-                'databasesCreate' => $stats["databases.create"],
-                'databasesRead' =>  $stats["databases.read"],
-                'databasesUpdate' => $stats["databases.update"],
-                'databasesDelete' => $stats["databases.delete"],
+                'databasesCount' => $stats['databases.$all.count.total'] ?? [],
+                'documentsCount' => $stats['documents.$all.count.total'] ?? [],
+                'collectionsCount' => $stats['collections.$all.count.total'] ?? [],
+                'documentsCreate' =>  $stats['documents.$all.requests.create'] ?? [],
+                'documentsRead' =>  $stats['documents.$all.requests.read'] ?? [],
+                'documentsUpdate' => $stats['documents.$all.requests.update'] ?? [],
+                'documentsDelete' => $stats['documents.$all.requests.delete'] ?? [],
+                'collectionsCreate' => $stats['collections.$all.requests.create'] ?? [],
+                'collectionsRead' =>  $stats['collections.$all.requests.read'] ?? [],
+                'collectionsUpdate' => $stats['collections.$all.requests.update'] ?? [],
+                'collectionsDelete' => $stats['collections.$all.requests.delete'] ?? [],
+                'databasesCreate' => $stats['databases.$all.requests.create'] ?? [],
+                'databasesRead' =>  $stats['databases.$all.requests.read'] ?? [],
+                'databasesUpdate' => $stats['databases.$all.requests.update'] ?? [],
+                'databasesDelete' => $stats['databases.$all.requests.delete'] ?? [],
             ]);
         }
 
@@ -2609,16 +2548,16 @@ App::get('/v1/databases/:databaseId/usage')
             ];
 
             $metrics = [
-                'databases.' . $databaseId . '.documents.count',
-                'databases.' . $databaseId . '.collections.count',
-                'databases.' . $databaseId . '.collections.create',
-                'databases.' . $databaseId . '.collections.read',
-                'databases.' . $databaseId . '.collections.update',
-                'databases.' . $databaseId . '.collections.delete',
-                'databases.' . $databaseId . '.documents.create',
-                'databases.' . $databaseId . '.documents.read',
-                'databases.' . $databaseId . '.documents.update',
-                'databases.' . $databaseId . '.documents.delete'
+                'collections.' . $databaseId . '.count.total',
+                'collections.' . $databaseId . '.requests.create',
+                'collections.' . $databaseId . '.requests.read',
+                'collections.' . $databaseId . '.requests.update',
+                'collections.' . $databaseId . '.requests.delete',
+                'documents.' . $databaseId . '.count.total',
+                'documents.' . $databaseId . '.requests.create',
+                'documents.' . $databaseId . '.requests.read',
+                'documents.' . $databaseId . '.requests.update',
+                'documents.' . $databaseId . '.requests.delete'
             ];
 
             $stats = [];
@@ -2664,16 +2603,16 @@ App::get('/v1/databases/:databaseId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'documentsCount' => $stats["databases.{$databaseId}.documents.count"],
-                'collectionsCount' => $stats["databases.{$databaseId}.collections.count"],
-                'documentsCreate' =>  $stats["databases.{$databaseId}.documents.create"],
-                'documentsRead' =>  $stats["databases.{$databaseId}.documents.read"],
-                'documentsUpdate' => $stats["databases.{$databaseId}.documents.update"],
-                'documentsDelete' => $stats["databases.{$databaseId}.documents.delete"],
-                'collectionsCreate' => $stats["databases.{$databaseId}.collections.create"],
-                'collectionsRead' =>  $stats["databases.{$databaseId}.collections.read"],
-                'collectionsUpdate' => $stats["databases.{$databaseId}.collections.update"],
-                'collectionsDelete' => $stats["databases.{$databaseId}.collections.delete"],
+                'collectionsCount' => $stats["collections.{$databaseId}.count.total"] ?? [],
+                'collectionsCreate' => $stats["collections.{$databaseId}.requests.create"] ?? [],
+                'collectionsRead' =>  $stats["collections.{$databaseId}.requests.read"] ?? [],
+                'collectionsUpdate' => $stats["collections.{$databaseId}.requests.update"] ?? [],
+                'collectionsDelete' => $stats["collections.{$databaseId}.requests.delete"] ?? [],
+                'documentsCount' => $stats["documents.{$databaseId}.count.total"] ?? [],
+                'documentsCreate' =>  $stats["documents.{$databaseId}.requests.create"] ?? [],
+                'documentsRead' =>  $stats["documents.{$databaseId}.requests.read"] ?? [],
+                'documentsUpdate' => $stats["documents.{$databaseId}.requests.update"] ?? [],
+                'documentsDelete' => $stats["documents.{$databaseId}.requests.delete"] ?? [],
             ]);
         }
 
@@ -2729,11 +2668,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
             ];
 
             $metrics = [
-                "databases.{$databaseId}.collections.{$collectionId}.documents.count",
-                "databases.{$databaseId}.collections.{$collectionId}.documents.create",
-                "databases.{$databaseId}.collections.{$collectionId}.documents.read",
-                "databases.{$databaseId}.collections.{$collectionId}.documents.update",
-                "databases.{$databaseId}.collections.{$collectionId}.documents.delete",
+                "documents.{$databaseId}/{$collectionId}.count.total",
+                "documents.{$databaseId}/{$collectionId}.requests.create",
+                "documents.{$databaseId}/{$collectionId}.requests.read",
+                "documents.{$databaseId}/{$collectionId}.requests.update",
+                "documents.{$databaseId}/{$collectionId}.requests.delete",
             ];
 
             $stats = [];
@@ -2778,11 +2717,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'documentsCount' => $stats["databases.{$databaseId}.collections.{$collectionId}.documents.count"],
-                'documentsCreate' => $stats["databases.{$databaseId}.collections.{$collectionId}.documents.create"],
-                'documentsRead' => $stats["databases.{$databaseId}.collections.{$collectionId}.documents.read"],
-                'documentsUpdate' =>  $stats["databases.{$databaseId}.collections.{$collectionId}.documents.update"],
-                'documentsDelete' =>  $stats["databases.{$databaseId}.collections.{$collectionId}.documents.delete"]
+                'documentsCount' => $stats["documents.{$databaseId}/{$collectionId}.count.total"] ?? [],
+                'documentsCreate' => $stats["documents.{$databaseId}/{$collectionId}.requests.create"] ?? [],
+                'documentsRead' => $stats["documents.{$databaseId}/{$collectionId}.requests.read"] ?? [],
+                'documentsUpdate' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.update"] ?? [],
+                'documentsDelete' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.delete" ?? []]
             ]);
         }
 
