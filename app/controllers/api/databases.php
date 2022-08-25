@@ -1278,9 +1278,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
-    ->inject('usage')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Stats $usage, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1290,7 +1289,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             'default' => $default,
             'array' => $array,
             'filters' => ['datetime']
-        ]), $response, $dbForProject, $database, $events, $usage);
+        ]), $response, $dbForProject, $database, $events);
 
         $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
         $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
