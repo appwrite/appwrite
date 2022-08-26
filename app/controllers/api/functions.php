@@ -25,6 +25,7 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Database\Validator\Queries\Functions;
+use Appwrite\Utopia\Database\Validator\Queries\Variables;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -1321,8 +1322,10 @@ App::post('/v1/functions/:functionId/variables')
             throw new Exception(Exception::FUNCTION_NOT_FOUND, 'Function not found');
         }
 
+        $variableId = ID::unique();
+
         $variable = new Document([
-            '$id' => ID::unique(),
+            '$id' => $variableId,
             '$permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -1331,7 +1334,8 @@ App::post('/v1/functions/:functionId/variables')
             'functionInternalId' => $function->getInternalId(),
             'functionId' => $function->getId(),
             'key' => $key,
-            'value' => $value
+            'value' => $value,
+            'search' => implode(' ', [$variableId, $function->getId(), $key]),
         ]);
 
         try {
@@ -1358,21 +1362,45 @@ App::get('/v1/functions/:functionId/variables')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE_LIST)
     ->param('functionId', null, new UID(), 'Function unique ID.', false)
-    // TODO: Pagination
+    ->param('queries', [], new Variables(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Variables::ALLOWED_ATTRIBUTES), true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND, 'Function not found');
         }
 
-        $variables = $function['vars'];
+        $queries = Query::parseQueries($queries);
+
+        if (!empty($search)) {
+            $queries[] = Query::search('search', $search);
+        }
+
+        // Set default limit
+        $queries[] = Query::limit(25);
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
+        if ($cursor !== null) {
+            /** @var Query $cursor */
+            $variableId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('variables', $variableId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Variable '{$variableId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
 
         $response->dynamic(new Document([
-            'variables' => $variables,
-            'total' => count($variables),
+            'variables' => $dbForProject->find('variables', $queries),
+            'total' => $dbForProject->count('variables', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
@@ -1450,6 +1478,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         $variable
             ->setAttribute('key', $key ?? $variable->getAttribute('key'))
             ->setAttribute('value', $value ?? $variable->getAttribute('value'))
+            ->setAttribute('search', implode(' ', [$variableId, $function->getId(), $key]))
         ;
 
         try {
