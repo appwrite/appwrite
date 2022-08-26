@@ -49,19 +49,25 @@
 
     class Query {
     }
-    Query.equal = (attribute, value) => Query.addQuery(attribute, 'equal', value);
-    Query.notEqual = (attribute, value) => Query.addQuery(attribute, 'notEqual', value);
-    Query.lesser = (attribute, value) => Query.addQuery(attribute, 'lesser', value);
-    Query.lesserEqual = (attribute, value) => Query.addQuery(attribute, 'lesserEqual', value);
-    Query.greater = (attribute, value) => Query.addQuery(attribute, 'greater', value);
-    Query.greaterEqual = (attribute, value) => Query.addQuery(attribute, 'greaterEqual', value);
-    Query.search = (attribute, value) => Query.addQuery(attribute, 'search', value);
-    Query.addQuery = (attribute, oper, value) => value instanceof Array
-        ? `${attribute}.${oper}(${value
+    Query.equal = (attribute, value) => Query.addQuery(attribute, "equal", value);
+    Query.notEqual = (attribute, value) => Query.addQuery(attribute, "notEqual", value);
+    Query.lessThan = (attribute, value) => Query.addQuery(attribute, "lessThan", value);
+    Query.lessThanEqual = (attribute, value) => Query.addQuery(attribute, "lessThanEqual", value);
+    Query.greaterThan = (attribute, value) => Query.addQuery(attribute, "greaterThan", value);
+    Query.greaterThanEqual = (attribute, value) => Query.addQuery(attribute, "greaterThanEqual", value);
+    Query.search = (attribute, value) => Query.addQuery(attribute, "search", value);
+    Query.orderDesc = (attribute) => `orderDesc("${attribute}")`;
+    Query.orderAsc = (attribute) => `orderAsc("${attribute}")`;
+    Query.cursorAfter = (documentId) => `cursorAfter("${documentId}")`;
+    Query.cursorBefore = (documentId) => `cursorBefore("${documentId}")`;
+    Query.limit = (limit) => `limit(${limit})`;
+    Query.offset = (offset) => `offset(${offset})`;
+    Query.addQuery = (attribute, method, value) => value instanceof Array
+        ? `${method}("${attribute}", [${value
         .map((v) => Query.parseValues(v))
-        .join(',')})`
-        : `${attribute}.${oper}(${Query.parseValues(value)})`;
-    Query.parseValues = (value) => typeof value === 'string' || value instanceof String
+        .join(",")}])`
+        : `${method}("${attribute}", [${Query.parseValues(value)}])`;
+    Query.parseValues = (value) => typeof value === "string" || value instanceof String
         ? `"${value}"`
         : `${value}`;
 
@@ -7192,6 +7198,57 @@
         }
     }
 
+    class Permission {
+    }
+    Permission.read = (role) => {
+        return `read("${role}")`;
+    };
+    Permission.write = (role) => {
+        return `write("${role}")`;
+    };
+    Permission.create = (role) => {
+        return `create("${role}")`;
+    };
+    Permission.update = (role) => {
+        return `update("${role}")`;
+    };
+    Permission.delete = (role) => {
+        return `delete("${role}")`;
+    };
+
+    class Role {
+        static any() {
+            return 'any';
+        }
+        static user(id) {
+            return `user:${id}`;
+        }
+        static users() {
+            return 'users';
+        }
+        static guests() {
+            return 'guests';
+        }
+        static team(id, role = '') {
+            if (role === '') {
+                return `team:${id}`;
+            }
+            return `team:${id}/${role}`;
+        }
+        static status(status) {
+            return `status:${status}`;
+        }
+    }
+
+    class ID {
+        static custom(id) {
+            return id;
+        }
+        static unique() {
+            return 'unique()';
+        }
+    }
+
     exports.Account = Account;
     exports.AppwriteException = AppwriteException;
     exports.Avatars = Avatars;
@@ -7199,9 +7256,12 @@
     exports.Databases = Databases;
     exports.Functions = Functions;
     exports.Health = Health;
+    exports.ID = ID;
     exports.Locale = Locale;
+    exports.Permission = Permission;
     exports.Projects = Projects;
     exports.Query = Query;
+    exports.Role = Role;
     exports.Storage = Storage;
     exports.Teams = Teams;
     exports.Users = Users;

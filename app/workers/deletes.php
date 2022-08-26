@@ -137,7 +137,7 @@ class DeletesV1 extends Worker
     protected function deleteCacheByTimestamp(): void
     {
         $this->deleteCacheFiles([
-            Query::lessThan('accessedAt', [$this->args['timestamp']]),
+            Query::lessThan('accessedAt', $this->args['timestamp']),
         ]);
     }
 

@@ -358,8 +358,8 @@ App::get('/v1/functions/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);
 
                     $stats[$metric] = [];

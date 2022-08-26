@@ -14,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\ID;
@@ -60,8 +61,8 @@ App::post('/v1/storage/buckets')
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('bucketId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Bucket name')
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('fileSecurity', false, new Boolean(true), 'Whether to enable file-level permission where each files permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default no user is granted with any permissions. [Learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('fileSecurity', false, new Boolean(true), 'Whether to enable file-level permissions, where each file\'s permissions will be merged with the bucket\'s permissions to determine who has access to each file individually. [Learn more about permissions](/docs/permissions).')
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
     ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
@@ -70,7 +71,7 @@ App::post('/v1/storage/buckets')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, ?array $permissions, string $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
@@ -230,8 +231,8 @@ App::put('/v1/storage/buckets/:bucketId')
     ->label('sdk.response.model', Response::MODEL_BUCKET)
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->param('name', null, new Text(128), 'Bucket name', false)
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('fileSecurity', false, new Boolean(true), 'Whether to enable file-level permission where each files permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default the current permissions are inherited. [Learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('fileSecurity', false, new Boolean(true), 'Whether to enable file-level permissions, where each file\'s permissions will be merged with the bucket\'s permissions to determine who has access to each file individually. [Learn more about permissions](/docs/permissions).')
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
     ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
@@ -240,7 +241,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, ?array $permissions, string $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -340,7 +341,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new CustomId(), 'File ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file.', false)
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE]), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE]), 'An array of permission strings. By default the current user is granted with all permissions. [Learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -574,6 +575,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
                     $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                 }
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
             } catch (StructureException $exception) {
                 throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
             } catch (DuplicateException) {
@@ -608,6 +611,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
                     $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                 }
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
             } catch (StructureException $exception) {
                 throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
             } catch (DuplicateException) {
@@ -741,7 +746,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
-        if (!$valid && !$fileSecurity) {
+        if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
@@ -751,7 +756,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -830,7 +835,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -964,7 +969,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -1095,7 +1100,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -1213,7 +1218,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission string. By default the current permissions are inherited. [Learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -1237,7 +1242,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         // Read permission should not be required for update
         $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -1248,13 +1253,9 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             Database::PERMISSION_DELETE,
         ]);
 
-        if (\is_null($permissions)) {
-            $permissions = $file->getPermissions() ?? [];
-        }
-
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
@@ -1273,9 +1274,21 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             }
         }
 
+        if (\is_null($permissions)) {
+            $permissions = $file->getPermissions() ?? [];
+        }
+
         $file->setAttribute('$permissions', $permissions);
 
-        $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
+        if ($fileSecurity && !$valid) {
+            try {
+                $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+        } else {
+            $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+        }
 
         $events
             ->setParam('bucketId', $bucket->getId())
@@ -1326,8 +1339,13 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         // Read permission should not be required for delete
         $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        // Make sure we don't delete the file before the document permission check occurs
+        if ($fileSecurity && !$valid && !$validator->isValid($file->getDelete())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
         $deviceDeleted = false;
@@ -1346,7 +1364,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                 ->setResource('file/' . $fileId)
             ;
 
-            if ($fileSecurity && !$valid) {
+            // Don't need to check valid here because we already ensured validity
+            if ($fileSecurity) {
                 $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
             } else {
                 $deleted = Authorization::skip(fn() => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
