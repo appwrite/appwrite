@@ -401,7 +401,7 @@ App::shutdown()
             && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
             $metric = $route->getLabel('usage.metric', '');
-            $usageParams = $route->getLabel('usage.params', '');
+            $usageParams = $route->getLabel('usage.params', []);
 
             if (!empty($metric)) {
                 $usage->setParam($metric, 1);
