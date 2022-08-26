@@ -2,11 +2,14 @@
 
 namespace Tests\E2E\Scopes;
 
+use Appwrite\Tests\Retryable;
 use Tests\E2E\Client;
 use PHPUnit\Framework\TestCase;
 
 abstract class Scope extends TestCase
 {
+    use Retryable;
+
     /**
      * @var Client
      */

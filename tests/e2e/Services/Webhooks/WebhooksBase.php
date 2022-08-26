@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Webhooks;
 
+use Appwrite\Tests\FlakyTest;
 use CURLFile;
 use Tests\E2E\Client;
 
@@ -296,6 +297,7 @@ trait WebhooksBase
     /**
      * @depends testCreateCollection
      */
+    #[FlakyTest(retries: 1)]
     public function testDeleteDocument(array $data): array
     {
         $actorsId = $data['actorsId'];
