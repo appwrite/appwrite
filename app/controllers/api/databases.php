@@ -2068,11 +2068,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         if ($documentSecurity && !$valid) {
-            try {
-                $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
-            } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
+            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
         } else {
             $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
         }

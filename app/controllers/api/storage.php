@@ -746,11 +746,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($fileSecurity && !$valid) {
-            try {
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-            } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
@@ -829,11 +825,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $key = \md5($fileId . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
 
         if ($fileSecurity && !$valid) {
-            try {
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-            } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
@@ -967,11 +959,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         if ($fileSecurity && !$valid) {
-            try {
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-            } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
@@ -1102,11 +1090,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         }
 
         if ($fileSecurity && !$valid) {
-            try {
-                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-            } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
@@ -1377,11 +1361,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
             // Don't need to check valid here because we already ensured validity
             if ($fileSecurity) {
-                try {
-                    $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
-                } catch (AuthorizationException) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED);
-                }
+                $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
             } else {
                 $deleted = Authorization::skip(fn() => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
             }
