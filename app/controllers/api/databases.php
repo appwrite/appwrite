@@ -480,8 +480,8 @@ App::post('/v1/databases/:databaseId/collections')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any read permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
-    ->param('documentSecurity', false, new Boolean(true), 'Specifies the permissions model used in this collection, which accepts either \'collection\' or \'document\'. For \'collection\' level permission, the permissions specified in read and write params are applied to all documents in the collection. For \'document\' level permissions, read and write permissions are specified in each document. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions.')
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default no user is granted with any permissions. [Learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('documentSecurity', false, new Boolean(true), 'Whether to enable document-level permissions, where each document\'s permissions will be merged with the collection\'s permissions to determine who has access to each document individually. [Learn more about permissions](/docs/permissions).')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
@@ -732,8 +732,8 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
-    ->param('documentSecurity', false, new Boolean(true), 'Whether to enable document-level permission where each document\'s permissions parameter will decide who has access to each file individually. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default the current permission are inherited. [Learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('documentSecurity', false, new Boolean(true), 'Whether to enable document-level permissions, where each document\'s permissions will be merged with the collection\'s permissions to determine who has access to each document individually. [Learn more about permissions](/docs/permissions).')
     ->param('enabled', true, new Boolean(), 'Is collection enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -853,7 +853,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_STRING)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -901,7 +901,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_EMAIL)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Email(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
@@ -943,7 +943,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_ENUM)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('elements', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
@@ -1001,7 +1001,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_IP)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new IP(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
@@ -1043,7 +1043,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_URL)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new URL(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
@@ -1085,7 +1085,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_INTEGER)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('min', null, new Integer(), 'Minimum value to enforce on new documents', true)
@@ -1156,7 +1156,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_FLOAT)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents', true)
@@ -1230,7 +1230,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_BOOLEAN)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Boolean(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
@@ -1262,6 +1262,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createDatetimeAttribute')
@@ -1270,7 +1272,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_DATETIME)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new DatetimeValidator(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
@@ -1311,7 +1313,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
@@ -1360,7 +1362,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         Response::MODEL_ATTRIBUTE_DATETIME,
         Response::MODEL_ATTRIBUTE_STRING])// needs to be last, since its condition would dominate any other string attribute
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1422,7 +1424,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1510,7 +1512,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', null, new Key(), 'Index Key.')
     ->param('type', null, new WhiteList([Database::INDEX_KEY, Database::INDEX_FULLTEXT, Database::INDEX_UNIQUE, Database::INDEX_SPATIAL, Database::INDEX_ARRAY]), 'Index type.')
     ->param('attributes', null, new ArrayList(new Key(true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' attributes are allowed, each 32 characters long.')
@@ -1656,7 +1658,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
@@ -1695,7 +1697,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INDEX)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', null, new Key(), 'Index Key.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1744,7 +1746,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Index Key.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1813,9 +1815,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection). Make sure to define attributes before creating documents.')
+    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE]), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE]), 'An array of permissions strings. By default the current user is granted with all permissions. [Learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -1932,14 +1934,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/database#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response. By default will return maximum 25 results. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' results allowed per request.', true)
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
     ->param('orderAttributes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes used to sort results. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' order attributes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
-    ->param('orderTypes', [], new ArrayList(new WhiteList([Database::ORDER_DESC, Database::ORDER_ASC], true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of order directions for sorting attribtues. Possible values are DESC for descending order, or ASC for ascending order. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' order types are allowed.', true)
+    ->param('orderTypes', [], new ArrayList(new WhiteList([Database::ORDER_DESC, Database::ORDER_ASC], true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of order directions for sorting attributes. Possible values are DESC for descending order or ASC for ascending order. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' order types are allowed.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
@@ -2060,7 +2062,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', null, new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -2102,7 +2104,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
          * Reset $collection attribute to remove prefix.
          */
         $document->setAttribute('$collection', $collectionId);
-
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -2224,7 +2225,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->param('collectionId', null, new UID(), 'Collection ID.')
     ->param('documentId', null, new UID(), 'Document ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with permissions. By default no user is granted with any permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default the current permissions are inherited. [Learn more about permissions](/docs/permissions) and get a full list of available permissions.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
@@ -2272,10 +2273,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             Database::PERMISSION_DELETE,
         ]);
 
-        if (\is_null($permissions)) {
-            $permissions = $document->getPermissions() ?? [];
-        }
-
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
@@ -2297,6 +2294,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             }
         }
 
+        if (\is_null($permissions)) {
+            $permissions = $document->getPermissions() ?? [];
+        }
+
         $data = \array_merge($document->getArrayCopy(), $data);
         $data['$collection'] = $collection->getId();            // Make sure user doesn't switch collectionID
         $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
@@ -2314,6 +2315,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
              * Reset $collection attribute to remove prefix.
              */
             $document->setAttribute('$collection', $collectionId);
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (DuplicateException) {
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         } catch (StructureException $exception) {
@@ -2347,7 +2350,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/database#createCollection).')
+    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', null, new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -2385,7 +2388,11 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         }
 
         if ($documentSecurity && !$valid) {
-             $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+            try {
+                $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
         } else {
             Authorization::skip(fn() => $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
         }
