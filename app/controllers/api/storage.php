@@ -751,7 +751,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -830,7 +830,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -964,7 +964,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -1095,7 +1095,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -1237,7 +1237,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         // Read permission should not be required for update
         $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -1248,13 +1248,9 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             Database::PERMISSION_DELETE,
         ]);
 
-        if (\is_null($permissions)) {
-            $permissions = $file->getPermissions() ?? [];
-        }
-
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
@@ -1271,6 +1267,10 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
                     }
                 }
             }
+        }
+
+        if (\is_null($permissions)) {
+            $permissions = $file->getPermissions() ?? [];
         }
 
         $file->setAttribute('$permissions', $permissions);
@@ -1334,7 +1334,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         // Read permission should not be required for delete
         $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
-        if ($file->isEmpty() || $file->getAttribute('bucketId') !== $bucketId) {
+        if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
