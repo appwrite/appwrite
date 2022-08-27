@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class UsageFunctions extends Model
+class UsageFunction extends Model
 {
     public function __construct()
     {
@@ -82,7 +82,7 @@ class UsageFunctions extends Model
      */
     public function getName(): string
     {
-        return 'UsageFunctions';
+        return 'UsageFunction';
     }
 
     /**
@@ -92,6 +92,6 @@ class UsageFunctions extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_USAGE_FUNCTIONS;
+        return Response::MODEL_USAGE_FUNCTION;
     }
 }

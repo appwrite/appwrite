@@ -49,19 +49,25 @@
 
     class Query {
     }
-    Query.equal = (attribute, value) => Query.addQuery(attribute, 'equal', value);
-    Query.notEqual = (attribute, value) => Query.addQuery(attribute, 'notEqual', value);
-    Query.lesser = (attribute, value) => Query.addQuery(attribute, 'lesser', value);
-    Query.lesserEqual = (attribute, value) => Query.addQuery(attribute, 'lesserEqual', value);
-    Query.greater = (attribute, value) => Query.addQuery(attribute, 'greater', value);
-    Query.greaterEqual = (attribute, value) => Query.addQuery(attribute, 'greaterEqual', value);
-    Query.search = (attribute, value) => Query.addQuery(attribute, 'search', value);
-    Query.addQuery = (attribute, oper, value) => value instanceof Array
-        ? `${attribute}.${oper}(${value
+    Query.equal = (attribute, value) => Query.addQuery(attribute, "equal", value);
+    Query.notEqual = (attribute, value) => Query.addQuery(attribute, "notEqual", value);
+    Query.lessThan = (attribute, value) => Query.addQuery(attribute, "lessThan", value);
+    Query.lessThanEqual = (attribute, value) => Query.addQuery(attribute, "lessThanEqual", value);
+    Query.greaterThan = (attribute, value) => Query.addQuery(attribute, "greaterThan", value);
+    Query.greaterThanEqual = (attribute, value) => Query.addQuery(attribute, "greaterThanEqual", value);
+    Query.search = (attribute, value) => Query.addQuery(attribute, "search", value);
+    Query.orderDesc = (attribute) => `orderDesc("${attribute}")`;
+    Query.orderAsc = (attribute) => `orderAsc("${attribute}")`;
+    Query.cursorAfter = (documentId) => `cursorAfter("${documentId}")`;
+    Query.cursorBefore = (documentId) => `cursorBefore("${documentId}")`;
+    Query.limit = (limit) => `limit(${limit})`;
+    Query.offset = (offset) => `offset(${offset})`;
+    Query.addQuery = (attribute, method, value) => value instanceof Array
+        ? `${method}("${attribute}", [${value
         .map((v) => Query.parseValues(v))
-        .join(',')})`
-        : `${attribute}.${oper}(${Query.parseValues(value)})`;
-    Query.parseValues = (value) => typeof value === 'string' || value instanceof String
+        .join(",")}])`
+        : `${method}("${attribute}", [${Query.parseValues(value)}])`;
+    Query.parseValues = (value) => typeof value === "string" || value instanceof String
         ? `"${value}"`
         : `${value}`;
 
@@ -643,23 +649,23 @@
          * /account/verification/phone](/docs/client/account#accountCreatePhoneVerification)
          * endpoint to send a confirmation SMS.
          *
-         * @param {string} number
+         * @param {string} phone
          * @param {string} password
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updatePhone(number, password) {
+        updatePhone(phone, password) {
             return __awaiter(this, void 0, void 0, function* () {
-                if (typeof number === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "number"');
+                if (typeof phone === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "phone"');
                 }
                 if (typeof password === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "password"');
                 }
                 let path = '/account/phone';
                 let payload = {};
-                if (typeof number !== 'undefined') {
-                    payload['number'] = number;
+                if (typeof phone !== 'undefined') {
+                    payload['phone'] = phone;
                 }
                 if (typeof password !== 'undefined') {
                     payload['password'] = password;
@@ -1051,25 +1057,25 @@
          * is valid for 15 minutes.
          *
          * @param {string} userId
-         * @param {string} number
+         * @param {string} phone
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createPhoneSession(userId, number) {
+        createPhoneSession(userId, phone) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
                 }
-                if (typeof number === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "number"');
+                if (typeof phone === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "phone"');
                 }
                 let path = '/account/sessions/phone';
                 let payload = {};
                 if (typeof userId !== 'undefined') {
                     payload['userId'] = userId;
                 }
-                if (typeof number !== 'undefined') {
-                    payload['number'] = number;
+                if (typeof phone !== 'undefined') {
+                    payload['phone'] = phone;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
@@ -1078,7 +1084,7 @@
             });
         }
         /**
-         * Create Phone session (confirmation)
+         * Create Phone Session (confirmation)
          *
          * Use this endpoint to complete creating a session with SMS. Use the
          * **userId** from the
@@ -3188,6 +3194,27 @@
             });
         }
         /**
+         * Get Functions Usage
+         *
+         *
+         * @param {string} range
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        getUsage(range) {
+            return __awaiter(this, void 0, void 0, function* () {
+                let path = '/functions/usage';
+                let payload = {};
+                if (typeof range !== 'undefined') {
+                    payload['range'] = range;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('get', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
          * Get Function
          *
          * Get a function by its unique ID.
@@ -3641,7 +3668,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getUsage(functionId, range) {
+        getFunctionUsage(functionId, range) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
@@ -6163,21 +6190,16 @@
          *
          * @param {string} userId
          * @param {string} email
+         * @param {string} phone
          * @param {string} password
          * @param {string} name
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        create(userId, email, password, name) {
+        create(userId, email, phone, password, name) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
-                }
-                if (typeof email === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "email"');
-                }
-                if (typeof password === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "password"');
                 }
                 let path = '/users';
                 let payload = {};
@@ -6186,6 +6208,9 @@
                 }
                 if (typeof email !== 'undefined') {
                     payload['email'] = email;
+                }
+                if (typeof phone !== 'undefined') {
+                    payload['phone'] = phone;
                 }
                 if (typeof password !== 'undefined') {
                     payload['password'] = password;
@@ -7035,6 +7060,57 @@
         }
     }
 
+    class Permission {
+    }
+    Permission.read = (role) => {
+        return `read("${role}")`;
+    };
+    Permission.write = (role) => {
+        return `write("${role}")`;
+    };
+    Permission.create = (role) => {
+        return `create("${role}")`;
+    };
+    Permission.update = (role) => {
+        return `update("${role}")`;
+    };
+    Permission.delete = (role) => {
+        return `delete("${role}")`;
+    };
+
+    class Role {
+        static any() {
+            return 'any';
+        }
+        static user(id) {
+            return `user:${id}`;
+        }
+        static users() {
+            return 'users';
+        }
+        static guests() {
+            return 'guests';
+        }
+        static team(id, role = '') {
+            if (role === '') {
+                return `team:${id}`;
+            }
+            return `team:${id}/${role}`;
+        }
+        static status(status) {
+            return `status:${status}`;
+        }
+    }
+
+    class ID {
+        static custom(id) {
+            return id;
+        }
+        static unique() {
+            return 'unique()';
+        }
+    }
+
     exports.Account = Account;
     exports.AppwriteException = AppwriteException;
     exports.Avatars = Avatars;
@@ -7042,9 +7118,12 @@
     exports.Databases = Databases;
     exports.Functions = Functions;
     exports.Health = Health;
+    exports.ID = ID;
     exports.Locale = Locale;
+    exports.Permission = Permission;
     exports.Projects = Projects;
     exports.Query = Query;
+    exports.Role = Role;
     exports.Storage = Storage;
     exports.Teams = Teams;
     exports.Users = Users;

@@ -36,7 +36,7 @@ class File extends Model
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'File permissions.',
+                'description' => 'File permissions. [Learn more about permissions](/docs/permissions).',
                 'default' => [],
                 'example' => ['read("any")'],
                 'array' => true,

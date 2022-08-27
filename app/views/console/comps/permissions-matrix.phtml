@@ -2,17 +2,15 @@
 
 use Utopia\Database\Database;
 
-// Data
 $method = $this->getParam('method', '');
 $params = $this->getParam('params', []);
 $events = $this->getParam('events', '');
 $permissions = $this->getParam('permissions', Database::PERMISSIONS);
-// Names
 $data = $this->getParam('data', '');
 $form = $this->getParam('form', 'form');
 
 $escapedPermissions = \array_map(function ($perm) {
-    // Alpine won't bind to a parameter named delete :/
+    // Alpine won't bind to a parameter named delete
     if ($perm == 'delete') {
         return 'xdelete';
     }
@@ -21,17 +19,21 @@ $escapedPermissions = \array_map(function ($perm) {
 
 ?>
 <div
-    <?php if ($method): ?>
+    x-data="permissionsMatrix"
+    class="permissions-matrix margin-bottom-large"
+    data-scope="sdk"
+    <?php if (!empty($method)): ?>
         data-method="<?php echo $method; ?>"
     <?php endif; ?>
     <?php foreach ($params as $key => $value): ?>
         data-param-<?php echo $key; ?>="<?php echo $value; ?>"
     <?php endforeach; ?>
-    data-scope="sdk"
-    data-event="load<?php if (!empty($events)) echo ',' . $events; ?>"
-    data-name="<?php echo $data; ?>"
-    class="permissions-matrix margin-bottom-large"
-    x-data="permissionsMatrix"
+    <?php if (!empty($events)): ?>
+        data-events="<?php echo $events; ?>"
+    <?php endif; ?>
+    <?php if (!empty($data)): ?>
+        data-name="<?php echo $data; ?>"
+    <?php endif; ?>
     @reset.window="permissions = rawPermissions = []">
 
     <input
@@ -39,10 +41,12 @@ $escapedPermissions = \array_map(function ($perm) {
         name="permissions"
         data-cast-from="csv"
         data-cast-to="array"
-        data-ls-bind="{{<?php echo $data ?>.$permissions}}"
+        <?php if (!empty(($data))): ?>
+            data-ls-bind="{{<?php echo $data ?>.$permissions}}"
+        <?php endif; ?>
         :value="rawPermissions"/>
 
-    <table data-ls-attrs="x-init=load({{<?php echo $data ?>.$permissions}})">
+    <table data-ls-attrs="x-init=load({{<?php if (!empty($data)) echo $data . '.$permissions' ?>}})">
         <thead>
         <tr>
             <th>Role</th>

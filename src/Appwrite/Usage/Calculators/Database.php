@@ -1,32 +1,49 @@
 <?php
 
-namespace Appwrite\Stats;
+namespace Appwrite\Usage\Calculators;
 
 use Exception;
-use Utopia\Database\Database;
+use Appwrite\Usage\Calculator;
+use DateTime;
+use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization;
+use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
 
-class UsageDB extends Usage
+class Database extends Calculator
 {
-    public function __construct(Database $database, callable $errorHandler = null)
+    protected array $periods = [
+        [
+            'key' => '30m',
+            'multiplier' => 1800,
+        ],
+        [
+            'key' => '1d',
+            'multiplier' => 86400,
+        ],
+    ];
+
+    public function __construct(UtopiaDatabase $database, callable $errorHandler = null)
     {
         $this->database = $database;
         $this->errorHandler = $errorHandler;
     }
 
     /**
-     * Create or Update Mertic
-     * Create or update each metric in the stats collection for the given project
+     * Create Per Period Metric
+     *
+     * Create given metric for each defined period
      *
      * @param string $projectId
      * @param string $metric
      * @param int $value
-     *
+     * @param bool $monthly
      * @return void
-     * @throws Exception
+     * @throws Authorization
+     * @throws Structure
      */
-    private function createOrUpdateMetric(string $projectId, string $metric, int $value): void
+    protected function createPerPeriodMetric(string $projectId, string $metric, int $value, bool $monthly = false): void
     {
         foreach ($this->periods as $options) {
             $period = $options['key'];
@@ -39,40 +56,66 @@ class UsageDB extends Usage
             } else {
                 throw new Exception("Period type not found", 500);
             }
+            $this->createOrUpdateMetric($projectId, $metric, $period, $time, $value);
+        }
 
-            $id = \md5("{$time}_{$period}_{$metric}");
-            $this->database->setNamespace('_' . $projectId);
+        // Required for billing
+        if ($monthly) {
+            $time = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-01\T00:00:00.000'))->format(DateTime::RFC3339);
+            $this->createOrUpdateMetric($projectId, $metric, '1mo', $time, $value);
+        }
+    }
 
-            try {
-                $document = $this->database->getDocument('stats', $id);
-                if ($document->isEmpty()) {
-                    $this->database->createDocument('stats', new Document([
-                        '$id' => $id,
-                        'period' => $period,
-                        'time' => $time,
-                        'metric' => $metric,
-                        'value' => $value,
-                        'type' => 1,
-                    ]));
-                } else {
-                    $this->database->updateDocument(
-                        'stats',
-                        $document->getId(),
-                        $document->setAttribute('value', $value)
-                    );
-                }
-            } catch (\Exception $e) { // if projects are deleted this might fail
-                if (is_callable($this->errorHandler)) {
-                    call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
-                } else {
-                    throw $e;
-                }
+    /**
+     * Create or Update Metric
+     *
+     * Create or update each metric in the stats collection for the given project
+     *
+     * @param string $projectId
+     * @param string $metric
+     * @param string $period
+     * @param string $time
+     * @param int $value
+     *
+     * @return void
+     * @throws Authorization
+     * @throws Structure
+     */
+    protected function createOrUpdateMetric(string $projectId, string $metric, string $period, string $time, int $value): void
+    {
+        $id = \md5("{$time}_{$period}_{$metric}");
+        $this->database->setNamespace('_' . $projectId);
+
+        try {
+            $document = $this->database->getDocument('stats', $id);
+            if ($document->isEmpty()) {
+                $this->database->createDocument('stats', new Document([
+                    '$id' => $id,
+                    'period' => $period,
+                    'time' => $time,
+                    'metric' => $metric,
+                    'value' => $value,
+                    'type' => 2, // these are cumulative metrics
+                ]));
+            } else {
+                $this->database->updateDocument(
+                    'stats',
+                    $document->getId(),
+                    $document->setAttribute('value', $value)
+                );
+            }
+        } catch (\Exception$e) { // if projects are deleted this might fail
+            if (is_callable($this->errorHandler)) {
+                call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
+            } else {
+                throw $e;
             }
         }
     }
 
     /**
      * Foreach Document
+     *
      * Call provided callback for each document in the collection
      *
      * @param string $projectId
@@ -81,8 +124,9 @@ class UsageDB extends Usage
      * @param callable $callback
      *
      * @return void
+     * @throws Exception
      */
-    private function foreachDocument(string $projectId, string $collection, array $queries, callable $callback): void
+    protected function foreachDocument(string $projectId, string $collection, array $queries, callable $callback): void
     {
         $limit = 50;
         $results = [];
@@ -122,23 +166,28 @@ class UsageDB extends Usage
 
     /**
      * Sum
-     * Calculate sum of a attribute of documents in collection
+     *
+     * Calculate sum of an attribute of documents in collection
      *
      * @param string $projectId
      * @param string $collection
      * @param string $attribute
-     * @param string $metric
-     *
+     * @param string|null $metric
+     * @param int $multiplier
      * @return int
      * @throws Exception
      */
-    private function sum(string $projectId, string $collection, string $attribute, string $metric): int
+    private function sum(string $projectId, string $collection, string $attribute, string $metric = null, int $multiplier = 1): int
     {
         $this->database->setNamespace('_' . $projectId);
 
         try {
-            $sum = (int) $this->database->sum($collection, $attribute);
-            $this->createOrUpdateMetric($projectId, $metric, $sum);
+            $sum = $this->database->sum($collection, $attribute);
+            $sum = (int) ($sum * $multiplier);
+
+            if (!is_null($metric)) {
+                $this->createPerPeriodMetric($projectId, $metric, $sum);
+            }
             return $sum;
         } catch (Exception $e) {
             if (is_callable($this->errorHandler)) {
@@ -147,26 +196,30 @@ class UsageDB extends Usage
                 throw $e;
             }
         }
+        return 0;
     }
 
     /**
      * Count
+     *
      * Count number of documents in collection
      *
      * @param string $projectId
      * @param string $collection
-     * @param string $metric
+     * @param ?string $metric
      *
      * @return int
      * @throws Exception
      */
-    private function count(string $projectId, string $collection, string $metric): int
+    private function count(string $projectId, string $collection, ?string $metric = null): int
     {
         $this->database->setNamespace('_' . $projectId);
 
         try {
             $count = $this->database->count($collection);
-            $this->createOrUpdateMetric($projectId, $metric, $count);
+            if (!is_null($metric)) {
+                $this->createPerPeriodMetric($projectId, (string) $metric, $count);
+            }
             return $count;
         } catch (Exception $e) {
             if (is_callable($this->errorHandler)) {
@@ -175,113 +228,124 @@ class UsageDB extends Usage
                 throw $e;
             }
         }
+        return 0;
     }
 
     /**
      * Deployments Total
+     *
      * Total sum of storage used by deployments
      *
      * @param string $projectId
      *
      * @return int
+     * @throws Exception
      */
     private function deploymentsTotal(string $projectId): int
     {
-        return $this->sum($projectId, 'deployments', 'size', 'stroage.deployments.total');
+        return $this->sum($projectId, 'deployments', 'size', 'deployments.$all.storage.size');
     }
 
     /**
      * Users Stats
+     *
      * Metric: users.count
      *
      * @param string $projectId
      *
      * @return void
+     * @throws Exception
      */
     private function usersStats(string $projectId): void
     {
-        $this->count($projectId, 'users', 'users.count');
+        $this->count($projectId, 'users', 'users.$all.count.total');
     }
 
     /**
      * Storage Stats
-     * Metrics: storage.total, storage.files.total, storage.buckets.{bucketId}.files.total,
-     * storage.buckets.count, storage.files.count, storage.buckets.{bucketId}.files.count
+     *
+     * Metrics: buckets.$all.count.total, files.$all.count.total, files.bucketId,count.total,
+     * files.$all.storage.size, files.bucketId.storage.size, project.$all.storage.size
      *
      * @param string $projectId
      *
      * @return void
+     * @throws Authorization
+     * @throws Structure
      */
     private function storageStats(string $projectId): void
     {
-        $deploymentsTotal = $this->deploymentsTotal($projectId);
-
         $projectFilesTotal = 0;
         $projectFilesCount = 0;
 
-        $metric = 'storage.buckets.count';
+        $metric = 'buckets.$all.count.total';
         $this->count($projectId, 'buckets', $metric);
 
         $this->foreachDocument($projectId, 'buckets', [], function ($bucket) use (&$projectFilesCount, &$projectFilesTotal, $projectId,) {
-            $metric = "storage.buckets.{$bucket->getId()}.files.count";
-
+            $metric = "files.{$bucket->getId()}.count.total";
             $count = $this->count($projectId, 'bucket_' . $bucket->getInternalId(), $metric);
             $projectFilesCount += $count;
 
-            $metric = "storage.buckets.{$bucket->getId()}.files.total";
+            $metric = "files.{$bucket->getId()}.storage.size";
             $sum = $this->sum($projectId, 'bucket_' . $bucket->getInternalId(), 'sizeOriginal', $metric);
             $projectFilesTotal += $sum;
         });
 
-        $this->createOrUpdateMetric($projectId, 'storage.files.count', $projectFilesCount);
-        $this->createOrUpdateMetric($projectId, 'storage.files.total', $projectFilesTotal);
+        $this->createPerPeriodMetric($projectId, 'files.$all.count.total', $projectFilesCount);
+        $this->createPerPeriodMetric($projectId, 'files.$all.storage.size', $projectFilesTotal);
 
-        $this->createOrUpdateMetric($projectId, 'storage.total', $projectFilesTotal + $deploymentsTotal);
+        $deploymentsTotal = $this->deploymentsTotal($projectId);
+        $this->createPerPeriodMetric($projectId, 'project.$all.storage.size', $projectFilesTotal + $deploymentsTotal);
     }
 
     /**
      * Database Stats
+     *
      * Collect all database stats
-     * Metrics: database.collections.count, database.collections.{collectionId}.documents.count,
-     * database.documents.count
+     * Metrics: databases.$all.count.total, collections.$all.count.total, collections.databaseId.count.total,
+     * documents.$all.count.all, documents.databaseId.count.total, documents.databaseId/collectionId.count.total
      *
      * @param string $projectId
      *
      * @return void
+     * @throws Authorization
+     * @throws Structure
      */
     private function databaseStats(string $projectId): void
     {
         $projectDocumentsCount = 0;
         $projectCollectionsCount = 0;
 
-        $this->count($projectId, 'databases', 'databases.count');
+        $this->count($projectId, 'databases', 'databases.$all.count.total');
 
         $this->foreachDocument($projectId, 'databases', [], function ($database) use (&$projectDocumentsCount, &$projectCollectionsCount, $projectId) {
-            $metric = "databases.{$database->getId()}.collections.count";
+            $metric = "collections.{$database->getId()}.count.total";
             $count = $this->count($projectId, 'database_' . $database->getInternalId(), $metric);
             $projectCollectionsCount += $count;
             $databaseDocumentsCount = 0;
 
             $this->foreachDocument($projectId, 'database_' . $database->getInternalId(), [], function ($collection) use (&$projectDocumentsCount, &$databaseDocumentsCount, $projectId, $database) {
-                $metric = "databases.{$database->getId()}.collections.{$collection->getId()}.documents.count";
+                $metric = "documents.{$database->getId()}/{$collection->getId()}.count.total";
 
                 $count = $this->count($projectId, 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $metric);
                 $projectDocumentsCount += $count;
                 $databaseDocumentsCount += $count;
             });
 
-            $this->createOrUpdateMetric($projectId, "databases.{$database->getId()}.documents.count", $databaseDocumentsCount);
+            $this->createPerPeriodMetric($projectId, "documents.{$database->getId()}.count.total", $databaseDocumentsCount);
         });
 
-        $this->createOrUpdateMetric($projectId, 'databases.collections.count', $projectCollectionsCount);
-        $this->createOrUpdateMetric($projectId, 'databases.documents.count', $projectDocumentsCount);
+        $this->createPerPeriodMetric($projectId, 'collections.$all.count.total', $projectCollectionsCount);
+        $this->createPerPeriodMetric($projectId, 'documents.$all.count.total', $projectDocumentsCount);
     }
 
     /**
      * Collect Stats
+     *
      * Collect all database related stats
      *
      * @return void
+     * @throws Exception
      */
     public function collect(): void
     {

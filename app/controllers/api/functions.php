@@ -13,7 +13,7 @@ use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
-use Appwrite\Stats\Stats;
+use Appwrite\Usage\Stats;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
@@ -57,7 +57,7 @@ App::post('/v1/functions')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
+    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
@@ -195,7 +195,7 @@ App::get('/v1/functions/:functionId/usage')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getUsage')
+    ->label('sdk.method', 'getFunctionUsage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
@@ -233,9 +233,14 @@ App::get('/v1/functions/:functionId/usage')
             ];
 
             $metrics = [
-                "functions.$functionId.executions",
-                "functions.$functionId.failures",
-                "functions.$functionId.compute"
+                "executions.$functionId.compute.total",
+                "executions.$functionId.compute.success",
+                "executions.$functionId.compute.failure",
+                "executions.$functionId.compute.time",
+                "builds.$functionId.compute.total",
+                "builds.$functionId.compute.success",
+                "builds.$functionId.compute.failure",
+                "builds.$functionId.compute.time",
             ];
 
             $stats = [];
@@ -280,9 +285,115 @@ App::get('/v1/functions/:functionId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'functionsExecutions' => $stats["functions.$functionId.executions"],
-                'functionsFailures' => $stats["functions.$functionId.failures"],
-                'functionsCompute' => $stats["functions.$functionId.compute"]
+                'executionsTotal' => $stats["executions.$functionId.compute.total"] ?? [],
+                'executionsFailure' => $stats["executions.$functionId.compute.failure"] ?? [],
+                'executionsSuccesse' => $stats["executions.$functionId.compute.success"] ?? [],
+                'executionsTime' => $stats["executions.$functionId.compute.time"] ?? [],
+                'buildsTotal' => $stats["builds.$functionId.compute.total"] ?? [],
+                'buildsFailure' => $stats["builds.$functionId.compute.failure"] ?? [],
+                'buildsSuccess' => $stats["builds.$functionId.compute.success"] ?? [],
+                'buildsTime' => $stats["builds.$functionId.compute.time" ?? []]
+            ]);
+        }
+
+        $response->dynamic($usage, Response::MODEL_USAGE_FUNCTION);
+    });
+
+App::get('/v1/functions/usage')
+    ->desc('Get Functions Usage')
+    ->groups(['api', 'functions'])
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $range, Response $response, Database $dbForProject) {
+
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $periods = [
+                '24h' => [
+                    'period' => '30m',
+                    'limit' => 48,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            $metrics = [
+                'executions.$all.compute.total',
+                'executions.$all.compute.failure',
+                'executions.$all.compute.success',
+                'executions.$all.compute.time',
+                'builds.$all.compute.total',
+                'builds.$all.compute.failure',
+                'builds.$all.compute.success',
+                'builds.$all.compute.time',
+            ];
+
+            $stats = [];
+
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
+                    $requestDocs = $dbForProject->find('stats', [
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
+                            '30m' => 1800,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                        ];
+                        $backfill--;
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }
+            });
+
+            $usage = new Document([
+                'range' => $range,
+                'executionsTotal' => $stats[$metrics[0]] ?? [],
+                'executionsFailure' => $stats[$metrics[1]] ?? [],
+                'executionsSuccess' => $stats[$metrics[2]] ?? [],
+                'executionsTime' => $stats[$metrics[3]] ?? [],
+                'buildsTotal' => $stats[$metrics[4]] ?? [],
+                'buildsFailure' => $stats[$metrics[5]] ?? [],
+                'buildsSuccess' => $stats[$metrics[6]] ?? [],
+                'buildsTime' => $stats[$metrics[7]] ?? [],
             ]);
         }
 
@@ -304,7 +415,7 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
+    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -479,12 +590,11 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('events')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Stats $usage, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -611,8 +721,6 @@ App::post('/v1/functions/:functionId/deployments')
                 ->setDeployment($deployment)
                 ->setProject($project)
                 ->trigger();
-
-            $usage->setParam('storage', $deployment->getAttribute('size', 0));
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -767,11 +875,10 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('usage')
     ->inject('deletes')
     ->inject('events')
     ->inject('deviceFunctions')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Stats $usage, Delete $deletes, Event $events, Device $deviceFunctions) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Device $deviceFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -798,9 +905,6 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
                 'deployment' => '',
             ])));
         }
-
-        $usage
-            ->setParam('storage', $deployment->getAttribute('size', 0) * -1);
 
         $events
             ->setParam('functionId', $function->getId())
@@ -987,11 +1091,12 @@ App::post('/v1/functions/:functionId/executions')
 
         Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
 
+        // TODO revise this later using route label
         $usage
-            ->setParam('functionId', $function->getId())
-            ->setParam('functionExecution', 1)
-            ->setParam('functionStatus', $execution->getAttribute('status', ''))
-            ->setParam('functionExecutionTime', $execution->getAttribute('time') * 1000); // ms
+        ->setParam('functionId', $function->getId())
+        ->setParam('executions.{scope}.compute', 1)
+        ->setParam('executionStatus', $execution->getAttribute('status', ''))
+        ->setParam('executionTime', $execution->getAttribute('time')); // ms
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);

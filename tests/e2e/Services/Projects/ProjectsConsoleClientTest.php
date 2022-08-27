@@ -276,7 +276,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['requests']);
         $this->assertIsArray($response['body']['network']);
-        $this->assertIsArray($response['body']['functions']);
+        $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['documents']);
         $this->assertIsArray($response['body']['collections']);
         $this->assertIsArray($response['body']['users']);
@@ -396,7 +396,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'provider' => 'unknown',
-            'appId' => ID::custom('AppId'),
+            'appId' => 'AppId',
             'secret' => 'Secret',
         ]);
 

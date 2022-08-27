@@ -18,7 +18,7 @@ class Bucket extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Bucket creation date in Datetime',
+                'description' => 'Bucket creation time in Datetime',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -30,14 +30,14 @@ class Bucket extends Model
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'File permissions.',
+                'description' => 'Bucket permissions. [Learn more about permissions](/docs/permissions).',
                 'default' => [],
                 'example' => ['read("any")'],
                 'array' => true,
             ])
             ->addRule('fileSecurity', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Whether file-level security is enabled.',
+                'description' => 'Whether file-level security is enabled. [Learn more about permissions](/docs/permissions).',
                 'default' => '',
                 'example' => true,
             ])

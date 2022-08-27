@@ -48,13 +48,10 @@ trait DatabasesBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'Movies',
-            'permissions' => [
-                Permission::read(Role::any()),
-                Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
             'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
         ]);
 
         $this->assertEquals(201, $movies['headers']['status-code']);
@@ -101,18 +98,20 @@ trait DatabasesBase
                 ],
             ]);
 
+            $this->assertEquals(404, $responseCreateDocument['headers']['status-code']);
+
             $responseListDocument = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
+
+            $this->assertEquals(404, $responseListDocument['headers']['status-code']);
 
             $responseGetDocument = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/someID', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
-            $this->assertEquals(404, $responseCreateDocument['headers']['status-code']);
-            $this->assertEquals(404, $responseListDocument['headers']['status-code']);
             $this->assertEquals(404, $responseGetDocument['headers']['status-code']);
         }
 
@@ -1602,8 +1601,8 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -2222,7 +2221,7 @@ trait DatabasesBase
             $this->assertEquals([], $document['body']['$permissions']);
         }
 
-        // Updated and Inherit Permissions
+        // Updated Permissions
 
         $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -2234,7 +2233,8 @@ trait DatabasesBase
                 'actors' => [],
             ],
             'permissions' => [
-                Permission::read(Role::any()),
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id']))
             ],
         ]);
 
@@ -2245,8 +2245,11 @@ trait DatabasesBase
         // This differs from the old permissions model because we don't inherit
         // existing document permissions on update, unless none were supplied,
         // so that specific types can be removed if wanted.
-        $this->assertCount(1, $document['body']['$permissions']);
-        $this->assertContains(Permission::read(Role::any()), $document['body']['$permissions']);
+        $this->assertCount(2, $document['body']['$permissions']);
+        $this->assertEquals([
+            Permission::read(Role::user($this->getUser()['$id'])),
+            Permission::update(Role::user($this->getUser()['$id'])),
+        ], $document['body']['$permissions']);
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
@@ -2257,11 +2260,11 @@ trait DatabasesBase
         $this->assertEquals($document['body']['title'], 'Captain America 2');
         $this->assertEquals($document['body']['releaseYear'], 1945);
 
-        // This differs from the old permissions model because we don't inherit
-        // existing document permissions on update, unless none were supplied,
-        // so that specific types can be removed if wanted.
-        $this->assertCount(1, $document['body']['$permissions']);
-        $this->assertContains(Permission::read(Role::any()), $document['body']['$permissions']);
+        $this->assertCount(2, $document['body']['$permissions']);
+        $this->assertEquals([
+            Permission::read(Role::user($this->getUser()['$id'])),
+            Permission::update(Role::user($this->getUser()['$id'])),
+        ], $document['body']['$permissions']);
 
         // Reset Permissions
 
@@ -2283,10 +2286,25 @@ trait DatabasesBase
         $this->assertCount(0, $document['body']['$permissions']);
         $this->assertEquals([], $document['body']['$permissions']);
 
+        // Check client side can no longer read the document.
+        $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        switch ($this->getSide()) {
+            case 'client':
+                $this->assertEquals(404, $document['headers']['status-code']);
+                break;
+            case 'server':
+                $this->assertEquals(200, $document['headers']['status-code']);
+                break;
+        }
+
         return $data;
     }
 
-    public function testEnforceDocumentPermissions(): void
+    public function testEnforceCollectionAndDocumentPermissions(): void
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
@@ -2294,10 +2312,10 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'databaseId' => ID::unique(),
-            'name' => 'EnforceCollectionPermissions',
+            'name' => 'EnforceCollectionAndDocumentPermissions',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
-        $this->assertEquals('EnforceCollectionPermissions', $database['body']['name']);
+        $this->assertEquals('EnforceCollectionAndDocumentPermissions', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
         $user = $this->getUser()['$id'];
@@ -2307,7 +2325,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'collectionId' => ID::unique(),
-            'name' => 'enforceCollectionPermissions',
+            'name' => 'enforceCollectionAndDocumentPermissions',
             'documentSecurity' => true,
             'permissions' => [
                 Permission::read(Role::user($user)),
@@ -2318,7 +2336,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(201, $collection['headers']['status-code']);
-        $this->assertEquals($collection['body']['name'], 'enforceCollectionPermissions');
+        $this->assertEquals($collection['body']['name'], 'enforceCollectionAndDocumentPermissions');
         $this->assertEquals($collection['body']['documentSecurity'], true);
 
         $collectionId = $collection['body']['$id'];
@@ -2412,22 +2430,16 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        switch ($this->getSide()) {
-            case 'client':
-                $this->assertEquals(2, $documentsUser1['body']['total']);
-                $this->assertCount(2, $documentsUser1['body']['documents']);
-                break;
-            case 'server':
-                $this->assertEquals(3, $documentsUser1['body']['total']);
-                $this->assertCount(3, $documentsUser1['body']['documents']);
-                break;
-        }
+        // Current user has read permission on the collection so can get any document
+        $this->assertEquals(3, $documentsUser1['body']['total']);
+        $this->assertCount(3, $documentsUser1['body']['documents']);
 
         $document3GetWithCollectionRead = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document3['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
+        // Current user has read permission on the collection so can get any document
         $this->assertEquals(200, $document3GetWithCollectionRead['headers']['status-code']);
 
         $email = uniqid() . 'user@localhost.test';
@@ -2460,6 +2472,7 @@ trait DatabasesBase
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
         ]);
 
+        // Current user has no collection permissions but has read permission for this document
         $this->assertEquals(200, $document3GetWithDocumentRead['headers']['status-code']);
 
         $document2GetFailure = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document2['body']['$id'], [
@@ -2469,7 +2482,8 @@ trait DatabasesBase
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
         ]);
 
-        $this->assertEquals(401, $document2GetFailure['headers']['status-code']);
+        // Current user has no collection or document permissions for this document
+        $this->assertEquals(404, $document2GetFailure['headers']['status-code']);
 
         $documentsUser2 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
             'origin' => 'http://localhost',
@@ -2478,6 +2492,210 @@ trait DatabasesBase
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
         ]);
 
+        // Current user has no collection permissions but has read permission for one document
+        $this->assertEquals(1, $documentsUser2['body']['total']);
+        $this->assertCount(1, $documentsUser2['body']['documents']);
+    }
+
+    public function testEnforceCollectionPermissions()
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'EnforceCollectionPermissions',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('EnforceCollectionPermissions', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
+        $user = $this->getUser()['$id'];
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'enforceCollectionPermissions',
+            'permissions' => [
+                Permission::read(Role::user($user)),
+                Permission::create(Role::user($user)),
+                Permission::update(Role::user($user)),
+                Permission::delete(Role::user($user)),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $this->assertEquals($collection['body']['name'], 'enforceCollectionPermissions');
+        $this->assertEquals($collection['body']['documentSecurity'], false);
+
+        $collectionId = $collection['body']['$id'];
+
+        sleep(2);
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'attribute',
+            'size' => 64,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $attribute['headers']['status-code'], 202);
+        $this->assertEquals('attribute', $attribute['body']['key']);
+
+        // wait for db to add attribute
+        sleep(2);
+
+        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'key_attribute',
+            'type' => 'key',
+            'attributes' => [$attribute['body']['key']],
+        ]);
+
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->assertEquals('key_attribute', $index['body']['key']);
+
+        // wait for db to add attribute
+        sleep(2);
+
+        $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'attribute' => 'one',
+            ],
+            'permissions' => [
+                Permission::read(Role::user($user)),
+                Permission::update(Role::user($user)),
+                Permission::delete(Role::user($user)),
+            ]
+        ]);
+
+        $this->assertEquals(201, $document1['headers']['status-code']);
+
+        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'attribute' => 'one',
+            ],
+            'permissions' => [
+                Permission::update(Role::user($user)),
+                Permission::delete(Role::user($user)),
+            ]
+        ]);
+
+        $this->assertEquals(201, $document2['headers']['status-code']);
+
+        $document3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'attribute' => 'one',
+            ],
+            'permissions' => [
+                Permission::read(Role::user(ID::custom('other2'))),
+                Permission::update(Role::user(ID::custom('other2'))),
+            ],
+        ]);
+
+        $this->assertEquals(201, $document3['headers']['status-code']);
+
+        $documentsUser1 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        // Current user has read permission on the collection so can get any document
+        $this->assertEquals(3, $documentsUser1['body']['total']);
+        $this->assertCount(3, $documentsUser1['body']['documents']);
+
+        $document3GetWithCollectionRead = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document3['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        // Current user has read permission on the collection so can get any document
+        $this->assertEquals(200, $document3GetWithCollectionRead['headers']['status-code']);
+
+        $email = uniqid() . 'user2@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+        $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => ID::custom('other2'),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+        $session2 = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $session2 = $this->client->parseCookie((string)$session2['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+
+        $document3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document3['body']['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
+        ]);
+
+        // Current user has no collection permissions and document permissions are disabled
+        $this->assertEquals(401, $document3GetWithDocumentRead['headers']['status-code']);
+
+        $documentsUser2 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
+        ]);
+
+        // Current user has no collection permissions and document permissions are disabled
+        $this->assertEquals(401, $documentsUser2['headers']['status-code']);
+
+
+        // Enable document permissions
+        $collection = $this->client->call(CLient::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'name' => $collection['body']['name'],
+            'documentSecurity' => true,
+        ]);
+
+        $documentsUser2 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session2,
+        ]);
+
+        // Current user has no collection permissions read access to one document
         $this->assertEquals(1, $documentsUser2['body']['total']);
         $this->assertCount(1, $documentsUser2['body']['documents']);
     }
