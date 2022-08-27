@@ -116,10 +116,10 @@ App::post('/v1/storage/buckets')
                 'name' => $name,
                 'maximumFileSize' => $maximumFileSize,
                 'allowedFileExtensions' => $allowedFileExtensions,
-                'fileSecurity' => (bool) filter_var($fileSecurity, FILTER_VALIDATE_BOOLEAN),
-                'enabled' => (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN),
-                'encryption' => (bool) filter_var($encryption, FILTER_VALIDATE_BOOLEAN),
-                'antivirus' => (bool) filter_var($antivirus, FILTER_VALIDATE_BOOLEAN),
+                'fileSecurity' => $fileSecurity,
+                'enabled' => $enabled,
+                'encryption' => $encryption,
+                'antivirus' => $antivirus,
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
 
@@ -264,10 +264,10 @@ App::put('/v1/storage/buckets/:bucketId')
                 ->setAttribute('$permissions', $permissions)
                 ->setAttribute('maximumFileSize', $maximumFileSize)
                 ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
-                ->setAttribute('fileSecurity', (bool) filter_var($fileSecurity, FILTER_VALIDATE_BOOLEAN))
-                ->setAttribute('enabled', (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN))
-                ->setAttribute('encryption', (bool) filter_var($encryption, FILTER_VALIDATE_BOOLEAN))
-                ->setAttribute('antivirus', (bool) filter_var($antivirus, FILTER_VALIDATE_BOOLEAN)));
+                ->setAttribute('fileSecurity', $fileSecurity)
+                ->setAttribute('enabled', $enabled)
+                ->setAttribute('encryption', $encryption)
+                ->setAttribute('antivirus', $antivirus));
 
         $events
             ->setParam('bucketId', $bucket->getId())
