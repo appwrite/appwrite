@@ -2056,12 +2056,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "336df0d08d8bd875acd6b2b87d7b24133aa016f5"
+                "reference": "a3b291456b0d73ea6b0de1a1bb8fc6713472575e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/336df0d08d8bd875acd6b2b87d7b24133aa016f5",
-                "reference": "336df0d08d8bd875acd6b2b87d7b24133aa016f5",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a3b291456b0d73ea6b0de1a1bb8fc6713472575e",
+                "reference": "a3b291456b0d73ea6b0de1a1bb8fc6713472575e",
                 "shasum": ""
             },
             "require": {
@@ -2112,7 +2112,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/refactor-permissions"
             },
-            "time": "2022-08-25T08:19:47+00:00"
+            "time": "2022-08-26T09:03:29+00:00"
         },
         {
             "name": "utopia-php/domains",
