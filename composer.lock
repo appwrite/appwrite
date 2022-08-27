@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1145ff29befcc4aa21b5002da0b8319c",
+    "content-hash": "039de21eff3a27955696a9f6f645c548",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2833,12 +2833,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "1a67d9dcd2884a6a708176955f83e319ac53059e"
+                "reference": "532d4d15ec8f11539972f2848c2e230c49b24f65"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/1a67d9dcd2884a6a708176955f83e319ac53059e",
-                "reference": "1a67d9dcd2884a6a708176955f83e319ac53059e",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/532d4d15ec8f11539972f2848c2e230c49b24f65",
+                "reference": "532d4d15ec8f11539972f2848c2e230c49b24f65",
                 "shasum": ""
             },
             "require": {
@@ -2875,7 +2875,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-new-headers"
             },
-            "time": "2022-08-19T10:03:22+00:00"
+            "time": "2022-08-20T07:42:55+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5375,5 +5375,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
