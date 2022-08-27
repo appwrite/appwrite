@@ -282,7 +282,7 @@ App::post('/v1/mock/tests/general/upload')
 
             if ($end !== $size) {
                 $response->json([
-                    '$id' => 'newfileid',
+                    '$id' => ID::custom('newfileid'),
                     'chunksTotal' => $file['size'] / $chunkSize,
                     'chunksUploaded' => $start / $chunkSize
                 ]);

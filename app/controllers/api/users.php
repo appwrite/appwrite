@@ -12,9 +12,13 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Locale\Locale;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
 use Utopia\Database\Database;
@@ -38,12 +42,17 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
     }
 
     try {
-        $userId = $userId == 'unique()' ? $dbForProject->getId() : $userId;
+        $userId = $userId == 'unique()'
+            ? ID::unique()
+            : ID::custom($userId);
 
         $user = $dbForProject->createDocument('users', new Document([
             '$id' => $userId,
-            '$read' => ['role:all'],
-            '$write' => ['user:' . $userId],
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
+            ],
             'email' => $email,
             'emailVerification' => false,
             'phone' => $phone,
@@ -52,8 +61,8 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'password' => (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null,
             'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
             'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions,
-            'passwordUpdate' => (!empty($password)) ? \time() : 0,
-            'registration' => \time(),
+            'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
+            'registration' => DateTime::now(),
             'reset' => false,
             'name' => $name,
             'prefs' => new \stdClass(),
@@ -336,28 +345,34 @@ App::get('/v1/users')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the user used as the starting point for the query, excluding the user itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
-        if (!empty($cursor)) {
-            $cursorUser = $dbForProject->getDocument('users', $cursor);
+        $filterQueries = [];
 
-            if ($cursorUser->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "User '{$cursor}' for the 'cursor' value not found.");
-            }
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('search', $search);
         }
 
         $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('users', $cursor);
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "User '{$cursor}' for the 'cursor' value not found.");
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         $response->dynamic(new Document([
-            'users' => $dbForProject->find('users', $queries, $limit, $offset, [], [$orderType], $cursorUser ?? null, $cursorDirection),
-            'total' => $dbForProject->count('users', $queries, APP_LIMIT_COUNT),
+            'users' => $dbForProject->find('users', \array_merge($filterQueries, $queries)),
+            'total' => $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -756,7 +771,7 @@ App::patch('/v1/users/:userId/password')
             ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
             ->setAttribute('hash', Auth::DEFAULT_ALGO)
             ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-            ->setAttribute('passwordUpdate', \time());
+            ->setAttribute('passwordUpdate', DateTime::now());
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -1094,7 +1109,7 @@ App::get('/v1/users/usage')
             ];
 
             $metrics = [
-                'users.$all.requests.count',
+                'users.$all.count.total',
                 'users.$all.requests.create',
                 'users.$all.requests.read',
                 'users.$all.requests.update',
@@ -1112,9 +1127,11 @@ App::get('/v1/users/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -1134,7 +1151,7 @@ App::get('/v1/users/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -1144,7 +1161,7 @@ App::get('/v1/users/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'usersCount' => $stats['users.$all.requests.count'] ?? [],
+                'usersCount' => $stats['users.$all.count.total'] ?? [],
                 'usersCreate' => $stats['users.$all.requests.create'] ?? [],
                 'usersRead' => $stats['users.$all.requests.read'] ?? [],
                 'usersUpdate' => $stats['users.$all.requests.update'] ?? [],

@@ -4,6 +4,7 @@ namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\Origin;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\ID;
 
 class OriginTest extends TestCase
 {
@@ -11,19 +12,19 @@ class OriginTest extends TestCase
     {
         $validator = new Origin([
             [
-                '$collection' => 'platforms',
+                '$collection' => ID::custom('platforms'),
                 'name' => 'Production',
                 'type' => 'web',
                 'hostname' => 'appwrite.io',
             ],
             [
-                '$collection' => 'platforms',
+                '$collection' => ID::custom('platforms'),
                 'name' => 'Development',
                 'type' => 'web',
                 'hostname' => 'appwrite.test',
             ],
             [
-                '$collection' => 'platforms',
+                '$collection' => ID::custom('platforms'),
                 'name' => 'Localhost',
                 'type' => 'web',
                 'hostname' => 'localhost',

@@ -109,14 +109,11 @@
       input.addEventListener("change", function() {
         var message = alerts.add({ text: labelLoading, class: "" }, 0);
         var files = input.files;
-        var read = JSON.parse(
-          expression.parse(element.dataset["read"] || "[]")
-        );
-        var write = JSON.parse(
-          expression.parse(element.dataset["write"] || "[]")
-        );
+        var permissions = JSON.parse(
+            expression.parse(element.dataset["permissions"] || "[]")
+        )
 
-        sdk.storage.createFile('default', 'unique()', files[0], read, write).then(
+        sdk.storage.createFile('default', 'unique()', files[0], permissions).then(
           function(response) {
             onComplete(message);
 

@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Users;
 
 use Tests\E2E\Client;
 use Utopia\Database\Database;
+use Utopia\Database\ID;
 
 trait UsersBase
 {
@@ -16,7 +17,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => 'cristiano.ronaldo@manchester-united.co.uk',
             'password' => 'password',
             'name' => 'Cristiano Ronaldo',
@@ -33,7 +34,7 @@ trait UsersBase
         $this->assertEquals($body['name'], 'Cristiano Ronaldo');
         $this->assertEquals($body['email'], 'cristiano.ronaldo@manchester-united.co.uk');
         $this->assertEquals($body['status'], true);
-        $this->assertGreaterThan(0, $body['registration']);
+        $this->assertGreaterThan('2000-01-01 00:00:00', $body['registration']);
 
         /**
          * Test Create with Custom ID for SUCCESS
@@ -42,7 +43,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => 'user1',
+            'userId' => ID::custom('user1'),
             'email' => 'lionel.messi@psg.fr',
             'password' => 'password',
             'name' => 'Lionel Messi',
@@ -53,7 +54,7 @@ trait UsersBase
         $this->assertEquals($res['body']['name'], 'Lionel Messi');
         $this->assertEquals($res['body']['email'], 'lionel.messi@psg.fr');
         $this->assertEquals(true, $res['body']['status']);
-        $this->assertGreaterThan(0, $res['body']['registration']);
+        $this->assertGreaterThan('2000-01-01 00:00:00', $res['body']['registration']);
 
          /**
          * Test Create with hashed passwords
@@ -527,7 +528,7 @@ trait UsersBase
         $this->assertEquals($user['body']['name'], 'Cristiano Ronaldo');
         $this->assertEquals($user['body']['email'], 'cristiano.ronaldo@manchester-united.co.uk');
         $this->assertEquals($user['body']['status'], true);
-        $this->assertGreaterThan(0, $user['body']['registration']);
+        $this->assertGreaterThan('2000-01-01 00:00:00', $user['body']['registration']);
 
         $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', array_merge([
             'content-type' => 'application/json',

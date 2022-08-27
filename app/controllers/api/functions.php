@@ -9,6 +9,9 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
 use Appwrite\Usage\Stats;
 use Utopia\Storage\Device;
@@ -22,6 +25,7 @@ use Appwrite\Task\Validator\Cron;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\ArrayList;
@@ -33,7 +37,7 @@ use Utopia\Config\Config;
 use Cron\CronExpression;
 use Executor\Executor;
 use Utopia\CLI\Console;
-use Utopia\Database\Validator\Permissions;
+use Utopia\Database\Validator\Roles;
 use Utopia\Validator\Boolean;
 
 include_once __DIR__ . '/../shared/api.php';
@@ -53,7 +57,7 @@ App::post('/v1/functions')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
+    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
@@ -64,7 +68,7 @@ App::post('/v1/functions')
     ->inject('events')
     ->action(function (string $functionId, string $name, array $execute, string $runtime, array $vars, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Event $eventsInstance) {
 
-        $functionId = ($functionId == 'unique()') ? $dbForProject->getId() : $functionId;
+        $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
             '$id' => $functionId,
             'execute' => $execute,
@@ -75,8 +79,8 @@ App::post('/v1/functions')
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
-            'schedulePrevious' => 0,
-            'scheduleNext' => 0,
+            'schedulePrevious' => null,
+            'scheduleNext' => null,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ]));
@@ -103,28 +107,34 @@ App::get('/v1/functions')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the function used as the starting point for the query, excluding the function itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
-        if (!empty($cursor)) {
-            $cursorFunction = $dbForProject->getDocument('functions', $cursor);
+        $filterQueries = [];
 
-            if ($cursorFunction->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Function '{$cursor}' for the 'cursor' value not found.");
-            }
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('search', $search);
         }
 
         $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('functions', $cursor);
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Function '{$cursor}' for the 'cursor' value not found.");
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         $response->dynamic(new Document([
-            'functions' => $dbForProject->find('functions', $queries, $limit, $offset, [], [$orderType], $cursorFunction ?? null, $cursorDirection),
-            'total' => $dbForProject->count('functions', $queries, APP_LIMIT_COUNT),
+            'functions' => $dbForProject->find('functions', \array_merge($filterQueries, $queries)),
+            'total' => $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FUNCTION_LIST);
     });
 
@@ -241,9 +251,11 @@ App::get('/v1/functions/:functionId/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -263,7 +275,7 @@ App::get('/v1/functions/:functionId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -342,8 +354,8 @@ App::get('/v1/functions/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
                     ], $limit, 0, ['time'], [Database::ORDER_DESC]);
 
                     $stats[$metric] = [];
@@ -403,7 +415,7 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution permissions. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions) and get a full list of available permissions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each 64 characters long.')
+    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.')
     ->param('vars', [], new Assoc(), 'Key-value JSON object that will be passed to the function as environment variables.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -422,8 +434,8 @@ App::put('/v1/functions/:functionId')
         }
 
         $original = $function->getAttribute('schedule', '');
-        $cron = (!empty($function->getAttribute('deployment', null)) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (!empty($function->getAttribute('deployment', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+        $cron = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
+        $next = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
@@ -431,7 +443,7 @@ App::put('/v1/functions/:functionId')
             'vars' => $vars,
             'events' => $events,
             'schedule' => $schedule,
-            'scheduleNext' => (int)$next,
+            'scheduleNext' => $next,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
@@ -443,9 +455,8 @@ App::put('/v1/functions/:functionId')
                 ->setFunction($function)
                 ->setType('schedule')
                 ->setUser($user)
-                ->setProject($project);
-
-            $functionEvent->schedule($next);
+                ->setProject($project)
+                ->schedule(new \DateTime($next));
         }
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -496,11 +507,11 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
 
         $schedule = $function->getAttribute('schedule', '');
         $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : 0;
+        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'deployment' => $deployment->getId(),
-            'scheduleNext' => (int)$next,
+            'scheduleNext' => $next,
         ])));
 
         if ($next) { // Init first schedule
@@ -508,8 +519,8 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             $functionEvent
                 ->setType('schedule')
                 ->setFunction($function)
-                ->setProject($project);
-            $functionEvent->schedule($next);
+                ->setProject($project)
+                ->schedule(new \DateTime($next));
         }
 
         $events
@@ -610,7 +621,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $contentRange = $request->getHeader('content-range');
-        $deploymentId = $dbForProject->getId();
+        $deploymentId = ID::unique();
         $chunk = 1;
         $chunks = 1;
 
@@ -668,9 +679,9 @@ App::post('/v1/functions/:functionId/deployments')
             if ($activate) {
                 // Remove deploy for all other deployments.
                 $activeDeployments = $dbForProject->find('deployments', [
-                    new Query('activate', Query::TYPE_EQUAL, [true]),
-                    new Query('resourceId', Query::TYPE_EQUAL, [$functionId]),
-                    new Query('resourceType', Query::TYPE_EQUAL, ['functions'])
+                    Query::equal('activate', [true]),
+                    Query::equal('resourceId', [$functionId]),
+                    Query::equal('resourceType', ['functions'])
                 ]);
 
                 foreach ($activeDeployments as $activeDeployment) {
@@ -684,8 +695,11 @@ App::post('/v1/functions/:functionId/deployments')
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
-                    '$read' => ['role:all'],
-                    '$write' => ['role:all'],
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -711,8 +725,11 @@ App::post('/v1/functions/:functionId/deployments')
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
                     '$id' => $deploymentId,
-                    '$read' => ['role:all'],
-                    '$write' => ['role:all'],
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -756,7 +773,7 @@ App::get('/v1/functions/:functionId/deployments')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the deployment used as the starting point for the query, excluding the deployment itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
@@ -767,25 +784,31 @@ App::get('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        if (!empty($cursor)) {
-            $cursorDeployment = $dbForProject->getDocument('deployments', $cursor);
-
-            if ($cursorDeployment->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Tag '{$cursor}' for the 'cursor' value not found.");
-            }
-        }
-
-        $queries = [];
+        $filterQueries = [];
 
         if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            $filterQueries[] = Query::search('search', $search);
         }
 
-        $queries[] = new Query('resourceId', Query::TYPE_EQUAL, [$function->getId()]);
-        $queries[] = new Query('resourceType', Query::TYPE_EQUAL, ['functions']);
+        $filterQueries[] = Query::equal('resourceId', [$function->getId()]);
+        $filterQueries[] = Query::equal('resourceType', ['functions']);
 
-        $results = $dbForProject->find('deployments', $queries, $limit, $offset, [], [$orderType], $cursorDeployment ?? null, $cursorDirection);
-        $total = $dbForProject->count('deployments', $queries, APP_LIMIT_COUNT);
+        $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('deployments', $cursor);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Tag '{$cursor}' for the 'cursor' value not found.");
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+        }
+
+        $results = $dbForProject->find('deployments', \array_merge($filterQueries, $queries));
+        $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
 
         foreach ($results as $result) {
             $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId', ''));
@@ -959,13 +982,12 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
         }
 
-        $executionId = $dbForProject->getId();
+        $executionId = ID::unique();
 
         /** @var Document $execution */
         $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
-            '$read' => (!$user->isEmpty()) ? ['user:' . $user->getId()] : [],
-            '$write' => [],
+            '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
@@ -1037,7 +1059,6 @@ App::post('/v1/functions/:functionId/executions')
 
         /** Execute function */
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-        $executionResponse = [];
         try {
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
@@ -1059,12 +1080,12 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
-            $endtime = \microtime(true);
-            $time = $endtime - $execution->getCreatedAt();
-            $execution->setAttribute('time', $time);
-            $execution->setAttribute('status', 'failed');
-            $execution->setAttribute('statusCode', $th->getCode());
-            $execution->setAttribute('stderr', $th->getMessage());
+            $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
+            $execution
+                ->setAttribute('time', (float)$interval->format('%s.%f'))
+                ->setAttribute('status', 'failed')
+                ->setAttribute('statusCode', $th->getCode())
+                ->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());
         }
 
@@ -1117,24 +1138,30 @@ App::get('/v1/functions/:functionId/executions')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        if (!empty($cursor)) {
-            $cursorExecution = $dbForProject->getDocument('executions', $cursor);
-
-            if ($cursorExecution->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Execution '{$cursor}' for the 'cursor' value not found.");
-            }
-        }
-
-        $queries = [
-            new Query('functionId', Query::TYPE_EQUAL, [$function->getId()])
+        $filterQueries = [
+            Query::equal('functionId', [$function->getId()])
         ];
 
         if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            $filterQueries[] = Query::search('search', $search);
         }
 
-        $results = $dbForProject->find('executions', $queries, $limit, $offset, [], [Database::ORDER_DESC], $cursorExecution ?? null, $cursorDirection);
-        $total = $dbForProject->count('executions', $queries, APP_LIMIT_COUNT);
+        $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('executions', $cursor);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Tag '{$cursor}' for the 'cursor' value not found.");
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+        }
+
+        $results = $dbForProject->find('executions', \array_merge($filterQueries, $queries));
+        $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);

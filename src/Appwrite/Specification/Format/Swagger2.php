@@ -5,6 +5,8 @@ namespace Appwrite\Specification\Format;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Validator;
 
 class Swagger2 extends Format
@@ -295,6 +297,11 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         $node['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
                         break;
+                    case 'Utopia\Database\Validator\DatetimeValidator':
+                        $node['type'] = $validator->getType();
+                        $node['format'] = 'datetime';
+                        $node['x-example'] = '2022-06-15T13:45:30.496';
+                        break;
                     case 'Appwrite\Network\Validator\Email':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'email';
@@ -329,7 +336,15 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["role:all"]';
+                        $node['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        break;
+                    case 'Utopia\Database\Validator\Roles':
+                        $node['type'] = $validator->getType();
+                        $node['collectionFormat'] = 'multi';
+                        $node['items'] = [
+                            'type' => 'string',
+                        ];
+                        $node['x-example'] = '["' . Role::any()->toString() . '"]';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['type'] = $validator->getType();
@@ -463,6 +478,7 @@ class Swagger2 extends Format
 
                 switch ($rule['type']) {
                     case 'string':
+                    case 'datetime':
                         $type = 'string';
                         break;
 

@@ -9,6 +9,8 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\ID;
+use Utopia\Database\Role;
 
 class FunctionsCustomClientTest extends Scope
 {
@@ -25,7 +27,7 @@ class FunctionsCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
             'vars' => [
                 'funcKey1' => 'funcValue1',
@@ -55,9 +57,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['user:' . $this->getUser()['$id']],
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
@@ -145,9 +147,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['role:all'],
+            'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',
@@ -177,7 +179,7 @@ class FunctionsCustomClientTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         // Wait for deployment to be built.
-        sleep(5);
+        sleep(10);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
@@ -236,7 +238,7 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
             'execute' => [],
             'runtime' => 'php-8.0',
@@ -330,9 +332,9 @@ class FunctionsCustomClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
         ], [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ['role:all'],
+            'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',

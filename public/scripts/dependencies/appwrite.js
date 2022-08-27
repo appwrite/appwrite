@@ -49,19 +49,25 @@
 
     class Query {
     }
-    Query.equal = (attribute, value) => Query.addQuery(attribute, 'equal', value);
-    Query.notEqual = (attribute, value) => Query.addQuery(attribute, 'notEqual', value);
-    Query.lesser = (attribute, value) => Query.addQuery(attribute, 'lesser', value);
-    Query.lesserEqual = (attribute, value) => Query.addQuery(attribute, 'lesserEqual', value);
-    Query.greater = (attribute, value) => Query.addQuery(attribute, 'greater', value);
-    Query.greaterEqual = (attribute, value) => Query.addQuery(attribute, 'greaterEqual', value);
-    Query.search = (attribute, value) => Query.addQuery(attribute, 'search', value);
-    Query.addQuery = (attribute, oper, value) => value instanceof Array
-        ? `${attribute}.${oper}(${value
+    Query.equal = (attribute, value) => Query.addQuery(attribute, "equal", value);
+    Query.notEqual = (attribute, value) => Query.addQuery(attribute, "notEqual", value);
+    Query.lessThan = (attribute, value) => Query.addQuery(attribute, "lessThan", value);
+    Query.lessThanEqual = (attribute, value) => Query.addQuery(attribute, "lessThanEqual", value);
+    Query.greaterThan = (attribute, value) => Query.addQuery(attribute, "greaterThan", value);
+    Query.greaterThanEqual = (attribute, value) => Query.addQuery(attribute, "greaterThanEqual", value);
+    Query.search = (attribute, value) => Query.addQuery(attribute, "search", value);
+    Query.orderDesc = (attribute) => `orderDesc("${attribute}")`;
+    Query.orderAsc = (attribute) => `orderAsc("${attribute}")`;
+    Query.cursorAfter = (documentId) => `cursorAfter("${documentId}")`;
+    Query.cursorBefore = (documentId) => `cursorBefore("${documentId}")`;
+    Query.limit = (limit) => `limit(${limit})`;
+    Query.offset = (offset) => `offset(${offset})`;
+    Query.addQuery = (attribute, method, value) => value instanceof Array
+        ? `${method}("${attribute}", [${value
         .map((v) => Query.parseValues(v))
-        .join(',')})`
-        : `${attribute}.${oper}(${Query.parseValues(value)})`;
-    Query.parseValues = (value) => typeof value === 'string' || value instanceof String
+        .join(",")}])`
+        : `${method}("${attribute}", [${Query.parseValues(value)}])`;
+    Query.parseValues = (value) => typeof value === "string" || value instanceof String
         ? `"${value}"`
         : `${value}`;
 
@@ -1867,13 +1873,12 @@
          * @param {string} databaseId
          * @param {string} collectionId
          * @param {string} name
-         * @param {string} permission
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {string[]} permissions
+         * @param {boolean} documentSecurity
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createCollection(databaseId, collectionId, name, permission, read, write) {
+        createCollection(databaseId, collectionId, name, permissions, documentSecurity) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -1884,14 +1889,11 @@
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
                 }
-                if (typeof permission === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "permission"');
+                if (typeof permissions === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "permissions"');
                 }
-                if (typeof read === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "read"');
-                }
-                if (typeof write === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "write"');
+                if (typeof documentSecurity === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "documentSecurity"');
                 }
                 let path = '/databases/{databaseId}/collections'.replace('{databaseId}', databaseId);
                 let payload = {};
@@ -1901,14 +1903,11 @@
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
-                if (typeof permission !== 'undefined') {
-                    payload['permission'] = permission;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof documentSecurity !== 'undefined') {
+                    payload['documentSecurity'] = documentSecurity;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
@@ -1951,14 +1950,13 @@
          * @param {string} databaseId
          * @param {string} collectionId
          * @param {string} name
-         * @param {string} permission
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {boolean} documentSecurity
+         * @param {string[]} permissions
          * @param {boolean} enabled
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updateCollection(databaseId, collectionId, name, permission, read, write, enabled) {
+        updateCollection(databaseId, collectionId, name, documentSecurity, permissions, enabled) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -1969,22 +1967,19 @@
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
                 }
-                if (typeof permission === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "permission"');
+                if (typeof documentSecurity === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "documentSecurity"');
                 }
                 let path = '/databases/{databaseId}/collections/{collectionId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
                 let payload = {};
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
-                if (typeof permission !== 'undefined') {
-                    payload['permission'] = permission;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof documentSecurity !== 'undefined') {
+                    payload['documentSecurity'] = documentSecurity;
                 }
                 if (typeof enabled !== 'undefined') {
                     payload['enabled'] = enabled;
@@ -2077,6 +2072,53 @@
                     throw new AppwriteException('Missing required parameter: "required"');
                 }
                 let path = '/databases/{databaseId}/collections/{collectionId}/attributes/boolean'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
+                let payload = {};
+                if (typeof key !== 'undefined') {
+                    payload['key'] = key;
+                }
+                if (typeof required !== 'undefined') {
+                    payload['required'] = required;
+                }
+                if (typeof xdefault !== 'undefined') {
+                    payload['default'] = xdefault;
+                }
+                if (typeof array !== 'undefined') {
+                    payload['array'] = array;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create DateTime Attribute
+         *
+         *
+         * @param {string} databaseId
+         * @param {string} collectionId
+         * @param {string} key
+         * @param {boolean} required
+         * @param {string} xdefault
+         * @param {boolean} array
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createDatetimeAttribute(databaseId, collectionId, key, required, xdefault, array) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof databaseId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "databaseId"');
+                }
+                if (typeof collectionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "collectionId"');
+                }
+                if (typeof key === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "key"');
+                }
+                if (typeof required === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "required"');
+                }
+                let path = '/databases/{databaseId}/collections/{collectionId}/attributes/datetime'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
                 let payload = {};
                 if (typeof key !== 'undefined') {
                     payload['key'] = key;
@@ -2596,12 +2638,11 @@
          * @param {string} collectionId
          * @param {string} documentId
          * @param {Omit<Document, keyof Models.Document>} data
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {string[]} permissions
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createDocument(databaseId, collectionId, documentId, data, read, write) {
+        createDocument(databaseId, collectionId, documentId, data, permissions) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -2623,11 +2664,8 @@
                 if (typeof data !== 'undefined') {
                     payload['data'] = data;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
@@ -2676,12 +2714,11 @@
          * @param {string} collectionId
          * @param {string} documentId
          * @param {Partial<Omit<Document, keyof Models.Document>>} data
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {string[]} permissions
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updateDocument(databaseId, collectionId, documentId, data, read, write) {
+        updateDocument(databaseId, collectionId, documentId, data, permissions) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -2697,11 +2734,8 @@
                 if (typeof data !== 'undefined') {
                     payload['data'] = data;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('patch', uri, {
@@ -4436,7 +4470,7 @@
          * @param {string} projectId
          * @param {string} name
          * @param {string[]} scopes
-         * @param {number} expire
+         * @param {string} expire
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -4501,7 +4535,7 @@
          * @param {string} keyId
          * @param {string} name
          * @param {string[]} scopes
-         * @param {number} expire
+         * @param {string} expire
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -5089,9 +5123,8 @@
          *
          * @param {string} bucketId
          * @param {string} name
-         * @param {string} permission
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {boolean} fileSecurity
+         * @param {string[]} permissions
          * @param {boolean} enabled
          * @param {number} maximumFileSize
          * @param {string[]} allowedFileExtensions
@@ -5100,7 +5133,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createBucket(bucketId, name, permission, read, write, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) {
+        createBucket(bucketId, name, fileSecurity, permissions, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
@@ -5108,8 +5141,8 @@
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
                 }
-                if (typeof permission === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "permission"');
+                if (typeof fileSecurity === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "fileSecurity"');
                 }
                 let path = '/storage/buckets';
                 let payload = {};
@@ -5119,14 +5152,11 @@
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
-                if (typeof permission !== 'undefined') {
-                    payload['permission'] = permission;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof fileSecurity !== 'undefined') {
+                    payload['fileSecurity'] = fileSecurity;
                 }
                 if (typeof enabled !== 'undefined') {
                     payload['enabled'] = enabled;
@@ -5179,9 +5209,8 @@
          *
          * @param {string} bucketId
          * @param {string} name
-         * @param {string} permission
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {boolean} fileSecurity
+         * @param {string[]} permissions
          * @param {boolean} enabled
          * @param {number} maximumFileSize
          * @param {string[]} allowedFileExtensions
@@ -5190,7 +5219,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updateBucket(bucketId, name, permission, read, write, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) {
+        updateBucket(bucketId, name, fileSecurity, permissions, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
@@ -5198,22 +5227,19 @@
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
                 }
-                if (typeof permission === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "permission"');
+                if (typeof fileSecurity === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "fileSecurity"');
                 }
                 let path = '/storage/buckets/{bucketId}'.replace('{bucketId}', bucketId);
                 let payload = {};
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
-                if (typeof permission !== 'undefined') {
-                    payload['permission'] = permission;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof fileSecurity !== 'undefined') {
+                    payload['fileSecurity'] = fileSecurity;
                 }
                 if (typeof enabled !== 'undefined') {
                     payload['enabled'] = enabled;
@@ -5331,12 +5357,11 @@
          * @param {string} bucketId
          * @param {string} fileId
          * @param {File} file
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {string[]} permissions
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createFile(bucketId, fileId, file, read, write, onProgress = (progress) => { }) {
+        createFile(bucketId, fileId, file, permissions, onProgress = (progress) => { }) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
@@ -5355,11 +5380,8 @@
                 if (typeof file !== 'undefined') {
                     payload['file'] = file;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 if (!(file instanceof File)) {
@@ -5447,12 +5469,11 @@
          *
          * @param {string} bucketId
          * @param {string} fileId
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {string[]} permissions
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updateFile(bucketId, fileId, read, write) {
+        updateFile(bucketId, fileId, permissions) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
@@ -5462,11 +5483,8 @@
                 }
                 let path = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
                 let payload = {};
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('put', uri, {
@@ -7042,6 +7060,57 @@
         }
     }
 
+    class Permission {
+    }
+    Permission.read = (role) => {
+        return `read("${role}")`;
+    };
+    Permission.write = (role) => {
+        return `write("${role}")`;
+    };
+    Permission.create = (role) => {
+        return `create("${role}")`;
+    };
+    Permission.update = (role) => {
+        return `update("${role}")`;
+    };
+    Permission.delete = (role) => {
+        return `delete("${role}")`;
+    };
+
+    class Role {
+        static any() {
+            return 'any';
+        }
+        static user(id) {
+            return `user:${id}`;
+        }
+        static users() {
+            return 'users';
+        }
+        static guests() {
+            return 'guests';
+        }
+        static team(id, role = '') {
+            if (role === '') {
+                return `team:${id}`;
+            }
+            return `team:${id}/${role}`;
+        }
+        static status(status) {
+            return `status:${status}`;
+        }
+    }
+
+    class ID {
+        static custom(id) {
+            return id;
+        }
+        static unique() {
+            return 'unique()';
+        }
+    }
+
     exports.Account = Account;
     exports.AppwriteException = AppwriteException;
     exports.Avatars = Avatars;
@@ -7049,9 +7118,12 @@
     exports.Databases = Databases;
     exports.Functions = Functions;
     exports.Health = Health;
+    exports.ID = ID;
     exports.Locale = Locale;
+    exports.Permission = Permission;
     exports.Projects = Projects;
     exports.Query = Query;
+    exports.Role = Role;
     exports.Storage = Storage;
     exports.Teams = Teams;
     exports.Users = Users;
