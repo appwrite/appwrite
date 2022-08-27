@@ -56,7 +56,7 @@ class Document extends Any
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Document permissions. [Learn more about permissions](/docs/permissions) and get a full list of available permissions.',
+                'description' => 'Document permissions. [Learn more about permissions](/docs/permissions).',
                 'default' => '',
                 'example' => ['read("any")'],
                 'array' => true,
