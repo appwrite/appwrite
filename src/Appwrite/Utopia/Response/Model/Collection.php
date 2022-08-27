@@ -30,7 +30,7 @@ class Collection extends Model
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Collection permissions. [Learn more about permissions](/docs/permissions) and get a full list of available permissions.',
+                'description' => 'Collection permissions. [Learn more about permissions](/docs/permissions).',
                 'default' => '',
                 'example' => ['read("any")'],
                 'array' => true
