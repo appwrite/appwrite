@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\ID;
+use Utopia\Database\Role;
 
 class FunctionsConsoleClientTest extends Scope
 {
@@ -21,7 +22,7 @@ class FunctionsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'functionId' => ID::unique(),
             'name' => 'Test',
-            'execute' => ["user:{$this->getUser()['$id']}"],
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
             'vars' => [
                 'funcKey1' => 'funcValue1',

@@ -396,7 +396,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'provider' => 'unknown',
-            'appId' => ID::custom('AppId'),
+            'appId' => 'AppId',
             'secret' => 'Secret',
         ]);
 

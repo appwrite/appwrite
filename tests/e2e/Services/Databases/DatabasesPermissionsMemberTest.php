@@ -95,6 +95,12 @@ class DatabasesPermissionsMemberTest extends Scope
                 'users' => 11,
                 'doconly' => 6,
             ],
+            [
+                'permissions' => [Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())],
+                'any' => 12,
+                'users' => 12,
+                'doconly' => 7,
+            ],
         ];
     }
 

@@ -648,10 +648,7 @@ class RealtimeCustomClientTest extends Scope
             'collectionId' => ID::unique(),
             'name' => 'Actors',
             'permissions' => [
-                Permission::read(Role::users()),
-                Permission::create(Role::users()),
-                Permission::update(Role::users()),
-                Permission::delete(Role::users()),
+                Permission::create(Role::user($this->getUser()['$id'])),
             ],
             'documentSecurity' => true,
         ]);
