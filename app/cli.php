@@ -21,6 +21,7 @@ include 'tasks/specs.php';
 include 'tasks/ssl.php';
 include 'tasks/vars.php';
 include 'tasks/usage.php';
+include 'tasks/processlist.php';
 
 $cli
     ->task('version')

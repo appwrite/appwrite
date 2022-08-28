@@ -595,7 +595,6 @@ $register->set('db', function () {
         PDO::ATTR_EMULATE_PREPARES => true,
         PDO::ATTR_STRINGIFY_FETCHES => true,
     ));
-
     return $pdo;
 });
 $register->set('cache', function () {
