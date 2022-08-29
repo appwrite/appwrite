@@ -2028,7 +2028,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $allQueries = \array_merge($filterQueries, $otherQueries);
 
-        if ($documentSecurity) {
+        if ($documentSecurity && !$valid) {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $allQueries);
             $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
         } else {
