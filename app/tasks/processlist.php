@@ -12,14 +12,12 @@ use Utopia\Database\Database;
 $cli
     ->task('process')
     ->action(function () use ($register) {
-
         // php app/cli.php process
         // $db = $register->get('db', true);
-
         $dbHost = '127.0.0.1';
         $dbPort = '3306';
-        $dbUser = 'user';
-        $dbPass = 'password';
+        $dbUser = 'root';
+        $dbPass = 'rootsecretpassword';
         $dbScheme = 'appwrite';
 
         $db = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, MariaDB::getPdoAttributes());
