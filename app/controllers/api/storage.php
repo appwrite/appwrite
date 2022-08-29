@@ -1359,9 +1359,12 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                 ->setResource('file/' . $fileId)
             ;
 
-            // Don't need to check valid here because we already ensured validity
-            if ($fileSecurity) {
-                $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            if ($fileSecurity && !$valid) {
+                try {
+                    $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                } catch (AuthorizationException) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
             } else {
                 $deleted = Authorization::skip(fn() => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
             }

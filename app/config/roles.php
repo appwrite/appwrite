@@ -59,9 +59,12 @@ return [
             'home',
             'console',
             'documents.read',
+            'documents.write',
             'files.read',
+            'files.write',
             'locale.read',
             'avatars.read',
+            'execution.write',
         ],
     ],
     Auth::USER_ROLE_USERS => [
