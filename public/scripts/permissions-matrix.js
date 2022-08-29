@@ -34,6 +34,10 @@
                 });
             },
             addPermission(formId, role, permissions) {
+                if (this.permissions.some(p => p.role === role)) {
+                    document.getElementById(`${formId}Input`)
+                        .setCustomValidity('Role entry already exists');
+                }
                 if (!document.getElementById(formId).reportValidity()) {
                     return;
                 }
