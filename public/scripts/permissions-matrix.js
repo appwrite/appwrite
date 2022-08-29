@@ -34,6 +34,10 @@
                 });
             },
             addPermission(formId, role, permissions) {
+                if (Object.values(permissions).every(p => p === false)) {
+                    document.getElementById(`${formId}Input`)
+                        .setCustomValidity('No permissions selected');
+                }
                 if (this.permissions.some(p => p.role === role)) {
                     document.getElementById(`${formId}Input`)
                         .setCustomValidity('Role entry already exists');
