@@ -61,6 +61,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
       - appwrite-certificates:/storage/certificates:ro
+      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - appwrite
     networks:
