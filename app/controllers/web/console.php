@@ -385,10 +385,12 @@ App::get('/console/databases/document/new')
 
         $permissions
             ->setParam('data', 'project-document')
-            ->setParam('permissions', \array_filter(
-                Database::PERMISSIONS,
-                fn ($perm) => $perm != Database::PERMISSION_CREATE
-            ))
+            ->setParam('form', 'documentPermissions')
+            ->setParam('permissions', [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ])
             ->setParam('params', [
                 'collection-id' => '{{router.params.collection}}',
                 'database-id' => '{{router.params.databaseId}}',
