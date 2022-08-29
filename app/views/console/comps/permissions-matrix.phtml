@@ -79,7 +79,7 @@ $escapedPermissions = \array_map(function ($perm) {
             </tr>
         </template>
         <tr x-data="permissionsRow"
-            @addrow<?php echo \strtolower($form); ?>.window="addPermission('<?php echo $form; ?>',role,{<?php echo \implode(',', $escapedPermissions) ?>})">
+            @addrow<?php echo \strtolower($form); ?>.window="addPermission('<?php echo $form; ?>', role, { <?php echo \implode(',', $escapedPermissions) ?> })">
             <td>
                 <datalist id="types">
                     <option value="user:">
