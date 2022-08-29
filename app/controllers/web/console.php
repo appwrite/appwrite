@@ -294,6 +294,7 @@ App::get('/console/databases/collection')
         $permissions
             ->setParam('method', 'databases.getCollection')
             ->setParam('events', 'load,databases.updateCollection')
+            ->setParam('form', 'collectionPermissions')
             ->setParam('data', 'project-collection')
             ->setParam('params', [
                 'collection-id' => '{{router.params.id}}',
@@ -345,6 +346,7 @@ App::get('/console/databases/document')
         $permissions
             ->setParam('method', 'databases.getDocument')
             ->setParam('events', 'load,databases.updateDocument')
+            ->setParam('form', 'documentPermissions')
             ->setParam('data', 'project-document')
             ->setParam('permissions', \array_filter(
                 Database::PERMISSIONS,
