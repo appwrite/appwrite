@@ -303,7 +303,7 @@ abstract class Worker
                 $doSpacesAcl = 'private';
                 return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
             case Storage::DEVICE_BACKBLAZE:
-                $root = trim ($root,"/");
+                $root = trim($root, "/");
                 $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
                 $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
                 $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
@@ -311,7 +311,7 @@ abstract class Worker
                 $backblazeAcl = 'private';
                 return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
             case Storage::DEVICE_LINODE:
-                $root = trim ($root,"/");
+                $root = trim($root, "/");
                 $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
                 $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
                 $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
@@ -319,7 +319,7 @@ abstract class Worker
                 $linodeAcl = 'private';
                 return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
             case Storage::DEVICE_WASABI:
-                $root = trim ($root,"/");
+                $root = trim($root, "/");
                 $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
                 $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
                 $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
