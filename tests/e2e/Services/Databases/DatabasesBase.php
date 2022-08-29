@@ -711,6 +711,18 @@ trait DatabasesBase
         $this->assertCount(1, $titleIndex['body']['attributes']);
         $this->assertEquals('title', $titleIndex['body']['attributes'][0]);
 
+        $titleIndex = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes/titleIndex', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $titleIndex['headers']['status-code']);
+        $this->assertEquals('titleIndex', $titleIndex['body']['key']);
+        $this->assertEquals('fulltext', $titleIndex['body']['type']);
+        $this->assertCount(1, $titleIndex['body']['attributes']);
+        $this->assertEquals('title', $titleIndex['body']['attributes'][0]);
+
         $releaseYearIndex = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
