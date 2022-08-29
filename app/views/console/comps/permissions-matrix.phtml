@@ -7,7 +7,7 @@ $params = $this->getParam('params', []);
 $events = $this->getParam('events', '');
 $permissions = $this->getParam('permissions', Database::PERMISSIONS);
 $data = $this->getParam('data', '');
-$form = $this->getParam('form', 'form');
+$form = $this->getParam('form');
 
 $escapedPermissions = \array_map(function ($perm) {
     // Alpine won't bind to a parameter named delete
