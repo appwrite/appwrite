@@ -1982,7 +1982,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $queriesValidator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
         $validQueries = $queriesValidator->isValid($queries);
         if (!$validQueries) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
         }
 
         $queries = Query::parseQueries($queries);
