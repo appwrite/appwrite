@@ -259,8 +259,16 @@ class FunctionsV1 extends Worker
         $execution->setAttribute('status', 'processing');
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
+        $vars = [];
+
+        $variables = $function['vars'];
+
+        foreach ($variables as $variable) {
+            $vars[$variable['key']] = $variable['value'];
+        }
+
         /** Collect environment variables */
-        $vars = [
+        $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,
@@ -273,8 +281,7 @@ class FunctionsV1 extends Worker
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
             'APPWRITE_FUNCTION_JWT' => $jwt,
-        ];
-        $vars = \array_merge($function->getAttribute('vars', []), $vars);
+        ]);
 
         /** Execute function */
         try {

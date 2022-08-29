@@ -3122,14 +3122,13 @@
          * @param {string} name
          * @param {string[]} execute
          * @param {string} runtime
-         * @param {object} vars
          * @param {string[]} events
          * @param {string} schedule
          * @param {number} timeout
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        create(functionId, name, execute, runtime, vars, events, schedule, timeout) {
+        create(functionId, name, execute, runtime, events, schedule, timeout) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
@@ -3156,9 +3155,6 @@
                 }
                 if (typeof runtime !== 'undefined') {
                     payload['runtime'] = runtime;
-                }
-                if (typeof vars !== 'undefined') {
-                    payload['vars'] = vars;
                 }
                 if (typeof events !== 'undefined') {
                     payload['events'] = events;
@@ -3244,14 +3240,13 @@
          * @param {string} functionId
          * @param {string} name
          * @param {string[]} execute
-         * @param {object} vars
          * @param {string[]} events
          * @param {string} schedule
          * @param {number} timeout
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        update(functionId, name, execute, vars, events, schedule, timeout) {
+        update(functionId, name, execute, events, schedule, timeout) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
@@ -3269,9 +3264,6 @@
                 }
                 if (typeof execute !== 'undefined') {
                     payload['execute'] = execute;
-                }
-                if (typeof vars !== 'undefined') {
-                    payload['vars'] = vars;
                 }
                 if (typeof events !== 'undefined') {
                     payload['events'] = events;
@@ -3680,6 +3672,152 @@
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * List Variables
+         *
+         * Get a list of all variables that are currently active on your function.
+         *
+         * @param {string} functionId
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        listVariables(functionId) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof functionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "functionId"');
+                }
+                let path = '/functions/{functionId}/variables'.replace('{functionId}', functionId);
+                let payload = {};
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('get', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create Variable
+         *
+         * Create a new function variable. These variables can be accessed within
+         * functions using the `env` object recieved through the payload of an
+         * execution.
+         *
+         * @param {string} functionId
+         * @param {string} key
+         * @param {string} value
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createVariable(functionId, key, value) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof functionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "functionId"');
+                }
+                if (typeof key === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "key"');
+                }
+                if (typeof value === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "value"');
+                }
+                let path = '/functions/{functionId}/variables'.replace('{functionId}', functionId);
+                let payload = {};
+                if (typeof key !== 'undefined') {
+                    payload['key'] = key;
+                }
+                if (typeof value !== 'undefined') {
+                    payload['value'] = value;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Get Variable
+         *
+         * Get a variable by its unique ID.
+         *
+         * @param {string} functionId
+         * @param {string} variableId
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        getVariable(functionId, variableId) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof functionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "functionId"');
+                }
+                if (typeof variableId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "variableId"');
+                }
+                let path = '/functions/{functionId}/variables/{variableId}'.replace('{functionId}', functionId).replace('{variableId}', variableId);
+                let payload = {};
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('get', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Update Variable
+         *
+         * Update variable by its unique ID.
+         *
+         * @param {string} functionId
+         * @param {string} variableId
+         * @param {string} key
+         * @param {string} value
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        updateVariable(functionId, variableId, key, value) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof functionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "functionId"');
+                }
+                if (typeof variableId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "variableId"');
+                }
+                let path = '/functions/{functionId}/variables/{variableId}'.replace('{functionId}', functionId).replace('{variableId}', variableId);
+                let payload = {};
+                if (typeof key !== 'undefined') {
+                    payload['key'] = key;
+                }
+                if (typeof value !== 'undefined') {
+                    payload['value'] = value;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('put', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Delete Variable
+         *
+         * Delete a variable by its unique ID.
+         *
+         * @param {string} functionId
+         * @param {string} variableId
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        deleteVariable(functionId, variableId) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof functionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "functionId"');
+                }
+                if (typeof variableId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "variableId"');
+                }
+                let path = '/functions/{functionId}/variables/{variableId}'.replace('{functionId}', functionId).replace('{variableId}', variableId);
+                let payload = {};
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('delete', uri, {
                     'content-type': 'application/json',
                 }, payload);
             });
