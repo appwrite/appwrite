@@ -984,7 +984,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'limit' => 1
+            'queries' => [ 'limit(1)' ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -996,7 +996,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'offset' => 1
+            'queries' => [ 'offset(1)' ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -1007,8 +1007,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'offset' => 1,
-            'limit' => 1
+            'queries' => [ 'limit(1)', 'offset(1)' ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
