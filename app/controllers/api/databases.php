@@ -1979,9 +1979,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Validate queries
-        $validator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
-        $valid = $validator->isValid($queries);
-        if (!$valid) {
+        $queriesValidator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
+        $validQueries = $queriesValidator->isValid($queries);
+        if (!$validQueries) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
         }
 
