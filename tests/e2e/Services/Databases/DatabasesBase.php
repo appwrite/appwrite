@@ -50,10 +50,7 @@ trait DatabasesBase
             'name' => 'Movies',
             'documentSecurity' => true,
             'permissions' => [
-                Permission::read(Role::any()),
-                Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
+                Permission::create(Role::user($this->getUser()['$id'])),
             ],
         ]);
 
@@ -1581,8 +1578,8 @@ trait DatabasesBase
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
-                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
@@ -2266,13 +2263,20 @@ trait DatabasesBase
         $this->assertCount(0, $document['body']['$permissions']);
         $this->assertEquals([], $document['body']['$permissions']);
 
-        // Check user can still read document due to collection permissions of read("any")
+        // Check client side can no longer read the document.
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(200, $document['headers']['status-code']);
+        switch ($this->getSide()) {
+            case 'client':
+                $this->assertEquals(404, $document['headers']['status-code']);
+                break;
+            case 'server':
+                $this->assertEquals(200, $document['headers']['status-code']);
+                break;
+        }
 
         return $data;
     }

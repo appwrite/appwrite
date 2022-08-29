@@ -58,7 +58,7 @@ class MessagingChannelsTest extends TestCase
                             'roles' => [
                                 empty($index % 2)
                                     ? Auth::USER_ROLE_ADMIN
-                                    : Role::users()->toString(),
+                                    : 'member',
                             ]
                         ]
                     ]
@@ -288,7 +288,7 @@ class MessagingChannelsTest extends TestCase
                     ID::custom('team' . $index),
                     (empty($index % 2)
                         ? Auth::USER_ROLE_ADMIN
-                        : Role::users()->toString())
+                        : 'member')
                 )->toString()
             ];
 
