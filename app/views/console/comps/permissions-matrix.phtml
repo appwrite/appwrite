@@ -34,7 +34,7 @@ $escapedPermissions = \array_map(function ($perm) {
     <?php if (!empty($data)): ?>
         data-name="<?php echo $data; ?>"
     <?php endif; ?>
-    @reset.window="permissions = rawPermissions = []">
+    @reset.window="permissions.length = rawPermissions.length = 0">
 
     <input
         type="hidden"
