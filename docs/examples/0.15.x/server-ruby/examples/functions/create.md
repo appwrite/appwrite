@@ -9,6 +9,6 @@ client
 
 functions = Appwrite::Functions.new(client)
 
-response = functions.create(function_id: '[FUNCTION_ID]', name: '[NAME]', execute: [], runtime: 'node-14.5')
+response = functions.create(function_id: '[FUNCTION_ID]', name: '[NAME]', execute: ["role:all"], runtime: 'node-14.5')
 
 puts response.inspect

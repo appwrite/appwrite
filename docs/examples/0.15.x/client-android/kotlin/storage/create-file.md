@@ -3,6 +3,7 @@ import android.os.Bundle
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import io.appwrite.Client
+import io.appwrite.models.InputFile
 import io.appwrite.services.Storage
 
 class MainActivity : AppCompatActivity() {

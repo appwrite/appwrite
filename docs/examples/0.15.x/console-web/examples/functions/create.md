@@ -9,7 +9,7 @@ client
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-const promise = functions.create('[FUNCTION_ID]', '[NAME]', [], 'node-14.5');
+const promise = functions.create('[FUNCTION_ID]', '[NAME]', ["role:all"], 'node-14.5');
 
 promise.then(function (response) {
     console.log(response); // Success

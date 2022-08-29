@@ -11,4 +11,4 @@ client = Client()
 
 functions = Functions(client)
 
-result = functions.create('[FUNCTION_ID]', '[NAME]', [], 'node-14.5')
+result = functions.create('[FUNCTION_ID]', '[NAME]', ["role:all"], 'node-14.5')

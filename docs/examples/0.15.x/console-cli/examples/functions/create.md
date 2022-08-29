@@ -1,7 +1,7 @@
 appwrite functions create \
         --functionId [FUNCTION_ID] \
         --name [NAME] \
-        --execute one two three \
+        --execute "role:all" \
         --runtime node-14.5 \
 
 

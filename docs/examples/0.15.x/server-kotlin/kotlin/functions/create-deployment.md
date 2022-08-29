@@ -1,4 +1,5 @@
 import io.appwrite.Client
+import io.appwrite.models.InputFile
 import io.appwrite.services.Functions
 
 suspend fun main() {

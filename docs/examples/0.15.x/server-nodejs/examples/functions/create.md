@@ -11,7 +11,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const promise = functions.create('[FUNCTION_ID]', '[NAME]', [], 'node-14.5');
+const promise = functions.create('[FUNCTION_ID]', '[NAME]', ["role:all"], 'node-14.5');
 
 promise.then(function (response) {
     console.log(response);

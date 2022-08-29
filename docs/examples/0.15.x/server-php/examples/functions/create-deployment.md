@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Client;
+use Appwrite\InputFile;
 use Appwrite\Services\Functions;
 
 $client = new Client();
@@ -13,4 +14,4 @@ $client
 
 $functions = new Functions($client);
 
-$result = $functions->createDeployment('[FUNCTION_ID]', '[ENTRYPOINT]', 'file.png', false);
+$result = $functions->createDeployment('[FUNCTION_ID]', '[ENTRYPOINT]', InputFile::withPath('file.png'), false);

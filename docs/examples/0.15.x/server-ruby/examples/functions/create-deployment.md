@@ -9,6 +9,6 @@ client
 
 functions = Appwrite::Functions.new(client)
 
-response = functions.create_deployment(function_id: '[FUNCTION_ID]', entrypoint: '[ENTRYPOINT]', code: InputFile.fromPath('dir/file.png'), activate: false)
+response = functions.create_deployment(function_id: '[FUNCTION_ID]', entrypoint: '[ENTRYPOINT]', code: Appwrite::InputFile.from_path('dir/file.png'), activate: false)
 
 puts response.inspect

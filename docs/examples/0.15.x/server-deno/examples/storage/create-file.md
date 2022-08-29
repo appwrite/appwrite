@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = storage.createFile('[BUCKET_ID]', '[FILE_ID]', 'file.png');
+let promise = storage.createFile('[BUCKET_ID]', '[FILE_ID]', InputFile.fromPath('/path/to/file.png', 'file.png'));
 
 promise.then(function (response) {
     console.log(response);
