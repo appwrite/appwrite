@@ -865,6 +865,8 @@ App::post('/v1/projects/:projectId/keys')
             'name' => $name,
             'scopes' => $scopes,
             'expire' => $expire,
+            'sdks' => [],
+            'accessedAt' => null,
             'secret' => \bin2hex(\random_bytes(128)),
         ]);
 

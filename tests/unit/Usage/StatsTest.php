@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Stats;
+namespace Tests\Unit\Usage;
 
 use Appwrite\Usage\Stats;
 use PHPUnit\Framework\TestCase;
