@@ -246,7 +246,8 @@ App::get('/v1/databases')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $databaseId = $cursor->getValue();
@@ -566,7 +567,8 @@ App::get('/v1/databases/:databaseId/collections')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $collectionId = $cursor->getValue();
@@ -1979,7 +1981,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $queries = Query::parseQueries($queries);
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $documentId = $cursor->getValue();

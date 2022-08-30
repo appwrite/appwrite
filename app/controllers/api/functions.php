@@ -118,7 +118,8 @@ App::get('/v1/functions')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $functionId = $cursor->getValue();
@@ -792,7 +793,8 @@ App::get('/v1/functions/:functionId/deployments')
         $queries[] = Query::equal('resourceType', ['functions']);
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $deploymentId = $cursor->getValue();
@@ -1145,7 +1147,8 @@ App::get('/v1/functions/:functionId/executions')
         $queries[] = Query::equal('functionId', [$function->getId()]);
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $executionId = $cursor->getValue();
