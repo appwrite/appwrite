@@ -259,13 +259,10 @@ class FunctionsV1 extends Worker
         $execution->setAttribute('status', 'processing');
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
-        $vars = [];
-
-        $variables = $function['vars'];
-
-        foreach ($variables as $variable) {
-            $vars[$variable['key']] = $variable['value'];
-        }
+        $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
+            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+            return $carry;
+        }, []);
 
         /** Collect environment variables */
         $vars = \array_merge($vars, [

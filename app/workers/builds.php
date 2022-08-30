@@ -145,12 +145,11 @@ class BuildsV1 extends Worker
         );
 
         $source = $deployment->getAttribute('path');
-        $vars = [];
-        $variables = $function['vars'];
 
-        foreach ($variables as $variable) {
-            $vars[$variable['key']] = $variable['value'];
-        }
+        $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
+            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+            return $carry;
+        }, []);
 
         $baseImage = $runtime['image'];
 

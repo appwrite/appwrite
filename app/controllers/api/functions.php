@@ -85,8 +85,7 @@ App::post('/v1/functions')
             'schedulePrevious' => null,
             'scheduleNext' => null,
             'timeout' => $timeout,
-            'search' => implode(' ', [$functionId, $name, $runtime]),
-            'vars' => null
+            'search' => implode(' ', [$functionId, $name, $runtime])
         ]));
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -1048,13 +1047,10 @@ App::post('/v1/functions/:functionId/executions')
             return $response->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
-        $vars = [];
-
-        $variables = $function['vars'];
-
-        foreach ($variables as $variable) {
-            $vars[$variable['key']] = $variable['value'];
-        }
+        $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
+            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+            return $carry;
+        }, []);
 
         $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
@@ -1380,8 +1376,8 @@ App::get('/v1/functions/:functionId/variables')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        if ($cursor) {
             /** @var Query $cursor */
             $variableId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('variables', $variableId);
@@ -1424,7 +1420,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable = $dbForProject->findOne('variables', [
-            Query::equal('_uid', [$variableId]),
+            Query::equal('$id', [$variableId]),
             Query::equal('functionInternalId', [$function->getInternalId()]),
         ]);
 
@@ -1464,7 +1460,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable = $dbForProject->findOne('variables', [
-            Query::equal('_uid', [$variableId]),
+            Query::equal('$id', [$variableId]),
             Query::equal('functionInternalId', [$function->getInternalId()]),
         ]);
 
@@ -1511,7 +1507,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable = $dbForProject->findOne('variables', [
-            Query::equal('_uid', [$variableId]),
+            Query::equal('$id', [$variableId]),
             Query::equal('functionInternalId', [$function->getInternalId()]),
         ]);
 
