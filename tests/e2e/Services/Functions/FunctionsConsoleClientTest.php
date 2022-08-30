@@ -227,6 +227,16 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['variables']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("key", "NON_EXISTING_VARIABLE")' ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(0, $response['body']['variables']);
+
         /**
          * Test for FAILURE
          */
