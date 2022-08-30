@@ -1,3 +1,8 @@
+## 6.0.1
+* Dependency upgrades
+* Doc comments updates
+* Cleanup code
+
 ## 6.0.0
 * Support for Appwrite 0.15
 * **BREAKING** `Database` -> `Databases`
