@@ -878,8 +878,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('sdks', $response['body']);
         $this->assertCount(2, $response['body']['sdks']);
-        $this->assertArrayHasKey('python', $response['body']['sdks']);
-        $this->assertArrayHasKey('php', $response['body']['sdks']);
+        $this->assertContains('python', $response['body']['sdks']);
+        $this->assertContains('php', $response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertNotEmpty($response['body']['accessedAt']);
  
