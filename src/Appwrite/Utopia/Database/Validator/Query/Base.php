@@ -55,15 +55,6 @@ abstract class Base extends Validator
     }
 
     /**
-     * Is valid.
-     *
-     * @param Query $value
-     *
-     * @return bool
-     */
-    abstract public function isValid($query): bool;
-
-    /**
      * Returns what type of query this Validator is for
      */
     abstract public function getMethodType(): string;
