@@ -882,7 +882,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('php', $response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertNotEmpty($response['body']['accessedAt']);
- 
+
         // Cleanup
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/keys/' . $keyId, array_merge([
