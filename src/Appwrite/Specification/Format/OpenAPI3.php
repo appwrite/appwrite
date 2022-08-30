@@ -304,7 +304,7 @@ class OpenAPI3 extends Format
                     case 'Utopia\Database\Validator\DatetimeValidator':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'datetime';
-                        $node['schema']['x-example'] = '2022-06-15T13:45:30.496';
+                        $node['schema']['x-example'] = Model::TYPE_DATETIME_EXAMPLE;
                         break;
                     case 'Appwrite\Network\Validator\Email':
                         $node['schema']['type'] = $validator->getType();

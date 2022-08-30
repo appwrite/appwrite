@@ -2841,12 +2841,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "532d4d15ec8f11539972f2848c2e230c49b24f65"
+                "reference": "6e630a62f522ac68a7056bebf81cd032c7a053ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/532d4d15ec8f11539972f2848c2e230c49b24f65",
-                "reference": "532d4d15ec8f11539972f2848c2e230c49b24f65",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6e630a62f522ac68a7056bebf81cd032c7a053ba",
+                "reference": "6e630a62f522ac68a7056bebf81cd032c7a053ba",
                 "shasum": ""
             },
             "require": {
@@ -2883,7 +2883,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-new-headers"
             },
-            "time": "2022-08-20T07:42:55+00:00"
+            "time": "2022-08-29T10:43:33+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5383,5 +5383,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
