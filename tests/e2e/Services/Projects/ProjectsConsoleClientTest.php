@@ -851,6 +851,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $keySecret,
+            'x-sdk-name' => 'python'
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -859,6 +860,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $keySecret,
+            'x-sdk-name' => 'php'
         ]), [
             'teamId' => ID::unique(),
             'name' => 'Arsenal'
@@ -866,6 +868,21 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
+        /** Check that the API key has been updated */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys/' . $keyId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('sdks', $response['body']);
+        $this->assertCount(2, $response['body']['sdks']);
+        $this->assertArrayHasKey('python', $response['body']['sdks']);
+        $this->assertArrayHasKey('php', $response['body']['sdks']);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+        $this->assertNotEmpty($response['body']['accessedAt']);
+ 
         // Cleanup
 
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/keys/' . $keyId, array_merge([
@@ -1183,6 +1200,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('teams.read', $response['body']['scopes']);
         $this->assertContains('teams.write', $response['body']['scopes']);
         $this->assertNotEmpty($response['body']['secret']);
+        $this->assertArrayHasKey('sdks', $response['body']);
+        $this->assertEmpty($response['body']['sdks']);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+        $this->assertEmpty($response['body']['accessedAt']);
 
         $data = array_merge($data, [
             'keyId' => $response['body']['$id'],
@@ -1252,6 +1273,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('teams.write', $response['body']['scopes']);
         $this->assertCount(2, $response['body']['scopes']);
         $this->assertNotEmpty($response['body']['secret']);
+        $this->assertArrayHasKey('sdks', $response['body']);
+        $this->assertEmpty($response['body']['sdks']);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+        $this->assertEmpty($response['body']['accessedAt']);
 
         /**
          * Test for FAILURE
@@ -1360,6 +1385,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
         $this->assertCount(3, $response['body']['scopes']);
+        $this->assertArrayHasKey('sdks', $response['body']);
+        $this->assertEmpty($response['body']['sdks']);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+        $this->assertEmpty($response['body']['accessedAt']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
@@ -1374,6 +1403,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
         $this->assertCount(3, $response['body']['scopes']);
+        $this->assertArrayHasKey('sdks', $response['body']);
+        $this->assertEmpty($response['body']['sdks']);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+        $this->assertEmpty($response['body']['accessedAt']);
 
         /**
          * Test for FAILURE
