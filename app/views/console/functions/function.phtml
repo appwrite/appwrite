@@ -112,16 +112,16 @@ sort($patterns);
                                             <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-{{deployment.$id}}">
                                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                                <h2 data-ls-if="{{deployment.status}} == 'failed'">Build Warning Log</h2>
+                                                <h2>Stderr</h2>
 
-                                                <div class="margin-bottom">
-                                                    <input type="hidden"  data-ls-if="({{deployment.buildStderr.length}})" data-ls-bind="{{deployment.buildStderr}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
-                                                    <input type="hidden"  data-ls-if="(!{{deployment.buildStderr.length}})" value="No output was logged." data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                <div class="margin-bottom" style="max-height: 300px; overflow-y: auto">
+                                                    <input type="hidden" data-ls-if="({{deployment.buildStderr.length}})" data-ls-bind="{{deployment.buildStderr}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
+                                                    <input type="hidden" data-ls-if="(!{{deployment.buildStderr.length}})" value="No output was logged." data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
                                                 </div>
 
-                                                <h2>Build Log</h2>
+                                                <h2>Stdout</h2>
 
-                                                <div class="margin-bottom">
+                                                <div class="margin-bottom" style="max-height: 300px; overflow-y: auto">
                                                     <input type="hidden" data-ls-if="({{deployment.buildStdout.length}})" data-ls-bind="{{deployment.buildStdout}}" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" />
                                                     <input type="hidden" data-ls-if="(!{{deployment.buildStdout.length}})" data-forms-code="bash" data-lang="bash" data-lang-label="Bash" value="No output was logged." />
                                                 </div>
@@ -174,7 +174,7 @@ sort($patterns);
                                                 <span data-ls-if="{{deployment.status}} == 'processing' || {{deployment.status}} == 'building'" style="color: var(--config-color-info)" class="pull-start" data-ls-bind="{{deployment.status}}"></span>
                                                 <span class="pull-start" data-ls-bind="&nbsp; | &nbsp; Created {{deployment.$createdAt|timeSince}} &nbsp; | &nbsp; {{deployment.size|humanFileSize}}{{deployment.size|humanFileUnit}}"></span>
 
-                                                <span>&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-{{deployment.$id}}"> Logs</button></span>
+                                                <span data-ls-if="{{deployment.status}} == 'failed' || {{deployment.status}} == 'ready'">&nbsp; | &nbsp;<button type="button" class="link text-size-small" data-ls-ui-trigger="open-{{deployment.$id}}"> Logs</button></span>
 
                                                 <form data-ls-if="{{deployment.$id}} !== {{project-function.deployment}}" name="functions.deleteDeployment" class="pull-start"
                                                     data-analytics
