@@ -381,7 +381,6 @@ App::shutdown()
                     'accessedAt' => $now,
                     'signature' => $signature,
                     ])));
-
                 } elseif (date('Y/m/d', \time()) > date('Y/m/d', strtotime($cacheLog->getAttribute('accessedAt')))) {
                     var_dump('update');
                     var_dump($now);
