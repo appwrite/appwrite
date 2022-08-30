@@ -164,9 +164,6 @@ App::get('/v1/storage/buckets')
             $queries[] = Query::search('search', $search);
         }
 
-        // Set default limit
-        $queries[] = Query::limit(25);
-
         // Get cursor document if there was a cursor query
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
         if ($cursor !== null) {
@@ -677,9 +674,6 @@ App::get('/v1/storage/buckets/:bucketId/files')
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
-
-        // Set default limit
-        $queries[] = Query::limit(25);
 
         // Get cursor document if there was a cursor query
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;

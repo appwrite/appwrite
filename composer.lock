@@ -2841,12 +2841,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "bf05fc00755b9d27dac530669ca834f3ceb655ec"
+                "reference": "6e630a62f522ac68a7056bebf81cd032c7a053ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/bf05fc00755b9d27dac530669ca834f3ceb655ec",
-                "reference": "bf05fc00755b9d27dac530669ca834f3ceb655ec",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6e630a62f522ac68a7056bebf81cd032c7a053ba",
+                "reference": "6e630a62f522ac68a7056bebf81cd032c7a053ba",
                 "shasum": ""
             },
             "require": {
@@ -2884,7 +2884,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/master"
             },
-            "time": "2022-08-28T04:14:32+00:00"
+            "time": "2022-08-29T10:43:33+00:00"
         },
         {
             "name": "doctrine/instantiator",

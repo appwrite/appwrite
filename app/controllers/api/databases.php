@@ -36,17 +36,12 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Appwrite\Utopia\Database\Validator\IndexedQueries;
-use Appwrite\Utopia\Database\Validator\Query\Cursor as Cursor;
-use Appwrite\Utopia\Database\Validator\Query\Filter as Filter;
-use Appwrite\Utopia\Database\Validator\Query\Limit as Limit;
-use Appwrite\Utopia\Database\Validator\Query\Offset as Offset;
-use Appwrite\Utopia\Database\Validator\Query\Order as Order;
+use Appwrite\Utopia\Database\Validator\Query\Limit;
+use Appwrite\Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
-use Appwrite\Stats\Stats;
 use Appwrite\Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
@@ -249,9 +244,6 @@ App::get('/v1/databases')
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
-
-        // Set default limit
-        $queries[] = Query::limit(25);
 
         // Get cursor document if there was a cursor query
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
@@ -572,9 +564,6 @@ App::get('/v1/databases/:databaseId/collections')
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
-
-        // Set default limit
-        $queries[] = Query::limit(25);
 
         // Get cursor document if there was a cursor query
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
@@ -1986,9 +1975,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $queries = Query::parseQueries($queries);
-
-        // Set default limit
-        $queries[] = Query::limit(25);
 
         // Get cursor document if there was a cursor query
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
