@@ -76,7 +76,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "dev-feat-dart-flutter-release as 0.19.5",
+        "appwrite/sdk-generator": "0.19.5",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",
         "swoole/ide-helper": "4.8.9",
