@@ -1298,6 +1298,13 @@ $collections = [
         ],
         'indexes' => [
             [
+                '$id' => ID::custom('_key_name'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['name'],
+                'lengths' => [256],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
                 '$id' => ID::custom('_key_email'),
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['email'],
@@ -1309,6 +1316,41 @@ $collections = [
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['phone'],
                 'lengths' => [16],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_status'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['status'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_passwordUpdate'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['passwordUpdate'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_registration'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['registration'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_emailVerification'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['emailVerification'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_phoneVerification'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['phoneVerification'],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
