@@ -2658,6 +2658,16 @@ $collections = [
                 'array' => true,
             ],
             [
+                '$id' => 'compression',
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 10,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('encryption'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
