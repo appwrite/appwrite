@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1145ff29befcc4aa21b5002da0b8319c",
+    "content-hash": "b1491fd16c44267bc71fb96581278b3f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2556,19 +2556,22 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.9.0",
+            "version": "dev-feat-zstd-compression",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "c7912481a56e17cc86358fa8de57309de5e88ef7"
+                "reference": "e049f2c10b9cb84b4490850d7b9e7360352c36d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/c7912481a56e17cc86358fa8de57309de5e88ef7",
-                "reference": "c7912481a56e17cc86358fa8de57309de5e88ef7",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/e049f2c10b9cb84b4490850d7b9e7360352c36d2",
+                "reference": "e049f2c10b9cb84b4490850d7b9e7360352c36d2",
                 "shasum": ""
             },
             "require": {
+                "ext-fileinfo": "*",
+                "ext-zlib": "*",
+                "ext-zstd": "*",
                 "php": ">=8.0",
                 "utopia-php/framework": "0.*.*"
             },
@@ -2602,9 +2605,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.9.0"
+                "source": "https://github.com/utopia-php/storage/tree/feat-zstd-compression"
             },
-            "time": "2022-05-19T11:05:45+00:00"
+            "time": "2022-08-22T09:19:07+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -3534,16 +3537,16 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.16",
+            "version": "9.2.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "2593003befdcc10db5e213f9f28814f5aa8ac073"
+                "reference": "aa94dc41e8661fe90c7316849907cba3007b10d8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/2593003befdcc10db5e213f9f28814f5aa8ac073",
-                "reference": "2593003befdcc10db5e213f9f28814f5aa8ac073",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/aa94dc41e8661fe90c7316849907cba3007b10d8",
+                "reference": "aa94dc41e8661fe90c7316849907cba3007b10d8",
                 "shasum": ""
             },
             "require": {
@@ -3599,7 +3602,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.16"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.17"
             },
             "funding": [
                 {
@@ -3607,7 +3610,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-08-20T05:26:47+00:00"
+            "time": "2022-08-30T12:24:04+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -5366,6 +5369,7 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/storage": 20,
         "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,
@@ -5391,5 +5395,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }

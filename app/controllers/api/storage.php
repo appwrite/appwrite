@@ -6,7 +6,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -27,8 +26,8 @@ use Utopia\Database\Validator\UID;
 use Appwrite\Extend\Exception;
 use Utopia\Image\Image;
 use Utopia\Storage\Compression\Algorithms\GZIP;
+use Utopia\Storage\Compression\Algorithms\Zstd;
 use Utopia\Storage\Device;
-use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
@@ -37,7 +36,6 @@ use Utopia\Storage\Validator\Upload;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -502,9 +500,17 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $mimeType = $deviceFiles->getFileMimeType($path); // Get mime-type before compression and encryption
             $data = '';
             // Compression
-            if ($fileSize <= APP_STORAGE_READ_BUFFER) {
+            $algorithm = $bucket->getAttribute('compression', 'none');
+            if ($fileSize <= APP_STORAGE_READ_BUFFER && $algorithm != 'none') {
                 $data = $deviceFiles->read($path);
-                $compressor = new GZIP();
+                switch($algorithm) {
+                    case 'zstd':
+                        $compressor = new Zstd();
+                    case 'gzip':
+                    default:
+                        $compressor = new GZIP();
+                        break;
+                }
                 $data = $compressor->compress($data);
             }
 
@@ -524,8 +530,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $sizeActual = $deviceFiles->getFileSize($path);
-
-            $algorithm = empty($compressor) ? '' : $compressor->getName();
             $fileHash = $deviceFiles->getFileHash($path);
 
             if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
@@ -840,7 +844,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $path = $file->getAttribute('path');
         $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-        $algorithm = $file->getAttribute('algorithm');
+        $algorithm = $file->getAttribute('algorithm', 'none');
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
         if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) App::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
@@ -851,15 +855,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 $path = $fileLogos['default_image'];
             }
 
-            $algorithm = null;
+            $algorithm = 'none';
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $deviceFiles = $deviceLocal;
         }
-
-
-        $compressor = new GZIP();
 
         if (!$deviceFiles->exists($path)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -885,8 +886,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             );
         }
 
-        if (!empty($algorithm)) {
-            $source = $compressor->decompress($source);
+        switch($algorithm) {
+            case 'zstd':
+                $compressor = new Zstd();
+                $source = $compressor->decompress($source);
+                break;
+            case 'gzip':
+                $compressor = new GZIP();
+                $source = $compressor->decompress($source);
+                break;
         }
 
         $image = new Image($source);
@@ -1021,12 +1029,21 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             );
         }
 
-        if (!empty($file->getAttribute('algorithm', ''))) {
-            if (empty($source)) {
-                $source = $deviceFiles->read($path);
-            }
-            $compressor = new GZIP();
-            $source = $compressor->decompress($source);
+        switch($file->getAttribute('algorithm', 'none')) {
+            case 'zstd':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new Zstd();
+                $source = $compressor->decompress($source);
+                break;
+            case 'gzip':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new GZIP();
+                $source = $compressor->decompress($source);
+                break;
         }
 
         if (!empty($source)) {
@@ -1162,12 +1179,21 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             );
         }
 
-        if (!empty($file->getAttribute('algorithm', ''))) {
-            if (empty($source)) {
-                $source = $deviceFiles->read($path);
-            }
-            $compressor = new GZIP();
-            $source = $compressor->decompress($source);
+        switch($file->getAttribute('algorithm', 'none')) {
+            case 'zstd':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new Zstd();
+                $source = $compressor->decompress($source);
+                break;
+            case 'gzip':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new GZIP();
+                $source = $compressor->decompress($source);
+                break;
         }
 
         if (!empty($source)) {
