@@ -563,20 +563,16 @@
          * Get currently logged in user list of latest security activity logs. Each
          * log returns user IP address, location and date and time of log.
          *
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getLogs(limit, offset) {
+        getLogs(queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/account/logs';
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -1649,36 +1645,20 @@
          * Get a list of all databases from the current Appwrite project. You can use
          * the search parameter to filter your results.
          *
+         * @param {string} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        list(search, limit, offset, cursor, cursorDirection, orderType) {
+        list(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/databases';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -1822,39 +1802,23 @@
          * can use the search parameter to filter your results.
          *
          * @param {string} databaseId
+         * @param {string} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listCollections(databaseId, search, limit, offset, cursor, cursorDirection, orderType) {
+        listCollections(databaseId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
                 }
                 let path = '/databases/{databaseId}/collections'.replace('{databaseId}', databaseId);
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -2580,16 +2544,10 @@
          * @param {string} databaseId
          * @param {string} collectionId
          * @param {string[]} queries
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string[]} orderAttributes
-         * @param {string[]} orderTypes
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listDocuments(databaseId, collectionId, queries, limit, offset, cursor, cursorDirection, orderAttributes, orderTypes) {
+        listDocuments(databaseId, collectionId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -2601,24 +2559,6 @@
                 let payload = {};
                 if (typeof queries !== 'undefined') {
                     payload['queries'] = queries;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderAttributes !== 'undefined') {
-                    payload['orderAttributes'] = orderAttributes;
-                }
-                if (typeof orderTypes !== 'undefined') {
-                    payload['orderTypes'] = orderTypes;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -2781,12 +2721,11 @@
          * @param {string} databaseId
          * @param {string} collectionId
          * @param {string} documentId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listDocumentLogs(databaseId, collectionId, documentId, limit, offset) {
+        listDocumentLogs(databaseId, collectionId, documentId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -2799,11 +2738,8 @@
                 }
                 let path = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}/logs'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -2951,12 +2887,11 @@
          *
          * @param {string} databaseId
          * @param {string} collectionId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listCollectionLogs(databaseId, collectionId, limit, offset) {
+        listCollectionLogs(databaseId, collectionId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -2966,11 +2901,8 @@
                 }
                 let path = '/databases/{databaseId}/collections/{collectionId}/logs'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -3008,28 +2940,24 @@
             });
         }
         /**
-         * List Collection Logs
+         * List Database Logs
          *
-         * Get the collection activity logs list by its unique ID.
+         * Get the database activity logs list by its unique ID.
          *
          * @param {string} databaseId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listLogs(databaseId, limit, offset) {
+        listLogs(databaseId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
                 }
                 let path = '/databases/{databaseId}/logs'.replace('{databaseId}', databaseId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -3074,36 +3002,20 @@
          * Get a list of all the project's functions. You can use the query params to
          * filter your results.
          *
+         * @param {string} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        list(search, limit, offset, cursor, cursorDirection, orderType) {
+        list(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/functions';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -3309,39 +3221,23 @@
          * params to filter your results.
          *
          * @param {string} functionId
+         * @param {string} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listDeployments(functionId, search, limit, offset, cursor, cursorDirection, orderType) {
+        listDeployments(functionId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
                 }
                 let path = '/functions/{functionId}/deployments'.replace('{functionId}', functionId);
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -3556,35 +3452,23 @@
          * different API modes](/docs/admin).
          *
          * @param {string} functionId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string} queries
          * @param {string} search
-         * @param {string} cursor
-         * @param {string} cursorDirection
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listExecutions(functionId, limit, offset, search, cursor, cursorDirection) {
+        listExecutions(functionId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
                 }
                 let path = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -3679,19 +3563,27 @@
         /**
          * List Variables
          *
-         * Get a list of all variables that are currently active on your function.
+         * Get a list of all variables of a specific function.
          *
          * @param {string} functionId
+         * @param {string} queries
+         * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listVariables(functionId) {
+        listVariables(functionId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
                 }
                 let path = '/functions/{functionId}/variables'.replace('{functionId}', functionId);
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
+                if (typeof search !== 'undefined') {
+                    payload['search'] = search;
+                }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
                     'content-type': 'application/json',
@@ -3702,8 +3594,7 @@
          * Create Variable
          *
          * Create a new function variable. These variables can be accessed within
-         * functions using the `env` object recieved through the payload of an
-         * execution.
+         * function in the `env` object under the request variable.
          *
          * @param {string} functionId
          * @param {string} key
@@ -5217,36 +5108,20 @@
          * Get a list of all the storage buckets. You can use the query params to
          * filter your results.
          *
+         * @param {string} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listBuckets(search, limit, offset, cursor, cursorDirection, orderType) {
+        listBuckets(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/storage/buckets';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -5430,39 +5305,23 @@
          * project's files. [Learn more about different API modes](/docs/admin).
          *
          * @param {string} bucketId
+         * @param {string} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listFiles(bucketId, search, limit, offset, cursor, cursorDirection, orderType) {
+        listFiles(bucketId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
                 }
                 let path = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -5848,36 +5707,20 @@
          * In admin mode, this endpoint returns a list of all the teams in the current
          * project. [Learn more about different API modes](/docs/admin).
          *
+         * @param {string} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        list(search, limit, offset, cursor, cursorDirection, orderType) {
+        list(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/teams';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -6004,23 +5847,19 @@
          * Get the team activity logs list by its unique ID.
          *
          * @param {string} teamId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listLogs(teamId, limit, offset) {
+        listLogs(teamId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof teamId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "teamId"');
                 }
                 let path = '/teams/{teamId}/logs'.replace('{teamId}', teamId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -6035,39 +5874,23 @@
          * members have read access to this endpoint.
          *
          * @param {string} teamId
+         * @param {string} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getMemberships(teamId, search, limit, offset, cursor, cursorDirection, orderType) {
+        getMemberships(teamId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof teamId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "teamId"');
                 }
                 let path = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -6284,36 +6107,20 @@
          * Get a list of all the project's users. You can use the query params to
          * filter your results.
          *
+         * @param {string} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        list(search, limit, offset, cursor, cursorDirection, orderType) {
+        list(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/users';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -6852,23 +6659,19 @@
          * Get the user activity logs list by its unique ID.
          *
          * @param {string} userId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getLogs(userId, limit, offset) {
+        getLogs(userId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
                 }
                 let path = '/users/{userId}/logs'.replace('{userId}', userId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {

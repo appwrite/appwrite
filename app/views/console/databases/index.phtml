@@ -16,11 +16,12 @@
                 data-service="databases.list"
                 data-event="load,databases.create,databases.update,databases.delete"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                data-param-offset="{{router.params.offset}}"
                 data-param-order-type="ASC"
+                data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset ?? 0}})"
+                data-param-queries-cast-to="array"
                 data-scope="sdk"
                 data-name="project-databases">
+                <!-- Problem here (line 20) is that with no param in offset, it is offset() instead of offset(0), causing error on API side -->
 
                 <div data-ls-if="(!{{project-databases.total}})" class="box dashboard margin-bottom">
                     <div class="margin-bottom-small margin-top-small margin-end margin-start">
