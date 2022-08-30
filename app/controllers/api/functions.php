@@ -1484,7 +1484,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         try {
             $dbForProject->updateDocument('variables', $variable->getId(), $variable);
         } catch (DuplicateException $th) {
-            throw new Exception(Exception::VARIABLE_ALREADY_EXISTS, 'Variable key already used.');
+            throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
