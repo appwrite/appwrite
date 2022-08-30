@@ -38,8 +38,8 @@ class TranscodingV1 extends Worker
     private const STREAM_HLS = 'hls';
     private const STREAM_MPEG_DASH = 'dash';
 
-    private string $basePath = '/tmp/';
-    //protected string $basePath = '/usr/src/code/tests/tmp/';
+    //private string $basePath = '/tmp/';
+    private string $basePath = '/usr/src/code/tests/tmp/';
 
     private string $inDir;
 
@@ -48,6 +48,8 @@ class TranscodingV1 extends Worker
     private string $outPath;
 
     private string $renditionName;
+
+    private string $audioStreamCount;
 
     private Database $database;
 
@@ -123,6 +125,9 @@ class TranscodingV1 extends Worker
         if (!$ffprobe->isValid($inPath)) {
             throw new Exception('Not an valid FFMpeg file "' . $inPath . '"');
         }
+
+        $this->audioStreamCount = $ffprobe->streams($inPath)->audios()->count();
+        $this->videoStreamCount = $ffprobe->streams($inPath)->videos()->count();
 
         $general = $this->getVideoSourceInfo($ffprobe->streams($inPath));
         if (!empty($general)) {
@@ -241,23 +246,26 @@ class TranscodingV1 extends Worker
             }
 
             if ($profile['stream'] === 'hls') {
-                $m3u8 = $this->parseM3u8($this->outPath . '_' . $representation->getHeight() . 'p.m3u8');
-                if (!empty($m3u8['segments'])) {
-                    foreach ($m3u8['segments'] as $segment) {
-                        Authorization::skip(function () use ($segment, $project, $query, $renditionPath) {
-                            return $this->database->createDocument('videos_renditions_segments', new Document([
-                                'renditionId' => $query->getId(),
-                                'representationId' => 0,
-                                'fileName' => $segment['fileName'],
-                                'path' => $renditionPath,
-                                'duration' => $segment['duration'],
-                            ]));
-                        });
+                $urls = $this->getHlsSegmentsUrls($this->outDir . 'master.m3u8');
+                foreach ($urls as $pos => $url) {
+                    $m3u8 = $this->getHlsSegments($this->outDir . $url);
+                    if (!empty($m3u8['segments'])) {
+                        foreach ($m3u8['segments'] as $segment) {
+                            Authorization::skip(function () use ($segment, $project, $query, $renditionPath, $pos) {
+                                return $this->database->createDocument('videos_renditions_segments', new Document([
+                                    'renditionId' => $query->getId(),
+                                    'representationId' => $pos,
+                                    'fileName' => $segment['fileName'],
+                                    'path' => $renditionPath,
+                                    'duration' => $segment['duration'],
+                                ]));
+                            });
+                        }
                     }
+                    $query->setAttribute('targetDuration', $m3u8['targetDuration']);
                 }
-                $query->setAttribute('targetDuration', $m3u8['targetDuration']);
             } else {
-                $mpd = $this->parseMpd($this->outPath . '.mpd');
+                $mpd = $this->getDashSegments($this->outPath . '.mpd');
                 if (!empty($mpd['segments'])) {
                     foreach ($mpd['segments'] as $segment) {
                         Authorization::skip(function () use ($segment, $project, $query, $renditionPath) {
@@ -283,7 +291,7 @@ class TranscodingV1 extends Worker
 
             foreach ($subtitles ?? [] as $subtitle) {
                 if ($profile['stream'] === 'hls') {
-                    $m3u8 = $this->parseM3u8($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
+                    $m3u8 = $this->getHlsSegments($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
                     foreach ($m3u8['segments'] ?? [] as $segment) {
                         Authorization::skip(function () use ($segment, $project, $subtitle, $renditionRootPath) {
                             return $this->database->createDocument('videos_subtitles_segments', new Document([
@@ -395,6 +403,7 @@ class TranscodingV1 extends Worker
         }
 
         $hls->setFormat($format)
+            ->setAudioStreamCount($this->audioStreamCount)
             ->setHlsTime($segmentSize)
             ->setHlsAllowCache(false)
             ->addRepresentation($representation)
@@ -408,7 +417,7 @@ class TranscodingV1 extends Worker
      * @param string $path
      * @return array
      */
-    private function parseMpd(string $path): array
+    private function getDashSegments(string $path): array
     {
         $segments = [];
         $metadata = null;
@@ -444,7 +453,32 @@ class TranscodingV1 extends Worker
      * @param string $path
      * @return array
      */
-    private function parseM3u8(string $path): array
+    private function getHlsSegmentsUrls(string $path): array
+    {
+        $files = [];
+        $handle = fopen($path, "r");
+        if ($handle) {
+            while (($line = fgets($handle)) !== false) {
+                $line =  str_replace([",","\r","\n"], "", $line);
+                $end = strpos($line, 'm3u8');
+                if ($end !== false) {
+                    $start = strpos($line, $this->args['videoId']);
+                    if ($start !== false) {
+                        $files[] = substr($line, $start, ($end - $start) + 4);
+                    }
+                }
+            }
+            fclose($handle);
+        }
+        return $files;
+    }
+
+
+    /**
+     * @param string $path
+     * @return array
+     */
+    private function getHlsSegments(string $path): array
     {
         $segments = [];
         $targetDuration = 0;
