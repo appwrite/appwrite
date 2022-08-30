@@ -356,8 +356,8 @@ App::get('/v1/users')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        if ($cursor) {
             /** @var Query $cursor */
             $userId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('users', $userId);
@@ -541,7 +541,7 @@ App::get('/v1/users/:userId/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);
