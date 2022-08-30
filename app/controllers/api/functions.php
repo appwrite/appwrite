@@ -1312,7 +1312,7 @@ App::post('/v1/functions/:functionId/variables')
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
     ->param('functionId', null, new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
-    ->param('value', null, new Text(16384), 'Variable value. Max length: 16384 chars.', false)
+    ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject) {
@@ -1452,7 +1452,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->param('functionId', null, new UID(), 'Function unique ID.', false)
     ->param('variableId', null, new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', true)
-    ->param('value', null, new Text(16384), 'Variable value. Max length: 16384 chars.', true)
+    ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $variableId, ?string $key, ?string $value, Response $response, Database $dbForProject) {
@@ -1520,7 +1520,6 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
 
         if ($variable === false || $variable->isEmpty()) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
-```
         }
 
         $dbForProject->deleteDocument('variables', $variable->getId());
