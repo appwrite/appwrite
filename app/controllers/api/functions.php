@@ -1510,7 +1510,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND, 'Function not found');
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $variable = $dbForProject->findOne('variables', [
