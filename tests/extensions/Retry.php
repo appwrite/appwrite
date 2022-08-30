@@ -8,9 +8,9 @@ namespace Appwrite\Tests;
  * Requires that the test class extends {@see TestCase} and has trait {@see Retryable}.
  */
 #[\Attribute(\Attribute::TARGET_METHOD)]
-class FlakyTest
+class Retry
 {
-    public function __construct(protected int $retries = 1)
+    public function __construct(protected int $count = 1)
     {
     }
 }

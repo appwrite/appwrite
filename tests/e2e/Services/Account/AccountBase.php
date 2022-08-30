@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\Account;
 
-use Appwrite\Tests\FlakyTest;
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 
 trait AccountBase
@@ -518,7 +518,7 @@ trait AccountBase
     /**
      * @depends testUpdateAccountName
      */
-    #[FlakyTest(retries: 1)]
+    #[Retry(count: 1)]
     public function testUpdateAccountPassword($data): array
     {
         $email = $data['email'] ?? '';

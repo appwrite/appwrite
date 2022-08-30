@@ -5,13 +5,13 @@ namespace Appwrite\Tests;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Allows test methods annotated with {@see FlakyTest} to be retried.
+ * Allows test methods annotated with {@see Retry} to be retried.
  */
 trait Retryable
 {
     /**
      * Custom runBare, hides and defers to PHPUnit {@see TestCase} runBare function,
-     * accounting for any retries configured by the {@see FlakyTest} annotation.
+     * accounting for any retries configured by the {@see Retry} annotation.
      *
      * @return void
      * @throws \ReflectionException
@@ -49,7 +49,7 @@ trait Retryable
         $name->setAccessible(true);
         $name = $name->getValue($this);
         $method = $root->getMethod($name);
-        $attributes = $method->getAttributes(FlakyTest::class);
+        $attributes = $method->getAttributes(Retry::class);
         $attribute = $attributes[0] ?? null;
         $args = $attribute?->getArguments();
         $retries = $args['retries'] ?? 0;
