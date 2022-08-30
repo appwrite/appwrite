@@ -259,6 +259,42 @@ trait StorageBase
         $this->assertGreaterThan(0, $files['body']['total']);
         $this->assertGreaterThan(0, count($files['body']['files']));
 
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'limit(0)' ]
+        ]);
+        $this->assertEquals(200, $files['headers']['status-code']);
+        $this->assertEquals(0, count($files['body']['files']));
+
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'offset(1)' ]
+        ]);
+        $this->assertEquals(200, $files['headers']['status-code']);
+        $this->assertEquals(0, count($files['body']['files']));
+
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("mimeType", "image/png")' ]
+        ]);
+        $this->assertEquals(200, $files['headers']['status-code']);
+        $this->assertEquals(1, count($files['body']['files']));
+
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("mimeType", "image/jpeg")' ]
+        ]);
+        $this->assertEquals(200, $files['headers']['status-code']);
+        $this->assertEquals(0, count($files['body']['files']));
+
         /**
          * Test for FAILURE unknown Bucket
          */
