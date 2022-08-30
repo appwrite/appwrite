@@ -25,9 +25,6 @@ $cli
         $cache = new Cache(new None());
         $consoleDB = new Database(new MariaDB($db), $cache);
         $processes = $consoleDB->getProcessList();
-        foreach ($processes as $proc) {
-            var_dump($proc);
-        }
 
         //Swoole\Event::wait(); // Wait for Coroutines to finish
         Console::success('Finish ! 2');
