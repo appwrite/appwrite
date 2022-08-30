@@ -131,9 +131,8 @@
                             <label for="collection-name">Name</label>
                             <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" maxlength="128" />
 
-                            <input type="hidden" id="collection-permission" name="permission" required value="collection" />
-                            <input type="hidden" id="collection-read" name="read" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
-                            <input type="hidden" id="collection-write" name="write" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
+                            <input type="hidden" id="collection-permissions" name="permissions" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
+                            <input type="hidden" id="collection-documentSecurity" name="documentSecurity" required data-cast-to="boolean" value="false" />
 
                             <hr />
 
@@ -292,8 +291,8 @@
 
                         <ul class="margin-bottom-large text-fade text-size-small">
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-database.$updatedAt|dateText}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-database.$createdAt|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-database.$updatedAt|date}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-database.$createdAt|date}}"></span></li>
                         </ul>
 
                             <form

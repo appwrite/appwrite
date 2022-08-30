@@ -1,20 +1,12 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\DSN;
 
 use Appwrite\DSN\DSN;
 use PHPUnit\Framework\TestCase;
 
 class DSNTest extends TestCase
 {
-    public function setUp(): void
-    {
-    }
-
-    public function tearDown(): void
-    {
-    }
-
     public function testSuccess(): void
     {
         $dsn = new DSN("mariadb://user:password@localhost:3306/database?charset=utf8&timezone=UTC");
@@ -84,6 +76,6 @@ class DSNTest extends TestCase
     public function testFail(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $dsn = new DSN("mariadb://");
+        new DSN("mariadb://");
     }
 }

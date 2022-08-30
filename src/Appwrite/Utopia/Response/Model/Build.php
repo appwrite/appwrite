@@ -16,12 +16,6 @@ class Build extends Model
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('startTime', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'The deployment creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
-            ])
             ->addRule('deploymentId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The deployment that created this build.',
@@ -51,11 +45,17 @@ class Build extends Model
                 'default' => '',
                 'example' => '',
             ])
+            ->addRule('startTime', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'The deployment creation date in Datetime.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
             ->addRule('endTime', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'The time the build was finished in Unix timestamp.',
-                'default' => 0,
-                'example' => 0,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'The time the build was finished in Datetime.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_INTEGER,

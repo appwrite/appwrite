@@ -156,10 +156,10 @@ class V12 extends Migration
                      */
                     $this->createCollection('buckets');
 
-                    if (!$this->projectDB->findOne('buckets', [new Query('$id', Query::TYPE_EQUAL, ['default'])])) {
+                    if (!$this->projectDB->findOne('buckets', [Query::equal('$id', ['default'])])) {
                         $this->projectDB->createDocument('buckets', new Document([
-                            '$id' => 'default',
-                            '$collection' => 'buckets',
+                            '$id' => ID::custom('default'),
+                            '$collection' => ID::custom('buckets'),
                             'dateCreated' => \time(),
                             'dateUpdated' => \time(),
                             'name' => 'Default',
@@ -180,7 +180,11 @@ class V12 extends Migration
                          */
                         $nextDocument = null;
                         do {
-                            $documents = $this->projectDB->find('files', limit: $this->limit, cursor: $nextDocument);
+                            $queries = [Query::limit($this->limit)];
+                            if ($nextDocument !== null) {
+                                $queries[] = Query::cursorAfter($nextDocument);
+                            }
+                            $documents = $this->projectDB->find('files', $queries);
                             $count = count($documents);
                             \Co\run(function (array $documents) {
                                 foreach ($documents as $document) {
@@ -344,7 +348,11 @@ class V12 extends Migration
         $nextCollection = null;
 
         do {
-            $documents = $this->projectDB->find('collections', limit: $this->limit, cursor: $nextCollection);
+            $queries = [Query::limit($this->limit)];
+            if ($nextCollection !== null) {
+                $queries[] = Query::cursorAfter($nextCollection);
+            }
+            $documents = $this->projectDB->find('collections', $queries);
             $count = count($documents);
 
             \Co\run(function (array $documents) {
@@ -387,7 +395,11 @@ class V12 extends Migration
                         $nextDocument = null;
 
                         do {
-                            $documents = $this->projectDB->find('collection_' . $internalId, limit: $this->limit, cursor: $nextDocument);
+                            $queries = [Query::limit($this->limit)];
+                            if ($nextDocument !== null) {
+                                $queries[] = Query::cursorAfter($nextDocument);
+                            }
+                            $documents = $this->projectDB->find('collection_' . $internalId, $queries);
                             $count = count($documents);
 
                             foreach ($documents as $document) {
@@ -462,7 +474,11 @@ class V12 extends Migration
             $nextDocument = null;
 
             do {
-                $documents = $this->projectDB->find($id, limit: $this->limit, cursor: $nextDocument);
+                $queries = [Query::limit($this->limit)];
+                if ($nextDocument !== null) {
+                    $queries[] = Query::cursorAfter($nextDocument);
+                }
+                $documents = $this->projectDB->find($id, $queries);
                 $count = count($documents);
 
                 \Co\run(function (array $documents) {

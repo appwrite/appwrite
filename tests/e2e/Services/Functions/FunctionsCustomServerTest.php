@@ -10,6 +10,8 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -26,7 +28,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test',
             'runtime' => 'php-8.0',
             'vars' => [
@@ -48,8 +50,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test', $response1['body']['name']);
         $this->assertEquals('php-8.0', $response1['body']['runtime']);
-        $this->assertIsInt($response1['body']['$createdAt']);
-        $this->assertIsInt($response1['body']['$updatedAt']);
+        $this->assertEquals(true, DateTime::isValid($response1['body']['$createdAt']));
+        $this->assertEquals(true, DateTime::isValid($response1['body']['$updatedAt']));
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
             'funcKey1' => 'funcValue1',
@@ -124,7 +126,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test 2',
             'runtime' => 'php-8.0',
             'vars' => [
@@ -249,8 +251,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test1', $response1['body']['name']);
-        $this->assertIsInt($response1['body']['$createdAt']);
-        $this->assertIsInt($response1['body']['$updatedAt']);
+        $this->assertEquals(true, DateTime::isValid($response1['body']['$createdAt']));
+        $this->assertEquals(true, DateTime::isValid($response1['body']['$updatedAt']));
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
             'key4' => 'value4',
@@ -293,9 +295,9 @@ class FunctionsCustomServerTest extends Scope
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
-        $this->assertIsInt($deployment['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
@@ -342,9 +344,9 @@ class FunctionsCustomServerTest extends Scope
         }
         @fclose($handle);
 
-        $this->assertEquals(201, $largeTag['headers']['status-code']);
+        $this->assertEquals(202, $largeTag['headers']['status-code']);
         $this->assertNotEmpty($largeTag['body']['$id']);
-        $this->assertIsInt($largeTag['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($largeTag['body']['$createdAt']));
         $this->assertEquals('index.php', $largeTag['body']['entrypoint']);
         $this->assertGreaterThan(10000, $largeTag['body']['size']);
 
@@ -366,8 +368,8 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertIsInt($response['body']['$createdAt']);
-        $this->assertIsInt($response['body']['$updatedAt']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, DateTime::isValid($response['body']['$updatedAt']));
         $this->assertEquals($data['deploymentId'], $response['body']['deployment']);
 
         /**
@@ -485,10 +487,10 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
-        $this->assertIsInt($execution['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($execution['body']['$createdAt']));
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('waiting', $execution['body']['status']);
         $this->assertEquals(0, $execution['body']['statusCode']);
@@ -505,7 +507,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
-        $this->assertIsInt($execution['body']['$createdAt']);
+        $this->assertEquals(true, DateTime::isValid($execution['body']['$createdAt']));
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['statusCode']);
@@ -712,7 +714,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [],
@@ -734,7 +736,7 @@ class FunctionsCustomServerTest extends Scope
             'activate' => true,
         ]);
 
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(20);
@@ -748,7 +750,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         sleep(10);
 
@@ -797,7 +799,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [],
@@ -819,7 +821,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(10);
@@ -840,7 +842,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
 
@@ -867,6 +869,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
+        $this->assertStringContainsString('Amazing Function Log', $executions['body']['stdout']);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -894,7 +897,7 @@ class FunctionsCustomServerTest extends Scope
 
     public function testCreateCustomNodeExecution()
     {
-        $name = 'node-17.0';
+        $name = 'node-18.0';
         $folder = 'node';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
@@ -906,7 +909,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
@@ -931,7 +934,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(10);
@@ -945,7 +948,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
 
@@ -965,7 +968,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
         $this->assertEquals('Node.js', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('17.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
+        $this->assertEquals('18.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
         $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
@@ -1011,7 +1014,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
@@ -1036,7 +1039,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(30);
@@ -1050,7 +1053,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
 
@@ -1116,7 +1119,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
@@ -1141,7 +1144,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(40);
@@ -1155,7 +1158,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
 
@@ -1222,7 +1225,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'functionId' => 'unique()',
+            'functionId' => ID::unique(),
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'vars' => [
@@ -1247,7 +1250,7 @@ class FunctionsCustomServerTest extends Scope
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(201, $deployment['headers']['status-code']);
+        $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
         sleep(30);
@@ -1261,7 +1264,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
 
         $executionId = $execution['body']['$id'] ?? '';
 
@@ -1327,7 +1330,7 @@ class FunctionsCustomServerTest extends Scope
     //         'content-type' => 'application/json',
     //         'x-appwrite-project' => $this->getProject()['$id'],
     //     ], $this->getHeaders()), [
-    //         'functionId' => 'unique()',
+    //         'functionId' => ID::unique(),
     //         'name' => 'Test '.$name,
     //         'runtime' => $name,
     //         'vars' => [
@@ -1352,7 +1355,7 @@ class FunctionsCustomServerTest extends Scope
     //     ]);
 
     //     $deploymentId = $deployment['body']['$id'] ?? '';
-    //     $this->assertEquals(201, $deployment['headers']['status-code']);
+    //     $this->assertEquals(202, $deployment['headers']['status-code']);
 
     //     // Allow (slow) build step to run
     //     sleep(300);
@@ -1366,7 +1369,7 @@ class FunctionsCustomServerTest extends Scope
 
     //     $executionId = $execution['body']['$id'] ?? '';
 
-    //     $this->assertEquals(201, $execution['headers']['status-code']);
+    //     $this->assertEquals(202, $execution['headers']['status-code']);
 
     //     $executionId = $execution['body']['$id'] ?? '';
 

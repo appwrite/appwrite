@@ -67,7 +67,7 @@ class V14 extends Migration
 
         try {
             $this->projectDB->createDocument('databases', new Document([
-                '$id' => 'default',
+                '$id' => ID::custom('default'),
                 'name' => 'Default',
                 'search' => 'default Default'
             ]));
@@ -87,7 +87,11 @@ class V14 extends Migration
     {
         $nextFile = null;
         do {
-            $documents = $this->projectDB->find("bucket_{$bucket->getInternalId()}", limit: $this->limit, cursor: $nextFile);
+            $queries = [Query::limit($this->limit)];
+            if ($nextFile !== null) {
+                $queries[] = Query::cursorAfter($nextFile);
+            }
+            $documents = $this->projectDB->find("bucket_{$bucket->getInternalId()}", $queries);
             $count = count($documents);
 
             foreach ($documents as $document) {
@@ -164,7 +168,11 @@ class V14 extends Migration
         $nextCollection = null;
 
         do {
-            $documents = $this->projectDB->find('database_1', limit: $this->limit, cursor: $nextCollection);
+            $queries = [Query::limit($this->limit)];
+            if ($nextCollection !== null) {
+                $queries[] = Query::cursorAfter($nextCollection);
+            }
+            $documents = $this->projectDB->find('database_1', $queries);
             $count = count($documents);
 
             \Co\run(function (array $documents) {
@@ -235,10 +243,15 @@ class V14 extends Migration
          * Offset pagination instead of cursor, since documents are re-created!
          */
         $offset = 0;
-        $attributesCount = $this->projectDB->count($type, queries: [new Query('collectionId', Query::TYPE_EQUAL, [$collection->getId()])]);
+        $attributesCount = $this->projectDB->count($type, queries: [Query::equal('collectionId', [$collection->getId()])]);
 
         do {
-            $documents = $this->projectDB->find($type, limit: $this->limit, offset: $offset, queries: [new Query('collectionId', Query::TYPE_EQUAL, [$collection->getId()])]);
+            $queries = [
+                Query::limit($this->limit),
+                Query::offset($offset),
+                Query::equal('collectionId', [$collection->getId()]),
+            ];
+            $documents = $this->projectDB->find($type, $queries);
             $offset += $this->limit;
 
             foreach ($documents as $document) {

@@ -2,7 +2,6 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
-use Appwrite\Event\Audit as EventAudit;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
@@ -16,12 +15,17 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\DateTime;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
@@ -36,6 +40,7 @@ App::post('/v1/teams')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].create')
     ->label('scope', 'teams.write')
+    ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'create')
@@ -50,17 +55,19 @@ App::post('/v1/teams')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('audits')
-    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $events, Event $audits) {
+    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
-        $teamId = $teamId == 'unique()' ? $dbForProject->getId() : $teamId;
+        $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
         $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
-            '$id' => $teamId ,
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner'],
+            '$id' => $teamId,
+            '$permissions' => [
+                Permission::read(Role::team($teamId)),
+                Permission::update(Role::team($teamId, 'owner')),
+                Permission::delete(Role::team($teamId, 'owner')),
+            ],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
             'search' => implode(' ', [$teamId, $name]),
@@ -71,18 +78,24 @@ App::post('/v1/teams')
                 $roles[] = 'owner';
             }
 
-            $membershipId = $dbForProject->getId();
+            $membershipId = ID::unique();
             $membership = new Document([
                 '$id' => $membershipId,
-                '$read' => ['user:' . $user->getId(), 'team:' . $team->getId()],
-                '$write' => ['user:' . $user->getId(), 'team:' . $team->getId() . '/owner'],
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::read(Role::team($team->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::update(Role::team($team->getId(), 'owner')),
+                    Permission::delete(Role::user($user->getId())),
+                    Permission::delete(Role::team($team->getId(), 'owner')),
+                ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'teamId' => $team->getId(),
                 'teamInternalId' => $team->getInternalId(),
                 'roles' => $roles,
-                'invited' => \time(),
-                'joined' => \time(),
+                'invited' => DateTime::now(),
+                'joined' => DateTime::now(),
                 'confirm' => true,
                 'secret' => '',
                 'search' => implode(' ', [$membershipId, $user->getId()])
@@ -97,12 +110,6 @@ App::post('/v1/teams')
         if (!empty($user->getId())) {
             $events->setParam('userId', $user->getId());
         }
-
-        $audits
-            ->setParam('event', 'teams.create')
-            ->setParam('resource', 'team/' . $teamId)
-            ->setParam('data', $team->getArrayCopy())
-        ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($team, Response::MODEL_TEAM);
@@ -129,22 +136,28 @@ App::get('/v1/teams')
     ->inject('dbForProject')
     ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
 
-        if (!empty($cursor)) {
-            $cursorTeam = $dbForProject->getDocument('teams', $cursor);
+        $filterQueries = [];
 
-            if ($cursorTeam->isEmpty()) {
-                throw new Exception("Team '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
+        if (!empty($search)) {
+            $filterQueries[] = Query::search('search', $search);
         }
 
         $queries = [];
+        $queries[] = Query::limit($limit);
+        $queries[] = Query::offset($offset);
+        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('teams', $cursor);
 
-        if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Team '{$cursor}' for the 'cursor' value not found.");
+            }
+
+            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
-        $results = $dbForProject->find('teams', $queries, $limit, $offset, [], [$orderType], $cursorTeam ?? null, $cursorDirection);
-        $total = $dbForProject->count('teams', $queries, APP_LIMIT_COUNT);
+        $results = $dbForProject->find('teams', \array_merge($filterQueries, $queries));
+        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -171,7 +184,7 @@ App::get('/v1/teams/:teamId')
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+            throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
         $response->dynamic($team, Response::MODEL_TEAM);
@@ -182,6 +195,7 @@ App::put('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update')
     ->label('scope', 'teams.write')
+    ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'update')
@@ -194,13 +208,12 @@ App::put('/v1/teams/:teamId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('audits')
-    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject, Event $events, EventAudit $audits) {
+    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject, Event $events) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+            throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
         $team = $dbForProject->updateDocument('teams', $team->getId(), $team
@@ -208,7 +221,6 @@ App::put('/v1/teams/:teamId')
             ->setAttribute('search', implode(' ', [$teamId, $name])));
 
         $events->setParam('teamId', $team->getId());
-        $audits->setResource('team/' . $team->getId());
 
         $response->dynamic($team, Response::MODEL_TEAM);
     });
@@ -218,6 +230,7 @@ App::delete('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].delete')
     ->label('scope', 'teams.write')
+    ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'delete')
@@ -229,28 +242,28 @@ App::delete('/v1/teams/:teamId')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
-    ->inject('audits')
-    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Delete $deletes, EventAudit $audits) {
+    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+            throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
         $memberships = $dbForProject->find('memberships', [
-            new Query('teamId', Query::TYPE_EQUAL, [$teamId]),
-        ], 2000, 0); // TODO fix members limit
+            Query::equal('teamId', [$teamId]),
+            Query::limit(2000), // TODO fix members limit
+        ]);
 
         // TODO delete all members individually from the user object
         foreach ($memberships as $membership) {
             if (!$dbForProject->deleteDocument('memberships', $membership->getId())) {
-                throw new Exception('Failed to remove membership for team from DB', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership for team from DB');
             }
         }
 
         if (!$dbForProject->deleteDocument('teams', $teamId)) {
-            throw new Exception('Failed to remove team from DB', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
 
         $deletes
@@ -262,12 +275,6 @@ App::delete('/v1/teams/:teamId')
             ->setPayload($response->output($team, Response::MODEL_TEAM))
         ;
 
-        $audits
-            ->setParam('event', 'teams.delete')
-            ->setParam('resource', 'team/' . $teamId)
-            ->setParam('data', $team->getArrayCopy())
-        ;
-
         $response->noContent();
     });
 
@@ -277,6 +284,8 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
     ->label('scope', 'teams.write')
     ->label('auth.type', 'invites')
+    ->label('audits.resource', 'team/{request.teamId}')
+    ->label('audits.userId', '{request.userId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createMembership')
@@ -295,16 +304,15 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('audits')
     ->inject('mails')
     ->inject('events')
-    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, EventAudit $audits, Mail $mails, Event $events) {
+    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, Event $events) {
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         if (!$isPrivilegedUser && !$isAppUser && empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('SMTP Disabled', 503, Exception::GENERAL_SMTP_DISABLED);
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED);
         }
 
         $email = \strtolower($email);
@@ -312,10 +320,10 @@ App::post('/v1/teams/:teamId/memberships')
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+            throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $invitee = $dbForProject->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]); // Get user by email address
+        $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
 
         if (empty($invitee)) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -324,27 +332,33 @@ App::post('/v1/teams/:teamId/memberships')
                 $total = $dbForProject->count('users', [], APP_LIMIT_USERS);
 
                 if ($total >= $limit) {
-                    throw new Exception('Project registration is restricted. Contact your administrator for more information.', 501, Exception::USER_COUNT_EXCEEDED);
+                    throw new Exception(Exception::USER_COUNT_EXCEEDED, 'Project registration is restricted. Contact your administrator for more information.');
                 }
             }
 
             try {
-                $userId = $dbForProject->getId();
+                $userId = ID::unique();
                 $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
-                    '$read' => ['user:' . $userId, 'role:all'],
-                    '$write' => ['user:' . $userId],
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::read(Role::user($userId)),
+                        Permission::update(Role::user($userId)),
+                        Permission::delete(Role::user($userId)),
+                    ],
                     'email' => $email,
                     'emailVerification' => false,
                     'status' => true,
-                    'password' => Auth::passwordHash(Auth::passwordGenerator()),
+                    'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
+                    'hash' => Auth::DEFAULT_ALGO,
+                    'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                     /**
                      * Set the password update time to 0 for users created using
                      * team invite and OAuth to allow password updates without an
                      * old password
                      */
-                    'passwordUpdate' => 0,
-                    'registration' => \time(),
+                    'passwordUpdate' => null,
+                    'registration' => DateTime::now(),
                     'reset' => false,
                     'name' => $name,
                     'prefs' => new \stdClass(),
@@ -354,30 +368,35 @@ App::post('/v1/teams/:teamId/memberships')
                     'search' => implode(' ', [$userId, $email, $name])
                 ])));
             } catch (Duplicate $th) {
-                throw new Exception('Account already exists', 409, Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
         }
 
         $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
-            throw new Exception('User is not allowed to send invitations for this team', 401, Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
         }
 
         $secret = Auth::tokenGenerator();
 
-        $membershipId = $dbForProject->getId();
+        $membershipId = ID::unique();
         $membership = new Document([
             '$id' => $membershipId,
-            '$read' => ['role:all'],
-            '$write' => ['user:' . $invitee->getId(), 'team:' . $team->getId() . '/owner'],
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::user($invitee->getId())),
+                Permission::update(Role::team($team->getId(), 'owner')),
+                Permission::delete(Role::user($invitee->getId())),
+                Permission::delete(Role::team($team->getId(), 'owner')),
+            ],
             'userId' => $invitee->getId(),
             'userInternalId' => $invitee->getInternalId(),
             'teamId' => $team->getId(),
             'teamInternalId' => $team->getInternalId(),
             'roles' => $roles,
-            'invited' => \time(),
-            'joined' => ($isPrivilegedUser || $isAppUser) ? \time() : 0,
+            'invited' => DateTime::now(),
+            'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
             'confirm' => ($isPrivilegedUser || $isAppUser),
             'secret' => Auth::hash($secret),
             'search' => implode(' ', [$membershipId, $invitee->getId()])
@@ -387,7 +406,7 @@ App::post('/v1/teams/:teamId/memberships')
             try {
                 $membership = Authorization::skip(fn() => $dbForProject->createDocument('memberships', $membership));
             } catch (Duplicate $th) {
-                throw new Exception('User is already a member of this team', 409, Exception::TEAM_INVITE_ALREADY_EXISTS);
+                throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
             $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
             $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
@@ -397,7 +416,7 @@ App::post('/v1/teams/:teamId/memberships')
             try {
                 $membership = $dbForProject->createDocument('memberships', $membership);
             } catch (Duplicate $th) {
-                throw new Exception('User has already been invited or is already a member of this team', 409, Exception::TEAM_INVITE_ALREADY_EXISTS);
+                throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
         }
 
@@ -417,10 +436,6 @@ App::post('/v1/teams/:teamId/memberships')
                 ->trigger()
             ;
         }
-
-        $audits
-            ->setResource('team/' . $teamId)
-        ;
 
         $events
             ->setParam('teamId', $team->getId())
@@ -454,7 +469,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursor', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
     ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
+    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $teamId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
@@ -462,36 +477,37 @@ App::get('/v1/teams/:teamId/memberships')
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+            throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        if (!empty($cursor)) {
-            $cursorMembership = $dbForProject->getDocument('memberships', $cursor);
-
-            if ($cursorMembership->isEmpty()) {
-                throw new Exception("Membership '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
-        }
-
-        $queries = [new Query('teamId', Query::TYPE_EQUAL, [$teamId])];
+        $filterQueries = [Query::equal('teamId', [$teamId])];
 
         if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            $filterQueries[] = Query::search('search', $search);
+        }
+
+        $otherQueries = [];
+        $otherQueries[] = Query::limit($limit);
+        $otherQueries[] = Query::offset($offset);
+        $otherQueries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
+        if (!empty($cursor)) {
+            $cursorDocument = $dbForProject->getDocument('memberships', $cursor);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Membership '{$cursor}' for the 'cursor' value not found.");
+            }
+
+            $otherQueries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
         }
 
         $memberships = $dbForProject->find(
             collection: 'memberships',
-            queries: $queries,
-            limit: $limit,
-            offset: $offset,
-            orderTypes: [$orderType],
-            cursor: $cursorMembership ?? null,
-            cursorDirection: $cursorDirection
+            queries: \array_merge($filterQueries, $otherQueries),
         );
 
         $total = $dbForProject->count(
-            collection:'memberships',
-            queries: $queries,
+            collection: 'memberships',
+            queries: $filterQueries,
             max: APP_LIMIT_COUNT
         );
 
@@ -535,13 +551,13 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+            throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
         if ($membership->isEmpty() || empty($membership->getAttribute('userId'))) {
-            throw new Exception('Membership not found', 404, Exception::MEMBERSHIP_NOT_FOUND);
+            throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
@@ -560,6 +576,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update')
     ->label('scope', 'teams.write')
+    ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateMembershipRoles')
@@ -574,23 +591,22 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('events')
-    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, EventAudit $audits, Event $events) {
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+            throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
         if ($membership->isEmpty()) {
-            throw new Exception('Membership not found', 404, Exception::MEMBERSHIP_NOT_FOUND);
+            throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
         $profile = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
         if ($profile->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -598,7 +614,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
 
         if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
-            throw new Exception('User is not allowed to modify roles', 401, Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to modify roles');
         }
 
         /**
@@ -611,8 +627,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
          * Replace membership on profile
          */
         $dbForProject->deleteCachedDocument('users', $profile->getId());
-
-        $audits->setResource('team/' . $teamId);
 
         $events
             ->setParam('teamId', $team->getId())
@@ -632,6 +646,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
     ->label('scope', 'public')
+    ->label('audits.resource', 'team/{request.teamId}')
+    ->label('audits.userId', '{request.userId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateMembershipStatus')
@@ -648,33 +664,32 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('geodb')
-    ->inject('audits')
     ->inject('events')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Reader $geodb, EventAudit $audits, Event $events) {
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Reader $geodb, Event $events) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
         if ($membership->isEmpty()) {
-            throw new Exception('Membership not found', 404, Exception::MEMBERSHIP_NOT_FOUND);
+            throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception('Team IDs don\'t match', 404, Exception::TEAM_MEMBERSHIP_MISMATCH);
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+            throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
         if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
-            throw new Exception('Secret key not valid', 401, Exception::TEAM_INVALID_SECRET);
+            throw new Exception(Exception::TEAM_INVALID_SECRET);
         }
 
         if ($userId !== $membership->getAttribute('userId')) {
-            throw new Exception('Invite does not belong to current user (' . $user->getAttribute('email') . ')', 401, Exception::TEAM_INVITE_MISMATCH);
+            throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
         if ($user->isEmpty()) {
@@ -682,58 +697,57 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
-            throw new Exception('Invite does not belong to current user (' . $user->getAttribute('email') . ')', 401, Exception::TEAM_INVITE_MISMATCH);
+            throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
 
         if ($membership->getAttribute('confirm') === true) {
-            throw new Exception('Membership already confirmed', 409);
+            throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
 
         $membership // Attach user to team
-            ->setAttribute('joined', \time())
+            ->setAttribute('joined', DateTime::now())
             ->setAttribute('confirm', true)
         ;
 
-        $user
-            ->setAttribute('emailVerification', true)
-        ;
+        $user->setAttribute('emailVerification', true);
 
         // Log user in
 
-        Authorization::setRole('user:' . $user->getId());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
-            '$id' => $dbForProject->getId(),
+            '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'provider' => Auth::SESSION_PROVIDER_EMAIL,
             'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => $expiry,
+            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $session = $dbForProject->createDocument('sessions', $session
-            ->setAttribute('$read', ['user:' . $user->getId()])
-            ->setAttribute('$write', ['user:' . $user->getId()]));
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        Authorization::setRole('user:' . $userId);
+        Authorization::setRole(Role::user($userId)->toString());
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
-
-        $audits->setResource('team/' . $teamId);
 
         $events
             ->setParam('teamId', $team->getId())
@@ -747,8 +761,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ;
 
         $response->dynamic(
@@ -765,6 +779,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
     ->label('scope', 'teams.write')
+    ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'deleteMembership')
@@ -775,38 +790,37 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('audits')
     ->inject('events')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, EventAudit $audits, Event $events) {
+    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $events) {
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
         if ($membership->isEmpty()) {
-            throw new Exception('Invite not found', 404, Exception::TEAM_INVITE_NOT_FOUND);
+            throw new Exception(Exception::TEAM_INVITE_NOT_FOUND);
         }
 
         if ($membership->getAttribute('teamId') !== $teamId) {
-            throw new Exception('Team IDs don\'t match', 404);
+            throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+            throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
         try {
             $dbForProject->deleteDocument('memberships', $membership->getId());
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized permissions', 401, Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (\Exception $exception) {
-            throw new Exception('Failed to remove membership from DB', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
         }
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -815,8 +829,6 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));
             Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
         }
-
-        $audits->setResource('team/' . $teamId);
 
         $events
             ->setParam('teamId', $team->getId())
@@ -855,7 +867,7 @@ App::get('/v1/teams/:teamId/logs')
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+            throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
         $audit = new Audit($dbForProject);
