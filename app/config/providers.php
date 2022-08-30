@@ -121,6 +121,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'etsy' => [
+        'name' => 'Etsy',
+        'developers' => 'https://developers.etsy.com/',
+        'icon' => 'icon-etsy',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'facebook' => [
         'name' => 'Facebook',
         'developers' => 'https://developers.facebook.com/',

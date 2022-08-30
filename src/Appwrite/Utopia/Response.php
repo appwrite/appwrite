@@ -28,6 +28,7 @@ use Appwrite\Utopia\Response\Model\AttributeEmail;
 use Appwrite\Utopia\Response\Model\AttributeEnum;
 use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
+use Appwrite\Utopia\Response\Model\AttributeDatetime;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Database;
@@ -126,6 +127,7 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
     public const MODEL_ATTRIBUTE_IP = 'attributeIp';
     public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
+    public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
 
     // Users
     public const MODEL_ACCOUNT = 'account';
@@ -275,6 +277,7 @@ class Response extends SwooleResponse
             ->setModel(new AttributeEnum())
             ->setModel(new AttributeIP())
             ->setModel(new AttributeURL())
+            ->setModel(new AttributeDatetime())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
             ->setModel(new Log())

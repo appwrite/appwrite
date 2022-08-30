@@ -6,6 +6,9 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class DatabasesConsoleClientTest extends Scope
 {
@@ -19,7 +22,7 @@ class DatabasesConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'invalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -33,14 +36,18 @@ class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Movies',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'document',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
         ]);
 
-        $this->assertEquals($movies['headers']['status-code'], 201);
+        $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
 
         return ['moviesId' => $movies['body']['$id'], 'databaseId' => $databaseId];
@@ -63,7 +70,7 @@ class DatabasesConsoleClientTest extends Scope
     //         'range' => '32h'
     //     ]);
 
-    //     $this->assertEquals($response['headers']['status-code'], 400);
+    //     $this->assertEquals(400, $response['headers']['status-code']);
 
     //     /**
     //      * Test for SUCCESS
@@ -76,7 +83,7 @@ class DatabasesConsoleClientTest extends Scope
     //         'range' => '24h'
     //     ]);
 
-    //     $this->assertEquals($response['headers']['status-code'], 200);
+    //     $this->assertEquals(200, $response['headers']['status-code']);
     //     $this->assertEquals(count($response['body']), 11);
     //     $this->assertEquals($response['body']['range'], '24h');
     //     $this->assertIsArray($response['body']['documentsCount']);
@@ -109,7 +116,7 @@ class DatabasesConsoleClientTest extends Scope
             'range' => '32h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/randomCollectionId/usage', array_merge([
             'content-type' => 'application/json',
@@ -118,7 +125,7 @@ class DatabasesConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 404);
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         /**
          * Test for SUCCESS
@@ -130,7 +137,7 @@ class DatabasesConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(count($response['body']), 6);
         $this->assertEquals($response['body']['range'], '24h');
         $this->assertIsArray($response['body']['documentsCount']);
@@ -154,7 +161,7 @@ class DatabasesConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
@@ -165,7 +172,7 @@ class DatabasesConsoleClientTest extends Scope
             'limit' => 1
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);
@@ -177,7 +184,7 @@ class DatabasesConsoleClientTest extends Scope
             'offset' => 1
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
@@ -189,7 +196,7 @@ class DatabasesConsoleClientTest extends Scope
             'limit' => 1
         ]);
 
-        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);

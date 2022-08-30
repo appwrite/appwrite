@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\ID;
 
 class TeamsConsoleClientTest extends Scope
 {
@@ -24,7 +25,7 @@ class TeamsConsoleClientTest extends Scope
             'x-appwrite-project' => 'console'
         ], $this->getHeaders()), [
             'name' => 'Latest version Team',
-            'teamId' => 'unique()'
+            'teamId' => ID::unique()
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);

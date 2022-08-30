@@ -2,6 +2,7 @@
 
 namespace Appwrite\Usage\Calculators;
 
+use DateTime;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -180,28 +181,29 @@ class Aggregator extends Database
 
     protected function aggregateDailyMetric(string $projectId, string $metric): void
     {
-        $beginOfDay = strtotime("today");
-        $endOfDay   = strtotime("tomorrow", $beginOfDay) - 1;
+        $beginOfDay = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-d\T00:00:00.000'))->format(DateTime::RFC3339);
+        $endOfDay = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-d\T23:59:59.999'))->format(DateTime::RFC3339);
+
         $this->database->setNamespace('_' . $projectId);
         $value = (int) $this->database->sum('stats', 'value', [
-            new Query('metric', Query::TYPE_EQUAL, [$metric]),
-            new Query('period', Query::TYPE_EQUAL, ['30m']),
-            new Query('time', Query::TYPE_GREATEREQUAL, [$beginOfDay]),
-            new Query('time', Query::TYPE_LESSEREQUAL, [$endOfDay]),
+            Query::equal('metric', [$metric]),
+            Query::equal('period', ['30m']),
+            Query::greaterThanEqual('time', $beginOfDay),
+            Query::lessThanEqual('time', $endOfDay),
         ]);
         $this->createOrUpdateMetric($projectId, $metric, '1d', $beginOfDay, $value);
     }
 
     protected function aggregateMonthlyMetric(string $projectId, string $metric): void
     {
-        $beginOfMonth = strtotime("first day of the month");
-        $endOfMonth = strtotime("last day of the month");
+        $beginOfMonth = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-01\T00:00:00.000'))->format(DateTime::RFC3339);
+        $endOfMonth = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-t\T23:59:59.999'))->format(DateTime::RFC3339);
         $this->database->setNamespace('_' . $projectId);
             $value = (int) $this->database->sum('stats', 'value', [
-                new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                new Query('period', Query::TYPE_EQUAL, ['1d']),
-                new Query('time', Query::TYPE_GREATEREQUAL, [$beginOfMonth]),
-                new Query('time', Query::TYPE_LESSEREQUAL, [$endOfMonth]),
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['1d']),
+                Query::greaterThanEqual('time', $beginOfMonth),
+                Query::lessThanEqual('time', $endOfMonth),
             ]);
             $this->createOrUpdateMetric($projectId, $metric, '1mo', $beginOfMonth, $value);
     }

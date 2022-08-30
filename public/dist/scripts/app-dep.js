@@ -9,9 +9,9 @@ static flatten(data,prefix=''){let output={};for(const key in data){let value=da
 else{output[finalKey]=value;}}
 return output;}}
 Service.CHUNK_SIZE=5*1024*1024;class Query{}
-Query.equal=(attribute,value)=>Query.addQuery(attribute,'equal',value);Query.notEqual=(attribute,value)=>Query.addQuery(attribute,'notEqual',value);Query.lesser=(attribute,value)=>Query.addQuery(attribute,'lesser',value);Query.lesserEqual=(attribute,value)=>Query.addQuery(attribute,'lesserEqual',value);Query.greater=(attribute,value)=>Query.addQuery(attribute,'greater',value);Query.greaterEqual=(attribute,value)=>Query.addQuery(attribute,'greaterEqual',value);Query.search=(attribute,value)=>Query.addQuery(attribute,'search',value);Query.addQuery=(attribute,oper,value)=>value instanceof Array?`${attribute}.${oper}(${value
+Query.equal=(attribute,value)=>Query.addQuery(attribute,"equal",value);Query.notEqual=(attribute,value)=>Query.addQuery(attribute,"notEqual",value);Query.lessThan=(attribute,value)=>Query.addQuery(attribute,"lessThan",value);Query.lessThanEqual=(attribute,value)=>Query.addQuery(attribute,"lessThanEqual",value);Query.greaterThan=(attribute,value)=>Query.addQuery(attribute,"greaterThan",value);Query.greaterThanEqual=(attribute,value)=>Query.addQuery(attribute,"greaterThanEqual",value);Query.search=(attribute,value)=>Query.addQuery(attribute,"search",value);Query.orderDesc=(attribute)=>`orderDesc("${attribute}")`;Query.orderAsc=(attribute)=>`orderAsc("${attribute}")`;Query.cursorAfter=(documentId)=>`cursorAfter("${documentId}")`;Query.cursorBefore=(documentId)=>`cursorBefore("${documentId}")`;Query.limit=(limit)=>`limit(${limit})`;Query.offset=(offset)=>`offset(${offset})`;Query.addQuery=(attribute,method,value)=>value instanceof Array?`${method}("${attribute}", [${value
         .map((v) => Query.parseValues(v))
-        .join(',')})`:`${attribute}.${oper}(${Query.parseValues(value)})`;Query.parseValues=(value)=>typeof value==='string'||value instanceof String?`"${value}"`:`${value}`;class AppwriteException extends Error{constructor(message,code=0,type='',response=''){super(message);this.name='AppwriteException';this.message=message;this.code=code;this.type=type;this.response=response;}}
+        .join(",")}])`:`${method}("${attribute}", [${Query.parseValues(value)}])`;Query.parseValues=(value)=>typeof value==="string"||value instanceof String?`"${value}"`:`${value}`;class AppwriteException extends Error{constructor(message,code=0,type='',response=''){super(message);this.name='AppwriteException';this.message=message;this.code=code;this.type=type;this.response=response;}}
 class Client{constructor(){this.config={endpoint:'https://HOSTNAME/v1',endpointRealtime:'',project:'',key:'',jwt:'',locale:'',mode:'',};this.headers={'x-sdk-version':'appwrite:web:6.0.0','X-Appwrite-Response-Format':'0.15.0',};this.realtime={socket:undefined,timeout:undefined,url:'',channels:new Set(),subscriptions:new Map(),subscriptionsCounter:0,reconnect:true,reconnectAttempts:0,lastMessage:undefined,connect:()=>{clearTimeout(this.realtime.timeout);this.realtime.timeout=window===null||window===void 0?void 0:window.setTimeout(()=>{this.realtime.createSocket();},50);},getTimeout:()=>{switch(true){case this.realtime.reconnectAttempts<5:return 1000;case this.realtime.reconnectAttempts<15:return 5000;case this.realtime.reconnectAttempts<100:return 10000;default:return 60000;}},createSocket:()=>{var _a,_b;if(this.realtime.channels.size<1)
 return;const channels=new URLSearchParams();channels.set('project',this.config.project);this.realtime.channels.forEach(channel=>{channels.append('channels[]',channel);});const url=this.config.endpointRealtime+'/realtime?'+channels.toString();if(url!==this.realtime.url||!this.realtime.socket||((_a=this.realtime.socket)===null||_a===void 0?void 0:_a.readyState)>WebSocket.OPEN){if(this.realtime.socket&&((_b=this.realtime.socket)===null||_b===void 0?void 0:_b.readyState)<WebSocket.CLOSING){this.realtime.reconnect=false;this.realtime.socket.close();}
 this.realtime.url=url;this.realtime.socket=new WebSocket(url);this.realtime.socket.addEventListener('message',this.realtime.onMessage);this.realtime.socket.addEventListener('open',_event=>{this.realtime.reconnectAttempts=0;});this.realtime.socket.addEventListener('close',event=>{var _a,_b,_c;if(!this.realtime.reconnect||(((_b=(_a=this.realtime)===null||_a===void 0?void 0:_a.lastMessage)===null||_b===void 0?void 0:_b.type)==='error'&&((_c=this.realtime)===null||_c===void 0?void 0:_c.lastMessage.data).code===1008)){this.realtime.reconnect=true;return;}
@@ -220,29 +220,26 @@ if(typeof cursor!=='undefined'){payload['cursor']=cursor;}
 if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirection;}
 if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-createCollection(databaseId,collectionId,name,permission,read,write){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+createCollection(databaseId,collectionId,name,permissions,documentSecurity){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof permission==='undefined'){throw new AppwriteException('Missing required parameter: "permission"');}
-if(typeof read==='undefined'){throw new AppwriteException('Missing required parameter: "read"');}
-if(typeof write==='undefined'){throw new AppwriteException('Missing required parameter: "write"');}
+if(typeof permissions==='undefined'){throw new AppwriteException('Missing required parameter: "permissions"');}
+if(typeof documentSecurity==='undefined'){throw new AppwriteException('Missing required parameter: "documentSecurity"');}
 let path='/databases/{databaseId}/collections'.replace('{databaseId}',databaseId);let payload={};if(typeof collectionId!=='undefined'){payload['collectionId']=collectionId;}
 if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof permission!=='undefined'){payload['permission']=permission;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
+if(typeof documentSecurity!=='undefined'){payload['documentSecurity']=documentSecurity;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getCollection(databaseId,collectionId){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 let path='/databases/{databaseId}/collections/{collectionId}'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-updateCollection(databaseId,collectionId,name,permission,read,write,enabled){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+updateCollection(databaseId,collectionId,name,documentSecurity,permissions,enabled){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof permission==='undefined'){throw new AppwriteException('Missing required parameter: "permission"');}
+if(typeof documentSecurity==='undefined'){throw new AppwriteException('Missing required parameter: "documentSecurity"');}
 let path='/databases/{databaseId}/collections/{collectionId}'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof permission!=='undefined'){payload['permission']=permission;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
+if(typeof documentSecurity!=='undefined'){payload['documentSecurity']=documentSecurity;}
 if(typeof enabled!=='undefined'){payload['enabled']=enabled;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('put',uri,{'content-type':'application/json',},payload);});}
 deleteCollection(databaseId,collectionId){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
@@ -256,6 +253,15 @@ if(typeof collectionId==='undefined'){throw new AppwriteException('Missing requi
 if(typeof key==='undefined'){throw new AppwriteException('Missing required parameter: "key"');}
 if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
 let path='/databases/{databaseId}/collections/{collectionId}/attributes/boolean'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};if(typeof key!=='undefined'){payload['key']=key;}
+if(typeof required!=='undefined'){payload['required']=required;}
+if(typeof xdefault!=='undefined'){payload['default']=xdefault;}
+if(typeof array!=='undefined'){payload['array']=array;}
+const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
+createDatetimeAttribute(databaseId,collectionId,key,required,xdefault,array){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
+if(typeof key==='undefined'){throw new AppwriteException('Missing required parameter: "key"');}
+if(typeof required==='undefined'){throw new AppwriteException('Missing required parameter: "required"');}
+let path='/databases/{databaseId}/collections/{collectionId}/attributes/datetime'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};if(typeof key!=='undefined'){payload['key']=key;}
 if(typeof required!=='undefined'){payload['required']=required;}
 if(typeof xdefault!=='undefined'){payload['default']=xdefault;}
 if(typeof array!=='undefined'){payload['array']=array;}
@@ -349,25 +355,23 @@ if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirect
 if(typeof orderAttributes!=='undefined'){payload['orderAttributes']=orderAttributes;}
 if(typeof orderTypes!=='undefined'){payload['orderTypes']=orderTypes;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-createDocument(databaseId,collectionId,documentId,data,read,write){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+createDocument(databaseId,collectionId,documentId,data,permissions){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof documentId==='undefined'){throw new AppwriteException('Missing required parameter: "documentId"');}
 if(typeof data==='undefined'){throw new AppwriteException('Missing required parameter: "data"');}
 let path='/databases/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId);let payload={};if(typeof documentId!=='undefined'){payload['documentId']=documentId;}
 if(typeof data!=='undefined'){payload['data']=data;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getDocument(databaseId,collectionId,documentId){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof documentId==='undefined'){throw new AppwriteException('Missing required parameter: "documentId"');}
 let path='/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId).replace('{documentId}',documentId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-updateDocument(databaseId,collectionId,documentId,data,read,write){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
+updateDocument(databaseId,collectionId,documentId,data,permissions){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
 if(typeof documentId==='undefined'){throw new AppwriteException('Missing required parameter: "documentId"');}
 let path='/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}',databaseId).replace('{collectionId}',collectionId).replace('{documentId}',documentId);let payload={};if(typeof data!=='undefined'){payload['data']=data;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}
 deleteDocument(databaseId,collectionId,documentId){return __awaiter(this,void 0,void 0,function*(){if(typeof databaseId==='undefined'){throw new AppwriteException('Missing required parameter: "databaseId"');}
 if(typeof collectionId==='undefined'){throw new AppwriteException('Missing required parameter: "collectionId"');}
@@ -698,14 +702,13 @@ if(typeof cursor!=='undefined'){payload['cursor']=cursor;}
 if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirection;}
 if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-createBucket(bucketId,name,permission,read,write,enabled,maximumFileSize,allowedFileExtensions,encryption,antivirus){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+createBucket(bucketId,name,fileSecurity,permissions,enabled,maximumFileSize,allowedFileExtensions,encryption,antivirus){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof permission==='undefined'){throw new AppwriteException('Missing required parameter: "permission"');}
+if(typeof fileSecurity==='undefined'){throw new AppwriteException('Missing required parameter: "fileSecurity"');}
 let path='/storage/buckets';let payload={};if(typeof bucketId!=='undefined'){payload['bucketId']=bucketId;}
 if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof permission!=='undefined'){payload['permission']=permission;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
+if(typeof fileSecurity!=='undefined'){payload['fileSecurity']=fileSecurity;}
 if(typeof enabled!=='undefined'){payload['enabled']=enabled;}
 if(typeof maximumFileSize!=='undefined'){payload['maximumFileSize']=maximumFileSize;}
 if(typeof allowedFileExtensions!=='undefined'){payload['allowedFileExtensions']=allowedFileExtensions;}
@@ -714,13 +717,12 @@ if(typeof antivirus!=='undefined'){payload['antivirus']=antivirus;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getBucket(bucketId){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 let path='/storage/buckets/{bucketId}'.replace('{bucketId}',bucketId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-updateBucket(bucketId,name,permission,read,write,enabled,maximumFileSize,allowedFileExtensions,encryption,antivirus){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+updateBucket(bucketId,name,fileSecurity,permissions,enabled,maximumFileSize,allowedFileExtensions,encryption,antivirus){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
-if(typeof permission==='undefined'){throw new AppwriteException('Missing required parameter: "permission"');}
+if(typeof fileSecurity==='undefined'){throw new AppwriteException('Missing required parameter: "fileSecurity"');}
 let path='/storage/buckets/{bucketId}'.replace('{bucketId}',bucketId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
-if(typeof permission!=='undefined'){payload['permission']=permission;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
+if(typeof fileSecurity!=='undefined'){payload['fileSecurity']=fileSecurity;}
 if(typeof enabled!=='undefined'){payload['enabled']=enabled;}
 if(typeof maximumFileSize!=='undefined'){payload['maximumFileSize']=maximumFileSize;}
 if(typeof allowedFileExtensions!=='undefined'){payload['allowedFileExtensions']=allowedFileExtensions;}
@@ -737,13 +739,12 @@ if(typeof cursor!=='undefined'){payload['cursor']=cursor;}
 if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirection;}
 if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-createFile(bucketId,fileId,file,read,write,onProgress=(progress)=>{}){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+createFile(bucketId,fileId,file,permissions,onProgress=(progress)=>{}){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
 if(typeof file==='undefined'){throw new AppwriteException('Missing required parameter: "file"');}
 let path='/storage/buckets/{bucketId}/files'.replace('{bucketId}',bucketId);let payload={};if(typeof fileId!=='undefined'){payload['fileId']=fileId;}
 if(typeof file!=='undefined'){payload['file']=file;}
-if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
 const uri=new URL(this.client.config.endpoint+path);if(!(file instanceof File)){throw new AppwriteException('Parameter "file" has to be a File.');}
 const size=file.size;if(size<=Service.CHUNK_SIZE){return yield this.client.call('post',uri,{'content-type':'multipart/form-data',},payload);}
 let id=undefined;let response=undefined;const headers={'content-type':'multipart/form-data',};let counter=0;const totalCounters=Math.ceil(size/Service.CHUNK_SIZE);if(fileId!='unique()'){try{response=yield this.client.call('GET',new URL(this.client.config.endpoint+path+'/'+fileId),headers);counter=response.chunksUploaded;}
@@ -755,10 +756,9 @@ return response;});}
 getFile(bucketId,fileId){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
 let path='/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-updateFile(bucketId,fileId,read,write){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
+updateFile(bucketId,fileId,permissions){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
-let path='/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};if(typeof read!=='undefined'){payload['read']=read;}
-if(typeof write!=='undefined'){payload['write']=write;}
+let path='/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}',bucketId).replace('{fileId}',fileId);let payload={};if(typeof permissions!=='undefined'){payload['permissions']=permissions;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('put',uri,{'content-type':'application/json',},payload);});}
 deleteFile(bucketId,fileId){return __awaiter(this,void 0,void 0,function*(){if(typeof bucketId==='undefined'){throw new AppwriteException('Missing required parameter: "bucketId"');}
 if(typeof fileId==='undefined'){throw new AppwriteException('Missing required parameter: "fileId"');}
@@ -994,7 +994,17 @@ updatePhoneVerification(userId,phoneVerification){return __awaiter(this,void 0,v
 if(typeof phoneVerification==='undefined'){throw new AppwriteException('Missing required parameter: "phoneVerification"');}
 let path='/users/{userId}/verification/phone'.replace('{userId}',userId);let payload={};if(typeof phoneVerification!=='undefined'){payload['phoneVerification']=phoneVerification;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}}
-exports.Account=Account;exports.AppwriteException=AppwriteException;exports.Avatars=Avatars;exports.Client=Client;exports.Databases=Databases;exports.Functions=Functions;exports.Health=Health;exports.Locale=Locale;exports.Projects=Projects;exports.Query=Query;exports.Storage=Storage;exports.Teams=Teams;exports.Users=Users;Object.defineProperty(exports,'__esModule',{value:true});})(this.Appwrite=this.Appwrite||{},null,window);(function(global,factory){typeof exports==='object'&&typeof module!=='undefined'?module.exports=factory():typeof define==='function'&&define.amd?define(factory):(global=typeof globalThis!=='undefined'?globalThis:global||self,global.Chart=factory());})(this,(function(){'use strict';function noop(){}
+class Permission{}
+Permission.read=(role)=>{return`read("${role}")`;};Permission.write=(role)=>{return`write("${role}")`;};Permission.create=(role)=>{return`create("${role}")`;};Permission.update=(role)=>{return`update("${role}")`;};Permission.delete=(role)=>{return`delete("${role}")`;};class Role{static any(){return'any';}
+static user(id){return`user:${id}`;}
+static users(){return'users';}
+static guests(){return'guests';}
+static team(id,role=''){if(role===''){return`team:${id}`;}
+return`team:${id}/${role}`;}
+static status(status){return`status:${status}`;}}
+class ID{static custom(id){return id;}
+static unique(){return'unique()';}}
+exports.Account=Account;exports.AppwriteException=AppwriteException;exports.Avatars=Avatars;exports.Client=Client;exports.Databases=Databases;exports.Functions=Functions;exports.Health=Health;exports.ID=ID;exports.Locale=Locale;exports.Permission=Permission;exports.Projects=Projects;exports.Query=Query;exports.Role=Role;exports.Storage=Storage;exports.Teams=Teams;exports.Users=Users;Object.defineProperty(exports,'__esModule',{value:true});})(this.Appwrite=this.Appwrite||{},null,window);(function(global,factory){typeof exports==='object'&&typeof module!=='undefined'?module.exports=factory():typeof define==='function'&&define.amd?define(factory):(global=typeof globalThis!=='undefined'?globalThis:global||self,global.Chart=factory());})(this,(function(){'use strict';function noop(){}
 const uid=(function(){let id=0;return function(){return id++;};}());function isNullOrUndef(value){return value===null||typeof value==='undefined';}
 function isArray(value){if(Array.isArray&&Array.isArray(value)){return true;}
 const type=Object.prototype.toString.call(value);if(type.slice(0,7)==='[object'&&type.slice(-6)==='Array]'){return true;}

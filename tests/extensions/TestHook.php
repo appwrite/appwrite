@@ -9,9 +9,9 @@ class TestHook implements AfterTestHook
     public function executeAfterTest(string $test, float $time): void
     {
         printf(
-            "%s ended in %s seconds\n",
+            "%s ended in %s milliseconds\n",
             $test,
-            $time
+            $time * 1000
         );
     }
 }

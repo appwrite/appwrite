@@ -69,7 +69,7 @@ App::init()
             throw new Exception(Exception::PROJECT_UNKNOWN);
         }
 
-        /**
+        /*
         * Abuse Check
         */
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
@@ -80,10 +80,10 @@ App::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
             $timeLimit
-                ->setParam('{userId}', $user->getId())
-                ->setParam('{userAgent}', $request->getUserAgent(''))
-                ->setParam('{ip}', $request->getIP())
-                ->setParam('{url}', $request->getHostname() . $route->getPath());
+            ->setParam('{userId}', $user->getId())
+            ->setParam('{userAgent}', $request->getUserAgent(''))
+            ->setParam('{ip}', $request->getIP())
+            ->setParam('{url}', $request->getHostname() . $route->getPath());
             $timeLimitArray[] = $timeLimit;
         }
 
@@ -101,13 +101,17 @@ App::init()
             }
 
             $abuse = new Abuse($timeLimit);
+            $remaining = $timeLimit->remaining();
+            $limit = $timeLimit->limit();
+            $time = (new DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
 
-            if ($timeLimit->limit() && ($timeLimit->remaining() < $closestLimit || is_null($closestLimit))) {
-                $closestLimit = $timeLimit->remaining();
+            if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
+                $closestLimit = $remaining;
                 $response
-                    ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
-                    ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
-                    ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600));
+                    ->addHeader('X-RateLimit-Limit', $limit)
+                    ->addHeader('X-RateLimit-Remaining', $remaining)
+                    ->addHeader('X-RateLimit-Reset', $time)
+                ;
             }
 
             if (
@@ -119,9 +123,9 @@ App::init()
             }
         }
 
-        /*
-        * Background Jobs
-        */
+    /*
+     * Background Jobs
+     */
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
@@ -397,7 +401,7 @@ App::shutdown()
             && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
             $metric = $route->getLabel('usage.metric', '');
-            $usageParams = $route->getLabel('usage.params', '');
+            $usageParams = $route->getLabel('usage.params', []);
 
             if (!empty($metric)) {
                 $usage->setParam($metric, 1);

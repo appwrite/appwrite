@@ -17,10 +17,10 @@ class Session extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Session creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Session creation date in Datetime',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
@@ -29,10 +29,10 @@ class Session extends Model
                 'example' => '5e5bb8c16897e',
             ])
             ->addRule('expire', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Session expiration date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Session expiration date in Datetime',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('provider', [
                 'type' => self::TYPE_STRING,
@@ -53,10 +53,10 @@ class Session extends Model
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
             ])
             ->addRule('providerAccessTokenExpiry', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Date, the Unix timestamp of when the access token expires.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'The date of when the access token expires in Datetime format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('providerRefreshToken', [
                 'type' => self::TYPE_STRING,

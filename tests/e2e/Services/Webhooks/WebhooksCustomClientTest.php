@@ -6,6 +6,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 
 class WebhooksCustomClientTest extends Scope
 {
@@ -27,7 +29,7 @@ class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -57,7 +59,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
-        $this->assertIsInt($webhook['data']['registration']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['registration']));
         $this->assertEquals($webhook['data']['status'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -85,7 +87,7 @@ class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -133,7 +135,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
-        $this->assertIsInt($webhook['data']['registration']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['registration']));
         $this->assertEquals($webhook['data']['status'], false);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -193,7 +195,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
-        $this->assertIsInt($webhook['data']['expire']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['expire']));
         $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
@@ -282,7 +284,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
-        $this->assertIsInt($webhook['data']['expire']);
+        $this->assertIsString($webhook['data']['expire']);
         $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
@@ -368,7 +370,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
-        $this->assertIsInt($webhook['data']['expire']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['expire']));
         $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
@@ -455,7 +457,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $newName);
-        $this->assertIsInt($webhook['data']['registration']);
+        $this->assertIsString($webhook['data']['registration']);
         $this->assertEquals($webhook['data']['status'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -508,7 +510,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'New Name');
-        $this->assertIsInt($webhook['data']['registration']);
+        $this->assertIsString($webhook['data']['registration']);
         $this->assertEquals($webhook['data']['status'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -563,7 +565,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'New Name');
-        $this->assertIsInt($webhook['data']['registration']);
+        $this->assertIsString($webhook['data']['registration']);
         $this->assertEquals($webhook['data']['status'], true);
         $this->assertEquals($webhook['data']['email'], $newEmail);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -619,7 +621,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], 'New Name');
-        $this->assertIsInt($webhook['data']['registration']);
+        $this->assertIsString($webhook['data']['registration']);
         $this->assertEquals($webhook['data']['status'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -679,7 +681,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $this->assertIsNumeric($webhook['data']['expire']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['expire']));
 
         $data['secret'] = $webhook['data']['secret'];
 
@@ -739,7 +741,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $this->assertIsNumeric($webhook['data']['expire']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['expire']));
 
         $data['secret'] = $webhook['data']['secret'];
 
@@ -795,7 +797,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $this->assertIsNumeric($webhook['data']['expire']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['expire']));
 
         $data['secret'] = $webhook['data']['secret'];
 
@@ -853,7 +855,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $this->assertIsNumeric($webhook['data']['expire']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['expire']));
 
         $data['secret'] = $webhook['data']['secret'];
 
@@ -916,7 +918,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);
         $this->assertCount(2, $webhook['data']['roles']);
-        $this->assertIsInt($webhook['data']['joined']);
+        $this->assertEquals(true, DateTime::isValid($webhook['data']['joined']));
         $this->assertEquals(true, $webhook['data']['confirm']);
 
         /**
