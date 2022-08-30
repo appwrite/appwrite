@@ -52,7 +52,7 @@ trait Retryable
         $attributes = $method->getAttributes(Retry::class);
         $attribute = $attributes[0] ?? null;
         $args = $attribute?->getArguments();
-        $retries = $args['retries'] ?? 0;
+        $retries = $args['count'] ?? 0;
         return \max(0, $retries);
     }
 
