@@ -2860,14 +2860,14 @@ $collections = [
             ],
             [
                 '$id' => 'accessedAt',
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
                 'signed' => false,
-                'required' => true,
+                'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['datetime'],
             ],
             [
                 '$id' => 'signature',

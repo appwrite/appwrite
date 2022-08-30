@@ -358,6 +358,7 @@ App::shutdown()
         if ($useCache) {
             $resource = null;
             $data = $response->getPayload();
+
             if (!empty($data['payload'])) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
@@ -365,7 +366,6 @@ App::shutdown()
                 }
 
                 $key = md5($request->getURI() . implode('*', $request->getParams()));
-
                 $data = json_encode([
                 'content-type' => $response->getContentType(),
                 'payload' => base64_encode($data['payload']),
@@ -373,15 +373,18 @@ App::shutdown()
 
                 $signature = md5($data);
                 $cacheLog  = $dbForProject->getDocument('cache', $key);
+                $now = date('d-m-Y H:i:s', time());
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
                     'resource' => $resource,
-                    'accessedAt' => \time(),
+                    'accessedAt' => $now,
                     'signature' => $signature,
                     ])));
-                } elseif (date('Y/m/d', \time()) > date('Y/m/d', $cacheLog->getAttribute('accessedAt'))) {
-                    $cacheLog->setAttribute('accessedAt', \time());
+                } elseif (date('Y/m/d', \time()) > date('Y/m/d', strtotime($cacheLog->getAttribute('accessedAt')))) {
+                    var_dump('update');
+                    var_dump($now);
+                    $cacheLog->setAttribute('accessedAt', $now);
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
 

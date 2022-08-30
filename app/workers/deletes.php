@@ -112,7 +112,7 @@ class DeletesV1 extends Worker
                 $this->deleteCacheByResource($project->getId());
                 break;
             case DELETE_TYPE_CACHE_BY_TIMESTAMP:
-                $this->deleteCacheByTimestamp();
+                $this->deleteCacheByDate();
                 break;
             default:
                 Console::error('No delete operation for type: ' . $type);
@@ -134,10 +134,10 @@ class DeletesV1 extends Worker
         ]);
     }
 
-    protected function deleteCacheByTimestamp(): void
+    protected function deleteCacheByDate(): void
     {
         $this->deleteCacheFiles([
-            Query::lessThan('accessedAt', $this->args['timestamp']),
+            Query::lessThan('accessedAt', $this->args['datetime']),
         ]);
     }
 
