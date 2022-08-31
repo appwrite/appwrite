@@ -534,6 +534,16 @@ return [
         'description' => 'A Domain with the requested ID already exists.',
         'code' => 409,
     ],
+    Exception::VARIABLE_NOT_FOUND => [
+        'name' => Exception::VARIABLE_NOT_FOUND,
+        'description' => 'Variable with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VARIABLE_ALREADY_EXISTS => [
+        'name' => Exception::VARIABLE_ALREADY_EXISTS,
+        'description' => 'Variable with the same ID already exists in your project.',
+        'code' => 409,
+    ],
     Exception::DOMAIN_VERIFICATION_FAILED => [
         'name' => Exception::DOMAIN_VERIFICATION_FAILED,
         'description' => 'Domain verification for the requested domain has failed.',

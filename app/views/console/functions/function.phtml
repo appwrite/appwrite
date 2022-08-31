@@ -522,6 +522,156 @@ sort($patterns);
                     </div>
                 </div>
             </li>
+            <li data-state="/console/functions/function/variables?id={{router.params.id}}&project={{router.params.project}}">
+                <h2
+                data-service="functions.listVariables"
+                data-event="load,project.update,functions.createVariable,functions.updateVariable,functions.deleteVariable"
+                data-name="function-variables"
+                data-param-function-id="{{router.params.id}}"
+                data-scope="sdk">Variables</h2>
+
+
+                <div class="box margin-bottom" data-ls-if="0 < {{function-variables.variables.length}} && undefined !== {{function-variables.variables}}">
+                    <ul data-ls-loop="function-variables.variables" data-ls-as="variable" class="list">
+                    <li class="clear">
+                        <div class="pull-end desktops-only">
+                            <button data-ls-ui-trigger="variable-delete-{{variable.$id}}" class="reverse danger margin-end-small">Delete</button>
+                            <button data-ls-ui-trigger="variable-update-{{variable.$id}}">Update</button>
+                        </div>
+
+
+                        <div data-ui-modal data-button-hide="on" data-open-event="variable-update-{{variable.$id}}">
+                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                            <h1>Update Variable</h1>
+
+                            <form
+                                data-analytics
+                                data-analytics-activity
+                                data-analytics-event="submit"
+                                data-analytics-category="sdk"
+                                data-analytics-label="Update Function Variable"
+                                data-service="functions.updateVariable"
+                                data-scope="sdk"
+                                data-event="submit"
+                                data-success="alert,trigger"
+                                data-success-param-alert-text="Updated variable successfully"
+                                data-success-param-trigger-events="functions.updateVariable"
+                                data-failure="alert,trigger"
+                                data-failure-param-trigger-events="functions.updateVariable"
+                                data-failure-param-alert-text="Failed to update variable"
+                                data-failure-param-alert-classname="error">
+
+                                <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
+                                <input type="hidden" name="variableId" data-ls-bind="{{variable.$id}}" />
+
+                                <label for="name">Name <span class="tooltip large" data-tooltip="The name of the environment variable you want to set"><i class="icon-question"></i></span></label>
+                                <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="APP_ENV" maxlength="128" data-ls-attrs="id=key-{{variable.$id}}" data-ls-bind="{{variable.key}}" />
+
+                                <label for="key">Value <span class="tooltip large" data-tooltip="The value of your environment variable"><i class="icon-question"></i></span></label>
+                                <input type="text" class="full-width" name="value" required autocomplete="off" placeholder="Production"  data-ls-attrs="id=value-{{variable.$id}}}" data-ls-bind="{{variable.value}}" />
+
+                                <hr />
+
+                                <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                            </form>
+                        </div>
+
+                        <form class="pull-end margin-end"
+                            data-analytics
+                            data-analytics-activity
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Delete Function Variable"
+                            data-service="functions.deleteVariable"
+                            data-scope="sdk"
+                            data-event="variable-delete-{{variable.$id}}"
+                            data-confirm="Are you sure you want to delete this variable?"
+                            data-success="alert,trigger"
+                            data-success-param-alert-text="Deleted variable successfully"
+                            data-success-param-trigger-events="functions.deleteVariable"
+                            data-failure="alert"
+                            data-failure-param-alert-text="Failed to delete variable"
+                            data-failure-param-alert-classname="error">
+                            <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
+                            <input type="hidden" name="variableId" data-ls-bind="{{variable.$id}}" />
+                        </form>
+
+                        <div>
+                            <span class="text-one-liner" data-ls-bind="{{variable.key}}"></span>
+                        </div>
+
+                        <div data-ui-modal class="modal box close" data-button-text="Show Value" data-button-class="link pull-start margin-end-small margin-top-tiny">
+                        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                        <h1>Variable Value</h1>
+
+                        <form>
+                            <div class="input-copy">
+                                <textarea disabled data-forms-copy data-ls-bind="{{variable.value}}"></textarea>
+                            </div>
+
+                            <hr />
+
+                            <div>
+                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                        <div class="phones-only-inline tablets-only-inline margin-top-small">
+                            <button class="link" data-ls-ui-trigger="variable-update-{{variable.$id}}">Update</button>
+                            <button class="link danger" data-ls-ui-trigger="variable-delete-{{variable.$id}}">Delete</button>
+                        </div>
+                    </li>
+                    </ul>
+                </div>
+
+                <div data-ls-if="(!{{function-variables.variables.length}})" class="box dashboard margin-bottom">
+                    <div class="margin-bottom-small margin-top-small margin-end margin-start">
+                        <h3 class="margin-bottom-small text-bold">There are currently no variables</h3>
+                                            
+                        <p class="margin-bottom-no">Add your first variable to store information securely.</p>
+                    </div>
+                </div>
+
+                <div data-ui-modal class="modal box close" data-button-alias=".variable-new">
+                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                    <h1>Create a new variable</h1>
+
+                    <form
+                        data-analytics
+                        data-analytics-activity
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Create New Function Variable"
+                        data-service="functions.createVariable"
+                        data-event="submit"
+                        data-success="alert,trigger,reset"
+                        data-success-param-alert-text="Registered new variable successfully"
+                        data-success-param-trigger-events="functions.createVariable"
+                        data-failure="alert"
+                        data-failure-param-alert-text="Failed to register variable"
+                        data-failure-param-alert-classname="error">
+
+                        <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
+
+                        <label for="name">Name <span class="tooltip large" data-tooltip="The name of the environment variable you want to set"><i class="icon-question"></i></span></label>
+                        <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="APP_ENV" maxlength="128" />
+
+                        <label for="key">Value <span class="tooltip large" data-tooltip="The value of your environment variable"><i class="icon-question"></i></span></label>
+                        <input type="text" class="full-width" name="value" required autocomplete="off" placeholder="Production" />
+
+                        <hr />
+
+                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    </form>
+                </div>
+
+                <div class="pull-start link variable-new" data-ls-ui-open="" data-button-aria="Add Variable" data-button-text="Add Variable" data-button-class="button" data-blur="1">
+                </div>
+            </li>
             <li data-state="/console/functions/function/settings?id={{router.params.id}}&project={{router.params.project}}" x-data="events">
                 <h2>Settings</h2>
 
