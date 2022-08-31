@@ -544,11 +544,6 @@ return [
         'description' => 'Variable with the same ID already exists in your project.',
         'code' => 409,
     ],
-    Exception::VARIABLE_MISSING_PAYLOAD => [
-        'name' => Exception::VARIABLE_MISSING_PAYLOAD,
-        'description' => 'The variable key or value is missing.',
-        'code' => 400,
-    ],
     Exception::DOMAIN_VERIFICATION_FAILED => [
         'name' => Exception::DOMAIN_VERIFICATION_FAILED,
         'description' => 'Domain verification for the requested domain has failed.',

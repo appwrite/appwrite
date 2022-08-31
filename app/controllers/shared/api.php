@@ -83,7 +83,8 @@ App::init()
             ->setParam('{userId}', $user->getId())
             ->setParam('{userAgent}', $request->getUserAgent(''))
             ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getHostname() . $route->getPath());
+            ->setParam('{url}', $request->getHostname() . $route->getPath())
+            ->setParam('{method}', $request->getMethod());
             $timeLimitArray[] = $timeLimit;
         }
 
@@ -114,11 +115,14 @@ App::init()
                 ;
             }
 
+            $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+
             if (
-                (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled' // Route is rate-limited
-                    && $abuse->check()) // Abuse is not disabled
-                && (!$isAppUser && !$isPrivilegedUser)
-            ) { // User is not an admin or API key
+                $enabled                // Abuse is enabled
+                && !$isAppUser          // User is not API key
+                && !$isPrivilegedUser   // User is not an admin
+                && $abuse->check()      // Route is rate-limited
+            ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
         }

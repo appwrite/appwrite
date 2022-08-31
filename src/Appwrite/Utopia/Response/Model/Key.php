@@ -58,6 +58,19 @@ class Key extends Model
                 'default' => '',
                 'example' => '919c2d18fb5d4...a2ae413da83346ad2',
             ])
+            ->addRule('accessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Most recent access date in Unix timestamp.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE
+            ])
+            ->addRule('sdks', [
+                'type' => self::TYPE_STRING,
+                'description' => 'List of SDK user agents that used this key.',
+                'default' => null,
+                'example' => 'appwrite:flutter',
+                'array' => true
+            ])
         ;
     }
 

@@ -16,7 +16,7 @@ class LimitTest extends TestCase
 
     public function setUp(): void
     {
-        $this->validator = new Limit();
+        $this->validator = new Limit(100);
     }
 
     public function tearDown(): void

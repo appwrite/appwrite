@@ -117,12 +117,10 @@ App::get('/v1/functions')
             $queries[] = Query::search('search', $search);
         }
 
-        // Set default limit
-        $queries[] = Query::limit(25);
-
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
             /** @var Query $cursor */
             $functionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('functions', $functionId);
@@ -788,16 +786,14 @@ App::get('/v1/functions/:functionId/deployments')
             $queries[] = Query::search('search', $search);
         }
 
-        // Set default limit
-        $queries[] = Query::limit(25);
-
         // Set resource queries
         $queries[] = Query::equal('resourceId', [$function->getId()]);
         $queries[] = Query::equal('resourceType', ['functions']);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
             /** @var Query $cursor */
             $deploymentId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('deployments', $deploymentId);
@@ -933,8 +929,9 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
-    ->label('abuse-limit', 60)
-    ->label('abuse-time', 60)
+    ->label('abuse-key', 'ip:{ip},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('data', '', new Text(8192), 'String of custom data to send to function.', true)
     ->param('async', true, new Boolean(), 'Execute code asynchronously. Default value is true.', true)
@@ -1149,15 +1146,13 @@ App::get('/v1/functions/:functionId/executions')
             $queries[] = Query::search('search', $search);
         }
 
-        // Set default limit
-        $queries[] = Query::limit(25);
-
         // Set internal queries
         $queries[] = Query::equal('functionId', [$function->getId()]);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
             /** @var Query $cursor */
             $executionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('executions', $executionId);
@@ -1444,14 +1439,11 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
     ->param('functionId', null, new UID(), 'Function unique ID.', false)
     ->param('variableId', null, new UID(), 'Variable unique ID.', false)
-    ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', true)
+    ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $variableId, ?string $key, ?string $value, Response $response, Database $dbForProject) {
-        if (empty($key) && empty($value)) {
-            throw new Exception(Exception::VARIABLE_MISSING_PAYLOAD, 'Missing key or value. Define at least one.');
-        }
+    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1469,7 +1461,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable
-            ->setAttribute('key', $key ?? $variable->getAttribute('key'))
+            ->setAttribute('key', $key)
             ->setAttribute('value', $value ?? $variable->getAttribute('value'))
             ->setAttribute('search', implode(' ', [$variableId, $function->getId(), $key]))
         ;

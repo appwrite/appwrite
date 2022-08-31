@@ -16,7 +16,7 @@ class OffsetTest extends TestCase
 
     public function setUp(): void
     {
-        $this->validator = new Offset();
+        $this->validator = new Offset(5000);
     }
 
     public function tearDown(): void

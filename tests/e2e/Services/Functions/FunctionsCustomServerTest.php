@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -1371,6 +1372,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    #[Retry(count: 1)]
     public function testCreateCustomRubyExecution()
     {
         $name = 'ruby-3.1';
