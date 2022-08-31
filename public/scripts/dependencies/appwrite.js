@@ -93,7 +93,10 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:6.0.0',
+                'x-sdk-name': 'Console',
+                'x-sdk-platform': 'console',
+                'x-sdk-language': 'web',
+                'x-sdk-version': '6.0.0',
                 'X-Appwrite-Response-Format': '0.15.0',
             };
             this.realtime = {
@@ -5125,12 +5128,13 @@
          * @param {boolean} enabled
          * @param {number} maximumFileSize
          * @param {string[]} allowedFileExtensions
+         * @param {string} compression
          * @param {boolean} encryption
          * @param {boolean} antivirus
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createBucket(bucketId, name, fileSecurity, permissions, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) {
+        createBucket(bucketId, name, fileSecurity, permissions, enabled, maximumFileSize, allowedFileExtensions, compression, encryption, antivirus) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
@@ -5163,6 +5167,9 @@
                 }
                 if (typeof allowedFileExtensions !== 'undefined') {
                     payload['allowedFileExtensions'] = allowedFileExtensions;
+                }
+                if (typeof compression !== 'undefined') {
+                    payload['compression'] = compression;
                 }
                 if (typeof encryption !== 'undefined') {
                     payload['encryption'] = encryption;
@@ -5211,12 +5218,13 @@
          * @param {boolean} enabled
          * @param {number} maximumFileSize
          * @param {string[]} allowedFileExtensions
+         * @param {string} compression
          * @param {boolean} encryption
          * @param {boolean} antivirus
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updateBucket(bucketId, name, fileSecurity, permissions, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) {
+        updateBucket(bucketId, name, fileSecurity, permissions, enabled, maximumFileSize, allowedFileExtensions, compression, encryption, antivirus) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
@@ -5246,6 +5254,9 @@
                 }
                 if (typeof allowedFileExtensions !== 'undefined') {
                     payload['allowedFileExtensions'] = allowedFileExtensions;
+                }
+                if (typeof compression !== 'undefined') {
+                    payload['compression'] = compression;
                 }
                 if (typeof encryption !== 'undefined') {
                     payload['encryption'] = encryption;
