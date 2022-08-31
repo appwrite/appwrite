@@ -395,6 +395,19 @@ Database::addFilter(
 );
 
 Database::addFilter(
+    'subQueryVariables',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database
+            ->find('variables', [
+                Query::equal('functionInternalId', [$document->getInternalId()]),
+            ], APP_LIMIT_SUBQUERY);
+    }
+);
+
+Database::addFilter(
     'encrypt',
     function (mixed $value) {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');

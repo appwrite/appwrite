@@ -80,6 +80,7 @@ use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
+use Appwrite\Utopia\Response\Model\Variable;
 
 /**
  * @method Response setStatusCode(int $code = 200)
@@ -197,6 +198,8 @@ class Response extends SwooleResponse
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_DOMAIN = 'domain';
     public const MODEL_DOMAIN_LIST = 'domainList';
+    public const MODEL_VARIABLE = 'variable';
+    public const MODEL_VARIABLE_LIST = 'variableList';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -264,6 +267,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
+            ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -309,6 +313,7 @@ class Response extends SwooleResponse
             ->setModel(new Key())
             ->setModel(new Domain())
             ->setModel(new Platform())
+            ->setModel(new Variable())
             ->setModel(new Country())
             ->setModel(new Continent())
             ->setModel(new Language())
