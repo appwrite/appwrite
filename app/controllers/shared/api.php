@@ -17,6 +17,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
@@ -103,7 +104,7 @@ App::init()
             $abuse = new Abuse($timeLimit);
             $remaining = $timeLimit->remaining();
             $limit = $timeLimit->limit();
-            $time = (new DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
+            $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
 
             if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
                 $closestLimit = $remaining;
@@ -373,18 +374,18 @@ App::shutdown()
 
                 $signature = md5($data);
                 $cacheLog  = $dbForProject->getDocument('cache', $key);
-                $now = date('d-m-Y H:i:s', time());
+                $accessedAt = $cacheLog->getAttribute('accessedAt', '');
+                $accessedAt = (new \DateTime($accessedAt))->format('Y/m/d');
+
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
                     'resource' => $resource,
-                    'accessedAt' => $now,
+                    'accessedAt' => DateTime::now(),
                     'signature' => $signature,
                     ])));
-                } elseif (date('Y/m/d', \time()) > date('Y/m/d', strtotime($cacheLog->getAttribute('accessedAt')))) {
-                    var_dump('update');
-                    var_dump($now);
-                    $cacheLog->setAttribute('accessedAt', $now);
+                } elseif ((new \DateTime(DateTime::now()))->format('Y/m/d') > $accessedAt) {
+                    $cacheLog->setAttribute('accessedAt', DateTime::now());
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
 
