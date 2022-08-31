@@ -288,7 +288,6 @@ trait StorageBase
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
         $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) != $file['body']['signature']); // should validate that the file is encrypted
-
     }
 
     /**

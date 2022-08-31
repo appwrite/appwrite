@@ -505,7 +505,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $algorithm = $bucket->getAttribute('compression', 'none');
             if ($fileSize <= APP_STORAGE_READ_BUFFER && $algorithm != 'none') {
                 $data = $deviceFiles->read($path);
-                switch($algorithm) {
+                switch ($algorithm) {
                     case 'zstd':
                         $compressor = new Zstd();
                     case 'gzip':
@@ -887,7 +887,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             );
         }
 
-        switch($algorithm) {
+        switch ($algorithm) {
             case 'zstd':
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
@@ -1030,7 +1030,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             );
         }
 
-        switch($file->getAttribute('algorithm', 'none')) {
+        switch ($file->getAttribute('algorithm', 'none')) {
             case 'zstd':
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
@@ -1180,7 +1180,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             );
         }
 
-        switch($file->getAttribute('algorithm', 'none')) {
+        switch ($file->getAttribute('algorithm', 'none')) {
             case 'zstd':
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
