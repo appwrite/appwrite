@@ -225,7 +225,7 @@ class DeletesV1 extends Worker
             ], $dbForProject);
 
             $this->deleteByGroup('stats', [
-                Query::lessThan('time', [$datetime30m]),
+                Query::lessThan('time', $datetime30m),
                 Query::equal('period', ['30m']),
             ], $dbForProject);
         });

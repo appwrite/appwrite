@@ -379,17 +379,16 @@ App::shutdown()
                 $signature = md5($data);
                 $cacheLog  = $dbForProject->getDocument('cache', $key);
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
-                $accessedAt = (new \DateTime($accessedAt))->format('Y/m/d');
-
+                $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
                     'resource' => $resource,
-                    'accessedAt' => DateTime::now(),
+                    'accessedAt' => $now,
                     'signature' => $signature,
                     ])));
-                } elseif ((new \DateTime(DateTime::now()))->format('Y/m/d') > $accessedAt) {
-                    $cacheLog->setAttribute('accessedAt', DateTime::now());
+                } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
+                    $cacheLog->setAttribute('accessedAt', $now);
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
 

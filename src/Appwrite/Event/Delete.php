@@ -11,8 +11,9 @@ class Delete extends Event
     protected ?Document $document = null;
     protected ?string $resource = null;
     protected ?string $datetime = null;
-    protected ?string $datetime1d = null;
-    protected ?string $datetime30m = null;
+    protected ?string $dateTime30m = null;
+    protected ?string $dateTime1d = null;
+
 
     public function __construct()
     {
@@ -60,9 +61,9 @@ class Delete extends Event
      * @param string $datetime
      * @return self
      */
-    public function setDatetime1d(string $datetime): self
+    public function setDateTime1d(string $datetime): self
     {
-        $this->datetime1d = $datetime;
+        $this->dateTime1d = $datetime;
         return $this;
     }
 
@@ -72,9 +73,9 @@ class Delete extends Event
      * @param string $datetime
      * @return self
      */
-    public function setDatetime30m(string $datetime): self
+    public function setDateTime30m(string $datetime): self
     {
-        $this->datetime30m = $datetime;
+        $this->dateTime30m = $datetime;
         return $this;
     }
 
@@ -139,8 +140,8 @@ class Delete extends Event
             'document' => $this->document,
             'resource' => $this->resource,
             'datetime' => $this->datetime,
-            'datetime1d' => $this->datetime1d,
-            'datetime30m' => $this->datetime30m,
+            'dateTime1d' => $this->dateTime1d,
+            'dateTime30m' => $this->dateTime30m,
         ]);
     }
 }
