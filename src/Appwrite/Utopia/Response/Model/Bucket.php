@@ -66,6 +66,13 @@ class Bucket extends Model
                 'example' => ['jpg', 'png'],
                 'array' => true
             ])
+            ->addRule('compression', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Compression algorithm choosen for compression. Will be one of ' . COMPRESSION_TYPE_NONE . ', [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd).',
+                'default' => [],
+                'example' => 'gzip',
+                'array' => false
+            ])
             ->addRule('encryption', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Bucket is encrypted.',

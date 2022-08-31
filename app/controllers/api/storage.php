@@ -6,7 +6,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -29,8 +28,8 @@ use Appwrite\Utopia\Database\Validator\Queries\Buckets;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
 use Utopia\Image\Image;
 use Utopia\Storage\Compression\Algorithms\GZIP;
+use Utopia\Storage\Compression\Algorithms\Zstd;
 use Utopia\Storage\Device;
-use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
@@ -39,7 +38,6 @@ use Utopia\Storage\Validator\Upload;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -66,12 +64,13 @@ App::post('/v1/storage/buckets')
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
     ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
+    ->param('compression', 'none', new WhiteList([COMPRESSION_TYPE_NONE, COMPRESSION_TYPE_GZIP, COMPRESSION_TYPE_ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . COMPRESSION_TYPE_NONE . ',  [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, string $compression, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
@@ -120,6 +119,7 @@ App::post('/v1/storage/buckets')
                 'allowedFileExtensions' => $allowedFileExtensions,
                 'fileSecurity' => $fileSecurity,
                 'enabled' => $enabled,
+                'compression' => $compression,
                 'encryption' => $encryption,
                 'antivirus' => $antivirus,
                 'search' => implode(' ', [$bucketId, $name]),
@@ -234,12 +234,13 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
     ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
+    ->param('compression', 'none', new WhiteList([COMPRESSION_TYPE_NONE, COMPRESSION_TYPE_GZIP, COMPRESSION_TYPE_ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . COMPRESSION_TYPE_NONE . ', [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, string $compression, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -268,6 +269,7 @@ App::put('/v1/storage/buckets/:bucketId')
                 ->setAttribute('fileSecurity', $fileSecurity)
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('encryption', $encryption)
+                ->setAttribute('compression', $compression)
                 ->setAttribute('antivirus', $antivirus));
 
         $events
@@ -502,9 +504,18 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $mimeType = $deviceFiles->getFileMimeType($path); // Get mime-type before compression and encryption
             $data = '';
             // Compression
-            if ($fileSize <= APP_STORAGE_READ_BUFFER) {
+            $algorithm = $bucket->getAttribute('compression', 'none');
+            if ($fileSize <= APP_STORAGE_READ_BUFFER && $algorithm != 'none') {
                 $data = $deviceFiles->read($path);
-                $compressor = new GZIP();
+                switch ($algorithm) {
+                    case 'zstd':
+                        $compressor = new Zstd();
+                        break;
+                    case 'gzip':
+                    default:
+                        $compressor = new GZIP();
+                        break;
+                }
                 $data = $compressor->compress($data);
             }
 
@@ -524,8 +535,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $sizeActual = $deviceFiles->getFileSize($path);
-
-            $algorithm = empty($compressor) ? '' : $compressor->getName();
             $fileHash = $deviceFiles->getFileHash($path);
 
             if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
@@ -840,7 +849,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $path = $file->getAttribute('path');
         $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-        $algorithm = $file->getAttribute('algorithm');
+        $algorithm = $file->getAttribute('algorithm', 'none');
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
         if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) App::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
@@ -851,15 +860,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 $path = $fileLogos['default_image'];
             }
 
-            $algorithm = null;
+            $algorithm = 'none';
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $deviceFiles = $deviceLocal;
         }
-
-
-        $compressor = new GZIP();
 
         if (!$deviceFiles->exists($path)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -885,8 +891,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             );
         }
 
-        if (!empty($algorithm)) {
-            $source = $compressor->decompress($source);
+        switch ($algorithm) {
+            case 'zstd':
+                $compressor = new Zstd();
+                $source = $compressor->decompress($source);
+                break;
+            case 'gzip':
+                $compressor = new GZIP();
+                $source = $compressor->decompress($source);
+                break;
         }
 
         $image = new Image($source);
@@ -1021,12 +1034,21 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             );
         }
 
-        if (!empty($file->getAttribute('algorithm', ''))) {
-            if (empty($source)) {
-                $source = $deviceFiles->read($path);
-            }
-            $compressor = new GZIP();
-            $source = $compressor->decompress($source);
+        switch ($file->getAttribute('algorithm', 'none')) {
+            case 'zstd':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new Zstd();
+                $source = $compressor->decompress($source);
+                break;
+            case 'gzip':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new GZIP();
+                $source = $compressor->decompress($source);
+                break;
         }
 
         if (!empty($source)) {
@@ -1162,12 +1184,21 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             );
         }
 
-        if (!empty($file->getAttribute('algorithm', ''))) {
-            if (empty($source)) {
-                $source = $deviceFiles->read($path);
-            }
-            $compressor = new GZIP();
-            $source = $compressor->decompress($source);
+        switch ($file->getAttribute('algorithm', 'none')) {
+            case 'zstd':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new Zstd();
+                $source = $compressor->decompress($source);
+                break;
+            case 'gzip':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new GZIP();
+                $source = $compressor->decompress($source);
+                break;
         }
 
         if (!empty($source)) {
