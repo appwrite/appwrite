@@ -164,12 +164,10 @@ App::get('/v1/storage/buckets')
             $queries[] = Query::search('search', $search);
         }
 
-        // Set default limit
-        $queries[] = Query::limit(25);
-
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
             /** @var Query $cursor */
             $bucketId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('buckets', $bucketId);
@@ -329,6 +327,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('audits.resource', 'files/{response.$id}')
     ->label('usage.metric', 'files.{scope}.requests.create')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
+    ->label('abuse-limit', 60)
+    ->label('abuse-time', 60)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createFile')
@@ -678,12 +678,10 @@ App::get('/v1/storage/buckets/:bucketId/files')
             $queries[] = Query::search('search', $search);
         }
 
-        // Set default limit
-        $queries[] = Query::limit(25);
-
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
             /** @var Query $cursor */
             $fileId = $cursor->getValue();
 
@@ -1209,6 +1207,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('audits.resource', 'files/{response.$id}')
     ->label('usage.metric', 'files.{scope}.requests.update')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
+    ->label('abuse-limit', 60)
+    ->label('abuse-time', 60)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateFile')
@@ -1308,6 +1308,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('audits.resource', 'file/{request.fileId}')
     ->label('usage.metric', 'files.{scope}.requests.delete')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
+    ->label('abuse-limit', 60)
+    ->label('abuse-time', 60)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteFile')
@@ -1364,9 +1366,12 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                 ->setResource('file/' . $fileId)
             ;
 
-            // Don't need to check valid here because we already ensured validity
-            if ($fileSecurity) {
-                $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            if ($fileSecurity && !$valid) {
+                try {
+                    $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                } catch (AuthorizationException) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
             } else {
                 $deleted = Authorization::skip(fn() => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
             }

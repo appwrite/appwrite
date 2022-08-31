@@ -117,12 +117,10 @@ App::get('/v1/functions')
             $queries[] = Query::search('search', $search);
         }
 
-        // Set default limit
-        $queries[] = Query::limit(25);
-
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
             /** @var Query $cursor */
             $functionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('functions', $functionId);
@@ -788,16 +786,14 @@ App::get('/v1/functions/:functionId/deployments')
             $queries[] = Query::search('search', $search);
         }
 
-        // Set default limit
-        $queries[] = Query::limit(25);
-
         // Set resource queries
         $queries[] = Query::equal('resourceId', [$function->getId()]);
         $queries[] = Query::equal('resourceType', ['functions']);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
             /** @var Query $cursor */
             $deploymentId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('deployments', $deploymentId);
@@ -1149,15 +1145,13 @@ App::get('/v1/functions/:functionId/executions')
             $queries[] = Query::search('search', $search);
         }
 
-        // Set default limit
-        $queries[] = Query::limit(25);
-
         // Set internal queries
         $queries[] = Query::equal('functionId', [$function->getId()]);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
             /** @var Query $cursor */
             $executionId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('executions', $executionId);

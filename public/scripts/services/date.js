@@ -7,8 +7,7 @@
                 return null;
             }
 
-            return new Intl.DateTimeFormat('en-US', {
-                timeZone: 'UTC',
+            return new Intl.DateTimeFormat(navigator.languages, {
                 hourCycle: 'h24',
                 ...format
             }).format(new Date(datetime));

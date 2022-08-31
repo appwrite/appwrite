@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1145ff29befcc4aa21b5002da0b8319c",
+    "content-hash": "039de21eff3a27955696a9f6f645c548",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2837,16 +2837,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-master",
+            "version": "dev-feat-new-headers",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "6597948263e88f73dbdd5c70259dd54aff2dfcf8"
+                "reference": "6e630a62f522ac68a7056bebf81cd032c7a053ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6597948263e88f73dbdd5c70259dd54aff2dfcf8",
-                "reference": "6597948263e88f73dbdd5c70259dd54aff2dfcf8",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6e630a62f522ac68a7056bebf81cd032c7a053ba",
+                "reference": "6e630a62f522ac68a7056bebf81cd032c7a053ba",
                 "shasum": ""
             },
             "require": {
@@ -2861,7 +2861,6 @@
                 "brianium/paratest": "^6.4",
                 "phpunit/phpunit": "^9.5.21"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2882,9 +2881,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/master"
+                "source": "https://github.com/appwrite/sdk-generator/tree/feat-new-headers"
             },
-            "time": "2022-08-30T18:29:13+00:00"
+            "time": "2022-08-29T10:43:33+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5356,14 +5355,7 @@
             "time": "2022-08-12T06:47:24+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "appwrite/sdk-generator",
-            "version": "9999999-dev",
-            "alias": "0.19.5",
-            "alias_normalized": "0.19.5.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
         "appwrite/sdk-generator": 20
@@ -5391,5 +5383,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }

@@ -90,6 +90,7 @@ const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
+const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 402;
 const APP_VERSION_STABLE = '0.15.3';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
@@ -1027,4 +1028,15 @@ App::setResource('sms', function () {
         'vonage' => new Vonage($user, $secret),
         default => null
     };
+});
+
+App::setResource('servers', function () {
+    $platforms = Config::getParam('platforms');
+    $server = $platforms[APP_PLATFORM_SERVER];
+
+    $languages = array_map(function ($language) {
+        return strtolower($language['name']);
+    }, $server['languages']);
+
+    return $languages;
 });

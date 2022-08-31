@@ -65,7 +65,7 @@ class User extends Model
             ->addRule('registration', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'User registration date in Datetime.',
-                'default' => null,
+                'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('status', [

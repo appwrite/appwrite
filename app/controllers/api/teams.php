@@ -79,6 +79,10 @@ App::post('/v1/teams')
         ])));
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
+            if (!\in_array('owner', $roles)) {
+                $roles[] = 'owner';
+            }
+
             $membershipId = ID::unique();
             $membership = new Document([
                 '$id' => $membershipId,
@@ -139,12 +143,10 @@ App::get('/v1/teams')
             $queries[] = Query::search('search', $search);
         }
 
-        // Set default limit
-        $queries[] = Query::limit(25);
-
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
             /** @var Query $cursor */
             $teamId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('teams', $teamId);
@@ -484,15 +486,13 @@ App::get('/v1/teams/:teamId/memberships')
             $queries[] = Query::search('search', $search);
         }
 
-        // Set default limit
-        $queries[] = Query::limit(25);
-
         // Set internal queries
         $queries[] = Query::equal('teamId', [$teamId]);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE)[0] ?? null;
-        if ($cursor !== null) {
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
             /** @var Query $cursor */
             $membershipId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('memberships', $membershipId);
@@ -872,7 +872,7 @@ App::get('/v1/teams/:teamId/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? 25;
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);

@@ -114,6 +114,7 @@ class Queries extends Validator
 
         return true;
     }
+
     /**
      * Is array
      *

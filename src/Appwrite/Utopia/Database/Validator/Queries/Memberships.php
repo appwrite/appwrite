@@ -2,8 +2,6 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Appwrite\Utopia\Database\Validator\Queries\Base;
-
 class Memberships extends Base
 {
     public const ALLOWED_ATTRIBUTES = [

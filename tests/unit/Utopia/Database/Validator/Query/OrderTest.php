@@ -50,5 +50,6 @@ class OrderTest extends TestCase
         $this->assertEquals($this->validator->isValid(Query::equal('dne', ['v'])), false, $this->validator->getDescription());
         $this->assertEquals($this->validator->isValid(Query::equal('', ['v'])), false, $this->validator->getDescription());
         $this->assertEquals($this->validator->isValid(Query::orderDesc('dne')), false, $this->validator->getDescription());
+        $this->assertEquals($this->validator->isValid(Query::orderAsc('dne')), false, $this->validator->getDescription());
     }
 }
