@@ -19,8 +19,13 @@
         if (offset + limit >= total) {
           element.disabled = true;
         } else {
+          const newOffset = offset + limit;
           element.disabled = false;
-          element.value = offset + limit;
+          element.value = 'orderAsc(\'\'),limit(' + limit + '),offset(' + newOffset + ')';
+
+          try {
+            element.parentElement.querySelector('input[name="offset"]').value = newOffset;
+          } catch(err) {} // Initial load can fail
         }
       };
 

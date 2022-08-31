@@ -239,10 +239,15 @@
          * 2. Get from element form object-*
          */
         if (element.dataset[attrKey]) {
-          result = expression.parse(element.dataset[attrKey]);
+          result = element.dataset[attrKey];
 
           if (element.dataset[attrKey + "CastTo"] === "array") {
             result = result.split(",");
+            result = result.map(function(r) {
+              return expression.parse(r);
+            });
+          } else {
+            result = expression.parse(result);
           }
         }
 
