@@ -83,7 +83,8 @@ App::init()
             ->setParam('{userId}', $user->getId())
             ->setParam('{userAgent}', $request->getUserAgent(''))
             ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getHostname() . $route->getPath());
+            ->setParam('{url}', $request->getHostname() . $route->getPath())
+            ->setParam('{method}', $request->getMethod());
             $timeLimitArray[] = $timeLimit;
         }
 
