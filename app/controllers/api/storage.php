@@ -508,6 +508,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 switch ($algorithm) {
                     case 'zstd':
                         $compressor = new Zstd();
+                        break;
                     case 'gzip':
                     default:
                         $compressor = new GZIP();
