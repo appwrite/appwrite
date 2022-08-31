@@ -35,7 +35,7 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0 \
-    PHP_ZSTD_VERSION="master"
+    PHP_ZSTD_VERSION="4504e4186e79b197cfcb75d4d09aa47ef7d92fe9 "
 
 RUN \
   apk add --no-cache --virtual .deps \
