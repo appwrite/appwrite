@@ -16,6 +16,7 @@ use Utopia\Database\Validator\UID;
 use Appwrite\Extend\Exception;
 use Utopia\Storage\Device;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -646,16 +647,36 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             }
 
             foreach ($renditions as $rendition) {
+                $uri = null;
+                $metadata = $rendition->getAttribute('metadata');
+                $manifest = $metadata['hls'];
+
+                $_audios = [];
+                foreach ($manifest as $key => $value) {
+                    if ($value['type'] === 'audio') {
+                        $_audios[] = [
+                            'type' => 'group_audio',
+                            'name' => 'audio_' . $value['id'],
+                            'default' => ($key === 0) ? 'YES' : 'NO',
+                            'uri' => $baseUrl . '/renditions/' . $rendition->getId() . '/types/' . $value['id'],
+                        ];
+                    } elseif ($value['type'] === 'video') {
+                        $uri = $baseUrl . '/renditions/' . $rendition->getId() . '/types/' . $value['id'];
+                    }
+                }
+
                 $_renditions[] = [
                     'bandwidth' => ($rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate')),
                     'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
                     'name' => $rendition->getAttribute('name'),
-                    'uri' => $baseUrl . '/renditions/' . $rendition->getId(),
-                    'subs' => !empty($paramsSubtitles) ? ' SUBTITLES="subs"' : '',
+                    'uri' => $uri,
+                    'subs' => !empty($_subtitles) ? 'subs' : null,
+                    'audio' => !empty($_audios) ? 'group_audio' : null,
                 ];
             }
 
             $template = new View(__DIR__ . '/../../views/videos/hls-master.phtml');
+            $template->setParam('audios', $_audios);
             $template->setParam('subtitles', $_subtitles);
             $template->setParam('renditions', $_renditions);
             $response
@@ -733,7 +754,7 @@ App::get('/v1/videos/:videoId/streams/:streamId')
     });
 
 
-App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId')
+App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/types/:typeId')
     ->desc('Get video rendition manifest')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -747,11 +768,12 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('streamId', '', new WhiteList(['hls', 'dash']), 'stream protocol name')
     ->param('renditionId', '', new UID(), 'Rendition unique ID.')
+    ->param('typeId', '', new Range(0, 10), 'Stream type id.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $streamId, string $renditionId, Response $response, Database $dbForProject, string $mode, Document $user) {
+    ->action(function (string $videoId, string $streamId, string $renditionId, string $typeId, Response $response, Database $dbForProject, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
@@ -777,6 +799,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId')
 
         $segments = Authorization::skip(fn() => $dbForProject->find('videos_renditions_segments', [
             new Query('renditionId', Query::TYPE_EQUAL, [$renditionId]),
+            new Query('representationId', Query::TYPE_EQUAL, [$typeId]),
         ], 5000));
 
         if (empty($segments)) {

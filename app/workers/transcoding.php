@@ -246,15 +246,15 @@ class TranscodingV1 extends Worker
             }
 
             if ($profile['stream'] === 'hls') {
-                $urls = $this->getHlsSegmentsUrls($this->outDir . 'master.m3u8');
-                foreach ($urls as $pos => $url) {
-                    $m3u8 = $this->getHlsSegments($this->outDir . $url);
+                $refs = $this->getHlsSegmentsUrls($this->outDir . 'master.m3u8');
+                foreach ($refs as $ref) {
+                    $m3u8 = $this->getHlsSegments($this->outDir . $ref['path']);
                     if (!empty($m3u8['segments'])) {
                         foreach ($m3u8['segments'] as $segment) {
-                            Authorization::skip(function () use ($segment, $project, $query, $renditionPath, $pos) {
+                            Authorization::skip(function () use ($segment, $project, $query, $renditionPath, $ref) {
                                 return $this->database->createDocument('videos_renditions_segments', new Document([
                                     'renditionId' => $query->getId(),
-                                    'representationId' => $pos,
+                                    'representationId' => $ref['id']+0,
                                     'fileName' => $segment['fileName'],
                                     'path' => $renditionPath,
                                     'duration' => $segment['duration'],
@@ -262,6 +262,8 @@ class TranscodingV1 extends Worker
                             });
                         }
                     }
+
+                    $query->setAttribute('metadata', json_encode(['hls' => $refs]));
                     $query->setAttribute('targetDuration', $m3u8['targetDuration']);
                 }
             } else {
@@ -464,7 +466,13 @@ class TranscodingV1 extends Worker
                 if ($end !== false) {
                     $start = strpos($line, $this->args['videoId']);
                     if ($start !== false) {
-                        $files[] = substr($line, $start, ($end - $start) + 4);
+                        $path = substr($line, $start, ($end - $start) + 4);
+                        $parts = explode('_', $path);
+                        $files[] = [
+                            'id' => $parts[1],
+                            'type' => str_contains($line, "TYPE=AUDIO") ? 'audio' : 'video',
+                            'path' => $path
+                            ];
                     }
                 }
             }
