@@ -2841,12 +2841,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "6e630a62f522ac68a7056bebf81cd032c7a053ba"
+                "reference": "6597948263e88f73dbdd5c70259dd54aff2dfcf8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6e630a62f522ac68a7056bebf81cd032c7a053ba",
-                "reference": "6e630a62f522ac68a7056bebf81cd032c7a053ba",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6597948263e88f73dbdd5c70259dd54aff2dfcf8",
+                "reference": "6597948263e88f73dbdd5c70259dd54aff2dfcf8",
                 "shasum": ""
             },
             "require": {
@@ -2884,7 +2884,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/master"
             },
-            "time": "2022-08-29T10:43:33+00:00"
+            "time": "2022-08-30T18:29:13+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -3534,16 +3534,16 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.16",
+            "version": "9.2.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "2593003befdcc10db5e213f9f28814f5aa8ac073"
+                "reference": "aa94dc41e8661fe90c7316849907cba3007b10d8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/2593003befdcc10db5e213f9f28814f5aa8ac073",
-                "reference": "2593003befdcc10db5e213f9f28814f5aa8ac073",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/aa94dc41e8661fe90c7316849907cba3007b10d8",
+                "reference": "aa94dc41e8661fe90c7316849907cba3007b10d8",
                 "shasum": ""
             },
             "require": {
@@ -3599,7 +3599,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.16"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.17"
             },
             "funding": [
                 {
@@ -3607,7 +3607,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-08-20T05:26:47+00:00"
+            "time": "2022-08-30T12:24:04+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",

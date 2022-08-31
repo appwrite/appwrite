@@ -1444,14 +1444,11 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
     ->param('functionId', null, new UID(), 'Function unique ID.', false)
     ->param('variableId', null, new UID(), 'Variable unique ID.', false)
-    ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', true)
+    ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $variableId, ?string $key, ?string $value, Response $response, Database $dbForProject) {
-        if (empty($key) && empty($value)) {
-            throw new Exception(Exception::VARIABLE_MISSING_PAYLOAD, 'Missing key or value. Define at least one.');
-        }
+    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1469,7 +1466,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable
-            ->setAttribute('key', $key ?? $variable->getAttribute('key'))
+            ->setAttribute('key', $key)
             ->setAttribute('value', $value ?? $variable->getAttribute('value'))
             ->setAttribute('search', implode(' ', [$variableId, $function->getId(), $key]))
         ;
