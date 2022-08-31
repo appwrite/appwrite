@@ -91,9 +91,9 @@ sort($patterns);
                             data-event="load,functions.createDeployment,functions.deleteDeployment,functions.updateDeployment,functions.retryBuild"
                             data-name="project-function-deployments"
                             data-param-function-id="{{router.params.id}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-offset=""
-                            data-param-order-type="DESC"
+                            data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                            data-param-queries-cast-to="array"
+                            data-param-queries-cast-from="csv"
                             data-success="trigger"
                             data-success-param-trigger-events="functions.listDeployments">
 
@@ -217,13 +217,12 @@ sort($patterns);
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
-                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                                data-param-order-type="DESC"
                                 data-scope="sdk"
                                 data-name="project-function-deployments"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                <input type="hidden" name="offset">
+                                <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                             </form>
 
                             <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-deployments.total|pageTotal}}"></span>
@@ -233,13 +232,12 @@ sort($patterns);
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
-                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                                data-param-order-type="DESC"
                                 data-scope="sdk"
                                 data-name="project-function-deployments"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                <input type="hidden" name="offset">
+                                <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                             </form>
                         </div>
                     </div>
@@ -380,9 +378,9 @@ sort($patterns);
                     data-event="load,functions.createExecution"
                     data-name="project-function-executions"
                     data-param-function-id="{{router.params.id}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset=""
-                    data-param-order-type="DESC"
+                    data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                    data-param-queries-cast-to="array"
+                    data-param-queries-cast-from="csv"
                     data-success="trigger"
                     data-success-param-trigger-events="functions.listExecutions">
 
@@ -486,13 +484,12 @@ sort($patterns);
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
-                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                                data-param-order-type="DESC"
                                 data-scope="sdk"
                                 data-name="project-function-executions"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                <input type="hidden" name="offset">
+                                <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                             </form>
 
                             <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-executions.total|pageTotal}}"></span>
@@ -502,13 +499,12 @@ sort($patterns);
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
-                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                                data-param-order-type="DESC"
                                 data-scope="sdk"
                                 data-name="project-function-executions"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                <input type="hidden" name="offset">
+                                <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                             </form>
                         </div>
                     </div>
@@ -527,6 +523,8 @@ sort($patterns);
                 data-service="functions.listVariables"
                 data-event="load,project.update,functions.createVariable,functions.updateVariable,functions.deleteVariable"
                 data-name="function-variables"
+                data-param-queries="limit(100)"
+                data-param-queries-cast-to="array" data-param-queries-cast-from="csv"
                 data-param-function-id="{{router.params.id}}"
                 data-scope="sdk">Variables</h2>
 

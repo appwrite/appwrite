@@ -51,9 +51,9 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
                     data-event="submit"
                     data-param-bucket-id="{{router.params.id}}"
                     data-param-search="{{router.params.search}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset=""
-                    data-param-order-type="DESC"
+                    data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                    data-param-queries-cast-to="array"
+                    data-param-queries-cast-from="csv"
                     data-scope="sdk"
                     data-name="project-files"
                     data-success="state"
@@ -73,9 +73,9 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
                     data-event="load,storage.createFile,storage.updateFile,storage.deleteFile"
                     data-param-bucket-id="{{router.params.id}}"
                     data-param-search="{{router.params.search}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset="{{router.params.offset}}"
-                    data-param-order-type="DESC"
+                    data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                    data-param-queries-cast-to="array"
+                    data-param-queries-cast-from="csv"
                     data-scope="sdk"
                     data-name="project-files">
 
@@ -240,13 +240,12 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
                             data-event="submit"
                             data-param-search="{{router.params.search}}"
                             data-param-bucket-id="{{router.params.id}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
                             data-scope="sdk"
                             data-name="project-files"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                            <input type="hidden" name="offset">
+                            <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                         </form>
 
                         <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.total|pageTotal}}"></span>
@@ -256,13 +255,12 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
                             data-event="submit"
                             data-param-bucket-id="{{router.params.id}}"
                             data-param-search="{{router.params.search}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
                             data-scope="sdk"
                             data-name="project-files"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                            <input type="hidden" name="offset">
+                            <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                         </form>
                     </div>
 

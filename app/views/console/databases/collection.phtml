@@ -52,9 +52,9 @@ $permissions = $this->getParam('permissions', null);
                     data-event="load,databases.createDocument,databases.updateDocument,databases.deleteDocument"
                     data-param-collection-id="{{router.params.id}}"
                     data-param-database-id="{{router.params.databaseId}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-order-types="DESC"
-                    data-param-order-types-cast-to="array"
+                    data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                    data-param-queries-cast-to="array"
+                    data-param-queries-cast-from="csv"
                     data-scope="sdk"
                     data-name="project-documents"
                     x-data="{ project: new URLSearchParams(location.search).get('project') }">
@@ -112,14 +112,12 @@ $permissions = $this->getParam('permissions', null);
                             data-event="submit"
                             data-param-database-id="{{router.params.databaseId}}"
                             data-param-collection-id="{{router.params.id}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-types="DESC"
-                            data-param-order-types-cast-to="array"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                            <input type="hidden" name="offset">
+                            <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                         </form>
 
                         <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-documents.total|pageTotal}}"></span>
@@ -129,14 +127,12 @@ $permissions = $this->getParam('permissions', null);
                             data-event="submit"
                             data-param-database-id="{{router.params.databaseId}}"
                             data-param-collection-id="{{router.params.id}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-types="DESC"
-                            data-param-order-types-cast-to="array"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                            <input type="hidden" name="offset">
+                            <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                         </form>
                     </div>
 

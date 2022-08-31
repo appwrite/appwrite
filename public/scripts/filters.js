@@ -318,6 +318,9 @@ window.ls.filter
   .add("last", function ($value) {
     return $value[$value.length - 1].$id;
   })
+  .add("orZero", function ($value) {
+    return $value ? $value : 0;
+  })
   ;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {
