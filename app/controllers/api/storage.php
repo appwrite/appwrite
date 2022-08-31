@@ -165,7 +165,8 @@ App::get('/v1/storage/buckets')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $bucketId = $cursor->getValue();
@@ -678,7 +679,8 @@ App::get('/v1/storage/buckets/:bucketId/files')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $fileId = $cursor->getValue();
