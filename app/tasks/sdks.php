@@ -178,6 +178,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setLicense($license)
                     ->setLicenseContent($licenseContent)
                     ->setVersion($language['version'])
+                    ->setPlatform($key)
                     ->setGitURL($language['url'])
                     ->setGitRepo($language['gitUrl'])
                     ->setGitRepoName($language['gitRepoName'])

@@ -24,6 +24,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Validator\Queries\Buckets;
+use Appwrite\Utopia\Database\Validator\Queries\Files;
 use Utopia\Image\Image;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Compression\Algorithms\Zstd;
@@ -150,38 +152,36 @@ App::get('/v1/storage/buckets')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_BUCKET_LIST)
+    ->param('queries', [], new Buckets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Buckets::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('cursor', '', new UID(), 'ID of the bucket used as the starting point for the query, excluding the bucket itself. Should be used for efficient pagination when working with large sets of data.', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' .  Database::ORDER_ASC . ' or ' .  Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $filterQueries = [];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $filterQueries[] = Query::search('name', $search);
+            $queries[] = Query::search('search', $search);
         }
 
-        $queries = [];
-        $queries[] = Query::limit($limit);
-        $queries[] = Query::offset($offset);
-        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
-        if (!empty($cursor)) {
-            $cursorDocument = $dbForProject->getDocument('buckets', $cursor);
+        // Get cursor document if there was a cursor query
+        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        if ($cursor) {
+            /** @var Query $cursor */
+            $bucketId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('buckets', $bucketId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Bucket '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Bucket '{$bucketId}' for the 'cursor' value not found.");
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
 
+        $filterQueries = Query::groupByType($queries)['filters'];
+
         $response->dynamic(new Document([
-            'buckets' => $dbForProject->find('buckets', \array_merge($filterQueries, $queries)),
+            'buckets' => $dbForProject->find('buckets', $queries),
             'total' => $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BUCKET_LIST);
     });
@@ -659,16 +659,12 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE_LIST)
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
+    ->param('queries', [], new Files(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Files::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of files to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $bucketId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $bucketId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -683,35 +679,38 @@ App::get('/v1/storage/buckets/:bucketId/files')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $filterQueries = [];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $filterQueries[] = Query::search('name', $search);
+            $queries[] = Query::search('search', $search);
         }
 
-        $queries = [];
-        $queries[] = Query::limit($limit);
-        $queries[] = Query::offset($offset);
-        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
-        if (!empty($cursor)) {
+        // Get cursor document if there was a cursor query
+        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        if ($cursor) {
+            /** @var Query $cursor */
+            $fileId = $cursor->getValue();
+
             if ($fileSecurity && !$valid) {
-                $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
+                $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
             } else {
-                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor));
+                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
             }
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "File '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "File '{$fileId}' for the 'cursor' value not found.");
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
 
+        $filterQueries = Query::groupByType($queries)['filters'];
+
         if ($fileSecurity && !$valid) {
-            $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), \array_merge($filterQueries, $queries));
+            $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries);
             $total = $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
         } else {
-            $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), \array_merge($filterQueries, $queries)));
+            $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries));
             $total = Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         }
 

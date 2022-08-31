@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Appwrite\Utopia\Database\Validator\IndexedQueries;
+use Appwrite\Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Query\Limit;
 use Appwrite\Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Database\Validator\Query\Cursor;
@@ -12,7 +12,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
-class Collection extends IndexedQueries
+class Base extends Queries
 {
     /**
      * Expression constructor
@@ -49,28 +49,14 @@ class Collection extends IndexedQueries
             'array' => false,
         ]);
         $attributes[] = new Document([
-            '$id' => '$createdAt',
+            'key' => '$createdAt',
             'type' => Database::VAR_DATETIME,
             'array' => false,
         ]);
         $attributes[] = new Document([
-            '$id' => '$updatedAt',
+            'key' => '$updatedAt',
             'type' => Database::VAR_DATETIME,
             'array' => false,
-        ]);
-
-        $indexes = [];
-        foreach ($allowedAttributes as $attribute) {
-            $indexes[] = new Document([
-                'status' => 'available',
-                'type' => Database::INDEX_KEY,
-                'attributes' => [$attribute]
-            ]);
-        }
-        $indexes[] = new Document([
-            'status' => 'available',
-            'type' => Database::INDEX_FULLTEXT,
-            'attributes' => ['search']
         ]);
 
         $validators = [
@@ -81,6 +67,6 @@ class Collection extends IndexedQueries
             new Order($attributes),
         ];
 
-        parent::__construct($attributes, $indexes, ...$validators);
+        parent::__construct(...$validators);
     }
 }

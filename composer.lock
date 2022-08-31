@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b1491fd16c44267bc71fb96581278b3f",
+    "content-hash": "26191185928bb538d77ec04e4e686b82",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2560,12 +2560,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "e049f2c10b9cb84b4490850d7b9e7360352c36d2"
+                "reference": "ef483d34eb8bd361495498184a341bee3861b24a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/e049f2c10b9cb84b4490850d7b9e7360352c36d2",
-                "reference": "e049f2c10b9cb84b4490850d7b9e7360352c36d2",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/ef483d34eb8bd361495498184a341bee3861b24a",
+                "reference": "ef483d34eb8bd361495498184a341bee3861b24a",
                 "shasum": ""
             },
             "require": {
@@ -2607,7 +2607,7 @@
                 "issues": "https://github.com/utopia-php/storage/issues",
                 "source": "https://github.com/utopia-php/storage/tree/feat-zstd-compression"
             },
-            "time": "2022-08-22T09:19:07+00:00"
+            "time": "2022-08-31T02:09:02+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -2840,16 +2840,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-master",
+            "version": "dev-feat-new-headers",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "6e630a62f522ac68a7056bebf81cd032c7a053ba"
+                "reference": "532d4d15ec8f11539972f2848c2e230c49b24f65"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/6e630a62f522ac68a7056bebf81cd032c7a053ba",
-                "reference": "6e630a62f522ac68a7056bebf81cd032c7a053ba",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/532d4d15ec8f11539972f2848c2e230c49b24f65",
+                "reference": "532d4d15ec8f11539972f2848c2e230c49b24f65",
                 "shasum": ""
             },
             "require": {
@@ -2864,7 +2864,6 @@
                 "brianium/paratest": "^6.4",
                 "phpunit/phpunit": "^9.5.21"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2885,9 +2884,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/master"
+                "source": "https://github.com/appwrite/sdk-generator/tree/feat-new-headers"
             },
-            "time": "2022-08-29T10:43:33+00:00"
+            "time": "2022-08-20T07:42:55+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5359,14 +5358,7 @@
             "time": "2022-08-12T06:47:24+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "appwrite/sdk-generator",
-            "version": "9999999-dev",
-            "alias": "0.19.5",
-            "alias_normalized": "0.19.5.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/storage": 20,

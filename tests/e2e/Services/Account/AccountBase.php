@@ -391,7 +391,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'limit' => 1
+            'queries' => [ 'limit(1)' ],
         ]);
 
         $this->assertEquals($responseLimit['headers']['status-code'], 200);
@@ -408,7 +408,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'offset' => 1
+            'queries' => [ 'offset(1)' ],
         ]);
 
         $this->assertEquals($responseOffset['headers']['status-code'], 200);
@@ -425,8 +425,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'limit' => 1,
-            'offset' => 1
+            'queries' => [ 'limit(1)', 'offset(1)' ],
         ]);
 
         $this->assertEquals($responseLimitOffset['headers']['status-code'], 200);
