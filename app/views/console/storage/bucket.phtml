@@ -416,6 +416,13 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
                                 <label for="bucket-maximum-file-size">Maximum File Size (bytes) <span class="tooltip small" data-tooltip="Limit file size allowed in the bucket."><i class="icon-info-circled"></i></span></label>
                                 <input name="maximumFileSize" id="bucket-maximum-file-size" type="number" autocomplete="off" data-ls-bind="{{project-bucket.maximumFileSize}}" min="1" data-cast-to="integer" />
 
+                                <label for="compression">Compression</label>
+                                <select id="compression" data-ls-bind="{{project-bucket.compression}}" name="compression">
+                                    <option value="none">None</option>
+                                    <option value="gzip">Gzip</option>
+                                    <option value="zstd">Zstd</option>
+                                </select>
+
                                 <div class="margin-bottom">
                                     <input name="enabled" type="hidden" data-forms-switch data-cast-to="boolean" data-ls-bind="{{project-bucket.enabled}}" /> &nbsp; Enabled <span class="tooltip" data-tooltip="Mark whether bucket is enabled"><i class="icon-info-circled"></i></span>
                                 </div>
