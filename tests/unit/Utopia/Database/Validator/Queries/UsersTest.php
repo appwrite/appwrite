@@ -30,7 +30,6 @@ class UsersTest extends TestCase
         $this->assertEquals(true, $validator->isValid(['greaterThan("registration", "2020-10-15 06:38")']), $validator->getDescription());
         $this->assertEquals(true, $validator->isValid(['equal("emailVerification", true)']), $validator->getDescription());
         $this->assertEquals(true, $validator->isValid(['equal("phoneVerification", true)']), $validator->getDescription());
-        $this->assertEquals(true, $validator->isValid(['search("search", "value")']), $validator->getDescription());
 
         /**
          * Test for Failure

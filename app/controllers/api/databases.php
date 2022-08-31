@@ -36,16 +36,16 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Appwrite\Utopia\Database\Validator\IndexedQueries;
-use Appwrite\Utopia\Database\Validator\Query\Cursor as CursorQueryValidator;
-use Appwrite\Utopia\Database\Validator\Query\Filter as FilterQueryValidator;
-use Appwrite\Utopia\Database\Validator\Query\Limit as LimitQueryValidator;
-use Appwrite\Utopia\Database\Validator\Query\Offset as OffsetQueryValidator;
-use Appwrite\Utopia\Database\Validator\Query\Order as OrderQueryValidator;
+use Appwrite\Utopia\Database\Validator\Query\Limit;
+use Appwrite\Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
+use Appwrite\Utopia\Database\Validator\Queries;
+use Appwrite\Utopia\Database\Validator\Queries\Collections;
+use Appwrite\Utopia\Database\Validator\Queries\Databases;
+use Appwrite\Utopia\Database\Validator\Queries\Documents;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
 
@@ -233,38 +233,37 @@ App::get('/v1/databases')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DATABASE_LIST)
+    ->param('queries', [], new Databases(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Databases::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of collection to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $filterQueries = [];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $filterQueries[] = Query::search('search', $search);
+            $queries[] = Query::search('search', $search);
         }
 
-        $queries = [];
-        $queries[] = Query::limit($limit);
-        $queries[] = Query::offset($offset);
-        $queries[] = $orderType === 'ASC' ? Query::orderAsc('') : Query::orderDesc('');
-        if (!empty($cursor)) {
-            $cursorDocument = $dbForProject->getDocument('databases', $cursor);
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $databaseId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('databases', $databaseId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Collection '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Database '{$databaseId}' for the 'cursor' value not found.");
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
 
+        $filterQueries = Query::groupByType($queries)['filters'];
+
         $response->dynamic(new Document([
-            'databases' => $dbForProject->find('databases', \array_merge($filterQueries, $queries)),
+            'databases' => $dbForProject->find('databases', $queries),
             'total' => $dbForProject->count('databases', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_DATABASE_LIST);
     });
@@ -296,24 +295,23 @@ App::get('/v1/databases/:databaseId')
     });
 
 App::get('/v1/databases/:databaseId/logs')
-    ->desc('List Collection Logs')
+    ->desc('List Database Logs')
     ->groups(['api', 'database'])
-    ->label('scope', 'collections.read')
+    ->label('scope', 'databases.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listLogs')
-    ->label('sdk.description', '/docs/references/databases/get-collection-logs.md')
+    ->label('sdk.description', '/docs/references/databases/get-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $databaseId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $databaseId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -321,9 +319,17 @@ App::get('/v1/databases/:databaseId/logs')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
+        $queries = Query::parseQueries($queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $offset = $grouped['offset'] ?? 0;
+
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
+
+        $output = [];
+
         foreach ($logs as $i => &$log) {
             $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
@@ -542,15 +548,11 @@ App::get('/v1/databases/:databaseId/collections')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('queries', [], new Collections(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Collections::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of collection to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the collection used as the starting point for the query, excluding the collection itself. Should be used for efficient pagination when working with large sets of data.', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -558,30 +560,31 @@ App::get('/v1/databases/:databaseId/collections')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $filterQueries = [];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $filterQueries[] = Query::search('search', $search);
+            $queries[] = Query::search('search', $search);
         }
 
-        $queries = [];
-        $queries[] = Query::limit($limit);
-        $queries[] = Query::offset($offset);
-        $queries[] = $orderType === 'ASC' ? Query::orderAsc('') : Query::orderDesc('');
-        if (!empty($cursor)) {
-            $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $cursor);
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $collectionId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Collection '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Collection '{$collectionId}' for the 'cursor' value not found.");
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER
-                ? Query::cursorAfter($cursorDocument)
-                : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
 
+        $filterQueries = Query::groupByType($queries)['filters'];
+
         $response->dynamic(new Document([
-            'collections' => $dbForProject->find('database_' . $database->getInternalId(), \array_merge($filterQueries, $queries)),
+            'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries),
             'total' => $dbForProject->count('database_' . $database->getInternalId(), $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
@@ -637,13 +640,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $databaseId, string $collectionId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -656,6 +658,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
+
+        $queries = Query::parseQueries($queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId;
@@ -1937,17 +1944,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/database#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of documents to return in response. By default will return maximum 25 results. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the document used as the starting point for the query, excluding the document itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderAttributes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attributes used to sort results. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' order attributes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
-    ->param('orderTypes', [], new ArrayList(new WhiteList([Database::ORDER_DESC, Database::ORDER_ASC], true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of order directions for sorting attributes. Possible values are DESC for descending order or ASC for ascending order. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' order types are allowed.', true)
+    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, int $limit, int $offset, string $cursor, string $cursorDirection, array $orderAttributes, array $orderTypes, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1970,71 +1971,42 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if (!empty($queries)) {
-            $attributes = array_merge(
-                $collection->getAttribute('attributes', []),
-                [
-                    new Document([
-                        'key' => '$id',
-                        'type' => Database::VAR_STRING,
-                        'array' => false,
-                    ]),
-                    new Document([
-                        'key' => '$createdAt',
-                        'type' => Database::VAR_DATETIME,
-                        'array' => false,
-                    ]),
-                    new Document([
-                        'key' => '$updatedAt',
-                        'type' => Database::VAR_DATETIME,
-                        'array' => false,
-                    ]),
-                ]
-            );
-            $validator = new IndexedQueries(
-                $attributes,
-                $collection->getAttribute('indexes', []),
-                new CursorQueryValidator(),
-                new FilterQueryValidator($attributes),
-                new LimitQueryValidator(),
-                new OffsetQueryValidator(),
-                new OrderQueryValidator(),
-            );
-            if (!$validator->isValid($queries)) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-            }
+        // Validate queries
+        $queriesValidator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
+        $validQueries = $queriesValidator->isValid($queries);
+        if (!$validQueries) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
         }
 
-        $filterQueries = Query::parseQueries($queries);
+        $queries = Query::parseQueries($queries);
 
-        $otherQueries = [];
-        $otherQueries[] = Query::limit($limit);
-        $otherQueries[] = Query::offset($offset);
-        foreach ($orderTypes as $i => $orderType) {
-            $otherQueries[] = $orderType === Database::ORDER_DESC ? Query::orderDesc($orderAttributes[$i] ?? '') : Query::orderAsc($orderAttributes[$i] ?? '');
-        }
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $documentId = $cursor->getValue();
 
-        if (!empty($cursor)) {
             if ($documentSecurity && !$valid) {
-                $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor);
+                $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
             } else {
-                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $cursor));
+                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
             }
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Document '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Document '{$documentId}' for the 'cursor' value not found.");
             }
 
-            $otherQueries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
 
-        $allQueries = \array_merge($filterQueries, $otherQueries);
+        $filterQueries = Query::groupByType($queries)['filters'];
 
         if ($documentSecurity && !$valid) {
-            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $allQueries);
+            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
             $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
         } else {
-            $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $allQueries));
+            $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
             $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         }
 
@@ -2127,13 +2099,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('documentId', null, new UID(), 'Document ID.')
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, int $limit, int $offset, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2152,6 +2123,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
+
+        $queries = Query::parseQueries($queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId();
