@@ -624,7 +624,7 @@ if(element.array){document[element.key]=[];}}}}}};let getParams=function getPara
 functionAsString=functionAsString.replaceAll('={}',"");functionAsString=functionAsString.replaceAll('=[]',"");functionAsString=functionAsString.replace(REGEX_COMMENTS,"");functionAsString=functionAsString.match(REGEX_FUNCTION_PARAMS)[1];if(functionAsString.charAt(0)==="("){functionAsString=functionAsString.slice(1,-1);}
 while((match=REGEX_PARAMETERS_VALUES.exec(functionAsString))){params.push(match[1]);}
 return params;};let getValue=function(key,prefix,data){let result=null;if(!key){return null;}
-let attrKey=prefix+key.charAt(0).toUpperCase()+key.slice(1);if(element.dataset[attrKey]){result=element.dataset[attrKey];if(element.dataset[attrKey+"CastTo"]==="array"){result=result.split(",");result=result.map(function(r){return expression.parse(r);});}else{result=expression.parse(result);}}
+let attrKey=prefix+key.charAt(0).toUpperCase()+key.slice(1);if(element.dataset[attrKey]){result=expression.parse(element.dataset[attrKey]);if(element.dataset[attrKey+"CastTo"]==="array"){result=result.split(",");}}
 if(typeof data[key]!=='undefined'){result=data[key];}
 if(typeof result==='undefined'){result="";}
 return result;};let resolve=function(target,prefix="param",data={}){if(!target){return function(){};}
