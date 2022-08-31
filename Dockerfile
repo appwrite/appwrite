@@ -127,8 +127,9 @@ RUN \
 
 # Zstd Compression
 FROM compile as zstd
-RUN git clone --recursive --depth 1 --branch $PHP_ZSTD_VERSION https://github.com/kjdev/php-ext-zstd.git \
+RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
   && cd php-ext-zstd \
+  && git checkout $PHP_ZSTD_VERSION \
   && phpize \
   && ./configure --with-libzstd \
   && make && make install
