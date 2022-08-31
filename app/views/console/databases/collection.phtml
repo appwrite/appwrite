@@ -1239,6 +1239,9 @@ $permissions = $this->getParam('permissions', null);
     </form>
 </div>
 
+<div class="margin-top" data-service="databases.listCollections" data-param-database-id="{{router.params.databaseId}}" data-event="load,databases.createCollection,databases.updateCollection,databases.deleteCollection" data-scope="sdk" data-param-limit="100" data-name="project-collections">
+</div>
+
 <script type="text/html" id="template-attribute-title-first">
     <i data-ls-attrs="class=pull-end icon-key text-size-xs"></i>
     <span class="text-bold">$id</span>
