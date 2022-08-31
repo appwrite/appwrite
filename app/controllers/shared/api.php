@@ -387,7 +387,7 @@ App::shutdown()
                     'accessedAt' => $now,
                     'signature' => $signature,
                     ])));
-                } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
+                } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
