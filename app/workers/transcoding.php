@@ -14,7 +14,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use FFMpeg\FFProbe\DataMapping\StreamCollection;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Captioning\Format\SubripFile;
 use Utopia\Storage\Device;
@@ -49,7 +48,7 @@ class TranscodingV1 extends Worker
 
     private string $renditionName;
 
-    private string $audioStreamCount;
+    private array $audios = [];
 
     private Database $database;
 
@@ -126,21 +125,29 @@ class TranscodingV1 extends Worker
             throw new Exception('Not an valid FFMpeg file "' . $inPath . '"');
         }
 
-        $this->audioStreamCount = $ffprobe->streams($inPath)->audios()->count();
-        $this->videoStreamCount = $ffprobe->streams($inPath)->videos()->count();
+        foreach ($ffprobe->streams($inPath)->audios()->getIterator() as $stream) {
+            $this->audios[] = $stream->get('tags')['language'];
+        }
 
-        $general = $this->getVideoSourceInfo($ffprobe->streams($inPath));
-        if (!empty($general)) {
-            foreach ($general as $key => $value) {
-                $sourceVideo->setAttribute($key, (string)$value);
-            }
-
+        $audioStreamCount = $ffprobe->streams($inPath)->audios()->count();
+        $videoStreamCount = $ffprobe->streams($inPath)->videos()->count();
+        $streams = $ffprobe->streams($inPath);
+        $sourceVideo
+            ->setAttribute('duration', $videoStreamCount > 0 ? $streams->videos()->first()->get('duration') : null)
+            ->setAttribute('height', $videoStreamCount > 0 ? $streams->videos()->first()->get('height') : null)
+            ->setAttribute('width', $videoStreamCount > 0 ? $streams->videos()->first()->get('width') : null)
+            ->setAttribute('videoCodec', $videoStreamCount > 0 ? $streams->videos()->first()->get('codec_name') : null)
+            ->setAttribute('videoFramerate', $videoStreamCount > 0 ? $streams->videos()->first()->get('avg_frame_rate') : null)
+            ->setAttribute('videoBitrate', $videoStreamCount > 0 ? $streams->videos()->first()->get('bit_rate') : null)
+            ->setAttribute('audioCodec', $audioStreamCount > 0 ? $streams->audios()->first()->get('codec_name') : null)
+            ->setAttribute('audioSamplerate', $audioStreamCount > 0 ? $streams->audios()->first()->get('sample_rate') : null)
+            ->setAttribute('audioBitrate', $audioStreamCount > 0 ? $streams->audios()->first()->get('bit_rate') : null)
+            ;
             Authorization::skip(fn() => $this->database->updateDocument(
                 'videos',
                 $sourceVideo->getId(),
                 $sourceVideo
             ));
-        }
 
         $video = $ffmpeg->open($inPath);
         $this->setRenditionName($profile);
@@ -254,7 +261,7 @@ class TranscodingV1 extends Worker
                             Authorization::skip(function () use ($segment, $project, $query, $renditionPath, $ref) {
                                 return $this->database->createDocument('videos_renditions_segments', new Document([
                                     'renditionId' => $query->getId(),
-                                    'representationId' => $ref['id']+0,
+                                    'representationId' => $ref['id'] + 0,
                                     'fileName' => $segment['fileName'],
                                     'path' => $renditionPath,
                                     'duration' => $segment['duration'],
@@ -405,7 +412,7 @@ class TranscodingV1 extends Worker
         }
 
         $hls->setFormat($format)
-            ->setAudioStreamCount($this->audioStreamCount)
+            ->setAudiolanguages($this->audios)
             ->setHlsTime($segmentSize)
             ->setHlsAllowCache(false)
             ->addRepresentation($representation)
@@ -516,25 +523,6 @@ class TranscodingV1 extends Worker
             'targetDuration' => $targetDuration,
             'segments' => $segments
         ];
-    }
-
-    /**
-     * @param $streams StreamCollection
-     * @return array
-     */
-    private function getVideoSourceInfo(StreamCollection $streams): array
-    {
-            return [
-                'duration' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('duration') : '0',
-                'height' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('height') : '0',
-                'width' => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('width') : '0',
-                'videoCodec'   => $streams->videos()->count() > 0 ? $streams->videos()->first()->get('codec_name') : '',
-                'videoFramerate' => $streams->videos()->count() > 0  ? $streams->videos()->first()->get('avg_frame_rate') : '0',
-                'videoBitrate' =>  $streams->videos()->count() > 0 ? $streams->videos()->first()->get('bit_rate') : '0',
-                 'audioCodec' =>   $streams->audios()->count() > 0 ? $streams->audios()->first()->get('codec_name')  : '',
-                'audioSamplerate' => $streams->audios()->count() > 0 ? $streams->audios()->first()->get('sample_rate') : '0',
-                'audioBitrate'   =>  $streams->audios()->count() > 0 ? $streams->audios()->first()->get('bit_rate') : '0',
-             ];
     }
 
     /**

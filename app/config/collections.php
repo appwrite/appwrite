@@ -3025,9 +3025,9 @@ $collections = [
             ],
             [
                 '$id' => 'width',
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_INTEGER,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
+                'size' => 0,
                 'signed' => false,
                 'required' => false,
                 'default' => null,
@@ -3036,9 +3036,9 @@ $collections = [
             ],
             [
                 '$id' => 'height',
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_INTEGER,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
+                'size' => 0,
                 'signed' => false,
                 'required' => false,
                 'default' => null,
