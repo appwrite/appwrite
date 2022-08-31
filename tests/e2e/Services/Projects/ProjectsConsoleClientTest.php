@@ -132,7 +132,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($response['body']['projects'][0]['$id'], $data['projectId']);
 
         /**
-         * Test after pagination
+         * Test pagination
          */
         $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -166,6 +166,55 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'limit(1)' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'offset(1)' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("name", "Project Test 2")' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'orderDesc("")' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(2, $response['body']['projects']);
+        $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
+        $this->assertEquals('Project Test', $response['body']['projects'][1]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -178,7 +227,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $response['body']['projects'][0]['$id']
+            'queries' => [ 'cursorAfter("' . $response['body']['projects'][0]['$id'] . '")' ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -190,8 +239,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $response['body']['projects'][0]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $response['body']['projects'][0]['$id'] . '")' ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -206,7 +254,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => 'unknown'
+            'queries' => [ 'cursorAfter("unknown")' ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
