@@ -183,7 +183,7 @@
                             <div class="text-align-center">
                                 <img src="" data-ls-attrs="src={{user|avatar}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
 
-                                <div class="margin-top-small margin-bottom-small" data-ls-bind="Member since {{user.registration|dateText}}"></div>
+                                <div class="margin-top-small margin-bottom-small" data-ls-bind="Member since {{user.registration|date}}"></div>
                                 <hr class="margin-top-tiny margin-bottom-tiny" data-ls-if="{{user.email}}">
                                 <div class="margin-top-small margin-bottom-small clear" data-ls-if="{{user.email}}">
                                     <span data-ls-bind="{{user.email}}" class="pull-start"></span>

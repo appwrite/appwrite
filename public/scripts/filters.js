@@ -28,19 +28,33 @@ window.ls.filter
     $value = parseInt($value);
     return !Number.isNaN($value) ? $value.toLocaleString() : "";
   })
-  .add("date", function ($value, date) {
-    return $value ? date.format("Y-m-d", $value) : "";
-  })
   .add("dateTime", function ($value, date) {
-    return $value ? date.format("Y-m-d H:i", $value) : "";
+    return $value ? date.format({
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }, $value) : "";
   })
-  .add("dateText", function ($value, date) {
-    return $value ? date.format("d M Y", $value) : "";
+  .add("date", function ($value, date) {
+    return $value ? date.format({
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+    }, $value) : "";
   })
   .add("timeSince", function ($value) {
-    $value = $value * 1000;
+    $value = new Date($value).getTime();
 
-    let seconds = Math.floor((Date.now() - $value) / 1000);
+    /**
+     * Adapt to timezone UTC.
+     */
+    let now = new Date();
+    now.setMinutes(now.getMinutes() + now.getTimezoneOffset());
+
+    let timestamp = new Date(now.toISOString()).getTime();
+    let seconds = Math.floor((timestamp - $value) / 1000);
     let unit = "second";
     let direction = "ago";
 
@@ -303,6 +317,9 @@ window.ls.filter
   })
   .add("last", function ($value) {
     return $value[$value.length - 1].$id;
+  })
+  .add("orZero", function ($value) {
+    return $value ? $value : 0;
   })
   ;
 

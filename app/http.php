@@ -10,6 +10,9 @@ use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -132,7 +135,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
             foreach ($collection['attributes'] as $attribute) {
                 $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
+                    '$id' => ID::custom($attribute['$id']),
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
@@ -146,7 +149,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
             foreach ($collection['indexes'] as $index) {
                 $indexes[] = new Document([
-                    '$id' => $index['$id'],
+                    '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],
@@ -160,17 +163,22 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         if ($dbForConsole->getDocument('buckets', 'default')->isEmpty()) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForConsole->createDocument('buckets', new Document([
-                '$id' => 'default',
-                '$collection' => 'buckets',
+                '$id' => ID::custom('default'),
+                '$collection' => ID::custom('buckets'),
                 'name' => 'Default',
-                'permission' => 'file',
                 'maximumFileSize' => (int) App::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
                 'allowedFileExtensions' => [],
                 'enabled' => true,
+                'compression' => 'gzip',
                 'encryption' => true,
                 'antivirus' => true,
-                '$read' => ['role:all'],
-                '$write' => ['role:all'],
+                'fileSecurity' => true,
+                '$permissions' => [
+                    Permission::create(Role::any()),
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
                 'search' => 'buckets Default',
             ]));
 
@@ -187,7 +195,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
             foreach ($files['attributes'] as $attribute) {
                 $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
+                    '$id' => ID::custom($attribute['$id']),
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
@@ -201,7 +209,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
             foreach ($files['indexes'] as $index) {
                 $indexes[] = new Document([
-                    '$id' => $index['$id'],
+                    '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],
@@ -252,7 +260,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     try {
         Authorization::cleanRoles();
-        Authorization::setRole('role:all');
+        Authorization::setRole(Role::any()->toString());
 
         $app->run($request, $response);
     } catch (\Throwable $th) {

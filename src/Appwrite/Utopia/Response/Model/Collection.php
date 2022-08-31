@@ -17,29 +17,22 @@ class Collection extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Collection creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Collection creation date in Datetime',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Collection update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
-            ])
-            ->addRule('$read', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Collection read permissions.',
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Collection update date in Datetime',
                 'default' => '',
-                'example' => 'role:all',
-                'array' => true
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
-            ->addRule('$write', [
+            ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Collection write permissions.',
+                'description' => 'Collection permissions. [Learn more about permissions](/docs/permissions).',
                 'default' => '',
-                'example' => 'user:608f9da25e7e1',
+                'example' => ['read("any")'],
                 'array' => true
             ])
             ->addRule('databaseId', [
@@ -60,11 +53,11 @@ class Collection extends Model
                 'default' => true,
                 'example' => false,
             ])
-            ->addRule('permission', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Collection permission model. Possible values: `document` or `collection`',
+            ->addRule('documentSecurity', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether document-level permissions are enabled. [Learn more about permissions](/docs/permissions).',
                 'default' => '',
-                'example' => 'document',
+                'example' => true,
             ])
             ->addRule('attributes', [
                 'type' => [
@@ -75,6 +68,7 @@ class Collection extends Model
                     Response::MODEL_ATTRIBUTE_ENUM,
                     Response::MODEL_ATTRIBUTE_URL,
                     Response::MODEL_ATTRIBUTE_IP,
+                    Response::MODEL_ATTRIBUTE_DATETIME,
                     Response::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'Collection attributes.',
