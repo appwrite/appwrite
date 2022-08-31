@@ -23,7 +23,7 @@ jobs:
       # Upstream bug causes buildkit pulls to fail so prefetch base images
       # https://github.com/moby/moby/issues/41864
       run:  |
-        echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
+        cp .env.test .env
         docker pull composer:2.0
         docker pull php:8.0-cli-alpine
         docker compose build --progress=plain
