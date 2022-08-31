@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\General;
 
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -25,6 +26,7 @@ class UsageTest extends Scope
         parent::setUp();
     }
 
+    #[Retry(count: 1)]
     public function testUsersStats(): array
     {
         $project = $this->getProject(true);
@@ -92,6 +94,7 @@ class UsageTest extends Scope
     }
 
     /** @depends testUsersStats */
+    #[Retry(count: 1)]
     public function testStorageStats(array $data): array
     {
         $projectId = $data['projectId'];
@@ -236,6 +239,7 @@ class UsageTest extends Scope
     }
 
     /** @depends testStorageStats */
+    #[Retry(count: 1)]
     public function testDatabaseStats(array $data): array
     {
         $headers = $data['headers'];
@@ -436,6 +440,7 @@ class UsageTest extends Scope
 
 
     /** @depends testDatabaseStats */
+    #[Retry(count: 1)]
     public function testFunctionsStats(array $data): void
     {
         $headers = $data['headers'];
