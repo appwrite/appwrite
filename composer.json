@@ -77,7 +77,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "dev-feat-new-headers",
+        "appwrite/sdk-generator": "dev-feat-array-item-examples",
         "ext-fileinfo": "*",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",

@@ -337,6 +337,7 @@ class Swagger2 extends Format
                             'type' => 'string',
                         ];
                         $node['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        $node['x-item-example'] = '"' . Permission::read(Role::any()) . '"';
                         break;
                     case 'Utopia\Database\Validator\Roles':
                         $node['type'] = $validator->getType();
@@ -345,6 +346,7 @@ class Swagger2 extends Format
                             'type' => 'string',
                         ];
                         $node['x-example'] = '["' . Role::any()->toString() . '"]';
+                        $node['x-item-example'] = '"' . Role::any()->toString() . '"';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['type'] = $validator->getType();
@@ -423,6 +425,7 @@ class Swagger2 extends Format
 
                     if (\array_key_exists('items', $node)) {
                         $body['schema']['properties'][$name]['items'] = $node['items'];
+                        $body['schema']['properties'][$name]['x-item-example'] = $node['x-item-example'] ?? null;
                     }
                 }
 
