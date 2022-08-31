@@ -36,7 +36,7 @@ class Token extends Model
             ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Token expiration date in Unix timestamp.',
+                'description' => 'Token expiration date in Datetime.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])

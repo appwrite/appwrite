@@ -90,6 +90,8 @@ const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
+const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
+const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 402;
 const APP_VERSION_STABLE = '0.15.3';
@@ -393,6 +395,19 @@ Database::addFilter(
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
+    }
+);
+
+Database::addFilter(
+    'subQueryVariables',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database
+            ->find('variables', [
+                Query::equal('functionInternalId', [$document->getInternalId()]),
+            ], APP_LIMIT_SUBQUERY);
     }
 );
 

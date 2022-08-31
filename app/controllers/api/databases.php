@@ -246,7 +246,8 @@ App::get('/v1/databases')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $databaseId = $cursor->getValue();
@@ -566,7 +567,8 @@ App::get('/v1/databases/:databaseId/collections')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $collectionId = $cursor->getValue();
@@ -1811,8 +1813,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
     ->label('usage.metric', 'documents.{scope}.requests.create')
     ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
-    ->label('abuse-limit', 120)
-    ->label('abuse-time', 60)
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createDocument')
@@ -1979,7 +1982,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $queries = Query::parseQueries($queries);
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $documentId = $cursor->getValue();
@@ -2189,8 +2193,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
     ->label('usage.metric', 'documents.{scope}.requests.update')
     ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
-    ->label('abuse-limit', 60)
-    ->label('abuse-time', 60)
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateDocument')
@@ -2320,8 +2325,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
     ->label('usage.metric', 'documents.{scope}.requests.delete')
     ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
-    ->label('abuse-limit', 60)
-    ->label('abuse-time', 60)
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteDocument')
