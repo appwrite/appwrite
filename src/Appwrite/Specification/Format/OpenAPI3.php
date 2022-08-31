@@ -341,6 +341,7 @@ class OpenAPI3 extends Format
                             'type' => 'string',
                         ];
                         $node['schema']['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        $node['schema']['x-item-example'] = '"' . Permission::read(Role::any()) . '"';
                         break;
                     case 'Utopia\Database\Validator\Roles':
                         $node['schema']['type'] = $validator->getType();
@@ -348,6 +349,7 @@ class OpenAPI3 extends Format
                             'type' => 'string',
                         ];
                         $node['schema']['x-example'] = '["' . Role::any()->toString() . '"]';
+                        $node['schema']['x-item-example'] = '"' . Role::any()->toString() . '"';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['schema']['type'] = $validator->getType();
@@ -409,7 +411,8 @@ class OpenAPI3 extends Format
                     $body['content'][$consumes[0]]['schema']['properties'][$name] = [
                         'type' => $node['schema']['type'],
                         'description' => $node['description'],
-                        'x-example' => $node['schema']['x-example'] ?? null
+                        'x-example' => $node['schema']['x-example'] ?? null,
+                        'x-item-example' => $node['schema']['x-item-example'] ?? null,
                     ];
 
                     if ($node['schema']['x-upload-id'] ?? false) {
