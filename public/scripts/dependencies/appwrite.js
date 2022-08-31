@@ -4063,36 +4063,20 @@
          * List Projects
          *
          *
+         * @param {string} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        list(search, limit, offset, cursor, cursorDirection, orderType) {
+        list(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/projects';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {

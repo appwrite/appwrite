@@ -519,12 +519,8 @@ getCountriesPhones(){return __awaiter(this,void 0,void 0,function*(){let path='/
 getCurrencies(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/currencies';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 getLanguages(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/languages';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}}
 class Projects extends Service{constructor(client){super(client);}
-list(search,limit,offset,cursor,cursorDirection,orderType){return __awaiter(this,void 0,void 0,function*(){let path='/projects';let payload={};if(typeof search!=='undefined'){payload['search']=search;}
-if(typeof limit!=='undefined'){payload['limit']=limit;}
-if(typeof offset!=='undefined'){payload['offset']=offset;}
-if(typeof cursor!=='undefined'){payload['cursor']=cursor;}
-if(typeof cursorDirection!=='undefined'){payload['cursorDirection']=cursorDirection;}
-if(typeof orderType!=='undefined'){payload['orderType']=orderType;}
+list(queries,search){return __awaiter(this,void 0,void 0,function*(){let path='/projects';let payload={};if(typeof queries!=='undefined'){payload['queries']=queries;}
+if(typeof search!=='undefined'){payload['search']=search;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 create(projectId,name,teamId,description,logo,url,legalName,legalCountry,legalState,legalCity,legalAddress,legalTaxId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}

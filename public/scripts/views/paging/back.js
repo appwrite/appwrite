@@ -17,7 +17,11 @@
         } else {
           const newOffset = offset - limit;
           element.disabled = false;
-          element.value = 'orderAsc(\'\'),limit(' + limit + '),offset(' + newOffset + ')';
+          element.value = 'limit(' + limit + '),offset(' + newOffset + ')';
+
+          if(element.dataset['pagingDesc'] !== undefined) {
+            element.value += ',orderDesc(\'\')';
+          }
 
           try {
             element.parentElement.querySelector('input[name="offset"]').value = newOffset + '';

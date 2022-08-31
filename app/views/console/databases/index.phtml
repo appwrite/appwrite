@@ -16,7 +16,7 @@
                 data-service="databases.list"
                 data-event="load,databases.create,databases.update,databases.delete"
                 data-param-search="{{router.params.search}}"
-                data-param-queries="orderAsc(''),limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}})"
+                data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}})"
                 data-param-queries-cast-to="array"
                 data-param-queries-cast-from="csv"
                 data-scope="sdk"
