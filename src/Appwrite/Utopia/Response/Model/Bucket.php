@@ -68,7 +68,7 @@ class Bucket extends Model
             ])
             ->addRule('compression', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Compression method chosen.',
+                'description' => 'Compression algorithm choosen for compression. Will be one of ' . COMPRESSION_TYPE_NONE . ',' . COMPRESSION_TYPE_GZIP . '(https://en.wikipedia.org/wiki/Gzip), or ' . COMPRESSION_TYPE_ZSTD . '(https://en.wikipedia.org/wiki/Zstd).',
                 'default' => [],
                 'example' => 'gzip',
                 'array' => false
