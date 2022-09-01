@@ -42,7 +42,10 @@ abstract class MigrationTest extends TestCase
             $this->assertTrue(class_exists('Appwrite\\Migration\\Version\\' . $class));
         }
         // Test if current version exists
-        $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
+        // Only test official releases - skip if latest is release candidate
+        if(!(\str_contains(APP_VERSION_STABLE, 'RC'))) {
+            $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
+        }
     }
 
     public function testHasDifference(): void
