@@ -11,7 +11,7 @@ suspend fun main() {
     val response = functions.update(
         functionId = "[FUNCTION_ID]",
         name = "[NAME]",
-        execute = listOf(),
+        execute = listOf("role:all"),
     )
     val json = response.body?.string()
 }
