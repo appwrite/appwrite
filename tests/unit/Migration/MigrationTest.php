@@ -43,7 +43,7 @@ abstract class MigrationTest extends TestCase
         }
         // Test if current version exists
         // Only test official releases - skip if latest is release candidate
-        if(!(\str_contains(APP_VERSION_STABLE, 'RC'))) {
+        if (!(\str_contains(APP_VERSION_STABLE, 'RC'))) {
             $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
         }
     }
