@@ -54,6 +54,7 @@ $cli
                 $proc['Id'] = (int)$proc['Id'];
 
                 $kill = false;
+
                 if (in_array($proc['User'], ['root_', 'root_'])) {
                     continue; // We Do not want to kill internal users
                 } elseif ($proc['command'] === 'sleep' && $proc['Time'] >= 28800) { // wait_timeout variable
