@@ -96,7 +96,7 @@
                 'x-sdk-name': 'Console',
                 'x-sdk-platform': 'console',
                 'x-sdk-language': 'web',
-                'x-sdk-version': '6.0.0',
+                'x-sdk-version': '6.1.0-RC1',
                 'X-Appwrite-Response-Format': '1.0.0-RC1',
             };
             this.realtime = {
