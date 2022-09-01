@@ -1,0 +1,117 @@
+<?php
+
+use Utopia\Database\Database;
+
+$method = $this->getParam('method', '');
+$params = $this->getParam('params', []);
+$events = $this->getParam('events', '');
+$permissions = $this->getParam('permissions', Database::PERMISSIONS);
+$data = $this->getParam('data', '');
+$form = $this->getParam('form');
+
+$escapedPermissions = \array_map(function ($perm) {
+    // Alpine won't bind to a parameter named delete
+    if ($perm == 'delete') {
+        return 'xdelete';
+    }
+    return $perm;
+}, $permissions);
+
+?>
+<div
+    x-data="permissionsMatrix"
+    class="permissions-matrix margin-bottom-large"
+    data-scope="sdk"
+    <?php if (!empty($method)): ?>
+        data-method="<?php echo $method; ?>"
+    <?php endif; ?>
+    <?php foreach ($params as $key => $value): ?>
+        data-param-<?php echo $key; ?>="<?php echo $value; ?>"
+    <?php endforeach; ?>
+    <?php if (!empty($events)): ?>
+        data-events="<?php echo $events; ?>"
+    <?php endif; ?>
+    <?php if (!empty($data)): ?>
+        data-name="<?php echo $data; ?>"
+    <?php endif; ?>
+    @reset.window="permissions.length = rawPermissions.length = 0">
+
+    <input
+        type="hidden"
+        name="permissions"
+        data-cast-from="csv"
+        data-cast-to="array"
+        <?php if (!empty(($data))): ?>
+            data-ls-bind="{{<?php echo $data ?>.$permissions}}"
+        <?php endif; ?>
+        :value="rawPermissions"/>
+
+    <table data-ls-attrs="x-init=load({{<?php if (!empty($data)) echo $data . '.$permissions' ?>}})">
+        <thead>
+        <tr>
+            <th>Role</th>
+            <?php foreach ($permissions as $permission): ?>
+                <th><?php echo \ucfirst($permission); ?></th>
+            <?php endforeach; ?>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <template x-for="(permission, index) in permissions">
+            <tr>
+                <td>
+                    <p x-text="permission.role"></p>
+                </td>
+                <?php foreach ($escapedPermissions as $permission): ?>
+                    <td>
+                        <input
+                            type="checkbox"
+                            name="<?php echo $permission ?>"
+                            x-model="permission.<?php echo $permission; ?>"
+                            @click="updatePermission(index)"/>
+                    </td>
+                <?php endforeach; ?>
+                <td>
+                    <span class="action" @click="removePermission(index)">
+                        <i class="icon-trash"></i>
+                    </span>
+                </td>
+            </tr>
+        </template>
+        <tr x-data="permissionsRow"
+            @addrow<?php echo \strtolower($form); ?>.window="addPermission('<?php echo $form; ?>', role, { <?php echo \implode(',', $escapedPermissions) ?> })">
+            <td>
+                <datalist id="types">
+                    <option value="user:">
+                    <option value="team:">
+                    <option value="users">
+                    <option value="guests">
+                    <option value="any">
+                </datalist>
+
+                <input
+                    required
+                    id="<?php echo $form; ?>Input"
+                    name="<?php echo $form; ?>"
+                    form="<?php echo $form ?>"
+                    list="types"
+                    type="text"
+                    x-model="role" />
+            </td>
+            <?php foreach ($escapedPermissions as $permission): ?>
+                <td>
+                    <input type="checkbox" name="<?php echo $permission ?>" x-model="<?php echo $permission; ?>"/>
+                </td>
+            <?php endforeach; ?>
+            <td></td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="<?php \count($permissions) + 2 ?>">
+                <button type="button" class="margin-top-small reverse" @click="$dispatch('addrow<?php echo \strtolower($form); ?>')">Add</button>
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+</div>

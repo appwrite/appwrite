@@ -5,10 +5,12 @@ namespace Appwrite\Migration;
 use Swoole\Runtime;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
+use Utopia\Database\Query;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Exception;
 use Utopia\App;
+use Utopia\Database\ID;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Migration
@@ -62,15 +64,15 @@ abstract class Migration
         Authorization::setDefaultStatus(false);
         $this->collections = array_merge([
             '_metadata' => [
-                '$id' => '_metadata',
+                '$id' => ID::custom('_metadata'),
                 '$collection' => Database::METADATA
             ],
             'audit' => [
-                '$id' => 'audit',
+                '$id' => ID::custom('audit'),
                 '$collection' => Database::METADATA
             ],
             'abuse' => [
-                '$id' => 'abuse',
+                '$id' => ID::custom('abuse'),
                 '$collection' => Database::METADATA
             ]
         ], Config::getParam('collections', []));
@@ -116,7 +118,11 @@ abstract class Migration
             Console::log('Migrating Collection ' . $collection['$id'] . ':');
 
             do {
-                $documents = $this->projectDB->find($collection['$id'], limit: $this->limit, cursor: $nextDocument);
+                $queries = [Query::limit($this->limit)];
+                if ($nextDocument !== null) {
+                    $queries[] = Query::cursorAfter($nextDocument);
+                }
+                $documents = $this->projectDB->find($collection['$id'], $queries);
                 $count = count($documents);
                 $sum += $count;
 

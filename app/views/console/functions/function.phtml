@@ -91,9 +91,9 @@ sort($patterns);
                             data-event="load,functions.createDeployment,functions.deleteDeployment,functions.updateDeployment,functions.retryBuild"
                             data-name="project-function-deployments"
                             data-param-function-id="{{router.params.id}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-offset=""
-                            data-param-order-type="DESC"
+                            data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                            data-param-queries-cast-to="array"
+                            data-param-queries-cast-from="csv"
                             data-success="trigger"
                             data-success-param-trigger-events="functions.listDeployments">
 
@@ -217,13 +217,12 @@ sort($patterns);
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
-                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                                data-param-order-type="DESC"
                                 data-scope="sdk"
                                 data-name="project-function-deployments"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                <input type="hidden" name="offset">
+                                <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                             </form>
 
                             <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-deployments.total|pageTotal}}"></span>
@@ -233,13 +232,12 @@ sort($patterns);
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
-                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                                data-param-order-type="DESC"
                                 data-scope="sdk"
                                 data-name="project-function-deployments"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                <input type="hidden" name="offset">
+                                <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-function-deployments.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                             </form>
                         </div>
                     </div>
@@ -260,8 +258,8 @@ sort($patterns);
                                     View as JSON
                                 </button>
                             </li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.$updatedAt|dateText}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.$createdAt|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.$updatedAt|date}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.$createdAt|date}}"></span></li>
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"
@@ -291,7 +289,7 @@ sort($patterns);
             <li data-state="/console/functions/function/monitors?id={{router.params.id}}&project={{router.params.project}}">
 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="submit"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}"
@@ -302,9 +300,10 @@ sort($patterns);
                 <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '90d'" disabled>90d</button>
 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '30d'"
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="submit"
                     data-name="usage"
+                    data-param-range="30d"
                     data-param-function-id="{{router.params.id}}">
                     <button class="tick">30d</button>
                 </form>
@@ -312,7 +311,7 @@ sort($patterns);
                 <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '30d'" disabled>30d</button>
 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '24h'"
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="submit"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}"
@@ -325,44 +324,44 @@ sort($patterns);
                 <h2>Monitors</h2>
 
                 <div
-                    data-service="functions.getUsage"
+                    data-service="functions.getFunctionUsage"
                     data-event="load"
                     data-name="usage"
                     data-param-function-id="{{router.params.id}}">
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart background-image-no border-no margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Executions=functionsExecutions" data-height="140" data-show-y-axis="true" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Executions=executionsTotal" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li>Executions <span data-ls-bind="({{usage.functionsExecutions|statsGetLast|statsTotal}})"></span></li>
+                        <li>Executions <span data-ls-bind="({{usage.executionsTotal|statsGetLast|statsTotal}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart background-image-no border-no margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="CPU Time (milliseconds)=functionsCompute" data-colors="orange" data-height="140" data-show-y-axis="true" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="CPU Time (milliseconds)=executionsTime" data-colors="orange" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="orange">CPU Time <span data-ls-bind="({{usage.functionsCompute|statsGetLast|seconds2hum}})"></span></li>
+                        <li class="orange">CPU Time <span data-ls-bind="({{usage.executionsTime|statsGetLast|seconds2hum}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart background-image-no border-no margin-bottom-no">
-                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Failures=functionsFailures" data-colors="red" data-height="140" data-show-y-axis="true" />
+                                <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Failures=executionsFailure" data-colors="red" data-height="140" data-show-y-axis="true" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="red">Errors <span data-ls-bind="({{usage.functionsFailures|statsGetLast|statsTotal}})"></span></li>
+                        <li class="red">Errors <span data-ls-bind="({{usage.executionsFailure|statsGetLast|statsTotal}})"></span></li>
                     </ul>
                 </div>
             </li>
@@ -379,9 +378,9 @@ sort($patterns);
                     data-event="load,functions.createExecution"
                     data-name="project-function-executions"
                     data-param-function-id="{{router.params.id}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset=""
-                    data-param-order-type="DESC"
+                    data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                    data-param-queries-cast-to="array"
+                    data-param-queries-cast-from="csv"
                     data-success="trigger"
                     data-success-param-trigger-events="functions.listExecutions">
 
@@ -392,10 +391,10 @@ sort($patterns);
                                     <tr>
                                         <th width="30"></th>
                                         <th width="160">Created</th>
-                                        <th width="150">Status</th>
-                                        <th width="120">Trigger</th>
-                                        <th width="80">Runtime</th>
-                                        <th></th>
+                                        <th width="100">Status</th>
+                                        <th width="80">Trigger</th>
+                                        <th width="60">Runtime</th>
+                                        <th width=""></th>
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-function-executions.executions" data-ls-as="execution">
@@ -416,29 +415,44 @@ sort($patterns);
                                         <td data-title="Trigger: ">
                                             <span data-ls-bind="{{execution.trigger}}"></span>
                                         </td>
-                                        <td data-title="Runtime: ">
+                                        <td data-title="Time: ">
                                             <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>
                                             <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'processing'">-</span>
                                         </td>
                                         <td data-title="">
-                                            <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
+                                            <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="" style="display: flex;">
+                                                <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Stderr</button>
+                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button>
+                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-response-{{execution.$id}}">Response</button>
 
-                                                <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
-                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
+                                                <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-response-{{execution.$id}}">Response</button>
+                                                <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button>
+                                                <button class="phones-only-inline tablets-only-inline link text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Stderr</button>
 
-                                                <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
-                                                <button class="phones-only-inline tablets-only-inline link text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
-
-                                                <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stdout-{{execution.$id}}">
+                                                <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-response-{{execution.$id}}">
                                                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                                    <h1>STDOUT</h1>
+                                                    <h1>RESPONSE</h1>
 
                                                     <div class="margin-bottom ide" data-ls-if="({{execution.response.length}})">
                                                         <pre data-ls-bind="{{execution.response}}"></pre>
                                                     </div>
 
                                                     <div class="margin-bottom" data-ls-if="(!{{execution.response.length}})">
+                                                        <p>No Response was logged.</p>
+                                                    </div>
+                                                </div>
+
+                                                <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stdout-{{execution.$id}}">
+                                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                    <h1>STDOUT</h1>
+
+                                                    <div class="margin-bottom ide" data-ls-if="({{execution.stdout.length}})">
+                                                        <pre data-ls-bind="{{execution.stdout}}"></pre>
+                                                    </div>
+
+                                                    <div class="margin-bottom" data-ls-if="(!{{execution.stdout.length}})">
                                                         <p>No output was logged.</p>
                                                     </div>
                                                 </div>
@@ -470,13 +484,12 @@ sort($patterns);
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
-                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                                data-param-order-type="DESC"
                                 data-scope="sdk"
                                 data-name="project-function-executions"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                <input type="hidden" name="offset">
+                                <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                             </form>
 
                             <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-executions.total|pageTotal}}"></span>
@@ -486,13 +499,12 @@ sort($patterns);
                                 data-event="submit"
                                 data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
-                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                                data-param-order-type="DESC"
                                 data-scope="sdk"
                                 data-name="project-function-executions"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                <input type="hidden" name="offset">
+                                <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-function-executions.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                             </form>
                         </div>
                     </div>
@@ -504,6 +516,158 @@ sort($patterns);
                             <p class="margin-bottom-no">Execute your function to view execution logs.</p>
                         </div>
                     </div>
+                </div>
+            </li>
+            <li data-state="/console/functions/function/variables?id={{router.params.id}}&project={{router.params.project}}">
+                <h2
+                data-service="functions.listVariables"
+                data-event="load,project.update,functions.createVariable,functions.updateVariable,functions.deleteVariable"
+                data-name="function-variables"
+                data-param-queries="limit(100)"
+                data-param-queries-cast-to="array" data-param-queries-cast-from="csv"
+                data-param-function-id="{{router.params.id}}"
+                data-scope="sdk">Variables</h2>
+
+
+                <div class="box margin-bottom" data-ls-if="0 < {{function-variables.variables.length}} && undefined !== {{function-variables.variables}}">
+                    <ul data-ls-loop="function-variables.variables" data-ls-as="variable" class="list">
+                    <li class="clear">
+                        <div class="pull-end desktops-only">
+                            <button data-ls-ui-trigger="variable-delete-{{variable.$id}}" class="reverse danger margin-end-small">Delete</button>
+                            <button data-ls-ui-trigger="variable-update-{{variable.$id}}">Update</button>
+                        </div>
+
+
+                        <div data-ui-modal data-button-hide="on" data-open-event="variable-update-{{variable.$id}}">
+                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                            <h1>Update Variable</h1>
+
+                            <form
+                                data-analytics
+                                data-analytics-activity
+                                data-analytics-event="submit"
+                                data-analytics-category="sdk"
+                                data-analytics-label="Update Function Variable"
+                                data-service="functions.updateVariable"
+                                data-scope="sdk"
+                                data-event="submit"
+                                data-success="alert,trigger"
+                                data-success-param-alert-text="Updated variable successfully"
+                                data-success-param-trigger-events="functions.updateVariable"
+                                data-failure="alert,trigger"
+                                data-failure-param-trigger-events="functions.updateVariable"
+                                data-failure-param-alert-text="Failed to update variable"
+                                data-failure-param-alert-classname="error">
+
+                                <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
+                                <input type="hidden" name="variableId" data-ls-bind="{{variable.$id}}" />
+
+                                <label for="name">Name <span class="tooltip large" data-tooltip="The name of the environment variable you want to set"><i class="icon-question"></i></span></label>
+                                <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="APP_ENV" maxlength="128" data-ls-attrs="id=key-{{variable.$id}}" data-ls-bind="{{variable.key}}" />
+
+                                <label for="key">Value <span class="tooltip large" data-tooltip="The value of your environment variable"><i class="icon-question"></i></span></label>
+                                <input type="text" class="full-width" name="value" required autocomplete="off" placeholder="Production"  data-ls-attrs="id=value-{{variable.$id}}}" data-ls-bind="{{variable.value}}" />
+
+                                <hr />
+
+                                <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                            </form>
+                        </div>
+
+                        <form class="pull-end margin-end"
+                            data-analytics
+                            data-analytics-activity
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Delete Function Variable"
+                            data-service="functions.deleteVariable"
+                            data-scope="sdk"
+                            data-event="variable-delete-{{variable.$id}}"
+                            data-confirm="Are you sure you want to delete this variable?"
+                            data-success="alert,trigger"
+                            data-success-param-alert-text="Deleted variable successfully"
+                            data-success-param-trigger-events="functions.deleteVariable"
+                            data-failure="alert"
+                            data-failure-param-alert-text="Failed to delete variable"
+                            data-failure-param-alert-classname="error">
+                            <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
+                            <input type="hidden" name="variableId" data-ls-bind="{{variable.$id}}" />
+                        </form>
+
+                        <div>
+                            <span class="text-one-liner" data-ls-bind="{{variable.key}}"></span>
+                        </div>
+
+                        <div data-ui-modal class="modal box close" data-button-text="Show Value" data-button-class="link pull-start margin-end-small margin-top-tiny">
+                        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                        <h1>Variable Value</h1>
+
+                        <form>
+                            <div class="input-copy">
+                                <textarea disabled data-forms-copy data-ls-bind="{{variable.value}}"></textarea>
+                            </div>
+
+                            <hr />
+
+                            <div>
+                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                        <div class="phones-only-inline tablets-only-inline margin-top-small">
+                            <button class="link" data-ls-ui-trigger="variable-update-{{variable.$id}}">Update</button>
+                            <button class="link danger" data-ls-ui-trigger="variable-delete-{{variable.$id}}">Delete</button>
+                        </div>
+                    </li>
+                    </ul>
+                </div>
+
+                <div data-ls-if="(!{{function-variables.variables.length}})" class="box dashboard margin-bottom">
+                    <div class="margin-bottom-small margin-top-small margin-end margin-start">
+                        <h3 class="margin-bottom-small text-bold">There are currently no variables</h3>
+                                            
+                        <p class="margin-bottom-no">Add your first variable to store information securely.</p>
+                    </div>
+                </div>
+
+                <div data-ui-modal class="modal box close" data-button-alias=".variable-new">
+                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                    <h1>Create a new variable</h1>
+
+                    <form
+                        data-analytics
+                        data-analytics-activity
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Create New Function Variable"
+                        data-service="functions.createVariable"
+                        data-event="submit"
+                        data-success="alert,trigger,reset"
+                        data-success-param-alert-text="Registered new variable successfully"
+                        data-success-param-trigger-events="functions.createVariable"
+                        data-failure="alert"
+                        data-failure-param-alert-text="Failed to register variable"
+                        data-failure-param-alert-classname="error">
+
+                        <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
+
+                        <label for="name">Name <span class="tooltip large" data-tooltip="The name of the environment variable you want to set"><i class="icon-question"></i></span></label>
+                        <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="APP_ENV" maxlength="128" />
+
+                        <label for="key">Value <span class="tooltip large" data-tooltip="The value of your environment variable"><i class="icon-question"></i></span></label>
+                        <input type="text" class="full-width" name="value" required autocomplete="off" placeholder="Production" />
+
+                        <hr />
+
+                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    </form>
+                </div>
+
+                <div class="pull-start link variable-new" data-ls-ui-open="" data-button-aria="Add Variable" data-button-text="Add Variable" data-button-class="button" data-blur="1">
                 </div>
             </li>
             <li data-state="/console/functions/function/settings?id={{router.params.id}}&project={{router.params.project}}" x-data="events">
@@ -537,7 +701,7 @@ sort($patterns);
 
                                     <label for="execute">Execute Access <span class="tooltip small" data-tooltip="Choose who can execute this function using the client API."><i class="icon-info-circled"></i></span> <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
                                     <input type="hidden" id="execute" name="execute" data-forms-tags data-cast-to="json" data-ls-bind="{{project-function.execute}}" placeholder="User ID, Team ID or Role" />
-                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'any' for wildcard access</div>
 
                                     <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
                                     <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="<?php echo $this->escape($timeout); ?>" data-cast-to="integer" />
@@ -619,8 +783,8 @@ sort($patterns);
                                     View as JSON
                                 </button>
                             </li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.$updatedAt|dateText}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.$createdAt|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.$updatedAt|date}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.$createdAt|date}}"></span></li>
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"

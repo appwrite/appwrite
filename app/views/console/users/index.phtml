@@ -11,7 +11,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
         <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Home</a>
         <br />
 
-        <span>Users</span>
+        <span>Authentication</span>
     </h1>
 </div>
 
@@ -25,9 +25,9 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                 data-service="users.list"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                data-param-offset=""
-                data-param-order-type="DESC"
+                data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                data-param-queries-cast-to="array"
+                data-param-queries-cast-from="csv"
                 data-scope="sdk"
                 data-name="project-users"
                 data-success="state"
@@ -46,9 +46,9 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                 data-service="users.list"
                 data-event="load,users.create,users.update,users.delete"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                data-param-offset="{{router.params.offset}}"
-                data-param-order-type="DESC"
+                data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                data-param-queries-cast-to="array"
+                data-param-queries-cast-from="csv"
                 data-scope="sdk"
                 data-name="project-users">
 
@@ -100,7 +100,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                             <span class="tag red">Blocked</span>
                                         </span>
                                     </td>
-                                    <td data-title="Created: "><small data-ls-bind="{{user.registration|dateText}}"></small></td>
+                                    <td data-title="Created: "><small data-ls-bind="{{user.registration|date}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -112,13 +112,12 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         data-service="users.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
-                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-users"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-users.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                        <input type="hidden" name="offset">
+                        <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-users.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                     </form>
 
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-users.total|pageTotal}}"></span>
@@ -127,13 +126,12 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         data-service="users.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
-                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-users"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-users.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                        <input type="hidden" name="offset">
+                        <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-users.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
 
@@ -193,9 +191,9 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                 data-service="teams.list"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                data-param-offset=""
-                data-param-order-type="DESC"
+                data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                data-param-queries-cast-to="array"
+                data-param-queries-cast-from="csv"
                 data-scope="sdk"
                 data-name="project-teams"
                 data-success="state"
@@ -214,9 +212,9 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                 data-service="teams.list"
                 data-event="load,teams.create,teams.update,teams.delete"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                data-param-offset="{{router.params.offset}}"
-                data-param-order-type="DESC"
+                data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                data-param-queries-cast-to="array"
+                data-param-queries-cast-from="csv"
                 data-scope="sdk"
                 data-name="project-teams">
 
@@ -248,7 +246,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                         <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.name}}" data-ls-attrs="title={{team.name}}"></a>
                                     </td>
                                     <td data-title="Members: "><span data-ls-bind="{{team.total}} members"></span></td>
-                                    <td data-title="Date Created: "><small data-ls-bind="{{team.$createdAt|dateText}}"></small></td>
+                                    <td data-title="Date Created: "><small data-ls-bind="{{team.$createdAt|date}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -260,13 +258,12 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         data-service="teams.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
-                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-teams"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-teams.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                        <input type="hidden" name="offset">
+                        <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-teams.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                     </form>
 
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-teams.total|pageTotal}}"></span>
@@ -275,13 +272,12 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                         data-service="teams.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
-                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-teams"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-teams.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                        <input type="hidden" name="offset">
+                        <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-teams.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
 
@@ -329,8 +325,8 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
         </li>
 
         <li data-state="/console/users/providers?project={{router.params.project}}">
-            <p data-ls-if="{{console-project.authLimit}} == 0" class="text-fade text-size-small margin-bottom pull-end">Unlimited Users <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Set Limit</a></p>
-            <p data-ls-if="{{console-project.authLimit}} != 0" class="text-fade text-size-small margin-bottom pull-end"><span data-ls-bind="{{console-project.authLimit|statsTotal}}"></span> Users allowed <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Change Limit</a></p>
+            <p data-ls-if="{{console-project.authLimit}} == 0" class="text-fade text-size-small margin-bottom pull-end">Unlimited Users <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Set Limit</span></p>
+            <p data-ls-if="{{console-project.authLimit}} != 0" class="text-fade text-size-small margin-bottom pull-end"><span data-ls-bind="{{console-project.authLimit|statsTotal}}"></span> Users allowed <span class="link" data-ls-ui-trigger="project-update-auth-users-limit">Change Limit</span></p>
 
             <h2>Settings</h2>
 

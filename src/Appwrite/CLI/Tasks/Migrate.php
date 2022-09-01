@@ -10,6 +10,7 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Text;
 use Swoole\Event;
@@ -86,7 +87,7 @@ class Migrate extends Action
             }
 
             $sum = \count($projects);
-            $projects = $consoleDB->find('projects', limit: $limit, offset: $offset);
+            $projects = $consoleDB->find('projects', [Query::limit($limit), Query::offset($offset)]);
 
             $offset = $offset + $limit;
             $count = $count + $sum;

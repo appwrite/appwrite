@@ -10,6 +10,7 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -69,7 +70,7 @@ class Maintenance extends Action
         {
             (new Delete())
                 ->setType(DELETE_TYPE_EXECUTIONS)
-                ->setTimestamp(time() - $interval)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
@@ -77,7 +78,7 @@ class Maintenance extends Action
         {
             (new Delete())
                 ->setType(DELETE_TYPE_ABUSE)
-                ->setTimestamp(time() - $interval)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
@@ -85,7 +86,7 @@ class Maintenance extends Action
         {
             (new Delete())
                 ->setType(DELETE_TYPE_AUDIT)
-                ->setTimestamp(time() - $interval)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
@@ -93,8 +94,8 @@ class Maintenance extends Action
         {
             (new Delete())
                 ->setType(DELETE_TYPE_USAGE)
-                ->setTimestamp1d(time() - $interval1d)
-                ->setTimestamp30m(time() - $interval30m)
+                ->setDateTime1d(DateTime::addSeconds(new \DateTime(), -1 * $interval1d))
+                ->setDateTime30m(DateTime::addSeconds(new \DateTime(), -1 * $interval30m))
                 ->trigger();
         }
 
@@ -102,7 +103,7 @@ class Maintenance extends Action
         {
             (new Delete())
                 ->setType(DELETE_TYPE_REALTIME)
-                ->setTimestamp(time() - 60)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -60))
                 ->trigger();
         }
 
@@ -110,16 +111,17 @@ class Maintenance extends Action
         {
             (new Delete())
                 ->setType(DELETE_TYPE_SESSIONS)
-                ->setTimestamp(time() - Auth::TOKEN_EXPIRATION_LOGIN_LONG)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * Auth::TOKEN_EXPIRATION_LOGIN_LONG))
                 ->trigger();
         }
 
         function renewCertificates($dbForConsole)
         {
-            $time = date('d-m-Y H:i:s', time());
+            $time = DateTime::now();
+
             $certificates = $dbForConsole->find('certificates', [
-                new Query('attempts', Query::TYPE_LESSEREQUAL, [5]), // Maximum 5 attempts
-                new Query('renewDate', Query::TYPE_LESSEREQUAL, [\time()]) // includes 60 days cooldown (we have 30 days to renew)
+               Query::lessThanEqual('attempts', 5), // Maximum 5 attempts
+               Query::lessThanEqual('renewDate', $time) // includes 60 days cooldown (we have 30 days to renew)
             ], 200); // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
 
 
@@ -139,6 +141,15 @@ class Maintenance extends Action
             }
         }
 
+        function notifyDeleteCache($interval)
+        {
+
+            (new Delete())
+                ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
+                ->trigger();
+        }
+
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
@@ -146,11 +157,13 @@ class Maintenance extends Action
         $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
+        $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
             $database = $this->getConsoleDB();
 
-            $time = date('d-m-Y H:i:s', time());
+            $time = DateTime::now();
+
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
             notifyDeleteExecutionLogs($executionLogsRetention);
             notifyDeleteAbuseLogs($abuseLogsRetention);
@@ -159,6 +172,7 @@ class Maintenance extends Action
             notifyDeleteConnections();
             notifyDeleteExpiredSessions();
             renewCertificates($database);
+            notifyDeleteCache($cacheRetention);
         }, $interval);
     }
 }

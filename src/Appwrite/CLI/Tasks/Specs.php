@@ -14,7 +14,6 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Request;
 use Utopia\Validator\WhiteList;
-use Exception;
 
 class Specs extends Action
 {
@@ -27,7 +26,7 @@ class Specs extends Action
     {
         $this
             ->desc('Generate Appwrite API specifications')
-            ->param('version', 'latest', new Text(8), 'Spec version', true)
+            ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
             ->callback(fn ($version, $mode) => $this->action($version, $mode));
     }

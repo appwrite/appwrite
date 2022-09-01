@@ -47,10 +47,10 @@ class Log extends Model
                 'example' => '127.0.0.1',
             ])
             ->addRule('time', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Log creation time in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Log creation date in Datetime.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('osCode', [
                 'type' => self::TYPE_STRING,
