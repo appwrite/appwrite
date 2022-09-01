@@ -67,7 +67,7 @@ class TeamsConsoleClientTest extends Scope
     /**
      * @depends testCreateTeam
      */
-    public function testCreateConsoleAccount($data): array
+    public function testTeamMembershipPerms($data): array
     {
         $teamUid = $data['teamUid'] ?? '';
         $teamName = $data['teamName'] ?? '';
@@ -81,70 +81,34 @@ class TeamsConsoleClientTest extends Scope
             'x-appwrite-project' => 'console'], [
             'userId' => 'unique()',
             'email' => $email,
-            'password' => 'password',
+            'password' => $password,
             'name' => $name,
-            ], false);
+        ], false);
 
         $this->assertEquals(201, $user['headers']['status-code']);
-
-        return [
-            'teamUid' => $teamUid,
-            'teamName' => $teamName,
-            'email' => $email,
-            'name' => $name,
-            'password' => $password
-        ];
-    }
-
-    // Create membership
-    /**
-     * @depends testCreateConsoleAccount
-     */
-    public function testCreateTeamMembershipPerms(array $data): array
-    {
-        $teamUid = $data['teamUid'] ?? '';
-        $teamName = $data['teamName'] ?? '';
 
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $data['teamUid'] . '/memberships', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'email' => $data['email'],
-            'name' => $data['name'],
+            'email' => $email,
+            'name' => $name,
             'roles' => ['admin', 'editor'],
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        return $data;
-    }
 
-    /**
-     * @depends testCreateTeamMembership
-     */
-    public function testInvalidPermissionsPerms(array $data): array
-    {
-        /**
-         * Test for FAILURE
-         */
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(401, $response['headers']['status-code']);
-        return $data;
-    }
 
-    // Delete membership and cleanup after permission test
-    /**
-     * @depends testInvalidPermissionsPermFix
-     */
-    public function testDeleteTeamMembershipPerms(array $data): array
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $data['teamUid'] . '/memberships', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -153,15 +117,13 @@ class TeamsConsoleClientTest extends Scope
 
         $ownerMembershipUid = $response['body']['memberships'][1]['$id'];
 
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $data['teamUid'] . '/memberships/' . $ownerMembershipUid, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $ownerMembershipUid, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(204, $response['headers']['status-code']);
+
         return $data;
     }
 }
