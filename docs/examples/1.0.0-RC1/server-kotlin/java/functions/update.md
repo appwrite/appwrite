@@ -11,7 +11,7 @@ public void main() {
     functions.update(
         functionId = "[FUNCTION_ID]",
         name = "[NAME]",
-        execute = ["any"],
+        execute = listOf("any"),
         new Continuation<Response>() {
             @NotNull
             @Override

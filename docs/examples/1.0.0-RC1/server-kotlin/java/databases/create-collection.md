@@ -12,7 +12,7 @@ public void main() {
         databaseId = "[DATABASE_ID]",
         collectionId = "[COLLECTION_ID]",
         name = "[NAME]",
-        permissions = ["read("any")"],
+        permissions = listOf("read("any")"),
         documentSecurity = false
         new Continuation<Response>() {
             @NotNull

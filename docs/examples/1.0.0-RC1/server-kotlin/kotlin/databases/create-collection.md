@@ -12,7 +12,7 @@ suspend fun main() {
         databaseId = "[DATABASE_ID]",
         collectionId = "[COLLECTION_ID]",
         name = "[NAME]",
-        permissions = ["read("any")"],
+        permissions = listOf("read("any")"),
         documentSecurity = false
     )
     val json = response.body?.string()

@@ -11,7 +11,7 @@ public void main() {
     functions.create(
         functionId = "[FUNCTION_ID]",
         name = "[NAME]",
-        execute = ["any"],
+        execute = listOf("any"),
         runtime = "node-14.5",
         new Continuation<Response>() {
             @NotNull
