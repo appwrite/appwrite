@@ -1,4 +1,5 @@
 from appwrite.client import Client
+from appwrite.input_file import InputFile
 from appwrite.services.storage import Storage
 
 client = Client()
