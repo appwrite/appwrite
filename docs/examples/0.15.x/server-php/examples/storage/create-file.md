@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Client;
+use Appwrite\InputFile;
 use Appwrite\Services\Storage;
 
 $client = new Client();
@@ -13,4 +14,4 @@ $client
 
 $storage = new Storage($client);
 
-$result = $storage->createFile('[BUCKET_ID]', '[FILE_ID]', 'file.png');
+$result = $storage->createFile('[BUCKET_ID]', '[FILE_ID]', InputFile::withPath('file.png'));
