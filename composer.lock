@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7c41d4bcb13c34e72039e3de7e84f732",
+    "content-hash": "a50b4ea6db12172f45d8c5062af58720",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2060,16 +2060,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.24.0",
+            "version": "dev-feat-query-to-string",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "7da841d65d87e9f2c242589e58c38880def44dd8"
+                "reference": "8d44880a4e744dd4b19eb7cafd3668b4d74f1dbd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/7da841d65d87e9f2c242589e58c38880def44dd8",
-                "reference": "7da841d65d87e9f2c242589e58c38880def44dd8",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/8d44880a4e744dd4b19eb7cafd3668b4d74f1dbd",
+                "reference": "8d44880a4e744dd4b19eb7cafd3668b4d74f1dbd",
                 "shasum": ""
             },
             "require": {
@@ -2118,9 +2118,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.24.0"
+                "source": "https://github.com/utopia-php/database/tree/feat-query-to-string"
             },
-            "time": "2022-08-27T09:16:05+00:00"
+            "time": "2022-09-01T10:13:27+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2844,12 +2844,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "532d4d15ec8f11539972f2848c2e230c49b24f65"
+                "reference": "c1ff0348f51897be9af7f8a62fed49949bee69b0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/532d4d15ec8f11539972f2848c2e230c49b24f65",
-                "reference": "532d4d15ec8f11539972f2848c2e230c49b24f65",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/c1ff0348f51897be9af7f8a62fed49949bee69b0",
+                "reference": "c1ff0348f51897be9af7f8a62fed49949bee69b0",
                 "shasum": ""
             },
             "require": {
@@ -2886,7 +2886,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-new-headers"
             },
-            "time": "2022-08-20T07:42:55+00:00"
+            "time": "2022-09-01T10:44:58+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5358,9 +5358,17 @@
             "time": "2022-08-12T06:47:24+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-query-to-string",
+            "alias": "0.24.0",
+            "alias_normalized": "0.24.0.0"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/database": 20,
         "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,
@@ -5386,5 +5394,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
