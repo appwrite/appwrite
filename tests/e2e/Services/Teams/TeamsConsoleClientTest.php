@@ -83,7 +83,7 @@ class TeamsConsoleClientTest extends Scope
             'email' => $email,
             'password' => $password,
             'name' => $name,
-        ], false);
+            ], false);
 
         $this->assertEquals(201, $user['headers']['status-code']);
 
