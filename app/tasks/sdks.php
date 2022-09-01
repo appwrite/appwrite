@@ -197,7 +197,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setTwitter(APP_SOCIAL_TWITTER_HANDLE)
                     ->setDiscord(APP_SOCIAL_DISCORD_CHANNEL, APP_SOCIAL_DISCORD)
                     ->setDefaultHeaders([
-                        'X-Appwrite-Response-Format' => '0.15.0',
+                        'X-Appwrite-Response-Format' => '1.0.0-RC1',
                     ]);
 
                 try {
