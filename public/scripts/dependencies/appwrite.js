@@ -96,8 +96,8 @@
                 'x-sdk-name': 'Console',
                 'x-sdk-platform': 'console',
                 'x-sdk-language': 'web',
-                'x-sdk-version': '6.0.0',
-                'X-Appwrite-Response-Format': '0.15.0',
+                'x-sdk-version': '6.1.0-RC1',
+                'X-Appwrite-Response-Format': '1.0.0-RC1',
             };
             this.realtime = {
                 socket: undefined,
@@ -566,7 +566,7 @@
          * Get currently logged in user list of latest security activity logs. Each
          * log returns user IP address, location and date and time of log.
          *
-         * @param {string} queries
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -1648,7 +1648,7 @@
          * Get a list of all databases from the current Appwrite project. You can use
          * the search parameter to filter your results.
          *
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -1805,7 +1805,7 @@
          * can use the search parameter to filter your results.
          *
          * @param {string} databaseId
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -2724,7 +2724,7 @@
          * @param {string} databaseId
          * @param {string} collectionId
          * @param {string} documentId
-         * @param {string} queries
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -2890,7 +2890,7 @@
          *
          * @param {string} databaseId
          * @param {string} collectionId
-         * @param {string} queries
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -2948,7 +2948,7 @@
          * Get the database activity logs list by its unique ID.
          *
          * @param {string} databaseId
-         * @param {string} queries
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -3005,7 +3005,7 @@
          * Get a list of all the project's functions. You can use the query params to
          * filter your results.
          *
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -3224,7 +3224,7 @@
          * params to filter your results.
          *
          * @param {string} functionId
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -3455,7 +3455,7 @@
          * different API modes](/docs/admin).
          *
          * @param {string} functionId
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -3569,7 +3569,7 @@
          * Get a list of all variables of a specific function.
          *
          * @param {string} functionId
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -3675,6 +3675,9 @@
                 }
                 if (typeof variableId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "variableId"');
+                }
+                if (typeof key === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "key"');
                 }
                 let path = '/functions/{functionId}/variables/{variableId}'.replace('{functionId}', functionId).replace('{variableId}', variableId);
                 let payload = {};
@@ -4066,7 +4069,7 @@
          * List Projects
          *
          *
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -5095,7 +5098,7 @@
          * Get a list of all the storage buckets. You can use the query params to
          * filter your results.
          *
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -5300,7 +5303,7 @@
          * project's files. [Learn more about different API modes](/docs/admin).
          *
          * @param {string} bucketId
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -5702,7 +5705,7 @@
          * In admin mode, this endpoint returns a list of all the teams in the current
          * project. [Learn more about different API modes](/docs/admin).
          *
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -5842,7 +5845,7 @@
          * Get the team activity logs list by its unique ID.
          *
          * @param {string} teamId
-         * @param {string} queries
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -5869,7 +5872,7 @@
          * members have read access to this endpoint.
          *
          * @param {string} teamId
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -6102,7 +6105,7 @@
          * Get a list of all the project's users. You can use the query params to
          * filter your results.
          *
-         * @param {string} queries
+         * @param {string[]} queries
          * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -6654,7 +6657,7 @@
          * Get the user activity logs list by its unique ID.
          *
          * @param {string} userId
-         * @param {string} queries
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */

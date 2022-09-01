@@ -170,7 +170,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
-                'description' => 'Deprecated since 0.16.0, use `_APP_USAGE_TIMESERIES_INTERVAL` and `_APP_USAGE_DATABASE_INTERVAL` instead.',
+                'description' => 'Deprecated since 1.0.0-RC1, use `_APP_USAGE_TIMESERIES_INTERVAL` and `_APP_USAGE_DATABASE_INTERVAL` instead.',
                 'introduction' => '0.10.0',
                 'default' => '30',
                 'required' => false,
@@ -180,7 +180,7 @@ return [
             [
                 'name' => '_APP_USAGE_TIMESERIES_INTERVAL',
                 'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Appwrite Database from Timeseries Database. The default value is 30 seconds.',
-                'introduction' => '0.16.0',
+                'introduction' => '1.0.0-RC1',
                 'default' => '30',
                 'required' => false,
                 'question' => '',
@@ -189,7 +189,7 @@ return [
             [
                 'name' => '_APP_USAGE_DATABASE_INTERVAL',
                 'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats from data in Appwrite Database. The default value is 15 minutes.',
-                'introduction' => '0.16.0',
+                'introduction' => '1.0.0-RC1',
                 'default' => '900',
                 'required' => false,
                 'question' => '',
@@ -825,7 +825,7 @@ return [
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_CACHE',
                 'description' => 'The maximum duration (in seconds) upto which to retain cached files. The default value is 2592000 seconds (30 days).',
-                'introduction' => '0.16.0',
+                'introduction' => '1.0.0-RC1',
                 'default' => '2592000',
                 'required' => false,
                 'question' => '',
