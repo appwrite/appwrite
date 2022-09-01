@@ -57,7 +57,7 @@ $cli
 
                 if (in_array($proc['User'], ['root_', 'root_'])) {
                     continue; // We Do not want to kill internal users
-                } elseif ($proc['command'] === 'sleep' && $proc['Time'] >= 28800) { // wait_timeout variable
+                } elseif ($proc['Command'] === 'sleep' && $proc['Time'] >= 28800) { // wait_timeout variable
                     continue; // let's not kill sleep at this point //PDO::ATTR_PERSISTENT = true
                 } elseif ($proc['Time'] >= 0) {
                     $kill = true;
