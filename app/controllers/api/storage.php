@@ -1595,6 +1595,7 @@ App::get('/v1/storage/:bucketId/usage')
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
+
                     $requestDocs = $dbForProject->find('stats', [
                         Query::equal('period', [$period]),
                         Query::equal('metric', [$metric]),

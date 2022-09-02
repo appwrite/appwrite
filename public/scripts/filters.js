@@ -89,34 +89,28 @@ window.ls.filter
     return value + " " + unit + " " + direction;
   })
   .add("ms2hum", function ($value) {
-    let temp = $value;
-    const years = Math.floor(temp / 31536000),
-      days = Math.floor((temp %= 31536000) / 86400),
-      hours = Math.floor((temp %= 86400) / 3600),
-      minutes = Math.floor((temp %= 3600) / 60),
-      seconds = temp % 60;
+    $value = $value / 1000;
+    var seconds = ($value).toFixed(3);
+    var minutes = ($value / (60)).toFixed(1);
+    var hours = ($value / (60 * 60)).toFixed(1);
+    var days = ($value / (60 * 60 * 24)).toFixed(1);
 
-    if (days || hours || seconds || minutes) {
-      return (
-        (years ? years + "y " : "") +
-        (days ? days + "d " : "") +
-        (hours ? hours + "h " : "") +
-        (minutes ? minutes + "m " : "") +
-        Number.parseFloat(seconds).toFixed(0) +
-        "s"
-      );
+    if(seconds < 1) {
+      return "< 1s";
+    } else if (seconds < 60) {
+      return seconds + "s";
+    } else if (minutes < 60) {
+      return minutes + "m";
+    } else if (hours < 24) {
+      return hours + "h";
+    } else {
+      return days + "d";
     }
-
-    return "< 1s";
   })
   .add("seconds2hum", function ($value) {
-
     var seconds = ($value).toFixed(3);
-
     var minutes = ($value / (60)).toFixed(1);
-
     var hours = ($value / (60 * 60)).toFixed(1);
-
     var days = ($value / (60 * 60 * 24)).toFixed(1);
 
     if (seconds < 60) {
@@ -126,7 +120,7 @@ window.ls.filter
     } else if (hours < 24) {
       return hours + "h";
     } else {
-      return days + "d"
+      return days + "d";
     }
   })
   .add("markdown", function ($value, markdown) {
