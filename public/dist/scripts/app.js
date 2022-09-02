@@ -561,12 +561,7 @@ else if(seconds>=86400){value=Math.floor(seconds/86400);unit="day";}
 else if(seconds>=3600){value=Math.floor(seconds/3600);unit="hour";}
 else if(seconds>=60){value=Math.floor(seconds/60);unit="minute";}
 if(value!=1){unit=unit+"s";}
-return value+" "+unit+" "+direction;}).add("ms2hum",function($value){let temp=$value;const years=Math.floor(temp/31536000),days=Math.floor((temp%=31536000)/86400),hours=Math.floor((temp%=86400)/3600),minutes=Math.floor((temp%=3600)/60),seconds=temp%60;if(days||hours||seconds||minutes){return((years?years+"y ":"")+
-(days?days+"d ":"")+
-(hours?hours+"h ":"")+
-(minutes?minutes+"m ":"")+
-Number.parseFloat(seconds).toFixed(0)+"s");}
-return"< 1s";}).add("seconds2hum",function($value){var seconds=($value).toFixed(3);var minutes=($value/(60)).toFixed(1);var hours=($value/(60*60)).toFixed(1);var days=($value/(60*60*24)).toFixed(1);if(seconds<60){return seconds+"s";}else if(minutes<60){return minutes+"m";}else if(hours<24){return hours+"h";}else{return days+"d"}}).add("markdown",function($value,markdown){return markdown.render($value);}).add("pageCurrent",function($value,env){return Math.ceil(parseInt($value||0)/env.PAGING_LIMIT)+1;}).add("pageTotal",function($value,env){let total=Math.ceil(parseInt($value||0)/env.PAGING_LIMIT);return total?total:1;}).add("humanFileSize",function($value){if(!$value){return 0;}
+return value+" "+unit+" "+direction;}).add("ms2hum",function($value){$value=$value/1000;var seconds=($value).toFixed(3);var minutes=($value/(60)).toFixed(1);var hours=($value/(60*60)).toFixed(1);var days=($value/(60*60*24)).toFixed(1);if(seconds<1){return"< 1s";}else if(seconds<60){return seconds+"s";}else if(minutes<60){return minutes+"m";}else if(hours<24){return hours+"h";}else{return days+"d";}}).add("seconds2hum",function($value){var seconds=($value).toFixed(3);var minutes=($value/(60)).toFixed(1);var hours=($value/(60*60)).toFixed(1);var days=($value/(60*60*24)).toFixed(1);if(seconds<60){return seconds+"s";}else if(minutes<60){return minutes+"m";}else if(hours<24){return hours+"h";}else{return days+"d";}}).add("markdown",function($value,markdown){return markdown.render($value);}).add("pageCurrent",function($value,env){return Math.ceil(parseInt($value||0)/env.PAGING_LIMIT)+1;}).add("pageTotal",function($value,env){let total=Math.ceil(parseInt($value||0)/env.PAGING_LIMIT);return total?total:1;}).add("humanFileSize",function($value){if(!$value){return 0;}
 let thresh=1000;if(Math.abs($value)<thresh){return $value;}
 let units=["kB","MB","GB","TB","PB","EB","ZB","YB"];let u=-1;do{$value/=thresh;++u;}while(Math.abs($value)>=thresh&&u<units.length-1);return $value.toFixed(1);}).add("humanFileUnit",function($value){if(!$value){return'';}
 let thresh=1000;if(Math.abs($value)<thresh){return'B';}
