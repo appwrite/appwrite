@@ -29,7 +29,6 @@ class AttributeDatetime extends Attribute
                 'default' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'array' => false,
-                'require' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
@@ -37,7 +36,7 @@ class AttributeDatetime extends Attribute
                 'default' => null,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
                 'array' => false,
-                'require' => false,
+                'required' => false,
             ])
         ;
     }
