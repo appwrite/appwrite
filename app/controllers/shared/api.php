@@ -144,7 +144,7 @@ App::init()
             ->setMode($mode)
             ->setUserAgent($request->getUserAgent(''))
             ->setIP($request->getIP())
-            ->setEvent($route->getLabel('event', ''))
+            ->setEvent($route->getLabel('audit.event', ''))
             ->setProject($project)
             ->setUser($user);
 
@@ -341,8 +341,6 @@ App::shutdown()
             if (!empty($pattern)) {
                 $audits->setPayload($responsePayload);
             }
-
-            $audits->setEvent($route->getLabel('audits.event', ''));
 
             foreach ($events->getParams() as $key => $value) {
                 $audits->setParam($key, $value);
