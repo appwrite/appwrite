@@ -12,8 +12,6 @@ public void main() {
         databaseId = "[DATABASE_ID]",
         collectionId = "[COLLECTION_ID]",
         name = "[NAME]",
-        permissions = listOf("read("any")"),
-        documentSecurity = false
         new Continuation<Response>() {
             @NotNull
             @Override

@@ -9,7 +9,7 @@ client
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-const promise = databases.createCollection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]', ["read("any")"], false);
+const promise = databases.createCollection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]');
 
 promise.then(function (response) {
     console.log(response); // Success

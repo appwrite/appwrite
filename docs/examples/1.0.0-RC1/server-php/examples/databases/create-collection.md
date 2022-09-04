@@ -13,4 +13,4 @@ $client
 
 $databases = new Databases($client);
 
-$result = $databases->createCollection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]', ["read("any")"], false);
+$result = $databases->createCollection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]');

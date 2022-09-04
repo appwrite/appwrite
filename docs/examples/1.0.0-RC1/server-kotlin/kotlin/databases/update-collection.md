@@ -12,7 +12,6 @@ suspend fun main() {
         databaseId = "[DATABASE_ID]",
         collectionId = "[COLLECTION_ID]",
         name = "[NAME]",
-        documentSecurity = false,
     )
     val json = response.body?.string()
 }

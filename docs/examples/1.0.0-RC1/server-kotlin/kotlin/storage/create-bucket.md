@@ -11,7 +11,6 @@ suspend fun main() {
     val response = storage.createBucket(
         bucketId = "[BUCKET_ID]",
         name = "[NAME]",
-        fileSecurity = false,
     )
     val json = response.body?.string()
 }

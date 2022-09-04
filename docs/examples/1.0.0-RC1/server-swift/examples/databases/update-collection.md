@@ -9,8 +9,7 @@ func main() async throws {
     let collection = try await databases.updateCollection(
         databaseId: "[DATABASE_ID]",
         collectionId: "[COLLECTION_ID]",
-        name: "[NAME]",
-        documentSecurity: xfalse
+        name: "[NAME]"
     )
 
     print(String(describing: collection)
