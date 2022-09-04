@@ -36,6 +36,7 @@ class AttributeURL extends Attribute
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'example' => 'http://example.com',
+                'required' => false,
             ])
         ;
     }

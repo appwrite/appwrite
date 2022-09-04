@@ -36,13 +36,13 @@ class AttributeEnum extends Attribute
                 'description' => 'String format.',
                 'default' => 'enum',
                 'example' => 'enum',
-                'required' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'example' => 'element',
+                'required' => false,
             ])
         ;
     }

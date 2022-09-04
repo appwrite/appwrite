@@ -28,16 +28,13 @@ class AttributeDatetime extends Attribute
                 'description' => 'Datetime format.',
                 'default' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
-                'array' => false,
-                'require' => true,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Only null is optional',
                 'default' => null,
                 'example' => self::TYPE_DATETIME_EXAMPLE,
-                'array' => false,
-                'require' => false,
+                'required' => false,
             ])
         ;
     }
