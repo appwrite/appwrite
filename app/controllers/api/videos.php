@@ -656,8 +656,9 @@ App::get('/v1/videos/:videoId/streams/:streamId')
                     if ($value['type'] === 'audio') {
                         $_audios[] = [
                             'type' => 'group_audio',
-                            'name' => 'audio_' . $value['id'],
+                            'name' => $value['language'],
                             'default' => ($key === 0) ? 'YES' : 'NO',
+                            'language' => $value['language'],
                             'uri' => $baseUrl . '/renditions/' . $rendition->getId() . '/types/' . $value['id'],
                         ];
                     } elseif ($value['type'] === 'video') {

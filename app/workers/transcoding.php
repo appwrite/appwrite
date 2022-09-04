@@ -48,7 +48,7 @@ class TranscodingV1 extends Worker
 
     private string $renditionName;
 
-    private array $audios = [];
+    private array $audioTracks = [];
 
     private Database $database;
 
@@ -75,12 +75,12 @@ class TranscodingV1 extends Worker
 
         $sourceVideo = Authorization::skip(fn() => $this->database->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$this->args['videoId']])]));
         if (empty($sourceVideo)) {
-            throw new Exception('Video not found');
+            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
         }
 
         $profile = Authorization::skip(fn() => $this->database->findOne('videos_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$this->args['profileId']])]));
         if (empty($profile)) {
-            throw new Exception('profile not found');
+            throw new Exception('Video profile not found', 404, Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
         $bucket = Authorization::skip(fn() => $this->database->getDocument('buckets', $sourceVideo['bucketId']));
@@ -126,7 +126,9 @@ class TranscodingV1 extends Worker
         }
 
         foreach ($ffprobe->streams($inPath)->audios()->getIterator() as $stream) {
-            $this->audios[] = $stream->get('tags')['language'];
+            if (!empty($stream->get('tags')['language'])) {
+                $this->audioTracks[] = $stream->get('tags')['language'];
+            }
         }
 
         $audioStreamCount = $ffprobe->streams($inPath)->audios()->count();
@@ -353,15 +355,14 @@ class TranscodingV1 extends Worker
             $query->setAttribute('status', self::STATUS_READY);
             Authorization::skip(fn() => $this->database->updateDocument($collection, $query->getId(), $query));
         } catch (\Throwable $th) {
-            var_dump($th->getCode());
-            var_dump($th->getMessage());
             $query->setAttribute('metadata', json_encode([
             'code' => $th->getCode(),
-            'message' => substr($th->getMessage(), 0, 3600),
+            'message' => substr($th->getMessage(), 0, 255),
             ]));
 
             $query->setAttribute('status', self::STATUS_ERROR);
             Authorization::skip(fn() => $this->database->updateDocument($collection, $query->getId(), $query));
+            throw new Exception($th->getMessage(), 500, Exception::GENERAL_UNKNOWN);
         }
     }
 
@@ -412,7 +413,7 @@ class TranscodingV1 extends Worker
         }
 
         $hls->setFormat($format)
-            ->setAudiolanguages($this->audios)
+            ->setAudioTracks($this->audioTracks)
             ->setHlsTime($segmentSize)
             ->setHlsAllowCache(false)
             ->addRepresentation($representation)
@@ -468,18 +469,32 @@ class TranscodingV1 extends Worker
         $handle = fopen($path, "r");
         if ($handle) {
             while (($line = fgets($handle)) !== false) {
-                $line =  str_replace([",","\r","\n"], "", $line);
+                $line =  str_replace(['"'], '', $line);
+                $attributes = explode(',', $line);
+                $language = null;
+                foreach ($attributes as $attribute) {
+                    if (str_contains($attribute, "LANGUAGE")) {
+                        $parts = explode('=', $attribute);
+                        $language = $parts[1];
+                    }
+                }
                 $end = strpos($line, 'm3u8');
                 if ($end !== false) {
                     $start = strpos($line, $this->args['videoId']);
                     if ($start !== false) {
                         $path = substr($line, $start, ($end - $start) + 4);
                         $parts = explode('_', $path);
-                        $files[] = [
+                        $tmp = [
                             'id' => $parts[1],
                             'type' => str_contains($line, "TYPE=AUDIO") ? 'audio' : 'video',
                             'path' => $path
-                            ];
+                        ];
+
+                        if (!empty($language)) {
+                            $tmp ['language'] = $language;
+                        }
+
+                        $files[] = $tmp;
                     }
                 }
             }

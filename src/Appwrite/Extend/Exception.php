@@ -180,6 +180,7 @@ class Exception extends \Exception
     public const VIDEO_SUBTITLE_SEGMENT_NOT_FOUND   = 'video_subtitle_segment_not_found';
 
 
+
     private $type = '';
 
     public function __construct(string $message, int $code = 0, string $type = Exception::GENERAL_UNKNOWN, \Throwable $previous = null)
