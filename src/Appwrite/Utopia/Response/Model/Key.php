@@ -60,7 +60,7 @@ class Key extends Model
             ])
             ->addRule('accessedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Most recent access date in Unix timestamp.',
+                'description' => 'Most recent access date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE
             ])
