@@ -342,6 +342,8 @@ App::shutdown()
                 $audits->setPayload($responsePayload);
             }
 
+            $audits->setEvent($route->getLabel('audits.event', ''));
+
             foreach ($events->getParams() as $key => $value) {
                 $audits->setParam($key, $value);
             }
