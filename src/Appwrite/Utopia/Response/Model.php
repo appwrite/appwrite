@@ -84,7 +84,7 @@ abstract class Model
     protected function addRule(string $key, array $options): self
     {
         $this->rules[$key] = array_merge([
-            'required' => true,
+            'required' => false,
             'array' => false,
             'description' => '',
             'example' => ''
