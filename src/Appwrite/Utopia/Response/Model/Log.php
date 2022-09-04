@@ -48,7 +48,7 @@ class Log extends Model
             ])
             ->addRule('time', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Log creation date in Datetime.',
+                'description' => 'Log creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
