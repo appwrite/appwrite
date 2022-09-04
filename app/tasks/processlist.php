@@ -10,10 +10,7 @@ use Utopia\CLI\Console;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\WhiteList;
 
@@ -21,7 +18,6 @@ $cli
     ->task('process')
     ->param('name', null, new WhiteList(['MariaDB'], true), 'Adapter List', false)
     ->action(function ($name) use ($register) {
-
         Authorization::disable();
 
         $consoleDB = null;
@@ -50,45 +46,54 @@ $cli
         Console::loop(function () use ($consoleDB) {
             $processes = $consoleDB->getProcessList();
             foreach ($processes as $proc) {
-                $proc['Time'] = (int)$proc['Time'];
-                $proc['Id'] = (int)$proc['Id'];
-
+                $seconds = (int)$proc['Time'];
+                $info = $proc['Info'];
+                $thread = (int)$proc['Id'];
                 $kill = false;
+                $json =  null;
 
-                if (in_array($proc['User'], ['root_', 'root_'])) {
+                // Cases to kill process:
+                if (in_array($info, ['show full processlist', 'show full processlist'])) {
+                    continue; // skip
+                } elseif (in_array($proc['User'], ['root_', 'root_'])) {
                     continue; // We Do not want to kill internal users
-                } elseif ($proc['Command'] === 'sleep' && $proc['Time'] >= 28800) { // wait_timeout variable
-                    continue; // let's not kill sleep at this point //PDO::ATTR_PERSISTENT = true
-                } elseif ($proc['Time'] >= 0) {
+                } elseif ($proc['Command'] === 'sleep' && $seconds >= 28800) { // wait_timeout variable
+                    $kill = true; // let's not kill sleep at this point //PDO::ATTR_PERSISTENT = true
+                } elseif (str_contains(strtolower($info), "select") && $seconds >= 0) {
+                    $kill = true; // kill stock select
+                    var_dump($info);
+                } elseif ($seconds >= 0) {
                     $kill = true;
+                    $kill = false;
                 }
 
                 if ($kill) {
-                    //$proc['Info'] = 'SELECT sleep(100) LIMIT 0, 1000 /* {"user":"xxx"} */'; // mock external comment
+                    //$info = 'SELECT sleep(100) LIMIT 0, 1000 /* {"user":"xxx"} */'; // mock external comment
                     $comment = '';
-                    $tmp = explode('/*', $proc['Info']);
-                    if (count($tmp) > 1) {
-                        $tmp = explode('*/', $tmp[count($tmp) - 1]);
+                    if (!empty($info)) {
+                        $tmp = explode('/*', $info);
                         if (count($tmp) > 1) {
-                            $comment = trim($tmp[0]);
+                            $tmp = explode('*/', $tmp[count($tmp) - 1]);
+                            if (count($tmp) > 1) {
+                                $comment = trim($tmp[0]);
+                            }
+                        }
+
+                        $comments = json_decode($comment, true);
+                        if (!empty($comments)) {
+                            $json['_comment'] = $comments;
                         }
                     }
 
-                    $json =  null;
-                    $comments = json_decode($comment, true);
-                    if (!empty($comments)) {
-                        $json['_comment'] = $comments;
-                    }
-
                     $doc = [
-                        'thread' => $proc['Id'],
-                        'seconds' => $proc['Time'],
+                        'thread' => $thread,
+                        'seconds' => $seconds,
                         'user' => $proc['User'],
                         'host' => $proc['Host'],
                         'db' => $proc['db'],
                         'command' => $proc['Command'],
                         'state' => $proc['State'],
-                        'info' => $proc['Info'],
+                        'info' => $info,
                         'progress' => $proc['Progress'],
                         'json' => $json
                     ];
