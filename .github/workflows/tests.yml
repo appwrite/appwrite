@@ -4,7 +4,7 @@ on: [pull_request]
 jobs:
   tests:
     name: Unit & E2E
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
@@ -23,12 +23,11 @@ jobs:
       # Upstream bug causes buildkit pulls to fail so prefetch base images
       # https://github.com/moby/moby/issues/41864
       run:  |
-        echo "_APP_FUNCTIONS_RUNTIMES=php-8.0" >> .env
         docker pull composer:2.0
         docker pull php:8.0-cli-alpine
         docker compose build --progress=plain
         docker compose up -d
-        sleep 10
+        sleep 30
     - name: Doctor
       run: docker compose exec -T appwrite doctor
 
@@ -37,10 +36,3 @@ jobs:
 
     - name: Run Tests
       run: docker compose exec -T appwrite test --debug
-
-    - name: Teardown
-      if: always()
-      run: |
-        docker ps -aq | xargs docker rm --force || true
-        docker volume prune --force || true
-        docker network prune --force || true
