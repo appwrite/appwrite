@@ -20,13 +20,13 @@ class Func extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function creation date in Datetime',
+                'description' => 'Function creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function update date in Datetime',
+                'description' => 'Function update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -83,13 +83,13 @@ class Func extends Model
             ])
             ->addRule('scheduleNext', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function\'s next scheduled execution time in Datetime.',
+                'description' => 'Function\'s next scheduled execution time in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('schedulePrevious', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function\'s previous scheduled execution time in Datetime.',
+                'description' => 'Function\'s previous scheduled execution time in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])

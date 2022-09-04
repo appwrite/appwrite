@@ -18,13 +18,13 @@ class Membership extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Membership creation date in Datetime',
+                'description' => 'Membership creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Membership update date in Datetime',
+                'description' => 'Membership update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -60,13 +60,13 @@ class Membership extends Model
             ])
             ->addRule('invited', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Date, the user has been invited to join the team in Datetime',
+                'description' => 'Date, the user has been invited to join the team in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('joined', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Date, the user has accepted the invitation to join the team in Datetime',
+                'description' => 'Date, the user has accepted the invitation to join the team in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])

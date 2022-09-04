@@ -18,7 +18,7 @@ class Session extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Session creation date in Datetime',
+                'description' => 'Session creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -30,7 +30,7 @@ class Session extends Model
             ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Session expiration date in Datetime',
+                'description' => 'Session expiration date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -54,7 +54,7 @@ class Session extends Model
             ])
             ->addRule('providerAccessTokenExpiry', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'The date of when the access token expires in Datetime format.',
+                'description' => 'The date of when the access token expires in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
