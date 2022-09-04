@@ -27,14 +27,14 @@ class AttributeURL extends Attribute
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',
-                'default' => 'url',
-                'example' => 'url',
-                'required' => true,
+                'default' => APP_DATABASE_ATTRIBUTE_URL,
+                'example' => APP_DATABASE_ATTRIBUTE_URL,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
+                'required' => false,
                 'example' => 'http://example.com',
             ])
         ;

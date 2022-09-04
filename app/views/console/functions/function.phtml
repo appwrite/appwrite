@@ -349,7 +349,7 @@ sort($patterns);
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="orange">CPU Time <span data-ls-bind="({{usage.executionsTime|statsGetLast|seconds2hum}})"></span></li>
+                        <li class="orange">CPU Time <span data-ls-bind="({{usage.executionsTime|statsGetLast|ms2hum}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
@@ -730,36 +730,6 @@ sort($patterns);
                                 <input type="text" id="function-schedule" class="full-width" name="schedule" autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />
                                 <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Leave blank for no schedule</div>
 
-                                <label class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function at runtime."><i class="icon-info-circled"></i></span></label>
-                                <div data-ls-if="(!{{project-function.vars.length}})">
-                                    <fieldset name="vars" data-cast-to="object">
-                                        <div data-ls-loop="project-function.vars" data-ls-as="var" id="project-vars" style="visibility: visible;">
-                                            <div class="margin-bottom-small">
-                                                <div data-forms-remove class="row thin">
-                                                    <div class="col span-10">
-                                                        <input type="hidden" data-forms-key-value data-ls-attrs="name={{$index}}" data-ls-bind="{{var}}" />
-                                                    </div>
-                                                    <div class="col span-2">
-                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-trash"></i></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div data-forms-clone="" data-target="project-vars" data-label="Add Variable" data-first="0">
-                                            <div class="margin-bottom-small">
-                                                <div data-forms-remove class="row thin">
-                                                    <div class="col span-10">
-                                                        <input type="hidden" data-ls-attrs="data-forms-key-value"/>
-                                                    </div>
-                                                    <div class="col span-2">
-                                                        <button type="button" data-remove class="close pull-end is-margin-top-10"><i class="icon-trash"></i></button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </fieldset>
-                                </div>
                                 <hr class="margin-bottom margin-top-small" />
 
                                 <button>Update</button>

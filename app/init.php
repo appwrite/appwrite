@@ -408,7 +408,8 @@ Database::addFilter(
         return $database
             ->find('variables', [
                 Query::equal('functionInternalId', [$document->getInternalId()]),
-            ], APP_LIMIT_SUBQUERY);
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]);
     }
 );
 

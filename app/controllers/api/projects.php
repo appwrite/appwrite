@@ -194,7 +194,8 @@ App::get('/v1/projects')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = reset(Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE));
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
             $projectId = $cursor->getValue();
