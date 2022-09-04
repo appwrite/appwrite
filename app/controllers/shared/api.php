@@ -342,8 +342,6 @@ App::shutdown()
                 $audits->setPayload($responsePayload);
             }
 
-            var_dump($audits);
-
             foreach ($events->getParams() as $key => $value) {
                 $audits->setParam($key, $value);
             }
