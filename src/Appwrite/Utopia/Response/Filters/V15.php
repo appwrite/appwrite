@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
+use Utopia\Database\Permission;
 
 class V15 extends Filter
 {
@@ -33,6 +34,7 @@ class V15 extends Filter
             case Response::MODEL_TEAM:
             case Response::MODEL_FILE:
             case Response::MODEL_WEBHOOK:
+            case Response::MODEL_DOMAIN:
                 $parsedResponse = $this->handleDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
                 break;
             case Response::MODEL_FUNCTION:
@@ -107,31 +109,27 @@ class V15 extends Filter
         return $permSelector;
     }
 
-    protected function downgradePermissions(array $permissions)
+    protected function downgradePermissions(array $model)
     {
+        if (!isset($model['$permissions'])) {
+            return $model;
+        }
+
+        $permissions = $model['$permissions'];
+
         $result = [
             '$read' => [],
             '$write' => []
         ];
 
-        $splitPermissions = [];
-
-        // split up the permisisons
-        foreach ($permissions as $permission) {
-            $permission_type = explode('(', $permission)[0];
-            $permission_value = explode(')', explode('(', $permission)[1])[0];
-            $splitPermissions[$permission_type][] = $permission_value;
-        }
-
         // downgrade the permissions
         foreach ($permissions as $permission) {
-            //TODO: Replace with Permission class
+            $permission = Permission::parse($permission);
             // permission = "read('any')" = ["$read" => "role:all"]
-            $permission_type = explode('(', $permission)[0];
-            $permission_value = explode(')', explode('(', $permission)[1])[0];
 
             // Old type permissions meant that 'write' is equivalent to 'create', 'update' and 'delete'
-            switch ($permission_type) {
+
+            switch ($permission->getPermission()) {
                 case 'update':
                 case 'delete':
                 case 'write':
@@ -148,6 +146,7 @@ class V15 extends Filter
             }
         }
 
-        return $result;
+        unset($model['$permissions']);
+        return array_merge($model, $result);
     }
 }
