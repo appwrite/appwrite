@@ -21,6 +21,13 @@ return [
             'delete' => [
                 '$description' => 'This event triggers when a session for a user is deleted.'
             ],
+            'magic' => [
+            '$model' => Response::MODEL_TOKEN,
+            '$resource' => false,
+            'create' => [
+                '$description' => 'This event triggers when a magic link token for a session is created.',
+            ],
+            ],
         ],
         'recovery' => [
             '$model' => Response::MODEL_TOKEN,

@@ -687,6 +687,46 @@ class WebhooksCustomClientTest extends Scope
     }
 
     /**
+     * @depends testUpdateAccountPrefs
+     */
+    public function testCreateSessionMagic($data): array
+    {
+        $id = $data['id'] ?? '';
+        $email = $data['email'] ?? '';
+
+        $magic = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $id,
+            'email' => $email
+        ]);
+
+        $magicId = $magic['body']['$id'];
+
+        $this->assertEquals(201, $magic['headers']['status-code']);
+        $this->assertIsArray($magic['body']);
+
+        $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertNotEmpty($webhook['data']['$id']);
+        $this->assertNotEmpty($webhook['data']['userId']);
+        $this->assertNotEmpty($webhook['data']['secret']);
+        $this->assertIsNumeric($webhook['data']['expire']);
+
+        $data['secret'] = $webhook['data']['secret'];
+
+        return $data;
+    }
+    /**
      * @depends testCreateAccountRecovery
      */
     public function testUpdateAccountRecovery($data): array

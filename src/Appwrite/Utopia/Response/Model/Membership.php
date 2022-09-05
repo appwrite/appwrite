@@ -64,6 +64,12 @@ class Membership extends Model
                 'default' => 0,
                 'example' => 1592981250,
             ])
+            ->addRule('secret', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Token secret key. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'default' => '',
+                'example' => '',
+            ])
             ->addRule('joined', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Date, the user has accepted the invitation to join the team in Unix timestamp.',

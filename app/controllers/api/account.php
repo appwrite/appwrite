@@ -595,6 +595,7 @@ App::post('/v1/account/sessions/magic-url')
     ->desc('Create Magic URL session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
+    ->label('event', 'users.[userId].sessions.[tokenId].magic.create')
     ->label('auth.type', 'magic-url')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
@@ -625,6 +626,7 @@ App::post('/v1/account/sessions/magic-url')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
+        $useEmail = App::getEnv('_APP_SMTP_USE_EMAIL', true);
 
         $user = $dbForProject->findOne('users', [new Query('email', Query::TYPE_EQUAL, [$email])]);
 
@@ -691,13 +693,15 @@ App::post('/v1/account/sessions/magic-url')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expire, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
-        $mails
-            ->setType(MAIL_TYPE_MAGIC_SESSION)
-            ->setRecipient($user->getAttribute('email'))
-            ->setUrl($url)
-            ->setLocale($locale->default)
-            ->trigger()
-        ;
+        if ($useEmail) {
+            $mails
+                ->setType(MAIL_TYPE_MAGIC_SESSION)
+                ->setRecipient($user->getAttribute('email'))
+                ->setUrl($url)
+                ->setLocale($locale->default)
+                ->trigger()
+            ;
+        }
 
         $events->setPayload(
             $response->output(
@@ -1947,6 +1951,7 @@ App::post('/v1/account/recovery')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
+        $useEmail = App::getEnv('_APP_SMTP_USE_EMAIL', true);
 
         $email = \strtolower($email);
 
@@ -1988,14 +1993,16 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $mails
-            ->setType(MAIL_TYPE_RECOVERY)
-            ->setRecipient($profile->getAttribute('email', ''))
-            ->setUrl($url)
-            ->setLocale($locale->default)
-            ->setName($profile->getAttribute('name'))
-            ->trigger();
-        ;
+        if ($useEmail) {
+            $mails
+                ->setType(MAIL_TYPE_RECOVERY)
+                ->setRecipient($profile->getAttribute('email', ''))
+                ->setUrl($url)
+                ->setLocale($locale->default)
+                ->setName($profile->getAttribute('name'))
+                ->trigger();
+            ;
+        }
 
         $events
             ->setParam('userId', $profile->getId())
@@ -2121,6 +2128,7 @@ App::post('/v1/account/verification')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
+        $useEmail = App::getEnv('_APP_SMTP_USE_EMAIL', true);
 
         $verificationSecret = Auth::tokenGenerator();
 
@@ -2149,14 +2157,16 @@ App::post('/v1/account/verification')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
-        $mails
-            ->setType(MAIL_TYPE_VERIFICATION)
-            ->setRecipient($user->getAttribute('email'))
-            ->setUrl($url)
-            ->setLocale($locale->default)
-            ->setName($user->getAttribute('name'))
-            ->trigger()
-        ;
+        if ($useEmail) {
+            $mails
+                ->setType(MAIL_TYPE_VERIFICATION)
+                ->setRecipient($user->getAttribute('email'))
+                ->setUrl($url)
+                ->setLocale($locale->default)
+                ->setName($user->getAttribute('name'))
+                ->trigger()
+            ;
+        }
 
         $events
             ->setParam('userId', $user->getId())
