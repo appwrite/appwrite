@@ -26,7 +26,7 @@ class VideoCustomServerTest extends Scope
             'audioBitrate' => 120,
             'width' => 600,
             'height' => 400,
-            'stream' => 'hls',
+            'protocol' => 'hls',
         ]);
 
         $profileId = $response['body']['$id'];
@@ -53,7 +53,7 @@ class VideoCustomServerTest extends Scope
             'audioBitrate' => 120,
             'width' => 300,
             'height' => 400,
-            'stream' => 'dash',
+            'protocol' => 'dash',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -374,7 +374,7 @@ class VideoCustomServerTest extends Scope
             'audioBitrate' => 64,
             'width' => 600,
             'height' => 400,
-            'stream' => 'hls',
+            'protocol' => 'hls',
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
@@ -388,7 +388,7 @@ class VideoCustomServerTest extends Scope
             'audioBitrate' => 64,
             'width' => 300,
             'height' => 200,
-            'stream' => 'dash',
+            'protocol' => 'dash',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -477,10 +477,10 @@ class VideoCustomServerTest extends Scope
     /**
      * @depends testGetRenditions
      */
-    public function testStreamWithSubs($videoId): string
+    public function testProtocolWithSubs($videoId): string
     {
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/streams/hls', [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/protocols/hls', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -527,7 +527,7 @@ class VideoCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1508, strlen($response['body']));
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/streams/dash', [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/protocols/dash', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -624,7 +624,7 @@ class VideoCustomServerTest extends Scope
 
 
     /**
-     * @depends testStreamWithSubs
+     * @depends testProtocolWithSubs
      */
     public function testDeleteVideo($videoId): string
     {
@@ -643,10 +643,10 @@ class VideoCustomServerTest extends Scope
     /**
      * @depends testDeleteVideo
      */
-    public function testStreamWithSubsAgain($videoId): string
+    public function testProtocolWithSubsAgain($videoId): string
     {
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/streams/hls', [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/protocols/hls', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -711,12 +711,12 @@ class VideoCustomServerTest extends Scope
     /**
      * @depends testTranscodeWithoutSubs
      */
-    public function testStreamWithoutSubs($videoId)
+    public function testProtocolWithoutSubs($videoId)
     {
 
         sleep(50);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/streams/hls', [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/protocols/hls', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -745,7 +745,7 @@ class VideoCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThan(0, strlen($response['body']));
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/streams/dash', [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/protocols/dash', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],

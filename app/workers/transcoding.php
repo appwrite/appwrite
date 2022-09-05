@@ -3,6 +3,7 @@
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Resque\Worker;
+use JetBrains\PhpStorm\ArrayShape;
 use Streaming\Format\StreamFormat;
 use Streaming\HLSSubtitle;
 use Streaming\Media;
@@ -34,8 +35,8 @@ class TranscodingV1 extends Worker
     private const STATUS_READY     = 'ready';
     private const STATUS_ERROR     = 'error';
 
-    private const STREAM_HLS = 'hls';
-    private const STREAM_MPEG_DASH = 'dash';
+    private const PROTOCOL_HLS = 'hls';
+    private const PROTOCOL_MPEG_DASH = 'dash';
 
     //private string $basePath = '/tmp/';
     private string $basePath = '/usr/src/code/tests/tmp/';
@@ -221,7 +222,7 @@ class TranscodingV1 extends Worker
                         'name'      => $this->getRenditionName(),
                         'startedAt' => time(),
                         'status'    => self::STATUS_START,
-                        'stream'    => $profile['stream'],
+                        'protocol'    => $profile['protocol'],
                     ]));
             });
 
@@ -247,23 +248,23 @@ class TranscodingV1 extends Worker
                 }
             });
 
-            $general = $this->transcode($profile['stream'], $video, $format, $representation, $subs);
+            $general = $this->transcode($profile['protocol'], $video, $format, $representation, $subs);
             if (!empty($general)) {
                 foreach ($general as $key => $value) {
                     $query->setAttribute($key, (string)$value);
                 }
             }
 
-            if ($profile['stream'] === 'hls') {
-                $refs = $this->getHlsSegmentsUrls($this->outDir . 'master.m3u8');
-                foreach ($refs as $ref) {
-                    $m3u8 = $this->getHlsSegments($this->outDir . $ref['path']);
+            if ($profile['protocol'] === 'hls') {
+                $streams = $this->getHlsSegmentsUrls($this->outDir . 'master.m3u8');
+                foreach ($streams as $stream) {
+                    $m3u8 = $this->getHlsSegments($this->outDir . $stream['path']);
                     if (!empty($m3u8['segments'])) {
                         foreach ($m3u8['segments'] as $segment) {
-                            Authorization::skip(function () use ($segment, $project, $query, $renditionPath, $ref) {
+                            Authorization::skip(function () use ($segment, $project, $query, $renditionPath, $stream) {
                                 return $this->database->createDocument('videos_renditions_segments', new Document([
                                     'renditionId' => $query->getId(),
-                                    'representationId' => $ref['id'] + 0,
+                                    'streamId' => (int)$stream['id'],
                                     'fileName' => $segment['fileName'],
                                     'path' => $renditionPath,
                                     'duration' => $segment['duration'],
@@ -272,7 +273,7 @@ class TranscodingV1 extends Worker
                         }
                     }
 
-                    $query->setAttribute('metadata', json_encode(['hls' => $refs]));
+                    $query->setAttribute('metadata', json_encode(['hls' => $streams]));
                     $query->setAttribute('targetDuration', $m3u8['targetDuration']);
                 }
             } else {
@@ -282,7 +283,7 @@ class TranscodingV1 extends Worker
                         Authorization::skip(function () use ($segment, $project, $query, $renditionPath) {
                             return $this->database->createDocument('videos_renditions_segments', new Document([
                                 'renditionId' => $query->getId(),
-                                'representationId' => $segment['representationId'],
+                                'streamId' => $segment['streamId'],
                                 'fileName' => $segment['fileName'],
                                 'path' => $renditionPath,
                                 'isInit' => $segment['isInit'],
@@ -301,7 +302,7 @@ class TranscodingV1 extends Worker
             Authorization::skip(fn() => $this->database->updateDocument($collection, $query->getId(), $query));
 
             foreach ($subtitles ?? [] as $subtitle) {
-                if ($profile['stream'] === 'hls') {
+                if ($profile['protocol'] === 'hls') {
                     $m3u8 = $this->getHlsSegments($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
                     foreach ($m3u8['segments'] ?? [] as $segment) {
                         Authorization::skip(function () use ($segment, $project, $subtitle, $renditionRootPath) {
@@ -367,14 +368,14 @@ class TranscodingV1 extends Worker
     }
 
     /**
-     * @param string $stream
+     * @param string $protocol
      * @param $video Media
      * @param $format StreamFormat
      * @param $representation Representation
      * @param array $subtitles
      * @return string|array
      */
-    private function transcode(string $stream, Media $video, StreamFormat $format, Representation $representation, array $subtitles): string | array
+    private function transcode(string $protocol, Media $video, StreamFormat $format, Representation $representation, array $subtitles): string | array
     {
 //        $video->filters()
 //            ->framerate(new FFMpeg\Coordinate\FrameRate(24), 2)
@@ -390,9 +391,9 @@ class TranscodingV1 extends Worker
             '-g', '120'
         ];
 
-        $segmentSize = 10;
+        $segmentSize = 8;
 
-        if ($stream === 'dash') {
+        if ($protocol === 'dash') {
                 $dash = $video->dash()
                 ->setFormat($format)
                 ->setSegDuration($segmentSize)
@@ -433,11 +434,11 @@ class TranscodingV1 extends Worker
         $metadata = null;
         $handle = fopen($path, "r");
         if ($handle) {
-            $representationId = -1;
+            $streamId = -1;
             while (($line = fgets($handle)) !== false) {
                 $line =  str_replace([",","\r","\n"], "", $line);
                 if (str_contains($line, "<AdaptationSet")) {
-                    $representationId++;
+                    $streamId++;
                 }
 
                 if (!str_contains($line, "SegmentURL") && !str_contains($line, "Initialization")) {
@@ -445,7 +446,7 @@ class TranscodingV1 extends Worker
                 } else {
                     $segments[] = [
                         'isInit' => str_contains($line, "Initialization") ? 1 : 0,
-                        'representationId' => $representationId,
+                        'streamId' => $streamId,
                         'fileName' => trim(str_replace(["<SegmentURL media=\"", "<Initialization sourceURL=\"", "\"/>", "\" />"], "", $line)),
                     ];
                 }

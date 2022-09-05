@@ -58,9 +58,9 @@ class Rendition extends Model
                 'default' => 0,
                 'example' => 88,
             ])
-            ->addRule('stream', [
+            ->addRule('protocol', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rendition trascoding stream protocol type',
+                'description' => 'Rendition trascoding  protocol type',
                 'default' => null,
                 'example' => 'hls',
             ])

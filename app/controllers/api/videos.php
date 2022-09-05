@@ -592,7 +592,7 @@ App::get('/v1/videos/:videoId/renditions')
     });
 
 
-App::get('/v1/videos/:videoId/streams/:streamId')
+App::get('/v1/videos/:videoId/protocols/:protocolId')
     ->desc('Get video master renditions manifest')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -603,12 +603,12 @@ App::get('/v1/videos/:videoId/streams/:streamId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('streamId', '', new WhiteList(['hls', 'dash']), 'stream protocol name')
+    ->param('protocolId', '', new WhiteList(['hls', 'dash']), 'protocol name')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $streamId, Response $response, Database $dbForProject, string $mode, Document $user) {
+    ->action(function (string $videoId, string $protocolId, Response $response, Database $dbForProject, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
@@ -624,19 +624,19 @@ App::get('/v1/videos/:videoId/streams/:streamId')
             new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
             new Query('endedAt', Query::TYPE_GREATER, [0]),
             new Query('status', Query::TYPE_EQUAL, ['ready']),
-            new Query('stream', Query::TYPE_EQUAL, [$streamId]),
+            new Query('protocol', Query::TYPE_EQUAL, [$protocolId]),
         ]));
 
         if (empty($renditions)) {
             throw new Exception('Renditions  not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/streams/' . $streamId;
+        $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/protocols/' . $protocolId;
         $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$video->getId()])]));
         $_renditions = [];
         $_subtitles = [];
 
-        if ($streamId === 'hls') {
+        if ($protocolId === 'hls') {
             foreach ($subtitles ?? [] as $subtitle) {
                 $_subtitles[] = [
                     'name' => $subtitle->getAttribute('name'),
@@ -695,19 +695,19 @@ App::get('/v1/videos/:videoId/streams/:streamId')
 
                 $attributes = (array)$xml->attributes();
                 $mpd = $attributes['@attributes'] ?? [];
-                $representationId = 0;
+                $streamId = 0;
 
                 foreach ($xml->Period->AdaptationSet ?? [] as $adaptation) {
                     $representation = [];
-                    $representation['id'] = $representationId;
+                    $representation['id'] = $streamId;
                     $attributes = (array)$adaptation->Representation->attributes();
                     $representation['attributes'] = $attributes['@attributes'] ?? [];
                     $attributes = (array)$adaptation->Representation->SegmentList->attributes();
                     $representation['segmentList']['attributes'] = $attributes['@attributes'] ?? [];
                     $segments = Authorization::skip(fn() => $dbForProject->find('videos_renditions_segments', [
                         new Query('renditionId', Query::TYPE_EQUAL, [$rendition->getId()]),
-                        new Query('representationId', Query::TYPE_EQUAL, [$representationId]),
-                    ], 1000, 0, ['representationId']));
+                        new Query('streamId', Query::TYPE_EQUAL, [$streamId]),
+                    ], 1000, 0, ['streamId']));
 
                     if (count($segments) === 0) {
                         continue;
@@ -730,7 +730,7 @@ App::get('/v1/videos/:videoId/streams/:streamId')
                         'representation' => $representation,
                     ];
                     $adaptationId++;
-                    $representationId++;
+                    $streamId++;
                 }
             }
 
@@ -755,7 +755,7 @@ App::get('/v1/videos/:videoId/streams/:streamId')
     });
 
 
-App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/types/:typeId')
+App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/streams/:streamId')
     ->desc('Get video rendition manifest')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -767,14 +767,14 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/types/:t
     // TODO: Response model
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('streamId', '', new WhiteList(['hls', 'dash']), 'stream protocol name')
+    ->param('protocolId', '', new WhiteList(['hls']), 'protocol name')
     ->param('renditionId', '', new UID(), 'Rendition unique ID.')
-    ->param('typeId', '', new Range(0, 10), 'Stream type id.')
+    ->param('streamId', '', new Range(0, 10), 'Stream id.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $streamId, string $renditionId, string $typeId, Response $response, Database $dbForProject, string $mode, Document $user) {
+    ->action(function (string $videoId, string $protocolId, string $renditionId, string $streamId, Response $response, Database $dbForProject, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
@@ -791,7 +791,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/types/:t
             new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
             new Query('endedAt', Query::TYPE_GREATER, [0]),
             new Query('status', Query::TYPE_EQUAL, ['ready']),
-            new Query('stream', Query::TYPE_EQUAL, [$streamId]),
+            new Query('protocol', Query::TYPE_EQUAL, [$protocolId]),
         ]));
 
         if (empty($rendition)) {
@@ -800,7 +800,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/types/:t
 
         $segments = Authorization::skip(fn() => $dbForProject->find('videos_renditions_segments', [
             new Query('renditionId', Query::TYPE_EQUAL, [$renditionId]),
-            new Query('representationId', Query::TYPE_EQUAL, [$typeId]),
+            new Query('streamId', Query::TYPE_EQUAL, [$streamId]),
         ], 5000));
 
         if (empty($segments)) {
@@ -811,7 +811,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/types/:t
         foreach ($segments as $segment) {
             $paramsSegments[] = [
                 'duration' => $segment->getAttribute('duration'),
-                'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/streams/' . $streamId . '/renditions/' . $renditionId . '/segments/' . $segment->getId(),
+                'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/protocols/' . $protocolId . '/renditions/' . $renditionId . '/segments/' . $segment->getId(),
             ];
         }
 
@@ -822,7 +822,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/types/:t
     });
 
 
-App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/segments/:segmentId')
+App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/segments/:segmentId')
     ->desc('Get video rendition segment')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -834,7 +834,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/segments
     // TODO: Response model
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('streamId', '', new WhiteList(['hls', 'dash']), 'stream protocol name')
+    ->param('protocolId', '', new WhiteList(['hls', 'dash']), 'Protocol name')
     ->param('renditionId', '', new UID(), 'Rendition unique ID.')
     ->param('segmentId', '', new UID(), 'Segment unique ID.')
     ->inject('response')
@@ -842,7 +842,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/segments
     ->inject('deviceVideos')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $streamId, string $renditionId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode, Document $user) {
+    ->action(function (string $videoId, string $protocolId, string $renditionId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
@@ -859,7 +859,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/segments
             new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
             new Query('endedAt', Query::TYPE_GREATER, [0]),
             new Query('status', Query::TYPE_EQUAL, ['ready']),
-            new Query('stream', Query::TYPE_EQUAL, [$streamId]),
+            new Query('protocol', Query::TYPE_EQUAL, [$protocolId]),
         ]));
 
         if (empty($rendition)) {
@@ -875,7 +875,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/segments
 
         $output = $deviceVideos->read($segment->getAttribute('path') .  $segment->getAttribute('fileName'));
 
-        if ($streamId === 'hls') {
+        if ($protocolId === 'hls') {
             $response->setContentType('video/MP2T')->send($output);
         } else {
             $response->setContentType('video/iso.segment')->send($output);
@@ -883,7 +883,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/renditions/:renditionId/segments
     });
 
 
-App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId')
+App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId')
     ->desc('Get video subtitle')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -895,14 +895,14 @@ App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId')
     // TODO: Response model
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('streamId', '', new WhiteList(['hls', 'dash']), 'stream protocol name')
+    ->param('protocolId', '', new WhiteList(['hls', 'dash']), 'Protocol name')
     ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deviceVideos')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $streamId, string $subtitleId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode, Document $user) {
+    ->action(function (string $videoId, string $protocolId, string $subtitleId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
@@ -923,7 +923,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId')
             throw new Exception('subtitle not found', 404, Exception::VIDEO_SUBTITLE_NOT_FOUND);
         }
 
-        if ($streamId == 'hls') {
+        if ($protocolId == 'hls') {
             $segments = Authorization::skip(fn() => $dbForProject->find('videos_subtitles_segments', [
                 new Query('subtitleId', Query::TYPE_EQUAL, [$subtitleId]),
             ], 4000));
@@ -936,7 +936,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId')
             foreach ($segments as $segment) {
                 $paramsSegments[] = [
                     'duration' => $segment->getAttribute('duration'),
-                    'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/streams/' . $streamId . '/subtitles/' . $subtitleId . '/segments/' . $segment->getId(),
+                    'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/protocols/' . $protocolId . '/subtitles/' . $subtitleId . '/segments/' . $segment->getId(),
                 ];
             }
 
@@ -951,7 +951,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId')
     });
 
 
-App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId/segments/:segmentId')
+App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId/segments/:segmentId')
     ->desc('Get video subtitle segment')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -963,7 +963,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId/segments/:
     // TODO: Response model
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('streamId', '', new WhiteList(['hls', 'dash']), 'stream protocol name')
+    ->param('protocolId', '', new WhiteList(['hls', 'dash']), 'Protocol name')
     ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
     ->param('segmentId', '', new UID(), 'Segment unique ID.')
     ->inject('response')
@@ -971,7 +971,7 @@ App::get('/v1/videos/:videoId/streams/:streamId/subtitles/:subtitleId/segments/:
     ->inject('deviceVideos')
     ->inject('mode')
     ->inject('user')
-    ->action(function (string $videoId, string $streamId, string $subtitleId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode, Document $user) {
+    ->action(function (string $videoId, string $protocolId, string $subtitleId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode, Document $user) {
 
         $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
             new Query('_uid', Query::TYPE_EQUAL, [$videoId])
@@ -1020,19 +1020,19 @@ App::post('/v1/videos/profiles')
     ->param('audioBitrate', '', new Range(32, 5000), 'Audio profile bit rate in Kbps.')
     ->param('width', '', new Range(6, 3000), 'Video profile width.')
     ->param('height', '', new Range(6, 3000), 'Video  profile height.')
-    ->param('stream', false, new WhiteList(['hls', 'dash']), 'Video  profile stream protocol.')
+    ->param('protocol', false, new WhiteList(['hls', 'dash']), 'Video  profile protocol.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(action: function (string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $stream, Response $response, Database $dbForProject) {
+    ->action(action: function (string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $protocol, Response $response, Database $dbForProject) {
         try {
-            $profile = Authorization::skip(function () use ($dbForProject, $name, $videoBitrate, $audioBitrate, $width, $height, $stream) {
+            $profile = Authorization::skip(function () use ($dbForProject, $name, $videoBitrate, $audioBitrate, $width, $height, $protocol) {
                 return $dbForProject->createDocument('videos_profiles', new Document([
                     'name'          => $name,
                     'videoBitrate'  => (int)$videoBitrate,
                     'audioBitrate'  => (int)$audioBitrate,
                     'width'         => (int)$width,
                     'height'        => (int)$height,
-                    'stream'        => $stream,
+                    'protocol'        => $protocol,
                 ]));
             });
         } catch (DuplicateException $exception) {
@@ -1061,10 +1061,10 @@ App::patch('/v1/videos/profiles/:profileId')
     ->param('audioBitrate', '', new Range(64, 4000), 'Audio profile bit rate in Kbps.')
     ->param('width', '', new Range(100, 2000), 'Video profile width.')
     ->param('height', '', new Range(100, 2000), 'Video  profile height.')
-    ->param('stream', false, new WhiteList(['hls', 'dash']), 'Video  profile stream protocol.')
+    ->param('protocol', false, new WhiteList(['hls', 'dash']), 'Video  profile protocol.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(action: function (string $profileId, string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $stream, Response $response, Database $dbForProject) {
+    ->action(action: function (string $profileId, string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $protocol, Response $response, Database $dbForProject) {
 
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('videos_profiles', $profileId));
         ;
@@ -1077,7 +1077,7 @@ App::patch('/v1/videos/profiles/:profileId')
                 ->setAttribute('audioBitrate', (int)$audioBitrate)
                 ->setAttribute('width', (int)$width)
                 ->setAttribute('height', (int)$height)
-                ->setAttribute('stream', $stream);
+                ->setAttribute('protocol', $protocol);
 
         $profile = Authorization::skip(fn() => $dbForProject->updateDocument('videos_profiles', $profile->getId(), $profile));
 

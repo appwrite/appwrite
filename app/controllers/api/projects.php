@@ -166,7 +166,7 @@ App::post('/v1/projects')
                         'audioBitrate' => $profile['audioBitrate'],
                         'width'  => $profile['width'],
                         'height' => $profile['height'],
-                        'stream' => $profile['stream']
+                        'protocol' => $profile['protocol']
                     ]));
                 });
             }

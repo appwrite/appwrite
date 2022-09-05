@@ -47,9 +47,9 @@ class Profile extends Model
                 'example' => 400,
             ])
 
-            ->addRule('stream', [
+            ->addRule('protocol', [
                 'type' => self::TYPE_STRING,
-                'description' => 'http video stream type.',
+                'description' => 'http video protocol type.',
                 'default' => null,
                 'example' => 'dash',
             ])

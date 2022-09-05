@@ -242,8 +242,8 @@ services:
       - ./src:/usr/src/code/src
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-videos:/storage/videos:rw
-      - ./tests:/usr/src/code/tests #TODO remove when done!!
-      - ./vendor:/usr/src/code/vendor #TODO remove when done!!
+      #- ./tests:/usr/src/code/tests #TODO remove when done!!
+      #- ./vendor:/usr/src/code/vendor #TODO remove when done!!
 
     depends_on:
       - redis
