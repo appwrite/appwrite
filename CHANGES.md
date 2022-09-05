@@ -10,8 +10,6 @@
 - Queries have been improved to allow even more flexibility, and introduced to new endpoints. See the Queries V2 section in the document for more information [#3702](https://github.com/appwrite/appwrite/pull/3702)
 - Compound indexes are now more flexible [#151](https://github.com/utopia-php/database/pull/151)
 
-For more information on the changes, please see our [1.0-RC1 Documentation](https://warm-tray-285.notion.site/Appwrite-1-0-0-RC1-a5eab87e115d454db0259f707fc88535).
-
 ## Features
 - Added the UI to see the Parent ID of all resources within the UI. [#3653](https://github.com/appwrite/appwrite/pull/3653)
 - Added automatic cache cleaning for internal Appwrite services [#3491](https://github.com/appwrite/appwrite/pull/3491)
@@ -30,7 +28,7 @@ For more information on the changes, please see our [1.0-RC1 Documentation](http
 - Fixed a bug where you could not search users by phone [#3619](https://github.com/appwrite/appwrite/pull/3619)
 - Fixed a bug where unaccepted invitations would grant access to projects [#3738](https://github.com/appwrite/appwrite/pull/3738)
 
-
+For more information on the changes, please see our [1.0-RC1 Documentation](https://warm-tray-285.notion.site/Appwrite-1-0-0-RC1-a5eab87e115d454db0259f707fc88535).
 
 # Version 0.15.3
 ## Features
