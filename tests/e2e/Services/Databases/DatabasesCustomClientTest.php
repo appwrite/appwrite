@@ -16,6 +16,92 @@ class DatabasesCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
+    public function testAllowedPermissions(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database'
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        // Collection aliases write to create, update, delete
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Movies',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::write(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertContains(Permission::create(Role::user($this->getUser()['$id'])), $movies['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $movies['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $movies['body']['$permissions']);
+
+        // Document aliases write to update, delete
+        $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Captain America',
+                'releaseYear' => 1944,
+                'birthDay' => '1975-06-12 14:12:55+02:00',
+                'actors' => [
+                    'Chris Evans',
+                    'Samuel Jackson',
+                ]
+            ],
+            'permissions' => [
+                Permission::write(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $this->assertNotContains(Permission::create(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // Document does not allow create permission
+        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Captain America',
+                'releaseYear' => 1944,
+                'birthDay' => '1975-06-12 14:12:55+02:00',
+                'actors' => [
+                    'Chris Evans',
+                    'Samuel Jackson',
+                ]
+            ],
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $this->assertEquals(400, $document2['headers']['status-code']);
+    }
+
     public function testUpdateWithoutPermission(): array
     {
         // If document has been created by server and client tried to update it without adjusting permissions, permission validation should be skipped

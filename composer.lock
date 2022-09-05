@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "39c0ee0169b4681e5c07889d2a285d01",
+    "content-hash": "acf850ed1f73f172c7573daf5ca54940",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2060,16 +2060,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.24.0",
+            "version": "dev-feat-write-helper",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "7da841d65d87e9f2c242589e58c38880def44dd8"
+                "reference": "d6a18e52df0118b33eda2228a8911c88533a1dbe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/7da841d65d87e9f2c242589e58c38880def44dd8",
-                "reference": "7da841d65d87e9f2c242589e58c38880def44dd8",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/d6a18e52df0118b33eda2228a8911c88533a1dbe",
+                "reference": "d6a18e52df0118b33eda2228a8911c88533a1dbe",
                 "shasum": ""
             },
             "require": {
@@ -2118,9 +2118,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.24.0"
+                "source": "https://github.com/utopia-php/database/tree/feat-write-helper"
             },
-            "time": "2022-08-27T09:16:05+00:00"
+            "time": "2022-09-05T01:47:47+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5358,9 +5358,18 @@
             "time": "2022-08-12T06:47:24+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-write-helper",
+            "alias": "0.24.0",
+            "alias_normalized": "0.24.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
