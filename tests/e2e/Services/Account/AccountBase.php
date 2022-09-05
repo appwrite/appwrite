@@ -341,7 +341,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['logs']);
         $this->assertCount(3, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['total']);
-        $this->assertContains($response['body']['logs'][1]['event'], ["account.session.email.create"]);
+        $this->assertContains($response['body']['logs'][1]['event'], ["session.create"]);
         $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
         $this->assertEquals(true, DateTime::isValid($response['body']['logs'][1]['time']));
 
