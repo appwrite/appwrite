@@ -354,11 +354,10 @@ App::get('/v1/avatars/initials')
     ->param('name', '', new Text(128), 'Full Name. When empty, current user name or email will be used. Max length: 128 chars.', true)
     ->param('width', 500, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 500, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('color', '', new HexColor(), 'Changes text color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->param('background', '', new HexColor(), 'Changes background color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->inject('response')
     ->inject('user')
-    ->action(function (string $name, int $width, int $height, string $color, string $background, Response $response, Document $user) {
+    ->action(function (string $name, int $width, int $height, string $background, Response $response, Document $user) {
 
         $themes = [
             ['background' => '#F2F2F8'], // Default
@@ -389,6 +388,10 @@ App::get('/v1/avatars/initials')
         }
 
         $rand = \substr($code, -1);
+
+        // Wrap rand value to avoid out of range
+        $rand = ($rand > \count($themes) - 1) ? $rand % \count($themes) : $rand;
+
         $background = (!empty($background)) ? '#' . $background : $themes[$rand]['background'];
 
         $image = new \Imagick();
