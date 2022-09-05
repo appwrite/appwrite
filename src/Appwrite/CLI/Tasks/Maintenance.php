@@ -121,8 +121,9 @@ class Maintenance extends Action
 
             $certificates = $dbForConsole->find('certificates', [
                Query::lessThanEqual('attempts', 5), // Maximum 5 attempts
-               Query::lessThanEqual('renewDate', $time) // includes 60 days cooldown (we have 30 days to renew)
-            ], 200); // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
+               Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
+               Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
+            ]);
 
 
             if (\count($certificates) > 0) {

@@ -14,7 +14,6 @@ void main() { // Init SDK
     databaseId: '[DATABASE_ID]',
     collectionId: '[COLLECTION_ID]',
     name: '[NAME]',
-    documentSecurity: false,
   );
 
   result

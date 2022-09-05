@@ -244,7 +244,7 @@ trait DatabasesBase
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'Response Models',
-            'permissions' => [],
+            // 'permissions' missing on purpose to make sure it's optional
             'documentSecurity' => true,
         ]);
 

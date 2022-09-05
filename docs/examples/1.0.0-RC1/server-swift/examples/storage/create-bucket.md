@@ -8,8 +8,7 @@ func main() async throws {
     let storage = Storage(client)
     let bucket = try await storage.createBucket(
         bucketId: "[BUCKET_ID]",
-        name: "[NAME]",
-        fileSecurity: xfalse
+        name: "[NAME]"
     )
 
     print(String(describing: bucket)

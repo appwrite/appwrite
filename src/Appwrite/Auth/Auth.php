@@ -427,6 +427,10 @@ class Auth
         }
 
         foreach ($user->getAttribute('memberships', []) as $node) {
+            if (!isset($node['confirm']) || !$node['confirm']) {
+                continue;
+            }
+
             if (isset($node['teamId']) && isset($node['roles'])) {
                 $roles[] = Role::team($node['teamId'])->toString();
 

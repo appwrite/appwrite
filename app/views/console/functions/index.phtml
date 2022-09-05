@@ -195,7 +195,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                 </div>
 
                 <ul class="chart-notes margin-bottom-large">
-                    <li class="orange">CPU Time <span data-ls-bind="({{usage.executionsTime|statsGetLast|seconds2hum}})"></span></li>
+                    <li class="orange">CPU Time <span data-ls-bind="({{usage.executionsTime|statsGetLast|ms2hum}})"></span></li>
                 </ul>
 
                 <div class="box margin-bottom-small">

@@ -13,4 +13,4 @@ $client
 
 $storage = new Storage($client);
 
-$result = $storage->createBucket('[BUCKET_ID]', '[NAME]', false);
+$result = $storage->createBucket('[BUCKET_ID]', '[NAME]');

@@ -9,7 +9,7 @@ client
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-const promise = storage.updateBucket('[BUCKET_ID]', '[NAME]', false);
+const promise = storage.updateBucket('[BUCKET_ID]', '[NAME]');
 
 promise.then(function (response) {
     console.log(response); // Success

@@ -23,13 +23,13 @@ class Key extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Key creation date in Datetime',
+                'description' => 'Key creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Key update date in Datetime',
+                'description' => 'Key update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -41,7 +41,7 @@ class Key extends Model
             ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Key expiration date in Datetime',
+                'description' => 'Key expiration date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -60,7 +60,7 @@ class Key extends Model
             ])
             ->addRule('accessedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Most recent access date in Unix timestamp.',
+                'description' => 'Most recent access date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE
             ])

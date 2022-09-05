@@ -9,6 +9,6 @@ client
 
 storage = Appwrite::Storage.new(client)
 
-response = storage.update_bucket(bucket_id: '[BUCKET_ID]', name: '[NAME]', file_security: false)
+response = storage.update_bucket(bucket_id: '[BUCKET_ID]', name: '[NAME]')
 
 puts response.inspect

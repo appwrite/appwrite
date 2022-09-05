@@ -11,4 +11,4 @@ client = Client()
 
 databases = Databases(client)
 
-result = databases.create_collection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]', ["read("any")"], False)
+result = databases.create_collection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]')

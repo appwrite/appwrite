@@ -12,8 +12,8 @@ public void main() {
         collectionId = "[COLLECTION_ID]",
         name = "[NAME]",
         permission = "document",
-        read = ["role:all"],
-        write = ["role:all"]
+        read = listOf("role:all"),
+        write = listOf("role:all")
         new Continuation<Response>() {
             @NotNull
             @Override
