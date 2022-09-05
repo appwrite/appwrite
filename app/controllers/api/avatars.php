@@ -361,16 +361,12 @@ App::get('/v1/avatars/initials')
     ->action(function (string $name, int $width, int $height, string $color, string $background, Response $response, Document $user) {
 
         $themes = [
-            ['color' => '#27005e', 'background' => '#e1d2f6'], // VIOLET
-            ['color' => '#5e2700', 'background' => '#f3d9c6'], // ORANGE
-            ['color' => '#006128', 'background' => '#c9f3c6'], // GREEN
-            ['color' => '#580061', 'background' => '#f2d1f5'], // FUSCHIA
-            ['color' => '#00365d', 'background' => '#c6e1f3'], // BLUE
-            ['color' => '#00075c', 'background' => '#d2d5f6'], // INDIGO
-            ['color' => '#610038', 'background' => '#f5d1e6'], // PINK
-            ['color' => '#386100', 'background' => '#dcf1bd'], // LIME
-            ['color' => '#615800', 'background' => '#f1ecba'], // YELLOW
-            ['color' => '#610008', 'background' => '#f6d2d5'], // RED
+            ['background' => '#F2F2F8'], // Default
+            ['background' => '#FDC584'], // Orange
+            ['background' => '#94DBD1'], // Green
+            ['background' => '#A1C4FF'], // Blue
+            ['background' => '#FFA1CE'], // Pink
+            ['background' => '#CBB1FC'] // Purple
         ];
 
         $rand = \rand(0, \count($themes) - 1);
@@ -394,24 +390,29 @@ App::get('/v1/avatars/initials')
 
         $rand = \substr($code, -1);
         $background = (!empty($background)) ? '#' . $background : $themes[$rand]['background'];
-        $color = (!empty($color)) ? '#' . $color : $themes[$rand]['color'];
 
         $image = new \Imagick();
+        $punch = new \Imagick();
         $draw = new \ImagickDraw();
         $fontSize = \min($width, $height) / 2;
+
+        $punch->newImage($width, $height, 'transparent');
 
         $draw->setFont(__DIR__ . "/../../../public/fonts/poppins-v9-latin-500.ttf");
         $image->setFont(__DIR__ . "/../../../public/fonts/poppins-v9-latin-500.ttf");
 
-        $draw->setFillColor(new \ImagickPixel($color));
+        $draw->setFillColor(new ImagickPixel('black'));
         $draw->setFontSize($fontSize);
 
         $draw->setTextAlignment(\Imagick::ALIGN_CENTER);
         $draw->annotation($width / 1.97, ($height / 2) + ($fontSize / 3), $initials);
 
+        $punch->drawImage($draw);
+        $punch->negateImage(true, Imagick::CHANNEL_ALPHA);
+
         $image->newImage($width, $height, $background);
         $image->setImageFormat("png");
-        $image->drawImage($draw);
+        $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
 
         //$image->setImageCompressionQuality(9 - round(($quality / 100) * 9));
 
