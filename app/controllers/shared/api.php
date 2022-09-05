@@ -7,17 +7,45 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Stats\Stats;
+use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
 use Utopia\App;
 use Appwrite\Extend\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Registry\Registry;
+
+$parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
+    preg_match_all('/{(.*?)}/', $label, $matches);
+    foreach ($matches[1] ?? [] as $pos => $match) {
+        $find = $matches[0][$pos];
+        $parts = explode('.', $match);
+
+        if (count($parts) !== 2) {
+            throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
+        }
+
+        $namespace = $parts[0] ?? '';
+        $replace = $parts[1] ?? '';
+
+        $params = match ($namespace) {
+            'user' => (array)$user,
+            'request' => $requestParams,
+            default => $responsePayload,
+        };
+
+        if (array_key_exists($replace, $params)) {
+            $label = \str_replace($find, $params[$replace], $label);
+        }
+    }
+    return $label;
+};
 
 App::init()
     ->groups(['api'])
@@ -53,10 +81,11 @@ App::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
             $timeLimit
-                ->setParam('{userId}', $user->getId())
-                ->setParam('{userAgent}', $request->getUserAgent(''))
-                ->setParam('{ip}', $request->getIP())
-                ->setParam('{url}', $request->getHostname() . $route->getPath());
+            ->setParam('{userId}', $user->getId())
+            ->setParam('{userAgent}', $request->getUserAgent(''))
+            ->setParam('{ip}', $request->getIP())
+            ->setParam('{url}', $request->getHostname() . $route->getPath())
+            ->setParam('{method}', $request->getMethod());
             $timeLimitArray[] = $timeLimit;
         }
 
@@ -74,38 +103,42 @@ App::init()
             }
 
             $abuse = new Abuse($timeLimit);
+            $remaining = $timeLimit->remaining();
+            $limit = $timeLimit->limit();
+            $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
 
-            if ($timeLimit->limit() && ($timeLimit->remaining() < $closestLimit || is_null($closestLimit))) {
-                $closestLimit = $timeLimit->remaining();
+            if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
+                $closestLimit = $remaining;
                 $response
-                    ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
-                    ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
-                    ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
+                    ->addHeader('X-RateLimit-Limit', $limit)
+                    ->addHeader('X-RateLimit-Remaining', $remaining)
+                    ->addHeader('X-RateLimit-Reset', $time)
                 ;
             }
 
+            $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+
             if (
-                (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled' // Route is rate-limited
-                && $abuse->check()) // Abuse is not disabled
-                && (!$isAppUser && !$isPrivilegedUser)
-            ) { // User is not an admin or API key
+                $enabled                // Abuse is enabled
+                && !$isAppUser          // User is not API key
+                && !$isPrivilegedUser   // User is not an admin
+                && $abuse->check()      // Route is rate-limited
+            ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
         }
 
-        /*
-        * Background Jobs
-        */
+    /*
+     * Background Jobs
+     */
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $mails
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $audits
             ->setMode($mode)
@@ -113,22 +146,42 @@ App::init()
             ->setIP($request->getIP())
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
-            ->setUser($user)
-        ;
+            ->setUser($user);
 
         $usage
             ->setParam('projectId', $project->getId())
-            ->setParam('httpRequest', 1)
-            ->setParam('httpUrl', $request->getHostname() . $request->getURI())
+            ->setParam('project.{scope}.network.requests', 1)
             ->setParam('httpMethod', $request->getMethod())
-            ->setParam('httpPath', $route->getPath())
-            ->setParam('networkRequestSize', 0)
-            ->setParam('networkResponseSize', 0)
-            ->setParam('storage', 0)
-        ;
+            ->setParam('project.{scope}.network.inbound', 0)
+            ->setParam('project.{scope}.network.outbound', 0);
 
         $deletes->setProject($project);
         $database->setProject($project);
+
+        $useCache = $route->getLabel('cache', false);
+
+        if ($useCache) {
+            $key = md5($request->getURI() . implode('*', $request->getParams()));
+            $cache = new Cache(
+                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+            );
+            $timestamp = 60 * 60 * 24 * 30;
+            $data = $cache->load($key, $timestamp);
+            if (!empty($data)) {
+                $data = json_decode($data, true);
+
+                $response
+                    ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
+                    ->addHeader('X-Appwrite-Cache', 'hit')
+                    ->setContentType($data['content-type'])
+                    ->send(base64_decode($data['payload']))
+                ;
+
+                $route->setIsActive(false);
+            } else {
+                $response->addHeader('X-Appwrite-Cache', 'miss');
+            }
+        }
     });
 
 App::init()
@@ -198,11 +251,13 @@ App::shutdown()
     ->inject('database')
     ->inject('mode')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) use ($parseLabel) {
+
+        $responsePayload = $response->getPayload();
 
         if (!empty($events->getEvent())) {
             if (empty($events->getPayload())) {
-                $events->setPayload($response->getPayload());
+                $events->setPayload($responsePayload);
             }
             /**
              * Trigger functions.
@@ -255,7 +310,38 @@ App::shutdown()
             }
         }
 
-        if (!empty($audits->getResource())) {
+        $route = $utopia->match($request);
+        $requestParams = $route->getParamsValues();
+        $user = $audits->getUser();
+
+        /**
+         * Audit labels
+         */
+        $pattern = $route->getLabel('audits.resource', null);
+        if (!empty($pattern)) {
+            $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+            if (!empty($resource) && $resource !== $pattern) {
+                $audits->setResource($resource);
+            }
+        }
+
+        $pattern = $route->getLabel('audits.userId', null);
+        if (!empty($pattern)) {
+            $userId = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+            $user = $dbForProject->getDocument('users', $userId);
+            $audits->setUser($user);
+        }
+
+        if (!empty($audits->getResource()) && !empty($audits->getUser()->getId())) {
+            /**
+             * audits.payload is switched to default true
+             * in order to auto audit payload for all endpoints
+             */
+            $pattern = $route->getLabel('audits.payload', true);
+            if (!empty($pattern)) {
+                $audits->setPayload($responsePayload);
+            }
+
             foreach ($events->getParams() as $key => $value) {
                 $audits->setParam($key, $value);
             }
@@ -270,16 +356,81 @@ App::shutdown()
             $database->trigger();
         }
 
-        $route = $utopia->match($request);
+        /**
+         * Cache label
+         */
+        $useCache = $route->getLabel('cache', false);
+        if ($useCache) {
+            $resource = null;
+            $data = $response->getPayload();
+
+            if (!empty($data['payload'])) {
+                $pattern = $route->getLabel('cache.resource', null);
+                if (!empty($pattern)) {
+                    $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+                }
+
+                $key = md5($request->getURI() . implode('*', $request->getParams()));
+                $data = json_encode([
+                'content-type' => $response->getContentType(),
+                'payload' => base64_encode($data['payload']),
+                ]) ;
+
+                $signature = md5($data);
+                $cacheLog  = $dbForProject->getDocument('cache', $key);
+                $accessedAt = $cacheLog->getAttribute('accessedAt', '');
+                $now = DateTime::now();
+                if ($cacheLog->isEmpty()) {
+                    Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
+                    '$id' => $key,
+                    'resource' => $resource,
+                    'accessedAt' => $now,
+                    'signature' => $signature,
+                    ])));
+                } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
+                    $cacheLog->setAttribute('accessedAt', $now);
+                    Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+                }
+
+                if ($signature !== $cacheLog->getAttribute('signature')) {
+                    $cache = new Cache(
+                        new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                    );
+                    $cache->save($key, $data);
+                }
+            }
+        }
+
         if (
             App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
             && $project->getId()
             && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
             && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
+            $metric = $route->getLabel('usage.metric', '');
+            $usageParams = $route->getLabel('usage.params', []);
+
+            if (!empty($metric)) {
+                $usage->setParam($metric, 1);
+                foreach ($usageParams as $param) {
+                    $param = $parseLabel($param, $responsePayload, $requestParams, $user);
+                    $parts = explode(':', $param);
+                    if (count($parts) != 2) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Usage params not properly set');
+                    }
+                    $usage->setParam($parts[0], $parts[1]);
+                }
+            }
+
+            $fileSize = 0;
+            $file = $request->getFiles('file');
+            if (!empty($file)) {
+                $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+            }
+
             $usage
-                ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-                ->setParam('networkResponseSize', $response->getSize())
+                ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
+                ->setParam('project.{scope}.network.outbound', $response->getSize())
                 ->submit();
         }
     });

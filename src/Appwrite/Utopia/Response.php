@@ -28,6 +28,7 @@ use Appwrite\Utopia\Response\Model\AttributeEmail;
 use Appwrite\Utopia\Response\Model\AttributeEnum;
 use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
+use Appwrite\Utopia\Response\Model\AttributeDatetime;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Database;
@@ -74,10 +75,12 @@ use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
 use Appwrite\Utopia\Response\Model\UsageDatabases;
+use Appwrite\Utopia\Response\Model\UsageFunction;
 use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
+use Appwrite\Utopia\Response\Model\Variable;
 
 /**
  * @method Response setStatusCode(int $code = 200)
@@ -101,6 +104,7 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_BUCKETS = 'usageBuckets';
     public const MODEL_USAGE_STORAGE = 'usageStorage';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
+    public const MODEL_USAGE_FUNCTION = 'usageFunction';
     public const MODEL_USAGE_PROJECT = 'usageProject';
 
     // Database
@@ -124,6 +128,7 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
     public const MODEL_ATTRIBUTE_IP = 'attributeIp';
     public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
+    public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
 
     // Users
     public const MODEL_ACCOUNT = 'account';
@@ -193,6 +198,8 @@ class Response extends SwooleResponse
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_DOMAIN = 'domain';
     public const MODEL_DOMAIN_LIST = 'domainList';
+    public const MODEL_VARIABLE = 'variable';
+    public const MODEL_VARIABLE_LIST = 'variableList';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -260,6 +267,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
+            ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -273,6 +281,7 @@ class Response extends SwooleResponse
             ->setModel(new AttributeEnum())
             ->setModel(new AttributeIP())
             ->setModel(new AttributeURL())
+            ->setModel(new AttributeDatetime())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
             ->setModel(new Log())
@@ -304,6 +313,7 @@ class Response extends SwooleResponse
             ->setModel(new Key())
             ->setModel(new Domain())
             ->setModel(new Platform())
+            ->setModel(new Variable())
             ->setModel(new Country())
             ->setModel(new Continent())
             ->setModel(new Language())
@@ -322,6 +332,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageStorage())
             ->setModel(new UsageBuckets())
             ->setModel(new UsageFunctions())
+            ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
             // Verification
             // Recovery
@@ -476,6 +487,24 @@ class Response extends SwooleResponse
     }
 
     /**
+     * Output response
+     *
+     * Generate HTTP response output including the response header (+cookies) and body and prints them.
+     *
+     * @param string $body
+     *
+     * @return void
+     */
+    public function file(string $body = ''): void
+    {
+        $this->payload = [
+            'payload' => $body
+        ];
+
+        $this->send($body);
+    }
+
+    /**
      * YAML
      *
      * This helper is for sending YAML HTTP response.
@@ -505,7 +534,6 @@ class Response extends SwooleResponse
     {
         return $this->payload;
     }
-
 
     /**
      * Function to set a response filter

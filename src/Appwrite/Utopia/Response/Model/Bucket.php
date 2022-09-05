@@ -17,36 +17,29 @@ class Bucket extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Bucket creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Bucket creation time in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Bucket update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
-            ])
-            ->addRule('$read', [
-                'type' => self::TYPE_STRING,
-                'description' => 'File read permissions.',
-                'default' => [],
-                'example' => ['role:all'],
-                'array' => true,
-            ])
-            ->addRule('$write', [
-                'type' => self::TYPE_STRING,
-                'description' => 'File write permissions.',
-                'default' => [],
-                'example' => ['user:608f9da25e7e1'],
-                'array' => true,
-            ])
-            ->addRule('permission', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Bucket permission model. Possible values: `bucket` or `file`',
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Bucket update date in ISO 8601 format.',
                 'default' => '',
-                'example' => 'file',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$permissions', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Bucket permissions. [Learn more about permissions](/docs/permissions).',
+                'default' => [],
+                'example' => ['read("any")'],
+                'array' => true,
+            ])
+            ->addRule('fileSecurity', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Whether file-level security is enabled. [Learn more about permissions](/docs/permissions).',
+                'default' => '',
+                'example' => true,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
@@ -72,6 +65,13 @@ class Bucket extends Model
                 'default' => [],
                 'example' => ['jpg', 'png'],
                 'array' => true
+            ])
+            ->addRule('compression', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Compression algorithm choosen for compression. Will be one of ' . COMPRESSION_TYPE_NONE . ', [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd).',
+                'default' => '',
+                'example' => 'gzip',
+                'array' => false
             ])
             ->addRule('encryption', [
                 'type' => self::TYPE_BOOLEAN,

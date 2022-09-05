@@ -5,6 +5,7 @@ namespace Tests\Unit\Migration;
 use ReflectionClass;
 use Appwrite\Migration\Version\V12;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
 
 class MigrationV12Test extends MigrationTest
 {
@@ -19,8 +20,8 @@ class MigrationV12Test extends MigrationTest
     public function testMigrationProjects(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'project',
-            '$collection' => 'projects',
+            '$id' => ID::custom('project'),
+            '$collection' => ID::custom('projects'),
             'name' => 'Appwrite',
             'version' => '0.12.0',
             'search' => ''
@@ -33,8 +34,8 @@ class MigrationV12Test extends MigrationTest
     public function testMigrationUsers(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'user',
-            '$collection' => 'users',
+            '$id' => ID::custom('user'),
+            '$collection' => ID::custom('users'),
             'email' => 'test@appwrite.io',
             'name' => 'Torsten Dittmann'
         ]));
@@ -45,8 +46,8 @@ class MigrationV12Test extends MigrationTest
     public function testMigrationTeams(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'team',
-            '$collection' => 'teams',
+            '$id' => ID::custom('team'),
+            '$collection' => ID::custom('teams'),
             'name' => 'Appwrite'
         ]));
 
@@ -56,8 +57,8 @@ class MigrationV12Test extends MigrationTest
     public function testMigrationFunctions(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'function',
-            '$collection' => 'functions',
+            '$id' => ID::custom('function'),
+            '$collection' => ID::custom('functions'),
             'name' => 'My Function',
             'runtime' => 'php-8.0'
         ]));
@@ -68,9 +69,9 @@ class MigrationV12Test extends MigrationTest
     public function testMigrationExecutions(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'execution',
-            '$collection' => 'executions',
-            'functionId' => 'function'
+            '$id' => ID::custom('execution'),
+            '$collection' => ID::custom('executions'),
+            'functionId' => ID::custom('function')
         ]));
 
         $this->assertEquals($document->getAttribute('search'), 'execution function');

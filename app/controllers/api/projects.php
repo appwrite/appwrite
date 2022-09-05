@@ -17,16 +17,21 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
+use Utopia\Database\DateTime;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -79,7 +84,7 @@ App::post('/v1/projects')
             $auths[$method['key'] ?? ''] = true;
         }
 
-        $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
+        $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
@@ -87,8 +92,13 @@ App::post('/v1/projects')
 
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            '$permissions' => [
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            ],
             'name' => $name,
             'teamInternalId' => $team->getInternalId(),
             'teamId' => $team->getId(),
@@ -101,7 +111,7 @@ App::post('/v1/projects')
             'legalState' => $legalState,
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
-            'legalTaxId' => $legalTaxId,
+            'legalTaxId' => ID::custom($legalTaxId),
             'services' => new stdClass(),
             'platforms' => null,
             'authProviders' => [],
@@ -127,6 +137,7 @@ App::post('/v1/projects')
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
+
             $attributes = [];
             $indexes = [];
 
@@ -153,7 +164,6 @@ App::post('/v1/projects')
                     'orders' => $index['orders'],
                 ]);
             }
-
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
@@ -171,36 +181,38 @@ App::get('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
+    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the project used as the starting point for the query, excluding the project itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForConsole) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForConsole) {
 
-        if (!empty($cursor)) {
-            $cursorProject = $dbForConsole->getDocument('projects', $cursor);
-
-            if ($cursorProject->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$cursor}' for the 'cursor' value not found.");
-            }
-        }
-
-        $queries = [];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            $queries[] = Query::search('search', $search);
         }
 
-        $results = $dbForConsole->find('projects', $queries, $limit, $offset, [], [$orderType], $cursorProject ?? null, $cursorDirection);
-        $total = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $projectId = $cursor->getValue();
+            $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$projectId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
 
         $response->dynamic(new Document([
-            'projects' => $results,
-            'total' => $total,
+            'projects' => $dbForConsole->find('projects', $queries),
+            'total' => $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_PROJECT_LIST);
     });
 
@@ -276,13 +288,13 @@ App::get('/v1/projects/:projectId/usage')
             $dbForProject->setNamespace("_{$project->getInternalId()}");
 
             $metrics = [
-                'requests',
-                'network',
-                'executions',
-                'users.count',
-                'databases.documents.count',
-                'databases.collections.count',
-                'storage.total'
+                'project.$all.network.requests',
+                'project.$all.network.bandwidth',
+                'project.$all.storage.size',
+                'users.$all.count.total',
+                'collections.$all.count.total',
+                'documents.$all.count.total',
+                'executions.$all.compute.total',
             ];
 
             $stats = [];
@@ -293,9 +305,11 @@ App::get('/v1/projects/:projectId/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -315,7 +329,7 @@ App::get('/v1/projects/:projectId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -325,13 +339,13 @@ App::get('/v1/projects/:projectId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'requests' => $stats['requests'],
-                'network' => $stats['network'],
-                'functions' => $stats['executions'],
-                'documents' => $stats['databases.documents.count'],
-                'collections' => $stats['databases.collections.count'],
-                'users' => $stats['users.count'],
-                'storage' => $stats['storage.total']
+                'requests' => $stats[$metrics[0]] ?? [],
+                'network' => $stats[$metrics[1]] ?? [],
+                'storage' => $stats[$metrics[2]] ?? [],
+                'users' => $stats[$metrics[3]] ?? [],
+                'collections' => $stats[$metrics[4]] ?? [],
+                'documents' => $stats[$metrics[5]] ?? [],
+                'executions' => $stats[$metrics[6]] ?? [],
             ]);
         }
 
@@ -589,9 +603,12 @@ App::post('/v1/projects/:projectId/webhooks')
         $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
         $webhook = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'name' => $name,
@@ -633,8 +650,9 @@ App::get('/v1/projects/:projectId/webhooks')
         }
 
         $webhooks = $dbForConsole->find('webhooks', [
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
-        ], 5000);
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'webhooks' => $webhooks,
@@ -665,8 +683,8 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
@@ -707,8 +725,8 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
@@ -753,8 +771,8 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
@@ -791,8 +809,8 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
@@ -821,10 +839,10 @@ App::post('/v1/projects/:projectId/keys')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
-    ->param('expire', 0, new Integer(), 'Key expiration time in Unix timestamp. Use 0 for unlimited expiration.', true)
+    ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, array $scopes, int $expire, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -833,14 +851,19 @@ App::post('/v1/projects/:projectId/keys')
         }
 
         $key = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
             'expire' => $expire,
+            'sdks' => [],
+            'accessedAt' => null,
             'secret' => \bin2hex(\random_bytes(128)),
         ]);
 
@@ -874,8 +897,9 @@ App::get('/v1/projects/:projectId/keys')
         }
 
         $keys = $dbForConsole->find('keys', [
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()]),
-        ], 5000);
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'keys' => $keys,
@@ -906,8 +930,8 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($key === false || $key->isEmpty()) {
@@ -931,10 +955,10 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('expire', 0, new Integer(), 'Key expiration time in Unix timestamp. Use 0 for unlimited expiration.', true)
+    ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $keyId, string $name, array $scopes, int $expire, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $keyId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -943,8 +967,8 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($key === false || $key->isEmpty()) {
@@ -986,8 +1010,8 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($key === false || $key->isEmpty()) {
@@ -1029,9 +1053,12 @@ App::post('/v1/projects/:projectId/platforms')
         }
 
         $platform = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'type' => $type,
@@ -1071,8 +1098,9 @@ App::get('/v1/projects/:projectId/platforms')
         }
 
         $platforms = $dbForConsole->find('platforms', [
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
-        ], 5000);
+            Query::equal('projectId', [$project->getId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'platforms' => $platforms,
@@ -1103,8 +1131,8 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$platformId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
@@ -1140,8 +1168,8 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$platformId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
@@ -1184,8 +1212,8 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$platformId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
@@ -1224,8 +1252,8 @@ App::post('/v1/projects/:projectId/domains')
         }
 
         $document = $dbForConsole->findOne('domains', [
-            new Query('domain', Query::TYPE_EQUAL, [$domain]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()]),
+            Query::equal('domain', [$domain]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($document && !$document->isEmpty()) {
@@ -1241,12 +1269,15 @@ App::post('/v1/projects/:projectId/domains')
         $domain = new Domain($domain);
 
         $domain = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
-            'updated' => \time(),
+            'updated' => DateTime::now(),
             'domain' => $domain->get(),
             'tld' => $domain->getSuffix(),
             'registerable' => $domain->getRegisterable(),
@@ -1284,8 +1315,9 @@ App::get('/v1/projects/:projectId/domains')
         }
 
         $domains = $dbForConsole->find('domains', [
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
-        ], 5000);
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'domains' => $domains,
@@ -1316,8 +1348,8 @@ App::get('/v1/projects/:projectId/domains/:domainId')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$domainId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
@@ -1350,8 +1382,8 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$domainId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
@@ -1410,8 +1442,8 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$domainId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($domain === false || $domain->isEmpty()) {

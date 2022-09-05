@@ -1,4 +1,8 @@
 <?php
+
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+
 $services = $this->getParam('services', []);
 $customDomainsEnabled = $this->getParam('customDomainsEnabled', false);
 $customDomainsTarget = $this->getParam('customDomainsTarget', false);
@@ -57,23 +61,10 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                                 <label for="logo">Project Logo</label>
 
                                 <div class="text-align-center clear">
-                                    <input type="hidden" name="logo" data-ls-bind="{{console-project.logo}}" data-read="<?php echo $this->escape(json_encode(['role:all'])); ?>" data-write="<?php echo $this->escape(json_encode(['team:{{console-project.teamId}}'])); ?>" data-accept="image/*" data-forms-upload="" data-label-button="Upload" data-preview-alt="Project Logo" data-scope="console" data-default="">
+                                    <input type="hidden" name="logo" data-ls-bind="{{console-project.logo}}" data-permissions="<?php echo $this->escape(\json_encode([Permission::read(Role::any()), Permission::update(Role::team('{{console-project.teamId}}')), Permission::delete(Role::team('{{console-project.teamId}}'))])); ?>" data-accept="image/*" data-forms-upload="" data-label-button="Upload" data-preview-alt="Project Logo" data-scope="console" data-default="">
                                 </div>
 
                                 <hr />
-
-                                <!-- <div data-ls-if="0 !== {{console-domains|activeDomainsCount}}">
-                                    <label for="name">Custom API Endpoints</label>
-
-                                    <ul data-ls-loop="console-domains" data-ls-as="domain">
-                                        <li>
-                                            <div class="input-copy" data-ls-if="true === {{domain.verification}} && {{domain.certificateId}}">
-                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{domain.domain}}/v1" />
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div> -->
-
 
                                 <button class="" type="submit">Update</button>
                             </form>
@@ -144,57 +135,7 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                     </div>
                 </div>
             </li>
-            <!-- <li data-state="/console/settings/privacy?project={{router.params.project}}">
 
-                <form
-                    data-service="projects.update"
-                    data-scope="console"
-                    data-event="submit"
-                    data-param-project-id="{{router.params.project}}"
-                    data-success="alert,trigger"
-                    data-success-param-alert-text="Updated project successfully"
-                    data-success-param-trigger-events="projects.update"
-                    data-failure="alert"
-                    data-failure-param-alert-text="Failed to update project"
-                    data-failure-param-alert-classname="error">
-
-                    <h2>Privacy & Legal</h2>
-
-                    <div class="box margin-bottom">
-                        <input name="$id" type="hidden" data-ls-bind="{{console-project.$id}}" />
-
-                        <div class="row thin">
-                            <div class="col span-6">
-                                <label for="legalName">Legal Name</label>
-                                <input name="legalName" id="legalName" type="text" autocomplete="off" data-ls-bind="{{console-project.legalName}}" data-forms-text-direction>
-
-                                <label for="legalCountry">Country</label>
-                                <select id="legalCountry" name="legalCountry" data-ls-bind="{{console-project.legalCountry}}" data-ls-loop="locale-countries" data-ls-as="option">
-                                    <option data-ls-attrs="value={{$index}}" data-ls-bind="{{option}}"></option>
-                                </select>
-
-                                <label for="legalCity">City</label>
-                                <input name="legalCity" id="legalCity" type="text" autocomplete="off" data-ls-bind="{{console-project.legalCity}}" data-forms-text-direction>
-                            </div>
-
-                            <div class="col span-6">
-                                <label for="legalTaxId">Tax ID</label>
-                                <input name="legalTaxId" id="legalTaxId" type="text" autocomplete="off" data-ls-bind="{{console-project.legalTaxId}}" data-forms-text-direction>
-
-                                <label for="legalState">State</label>
-                                <input name="legalState" id="legalState" type="text" autocomplete="off" data-ls-bind="{{console-project.legalState}}" data-forms-text-direction>
-
-                                <label for="legalAddress">Address</label>
-                                <input name="legalAddress" id="legalAddress" type="text" autocomplete="off" data-ls-bind="{{console-project.legalAddress}}" data-forms-text-direction>
-                            </div>
-                        </div>
-
-                        <hr />
-
-                        <button class="" type="submit">Update</button>
-                    </div>
-                </form>
-            </li> -->
             <li data-state="/console/settings/services?project={{router.params.project}}">
                 <h2>Services</h2>
 
