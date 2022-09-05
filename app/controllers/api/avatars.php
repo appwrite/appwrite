@@ -368,8 +368,6 @@ App::get('/v1/avatars/initials')
             ['background' => '#CBB1FC'] // Purple
         ];
 
-        $rand = \rand(0, \count($themes) - 1);
-
         $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
         $words = \explode(' ', \strtoupper($name));
         // if there is no space, try to split by `_` underscore
