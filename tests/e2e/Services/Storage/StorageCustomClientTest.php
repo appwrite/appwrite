@@ -1093,10 +1093,10 @@ class StorageCustomClientTest extends Scope
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $bucket['body']['$permissions']);
 
         // File aliases write to update, delete
-        $file1 = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+        $file1 = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
+        ], $this->getHeaders()), [
             'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'permissions' => [

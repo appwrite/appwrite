@@ -225,4 +225,54 @@ class DatabasesPermissionsGuestTest extends Scope
             Authorization::setRole($role);
         }
     }
+
+    public function testWriteDocumentWithPermissions()
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'GuestPermissionsWrite',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('InvalidDocumentDatabase', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
+            'collectionId' => ID::unique(),
+            'name' => 'Movies',
+            'permissions' => [
+                Permission::create(Role::any()),
+            ],
+            'documentSecurity' => true
+        ]);
+
+        $moviesId = $movies['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/attributes/string', $this->getServerHeader(), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        sleep(1);
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Thor: Ragnarok',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertEquals('Thor: Ragnarok', $document['body']['title']);
+    }
 }

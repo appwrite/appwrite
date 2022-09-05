@@ -47,24 +47,32 @@ class DatabasesCustomClientTest extends Scope
             ],
         ]);
 
+        $moviesId = $movies['body']['$id'];
+
         $this->assertContains(Permission::create(Role::user($this->getUser()['$id'])), $movies['body']['$permissions']);
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $movies['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $movies['body']['$permissions']);
 
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        sleep(1);
+
         // Document aliases write to update, delete
-        $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+        $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Captain America',
-                'releaseYear' => 1944,
-                'birthDay' => '1975-06-12 14:12:55+02:00',
-                'actors' => [
-                    'Chris Evans',
-                    'Samuel Jackson',
-                ]
             ],
             'permissions' => [
                 Permission::write(Role::user($this->getUser()['$id'])),
@@ -80,19 +88,13 @@ class DatabasesCustomClientTest extends Scope
          */
 
         // Document does not allow create permission
-        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Captain America',
-                'releaseYear' => 1944,
-                'birthDay' => '1975-06-12 14:12:55+02:00',
-                'actors' => [
-                    'Chris Evans',
-                    'Samuel Jackson',
-                ]
             ],
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
