@@ -77,7 +77,7 @@ class V15 extends Filter
         return $content;
     }
 
-    protected function handleMetricAttributes(array $content) 
+    protected function handleMetricAttributes(array $content)
     {
         $content['timestamp'] = $content['date'];
         unset($content['date']);
@@ -95,8 +95,7 @@ class V15 extends Filter
 
     protected function downgradePermissionSelector(string $permSelector)
     {
-        switch ($permSelector)
-        {
+        switch ($permSelector) {
             case 'any':
                 return 'role:all';
             case 'users':
@@ -132,8 +131,7 @@ class V15 extends Filter
             $permission_value = explode(')', explode('(', $permission)[1])[0];
 
             // Old type permissions meant that 'write' is equivalent to 'create', 'update' and 'delete'
-            switch ($permission_type)
-            {
+            switch ($permission_type) {
                 case 'update':
                 case 'delete':
                 case 'write':
@@ -146,7 +144,7 @@ class V15 extends Filter
                     if (!in_array($this->downgradePermissionSelector($permission_value), $result['read'])) {
                         $result['$read'][] = $this->downgradePermissionSelector($permission_value);
                     }
-                    break;                
+                    break;
             }
         }
 

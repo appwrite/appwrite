@@ -10,7 +10,6 @@ class V15 extends Filter
     public function parse(array $content, string $model): array
     {
         switch ($model) {
-
         }
 
         return $content;
