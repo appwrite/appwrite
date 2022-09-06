@@ -614,7 +614,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'search' => $newName
+            'search' => $newName,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -628,7 +628,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'search' => $id
+            'search' => $id,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -654,7 +654,8 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'search' => '"' . $email . '"'
+            'search' => '"' . $email . '"',
+
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -668,7 +669,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'search' => $id
+            'search' => $id,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);

@@ -31,7 +31,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $this->assertEquals('InvalidDocumentDatabase', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
+        $publicMovies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
             'collectionId' => ID::unique(),
             'name' => 'Movies',
             'permissions' => [
@@ -40,12 +40,23 @@ class DatabasesPermissionsGuestTest extends Scope
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
+        ]);
+        $privateMovies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
+            'collectionId' => ID::unique(),
+            'name' => 'Movies',
+            'permissions' => [],
             'documentSecurity' => true,
         ]);
 
-        $collection = ['id' => $movies['body']['$id']];
+        $publicCollection = ['id' => $publicMovies['body']['$id']];
+        $privateCollection = ['id' => $privateMovies['body']['$id']];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection['id'] . '/attributes/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $publicCollection['id'] . '/attributes/string', $this->getServerHeader(), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $privateCollection['id'] . '/attributes/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -53,13 +64,14 @@ class DatabasesPermissionsGuestTest extends Scope
 
         sleep(2);
 
-        return ['collectionId' => $collection['id'], 'databaseId' => $databaseId];
+        return [
+            'databaseId' => $databaseId,
+            'publicCollectionId' => $publicCollection['id'],
+            'privateCollectionId' => $privateCollection['id'],
+        ];
     }
 
-    /**
-     * [string[] $permissions]
-     */
-    public function readDocumentsProvider()
+    public function permissionsProvider(): array
     {
         return [
             [[Permission::read(Role::any())]],
@@ -72,14 +84,23 @@ class DatabasesPermissionsGuestTest extends Scope
     }
 
     /**
-     * @dataProvider readDocumentsProvider
+     * @dataProvider permissionsProvider
      */
     public function testReadDocuments($permissions)
     {
         $data = $this->createCollection();
-        $collectionId = $data['collectionId'];
+        $publicCollectionId = $data['publicCollectionId'];
+        $privateCollectionId = $data['privateCollectionId'];
         $databaseId = $data['databaseId'];
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $this->getServerHeader(), [
+
+        $publicResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $publicCollectionId . '/documents', $this->getServerHeader(), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Lorem',
+            ],
+            'permissions' => $permissions,
+        ]);
+        $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $privateCollectionId . '/documents', $this->getServerHeader(), [
             'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
@@ -87,18 +108,118 @@ class DatabasesPermissionsGuestTest extends Scope
             'permissions' => $permissions,
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(201, $publicResponse['headers']['status-code']);
+        $this->assertEquals(201, $privateResponse['headers']['status-code']);
 
         $roles = Authorization::getRoles();
         Authorization::cleanRoles();
 
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId  . '/documents', [
+        $publicDocuments = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $publicCollectionId  . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+        $privateDocuments = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $privateCollectionId  . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        $this->assertEquals(1, $documents['body']['total']);
-        $this->assertEquals($permissions, $documents['body']['documents'][0]['$permissions']);
+        $this->assertEquals(1, $publicDocuments['body']['total']);
+        $this->assertEquals($permissions, $publicDocuments['body']['documents'][0]['$permissions']);
+
+        if (\in_array(Permission::read(Role::any()), $permissions)) {
+            $this->assertEquals(1, $privateDocuments['body']['total']);
+            $this->assertEquals($permissions, $privateDocuments['body']['documents'][0]['$permissions']);
+        } else {
+            $this->assertEquals(0, $privateDocuments['body']['total']);
+        }
+
+        foreach ($roles as $role) {
+            Authorization::setRole($role);
+        }
+    }
+
+    public function testWriteDocument()
+    {
+        $data = $this->createCollection();
+        $publicCollectionId = $data['publicCollectionId'];
+        $privateCollectionId = $data['privateCollectionId'];
+        $databaseId = $data['databaseId'];
+
+        $roles = Authorization::getRoles();
+        Authorization::cleanRoles();
+
+        $publicResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $publicCollectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Lorem',
+            ]
+        ]);
+
+        $publicDocumentId = $publicResponse['body']['$id'];
+        $this->assertEquals(201, $publicResponse['headers']['status-code']);
+
+        $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $privateCollectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Lorem',
+            ],
+        ]);
+
+        $this->assertEquals(401, $privateResponse['headers']['status-code']);
+
+        // Create a document in private collection with API key so we can test that update and delete are also not allowed
+        $privateResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $privateCollectionId . '/documents', $this->getServerHeader(), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'Lorem',
+            ],
+        ]);
+
+        $this->assertEquals(201, $privateResponse['headers']['status-code']);
+        $privateDocumentId = $privateResponse['body']['$id'];
+
+        $publicDocument = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $publicCollectionId . '/documents/' . $publicDocumentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'data' => [
+                'title' => 'Thor: Ragnarok',
+            ],
+        ]);
+
+        $this->assertEquals(200, $publicDocument['headers']['status-code']);
+        $this->assertEquals('Thor: Ragnarok', $publicDocument['body']['title']);
+
+        $privateDocument = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $privateCollectionId . '/documents/' . $privateDocumentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'data' => [
+                'title' => 'Thor: Ragnarok',
+            ],
+        ]);
+
+        $this->assertEquals(401, $privateDocument['headers']['status-code']);
+
+        $publicDocument = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $publicCollectionId . '/documents/' . $publicDocumentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(204, $publicDocument['headers']['status-code']);
+
+        $privateDocument = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $privateCollectionId . '/documents/' . $privateDocumentId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(401, $privateDocument['headers']['status-code']);
 
         foreach ($roles as $role) {
             Authorization::setRole($role);

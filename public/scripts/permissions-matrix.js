@@ -34,7 +34,7 @@
                 });
             },
             addPermission(formId, role, permissions) {
-                if (!document.getElementById(formId).reportValidity()) {
+                if (!this.validate(formId, role, permissions)) {
                     return;
                 }
                 Object.entries(permissions).forEach(entry => {
@@ -105,6 +105,21 @@
                     return 'delete';
                 }
                 return key;
+            },
+            validate(formId, role, permissions) {
+                const form = document.getElementById(formId);
+                const input = document.getElementById(`${formId}Input`);
+
+                input.setCustomValidity('');
+
+                if (!Object.values(permissions).some(p => p)) {
+                    input.setCustomValidity('No permissions selected');
+                }
+                if (this.permissions.some(p => p.role === role)) {
+                    input.setCustomValidity('Role entry already exists');
+                }
+                
+                return form.reportValidity();
             }
         }));
         Alpine.data('permissionsRow', () => ({

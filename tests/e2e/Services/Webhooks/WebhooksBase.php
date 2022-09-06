@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Webhooks;
 
+use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
@@ -304,6 +305,7 @@ trait WebhooksBase
     /**
      * @depends testCreateCollection
      */
+    #[Retry(count: 1)]
     public function testDeleteDocument(array $data): array
     {
         $actorsId = $data['actorsId'];

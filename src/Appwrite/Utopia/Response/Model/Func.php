@@ -20,13 +20,13 @@ class Func extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function creation date in Datetime',
+                'description' => 'Function creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function update date in Datetime',
+                'description' => 'Function update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -62,10 +62,11 @@ class Func extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('vars', [
-                'type' => self::TYPE_JSON,
-                'description' => 'Function environment variables.',
-                'default' => new \stdClass(),
-                'example' => ['key' => 'value'],
+                'type' => Response::MODEL_VARIABLE,
+                'description' => 'Function variables.',
+                'default' => [],
+                'example' => [],
+                'array' => true
             ])
             ->addRule('events', [
                 'type' => self::TYPE_STRING,
@@ -82,13 +83,13 @@ class Func extends Model
             ])
             ->addRule('scheduleNext', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function\'s next scheduled execution time in Datetime.',
+                'description' => 'Function\'s next scheduled execution time in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('schedulePrevious', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function\'s previous scheduled execution time in Datetime.',
+                'description' => 'Function\'s previous scheduled execution time in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -119,26 +120,5 @@ class Func extends Model
     public function getType(): string
     {
         return Response::MODEL_FUNCTION;
-    }
-
-    /**
-     * Filter Function
-     *
-     * Automatically converts a [] default to a stdClass, this is called while grabbing the document.
-     *
-     * @param Document $document
-     * @return Document
-     */
-    public function filter(Document $document): Document
-    {
-        $vars = $document->getAttribute('vars');
-        if ($vars instanceof Document) {
-            $vars = $vars->getArrayCopy();
-        }
-
-        if (is_array($vars) && empty($vars)) {
-            $document->setAttribute('vars', new stdClass());
-        }
-        return $document;
     }
 }

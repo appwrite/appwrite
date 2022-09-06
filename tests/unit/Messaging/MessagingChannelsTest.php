@@ -54,6 +54,7 @@ class MessagingChannelsTest extends TestCase
                     '$id' => ID::custom('user' . $this->connectionsCount),
                     'memberships' => [
                         [
+                            'confirm' => true,
                             'teamId' => ID::custom('team' . $i),
                             'roles' => [
                                 empty($index % 2)

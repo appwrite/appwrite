@@ -10,6 +10,11 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries;
+use Appwrite\Utopia\Database\Validator\Queries\Memberships;
+use Appwrite\Utopia\Database\Validator\Queries\Teams;
+use Appwrite\Utopia\Database\Validator\Query\Limit;
+use Appwrite\Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
@@ -74,6 +79,10 @@ App::post('/v1/teams')
         ])));
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
+            if (!\in_array('owner', $roles)) {
+                $roles[] = 'owner';
+            }
+
             $membershipId = ID::unique();
             $membership = new Document([
                 '$id' => $membershipId,
@@ -122,37 +131,36 @@ App::get('/v1/teams')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM_LIST)
+    ->param('queries', [], new Teams(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Teams::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of teams to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the team used as the starting point for the query, excluding the team itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $filterQueries = [];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $filterQueries[] = Query::search('search', $search);
+            $queries[] = Query::search('search', $search);
         }
 
-        $queries = [];
-        $queries[] = Query::limit($limit);
-        $queries[] = Query::offset($offset);
-        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
-        if (!empty($cursor)) {
-            $cursorDocument = $dbForProject->getDocument('teams', $cursor);
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $teamId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('teams', $teamId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Team '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Team '{$teamId}' for the 'cursor' value not found.");
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
 
-        $results = $dbForProject->find('teams', \array_merge($filterQueries, $queries));
+        $filterQueries = Query::groupByType($queries)['filters'];
+
+        $results = $dbForProject->find('teams', $queries);
         $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
@@ -460,15 +468,11 @@ App::get('/v1/teams/:teamId/memberships')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
     ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of memberships to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the membership used as the starting point for the query, excluding the membership itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $teamId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
+    ->action(function (string $teamId, array $queries, string $search, Response $response, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -476,29 +480,35 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $filterQueries = [Query::equal('teamId', [$teamId])];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $filterQueries[] = Query::search('search', $search);
+            $queries[] = Query::search('search', $search);
         }
 
-        $otherQueries = [];
-        $otherQueries[] = Query::limit($limit);
-        $otherQueries[] = Query::offset($offset);
-        $otherQueries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
-        if (!empty($cursor)) {
-            $cursorDocument = $dbForProject->getDocument('memberships', $cursor);
+        // Set internal queries
+        $queries[] = Query::equal('teamId', [$teamId]);
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $membershipId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('memberships', $membershipId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Membership '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Membership '{$membershipId}' for the 'cursor' value not found.");
             }
 
-            $otherQueries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
 
         $memberships = $dbForProject->find(
             collection: 'memberships',
-            queries: \array_merge($filterQueries, $otherQueries),
+            queries: $queries,
         );
 
         $total = $dbForProject->count(
@@ -847,24 +857,23 @@ App::get('/v1/teams/:teamId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('teamId', null, new UID(), 'Team ID.')
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function ($teamId, $limit, $offset, $response, $dbForProject, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Response $response */
-        /** @var Utopia\Database\Document $project */
-        /** @var Utopia\Database\Database $dbForProject */
-        /** @var Utopia\Locale\Locale $locale */
-        /** @var MaxMind\Db\Reader $geodb */
+    ->action(function (string $teamId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
+
+        $queries = Query::parseQueries($queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);
         $resource = 'team/' . $team->getId();

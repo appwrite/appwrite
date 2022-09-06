@@ -32,6 +32,7 @@ use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
 use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -47,7 +48,8 @@ App::init()
     ->inject('user')
     ->inject('locale')
     ->inject('clients')
-    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients) {
+    ->inject('servers')
+    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers) {
         /*
         * Request format
         */
@@ -221,7 +223,7 @@ App::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -303,6 +305,28 @@ App::init()
 
                 Authorization::setRole(Auth::USER_ROLE_APPS);
                 Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+
+                $accessedAt = $key->getAttribute('accessedAt', '');
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
+                    $key->setAttribute('accessedAt', DateTime::now());
+                    $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                    $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                }
+
+                $sdkValidator = new WhiteList($servers, true);
+                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+                if ($sdkValidator->isValid($sdk)) {
+                    $sdks = $key->getAttribute('sdks', []);
+                    if (!in_array($sdk, $sdks)) {
+                        array_push($sdks, $sdk);
+                        $key->setAttribute('sdks', $sdks);
+
+                        /** Update access time as well */
+                        $key->setAttribute('accessedAt', Datetime::now());
+                        $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                    }
+                }
             }
         }
 
@@ -350,7 +374,7 @@ App::options()
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')

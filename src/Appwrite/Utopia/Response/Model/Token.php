@@ -18,7 +18,7 @@ class Token extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Token creation date in Datetime',
+                'description' => 'Token creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -36,7 +36,7 @@ class Token extends Model
             ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Token expiration date in Unix timestamp.',
+                'description' => 'Token expiration date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])

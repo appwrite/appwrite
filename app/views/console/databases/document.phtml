@@ -53,7 +53,7 @@ $permissions = $this->getParam('permissions', null);
 
                     <div class="row responsive">
                         <div class="col span-8 margin-bottom">
-                            <form id="<?php echo $permissions->getParam('form', 'permissions') ?>"></form>
+                            <form id="<?php echo $permissions->getParam('form') ?>"></form>
 
                             <form
                                 data-analytics
@@ -413,7 +413,7 @@ $permissions = $this->getParam('permissions', null);
                     </div>
                 </li>
                 <?php if(!$new): ?>
-                    <li data-state="/console/databases/document/activity?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
+                    <li data-state="/console/databases/document/activity?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}&databaseId={{router.params.databaseId}}">
                         <h2>Activity</h2>
 
                         <?php echo $logs->render(); ?>

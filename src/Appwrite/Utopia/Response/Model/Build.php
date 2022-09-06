@@ -47,13 +47,13 @@ class Build extends Model
             ])
             ->addRule('startTime', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'The deployment creation date in Datetime.',
+                'description' => 'The deployment creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('endTime', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'The time the build was finished in Datetime.',
+                'description' => 'The time the build was finished in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])

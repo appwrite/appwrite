@@ -28,6 +28,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -180,42 +181,38 @@ App::get('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
+    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the project used as the starting point for the query, excluding the project itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForConsole) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForConsole) {
 
-        $filterQueries = [];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $filterQueries[] = Query::search('search', $search);
+            $queries[] = Query::search('search', $search);
         }
 
-        $queries = [];
-        $queries[] = Query::limit($limit);
-        $queries[] = Query::offset($offset);
-        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
-        if (!empty($cursor)) {
-            $cursorDocument = $dbForConsole->getDocument('projects', $cursor);
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $projectId = $cursor->getValue();
+            $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$projectId}' for the 'cursor' value not found.");
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
 
-        $results = $dbForConsole->find('projects', \array_merge($filterQueries, $queries));
-        $total = $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT);
+        $filterQueries = Query::groupByType($queries)['filters'];
 
         $response->dynamic(new Document([
-            'projects' => $results,
-            'total' => $total,
+            'projects' => $dbForConsole->find('projects', $queries),
+            'total' => $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_PROJECT_LIST);
     });
 
@@ -842,7 +839,7 @@ App::post('/v1/projects/:projectId/keys')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
-    ->param('expire', null, new DatetimeValidator(), 'Expiration time in DateTime. Use null for unlimited expiration.', true)
+    ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
@@ -865,6 +862,8 @@ App::post('/v1/projects/:projectId/keys')
             'name' => $name,
             'scopes' => $scopes,
             'expire' => $expire,
+            'sdks' => [],
+            'accessedAt' => null,
             'secret' => \bin2hex(\random_bytes(128)),
         ]);
 
@@ -956,7 +955,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('expire', null, new DatetimeValidator(), 'Expiration time in DateTime. Use null for unlimited expiration.', true)
+    ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {

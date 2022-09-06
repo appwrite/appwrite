@@ -243,6 +243,55 @@ trait StorageBase
         return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
     }
 
+    public function testCreateBucketFileZstdCompression(): array
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'fileSecurity' => true,
+            'maximumFileSize' => 2000000, //2MB
+            'allowedFileExtensions' => ["jpg", "png"],
+            'compression' => 'zstd',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+        $this->assertEquals('zstd', $bucket['body']['compression']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
+        $this->assertEquals('logo.png', $file['body']['name']);
+        $this->assertEquals('image/png', $file['body']['mimeType']);
+        $this->assertEquals(47218, $file['body']['sizeOriginal']);
+        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) != $file['body']['signature']); // should validate that the file is encrypted
+
+        return ['bucketId' => $bucketId];
+    }
+
     /**
      * @depends testCreateBucketFile
      */
@@ -258,6 +307,42 @@ trait StorageBase
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertGreaterThan(0, $files['body']['total']);
         $this->assertGreaterThan(0, count($files['body']['files']));
+
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'limit(0)' ]
+        ]);
+        $this->assertEquals(200, $files['headers']['status-code']);
+        $this->assertEquals(0, count($files['body']['files']));
+
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'offset(1)' ]
+        ]);
+        $this->assertEquals(200, $files['headers']['status-code']);
+        $this->assertEquals(0, count($files['body']['files']));
+
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("mimeType", "image/png")' ]
+        ]);
+        $this->assertEquals(200, $files['headers']['status-code']);
+        $this->assertEquals(1, count($files['body']['files']));
+
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("mimeType", "image/jpeg")' ]
+        ]);
+        $this->assertEquals(200, $files['headers']['status-code']);
+        $this->assertEquals(0, count($files['body']['files']));
 
         /**
          * Test for FAILURE unknown Bucket
@@ -558,6 +643,50 @@ trait StorageBase
         $imageAfter->readImageBlob($file3['body']);
 
         $this->assertNotEquals($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateBucketFileZstdCompression
+     */
+    public function testFilePreviewZstdCompression(array $data): array
+    {
+        $bucketId = $data['bucketId'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertNotEmpty($file['body']['$id']);
+
+        $fileId = $file['body']['$id'];
+
+        //get image preview
+        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'borderRadius' => '50',
+            'opacity' => '0.5',
+            'output' => 'png',
+            'rotation' => '45',
+        ]);
+
+        $this->assertEquals(200, $file3['headers']['status-code']);
+        $this->assertEquals('image/png', $file3['headers']['content-type']);
+        $this->assertNotEmpty($file3['body']);
 
         return $data;
     }

@@ -41,6 +41,7 @@ class Index extends Model
                 'default' => [],
                 'example' => [],
                 'array' => true,
+                'required' => false,
             ])
         ;
     }

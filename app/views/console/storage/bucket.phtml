@@ -51,9 +51,9 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
                     data-event="submit"
                     data-param-bucket-id="{{router.params.id}}"
                     data-param-search="{{router.params.search}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset=""
-                    data-param-order-type="DESC"
+                    data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                    data-param-queries-cast-to="array"
+                    data-param-queries-cast-from="csv"
                     data-scope="sdk"
                     data-name="project-files"
                     data-success="state"
@@ -73,9 +73,9 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
                     data-event="load,storage.createFile,storage.updateFile,storage.deleteFile"
                     data-param-bucket-id="{{router.params.id}}"
                     data-param-search="{{router.params.search}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset="{{router.params.offset}}"
-                    data-param-order-type="DESC"
+                    data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                    data-param-queries-cast-to="array"
+                    data-param-queries-cast-from="csv"
                     data-scope="sdk"
                     data-name="project-files">
 
@@ -108,7 +108,7 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
                                         <td class="col-name" data-title="Name: " data-ls-attrs="title={{file.name}}" >
                                             <div class="trim-inner-text">
                                                 <span data-ls-ui-trigger="modal-file-update-{{file.$id}}" class="link text-one-liner" data-ls-bind="{{file.name}}"></span>
-                                                <div data-ls-attrs="data-open-event=modal-file-update-{{file.$id}}" data-button-hide="1" data-ui-modal class="box modal sticky-footer width-large close" >
+                                                <div data-ls-attrs="data-open-event=modal-file-update-{{file.$id}}" data-button-hide="1" data-ui-modal class="box modal width-xlarge sticky-footer close" >
                                                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                                     <h1>Update File</h1>
@@ -139,12 +139,11 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
                                                                 </div>
                                                                 <input type="hidden" data-ls-attrs="id=file-bucketId-{{file.$id}}" name="bucketId" data-ls-bind="{{file.bucketId}}">
 
-                                                                <div class="toggle margin-bottom" data-ls-if="{{project-bucket.fileSecurity}}" data-ls-ui-open data-button-aria="Open Permissions">
-                                                                    <i class="icon-plus pull-end margin-top-tiny"></i>
-                                                                    <i class="icon-minus pull-end margin-top-tiny"></i>
+                                                                <hr class="margin-start margin-end" />
 
-                                                                    <h3 class="margin-bottom-large">Permissions</h3>
+                                                                <h3 class="margin-bottom">Permissions</h3>
 
+                                                                <div class="margin-start margin-end margin-bottom">
                                                                     <?php echo $fileUpdatePermissions->render(); ?>
                                                                 </div>
                                                             </form>
@@ -241,13 +240,12 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
                             data-event="submit"
                             data-param-search="{{router.params.search}}"
                             data-param-bucket-id="{{router.params.id}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
                             data-scope="sdk"
                             data-name="project-files"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                            <input type="hidden" name="offset">
+                            <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                         </form>
 
                         <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.total|pageTotal}}"></span>
@@ -257,13 +255,12 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
                             data-event="submit"
                             data-param-bucket-id="{{router.params.id}}"
                             data-param-search="{{router.params.search}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
                             data-scope="sdk"
                             data-name="project-files"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                            <input type="hidden" name="offset">
+                            <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                         </form>
                     </div>
 
@@ -416,6 +413,13 @@ $fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
 
                                 <label for="bucket-maximum-file-size">Maximum File Size (bytes) <span class="tooltip small" data-tooltip="Limit file size allowed in the bucket."><i class="icon-info-circled"></i></span></label>
                                 <input name="maximumFileSize" id="bucket-maximum-file-size" type="number" autocomplete="off" data-ls-bind="{{project-bucket.maximumFileSize}}" min="1" data-cast-to="integer" />
+
+                                <label for="compression">Compression</label>
+                                <select id="compression" data-ls-bind="{{project-bucket.compression}}" name="compression">
+                                    <option value="none">None</option>
+                                    <option value="gzip">Gzip</option>
+                                    <option value="zstd">Zstd</option>
+                                </select>
 
                                 <div class="margin-bottom">
                                     <input name="enabled" type="hidden" data-forms-switch data-cast-to="boolean" data-ls-bind="{{project-bucket.enabled}}" /> &nbsp; Enabled <span class="tooltip" data-tooltip="Mark whether bucket is enabled"><i class="icon-info-circled"></i></span>

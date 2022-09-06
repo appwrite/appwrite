@@ -19,7 +19,8 @@ trait TeamsBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'teamId' => ID::unique(),
-            'name' => 'Arsenal'
+            'name' => 'Arsenal',
+            'roles' => ['player'],
         ]);
 
         $this->assertEquals(201, $response1['headers']['status-code']);
@@ -128,25 +129,41 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'limit' => 2,
+            'queries' => [ 'limit(2)' ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertGreaterThan(0, $response['body']['total']);
-        $this->assertIsInt($response['body']['total']);
-        $this->assertCount(2, $response['body']['teams']);
+        $this->assertEquals(2, count($response['body']['teams']));
 
         $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'offset' => 1,
+            'queries' => [ 'offset(1)' ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertGreaterThan(0, $response['body']['total']);
-        $this->assertIsInt($response['body']['total']);
-        $this->assertGreaterThan(2, $response['body']['teams']);
+        $this->assertGreaterThan(1, count($response['body']['teams']));
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'greaterThanEqual("total", 0)' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThan(2, count($response['body']['teams']));
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("name", ["Arsenal", "Newcastle"])' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, count($response['body']['teams']));
 
         $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -191,7 +208,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'limit' => 2,
+            'queries' => [ 'limit(2)' ],
         ]);
 
         $this->assertEquals(200, $teams['headers']['status-code']);
@@ -203,8 +220,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'limit' => 1,
-            'cursor' => $teams['body']['teams'][0]['$id']
+            'queries' => [ 'limit(1)', 'cursorAfter("' . $teams['body']['teams'][0]['$id'] . '")' ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -217,9 +233,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'limit' => 1,
-            'cursor' => $teams['body']['teams'][1]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'limit(1)', 'cursorBefore("' . $teams['body']['teams'][1]['$id'] . '")' ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -235,7 +249,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => 'unknown'
+            'queries' => [ 'cursorAfter("unknown")' ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);

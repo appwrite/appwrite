@@ -304,7 +304,7 @@ class OpenAPI3 extends Format
                     case 'Utopia\Database\Validator\DatetimeValidator':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'datetime';
-                        $node['schema']['x-example'] = '2022-06-15T13:45:30.496';
+                        $node['schema']['x-example'] = Model::TYPE_DATETIME_EXAMPLE;
                         break;
                     case 'Appwrite\Network\Validator\Email':
                         $node['schema']['type'] = $validator->getType();
@@ -330,6 +330,20 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'binary';
                         break;
                     case 'Utopia\Validator\ArrayList':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Files':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Users':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
+                    case 'Appwrite\Utopia\Database\Validator\Queries':
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',

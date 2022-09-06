@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Account;
 
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Utopia\Database\ID;
 use Utopia\Database\DateTime;
@@ -390,7 +391,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'limit' => 1
+            'queries' => [ 'limit(1)' ],
         ]);
 
         $this->assertEquals($responseLimit['headers']['status-code'], 200);
@@ -407,7 +408,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'offset' => 1
+            'queries' => [ 'offset(1)' ],
         ]);
 
         $this->assertEquals($responseOffset['headers']['status-code'], 200);
@@ -424,8 +425,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'limit' => 1,
-            'offset' => 1
+            'queries' => [ 'limit(1)', 'offset(1)' ],
         ]);
 
         $this->assertEquals($responseLimitOffset['headers']['status-code'], 200);
@@ -519,6 +519,7 @@ trait AccountBase
     /**
      * @depends testUpdateAccountName
      */
+    #[Retry(count: 1)]
     public function testUpdateAccountPassword($data): array
     {
         $email = $data['email'] ?? '';

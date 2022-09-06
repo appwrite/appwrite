@@ -6,7 +6,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -25,10 +24,12 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Validator\Queries\Buckets;
+use Appwrite\Utopia\Database\Validator\Queries\Files;
 use Utopia\Image\Image;
 use Utopia\Storage\Compression\Algorithms\GZIP;
+use Utopia\Storage\Compression\Algorithms\Zstd;
 use Utopia\Storage\Device;
-use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
@@ -37,7 +38,6 @@ use Utopia\Storage\Validator\Upload;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -60,16 +60,17 @@ App::post('/v1/storage/buckets')
     ->param('bucketId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Bucket name')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default no user is granted with any permissions. [Learn more about permissions](/docs/permissions).', true)
-    ->param('fileSecurity', false, new Boolean(true), 'Enables configuring permissions for individual file. A user needs one of file or bucket level permissions to access a file. [Learn more about permissions](/docs/permissions).')
+    ->param('fileSecurity', false, new Boolean(true), 'Enables configuring permissions for individual file. A user needs one of file or bucket level permissions to access a file. [Learn more about permissions](/docs/permissions).', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
     ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
+    ->param('compression', 'none', new WhiteList([COMPRESSION_TYPE_NONE, COMPRESSION_TYPE_GZIP, COMPRESSION_TYPE_ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . COMPRESSION_TYPE_NONE . ',  [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, string $compression, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
@@ -118,6 +119,7 @@ App::post('/v1/storage/buckets')
                 'allowedFileExtensions' => $allowedFileExtensions,
                 'fileSecurity' => $fileSecurity,
                 'enabled' => $enabled,
+                'compression' => $compression,
                 'encryption' => $encryption,
                 'antivirus' => $antivirus,
                 'search' => implode(' ', [$bucketId, $name]),
@@ -150,38 +152,37 @@ App::get('/v1/storage/buckets')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_BUCKET_LIST)
+    ->param('queries', [], new Buckets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Buckets::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('cursor', '', new UID(), 'ID of the bucket used as the starting point for the query, excluding the bucket itself. Should be used for efficient pagination when working with large sets of data.', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' .  Database::ORDER_ASC . ' or ' .  Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $filterQueries = [];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $filterQueries[] = Query::search('name', $search);
+            $queries[] = Query::search('search', $search);
         }
 
-        $queries = [];
-        $queries[] = Query::limit($limit);
-        $queries[] = Query::offset($offset);
-        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
-        if (!empty($cursor)) {
-            $cursorDocument = $dbForProject->getDocument('buckets', $cursor);
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $bucketId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('buckets', $bucketId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Bucket '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Bucket '{$bucketId}' for the 'cursor' value not found.");
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
 
+        $filterQueries = Query::groupByType($queries)['filters'];
+
         $response->dynamic(new Document([
-            'buckets' => $dbForProject->find('buckets', \array_merge($filterQueries, $queries)),
+            'buckets' => $dbForProject->find('buckets', $queries),
             'total' => $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BUCKET_LIST);
     });
@@ -229,16 +230,17 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->param('name', null, new Text(128), 'Bucket name', false)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
-    ->param('fileSecurity', false, new Boolean(true), 'Enables configuring permissions for individual file. A user needs one of file or bucket level permissions to access a file. [Learn more about permissions](/docs/permissions).')
+    ->param('fileSecurity', false, new Boolean(true), 'Enables configuring permissions for individual file. A user needs one of file or bucket level permissions to access a file. [Learn more about permissions](/docs/permissions).', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
     ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
+    ->param('compression', 'none', new WhiteList([COMPRESSION_TYPE_NONE, COMPRESSION_TYPE_GZIP, COMPRESSION_TYPE_ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . COMPRESSION_TYPE_NONE . ', [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, string $compression, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -267,6 +269,7 @@ App::put('/v1/storage/buckets/:bucketId')
                 ->setAttribute('fileSecurity', $fileSecurity)
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('encryption', $encryption)
+                ->setAttribute('compression', $compression)
                 ->setAttribute('antivirus', $antivirus));
 
         $events
@@ -326,6 +329,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('audits.resource', 'files/{response.$id}')
     ->label('usage.metric', 'files.{scope}.requests.create')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createFile')
@@ -498,9 +504,18 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $mimeType = $deviceFiles->getFileMimeType($path); // Get mime-type before compression and encryption
             $data = '';
             // Compression
-            if ($fileSize <= APP_STORAGE_READ_BUFFER) {
+            $algorithm = $bucket->getAttribute('compression', 'none');
+            if ($fileSize <= APP_STORAGE_READ_BUFFER && $algorithm != 'none') {
                 $data = $deviceFiles->read($path);
-                $compressor = new GZIP();
+                switch ($algorithm) {
+                    case 'zstd':
+                        $compressor = new Zstd();
+                        break;
+                    case 'gzip':
+                    default:
+                        $compressor = new GZIP();
+                        break;
+                }
                 $data = $compressor->compress($data);
             }
 
@@ -520,8 +535,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $sizeActual = $deviceFiles->getFileSize($path);
-
-            $algorithm = empty($compressor) ? '' : $compressor->getName();
             $fileHash = $deviceFiles->getFileHash($path);
 
             if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
@@ -649,16 +662,12 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE_LIST)
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
+    ->param('queries', [], new Files(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Files::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of files to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the file used as the starting point for the query, excluding the file itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', Database::ORDER_ASC, new WhiteList([Database::ORDER_ASC, Database::ORDER_DESC], true), 'Order result by ' . Database::ORDER_ASC . ' or ' . Database::ORDER_DESC . ' order.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $bucketId, string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $bucketId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -673,35 +682,39 @@ App::get('/v1/storage/buckets/:bucketId/files')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        $filterQueries = [];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $filterQueries[] = Query::search('name', $search);
+            $queries[] = Query::search('search', $search);
         }
 
-        $queries = [];
-        $queries[] = Query::limit($limit);
-        $queries[] = Query::offset($offset);
-        $queries[] = $orderType === Database::ORDER_ASC ? Query::orderAsc('') : Query::orderDesc('');
-        if (!empty($cursor)) {
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $fileId = $cursor->getValue();
+
             if ($fileSecurity && !$valid) {
-                $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor);
+                $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
             } else {
-                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $cursor));
+                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
             }
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "File '{$cursor}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "File '{$fileId}' for the 'cursor' value not found.");
             }
 
-            $queries[] = $cursorDirection === Database::CURSOR_AFTER ? Query::cursorAfter($cursorDocument) : Query::cursorBefore($cursorDocument);
+            $cursor->setValue($cursorDocument);
         }
 
+        $filterQueries = Query::groupByType($queries)['filters'];
+
         if ($fileSecurity && !$valid) {
-            $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), \array_merge($filterQueries, $queries));
+            $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries);
             $total = $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
         } else {
-            $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), \array_merge($filterQueries, $queries)));
+            $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries));
             $total = Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         }
 
@@ -836,7 +849,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $path = $file->getAttribute('path');
         $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-        $algorithm = $file->getAttribute('algorithm');
+        $algorithm = $file->getAttribute('algorithm', 'none');
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
         if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) App::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
@@ -847,15 +860,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 $path = $fileLogos['default_image'];
             }
 
-            $algorithm = null;
+            $algorithm = 'none';
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $deviceFiles = $deviceLocal;
         }
-
-
-        $compressor = new GZIP();
 
         if (!$deviceFiles->exists($path)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -881,8 +891,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             );
         }
 
-        if (!empty($algorithm)) {
-            $source = $compressor->decompress($source);
+        switch ($algorithm) {
+            case 'zstd':
+                $compressor = new Zstd();
+                $source = $compressor->decompress($source);
+                break;
+            case 'gzip':
+                $compressor = new GZIP();
+                $source = $compressor->decompress($source);
+                break;
         }
 
         $image = new Image($source);
@@ -1017,12 +1034,21 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             );
         }
 
-        if (!empty($file->getAttribute('algorithm', ''))) {
-            if (empty($source)) {
-                $source = $deviceFiles->read($path);
-            }
-            $compressor = new GZIP();
-            $source = $compressor->decompress($source);
+        switch ($file->getAttribute('algorithm', 'none')) {
+            case 'zstd':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new Zstd();
+                $source = $compressor->decompress($source);
+                break;
+            case 'gzip':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new GZIP();
+                $source = $compressor->decompress($source);
+                break;
         }
 
         if (!empty($source)) {
@@ -1158,12 +1184,21 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             );
         }
 
-        if (!empty($file->getAttribute('algorithm', ''))) {
-            if (empty($source)) {
-                $source = $deviceFiles->read($path);
-            }
-            $compressor = new GZIP();
-            $source = $compressor->decompress($source);
+        switch ($file->getAttribute('algorithm', 'none')) {
+            case 'zstd':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new Zstd();
+                $source = $compressor->decompress($source);
+                break;
+            case 'gzip':
+                if (empty($source)) {
+                    $source = $deviceFiles->read($path);
+                }
+                $compressor = new GZIP();
+                $source = $compressor->decompress($source);
+                break;
         }
 
         if (!empty($source)) {
@@ -1204,6 +1239,9 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('audits.resource', 'files/{response.$id}')
     ->label('usage.metric', 'files.{scope}.requests.update')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateFile')
@@ -1303,6 +1341,9 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('audits.resource', 'file/{request.fileId}')
     ->label('usage.metric', 'files.{scope}.requests.delete')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteFile')
@@ -1359,9 +1400,12 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                 ->setResource('file/' . $fileId)
             ;
 
-            // Don't need to check valid here because we already ensured validity
-            if ($fileSecurity) {
-                $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            if ($fileSecurity && !$valid) {
+                try {
+                    $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                } catch (AuthorizationException) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
             } else {
                 $deleted = Authorization::skip(fn() => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
             }
@@ -1551,6 +1595,7 @@ App::get('/v1/storage/:bucketId/usage')
                 foreach ($metrics as $metric) {
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
+
                     $requestDocs = $dbForProject->find('stats', [
                         Query::equal('period', [$period]),
                         Query::equal('metric', [$metric]),

@@ -15,6 +15,7 @@ use Utopia\Database\ID;
 use Utopia\Storage\Storage;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
+use Utopia\Database\Query;
 
 require_once __DIR__ . '/../init.php';
 
@@ -144,7 +145,12 @@ class BuildsV1 extends Worker
         );
 
         $source = $deployment->getAttribute('path');
-        $vars = $function->getAttribute('vars', []);
+
+        $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
+            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+            return $carry;
+        }, []);
+
         $baseImage = $runtime['image'];
 
         try {
@@ -189,10 +195,10 @@ class BuildsV1 extends Worker
             $function->setAttribute('scheduleNext', $next);
             $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
         } catch (\Throwable $th) {
-            $endtime = DateTime::now();
-            $interval = (new \DateTime($endtime))->diff(new \DateTime($startTime));
-            $build->setAttribute('endTime', $endtime);
-            $build->setAttribute('duration', $interval->format('%s'));
+            $endTime = DateTime::now();
+            $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));
+            $build->setAttribute('endTime', $endTime);
+            $build->setAttribute('duration', $interval->format('%s') + 0);
             $build->setAttribute('status', 'failed');
             $build->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());

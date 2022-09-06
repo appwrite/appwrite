@@ -294,6 +294,7 @@ App::get('/console/databases/collection')
         $permissions
             ->setParam('method', 'databases.getCollection')
             ->setParam('events', 'load,databases.updateCollection')
+            ->setParam('form', 'collectionPermissions')
             ->setParam('data', 'project-collection')
             ->setParam('params', [
                 'collection-id' => '{{router.params.id}}',
@@ -329,7 +330,6 @@ App::get('/console/databases/document')
     ->action(function (string $databaseId, string $collection, View $layout) {
 
         $logs = new View(__DIR__ . '/../../views/console/comps/logs.phtml');
-
         $logs
             ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
             ->setParam('method', 'databases.listDocumentLogs')
@@ -341,15 +341,16 @@ App::get('/console/databases/document')
         ;
 
         $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
-
         $permissions
             ->setParam('method', 'databases.getDocument')
             ->setParam('events', 'load,databases.updateDocument')
+            ->setParam('form', 'documentPermissions')
             ->setParam('data', 'project-document')
-            ->setParam('permissions', \array_filter(
-                Database::PERMISSIONS,
-                fn ($perm) => $perm != Database::PERMISSION_CREATE
-            ))
+            ->setParam('permissions', [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ])
             ->setParam('params', [
                 'collection-id' => '{{router.params.collection}}',
                 'database-id' => '{{router.params.databaseId}}',
@@ -384,10 +385,12 @@ App::get('/console/databases/document/new')
 
         $permissions
             ->setParam('data', 'project-document')
-            ->setParam('permissions', \array_filter(
-                Database::PERMISSIONS,
-                fn ($perm) => $perm != Database::PERMISSION_CREATE
-            ))
+            ->setParam('form', 'documentPermissions')
+            ->setParam('permissions', [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ])
             ->setParam('params', [
                 'collection-id' => '{{router.params.collection}}',
                 'database-id' => '{{router.params.databaseId}}',
@@ -451,20 +454,22 @@ App::get('/console/storage/bucket')
         $fileCreatePermissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
         $fileCreatePermissions
             ->setParam('form', 'fileCreatePermissions')
-            ->setParam('permissions', \array_filter(
-                Database::PERMISSIONS,
-                fn ($perm) => $perm != Database::PERMISSION_CREATE
-            ));
+            ->setParam('permissions', [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ]);
 
         $fileUpdatePermissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
         $fileUpdatePermissions
             ->setParam('method', 'storage.getFile')
             ->setParam('data', 'file')
             ->setParam('form', 'fileUpdatePermissions')
-            ->setParam('permissions', \array_filter(
-                Database::PERMISSIONS,
-                fn ($perm) => $perm != Database::PERMISSION_CREATE
-            ))
+            ->setParam('permissions', [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ])
             ->setParam('params', [
                 'bucket-id' => '{{router.params.id}}',
             ]);

@@ -7,12 +7,14 @@ use Utopia\Database\Document;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model;
 use Utopia\App;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 use Utopia\Storage\Validator\File;
 use Utopia\Validator\WhiteList;
+use Utopia\Database\ID;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')
@@ -393,6 +395,35 @@ App::get('/v1/mock/tests/general/empty')
     ->action(function (Response $response) {
 
         $response->noContent();
+    });
+
+/** Endpoint to test if required headers are sent from the SDK */
+App::get('/v1/mock/tests/general/headers')
+    ->desc('Get headers')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'headers')
+    ->label('sdk.description', 'Return headers from the request')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_MOCK)
+    ->label('sdk.mock', true)
+    ->inject('request')
+    ->inject('response')
+    ->action(function (Request $request, Response $response) {
+        $res = [
+            'x-sdk-name' => $request->getHeader('x-sdk-name'),
+            'x-sdk-platform' => $request->getHeader('x-sdk-platform'),
+            'x-sdk-language' => $request->getHeader('x-sdk-language'),
+            'x-sdk-version' => $request->getHeader('x-sdk-version'),
+        ];
+        $res = array_map(function ($key, $value) {
+            return $key . ': ' . $value;
+        }, array_keys($res), $res);
+        $res = implode("; ", $res);
+
+        $response->dynamic(new Document(['result' => $res]), Response::MODEL_MOCK);
     });
 
 App::get('/v1/mock/tests/general/400-error')

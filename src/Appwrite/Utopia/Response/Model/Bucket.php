@@ -18,13 +18,13 @@ class Bucket extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Bucket creation time in Datetime',
+                'description' => 'Bucket creation time in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Bucket update date in Datetime',
+                'description' => 'Bucket update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -65,6 +65,13 @@ class Bucket extends Model
                 'default' => [],
                 'example' => ['jpg', 'png'],
                 'array' => true
+            ])
+            ->addRule('compression', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Compression algorithm choosen for compression. Will be one of ' . COMPRESSION_TYPE_NONE . ', [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd).',
+                'default' => '',
+                'example' => 'gzip',
+                'array' => false
             ])
             ->addRule('encryption', [
                 'type' => self::TYPE_BOOLEAN,

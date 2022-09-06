@@ -19,13 +19,13 @@ class User extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'User creation date in Datetime.',
+                'description' => 'User creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'User update date in Datetime.',
+                'description' => 'User update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -64,8 +64,8 @@ class User extends Model
             ])
             ->addRule('registration', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'User registration date in Datetime.',
-                'default' => null,
+                'description' => 'User registration date in ISO 8601 format.',
+                'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('status', [
@@ -76,7 +76,7 @@ class User extends Model
             ])
             ->addRule('passwordUpdate', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Datetime of the most recent password update',
+                'description' => 'Password update time in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])

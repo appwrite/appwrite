@@ -17,6 +17,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
@@ -83,7 +84,8 @@ App::init()
             ->setParam('{userId}', $user->getId())
             ->setParam('{userAgent}', $request->getUserAgent(''))
             ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getHostname() . $route->getPath());
+            ->setParam('{url}', $request->getHostname() . $route->getPath())
+            ->setParam('{method}', $request->getMethod());
             $timeLimitArray[] = $timeLimit;
         }
 
@@ -103,7 +105,7 @@ App::init()
             $abuse = new Abuse($timeLimit);
             $remaining = $timeLimit->remaining();
             $limit = $timeLimit->limit();
-            $time = (new DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
+            $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
 
             if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
                 $closestLimit = $remaining;
@@ -114,11 +116,14 @@ App::init()
                 ;
             }
 
+            $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+
             if (
-                (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled' // Route is rate-limited
-                    && $abuse->check()) // Abuse is not disabled
-                && (!$isAppUser && !$isPrivilegedUser)
-            ) { // User is not an admin or API key
+                $enabled                // Abuse is enabled
+                && !$isAppUser          // User is not API key
+                && !$isPrivilegedUser   // User is not an admin
+                && $abuse->check()      // Route is rate-limited
+            ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
         }
@@ -358,6 +363,7 @@ App::shutdown()
         if ($useCache) {
             $resource = null;
             $data = $response->getPayload();
+
             if (!empty($data['payload'])) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
@@ -365,7 +371,6 @@ App::shutdown()
                 }
 
                 $key = md5($request->getURI() . implode('*', $request->getParams()));
-
                 $data = json_encode([
                 'content-type' => $response->getContentType(),
                 'payload' => base64_encode($data['payload']),
@@ -373,15 +378,17 @@ App::shutdown()
 
                 $signature = md5($data);
                 $cacheLog  = $dbForProject->getDocument('cache', $key);
+                $accessedAt = $cacheLog->getAttribute('accessedAt', '');
+                $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
                     'resource' => $resource,
-                    'accessedAt' => \time(),
+                    'accessedAt' => $now,
                     'signature' => $signature,
                     ])));
-                } elseif (date('Y/m/d', \time()) > date('Y/m/d', $cacheLog->getAttribute('accessedAt'))) {
-                    $cacheLog->setAttribute('accessedAt', \time());
+                } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
+                    $cacheLog->setAttribute('accessedAt', $now);
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
 

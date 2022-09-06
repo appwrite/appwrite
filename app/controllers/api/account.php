@@ -18,6 +18,9 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries;
+use Appwrite\Utopia\Database\Validator\Query\Limit;
+use Appwrite\Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
@@ -1345,14 +1348,18 @@ App::get('/v1/account/logs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
-    ->param('limit', 25, new Range(0, 100), 'Maximum number of logs to return in response. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Offset value. The default value is 0. Use this value to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('user')
     ->inject('locale')
     ->inject('geodb')
     ->inject('dbForProject')
-    ->action(function (int $limit, int $offset, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
+    ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
+
+        $queries = Query::parseQueries($queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $offset = $grouped['offset'] ?? 0;
 
         $audit = new EventAudit($dbForProject);
 

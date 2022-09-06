@@ -1,3 +1,9 @@
+## 7.0.0
+* **BREAKING** Switched to using [flutter_web_auth_2](https://pub.dev/packages/flutter_web_auth_2), check Getting Started section in Readme for changes (Android and Web will require adjustments for OAuth to work properly)
+* Fixes Concurrent modification issue
+* Upgrade dependencies
+* **Windows** support for OAuth sessions
+
 ## 6.0.0
 * Support for Appwrite 0.15
 * **NEW** Phone authentication `account.createPhoneSession()`

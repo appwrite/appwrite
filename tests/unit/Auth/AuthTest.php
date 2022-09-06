@@ -353,6 +353,7 @@ class AuthTest extends TestCase
             '$id' => ID::custom('123'),
             'memberships' => [
                 [
+                    'confirm' => true,
                     'teamId' => ID::custom('abc'),
                     'roles' => [
                         'administrator',
@@ -360,6 +361,7 @@ class AuthTest extends TestCase
                     ]
                 ],
                 [
+                    'confirm' => true,
                     'teamId' => ID::custom('def'),
                     'roles' => [
                         'guest'
@@ -387,6 +389,7 @@ class AuthTest extends TestCase
             '$id' => ID::custom('123'),
             'memberships' => [
                 [
+                    'confirm' => true,
                     'teamId' => ID::custom('abc'),
                     'roles' => [
                         'administrator',
@@ -394,6 +397,7 @@ class AuthTest extends TestCase
                     ]
                 ],
                 [
+                    'confirm' => true,
                     'teamId' => ID::custom('def'),
                     'roles' => [
                         'guest'
@@ -421,6 +425,7 @@ class AuthTest extends TestCase
             '$id' => ID::custom('123'),
             'memberships' => [
                 [
+                    'confirm' => true,
                     'teamId' => ID::custom('abc'),
                     'roles' => [
                         'administrator',
@@ -428,6 +433,7 @@ class AuthTest extends TestCase
                     ]
                 ],
                 [
+                    'confirm' => true,
                     'teamId' => ID::custom('def'),
                     'roles' => [
                         'guest'
