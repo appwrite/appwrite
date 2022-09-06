@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Users;
 
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Utopia\Database\ID;
 
@@ -852,6 +853,7 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
+    #[Retry(count: 1)]
     public function testUpdateUserStatus(array $data): array
     {
         /**

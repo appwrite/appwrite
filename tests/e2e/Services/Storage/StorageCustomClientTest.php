@@ -1065,6 +1065,68 @@ class StorageCustomClientTest extends Scope
         $this->assertEmpty($file['body']);
     }
 
+    public function testAllowedPermissions(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        // Bucket aliases write to create, update, delete
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'permissions' => [
+                Permission::write(Role::user($this->getUser()['$id'])),
+            ],
+            'fileSecurity' => true,
+        ]);
+
+        $bucketId = $bucket['body']['$id'];
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $this->assertContains(Permission::create(Role::user($this->getUser()['$id'])), $bucket['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $bucket['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $bucket['body']['$permissions']);
+
+        // File aliases write to update, delete
+        $file1 = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
+            'permissions' => [
+                Permission::write(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $this->assertNotContains(Permission::create(Role::user($this->getUser()['$id'])), $file1['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $file1['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $file1['body']['$permissions']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // File does not allow create permission
+        $file2 = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $this->assertEquals(400, $file2['headers']['status-code']);
+    }
+
     public function testCreateFileDefaultPermissions(): array
     {
         /**
@@ -1220,9 +1282,8 @@ class StorageCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'permissions' => [
                 Permission::read(Role::user(ID::custom('notme'))),
-                 Permission::create(Role::user(ID::custom('notme'))),
-                    Permission::update(Role::user(ID::custom('notme'))),
-                    Permission::delete(Role::user(ID::custom('notme'))),
+                Permission::update(Role::user(ID::custom('notme'))),
+                Permission::delete(Role::user(ID::custom('notme'))),
             ],
         ]);
 
