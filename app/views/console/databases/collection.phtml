@@ -719,10 +719,10 @@ $permissions = $this->getParam('permissions', null);
 
         <label for="xdefault">Default Value</label>
         <template x-if="!(array || required)">
-            <input name="xdefault" type="datetime-local" class="margin-bottom-large">
+            <input name="xdefault" type="datetime-local" step=".001" data-cast-to="string-datetime" class="margin-bottom-large">
         </template>
         <template x-if="(array || required)">
-            <input name="xdefault" type="datetime-local" class="margin-bottom-large" disabled value="">
+            <input name="xdefault" type="datetime-local" step=".001" data-cast-to="string-datetime" class="margin-bottom-large" disabled value="">
         </template>
 
         <footer>

@@ -25,6 +25,26 @@
                         value = null;
                     }
                     break;
+                case 'string-datetime':
+                    value = value.toString();
+                    if (value.length === 0) {
+                        value = null;
+                    } else {
+                        function prefixWithZero(value, minLength = 2) {
+                            value = value + "";
+                        
+                            while (value.length < minLength) {
+                                value = `0${value}`;
+                            }
+                        
+                            return value;
+                        }
+                        
+                        const date = new Date(value);
+                        const isoTime = `${date.getUTCFullYear()}-${prefixWithZero(date.getUTCMonth() + 1)}-${prefixWithZero(date.getUTCDate())}T${prefixWithZero(date.getUTCHours())}:${prefixWithZero(date.getUTCMinutes())}:${prefixWithZero(date.getUTCSeconds())}.${prefixWithZero(date.getUTCMilliseconds(), 3)}+00:00`;
+                        value = isoTime;
+                    }
+                    break;
                 case 'json':
                     value = (value) ? JSON.parse(value) : [];
                     break;
