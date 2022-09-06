@@ -8,7 +8,9 @@ $params = $this->getParam('params', []);
     <?php foreach($params as $key => $value): ?>
     data-param-<?php echo $key; ?>="<?php echo $value; ?>"
     <?php endforeach; ?>
-    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+    data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}})"
+    data-param-queries-cast-to="array"
+    data-param-queries-cast-from="csv"
     data-scope="sdk"
     data-event="load"
     data-name="logs">
@@ -65,13 +67,12 @@ $params = $this->getParam('params', []);
                 <?php endforeach; ?> 
                 data-event="submit"
                 data-param-collection-id="{{router.params.id}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                data-param-order-type="DESC"
                 data-scope="sdk"
                 data-name="logs"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{logs.total}}" class="margin-end-small round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                <input type="hidden" name="offset">
+                <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-offset="{{router.params.offset}}" data-total="{{logs.total}}" class="margin-end-small round small" aria-label="Back"><i class="icon-left-open"></i></button>
             </form>
 
             <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{logs.total|pageTotal}}"></span>
@@ -83,13 +84,12 @@ $params = $this->getParam('params', []);
                 <?php endforeach; ?> 
                 data-event="submit"
                 data-param-collection-id="{{router.params.id}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                data-param-order-type="DESC"
                 data-scope="sdk"
                 data-name="logs"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{logs.total}}" class="margin-start-small round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                <input type="hidden" name="offset">
+                <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-offset="{{router.params.offset}}" data-total="{{logs.total}}" class="margin-start-small round small" aria-label="Next"><i class="icon-right-open"></i></button>
             </form>
         </div>
     </div>

@@ -2,6 +2,8 @@
 
 namespace Appwrite\Extend;
 
+use Utopia\Config\Config;
+
 class Exception extends \Exception
 {
     /**
@@ -47,7 +49,7 @@ class Exception extends \Exception
     public const GENERAL_ROUTE_NOT_FOUND           = 'general_route_not_found';
     public const GENERAL_CURSOR_NOT_FOUND          = 'general_cursor_not_found';
     public const GENERAL_SERVER_ERROR              = 'general_server_error';
-    public const GENERAL_PROTOCOL_UNSUPPORTED       = 'general_protocol_unsupported';
+    public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -69,6 +71,7 @@ class Exception extends \Exception
     public const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
     public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
     public const USER_PHONE_NOT_FOUND              = 'user_phone_not_found';
+    public const USER_MISSING_ID                   = 'user_missing_id';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -80,6 +83,7 @@ class Exception extends \Exception
 
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
+    public const MEMBERSHIP_ALREADY_CONFIRMED      = 'membership_already_confirmed';
 
     /** Avatars */
     public const AVATAR_SET_NOT_FOUND              = 'avatar_set_not_found';
@@ -116,8 +120,8 @@ class Exception extends \Exception
     public const EXECUTION_NOT_FOUND               = 'execution_not_found';
 
     /** Databases */
-    public const DATABASE_NOT_FOUND              = 'database_not_found';
-    public const DATABASE_ALREADY_EXISTS         = 'database_already_exists';
+    public const DATABASE_NOT_FOUND                = 'database_not_found';
+    public const DATABASE_ALREADY_EXISTS           = 'database_already_exists';
 
     /** Collections */
     public const COLLECTION_NOT_FOUND              = 'collection_not_found';
@@ -152,7 +156,6 @@ class Exception extends \Exception
     public const PROJECT_PROVIDER_UNSUPPORTED      = 'project_provider_unsupported';
     public const PROJECT_INVALID_SUCCESS_URL       = 'project_invalid_success_url';
     public const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
-    public const PROJECT_MISSING_USER_ID           = 'project_missing_user_id';
     public const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
     public const PROJECT_KEY_EXPIRED               = 'project_key_expired';
 
@@ -161,6 +164,10 @@ class Exception extends \Exception
 
     /** Keys */
     public const KEY_NOT_FOUND                     = 'key_not_found';
+
+    /** Variables */
+    public const VARIABLE_NOT_FOUND                = 'variable_not_found';
+    public const VARIABLE_ALREADY_EXISTS           = 'variable_already_exists';
 
     /** Platform */
     public const PLATFORM_NOT_FOUND                = 'platform_not_found';
@@ -180,14 +187,22 @@ class Exception extends \Exception
     public const VIDEO_SUBTITLE_SEGMENT_NOT_FOUND   = 'video_subtitle_segment_not_found';
 
 
+    protected $type = '';
 
-    private $type = '';
-
-    public function __construct(string $message, int $code = 0, string $type = Exception::GENERAL_UNKNOWN, \Throwable $previous = null)
+    public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
+        $this->errors = Config::getParam('errors');
         $this->type = $type;
 
-        parent::__construct($message, $code, $previous);
+        if (isset($this->errors[$type])) {
+            $this->code = $this->errors[$type]['code'];
+            $this->message = $this->errors[$type]['description'];
+        }
+
+        $this->message = $message ?? $this->message;
+        $this->code = $code ?? $this->code;
+
+        parent::__construct($this->message, $this->code, $previous);
     }
 
     /**

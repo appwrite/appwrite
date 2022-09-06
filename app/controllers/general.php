@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
+use Utopia\Database\Role;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
@@ -22,6 +23,7 @@ use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -30,6 +32,7 @@ use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
 use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -45,7 +48,8 @@ App::init()
     ->inject('user')
     ->inject('locale')
     ->inject('clients')
-    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients) {
+    ->inject('servers')
+    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers) {
         /*
         * Request format
         */
@@ -89,7 +93,7 @@ App::init()
                 if (!empty($envDomain) && $envDomain !== 'localhost') {
                     $mainDomain = $envDomain;
                 } else {
-                    $domainDocument = $dbForConsole->findOne('domains', [], 0, ['_id'], ['ASC']);
+                    $domainDocument = $dbForConsole->findOne('domains', [Query::orderAsc('_id')]);
                     $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
 
@@ -97,7 +101,7 @@ App::init()
                     Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
                 } else {
                     $domainDocument = $dbForConsole->findOne('domains', [
-                        new Query('domain', QUERY::TYPE_EQUAL, [$domain->get()])
+                        Query::equal('domain', [$domain->get()])
                     ]);
 
                     if (!$domainDocument) {
@@ -131,11 +135,11 @@ App::init()
         }
 
         if ($project->isEmpty()) {
-            throw new AppwriteException('Project not found', 404, AppwriteException::PROJECT_NOT_FOUND);
+            throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
         }
 
         if (!empty($route->getLabel('sdk.auth', [])) && $project->isEmpty() && ($route->getLabel('scope', '') !== 'public')) {
-            throw new AppwriteException('Missing or unknown project ID', 400, AppwriteException::PROJECT_UNKNOWN);
+            throw new AppwriteException(AppwriteException::PROJECT_UNKNOWN);
         }
 
         $referrer = $request->getReferer();
@@ -206,7 +210,7 @@ App::init()
         if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
                 if ($request->getMethod() !== Request::METHOD_GET) {
-                    throw new AppwriteException('Method unsupported over HTTP.', 500, AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED);
+                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP.');
                 }
 
                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
@@ -219,7 +223,7 @@ App::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -239,13 +243,15 @@ App::init()
             && $route->getLabel('origin', false) !== '*'
             && empty($request->getHeader('x-appwrite-key', ''))
         ) {
-            throw new AppwriteException($originValidator->getDescription(), 403, AppwriteException::GENERAL_UNKNOWN_ORIGIN);
+            throw new AppwriteException(AppwriteException::GENERAL_UNKNOWN_ORIGIN, $originValidator->getDescription());
         }
 
         /*
         * ACL Check
         */
-        $role = ($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER;
+        $role = ($user->isEmpty())
+            ? Role::guests()->toString()
+            : Role::users()->toString();
 
         // Add user roles
         $memberships = $user->find('teamId', $project->getAttribute('teamId', null), 'memberships');
@@ -289,21 +295,42 @@ App::init()
                     'name' => $project->getAttribute('name', 'Untitled'),
                 ]);
 
-                $role = Auth::USER_ROLE_APP;
+                $role = Auth::USER_ROLE_APPS;
                 $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
-                $expire = $key->getAttribute('expire', 0);
-
-                if (!empty($expire) && $expire < \time()) {
-                    throw new AppwriteException('Project key expired', 401, AppwriteException:: PROJECT_KEY_EXPIRED);
+                $expire = $key->getAttribute('expire');
+                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+                    throw new AppwriteException(AppwriteException:: PROJECT_KEY_EXPIRED);
                 }
 
-                Authorization::setRole('role:' . Auth::USER_ROLE_APP);
+                Authorization::setRole(Auth::USER_ROLE_APPS);
                 Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+
+                $accessedAt = $key->getAttribute('accessedAt', '');
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
+                    $key->setAttribute('accessedAt', DateTime::now());
+                    $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                    $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                }
+
+                $sdkValidator = new WhiteList($servers, true);
+                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+                if ($sdkValidator->isValid($sdk)) {
+                    $sdks = $key->getAttribute('sdks', []);
+                    if (!in_array($sdk, $sdks)) {
+                        array_push($sdks, $sdk);
+                        $key->setAttribute('sdks', $sdks);
+
+                        /** Update access time as well */
+                        $key->setAttribute('accessedAt', Datetime::now());
+                        $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                    }
+                }
             }
         }
 
-        Authorization::setRole('role:' . $role);
+        Authorization::setRole($role);
 
         foreach (Auth::getRoles($user) as $authRole) {
             Authorization::setRole($authRole);
@@ -316,24 +343,24 @@ App::init()
                 && !$project->getAttribute('services', [])[$service]
                 && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
             ) {
-                throw new AppwriteException('Service is disabled', 503, AppwriteException::GENERAL_SERVICE_DISABLED);
+                throw new AppwriteException(AppwriteException::GENERAL_SERVICE_DISABLED);
             }
         }
 
         if (!\in_array($scope, $scopes)) {
             if ($project->isEmpty()) { // Check if permission is denied because project is missing
-                throw new AppwriteException('Project not found', 404, AppwriteException::PROJECT_NOT_FOUND);
+                throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
             }
 
-            throw new AppwriteException($user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')', 401, AppwriteException::GENERAL_UNAUTHORIZED_SCOPE);
+            throw new AppwriteException(AppwriteException::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
         }
 
         if (false === $user->getAttribute('status')) { // Account is blocked
-            throw new AppwriteException('Invalid credentials. User is blocked', 401, AppwriteException::USER_BLOCKED);
+            throw new AppwriteException(AppwriteException::USER_BLOCKED);
         }
 
         if ($user->getAttribute('reset')) {
-            throw new AppwriteException('Password reset is required', 412, AppwriteException::USER_PASSWORD_RESET_REQUIRED);
+            throw new AppwriteException(AppwriteException::USER_PASSWORD_RESET_REQUIRED);
         }
     });
 
@@ -347,7 +374,7 @@ App::options()
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -445,7 +472,7 @@ App::error()
 
         /** Handle Utopia Errors */
         if ($error instanceof Utopia\Exception) {
-            $error = new AppwriteException($message, $code, AppwriteException::GENERAL_UNKNOWN, $error);
+            $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
             switch ($code) {
                 case 400:
                     $error->setType(AppwriteException::GENERAL_ARGUMENT_INVALID);
@@ -458,7 +485,7 @@ App::error()
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */
         if (!($error instanceof AppwriteException)) {
-            $error = new AppwriteException($message, $code, AppwriteException::GENERAL_UNKNOWN, $error);
+            $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
         }
 
         switch ($code) { // Don't show 500 errors!
@@ -601,32 +628,32 @@ App::get('/.well-known/acme-challenge')
         ]);
 
         if (!$validator->isValid($token) || \count($uriChunks) !== 4) {
-            throw new AppwriteException('Invalid challenge token.', 400);
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Invalid challenge token.');
         }
 
         $base = \realpath(APP_STORAGE_CERTIFICATES);
         $absolute = \realpath($base . '/.well-known/acme-challenge/' . $token);
 
         if (!$base) {
-            throw new AppwriteException('Storage error', 500, AppwriteException::GENERAL_SERVER_ERROR);
+            throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Storage error');
         }
 
         if (!$absolute) {
-            throw new AppwriteException('Unknown path', 404);
+            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND, 'Unknown path');
         }
 
         if (!\substr($absolute, 0, \strlen($base)) === $base) {
-            throw new AppwriteException('Invalid path', 401);
+            throw new AppwriteException(AppwriteException::GENERAL_UNAUTHORIZED_SCOPE, 'Invalid path');
         }
 
         if (!\file_exists($absolute)) {
-            throw new AppwriteException('Unknown path', 404);
+            throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND, 'Unknown path');
         }
 
         $content = @\file_get_contents($absolute);
 
         if (!$content) {
-            throw new AppwriteException('Failed to get contents', 500, AppwriteException::GENERAL_SERVER_ERROR);
+            throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Failed to get contents');
         }
 
         $response->text($content);

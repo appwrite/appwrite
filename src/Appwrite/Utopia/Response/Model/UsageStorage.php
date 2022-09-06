@@ -16,16 +16,9 @@ class UsageStorage extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('filesStorage', [
+            ->addRule('storage', [
                 'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for the occupied storage size by files (in bytes).',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true
-            ])
-            ->addRule('tagsStorage', [
-                'type' => Response::MODEL_METRIC_LIST,
-                'description' => 'Aggregated stats for the occupied storage size by tags (in bytes).',
+                'description' => 'Aggregated stats for the occupied storage size (in bytes).',
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true

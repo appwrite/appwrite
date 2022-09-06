@@ -1,3 +1,35 @@
+# Version 1.0.0-RC1
+
+# DO NOT INSTALL THIS VERSION ON ANY EXISTING INSTANCES OF APPWRITE, THIS IS A TEST RELEASE AND DOES NOT HAVE BACKWARDS COMPATIBILITY!!
+
+## BREAKING CHANGES
+- All Date values are now stored as ISO-8601 instead of UNIX timestamps [#3516](https://github.com/appwrite/appwrite/pull/3516)
+- Permission levels and syntax have been reworked. See the Permissions V2 section in the document for more information [#3700](https://github.com/appwrite/appwrite/pull/3700)
+- Function Variables are now stored in a seperate collection with their own API endpoints [#3634](https://github.com/appwrite/appwrite/pull/3634)
+- Resources that are computed asynchronously, such as function deployments, will now return a `202 Accepted` status code instead of `200 OK` [#3547](https://github.com/appwrite/appwrite/pull/3547)
+- Queries have been improved to allow even more flexibility, and introduced to new endpoints. See the Queries V2 section in the document for more information [#3702](https://github.com/appwrite/appwrite/pull/3702)
+- Compound indexes are now more flexible [#151](https://github.com/utopia-php/database/pull/151)
+
+## Features
+- Added the UI to see the Parent ID of all resources within the UI. [#3653](https://github.com/appwrite/appwrite/pull/3653)
+- Added automatic cache cleaning for internal Appwrite services [#3491](https://github.com/appwrite/appwrite/pull/3491)
+- Added the ability for Appwrite to handle importing hashed passwords, this can be leveraged to import existing user data from other systems. More information can be found in the document linked above. [#2747](https://github.com/appwrite/appwrite/pull/2747)
+- `Users` has now been renamed to `Authentication` within the Appwrite console [#3664](https://github.com/appwrite/appwrite/pull/3664)
+- More endpoints were made public (for guests) with proper rate limits [#3741](https://github.com/appwrite/appwrite/pull/3741)
+- Added Disqus, Podio, and Etsy OAuth providers [#3526](https://github.com/appwrite/appwrite/pull/3526), [#3488](https://github.com/appwrite/appwrite/pull/3488), [#3522](https://github.com/appwrite/appwrite/pull/3522)
+- Function logs now capture stdout [#3656](https://github.com/appwrite/appwrite/pull/3656)
+- Added the ability to grant guests write permissions for documents, files and executions [#3727](https://github.com/appwrite/appwrite/pull/3727)
+
+## Bugs
+- Fixed an issue where after resetting your password in the Appwrite console, you would not be redirected to the login page. [#3654](https://github.com/appwrite/appwrite/pull/3654)
+- Fixed an issue where invalid data could be loaded into the Appwrite console. [#3660](https://github.com/appwrite/appwrite/pull/3660)
+- Fixed an issue where users using the MySQL adapter for Appwrite would run into an issue with full text indexes [#154](https://github.com/utopia-php/database/pull/154)
+- Fix teams being created with no owners [#3558](https://github.com/appwrite/appwrite/pull/3558)
+- Fixed a bug where you could not search users by phone [#3619](https://github.com/appwrite/appwrite/pull/3619)
+- Fixed a bug where unaccepted invitations would grant access to projects [#3738](https://github.com/appwrite/appwrite/pull/3738)
+
+For more information on the changes, please see our [1.0-RC1 Documentation](https://warm-tray-285.notion.site/Appwrite-1-0-0-RC1-a5eab87e115d454db0259f707fc88535).
+
 # Version 0.15.3
 ## Features
 - Added hint during Installation for DNS Configuration by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/2450

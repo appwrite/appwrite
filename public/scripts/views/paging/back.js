@@ -15,8 +15,17 @@
         if (offset - limit < 0) {
           element.disabled = true;
         } else {
+          const newOffset = offset - limit;
           element.disabled = false;
-          element.value = offset - limit;
+          element.value = 'limit(' + limit + '),offset(' + newOffset + ')';
+
+          if(element.dataset['pagingDesc'] !== undefined) {
+            element.value += ',orderDesc(\'\')';
+          }
+
+          try {
+            element.parentElement.querySelector('input[name="offset"]').value = newOffset + '';
+          } catch(err) {} // Initial load can fail
         }
       };
 

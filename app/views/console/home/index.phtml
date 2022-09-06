@@ -130,7 +130,7 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                         <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
                     </div>
                     <div class="col span-3">
-                        <div class="value"><span class="sum" data-ls-bind="{{usage.functions|statsGetLast|statsTotal}}" data-default="0">0</span></div>
+                        <div class="value"><span class="sum" data-ls-bind="{{usage.executions|statsGetLast|statsTotal}}" data-default="0">0</span></div>
                         <div class="margin-top-small"><b class="text-size-small unit">Executions</b></div>
                     </div>
                 </div>

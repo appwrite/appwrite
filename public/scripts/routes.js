@@ -232,6 +232,13 @@ window.ls.router
     scope: "console",
     project: true
   })
+  .add("/console/functions/usage", {
+    template: function(window) {
+      return window.location.pathname + window.location.search + '&version=' + APP_ENV.CACHEBUSTER;
+    },
+    scope: "console",
+    project: true
+  })
   .add("/console/functions/function", {
     template: "/console/functions/function?version=" + APP_ENV.CACHEBUSTER,
     scope: "console",
