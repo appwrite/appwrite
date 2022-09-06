@@ -487,9 +487,9 @@ class VideoCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $this->assertEquals(3, count($match[0]));
-        $subtitleUri = $match[0][0];
-        $renditionUri = $match[0][2];
+        $this->assertEquals(4, count($match[0]));
+        $subtitleUri = $match[0][1];
+        $renditionUri = $match[0][3];
 
         $response = $this->client->call(Client::METHOD_GET, $renditionUri, [
             'content-type' => 'application/json',
@@ -498,7 +498,7 @@ class VideoCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $this->assertEquals(9, count($match[0]));
+        $this->assertEquals(12, count($match[0]));
 
         $segmentUri = $match[0][0];
         $response = $this->client->call(Client::METHOD_GET, $segmentUri, [
@@ -537,8 +537,8 @@ class VideoCustomServerTest extends Scope
         $xml = simplexml_load_string($response['body']);
 
         $this->assertEquals("PT1M32.7S", $xml->attributes()->mediaPresentationDuration);
-        $this->assertEquals("PT10.0S", $xml->attributes()->maxSegmentDuration);
-        $this->assertEquals("PT27.0S", $xml->attributes()->minBufferTime);
+        $this->assertEquals("PT8.0S", $xml->attributes()->maxSegmentDuration);
+        $this->assertEquals("PT20.5S", $xml->attributes()->minBufferTime);
         $subsCount = 0;
         $isVideo = false;
         $isAudio = false;
@@ -557,7 +557,7 @@ class VideoCustomServerTest extends Scope
                     $this->assertEquals("300", $representation['width']);
                     $this->assertEquals("200", $representation['height']);
                     $this->assertEquals("20:17", $representation['sar']);
-                    $this->assertEquals(8, $representation->SegmentList->SegmentURL->count());
+                    $this->assertEquals(10, $representation->SegmentList->SegmentURL->count());
                     $videoSegmentBaseUrl = (string)$representation->BaseURL;
                     $videoSegmentInitialization = (string)$representation->SegmentList->Initialization['sourceURL'];
                     $videoSegmentId = (string)$representation->SegmentList->SegmentURL['media'];
@@ -585,7 +585,7 @@ class VideoCustomServerTest extends Scope
                 foreach ($adaptation->Representation as $representation) {
                     $this->assertEquals("audio/mp4", $representation['mimeType']);
                     $this->assertEquals("mp4a.40.2", $representation['codecs']);
-                    $this->assertEquals(10, $representation->SegmentList->SegmentURL->count());
+                    $this->assertEquals(12, $representation->SegmentList->SegmentURL->count());
                     $audioSegmentBaseUrl = (string)$representation->BaseURL;
                     $audioSegmentInitialization = (string)$representation->SegmentList->Initialization['sourceURL'];
                     $audioSegmentId = (string)$representation->SegmentList->SegmentURL['media'];
@@ -723,7 +723,7 @@ class VideoCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $this->assertEquals(1, count($match[0]));
+        $this->assertEquals(2, count($match[0]));
 
         $renditionUri = $match[0][0];
         $response = $this->client->call(Client::METHOD_GET, $renditionUri, [
@@ -733,7 +733,7 @@ class VideoCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $this->assertEquals(9, count($match[0]));
+        $this->assertEquals(12, count($match[0]));
 
         $segmentUri = $match[0][0];
         $response = $this->client->call(Client::METHOD_GET, $segmentUri, [
@@ -755,8 +755,8 @@ class VideoCustomServerTest extends Scope
         $xml = simplexml_load_string($response['body']);
 
         $this->assertEquals("PT1M32.7S", $xml->attributes()->mediaPresentationDuration);
-        $this->assertEquals("PT10.0S", $xml->attributes()->maxSegmentDuration);
-        $this->assertEquals("PT27.0S", $xml->attributes()->minBufferTime);
+        $this->assertEquals("PT8.0S", $xml->attributes()->maxSegmentDuration);
+        $this->assertEquals("PT20.5S", $xml->attributes()->minBufferTime);
 
         $isVideo = false;
         foreach ($xml->Period->AdaptationSet as $adaptation) {
@@ -772,7 +772,7 @@ class VideoCustomServerTest extends Scope
                     $this->assertEquals("300", $representation['width']);
                     $this->assertEquals("200", $representation['height']);
                     $this->assertEquals("20:17", $representation['sar']);
-                    $this->assertEquals(8, $representation->SegmentList->SegmentURL->count());
+                    $this->assertEquals(10, $representation->SegmentList->SegmentURL->count());
                     $videoSegmentBaseUrl = (string)$representation->BaseURL;
                     $videoSegmentInitialization = (string)$representation->SegmentList->Initialization['sourceURL'];
                     $videoSegmentId = (string)$representation->SegmentList->SegmentURL['media'];
@@ -800,7 +800,7 @@ class VideoCustomServerTest extends Scope
                 foreach ($adaptation->Representation as $representation) {
                     $this->assertEquals("audio/mp4", $representation['mimeType']);
                     $this->assertEquals("mp4a.40.2", $representation['codecs']);
-                    $this->assertEquals(10, $representation->SegmentList->SegmentURL->count());
+                    $this->assertEquals(12, $representation->SegmentList->SegmentURL->count());
                     $audioSegmentBaseUrl = (string)$representation->BaseURL;
                     $audioSegmentInitialization = (string)$representation->SegmentList->Initialization['sourceURL'];
                     $audioSegmentId = (string)$representation->SegmentList->SegmentURL['media'];

@@ -659,10 +659,10 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
                             'name' => $value['language'],
                             'default' => ($key === 0) ? 'YES' : 'NO',
                             'language' => $value['language'],
-                            'uri' => $baseUrl . '/renditions/' . $rendition->getId() . '/types/' . $value['id'],
+                            'uri' => $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $value['id'],
                         ];
                     } elseif ($value['type'] === 'video') {
-                        $uri = $baseUrl . '/renditions/' . $rendition->getId() . '/types/' . $value['id'];
+                        $uri = $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $value['id'];
                     }
                 }
 
@@ -696,7 +696,6 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
                 $attributes = (array)$xml->attributes();
                 $mpd = $attributes['@attributes'] ?? [];
                 $streamId = 0;
-
                 foreach ($xml->Period->AdaptationSet ?? [] as $adaptation) {
                     $representation = [];
                     $representation['id'] = $streamId;
