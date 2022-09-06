@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Webhooks;
 
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -416,6 +417,7 @@ class WebhooksCustomClientTest extends Scope
     /**
      * @depends testDeleteAccountSessions
      */
+    #[Retry(count: 1)]
     public function testUpdateAccountName($data): array
     {
         $id = $data['id'] ?? '';

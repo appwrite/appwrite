@@ -1080,7 +1080,9 @@ class StorageCustomClientTest extends Scope
             'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
             'permissions' => [
-                Permission::write(Role::user($this->getUser()['$id'])),
+                // To avoid need for a Database release for now
+                //Permission::write(Role::user($this->getUser()['$id'])),
+                'write("user:' . $this->getUser()['$id'] . '")',
             ],
             'fileSecurity' => true,
         ]);
@@ -1100,7 +1102,9 @@ class StorageCustomClientTest extends Scope
             'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'permissions' => [
-                Permission::write(Role::user($this->getUser()['$id'])),
+                // To avoid need for a Database release for now
+                //Permission::write(Role::user($this->getUser()['$id'])),
+                'write("user:' . $this->getUser()['$id'] . '")',
             ]
         ]);
 
@@ -1282,9 +1286,8 @@ class StorageCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'permissions' => [
                 Permission::read(Role::user(ID::custom('notme'))),
-                 Permission::create(Role::user(ID::custom('notme'))),
-                    Permission::update(Role::user(ID::custom('notme'))),
-                    Permission::delete(Role::user(ID::custom('notme'))),
+                Permission::update(Role::user(ID::custom('notme'))),
+                Permission::delete(Role::user(ID::custom('notme'))),
             ],
         ]);
 

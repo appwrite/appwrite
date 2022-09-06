@@ -237,7 +237,7 @@ class DatabasesPermissionsGuestTest extends Scope
             'name' => 'GuestPermissionsWrite',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
-        $this->assertEquals('InvalidDocumentDatabase', $database['body']['name']);
+        $this->assertEquals('GuestPermissionsWrite', $database['body']['name']);
 
         $databaseId = $database['body']['$id'];
         $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $this->getServerHeader(), [
