@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "39c0ee0169b4681e5c07889d2a285d01",
+    "content-hash": "b3bac751cba7eabe3dd207fa9aef8c86",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2060,16 +2060,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.24.0",
+            "version": "dev-fix-force-datetime-filter",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "7da841d65d87e9f2c242589e58c38880def44dd8"
+                "reference": "4e661f6397a02764a202e6b722e75bb7ba869e6b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/7da841d65d87e9f2c242589e58c38880def44dd8",
-                "reference": "7da841d65d87e9f2c242589e58c38880def44dd8",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4e661f6397a02764a202e6b722e75bb7ba869e6b",
+                "reference": "4e661f6397a02764a202e6b722e75bb7ba869e6b",
                 "shasum": ""
             },
             "require": {
@@ -2118,9 +2118,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.24.0"
+                "source": "https://github.com/utopia-php/database/tree/fix-force-datetime-filter"
             },
-            "time": "2022-08-27T09:16:05+00:00"
+            "time": "2022-09-06T12:41:09+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5358,9 +5358,18 @@
             "time": "2022-08-12T06:47:24+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-fix-force-datetime-filter",
+            "alias": "0.24.0",
+            "alias_normalized": "0.24.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5384,5 +5393,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
