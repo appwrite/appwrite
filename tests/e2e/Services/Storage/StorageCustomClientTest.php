@@ -1080,9 +1080,7 @@ class StorageCustomClientTest extends Scope
             'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
             'permissions' => [
-                // To avoid need for a Database release for now
-                //Permission::write(Role::user($this->getUser()['$id'])),
-                'write("user:' . $this->getUser()['$id'] . '")',
+                Permission::write(Role::user($this->getUser()['$id'])),
             ],
             'fileSecurity' => true,
         ]);
@@ -1102,9 +1100,7 @@ class StorageCustomClientTest extends Scope
             'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'permissions' => [
-                // To avoid need for a Database release for now
-                //Permission::write(Role::user($this->getUser()['$id'])),
-                'write("user:' . $this->getUser()['$id'] . '")',
+                Permission::write(Role::user($this->getUser()['$id'])),
             ]
         ]);
 

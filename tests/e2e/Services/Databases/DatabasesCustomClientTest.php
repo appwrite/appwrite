@@ -43,9 +43,7 @@ class DatabasesCustomClientTest extends Scope
             'name' => 'Movies',
             'documentSecurity' => true,
             'permissions' => [
-                // To avoid need for a Database release for now
-                //Permission::write(Role::user($this->getUser()['$id'])),
-                'write("user:' . $this->getUser()['$id'] . '")',
+                Permission::write(Role::user($this->getUser()['$id'])),
             ],
         ]);
 
@@ -77,9 +75,7 @@ class DatabasesCustomClientTest extends Scope
                 'title' => 'Captain America',
             ],
             'permissions' => [
-                // To avoid need for a Database release for now
-                //Permission::write(Role::user($this->getUser()['$id'])),
-                'write("user:' . $this->getUser()['$id'] . '")',
+                Permission::write(Role::user($this->getUser()['$id'])),
             ]
         ]);
 
