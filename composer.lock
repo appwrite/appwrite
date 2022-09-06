@@ -2064,12 +2064,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "4ee1cb67de5d6e683b554e1cec2bd72d45684976"
+                "reference": "329cabb4bf2b71e35151f400bb280d617a269e91"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/4ee1cb67de5d6e683b554e1cec2bd72d45684976",
-                "reference": "4ee1cb67de5d6e683b554e1cec2bd72d45684976",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/329cabb4bf2b71e35151f400bb280d617a269e91",
+                "reference": "329cabb4bf2b71e35151f400bb280d617a269e91",
                 "shasum": ""
             },
             "require": {
@@ -2120,7 +2120,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/fix-5permissions"
             },
-            "time": "2022-09-06T15:46:08+00:00"
+            "time": "2022-09-06T17:56:27+00:00"
         },
         {
             "name": "utopia-php/domains",
