@@ -38,36 +38,20 @@ function validateFilePermissions(Database $dbForProject, string $bucketId, strin
     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-        throw new Exception('Bucket not found', 404, Exception::STORAGE_BUCKET_NOT_FOUND);
+        throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
     }
 
-    // Check bucket permissions when enforced
-    $permissionBucket = $bucket->getAttribute('permission') === 'bucket';
-    if ($permissionBucket) {
-        $validator = new Authorization('read');
-        if (!$validator->isValid($bucket->getRead())) {
-            throw new Exception('Unauthorized file permissions', 401, Exception::USER_UNAUTHORIZED);
-        }
+    $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+    $validator = new Authorization(Database::PERMISSION_READ);
+    $valid = $validator->isValid($bucket->getRead());
+    if (!$fileSecurity && !$valid) {
+        throw new Exception(Exception::USER_UNAUTHORIZED);
     }
 
-    $read = !$user->isEmpty() ? ['user:' . $user->getId()] : []; // By default set read permissions for user
-
-    // Users can only add their roles to files, API keys and Admin users can add any
-    $roles = Authorization::getRoles();
-
-    if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
-        foreach ($read as $role) {
-            if (!Authorization::isRole($role)) {
-                throw new Exception('Read permissions must be one of: (' . \implode(', ', $roles) . ')', 400, Exception::USER_UNAUTHORIZED);
-            }
-        }
-    }
-
-    if ($bucket->getAttribute('permission') === 'bucket') {
-        // skip authorization
-        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
-    } else {
+    if ($fileSecurity && !$valid) {
         $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+    } else {
+        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
     }
 
     return $file;
@@ -439,15 +423,20 @@ App::post('/v1/videos/:videoId/rendition')
     ->inject('mode')
     ->action(action: function (string $videoId, string $profileId, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, string $mode) {
 
-        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [new Query('_uid', Query::TYPE_EQUAL, [$videoId])]));
+        $video =  Authorization::skip(fn() =>  $dbForProject->findOne('videos', [
+            Query::equal('_uid', [$videoId]),
+        ]));
 
         if (empty($video)) {
             throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+        validateFilePermissions($dbForProject, $video->getAttribute('bucketId'), $video->getAttribute('fileId'), $mode, $user);
 
-        $profile = Authorization::skip(fn() => $dbForProject->findOne('videos_profiles', [new Query('_uid', Query::TYPE_EQUAL, [$profileId])]));
+        $profile =  Authorization::skip(fn() =>  $dbForProject->findOne('videos_profiles', [
+                    Query::equal('_uid', [$profileId]),
+                    ]));
+
 
         if (empty($profile)) {
             throw new Exception('Video profile not found', 404, Exception::VIDEO_PROFILE_NOT_FOUND);
@@ -610,8 +599,8 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
     ->inject('user')
     ->action(function (string $videoId, string $protocolId, Response $response, Database $dbForProject, string $mode, Document $user) {
 
-        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
-            new Query('_uid', Query::TYPE_EQUAL, [$videoId])
+        $video =  Authorization::skip(fn() =>  $dbForProject->findOne('videos', [
+            Query::equal('_uid', [$videoId]),
         ]));
 
         if (empty($video)) {
@@ -621,10 +610,9 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
 
         $renditions = Authorization::skip(fn () => $dbForProject->find('videos_renditions', [
-            new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
-            new Query('endedAt', Query::TYPE_GREATER, [0]),
-            new Query('status', Query::TYPE_EQUAL, ['ready']),
-            new Query('protocol', Query::TYPE_EQUAL, [$protocolId]),
+            Query::equal('videoId', [$video->getId()]),
+            Query::equal('status', ['ready']),
+            Query::equal('protocol', [$protocolId]),
         ]));
 
         if (empty($renditions)) {
@@ -632,7 +620,10 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
         }
 
         $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/protocols/' . $protocolId;
-        $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [new Query('videoId', Query::TYPE_EQUAL, [$video->getId()])]));
+        $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [
+            Query::equal('videoId', [$video->getId()]),
+        ]));
+
         $_renditions = [];
         $_subtitles = [];
 
@@ -648,21 +639,20 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
 
             foreach ($renditions as $rendition) {
                 $uri = null;
-                $metadata = $rendition->getAttribute('metadata');
-                $manifest = $metadata['hls'];
-
                 $_audios = [];
-                foreach ($manifest as $key => $value) {
-                    if ($value['type'] === 'audio') {
+                $metadata = $rendition->getAttribute('metadata');
+                $streams = $metadata['hls'];
+                foreach ($streams as $i => $stream) {
+                    if ($stream['type'] === 'audio') {
                         $_audios[] = [
                             'type' => 'group_audio',
-                            'name' => $value['language'],
-                            'default' => ($key === 0) ? 'YES' : 'NO',
-                            'language' => $value['language'],
-                            'uri' => $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $value['id'],
+                            'name' => $stream['language'],
+                            'default' => ($i === 0) ? 'YES' : 'NO',
+                            'language' => $stream['language'],
+                            'uri' => $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $stream['id'],
                         ];
-                    } elseif ($value['type'] === 'video') {
-                        $uri = $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $value['id'];
+                    } elseif ($stream['type'] === 'video') {
+                        $uri = $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $stream['id'];
                     }
                 }
 
@@ -775,8 +765,8 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/stre
     ->inject('user')
     ->action(function (string $videoId, string $protocolId, string $renditionId, string $streamId, Response $response, Database $dbForProject, string $mode, Document $user) {
 
-        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
-            new Query('_uid', Query::TYPE_EQUAL, [$videoId])
+        $video =  Authorization::skip(fn() =>  $dbForProject->findOne('videos', [
+            Query::equal('_uid', [$videoId]),
         ]));
 
         if (empty($video)) {
@@ -786,29 +776,28 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/stre
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
 
         $rendition = Authorization::skip(fn () => $dbForProject->findOne('videos_renditions', [
-            new Query('_uid', Query::TYPE_EQUAL, [$renditionId]),
-            new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
-            new Query('endedAt', Query::TYPE_GREATER, [0]),
-            new Query('status', Query::TYPE_EQUAL, ['ready']),
-            new Query('protocol', Query::TYPE_EQUAL, [$protocolId]),
+            Query::equal('_uid', [$renditionId]),
+            Query::equal('videoId', [$video->getId()]),
+            Query::equal('status', ['ready']),
+            Query::equal('protocol', [$protocolId]),
         ]));
 
         if (empty($rendition)) {
             throw new Exception('Rendition  not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        $segments = Authorization::skip(fn() => $dbForProject->find('videos_renditions_segments', [
-            new Query('renditionId', Query::TYPE_EQUAL, [$renditionId]),
-            new Query('streamId', Query::TYPE_EQUAL, [$streamId]),
-        ], 5000));
+        $segments = Authorization::skip(fn () => $dbForProject->find('videos_renditions_segments', [
+            Query::equal('renditionId', [$renditionId]),
+            Query::equal('streamId', [$streamId]),
+        ]));
 
         if (empty($segments)) {
             throw new Exception('Rendition segments not found', 404, Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
         }
 
-        $paramsSegments = [];
+        $_segments = [];
         foreach ($segments as $segment) {
-            $paramsSegments[] = [
+            $_segments[] = [
                 'duration' => $segment->getAttribute('duration'),
                 'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/protocols/' . $protocolId . '/renditions/' . $renditionId . '/segments/' . $segment->getId(),
             ];
@@ -816,8 +805,9 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/stre
 
         $template = new View(__DIR__ . '/../../views/videos/hls.phtml');
         $template->setParam('targetDuration', $rendition->getAttribute('targetDuration'));
-        $template->setParam('paramsSegments', $paramsSegments);
-        $response->setContentType('application/x-mpegurl')->send($template->render(false));
+        $template->setParam('paramsSegments', $_segments);
+        $response->setContentType('application/x-mpegurl')
+            ->send($template->render(false));
     });
 
 
@@ -843,8 +833,8 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/segm
     ->inject('user')
     ->action(function (string $videoId, string $protocolId, string $renditionId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode, Document $user) {
 
-        $video = Authorization::skip(fn() => $dbForProject->findOne('videos', [
-            new Query('_uid', Query::TYPE_EQUAL, [$videoId])
+        $video =  Authorization::skip(fn() =>  $dbForProject->findOne('videos', [
+            Query::equal('_uid', [$videoId]),
         ]));
 
         if (empty($video)) {
@@ -853,20 +843,24 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/segm
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
 
-        $rendition = Authorization::skip(fn() => $dbForProject->findOne('videos_renditions', [
-            new Query('_uid', Query::TYPE_EQUAL, [$renditionId]),
-            new Query('videoId', Query::TYPE_EQUAL, [$video->getId()]),
-            new Query('endedAt', Query::TYPE_GREATER, [0]),
-            new Query('status', Query::TYPE_EQUAL, ['ready']),
-            new Query('protocol', Query::TYPE_EQUAL, [$protocolId]),
+        $video =  Authorization::skip(fn() =>  $dbForProject->findOne('videos', [
+            Query::equal('_uid', [$videoId]),
+        ]));
+
+        $rendition = Authorization::skip(fn () => $dbForProject->findOne('videos_renditions', [
+            Query::equal('_uid', [$renditionId]),
+            Query::equal('videoId', [$video->getId()]),
+            Query::equal('status', ['ready']),
+            Query::equal('protocol', [$protocolId]),
         ]));
 
         if (empty($rendition)) {
-            throw new Exception('Rendition not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
+            throw new Exception('Rendition  not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
         $segment = Authorization::skip(fn () => $dbForProject->findOne('videos_renditions_segments', [
-            new Query('_uid', Query::TYPE_EQUAL, [$segmentId])]));
+            Query::equal('_uid', [$segmentId]),
+        ]));
 
         if (empty($segment)) {
             throw new Exception('Rendition segments not found', 404, Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
@@ -875,9 +869,11 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/segm
         $output = $deviceVideos->read($segment->getAttribute('path') .  $segment->getAttribute('fileName'));
 
         if ($protocolId === 'hls') {
-            $response->setContentType('video/MP2T')->send($output);
+            $response->setContentType('video/MP2T')
+                ->send($output);
         } else {
-            $response->setContentType('video/iso.segment')->send($output);
+            $response->setContentType('video/iso.segment')
+                ->send($output);
         }
     });
 

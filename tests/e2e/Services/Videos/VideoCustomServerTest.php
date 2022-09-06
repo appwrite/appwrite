@@ -7,6 +7,8 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\VideoCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class VideoCustomServerTest extends Scope
 {
@@ -28,6 +30,16 @@ class VideoCustomServerTest extends Scope
             'height' => 400,
             'protocol' => 'hls',
         ]);
+
+        $x  = [
+        Permission::read(Role::any()),
+        Permission::create(Role::any()),
+        Permission::update(Role::any()),
+        Permission::delete(Role::any()),
+
+        ];
+        var_dump($x);
+        exit;
 
         $profileId = $response['body']['$id'];
         $this->assertEquals(201, $response['headers']['status-code']);
