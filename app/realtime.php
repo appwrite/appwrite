@@ -263,7 +263,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 'data' => [
                     'events' => ['test.event'],
                     'channels' => ['tests'],
-                    'timestamp' => time(),
+                    'timestamp' => \gmdate(),
                     'payload' => $payload
                 ]
             ];
