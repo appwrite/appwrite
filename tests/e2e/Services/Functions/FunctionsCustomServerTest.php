@@ -727,6 +727,7 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testUpdateDeployment
      */
+    #[Retry(count: 2)]
     public function testSyncCreateExecution($data): array
     {
         /**

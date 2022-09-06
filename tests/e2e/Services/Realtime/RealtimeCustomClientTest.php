@@ -1122,7 +1122,6 @@ class RealtimeCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'permissions' => [
                 Permission::read(Role::any()),
-                Permission::create(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
