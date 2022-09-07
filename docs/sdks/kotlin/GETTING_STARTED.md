@@ -71,7 +71,7 @@ suspend fun main() {
             password = "password",
         )
     } catch (e: AppwriteException) {
-        println(e)
+        e.printStackTrace()
     }
 }
 ```
