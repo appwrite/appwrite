@@ -38,7 +38,7 @@ class Bucket extends Model
             ->addRule('fileSecurity', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether file-level security is enabled. [Learn more about permissions](/docs/permissions).',
-                'default' => '',
+                'default' => false,
                 'example' => true,
             ])
             ->addRule('name', [
