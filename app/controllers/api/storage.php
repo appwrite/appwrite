@@ -136,8 +136,9 @@ App::post('/v1/storage/buckets')
             ->setParam('bucketId', $bucket->getId())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($bucket, Response::MODEL_BUCKET);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
 App::get('/v1/storage/buckets')
@@ -643,8 +644,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $metadata = null; // was causing leaks as it was passed by reference
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($file, Response::MODEL_FILE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($file, Response::MODEL_FILE);
     });
 
 App::get('/v1/storage/buckets/:bucketId/files')

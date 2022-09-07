@@ -90,8 +90,9 @@ App::post('/v1/functions')
 
         $eventsInstance->setParam('functionId', $function->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($function, Response::MODEL_FUNCTION);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($function, Response::MODEL_FUNCTION);
     });
 
 App::get('/v1/functions')
@@ -754,8 +755,9 @@ App::post('/v1/functions/:functionId/deployments')
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
 App::get('/v1/functions/:functionId/deployments')
@@ -1041,9 +1043,9 @@ App::post('/v1/functions/:functionId/executions')
 
             $event->trigger();
 
-            $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-
-            return $response->dynamic($execution, Response::MODEL_EXECUTION);
+            return $response
+                ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                ->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
@@ -1340,8 +1342,9 @@ App::post('/v1/functions/:functionId/variables')
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($variable, Response::MODEL_VARIABLE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
 App::get('/v1/functions/:functionId/variables')
