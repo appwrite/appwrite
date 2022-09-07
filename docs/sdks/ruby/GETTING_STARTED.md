@@ -22,7 +22,7 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 ```ruby
 users = Appwrite::Users.new(client);
 
-result = users.create(userId: '[USER_ID]', email: 'email@example.com', password: 'password');
+user = users.create(userId: Appwrite::ID::unique(), email: 'email@example.com', password: 'password');
 ```
 
 ### Full Example
@@ -40,7 +40,7 @@ client
 
 users = Appwrite::Users.new(client);
 
-result = users.create(userId: '[USER_ID]', email: 'email@example.com', password: 'password');
+user = users.create(userId: Appwrite::ID::unique(), email: 'email@example.com', password: 'password');
 ```
 
 ### Error Handling
@@ -50,7 +50,7 @@ The Appwrite Ruby SDK raises `Appwrite::Exception` object with `message`, `code`
 users = Appwrite::Users.new(client);
 
 begin
-    result = users.create(userId: '[USER_ID]', email: 'email@example.com', password: 'password');
+    user = users.create(userId: Appwrite::ID::unique(), email: 'email@example.com', password: 'password');
 rescue Appwrite::Exception => error
     puts error.message
 end
