@@ -125,6 +125,9 @@ class CertificatesV1 extends Worker
             $attempts = $certificate->getAttribute('attempts', 0) + 1;
             $certificate->setAttribute('attempts', $attempts);
 
+            // Store cuttent time as renew date to ensure another attempt in next maintenance cycle
+            $certificate->setAttribute('renewDate', DateTime::now());
+
             // Send email to security email
             $this->notifyError($domain->get(), $e->getMessage(), $attempts);
         } finally {
@@ -290,9 +293,9 @@ class CertificatesV1 extends Worker
      *
      * @param string $domain Domain which certificate was generated for
      *
-     * @return int
+     * @return string
      */
-    private function getRenewDate(string $domain): int
+    private function getRenewDate(string $domain): string
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         $certData = openssl_x509_parse(file_get_contents($certPath));
