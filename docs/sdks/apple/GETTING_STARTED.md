@@ -74,7 +74,7 @@ Once your SDK object is initialized, create any of the Appwrite service objects 
 let account = Account(client)
 
 do {
-    let account = try await account.create(
+    let user = try await account.create(
         userId: ID.unique(), 
         email: "email@example.com", 
         password: "password"
