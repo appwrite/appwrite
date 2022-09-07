@@ -4,7 +4,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
-use Appwrite\Stats\Stats;
+use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Executor\Executor;
@@ -12,8 +12,12 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 require_once __DIR__ . '/../init.php';
 
@@ -61,7 +65,11 @@ class FunctionsV1 extends Worker
             /** @var Document[] $functions */
 
             while ($sum >= $limit) {
-                $functions = $database->find('functions', [], $limit, $offset, ['name'], [Database::ORDER_ASC]);
+                $functions = $database->find('functions', [
+                    Query::limit($limit),
+                    Query::offset($offset),
+                    Query::orderAsc('name'),
+                ]);
                 $sum = \count($functions);
                 $offset = $offset + $limit;
 
@@ -147,31 +155,26 @@ class FunctionsV1 extends Worker
                 }
 
                 $cron = new CronExpression($function->getAttribute('schedule'));
-                $next = (int) $cron->getNextRunDate()->format('U');
+                $next = DateTime::format($cron->getNextRunDate());
 
                 $function
                     ->setAttribute('scheduleNext', $next)
-                    ->setAttribute('schedulePrevious', \time());
+                    ->setAttribute('schedulePrevious', DateTime::now());
 
                 $function = $database->updateDocument(
                     'functions',
                     $function->getId(),
-                    $function->setAttribute('scheduleNext', (int) $next)
+                    $function->setAttribute('scheduleNext', $next)
                 );
-
-                if ($function === false) {
-                    throw new Exception('Function update failed.');
-                }
 
                 $reschedule = new Func();
                 $reschedule
                     ->setFunction($function)
                     ->setType('schedule')
                     ->setUser($user)
-                    ->setProject($project);
-
-                // Async task reschedule
-                $reschedule->schedule($next);
+                    ->setProject($project)
+                    ->schedule(new \DateTime($next));
+                ;
 
                 $this->execute(
                     project: $project,
@@ -234,11 +237,10 @@ class FunctionsV1 extends Worker
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
-            $executionId = $dbForProject->getId();
+            $executionId = ID::unique();
             $execution = $dbForProject->createDocument('executions', new Document([
                 '$id' => $executionId,
-                '$read' => $user->isEmpty() ? [] : ['user:' . $user->getId()],
-                '$write' => [],
+                '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
                 'functionId' => $functionId,
                 'deploymentId' => $deploymentId,
                 'trigger' => $trigger,
@@ -257,8 +259,13 @@ class FunctionsV1 extends Worker
         $execution->setAttribute('status', 'processing');
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
+        $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
+            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+            return $carry;
+        }, []);
+
         /** Collect environment variables */
-        $vars = [
+        $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,
@@ -271,8 +278,7 @@ class FunctionsV1 extends Worker
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
             'APPWRITE_FUNCTION_JWT' => $jwt,
-        ];
-        $vars = \array_merge($function->getAttribute('vars', []), $vars);
+        ]);
 
         /** Execute function */
         try {
@@ -293,13 +299,13 @@ class FunctionsV1 extends Worker
                 ->setAttribute('status', $executionResponse['status'])
                 ->setAttribute('statusCode', $executionResponse['statusCode'])
                 ->setAttribute('response', $executionResponse['response'])
+                ->setAttribute('stdout', $executionResponse['stdout'])
                 ->setAttribute('stderr', $executionResponse['stderr'])
                 ->setAttribute('time', $executionResponse['time']);
         } catch (\Throwable $th) {
-            $endtime = \microtime(true);
-            $time = $endtime - $execution->getCreatedAt();
+            $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution
-                ->setAttribute('time', $time)
+                ->setAttribute('time', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
@@ -359,9 +365,9 @@ class FunctionsV1 extends Worker
             $usage
                 ->setParam('projectId', $project->getId())
                 ->setParam('functionId', $function->getId())
-                ->setParam('functionExecution', 1)
-                ->setParam('functionStatus', $execution->getAttribute('status', ''))
-                ->setParam('functionExecutionTime', $execution->getAttribute('time') * 1000) // ms
+                ->setParam('executions.{scope}.compute', 1)
+                ->setParam('executionStatus', $execution->getAttribute('status', ''))
+                ->setParam('executionTime', $execution->getAttribute('time'))
                 ->setParam('networkRequestSize', 0)
                 ->setParam('networkResponseSize', 0)
                 ->submit();

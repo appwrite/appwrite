@@ -2,6 +2,9 @@
 $home = $this->getParam('home', '');
 $fileLimit = $this->getParam('fileLimit', 0);
 $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
+$bucketPermissions = $this->getParam('bucketPermissions', null);
+$fileCreatePermissions = $this->getParam('fileCreatePermissions', null);
+$fileUpdatePermissions = $this->getParam('fileUpdatePermissions', null);
 ?>
 
 <div
@@ -34,6 +37,11 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
     </div>
 
     <div class="zone xl">
+        <!-- Required for permission input validation -->
+        <form id="<?php echo $bucketPermissions->getParam('form') ?>"></form>
+        <form id="<?php echo $fileCreatePermissions->getParam('form') ?>"></form>
+        <form id="<?php echo $fileUpdatePermissions->getParam('form') ?>"></form>
+
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/storage/bucket?id={{router.params.id}}&project={{router.params.project}}">
                 <h2 class="margin-bottom">Files</h2>
@@ -43,9 +51,9 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                     data-event="submit"
                     data-param-bucket-id="{{router.params.id}}"
                     data-param-search="{{router.params.search}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset=""
-                    data-param-order-type="DESC"
+                    data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                    data-param-queries-cast-to="array"
+                    data-param-queries-cast-from="csv"
                     data-scope="sdk"
                     data-name="project-files"
                     data-success="state"
@@ -65,9 +73,9 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                     data-event="load,storage.createFile,storage.updateFile,storage.deleteFile"
                     data-param-bucket-id="{{router.params.id}}"
                     data-param-search="{{router.params.search}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset="{{router.params.offset}}"
-                    data-param-order-type="DESC"
+                    data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                    data-param-queries-cast-to="array"
+                    data-param-queries-cast-from="csv"
                     data-scope="sdk"
                     data-name="project-files">
 
@@ -100,7 +108,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                         <td class="col-name" data-title="Name: " data-ls-attrs="title={{file.name}}" >
                                             <div class="trim-inner-text">
                                                 <span data-ls-ui-trigger="modal-file-update-{{file.$id}}" class="link text-one-liner" data-ls-bind="{{file.name}}"></span>
-                                                <div data-ls-attrs="data-open-event=modal-file-update-{{file.$id}}" data-button-hide="1" data-ui-modal class="box modal sticky-footer width-large close" >
+                                                <div data-ls-attrs="data-open-event=modal-file-update-{{file.$id}}" data-button-hide="1" data-ui-modal class="box modal width-xlarge sticky-footer close" >
                                                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                                     <h1>Update File</h1>
@@ -131,13 +139,13 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                                 </div>
                                                                 <input type="hidden" data-ls-attrs="id=file-bucketId-{{file.$id}}" name="bucketId" data-ls-bind="{{file.bucketId}}">
 
-                                                                <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                                                <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$read}}" placeholder="User ID, Team ID or Role" />
-                                                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                                                <hr class="margin-start margin-end" />
 
-                                                                <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                                                <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$write}}" placeholder="User ID, Team ID or Role" />
-                                                                <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                                                <h3 class="margin-bottom">Permissions</h3>
+
+                                                                <div class="margin-start margin-end margin-bottom">
+                                                                    <?php echo $fileUpdatePermissions->render(); ?>
+                                                                </div>
                                                             </form>
 
                                                             <form class="strip"
@@ -190,7 +198,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                                 <span data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
                                                             </div>
                                                             <div class="margin-bottom">
-                                                                <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Created at: <span data-ls-bind="{{file.$createdAt|dateText}}"></span>
+                                                                <i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Created at: <span data-ls-bind="{{file.$createdAt|date}}"></span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -211,7 +219,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                             <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileUnit}}"></span>
                                         </td>
                                         <td data-title="Created: ">
-                                            <span class="text-fade text-size-small" data-ls-bind="{{file.$createdAt|dateText}}"></span>
+                                            <span class="text-fade text-size-small" data-ls-bind="{{file.$createdAt|date}}"></span>
                                         </td>
                                         <td data-title="" class="cell-options-more" style="overflow: visible">
                                            <div class="drop-list end" data-ls-ui-open="" data-button-aria="File Options" data-button-class="icon-dot-3 reset-inner-button" data-blur="1">
@@ -232,13 +240,12 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             data-event="submit"
                             data-param-search="{{router.params.search}}"
                             data-param-bucket-id="{{router.params.id}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
                             data-scope="sdk"
                             data-name="project-files"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                            <input type="hidden" name="offset">
+                            <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                         </form>
 
                         <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.total|pageTotal}}"></span>
@@ -248,13 +255,12 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             data-event="submit"
                             data-param-bucket-id="{{router.params.id}}"
                             data-param-search="{{router.params.search}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
                             data-scope="sdk"
                             data-name="project-files"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                            <input type="hidden" name="offset">
+                            <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-files.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                         </form>
                     </div>
 
@@ -270,8 +276,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             data-analytics-category="console"
                             data-analytics-label="Create Storage File"
                             x-data
-                            @submit.prevent="$store.uploader.uploadFile($event.target)"
-                            >
+                            @submit.prevent="$store.uploader.uploadFile($event.target)">
                             <input type="hidden" name="bucketId" id="files-bucketId" data-ls-bind="{{router.params.id}}">
 
                             <label for="fileId">File ID</label>
@@ -285,18 +290,19 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 name="fileId"
                                 id="fileId" />
 
-                            <label for="file-read">File</label>
+                            <label for="file">File</label>
                             <input type="file" name="file" id="file-file" size="1" required>
 
                             <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
-                            <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                            <input type="hidden" id="file-read" name="read" data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['role:all'])); ?>" placeholder="User ID, Team ID or Role" />
-                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                            <div class="toggle margin-bottom" data-ls-if="{{project-bucket.fileSecurity}}" data-ls-ui-open data-button-aria="Open Permissions">
+                                <i class="icon-plus pull-end margin-top-tiny"></i>
+                                <i class="icon-minus pull-end margin-top-tiny"></i>
 
-                            <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                            <input type="hidden" id="file-write" name="write" data-forms-tags data-cast-to="json" value="" placeholder="User ID, Team ID or Role" />
-                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                <h3 class="margin-bottom-large">Permissions</h3>
+
+                                <?php echo $fileCreatePermissions->render() ?>
+                            </div>
 
                             <footer>
                                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
@@ -381,6 +387,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
+
                         <form
                             data-analytics
                             data-analytics-activity
@@ -407,6 +414,13 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 <label for="bucket-maximum-file-size">Maximum File Size (bytes) <span class="tooltip small" data-tooltip="Limit file size allowed in the bucket."><i class="icon-info-circled"></i></span></label>
                                 <input name="maximumFileSize" id="bucket-maximum-file-size" type="number" autocomplete="off" data-ls-bind="{{project-bucket.maximumFileSize}}" min="1" data-cast-to="integer" />
 
+                                <label for="compression">Compression</label>
+                                <select id="compression" data-ls-bind="{{project-bucket.compression}}" name="compression">
+                                    <option value="none">None</option>
+                                    <option value="gzip">Gzip</option>
+                                    <option value="zstd">Zstd</option>
+                                </select>
+
                                 <div class="margin-bottom">
                                     <input name="enabled" type="hidden" data-forms-switch data-cast-to="boolean" data-ls-bind="{{project-bucket.enabled}}" /> &nbsp; Enabled <span class="tooltip" data-tooltip="Mark whether bucket is enabled"><i class="icon-info-circled"></i></span>
                                 </div>
@@ -426,35 +440,21 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                                 <label class="margin-bottom-small">Permissions</label>
 
-                                <p class="text-fade text-size-small">Choose the permissions model for this bucket.</p>
+                                <p class="text-fade text-size-small">Configure the permissions for this bucket.</p>
 
                                 <hr class="margin-top-small" />
 
-                                <div class="row">
-                                    <div class="col span-1"><input name="permission" value="bucket" type="radio" class="margin-top-tiny" data-ls-bind="{{project-bucket.permission}}" /></div>
-                                    <div class="col span-11">
-                                        <b>Bucket Level</b>
-                                        <p class="text-fade margin-top-tiny">With Bucket Level permissions, you assign permissions only once in the bucket.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level permissions assigned to bucket takes the precedence and file permissions are ignored</p>
-                                        <div data-ls-if="{{project-bucket.permission}} == 'bucket'">
+                                <?php echo $bucketPermissions->render(); ?>
 
-                                            <label for="bucket-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                            <input type="hidden" id="bucket-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$read}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                <hr class="margin-top-no" />
 
-                                            <label for="bucket-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                            <input type="hidden" id="bucket-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-bucket.$write}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <label class="margin-bottom-small">File Security</label>
 
                                 <div class="row">
-                                    <div class="col span-1"><input name="permission" value="file" type="radio" class="margin-top-no" data-ls-bind="{{project-bucket.permission}}" /></div>
+                                    <div class="col span-1"><input name="fileSecurity" value="false" type="checkbox" class="margin-top-no" data-ls-bind="{{project-bucket.fileSecurity}}" /></div>
                                     <div class="col span-11">
-                                        <b>File Level</b>
-                                        <p class="text-fade margin-top-tiny">With File Level permissions, you have granular access control over every file. Users will only be able to access files for which they have explicit permissions.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level file permissions take precedence and bucket permissions are ignored.</p>
+                                        <b>Enabled</b>
+                                        <p class="text-fade margin-top-tiny">With File Security enabled, users will be able to access files for which they have been granted <b>either</b> File or Bucket permissions.</p>
                                     </div>
                                 </div>
 
@@ -481,8 +481,8 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                     View as JSON
                                 </button>
                             </li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-bucket.$updatedAt|dateText}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-bucket.$createdAt|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-bucket.$updatedAt|date}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-bucket.$createdAt|date}}"></span></li>
                         </ul>
 
                         <form name="storage.deleteBucket" class="margin-bottom"

@@ -65,16 +65,12 @@
                 const file = formData.get('file');
                 const fileId = formData.get('fileId');
                 let id = fileId === 'unique()' ? performance.now() : fileId;
-                let read = formData.get('read');
                 if(!file || !fileId) {
                     return;
                 }
-                if(read) {
-                    read = JSON.parse(read);
-                }
-                let write = formData.get('write');
-                if(write) {
-                    write = JSON.parse(write);
+                let permissions = formData.get('permissions');
+                if(permissions) {
+                    permissions = permissions.split(',');
                 }
 
                 if(this.getFile(id)) {
@@ -103,8 +99,7 @@
                         bucketId,
                         fileId,
                         file,
-                        read,
-                        write,
+                        permissions,
                         (progress) => {
                             this.updateFile(id, {
                                 id: progress.$id,

@@ -23,6 +23,7 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\E2E\\": "tests/e2e",
+            "Tests\\Unit\\": "tests/unit",
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
@@ -41,22 +42,22 @@
         "ext-zlib": "*",
         "ext-sockets": "*",
         "appwrite/php-clamav": "1.1.*",
-        "appwrite/php-runtimes": "0.10.*",
-        "utopia-php/framework": "0.20.*",
+        "appwrite/php-runtimes": "0.11.*",
+        "utopia-php/framework": "0.21.*",
         "utopia-php/logger": "0.3.*",
-        "utopia-php/abuse": "0.7.*",
+        "utopia-php/abuse": "0.13.*",
         "utopia-php/analytics": "0.2.*",
-        "utopia-php/audit": "0.8.*",
+        "utopia-php/audit": "0.14.*",
         "utopia-php/cache": "0.6.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.18.*",
+        "utopia-php/database": "0.25.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
         "utopia-php/swoole": "0.3.*",
-        "utopia-php/storage": "0.9.*",
+        "utopia-php/storage": "0.11.*",
         "utopia-php/websocket": "0.1.0",
         "utopia-php/image": "0.5.*",
         "utopia-php/orchestration": "0.6.*",
@@ -76,7 +77,8 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.20.0",
+        "appwrite/sdk-generator": "0.25.0",
+        "ext-fileinfo": "*",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",
         "swoole/ide-helper": "4.8.9",

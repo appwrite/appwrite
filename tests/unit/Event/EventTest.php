@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Event;
 
 use Appwrite\Event\Event;
 use InvalidArgumentException;
@@ -9,15 +9,8 @@ use Utopia\App;
 
 class EventTest extends TestCase
 {
-    /**
-     * @var Event
-     */
-    protected $object = null;
-
-    /**
-     * @var string
-     */
-    protected $queue = '';
+    protected ?Event $object = null;
+    protected string $queue = '';
 
     public function setUp(): void
     {
@@ -29,11 +22,7 @@ class EventTest extends TestCase
         $this->object = new Event($this->queue, 'TestsV1');
     }
 
-    public function tearDown(): void
-    {
-    }
-
-    public function testQueue()
+    public function testQueue(): void
     {
         $this->assertEquals($this->queue, $this->object->getQueue());
 
@@ -44,7 +33,7 @@ class EventTest extends TestCase
         $this->object->setQueue($this->queue);
     }
 
-    public function testClass()
+    public function testClass(): void
     {
         $this->assertEquals('TestsV1', $this->object->getClass());
 
@@ -55,7 +44,7 @@ class EventTest extends TestCase
         $this->object->setClass('TestsV1');
     }
 
-    public function testParams()
+    public function testParams(): void
     {
         $this->object
             ->setParam('eventKey1', 'eventValue1')
@@ -69,7 +58,7 @@ class EventTest extends TestCase
         $this->assertEquals(\Resque::size($this->queue), 1);
     }
 
-    public function testReset()
+    public function testReset(): void
     {
         $this->object
             ->setParam('eventKey1', 'eventValue1')
@@ -85,7 +74,7 @@ class EventTest extends TestCase
         $this->assertEquals(null, $this->object->getParam('eventKey3'));
     }
 
-    public function testGenerateEvents()
+    public function testGenerateEvents(): void
     {
         $event = Event::generateEvents('users.[userId].create', [
             'userId' => 'torsten'

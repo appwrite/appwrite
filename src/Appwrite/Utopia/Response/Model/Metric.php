@@ -16,7 +16,7 @@ class Metric extends Model
                 'default' => -1,
                 'example' => 1,
             ])
-            ->addRule('timestamp', [
+            ->addRule('date', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The UNIX timestamp at which this metric was aggregated.',
                 'default' => 0,

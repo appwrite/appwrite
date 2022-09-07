@@ -11,7 +11,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const promise = functions.update('[FUNCTION_ID]', '[NAME]', []);
+const promise = functions.update('[FUNCTION_ID]', '[NAME]', ["role:all"]);
 
 promise.then(function (response) {
     console.log(response);

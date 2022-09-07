@@ -49,19 +49,25 @@
 
     class Query {
     }
-    Query.equal = (attribute, value) => Query.addQuery(attribute, 'equal', value);
-    Query.notEqual = (attribute, value) => Query.addQuery(attribute, 'notEqual', value);
-    Query.lesser = (attribute, value) => Query.addQuery(attribute, 'lesser', value);
-    Query.lesserEqual = (attribute, value) => Query.addQuery(attribute, 'lesserEqual', value);
-    Query.greater = (attribute, value) => Query.addQuery(attribute, 'greater', value);
-    Query.greaterEqual = (attribute, value) => Query.addQuery(attribute, 'greaterEqual', value);
-    Query.search = (attribute, value) => Query.addQuery(attribute, 'search', value);
-    Query.addQuery = (attribute, oper, value) => value instanceof Array
-        ? `${attribute}.${oper}(${value
+    Query.equal = (attribute, value) => Query.addQuery(attribute, "equal", value);
+    Query.notEqual = (attribute, value) => Query.addQuery(attribute, "notEqual", value);
+    Query.lessThan = (attribute, value) => Query.addQuery(attribute, "lessThan", value);
+    Query.lessThanEqual = (attribute, value) => Query.addQuery(attribute, "lessThanEqual", value);
+    Query.greaterThan = (attribute, value) => Query.addQuery(attribute, "greaterThan", value);
+    Query.greaterThanEqual = (attribute, value) => Query.addQuery(attribute, "greaterThanEqual", value);
+    Query.search = (attribute, value) => Query.addQuery(attribute, "search", value);
+    Query.orderDesc = (attribute) => `orderDesc("${attribute}")`;
+    Query.orderAsc = (attribute) => `orderAsc("${attribute}")`;
+    Query.cursorAfter = (documentId) => `cursorAfter("${documentId}")`;
+    Query.cursorBefore = (documentId) => `cursorBefore("${documentId}")`;
+    Query.limit = (limit) => `limit(${limit})`;
+    Query.offset = (offset) => `offset(${offset})`;
+    Query.addQuery = (attribute, method, value) => value instanceof Array
+        ? `${method}("${attribute}", [${value
         .map((v) => Query.parseValues(v))
-        .join(',')})`
-        : `${attribute}.${oper}(${Query.parseValues(value)})`;
-    Query.parseValues = (value) => typeof value === 'string' || value instanceof String
+        .join(",")}])`
+        : `${method}("${attribute}", [${Query.parseValues(value)}])`;
+    Query.parseValues = (value) => typeof value === "string" || value instanceof String
         ? `"${value}"`
         : `${value}`;
 
@@ -87,8 +93,11 @@
                 mode: '',
             };
             this.headers = {
-                'x-sdk-version': 'appwrite:web:6.0.0',
-                'X-Appwrite-Response-Format': '0.15.0',
+                'x-sdk-name': 'Console',
+                'x-sdk-platform': 'console',
+                'x-sdk-language': 'web',
+                'x-sdk-version': '6.1.0-RC1',
+                'X-Appwrite-Response-Format': '1.0.0-RC1',
             };
             this.realtime = {
                 socket: undefined,
@@ -557,20 +566,16 @@
          * Get currently logged in user list of latest security activity logs. Each
          * log returns user IP address, location and date and time of log.
          *
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getLogs(limit, offset) {
+        getLogs(queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/account/logs';
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -643,23 +648,23 @@
          * /account/verification/phone](/docs/client/account#accountCreatePhoneVerification)
          * endpoint to send a confirmation SMS.
          *
-         * @param {string} number
+         * @param {string} phone
          * @param {string} password
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updatePhone(number, password) {
+        updatePhone(phone, password) {
             return __awaiter(this, void 0, void 0, function* () {
-                if (typeof number === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "number"');
+                if (typeof phone === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "phone"');
                 }
                 if (typeof password === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "password"');
                 }
                 let path = '/account/phone';
                 let payload = {};
-                if (typeof number !== 'undefined') {
-                    payload['number'] = number;
+                if (typeof phone !== 'undefined') {
+                    payload['phone'] = phone;
                 }
                 if (typeof password !== 'undefined') {
                     payload['password'] = password;
@@ -695,7 +700,7 @@
          * stored as is, and replaces any previous value. The maximum allowed prefs
          * size is 64kB and throws error if exceeded.
          *
-         * @param {Partial<Preferences>} prefs
+         * @param {object} prefs
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -1051,25 +1056,25 @@
          * is valid for 15 minutes.
          *
          * @param {string} userId
-         * @param {string} number
+         * @param {string} phone
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createPhoneSession(userId, number) {
+        createPhoneSession(userId, phone) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
                 }
-                if (typeof number === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "number"');
+                if (typeof phone === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "phone"');
                 }
                 let path = '/account/sessions/phone';
                 let payload = {};
                 if (typeof userId !== 'undefined') {
                     payload['userId'] = userId;
                 }
-                if (typeof number !== 'undefined') {
-                    payload['number'] = number;
+                if (typeof phone !== 'undefined') {
+                    payload['phone'] = phone;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
@@ -1078,7 +1083,7 @@
             });
         }
         /**
-         * Create Phone session (confirmation)
+         * Create Phone Session (confirmation)
          *
          * Use this endpoint to complete creating a session with SMS. Use the
          * **userId** from the
@@ -1459,7 +1464,8 @@
          *
          * You can use this endpoint to show different country flags icons to your
          * users. The code argument receives the 2 letter country code. Use width,
-         * height and quality arguments to change the output settings.
+         * height and quality arguments to change the output settings. Country codes
+         * follow the [ISO 3166-1](http://en.wikipedia.org/wiki/ISO_3166-1) standard.
          *
          * When one dimension is specified and the other is 0, the image is scaled
          * with preserved aspect ratio. If both dimensions are 0, the API provides an
@@ -1642,36 +1648,20 @@
          * Get a list of all databases from the current Appwrite project. You can use
          * the search parameter to filter your results.
          *
+         * @param {string[]} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        list(search, limit, offset, cursor, cursorDirection, orderType) {
+        list(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/databases';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -1815,39 +1805,23 @@
          * can use the search parameter to filter your results.
          *
          * @param {string} databaseId
+         * @param {string[]} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listCollections(databaseId, search, limit, offset, cursor, cursorDirection, orderType) {
+        listCollections(databaseId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
                 }
                 let path = '/databases/{databaseId}/collections'.replace('{databaseId}', databaseId);
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -1860,19 +1834,18 @@
          *
          * Create a new Collection. Before using this route, you should create a new
          * database resource using either a [server
-         * integration](/docs/server/database#databaseCreateCollection) API or
+         * integration](/docs/server/databases#databasesCreateCollection) API or
          * directly from your database console.
          *
          * @param {string} databaseId
          * @param {string} collectionId
          * @param {string} name
-         * @param {string} permission
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {string[]} permissions
+         * @param {boolean} documentSecurity
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createCollection(databaseId, collectionId, name, permission, read, write) {
+        createCollection(databaseId, collectionId, name, permissions, documentSecurity) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -1883,14 +1856,11 @@
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
                 }
-                if (typeof permission === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "permission"');
+                if (typeof permissions === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "permissions"');
                 }
-                if (typeof read === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "read"');
-                }
-                if (typeof write === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "write"');
+                if (typeof documentSecurity === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "documentSecurity"');
                 }
                 let path = '/databases/{databaseId}/collections'.replace('{databaseId}', databaseId);
                 let payload = {};
@@ -1900,14 +1870,11 @@
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
-                if (typeof permission !== 'undefined') {
-                    payload['permission'] = permission;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof documentSecurity !== 'undefined') {
+                    payload['documentSecurity'] = documentSecurity;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
@@ -1950,14 +1917,13 @@
          * @param {string} databaseId
          * @param {string} collectionId
          * @param {string} name
-         * @param {string} permission
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {boolean} documentSecurity
+         * @param {string[]} permissions
          * @param {boolean} enabled
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updateCollection(databaseId, collectionId, name, permission, read, write, enabled) {
+        updateCollection(databaseId, collectionId, name, documentSecurity, permissions, enabled) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -1968,22 +1934,19 @@
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
                 }
-                if (typeof permission === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "permission"');
+                if (typeof documentSecurity === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "documentSecurity"');
                 }
                 let path = '/databases/{databaseId}/collections/{collectionId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
                 let payload = {};
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
-                if (typeof permission !== 'undefined') {
-                    payload['permission'] = permission;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof documentSecurity !== 'undefined') {
+                    payload['documentSecurity'] = documentSecurity;
                 }
                 if (typeof enabled !== 'undefined') {
                     payload['enabled'] = enabled;
@@ -2076,6 +2039,53 @@
                     throw new AppwriteException('Missing required parameter: "required"');
                 }
                 let path = '/databases/{databaseId}/collections/{collectionId}/attributes/boolean'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
+                let payload = {};
+                if (typeof key !== 'undefined') {
+                    payload['key'] = key;
+                }
+                if (typeof required !== 'undefined') {
+                    payload['required'] = required;
+                }
+                if (typeof xdefault !== 'undefined') {
+                    payload['default'] = xdefault;
+                }
+                if (typeof array !== 'undefined') {
+                    payload['array'] = array;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create DateTime Attribute
+         *
+         *
+         * @param {string} databaseId
+         * @param {string} collectionId
+         * @param {string} key
+         * @param {boolean} required
+         * @param {string} xdefault
+         * @param {boolean} array
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createDatetimeAttribute(databaseId, collectionId, key, required, xdefault, array) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof databaseId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "databaseId"');
+                }
+                if (typeof collectionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "collectionId"');
+                }
+                if (typeof key === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "key"');
+                }
+                if (typeof required === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "required"');
+                }
+                let path = '/databases/{databaseId}/collections/{collectionId}/attributes/datetime'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
                 let payload = {};
                 if (typeof key !== 'undefined') {
                     payload['key'] = key;
@@ -2537,16 +2547,10 @@
          * @param {string} databaseId
          * @param {string} collectionId
          * @param {string[]} queries
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string[]} orderAttributes
-         * @param {string[]} orderTypes
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listDocuments(databaseId, collectionId, queries, limit, offset, cursor, cursorDirection, orderAttributes, orderTypes) {
+        listDocuments(databaseId, collectionId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -2559,24 +2563,6 @@
                 if (typeof queries !== 'undefined') {
                     payload['queries'] = queries;
                 }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderAttributes !== 'undefined') {
-                    payload['orderAttributes'] = orderAttributes;
-                }
-                if (typeof orderTypes !== 'undefined') {
-                    payload['orderTypes'] = orderTypes;
-                }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
                     'content-type': 'application/json',
@@ -2588,19 +2574,18 @@
          *
          * Create a new Document. Before using this route, you should create a new
          * collection resource using either a [server
-         * integration](/docs/server/database#databaseCreateCollection) API or
+         * integration](/docs/server/databases#databasesCreateCollection) API or
          * directly from your database console.
          *
          * @param {string} databaseId
          * @param {string} collectionId
          * @param {string} documentId
          * @param {Omit<Document, keyof Models.Document>} data
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {string[]} permissions
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createDocument(databaseId, collectionId, documentId, data, read, write) {
+        createDocument(databaseId, collectionId, documentId, data, permissions) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -2622,11 +2607,8 @@
                 if (typeof data !== 'undefined') {
                     payload['data'] = data;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
@@ -2675,12 +2657,11 @@
          * @param {string} collectionId
          * @param {string} documentId
          * @param {Partial<Omit<Document, keyof Models.Document>>} data
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {string[]} permissions
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updateDocument(databaseId, collectionId, documentId, data, read, write) {
+        updateDocument(databaseId, collectionId, documentId, data, permissions) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -2696,11 +2677,8 @@
                 if (typeof data !== 'undefined') {
                     payload['data'] = data;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('patch', uri, {
@@ -2746,12 +2724,11 @@
          * @param {string} databaseId
          * @param {string} collectionId
          * @param {string} documentId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listDocumentLogs(databaseId, collectionId, documentId, limit, offset) {
+        listDocumentLogs(databaseId, collectionId, documentId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -2764,11 +2741,8 @@
                 }
                 let path = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}/logs'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -2916,12 +2890,11 @@
          *
          * @param {string} databaseId
          * @param {string} collectionId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listCollectionLogs(databaseId, collectionId, limit, offset) {
+        listCollectionLogs(databaseId, collectionId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -2931,11 +2904,8 @@
                 }
                 let path = '/databases/{databaseId}/collections/{collectionId}/logs'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -2973,28 +2943,24 @@
             });
         }
         /**
-         * List Collection Logs
+         * List Database Logs
          *
-         * Get the collection activity logs list by its unique ID.
+         * Get the database activity logs list by its unique ID.
          *
          * @param {string} databaseId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listLogs(databaseId, limit, offset) {
+        listLogs(databaseId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
                 }
                 let path = '/databases/{databaseId}/logs'.replace('{databaseId}', databaseId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -3039,36 +3005,20 @@
          * Get a list of all the project's functions. You can use the query params to
          * filter your results.
          *
+         * @param {string[]} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        list(search, limit, offset, cursor, cursorDirection, orderType) {
+        list(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/functions';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -3087,14 +3037,13 @@
          * @param {string} name
          * @param {string[]} execute
          * @param {string} runtime
-         * @param {object} vars
          * @param {string[]} events
          * @param {string} schedule
          * @param {number} timeout
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        create(functionId, name, execute, runtime, vars, events, schedule, timeout) {
+        create(functionId, name, execute, runtime, events, schedule, timeout) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
@@ -3121,9 +3070,6 @@
                 }
                 if (typeof runtime !== 'undefined') {
                     payload['runtime'] = runtime;
-                }
-                if (typeof vars !== 'undefined') {
-                    payload['vars'] = vars;
                 }
                 if (typeof events !== 'undefined') {
                     payload['events'] = events;
@@ -3152,6 +3098,27 @@
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/functions/runtimes';
                 let payload = {};
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('get', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Get Functions Usage
+         *
+         *
+         * @param {string} range
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        getUsage(range) {
+            return __awaiter(this, void 0, void 0, function* () {
+                let path = '/functions/usage';
+                let payload = {};
+                if (typeof range !== 'undefined') {
+                    payload['range'] = range;
+                }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
                     'content-type': 'application/json',
@@ -3188,14 +3155,13 @@
          * @param {string} functionId
          * @param {string} name
          * @param {string[]} execute
-         * @param {object} vars
          * @param {string[]} events
          * @param {string} schedule
          * @param {number} timeout
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        update(functionId, name, execute, vars, events, schedule, timeout) {
+        update(functionId, name, execute, events, schedule, timeout) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
@@ -3213,9 +3179,6 @@
                 }
                 if (typeof execute !== 'undefined') {
                     payload['execute'] = execute;
-                }
-                if (typeof vars !== 'undefined') {
-                    payload['vars'] = vars;
                 }
                 if (typeof events !== 'undefined') {
                     payload['events'] = events;
@@ -3261,39 +3224,23 @@
          * params to filter your results.
          *
          * @param {string} functionId
+         * @param {string[]} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listDeployments(functionId, search, limit, offset, cursor, cursorDirection, orderType) {
+        listDeployments(functionId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
                 }
                 let path = '/functions/{functionId}/deployments'.replace('{functionId}', functionId);
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -3508,35 +3455,23 @@
          * different API modes](/docs/admin).
          *
          * @param {string} functionId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string[]} queries
          * @param {string} search
-         * @param {string} cursor
-         * @param {string} cursorDirection
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listExecutions(functionId, limit, offset, search, cursor, cursorDirection) {
+        listExecutions(functionId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
                 }
                 let path = '/functions/{functionId}/executions'.replace('{functionId}', functionId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -3612,7 +3547,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getUsage(functionId, range) {
+        getFunctionUsage(functionId, range) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
@@ -3624,6 +3559,162 @@
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * List Variables
+         *
+         * Get a list of all variables of a specific function.
+         *
+         * @param {string} functionId
+         * @param {string[]} queries
+         * @param {string} search
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        listVariables(functionId, queries, search) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof functionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "functionId"');
+                }
+                let path = '/functions/{functionId}/variables'.replace('{functionId}', functionId);
+                let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
+                if (typeof search !== 'undefined') {
+                    payload['search'] = search;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('get', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create Variable
+         *
+         * Create a new function variable. These variables can be accessed within
+         * function in the `env` object under the request variable.
+         *
+         * @param {string} functionId
+         * @param {string} key
+         * @param {string} value
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createVariable(functionId, key, value) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof functionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "functionId"');
+                }
+                if (typeof key === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "key"');
+                }
+                if (typeof value === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "value"');
+                }
+                let path = '/functions/{functionId}/variables'.replace('{functionId}', functionId);
+                let payload = {};
+                if (typeof key !== 'undefined') {
+                    payload['key'] = key;
+                }
+                if (typeof value !== 'undefined') {
+                    payload['value'] = value;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Get Variable
+         *
+         * Get a variable by its unique ID.
+         *
+         * @param {string} functionId
+         * @param {string} variableId
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        getVariable(functionId, variableId) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof functionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "functionId"');
+                }
+                if (typeof variableId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "variableId"');
+                }
+                let path = '/functions/{functionId}/variables/{variableId}'.replace('{functionId}', functionId).replace('{variableId}', variableId);
+                let payload = {};
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('get', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Update Variable
+         *
+         * Update variable by its unique ID.
+         *
+         * @param {string} functionId
+         * @param {string} variableId
+         * @param {string} key
+         * @param {string} value
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        updateVariable(functionId, variableId, key, value) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof functionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "functionId"');
+                }
+                if (typeof variableId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "variableId"');
+                }
+                if (typeof key === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "key"');
+                }
+                let path = '/functions/{functionId}/variables/{variableId}'.replace('{functionId}', functionId).replace('{variableId}', variableId);
+                let payload = {};
+                if (typeof key !== 'undefined') {
+                    payload['key'] = key;
+                }
+                if (typeof value !== 'undefined') {
+                    payload['value'] = value;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('put', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Delete Variable
+         *
+         * Delete a variable by its unique ID.
+         *
+         * @param {string} functionId
+         * @param {string} variableId
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        deleteVariable(functionId, variableId) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof functionId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "functionId"');
+                }
+                if (typeof variableId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "variableId"');
+                }
+                let path = '/functions/{functionId}/variables/{variableId}'.replace('{functionId}', functionId).replace('{variableId}', variableId);
+                let payload = {};
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('delete', uri, {
                     'content-type': 'application/json',
                 }, payload);
             });
@@ -3978,36 +4069,20 @@
          * List Projects
          *
          *
+         * @param {string[]} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        list(search, limit, offset, cursor, cursorDirection, orderType) {
+        list(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/projects';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -4414,7 +4489,7 @@
          * @param {string} projectId
          * @param {string} name
          * @param {string[]} scopes
-         * @param {number} expire
+         * @param {string} expire
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -4479,7 +4554,7 @@
          * @param {string} keyId
          * @param {string} name
          * @param {string[]} scopes
-         * @param {number} expire
+         * @param {string} expire
          * @throws {AppwriteException}
          * @returns {Promise}
          */
@@ -5023,36 +5098,20 @@
          * Get a list of all the storage buckets. You can use the query params to
          * filter your results.
          *
+         * @param {string[]} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listBuckets(search, limit, offset, cursor, cursorDirection, orderType) {
+        listBuckets(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/storage/buckets';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -5067,18 +5126,18 @@
          *
          * @param {string} bucketId
          * @param {string} name
-         * @param {string} permission
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {boolean} fileSecurity
+         * @param {string[]} permissions
          * @param {boolean} enabled
          * @param {number} maximumFileSize
          * @param {string[]} allowedFileExtensions
+         * @param {string} compression
          * @param {boolean} encryption
          * @param {boolean} antivirus
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createBucket(bucketId, name, permission, read, write, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) {
+        createBucket(bucketId, name, fileSecurity, permissions, enabled, maximumFileSize, allowedFileExtensions, compression, encryption, antivirus) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
@@ -5086,8 +5145,8 @@
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
                 }
-                if (typeof permission === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "permission"');
+                if (typeof fileSecurity === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "fileSecurity"');
                 }
                 let path = '/storage/buckets';
                 let payload = {};
@@ -5097,14 +5156,11 @@
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
-                if (typeof permission !== 'undefined') {
-                    payload['permission'] = permission;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof fileSecurity !== 'undefined') {
+                    payload['fileSecurity'] = fileSecurity;
                 }
                 if (typeof enabled !== 'undefined') {
                     payload['enabled'] = enabled;
@@ -5114,6 +5170,9 @@
                 }
                 if (typeof allowedFileExtensions !== 'undefined') {
                     payload['allowedFileExtensions'] = allowedFileExtensions;
+                }
+                if (typeof compression !== 'undefined') {
+                    payload['compression'] = compression;
                 }
                 if (typeof encryption !== 'undefined') {
                     payload['encryption'] = encryption;
@@ -5157,18 +5216,18 @@
          *
          * @param {string} bucketId
          * @param {string} name
-         * @param {string} permission
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {boolean} fileSecurity
+         * @param {string[]} permissions
          * @param {boolean} enabled
          * @param {number} maximumFileSize
          * @param {string[]} allowedFileExtensions
+         * @param {string} compression
          * @param {boolean} encryption
          * @param {boolean} antivirus
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updateBucket(bucketId, name, permission, read, write, enabled, maximumFileSize, allowedFileExtensions, encryption, antivirus) {
+        updateBucket(bucketId, name, fileSecurity, permissions, enabled, maximumFileSize, allowedFileExtensions, compression, encryption, antivirus) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
@@ -5176,22 +5235,19 @@
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
                 }
-                if (typeof permission === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "permission"');
+                if (typeof fileSecurity === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "fileSecurity"');
                 }
                 let path = '/storage/buckets/{bucketId}'.replace('{bucketId}', bucketId);
                 let payload = {};
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
                 }
-                if (typeof permission !== 'undefined') {
-                    payload['permission'] = permission;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof fileSecurity !== 'undefined') {
+                    payload['fileSecurity'] = fileSecurity;
                 }
                 if (typeof enabled !== 'undefined') {
                     payload['enabled'] = enabled;
@@ -5201,6 +5257,9 @@
                 }
                 if (typeof allowedFileExtensions !== 'undefined') {
                     payload['allowedFileExtensions'] = allowedFileExtensions;
+                }
+                if (typeof compression !== 'undefined') {
+                    payload['compression'] = compression;
                 }
                 if (typeof encryption !== 'undefined') {
                     payload['encryption'] = encryption;
@@ -5244,39 +5303,23 @@
          * project's files. [Learn more about different API modes](/docs/admin).
          *
          * @param {string} bucketId
+         * @param {string[]} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listFiles(bucketId, search, limit, offset, cursor, cursorDirection, orderType) {
+        listFiles(bucketId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
                 }
                 let path = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -5289,8 +5332,8 @@
          *
          * Create a new file. Before using this route, you should create a new bucket
          * resource using either a [server
-         * integration](/docs/server/database#storageCreateBucket) API or directly
-         * from your Appwrite console.
+         * integration](/docs/server/storage#storageCreateBucket) API or directly from
+         * your Appwrite console.
          *
          * Larger files should be uploaded using multiple requests with the
          * [content-range](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range)
@@ -5309,12 +5352,11 @@
          * @param {string} bucketId
          * @param {string} fileId
          * @param {File} file
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {string[]} permissions
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createFile(bucketId, fileId, file, read, write, onProgress = (progress) => { }) {
+        createFile(bucketId, fileId, file, permissions, onProgress = (progress) => { }) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
@@ -5333,11 +5375,8 @@
                 if (typeof file !== 'undefined') {
                     payload['file'] = file;
                 }
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 if (!(file instanceof File)) {
@@ -5425,12 +5464,11 @@
          *
          * @param {string} bucketId
          * @param {string} fileId
-         * @param {string[]} read
-         * @param {string[]} write
+         * @param {string[]} permissions
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updateFile(bucketId, fileId, read, write) {
+        updateFile(bucketId, fileId, permissions) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
@@ -5440,11 +5478,8 @@
                 }
                 let path = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
                 let payload = {};
-                if (typeof read !== 'undefined') {
-                    payload['read'] = read;
-                }
-                if (typeof write !== 'undefined') {
-                    payload['write'] = write;
+                if (typeof permissions !== 'undefined') {
+                    payload['permissions'] = permissions;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('put', uri, {
@@ -5670,36 +5705,20 @@
          * In admin mode, this endpoint returns a list of all the teams in the current
          * project. [Learn more about different API modes](/docs/admin).
          *
+         * @param {string[]} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        list(search, limit, offset, cursor, cursorDirection, orderType) {
+        list(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/teams';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -5826,23 +5845,19 @@
          * Get the team activity logs list by its unique ID.
          *
          * @param {string} teamId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listLogs(teamId, limit, offset) {
+        listLogs(teamId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof teamId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "teamId"');
                 }
                 let path = '/teams/{teamId}/logs'.replace('{teamId}', teamId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -5857,39 +5872,23 @@
          * members have read access to this endpoint.
          *
          * @param {string} teamId
+         * @param {string[]} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getMemberships(teamId, search, limit, offset, cursor, cursorDirection, orderType) {
+        getMemberships(teamId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof teamId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "teamId"');
                 }
                 let path = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -6106,36 +6105,20 @@
          * Get a list of all the project's users. You can use the query params to
          * filter your results.
          *
+         * @param {string[]} queries
          * @param {string} search
-         * @param {number} limit
-         * @param {number} offset
-         * @param {string} cursor
-         * @param {string} cursorDirection
-         * @param {string} orderType
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        list(search, limit, offset, cursor, cursorDirection, orderType) {
+        list(queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/users';
                 let payload = {};
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
+                }
                 if (typeof search !== 'undefined') {
                     payload['search'] = search;
-                }
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
-                }
-                if (typeof cursor !== 'undefined') {
-                    payload['cursor'] = cursor;
-                }
-                if (typeof cursorDirection !== 'undefined') {
-                    payload['cursorDirection'] = cursorDirection;
-                }
-                if (typeof orderType !== 'undefined') {
-                    payload['orderType'] = orderType;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -6150,12 +6133,56 @@
          *
          * @param {string} userId
          * @param {string} email
+         * @param {string} phone
          * @param {string} password
          * @param {string} name
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        create(userId, email, password, name) {
+        create(userId, email, phone, password, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                let path = '/users';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof phone !== 'undefined') {
+                    payload['phone'] = phone;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with Argon2 Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [Argon2](https://en.wikipedia.org/wiki/Argon2) algorithm. Use the [POST
+         * /users](/docs/server/users#usersCreate) endpoint to create users with a
+         * plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createArgon2User(userId, email, password, name) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
@@ -6166,7 +6193,7 @@
                 if (typeof password === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "password"');
                 }
-                let path = '/users';
+                let path = '/users/argon2';
                 let payload = {};
                 if (typeof userId !== 'undefined') {
                     payload['userId'] = userId;
@@ -6176,6 +6203,342 @@
                 }
                 if (typeof password !== 'undefined') {
                     payload['password'] = password;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with Bcrypt Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [Bcrypt](https://en.wikipedia.org/wiki/Bcrypt) algorithm. Use the [POST
+         * /users](/docs/server/users#usersCreate) endpoint to create users with a
+         * plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createBcryptUser(userId, email, password, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                let path = '/users/bcrypt';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with MD5 Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [MD5](https://en.wikipedia.org/wiki/MD5) algorithm. Use the [POST
+         * /users](/docs/server/users#usersCreate) endpoint to create users with a
+         * plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createMD5User(userId, email, password, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                let path = '/users/md5';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with PHPass Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [PHPass](https://www.openwall.com/phpass/) algorithm. Use the [POST
+         * /users](/docs/server/users#usersCreate) endpoint to create users with a
+         * plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createPHPassUser(userId, email, password, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                let path = '/users/phpass';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with Scrypt Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [Scrypt](https://github.com/Tarsnap/scrypt) algorithm. Use the [POST
+         * /users](/docs/server/users#usersCreate) endpoint to create users with a
+         * plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} passwordSalt
+         * @param {number} passwordCpu
+         * @param {number} passwordMemory
+         * @param {number} passwordParallel
+         * @param {number} passwordLength
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createScryptUser(userId, email, password, passwordSalt, passwordCpu, passwordMemory, passwordParallel, passwordLength, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                if (typeof passwordSalt === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordSalt"');
+                }
+                if (typeof passwordCpu === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordCpu"');
+                }
+                if (typeof passwordMemory === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordMemory"');
+                }
+                if (typeof passwordParallel === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordParallel"');
+                }
+                if (typeof passwordLength === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordLength"');
+                }
+                let path = '/users/scrypt';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof passwordSalt !== 'undefined') {
+                    payload['passwordSalt'] = passwordSalt;
+                }
+                if (typeof passwordCpu !== 'undefined') {
+                    payload['passwordCpu'] = passwordCpu;
+                }
+                if (typeof passwordMemory !== 'undefined') {
+                    payload['passwordMemory'] = passwordMemory;
+                }
+                if (typeof passwordParallel !== 'undefined') {
+                    payload['passwordParallel'] = passwordParallel;
+                }
+                if (typeof passwordLength !== 'undefined') {
+                    payload['passwordLength'] = passwordLength;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with Scrypt Modified Password
+         *
+         * Create a new user. Password provided must be hashed with the [Scrypt
+         * Modified](https://gist.github.com/Meldiron/eecf84a0225eccb5a378d45bb27462cc)
+         * algorithm. Use the [POST /users](/docs/server/users#usersCreate) endpoint
+         * to create users with a plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} passwordSalt
+         * @param {string} passwordSaltSeparator
+         * @param {string} passwordSignerKey
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createScryptModifiedUser(userId, email, password, passwordSalt, passwordSaltSeparator, passwordSignerKey, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                if (typeof passwordSalt === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordSalt"');
+                }
+                if (typeof passwordSaltSeparator === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordSaltSeparator"');
+                }
+                if (typeof passwordSignerKey === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "passwordSignerKey"');
+                }
+                let path = '/users/scrypt-modified';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof passwordSalt !== 'undefined') {
+                    payload['passwordSalt'] = passwordSalt;
+                }
+                if (typeof passwordSaltSeparator !== 'undefined') {
+                    payload['passwordSaltSeparator'] = passwordSaltSeparator;
+                }
+                if (typeof passwordSignerKey !== 'undefined') {
+                    payload['passwordSignerKey'] = passwordSignerKey;
+                }
+                if (typeof name !== 'undefined') {
+                    payload['name'] = name;
+                }
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('post', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Create User with SHA Password
+         *
+         * Create a new user. Password provided must be hashed with the
+         * [SHA](https://en.wikipedia.org/wiki/Secure_Hash_Algorithm) algorithm. Use
+         * the [POST /users](/docs/server/users#usersCreate) endpoint to create users
+         * with a plain text password.
+         *
+         * @param {string} userId
+         * @param {string} email
+         * @param {string} password
+         * @param {string} passwordVersion
+         * @param {string} name
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        createSHAUser(userId, email, password, passwordVersion, name) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (typeof userId === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "userId"');
+                }
+                if (typeof email === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "email"');
+                }
+                if (typeof password === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "password"');
+                }
+                let path = '/users/sha';
+                let payload = {};
+                if (typeof userId !== 'undefined') {
+                    payload['userId'] = userId;
+                }
+                if (typeof email !== 'undefined') {
+                    payload['email'] = email;
+                }
+                if (typeof password !== 'undefined') {
+                    payload['password'] = password;
+                }
+                if (typeof passwordVersion !== 'undefined') {
+                    payload['passwordVersion'] = passwordVersion;
                 }
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
@@ -6294,23 +6657,19 @@
          * Get the user activity logs list by its unique ID.
          *
          * @param {string} userId
-         * @param {number} limit
-         * @param {number} offset
+         * @param {string[]} queries
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getLogs(userId, limit, offset) {
+        getLogs(userId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
                 }
                 let path = '/users/{userId}/logs'.replace('{userId}', userId);
                 let payload = {};
-                if (typeof limit !== 'undefined') {
-                    payload['limit'] = limit;
-                }
-                if (typeof offset !== 'undefined') {
-                    payload['offset'] = offset;
+                if (typeof queries !== 'undefined') {
+                    payload['queries'] = queries;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -6640,6 +6999,57 @@
         }
     }
 
+    class Permission {
+    }
+    Permission.read = (role) => {
+        return `read("${role}")`;
+    };
+    Permission.write = (role) => {
+        return `write("${role}")`;
+    };
+    Permission.create = (role) => {
+        return `create("${role}")`;
+    };
+    Permission.update = (role) => {
+        return `update("${role}")`;
+    };
+    Permission.delete = (role) => {
+        return `delete("${role}")`;
+    };
+
+    class Role {
+        static any() {
+            return 'any';
+        }
+        static user(id) {
+            return `user:${id}`;
+        }
+        static users() {
+            return 'users';
+        }
+        static guests() {
+            return 'guests';
+        }
+        static team(id, role = '') {
+            if (role === '') {
+                return `team:${id}`;
+            }
+            return `team:${id}/${role}`;
+        }
+        static status(status) {
+            return `status:${status}`;
+        }
+    }
+
+    class ID {
+        static custom(id) {
+            return id;
+        }
+        static unique() {
+            return 'unique()';
+        }
+    }
+
     exports.Account = Account;
     exports.AppwriteException = AppwriteException;
     exports.Avatars = Avatars;
@@ -6647,9 +7057,12 @@
     exports.Databases = Databases;
     exports.Functions = Functions;
     exports.Health = Health;
+    exports.ID = ID;
     exports.Locale = Locale;
+    exports.Permission = Permission;
     exports.Projects = Projects;
     exports.Query = Query;
+    exports.Role = Role;
     exports.Storage = Storage;
     exports.Teams = Teams;
     exports.Users = Users;
