@@ -35,7 +35,7 @@ The Appwrite .NET SDK raises `AppwriteException` object with `message`, `code` a
 var users = Users(client);
 
 try {
-  var user = await users.create(ID.unique(), 'email@example.com', 'password', 'name');
+  var user = await users.Create(ID.Unique(), 'email@example.com', 'password', 'name');
   Console.WriteLine(user.ToMap());
 } catch (AppwriteException e) {
   Console.WriteLine(e.Message);
