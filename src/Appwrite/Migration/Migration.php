@@ -50,7 +50,8 @@ abstract class Migration
         '0.15.0' => 'V14',
         '0.15.1' => 'V14',
         '0.15.2' => 'V14',
-        '0.15.3' => 'V14'
+        '0.15.3' => 'V14',
+        '1.0.0-RC1' => 'V15'
     ];
 
     /**
@@ -62,6 +63,7 @@ abstract class Migration
     {
         Authorization::disable();
         Authorization::setDefaultStatus(false);
+
         $this->collections = array_merge([
             '_metadata' => [
                 '$id' => ID::custom('_metadata'),

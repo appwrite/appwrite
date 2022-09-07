@@ -7,6 +7,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
 use Utopia\Database\Query;
 
 class V12 extends Migration

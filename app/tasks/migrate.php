@@ -15,7 +15,7 @@ use Utopia\Validator\Text;
 
 $cli
     ->task('migrate')
-    ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
+    ->param('version', APP_VERSION_STABLE, new Text(32), 'Version to migrate to.', true)
     ->action(function ($version) use ($register) {
         Authorization::disable();
         if (!array_key_exists($version, Migration::$versions)) {
