@@ -20,7 +20,7 @@ static async Task Main(string[] args)
   var users = Users(client);
 
   try {
-    var user = await users.create(ID.unique(), 'email@example.com', 'password', 'name');
+    var user = await users.Create(ID.Unique(), 'email@example.com', 'password', 'name');
     Console.WriteLine(user.ToMap());
   } catch (AppwriteException e) {
     Console.WriteLine(e.Message);
