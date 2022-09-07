@@ -1342,8 +1342,9 @@ App::post('/v1/functions/:functionId/variables')
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($variable, Response::MODEL_VARIABLE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
 App::get('/v1/functions/:functionId/variables')

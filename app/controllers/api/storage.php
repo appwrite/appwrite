@@ -136,8 +136,9 @@ App::post('/v1/storage/buckets')
             ->setParam('bucketId', $bucket->getId())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($bucket, Response::MODEL_BUCKET);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
 App::get('/v1/storage/buckets')

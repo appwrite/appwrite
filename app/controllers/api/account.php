@@ -1981,8 +1981,9 @@ App::post('/v1/account/recovery')
         // Hide secret for clients
         $recovery->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($recovery, Response::MODEL_TOKEN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($recovery, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/recovery')
@@ -2137,8 +2138,9 @@ App::post('/v1/account/verification')
         // Hide secret for clients
         $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($verification, Response::MODEL_TOKEN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/verification')
@@ -2278,8 +2280,9 @@ App::post('/v1/account/verification/phone')
         // Hide secret for clients
         $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($verification, Response::MODEL_TOKEN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/verification/phone')

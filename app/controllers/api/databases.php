@@ -530,8 +530,9 @@ App::post('/v1/databases/:databaseId/collections')
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($collection, Response::MODEL_COLLECTION);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
 App::get('/v1/databases/:databaseId/collections')
@@ -1265,8 +1266,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
             'array' => $array,
         ]), $response, $dbForProject, $database, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
 
@@ -1308,8 +1310,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             'filters' => ['datetime']
         ]), $response, $dbForProject, $database, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
     });
 
 
@@ -1654,8 +1657,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->setContext('database', $db)
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($index, Response::MODEL_INDEX);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($index, Response::MODEL_INDEX);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
@@ -1933,8 +1937,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('database', $database)
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($document, Response::MODEL_DOCUMENT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
