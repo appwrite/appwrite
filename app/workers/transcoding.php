@@ -80,7 +80,7 @@ class TranscodingV1 extends Worker
         ]));
 
         if (empty($sourceVideo)) {
-            throw new Exception('Video not found', 400, Exception::VIDEO_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
         $profile =  Authorization::skip(fn() =>  $this->database->findOne('videos_profiles', [
@@ -88,7 +88,7 @@ class TranscodingV1 extends Worker
         ]));
 
         if (empty($profile)) {
-            throw new Exception('Video profile not found', 400, Exception::VIDEO_PROFILE_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
         $bucket = Authorization::skip(
@@ -104,7 +104,7 @@ class TranscodingV1 extends Worker
 
         $result = $this->writeData($project, $file);
         if (empty($result)) {
-            throw new Exception('File write failed', 500, Exception::GENERAL_UNKNOWN);
+            throw new Exception(Exception::GENERAL_UNKNOWN);
         }
 
         $ffprobe = FFMpeg\FFProbe::create();
@@ -114,7 +114,7 @@ class TranscodingV1 extends Worker
         ]);
 
         if (!$ffprobe->isValid($inPath)) {
-            throw new Exception('Not an valid FFMpeg file "' . $inPath . '"');
+            throw new Exception('Not an valid Video file "' . $inPath . '"');
         }
 
         foreach ($ffprobe->streams($inPath)->audios()->getIterator() as $stream) {
@@ -185,16 +185,16 @@ class TranscodingV1 extends Worker
             ];
         }
 
-            $query = Authorization::skip(function () use ($profile) {
-                    return $this->database->createDocument('videos_renditions', new Document([
-                        'videoId'  => $this->args['videoId'],
-                        'profileId' => $profile->getId(),
-                        'name'      => $this->getRenditionName(),
-                        'startedAt' => DateTime::now(),
-                        'status'    => self::STATUS_START,
-                        'protocol'  => $profile->getAttribute('protocol'),
-                    ]));
-            });
+        $query = Authorization::skip(function () use ($profile) {
+            return $this->database->createDocument('videos_renditions', new Document([
+               'videoId'  => $this->args['videoId'],
+               'profileId' => $profile->getId(),
+               'name'      => $this->getRenditionName(),
+               'startedAt' => DateTime::now(),
+               'status'    => self::STATUS_START,
+               'protocol'  => $profile->getAttribute('protocol'),
+            ]));
+        });
 
         $renditionRootPath = $this->getVideoDevice($project->getId())->getPath($this->args['videoId']) . '/';
         $renditionPath = $renditionRootPath . $this->getRenditionName() . '-' . $query->getId() .  '/';
@@ -315,6 +315,7 @@ class TranscodingV1 extends Worker
 
                 $this->getVideoDevice($project->getId())->write($to .  $fileName, $data, \mime_content_type($this->outDir . $fileName));
                 if ($start === 0) {
+                    $query->setAttribute('progress', '100');
                     $query->setAttribute('status', self::STATUS_UPLOADING);
                     $query->setAttribute('path', $renditionPath);
                     Authorization::skip(fn() => $this->database->updateDocument('videos_renditions', $query->getId(), $query));

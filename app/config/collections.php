@@ -4060,7 +4060,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_unique',
+                '$id' => '_key_profile',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['protocol', 'width', 'height', 'videoBitrate', 'audioBitrate' ],
                 'lengths' => [],

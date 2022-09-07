@@ -3,7 +3,7 @@
 #EXT-X-ALLOW-CACHE:NO
 #EXT-X-TARGETDURATION:<?php echo $this->getParam('targetDuration', 0)?><?php echo PHP_EOL?>
 #EXT-X-MEDIA-SEQUENCE:0
-<?php foreach ($this->getParam('paramsSegments', []) as $segment): ?>
+<?php foreach ($this->getParam('segments', []) as $segment): ?>
     #EXTINF:<?php echo $segment['duration']; ?><?php echo PHP_EOL?>
     <?php echo $segment['url']; ?><?php echo PHP_EOL?>
 <?php endforeach; ?>

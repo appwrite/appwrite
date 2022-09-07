@@ -31,16 +31,6 @@ class VideoCustomServerTest extends Scope
             'protocol' => 'hls',
         ]);
 
-        $x  = [
-        Permission::read(Role::any()),
-        Permission::create(Role::any()),
-        Permission::update(Role::any()),
-        Permission::delete(Role::any()),
-
-        ];
-        var_dump($x);
-        exit;
-
         $profileId = $response['body']['$id'];
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
@@ -115,7 +105,7 @@ class VideoCustomServerTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals('Video profile not found', $response['body']['message']);
+        $this->assertEquals('Video profile not found.', $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_GET, '/videos/profiles', [
             'content-type' => 'application/json',
@@ -159,7 +149,7 @@ class VideoCustomServerTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals('Video profile not found', $response['body']['message']);
+        $this->assertEquals('Video profile not found.', $response['body']['message']);
     }
 
     /**
@@ -359,7 +349,6 @@ class VideoCustomServerTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-
 
         /**
          * Try to transcode with wrong profileId
@@ -849,6 +838,7 @@ class VideoCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
+            'queries' => [ 'limit(1)' ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
