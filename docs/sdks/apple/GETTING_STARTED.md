@@ -79,7 +79,7 @@ do {
         email: "email@example.com", 
         password: "password"
     )
-    print(String(describing: account.toMap()))
+    print(String(describing: user.toMap()))
 } catch {
     print(error.localizedDescription)
 }
