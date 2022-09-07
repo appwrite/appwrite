@@ -123,7 +123,7 @@ func main() {
     
     do {
         let account = try await account.get()
-        print(String(describing: account.toMap()))
+        print(String(describing: user.toMap()))
     } catch {
         print(error.localizedDescription)
     }
