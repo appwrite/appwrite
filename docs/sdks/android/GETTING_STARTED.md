@@ -83,7 +83,7 @@ The Appwrite Android SDK raises an `AppwriteException` object with `message`, `c
 ```kotlin
 try {
     var user = account.create(ID.unique(), "email@example.com", "password")
-    Log.d("Appwrite user", account.toMap())
+    Log.d("Appwrite user", user.toMap())
 } catch(e : AppwriteException) {
     e.printStackTrace()
 }
