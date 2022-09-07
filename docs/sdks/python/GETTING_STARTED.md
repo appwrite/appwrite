@@ -30,7 +30,7 @@ result = users.create('[USER_ID]', 'email@example.com', 'password')
 ```python
 from appwrite.client import Client
 from appwrite.services.users import Users
-from appwrite.client import ID
+from appwrite.id import ID
 
 client = Client()
 
