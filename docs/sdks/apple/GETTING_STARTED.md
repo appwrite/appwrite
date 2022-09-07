@@ -53,30 +53,35 @@ For UIKit, you need to add the following function to your `SceneDelegate.swift`.
 
 ### Init your SDK
 
-Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page and your new API secret Key project API keys section.
+Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page.
 
 ```swift
 import Appwrite
 
 func main() {
     let client = Client()
-      .setEndpoint("http://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-      .setProject("5df5acd0d48c2") // Your project ID
-      .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
+        .setEndpoint("http://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
+        .setProject("5df5acd0d48c2") // Your project ID
+        .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 }
 ```
 
 ### Make Your First Request
 
-Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
+Once your SDK object is initialized, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
 
 ```swift
-let users = Users(client: client)
-users.create(userId: "[USER_ID]", email: "email@example.com", password: "password") { result in
-    switch result {
-    case .failure(let error): print(error.message)
-    case .success(let user): print(String(describing: user))
-    }
+let account = Account(client)
+
+do {
+    let account = try await account.create(
+        userId: ID.unique(), 
+        email: "email@example.com", 
+        password: "password"
+    )
+    print(String(describing: account.toMap()))
+} catch {
+    print(error.localizedDescription)
 }
 ```
 
@@ -87,37 +92,40 @@ import Appwrite
 
 func main() {
     let client = Client()
-      .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-      .setProject("5df5acd0d48c2") // Your project ID
-      .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
+        .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
+        .setProject("5df5acd0d48c2") // Your project ID
+        .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 
-    let users = Users(client: client)
-    users.create(userId: "[USER_ID]", email: "email@example.com", password: "password") { result in
-        switch result {
-        case .failure(let error): print(error.message)
-        case .success(let user): print(String(describing: user))
-        }
+    let account = Account(client)
+    
+    do {
+        let account = try await account.create(
+            userId: ID.unique(), 
+            email: "email@example.com", 
+            password: "password"
+        )
+        print(String(describing: account.toMap()))
+    } catch {
+        print(error.localizedDescription)
     }
 }
 ```
 
 ### Error Handling
 
-When an error occurs, the Appwrite Swift SDK responds with a result wrapping an `AppwriteError` object with `message` and `code` properties. You can handle any errors in the result's `.failure` case and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+When an error occurs, the Appwrite Apple SDK throws an `AppwriteError` object with `message` and `code` properties. You can handle any errors in a catch block and present the `message` or `localizedDescription` to the user or handle it yourself based on the provided error information. Below is an example.
 
 ```swift
 import Appwrite
 
 func main() {
-    let users = Users(client: client)
+    let account = Account(client)
     
-    users.create(userId: "[USER_ID]", email: "email@example.com", password: "password") { result in
-        switch result {
-        case .failure(let error): 
-            print(error.message)
-        case .success(var response):
-            ...
-        }
+    do {
+        let account = try await account.get()
+        print(String(describing: account.toMap()))
+    } catch {
+        print(error.localizedDescription)
     }
 }
 ```
