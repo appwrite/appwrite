@@ -85,7 +85,7 @@ try {
     var user = account.create(ID.unique(), "email@example.com", "password")
     Log.d("Appwrite user", account.toMap())
 } catch(e : AppwriteException) {
-    Log.e("AppwriteException",e.message.toString())
+    e.printStackTrace()
 }
 ```
 
