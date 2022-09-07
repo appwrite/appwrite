@@ -453,8 +453,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $membership
                     ->setAttribute('teamName', $team->getAttribute('name'))
                     ->setAttribute('userName', $invitee->getAttribute('name'))
-                    ->setAttribute('userEmail', $invitee->getAttribute('email'))
-                    ,
+                    ->setAttribute('userEmail', $invitee->getAttribute('email')),
                 Response::MODEL_MEMBERSHIP
             );
     });
