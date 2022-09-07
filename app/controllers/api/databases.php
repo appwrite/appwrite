@@ -226,8 +226,9 @@ App::post('/v1/databases')
         $events->setParam('databaseId', $database->getId());
         $usage->setParam('databases.create', 1);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($database, Response::MODEL_DATABASE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($database, Response::MODEL_DATABASE);
     });
 
 App::get('/v1/databases')
@@ -550,8 +551,9 @@ App::post('/v1/databases/:databaseId/collections')
             ->setParam('databaseId', $databaseId)
             ->setParam('databases.collections.create', 1);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($collection, Response::MODEL_COLLECTION);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
 App::get('/v1/databases/:databaseId/collections')
@@ -915,8 +917,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'array' => $array,
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email')
@@ -956,8 +959,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
             'format' => APP_DATABASE_ATTRIBUTE_EMAIL,
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
@@ -1013,8 +1017,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
             'formatOptions' => ['elements' => $elements],
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
@@ -1054,8 +1059,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
             'format' => APP_DATABASE_ATTRIBUTE_IP,
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
@@ -1095,8 +1101,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
             'format' => APP_DATABASE_ATTRIBUTE_URL,
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/integer')
@@ -1165,8 +1172,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
             $attribute->setAttribute('max', \intval($formatOptions['max']));
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float')
@@ -1238,8 +1246,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
             $attribute->setAttribute('max', \floatval($formatOptions['max']));
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean')
@@ -1278,8 +1287,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
             'array' => $array,
         ]), $response, $dbForProject, $database, $audits, $events, $usage);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
@@ -1632,8 +1642,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('indexId', $index->getId())
-           ->setContext('collection', $collection)
-        ->setContext('database', $db)
+            ->setContext('collection', $collection)
+            ->setContext('database', $db)
         ;
 
         $audits
@@ -1641,8 +1651,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->setPayload($index->getArrayCopy())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($index, Response::MODEL_INDEX);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($index, Response::MODEL_INDEX);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
@@ -1932,8 +1943,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setPayload($document->getArrayCopy())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($document, Response::MODEL_DOCUMENT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')

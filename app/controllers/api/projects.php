@@ -155,8 +155,9 @@ App::post('/v1/projects')
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($project, Response::MODEL_PROJECT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($project, Response::MODEL_PROJECT);
     });
 
 App::get('/v1/projects')
@@ -605,8 +606,9 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
 App::get('/v1/projects/:projectId/webhooks')
@@ -846,8 +848,9 @@ App::post('/v1/projects/:projectId/keys')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($key, Response::MODEL_KEY);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($key, Response::MODEL_KEY);
     });
 
 App::get('/v1/projects/:projectId/keys')
@@ -1043,8 +1046,9 @@ App::post('/v1/projects/:projectId/platforms')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($platform, Response::MODEL_PLATFORM);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
 App::get('/v1/projects/:projectId/platforms')
@@ -1256,8 +1260,9 @@ App::post('/v1/projects/:projectId/domains')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($domain, Response::MODEL_DOMAIN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
 App::get('/v1/projects/:projectId/domains')

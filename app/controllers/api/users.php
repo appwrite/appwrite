@@ -85,8 +85,9 @@ App::post('/v1/users')
             ->setParam('userId', $user->getId())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::get('/v1/users')

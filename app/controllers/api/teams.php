@@ -100,8 +100,9 @@ App::post('/v1/teams')
             ->setParam('data', $team->getArrayCopy())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($team, Response::MODEL_TEAM);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($team, Response::MODEL_TEAM);
     });
 
 App::get('/v1/teams')
@@ -423,12 +424,14 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('membershipId', $membership->getId())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic(
-            $membership
-            ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email')),
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(
+                $membership
+                    ->setAttribute('teamName', $team->getAttribute('name'))
+                    ->setAttribute('userName', $user->getAttribute('name'))
+                    ->setAttribute('userEmail', $user->getAttribute('email'))
+            ,
             Response::MODEL_MEMBERSHIP
         );
     });
