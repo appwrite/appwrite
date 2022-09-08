@@ -3,7 +3,7 @@
 This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](https://github.com/appwrite/appwrite/blob/master/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md).
 
 ### 1. Alias
-Setting an alias  is used to permit access the route from an alias url as well
+Setting an alias  is used to permit access the route from an alias url as well,
 second parameter is used to push default values to the route.
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
@@ -11,14 +11,14 @@ App::post('/v1/storage/buckets/:bucketId/files')
 ```
 
 ### 2. desc
-Used for an  abstract description of the route in a couple of words. 
+Used as an  abstract description of the route. 
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
 ->desc('Create File')
 ```
 
 ### 3. Groups
-The groups array is used to group one or more routes with one or more hooks functionality.
+Groups array is used to group one or more routes with one or more hooks functionality.
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
 ->groups(['api'])
