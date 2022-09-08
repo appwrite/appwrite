@@ -5,6 +5,7 @@ jobs:
   lint:
     name: Linter
     runs-on: ubuntu-latest
+    container: composer
 
     steps:
     - name: Checkout repository
@@ -20,7 +21,6 @@ jobs:
       if: ${{ github.event_name == 'pull_request' }}
 
     - name: Run Linter
-      uses: docker://composer
       run: |
         composer install --profile --ignore-platform-reqs
         composer lint
