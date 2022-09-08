@@ -220,17 +220,17 @@ $defaultRegion = $this->getParam('defaultRegion', []);
             name="projectId" />
 
         <label>Name</label>
-        <input type="text" class="full-width margin-bottom-xl" name="name" required autocomplete="off" maxlength="128" />
+        <input type="text" class="full-width" name="name" required autocomplete="off" maxlength="128" />
 
-        <?php if(count(array_diff($regions, $disabledRegions)) > 1): ?>
+        <?php if(count($regions) > 1): ?>
             <label>Region</label>
-            <select name="region">
+            <select name="region" class="margin-bottom-xl">
                 <?php foreach($regions as $region): ?>
-                    <option value="<?php echo $region ?>"><?php echo $region ?></option>
+                    <option <?php echo in_array($region, $disabledRegions) ? 'disabled' : '' ?> value="<?php echo $region ?>"><?php echo $region ?></option>
                 <?php endforeach; ?>
             </select>
         <?php else: ?>
-            <input type="hidden" name="region" data-ls-bind="{{$defaultRegion}}" />
+            <input type="hidden" name="region" data-ls-bind="{{$defaultRegion}}" class="margin-bottom-xl" />
         <?php endif; ?>
 
         <footer>

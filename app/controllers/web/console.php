@@ -29,8 +29,8 @@ App::shutdown()
         $footer = new View(__DIR__ . '/../../views/console/comps/footer.phtml');
 
         $header
-            ->setParam('regions', App::getEnv('_APP_REGIONS', []))
-            ->setParam('disabledRegions', App::getEnv('_APP_REGIONS_DISABLED', []))
+            ->setParam('regions', explode(',', App::getEnv('_APP_REGIONS', '')))
+            ->setParam('disabledRegions', explode(',', App::getEnv('_APP_REGIONS_DISABLED', '')))
             ->setParam('defaultRegion', App::getEnv('_APP_REGION_DEFAULT', 'default'))
         ;
 

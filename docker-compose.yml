@@ -176,6 +176,9 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
+      - _APP_REGION_DEFAULT
+      - _APP_REGIONS
+      - _APP_REGIONS_DISABLED
 
   appwrite-realtime:
     entrypoint: realtime
