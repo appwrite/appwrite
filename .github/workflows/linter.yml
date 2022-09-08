@@ -2,7 +2,7 @@ name: "Linter"
 
 on: [pull_request]
 jobs:
-  tests:
+  lint:
     name: Linter
     runs-on: ubuntu-latest
 
@@ -20,7 +20,7 @@ jobs:
       if: ${{ github.event_name == 'pull_request' }}
 
     - name: Run Linter
-      uses: docker
+      uses: docker://composer
       run: |
-        docker run --rm -v $(pwd):/app -w /app composer sh -c \
-        "composer install --profile --ignore-platform-reqs && composer lint"
+        composer install --profile --ignore-platform-reqs
+        composer lint
