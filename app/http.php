@@ -122,9 +122,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 continue;
             }
             /**
-             * Skip to prevent 0.15 migration issues.
+             * Skip to prevent 0.16 migration issues.
              */
-            if ($key === 'databases' && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'collections')) {
+            if (in_array($key, ['cache', 'variables']) && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
                 continue;
             }
 
@@ -156,8 +156,11 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                     'orders' => $index['orders'],
                 ]);
             }
-
-            $dbForConsole->createCollection($key, $attributes, $indexes);
+            try {
+                $dbForConsole->createCollection($key, $attributes, $indexes);
+            } catch (\Throwable $th) {
+                Console::warning("Failed to create {$key} collection: " . $th->getMessage());
+            }
         }
 
         if ($dbForConsole->getDocument('buckets', 'default')->isEmpty()) {

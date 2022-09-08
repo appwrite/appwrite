@@ -13,6 +13,8 @@ use Utopia\App;
 use Utopia\Database\ID;
 use Utopia\Database\Validator\Authorization;
 
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
 abstract class Migration
 {
     /**
@@ -107,64 +109,74 @@ abstract class Migration
      */
     public function forEachDocument(callable $callback): void
     {
-        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-
         foreach ($this->collections as $collection) {
             if ($collection['$collection'] !== Database::METADATA) {
                 continue;
             }
 
-            $sum = 0;
-            $nextDocument = null;
-            $collectionCount = $this->projectDB->count($collection['$id']);
             Console::log('Migrating Collection ' . $collection['$id'] . ':');
 
-            do {
-                $queries = [Query::limit($this->limit)];
-                if ($nextDocument !== null) {
-                    $queries[] = Query::cursorAfter($nextDocument);
+            \Co\run(function (array $collection, callable $callback) {
+                foreach ($this->documentsIterator($collection['$id']) as $document) {
+                    go(function (Document $document, callable $callback) {
+                        if (empty($document->getId()) || empty($document->getCollection())) {
+                            return;
+                        }
+
+                        $old = $document->getArrayCopy();
+                        $new = call_user_func($callback, $document);
+
+                        if (is_null($new) || !self::hasDifference($new->getArrayCopy(), $old)) {
+                            return;
+                        }
+
+                        try {
+                            $new = $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                        } catch (\Throwable $th) {
+                            Console::error('Failed to update document: ' . $th->getMessage());
+                            return;
+
+                            if ($document && $new->getId() !== $document->getId()) {
+                                throw new Exception('Duplication Error');
+                            }
+                        }
+                    }, $document, $callback);
                 }
-                $documents = $this->projectDB->find($collection['$id'], $queries);
-                $count = count($documents);
-                $sum += $count;
-
-                Console::log($sum . ' / ' . $collectionCount);
-
-                \Co\run(function (array $documents, callable $callback) {
-                    foreach ($documents as $document) {
-                        go(function (Document $document, callable $callback) {
-                            if (empty($document->getId()) || empty($document->getCollection())) {
-                                return;
-                            }
-
-                            $old = $document->getArrayCopy();
-                            $new = call_user_func($callback, $document);
-
-                            if (is_null($new) || !self::hasDifference($new->getArrayCopy(), $old)) {
-                                return;
-                            }
-
-                            try {
-                                $new = $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
-                            } catch (\Throwable $th) {
-                                Console::error('Failed to update document: ' . $th->getMessage());
-                                return;
-
-                                if ($document && $new->getId() !== $document->getId()) {
-                                    throw new Exception('Duplication Error');
-                                }
-                            }
-                        }, $document, $callback);
-                    }
-                }, $documents, $callback);
-
-                if ($count !== $this->limit) {
-                    $nextDocument = null;
-                } else {
-                    $nextDocument = end($documents);
-                }
-            } while (!is_null($nextDocument));
+            }, $collection, $callback);
         }
+    }
+
+    /**
+     * @param string $collectionId 
+     * @return iterable<Document>
+     * @throws \Exception 
+     */
+    public function documentsIterator(string $collectionId): iterable
+    {
+        $sum = 0;
+        $nextDocument = null;
+        $collectionCount = $this->projectDB->count($collectionId);
+
+        do {
+            $queries = [Query::limit($this->limit)];
+            if ($nextDocument !== null) {
+                $queries[] = Query::cursorAfter($nextDocument);
+            }
+            $documents = $this->projectDB->find($collectionId, $queries);
+            $count = count($documents);
+            $sum += $count;
+
+            Console::log($sum . ' / ' . $collectionCount);
+            foreach ($documents as $document) {
+                yield $document;
+            }
+
+            if ($count !== $this->limit) {
+                $nextDocument = null;
+            } else {
+                $nextDocument = end($documents);
+            }
+        } while (!is_null($nextDocument));
     }
 
     /**
@@ -267,6 +279,8 @@ abstract class Migration
         }
 
         $attribute = $attributes[$attributeKey];
+        $filters = $attribute['filters'] ?? [];
+        $default = $attribute['default'] ?? null;
 
         $database->createAttribute(
             collection: $collectionId,
@@ -274,28 +288,30 @@ abstract class Migration
             type: $attribute['type'],
             size: $attribute['size'],
             required: $attribute['required'] ?? false,
-            default: $attribute['default'] ?? null,
+            default: in_array('json', $filters) ? json_encode($default) : $default,
             signed: $attribute['signed'] ?? false,
             array: $attribute['array'] ?? false,
             format: $attribute['format'] ?? '',
             formatOptions: $attribute['formatOptions'] ?? [],
-            filters: $attribute['filters'] ?? [],
+            filters: $filters,
         );
     }
 
     /**
      * Creates index from collections.php
-     *
+     * 
      * @param \Utopia\Database\Database $database
      * @param string $collectionId
      * @param string $indexId
+     * @param string|null $from
      * @return void
      * @throws \Exception
      * @throws \Utopia\Database\Exception\Duplicate
      * @throws \Utopia\Database\Exception\Limit
      */
-    public function createIndexFromCollection(Database $database, string $collectionId, string $indexId): void
+    public function createIndexFromCollection(Database $database, string $collectionId, string $indexId, string $from = null): void
     {
+        $from ??= $collectionId;
         $collection = Config::getParam('collections', [])[$collectionId] ?? null;
 
         if (is_null($collection)) {
