@@ -11,4 +11,4 @@ client = Client()
 
 storage = Storage(client)
 
-result = storage.update_bucket('[BUCKET_ID]', '[NAME]', False)
+result = storage.update_bucket('[BUCKET_ID]', '[NAME]')

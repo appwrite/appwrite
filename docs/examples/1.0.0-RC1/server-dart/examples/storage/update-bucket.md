@@ -13,7 +13,6 @@ void main() { // Init SDK
   Future result = storage.updateBucket(
     bucketId: '[BUCKET_ID]',
     name: '[NAME]',
-    fileSecurity: false,
   );
 
   result

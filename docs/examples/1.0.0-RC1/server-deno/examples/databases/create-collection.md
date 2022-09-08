@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = databases.createCollection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]', ["read("any")"], false);
+let promise = databases.createCollection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]');
 
 promise.then(function (response) {
     console.log(response);

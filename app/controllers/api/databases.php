@@ -218,8 +218,9 @@ App::post('/v1/databases')
 
         $events->setParam('databaseId', $database->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($database, Response::MODEL_DATABASE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($database, Response::MODEL_DATABASE);
     });
 
 App::get('/v1/databases')
@@ -533,8 +534,9 @@ App::post('/v1/databases/:databaseId/collections')
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($collection, Response::MODEL_COLLECTION);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
 App::get('/v1/databases/:databaseId/collections')
@@ -894,8 +896,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'array' => $array,
         ]), $response, $dbForProject, $database, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email')
@@ -937,8 +940,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
             'format' => APP_DATABASE_ATTRIBUTE_EMAIL,
         ]), $response, $dbForProject, $database, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
@@ -996,8 +1000,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
             'formatOptions' => ['elements' => $elements],
         ]), $response, $dbForProject, $database, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
@@ -1039,8 +1044,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
             'format' => APP_DATABASE_ATTRIBUTE_IP,
         ]), $response, $dbForProject, $database, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
@@ -1082,8 +1088,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
             'format' => APP_DATABASE_ATTRIBUTE_URL,
         ]), $response, $dbForProject, $database, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/integer')
@@ -1154,8 +1161,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
             $attribute->setAttribute('max', \intval($formatOptions['max']));
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float')
@@ -1229,8 +1237,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
             $attribute->setAttribute('max', \floatval($formatOptions['max']));
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean')
@@ -1271,8 +1280,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
             'array' => $array,
         ]), $response, $dbForProject, $database, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
 
@@ -1297,7 +1307,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new DatetimeValidator(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('default', null, new DatetimeValidator(), 'Default value for the attribute in ISO 8601 format. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1315,8 +1325,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             'filters' => ['datetime']
         ]), $response, $dbForProject, $database, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
     });
 
 
@@ -1659,12 +1670,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('indexId', $index->getId())
-           ->setContext('collection', $collection)
-        ->setContext('database', $db)
+            ->setContext('collection', $collection)
+            ->setContext('database', $db)
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($index, Response::MODEL_INDEX);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($index, Response::MODEL_INDEX);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
@@ -1846,7 +1858,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE]), 'An array of permissions strings. By default the current user is granted with all permissions. [Learn more about permissions](/docs/permissions).', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default the current user is granted with all permissions. [Learn more about permissions](/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -1944,8 +1956,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('database', $database)
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($document, Response::MODEL_DOCUMENT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
@@ -2227,7 +2240,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->param('collectionId', null, new UID(), 'Collection ID.')
     ->param('documentId', null, new UID(), 'Document ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')

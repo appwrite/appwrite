@@ -25,7 +25,7 @@ class AttributeDatetime extends Attribute
             ])
             ->addRule('format', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Datetime format.',
+                'description' => 'ISO 8601 format.',
                 'default' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'array' => false,

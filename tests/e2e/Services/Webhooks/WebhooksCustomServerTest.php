@@ -605,7 +605,9 @@ class WebhooksCustomServerTest extends Scope
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $id . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()), [
+            'async' => true
+        ]);
 
         $executionId = $execution['body']['$id'] ?? '';
 

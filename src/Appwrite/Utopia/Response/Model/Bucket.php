@@ -18,13 +18,13 @@ class Bucket extends Model
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Bucket creation time in Datetime',
+                'description' => 'Bucket creation time in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Bucket update date in Datetime',
+                'description' => 'Bucket update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -36,9 +36,9 @@ class Bucket extends Model
                 'array' => true,
             ])
             ->addRule('fileSecurity', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether file-level security is enabled. [Learn more about permissions](/docs/permissions).',
-                'default' => '',
+                'default' => false,
                 'example' => true,
             ])
             ->addRule('name', [

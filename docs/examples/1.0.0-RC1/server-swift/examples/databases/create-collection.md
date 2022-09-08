@@ -9,9 +9,7 @@ func main() async throws {
     let collection = try await databases.createCollection(
         databaseId: "[DATABASE_ID]",
         collectionId: "[COLLECTION_ID]",
-        name: "[NAME]",
-        permissions: ["read("any")"],
-        documentSecurity: xfalse
+        name: "[NAME]"
     )
 
     print(String(describing: collection)

@@ -11,4 +11,4 @@ client = Client()
 
 databases = Databases(client)
 
-result = databases.update_collection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]', False)
+result = databases.update_collection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]')

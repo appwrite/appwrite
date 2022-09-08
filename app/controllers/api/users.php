@@ -109,8 +109,9 @@ App::post('/v1/users')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/bcrypt')
@@ -138,8 +139,9 @@ App::post('/v1/users/bcrypt')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/md5')
@@ -167,8 +169,9 @@ App::post('/v1/users/md5')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/argon2')
@@ -196,8 +199,9 @@ App::post('/v1/users/argon2')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/sha')
@@ -232,8 +236,9 @@ App::post('/v1/users/sha')
 
         $user = createUser('sha', $options, $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/phpass')
@@ -261,8 +266,9 @@ App::post('/v1/users/phpass')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/scrypt')
@@ -303,8 +309,9 @@ App::post('/v1/users/scrypt')
 
         $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/scrypt-modified')
@@ -335,8 +342,9 @@ App::post('/v1/users/scrypt-modified')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::get('/v1/users')

@@ -1185,6 +1185,7 @@ trait AccountBase
     /**
      * @depends testCreateAccountRecovery
      */
+    #[Retry(count: 1)]
     public function testUpdateAccountRecovery($data): array
     {
         $id = $data['id'] ?? '';

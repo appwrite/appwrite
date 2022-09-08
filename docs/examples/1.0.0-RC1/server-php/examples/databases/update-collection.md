@@ -13,4 +13,4 @@ $client
 
 $databases = new Databases($client);
 
-$result = $databases->updateCollection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]', false);
+$result = $databases->updateCollection('[DATABASE_ID]', '[COLLECTION_ID]', '[NAME]');
