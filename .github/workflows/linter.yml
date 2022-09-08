@@ -19,16 +19,8 @@ jobs:
     - run: git checkout HEAD^2
       if: ${{ github.event_name == 'pull_request' }}
 
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.0'
-
-    - name: Install dependencies
-      uses: php-actions/composer@v6
-      with:
-        php_version: '8.0'
-        args: --profile --ignore-platform-reqs
-
     - name: Run Linter
-      run: ./vendor/bin/phpcs -p
+      uses: docker
+      run: |
+        docker run --rm -v $(pwd):/app -w /app composer sh -c \
+        "composer install --profile --ignore-platform-reqs && composer lint"
