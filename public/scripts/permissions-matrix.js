@@ -120,6 +120,10 @@
                 }
                 
                 return form.reportValidity();
+            },
+            prevent(event) {
+                event.preventDefault();
+                event.stopPropagation();
             }
         }));
         Alpine.data('permissionsRow', () => ({

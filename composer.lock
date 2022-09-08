@@ -1741,23 +1741,23 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.13.0",
+            "version": "0.13.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "3157bee5eee631b549fa4e9cca0aaf982649f931"
+                "reference": "4c1b8fe742f17158c59550cdfd9074a94bf474ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/3157bee5eee631b549fa4e9cca0aaf982649f931",
-                "reference": "3157bee5eee631b549fa4e9cca0aaf982649f931",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/4c1b8fe742f17158c59550cdfd9074a94bf474ac",
+                "reference": "4c1b8fe742f17158c59550cdfd9074a94bf474ac",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.25.0"
+                "utopia-php/database": "0.25.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1789,9 +1789,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.13.0"
+                "source": "https://github.com/utopia-php/abuse/tree/0.13.1"
             },
-            "time": "2022-09-06T08:33:02+00:00"
+            "time": "2022-09-07T16:02:58+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1850,22 +1850,22 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.14.0",
+            "version": "0.14.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "fe5d59076512dd63db92d38035d3039170730e5e"
+                "reference": "b011224ed9bfef7e5c849938e65619af28f7cf41"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/fe5d59076512dd63db92d38035d3039170730e5e",
-                "reference": "fe5d59076512dd63db92d38035d3039170730e5e",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/b011224ed9bfef7e5c849938e65619af28f7cf41",
+                "reference": "b011224ed9bfef7e5c849938e65619af28f7cf41",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.25.0"
+                "utopia-php/database": "0.25.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1897,9 +1897,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.14.0"
+                "source": "https://github.com/utopia-php/audit/tree/0.14.1"
             },
-            "time": "2022-09-06T08:38:04+00:00"
+            "time": "2022-09-07T16:03:16+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2060,16 +2060,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.25.0",
+            "version": "0.25.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "167fb53a6c199d4b9ce5fc513c78774ee92199e7"
+                "reference": "9d013ce3c111d1477d7986483f1003dcab2b9d14"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/167fb53a6c199d4b9ce5fc513c78774ee92199e7",
-                "reference": "167fb53a6c199d4b9ce5fc513c78774ee92199e7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/9d013ce3c111d1477d7986483f1003dcab2b9d14",
+                "reference": "9d013ce3c111d1477d7986483f1003dcab2b9d14",
                 "shasum": ""
             },
             "require": {
@@ -2118,9 +2118,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.25.0"
+                "source": "https://github.com/utopia-php/database/tree/0.25.1"
             },
-            "time": "2022-09-06T07:53:26+00:00"
+            "time": "2022-09-07T14:47:52+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2178,16 +2178,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.21.0",
+            "version": "0.21.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "5aa5431788460a782065e42b0e8a35e7f139af2f"
+                "reference": "c81789b87a917da2daf336738170ebe01f50ea18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/5aa5431788460a782065e42b0e8a35e7f139af2f",
-                "reference": "5aa5431788460a782065e42b0e8a35e7f139af2f",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/c81789b87a917da2daf336738170ebe01f50ea18",
+                "reference": "c81789b87a917da2daf336738170ebe01f50ea18",
                 "shasum": ""
             },
             "require": {
@@ -2221,9 +2221,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.21.0"
+                "source": "https://github.com/utopia-php/framework/tree/0.21.1"
             },
-            "time": "2022-08-12T11:37:21+00:00"
+            "time": "2022-09-07T09:56:28+00:00"
         },
         {
             "name": "utopia-php/image",

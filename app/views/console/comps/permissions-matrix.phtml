@@ -96,7 +96,8 @@ $escapedPermissions = \array_map(function ($perm) {
                     form="<?php echo $form ?>"
                     list="types"
                     type="text"
-                    x-model="role" />
+                    x-model="role"
+                    @keydown.enter="prevent($event)" />
             </td>
             <?php foreach ($escapedPermissions as $permission): ?>
                 <td>
