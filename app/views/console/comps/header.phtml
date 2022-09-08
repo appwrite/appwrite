@@ -1,7 +1,5 @@
 <?php
 $regions = $this->getParam('regions', []);
-$disabledRegions = $this->getParam('disabledRegions', []);
-$defaultRegion = $this->getParam('defaultRegion', []);
 ?>
 <header class="clear" data-version>
     <a href="/console" class="logo pull-start">
@@ -225,12 +223,10 @@ $defaultRegion = $this->getParam('defaultRegion', []);
         <?php if(count($regions) > 1): ?>
             <label>Region</label>
             <select name="region" class="margin-bottom-xl">
-                <?php foreach($regions as $region): ?>
-                    <option <?php echo in_array($region, $disabledRegions) ? 'disabled' : '' ?> value="<?php echo $region ?>"><?php echo $region ?></option>
+                <?php foreach($regions as $key => $region): ?>
+                    <option <?php echo ($region['default'] ?? false) ? 'selected' : '' ?> <?php echo ($region['disabled'] ?? false ) ? 'disabled' : '' ?> value="<?php echo $key ?>"><?php echo $region['name'] ?></option>
                 <?php endforeach; ?>
             </select>
-        <?php else: ?>
-            <input type="hidden" name="region" data-ls-bind="{{$defaultRegion}}" class="margin-bottom-xl" />
         <?php endif; ?>
 
         <footer>
