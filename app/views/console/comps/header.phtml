@@ -1,3 +1,8 @@
+<?php
+$regions = $this->getParam('regions', []);
+$disabledRegions = $this->getParam('disabledRegions', []);
+$defaultRegion = $this->getParam('defaultRegion', []);
+?>
 <header class="clear" data-version>
     <a href="/console" class="logo pull-start">
         <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" loading="lazy" />
@@ -216,6 +221,17 @@
 
         <label>Name</label>
         <input type="text" class="full-width margin-bottom-xl" name="name" required autocomplete="off" maxlength="128" />
+
+        <?php if(count(array_diff($regions, $disabledRegions)) > 1): ?>
+            <label>Region</label>
+            <select name="region">
+                <?php foreach($regions as $region): ?>
+                    <option value="<?php echo $region ?>"><?php echo $region ?></option>
+                <?php endforeach; ?>
+            </select>
+        <?php else: ?>
+            <input type="hidden" name="region" data-ls-bind="{{$defaultRegion}}" />
+        <?php endif; ?>
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

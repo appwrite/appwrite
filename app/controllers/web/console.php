@@ -28,6 +28,12 @@ App::shutdown()
         $header = new View(__DIR__ . '/../../views/console/comps/header.phtml');
         $footer = new View(__DIR__ . '/../../views/console/comps/footer.phtml');
 
+        $header
+            ->setParam('regions', App::getEnv('_APP_REGIONS', []))
+            ->setParam('disabledRegions', App::getEnv('_APP_REGIONS_DISABLED', []))
+            ->setParam('defaultRegion', App::getEnv('_APP_REGION_DEFAULT', 'default'))
+        ;
+
         $footer
             ->setParam('home', App::getEnv('_APP_HOME', ''))
             ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))

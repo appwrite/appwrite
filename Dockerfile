@@ -258,7 +258,7 @@ ENV _APP_SERVER=swoole \
     _APP_LOGGING_CONFIG= \
     _APP_REGIONS=default \
     _APP_REGION_DEFAULT=default \
-    _APP_REGION_DISABLED=
+    _APP_REGIONS_DISABLED=
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
