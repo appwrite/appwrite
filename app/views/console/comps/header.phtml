@@ -227,6 +227,8 @@ $regions = $this->getParam('regions', []);
                     <option <?php echo ($region['default'] ?? false) ? 'selected' : '' ?> <?php echo ($region['disabled'] ?? false ) ? 'disabled' : '' ?> value="<?php echo $key ?>"><?php echo $region['name'] ?></option>
                 <?php endforeach; ?>
             </select>
+        <?php else: ?>
+            <input type="hidden" name="region" value="<?php array_key_first($regions) ?>" class="margin-bottom-xl" />
         <?php endif; ?>
 
         <footer>
