@@ -1557,7 +1557,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $oldAttributes[] = [
             'key' => '$id',
-            'type' => 'string',
+            'type' => Database::VAR_STRING,
             'status' => 'available',
             'required' => true,
             'array' => false,
@@ -1567,7 +1567,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $oldAttributes[] = [
             'key' => '$createdAt',
-            'type' => 'string',
+            'type' => Database::VAR_DATETIME,
             'status' => 'available',
             'signed' => false,
             'required' => false,
@@ -1578,7 +1578,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $oldAttributes[] = [
             'key' => '$updatedAt',
-            'type' => 'string',
+            'type' => Database::VAR_DATETIME,
             'status' => 'available',
             'signed' => false,
             'required' => false,
