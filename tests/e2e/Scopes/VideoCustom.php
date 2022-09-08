@@ -3,6 +3,10 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 trait VideoCustom
 {
@@ -13,6 +17,7 @@ trait VideoCustom
      */
     protected static $bucket = [];
     protected static $video = [];
+    protected static $videoWithUserPerm = [];
     protected static $subtitle = [];
 
     /**
@@ -31,9 +36,12 @@ trait VideoCustom
         ], [
             'bucketId' => 'unique()',
             'name' => 'Test Bucket 2',
-            'permission' => 'file',
-            'read' => ['role:all'],
-            'write' => ['role:all']
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
         ]);
 
         self::$bucket = [
@@ -78,8 +86,7 @@ trait VideoCustom
             $_file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getBucket()['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
                 'fileId' => $fileId,
                 'file' => $curlFile,
-                'read' => ['role:all'],
-                'write' => ['role:all'],
+
             ]);
             $counter++;
             $id = $_file['body']['$id'];
@@ -91,6 +98,61 @@ trait VideoCustom
         ];
 
         return self::$video;
+    }
+
+    /**
+     * @return array
+     */
+    public function getVideoWithUserPermissions(): array
+    {
+
+        if (!empty(self::$videoWithUserPerm)) {
+            return self::$videoWithUserPerm;
+        }
+
+        $source = __DIR__ . "/../../resources/disk-a/video-srt.mp4";
+        $totalSize = \filesize($source);
+        $chunkSize = 5 * 1024 * 1024;
+        $handle = @fopen($source, "rb");
+        $fileId = 'unique()';
+        $mimeType = mime_content_type($source);
+        $counter = 0;
+        $size = filesize($source);
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ];
+        $id = '';
+
+        while (!feof($handle)) {
+            $curlFile = new \CURLFile('data:' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'video-srt.mp4');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+
+            $_file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getBucket()['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => $curlFile,
+                'permissions' => [
+                    Permission::read(Role::team(ID::custom($team1['$id']))),
+                    Permission::read(Role::team(ID::custom($team2['$id']))),
+                    Permission::update(Role::team(ID::custom($team1['$id']))),
+                    Permission::delete(Role::team(ID::custom($team1['$id']))),
+                ],
+
+            ]);
+            $counter++;
+            $id = $_file['body']['$id'];
+        }
+        @fclose($handle);
+
+        self::$videoWithUserPerm = [
+            '$id' => $_file['body']['$id'],
+        ];
+
+        return self::$videoWithUserPerm;
     }
 
 

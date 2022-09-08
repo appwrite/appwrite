@@ -104,8 +104,7 @@ services:
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      #- ./vendor:/usr/src/code/vendor #TODO remove when done!!
-      # - ./vendor/utopia/database:/usr/src/code/vendor/utopia/database
+      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src

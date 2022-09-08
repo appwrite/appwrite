@@ -7,6 +7,8 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\VideoCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Tests\E2E\Services\Videos\VideosPermissionsScope;
+use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
@@ -15,6 +17,7 @@ class VideoCustomServerTest extends Scope
     use ProjectCustom;
     use VideoCustom;
     use SideServer;
+    use StoragePermissionsScope;
 
     public function testCreateProfile(): string
     {
@@ -66,7 +69,7 @@ class VideoCustomServerTest extends Scope
     /**
      * @depends testCreateProfile
      */
-    public function testGetProfile(string $profileId)
+    public function testGetProfile(string $profileId): string
     {
         $response = $this->client->call(Client::METHOD_GET, '/videos/profiles/' . $profileId, [
             'content-type' => 'application/json',
@@ -81,7 +84,68 @@ class VideoCustomServerTest extends Scope
         $this->assertEquals('My updated test profile', $response['body']['name']);
         $this->assertEquals(300, $response['body']['width']);
         $this->assertEquals(400, $response['body']['height']);
+
+        return $profileId;
     }
+    /**
+     * @depends testGetProfile
+     */
+    public function testGetVideoWithUserPermissions(string $profileId)
+    {
+
+        $source = __DIR__ . "/../../../resources/disk-a/video-srt.mp4";
+        var_dump($source);
+        $totalSize = \filesize($source);
+        $chunkSize = 5 * 1024 * 1024;
+        $handle = @fopen($source, "rb");
+        $fileId = 'unique()';
+        $mimeType = mime_content_type($source);
+        $counter = 0;
+        $size = filesize($source);
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ];
+        $id = '';
+
+        while (!feof($handle)) {
+            $curlFile = new \CURLFile('data:' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'video-srt.mp4');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+
+            $_file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getBucket()['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => $curlFile,
+                'fileSecurity' => true,
+                'permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ],
+
+            ]);
+            $counter++;
+            $fileId = $_file['body']['$id'];
+        }
+        @fclose($handle);
+
+        $response = $this->client->call(Client::METHOD_POST, '/videos', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => $this->getBucket()['$id'],
+            'fileId' => $fileId
+        ]);
+
+        var_dump($response['body']);
+        exit;
+
+    }
+
 
     /**
      * @depends testCreateProfile
@@ -363,7 +427,7 @@ class VideoCustomServerTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals('Video profile not found', $response['body']['message']);
+        $this->assertEquals('Video profile not found.', $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_POST, '/videos/profiles', [
             'content-type' => 'application/json',
@@ -401,23 +465,23 @@ class VideoCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, $response['body']['total']);
-
+        $this->assertNotEmpty($response['body']['profiles']);
         $profiles = $response['body']['profiles'];
 
         /**
          * Try to transcode with wrong videoId
          */
-        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $response['body']['profiles'][0]['$id'] . '/rendition', [
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $profiles[0]['$id'] . '/rendition', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'profileId' => $response['body']['profiles'][0]['$id'],
+            'profileId' => $profiles[0]['$id'],
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals('Video not found', $response['body']['message']);
+        $this->assertEquals('Video not found.', $response['body']['message']);
 
         foreach ($profiles as $profile) {
             $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/rendition', [
@@ -455,7 +519,7 @@ class VideoCustomServerTest extends Scope
 
         foreach ($response['body']['renditions'] as $rendition) {
             $this->assertEquals('ready', $rendition['status']);
-            $this->assertEquals('99', $rendition['progress']);
+            $this->assertEquals('100', $rendition['progress']);
             $this->assertNotEmpty($rendition['videoBitrate']);
             $this->assertNotEmpty($rendition['videoCodec']);
         }
@@ -516,6 +580,7 @@ class VideoCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
+
 
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
         $segmentUri = $match[0][0];
@@ -838,7 +903,9 @@ class VideoCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-            'queries' => [ 'limit(1)' ],
+
+        ], [
+            'queries' => [ 'limit(10)' ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
