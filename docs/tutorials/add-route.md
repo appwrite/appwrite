@@ -104,7 +104,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
 ### Events
 * event - A pattern that is associated with the route in behalf of realtime messaging.
-  Placeholders marked as [] are parsed and replaced with their real values.
+  Placeholders marked as `[]` are parsed and replaced with their real values.
 
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
