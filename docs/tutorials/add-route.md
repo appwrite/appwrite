@@ -14,7 +14,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 Used as an abstract description of the route. 
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
-->desc('Create File')
+    ->desc('Create File')
 ```
 
 ### 3. Groups
@@ -26,8 +26,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
 In the above example groups() is used to define the current route as part of the routes that shares a common init middleware hook. 
 ```php
 App::init()
-->groups(['api'])
-->action(
+    ->groups(['api'])
+    ->action(
   some code.....
 );
 ```
@@ -56,12 +56,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
 ```php
 App::post('/v1/account/create')
-->label('audits.event', 'account.create')
-->label('audits.resource', 'user/{response.$id}')
-->label('audits.userId', '{response.$id}')
+    ->label('audits.event', 'account.create')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
 ```
 
-#### Sdk
+#### SDK
 * sdk.auth - Array of authentication types is passed in order to impose different authentication methods in different situations.
 * sdk.namespace - Refers to the route namespace.
 * sdk.method - Refers to the sdk method that needs to called.
@@ -71,13 +71,13 @@ App::post('/v1/account/create')
 
 ```php
 App::post('/v1/account/jwt')
-->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
-->label('sdk.namespace', 'account')
-->label('sdk.method', 'createJWT')
-->label('sdk.description', '/docs/references/account/create-jwt.md')
-->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-->label('sdk.response.model', Response::MODEL_JWT)
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createJWT')
+    ->label('sdk.description', '/docs/references/account/create-jwt.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_JWT)
 ```
 
 #### Cache
@@ -86,8 +86,8 @@ App::post('/v1/account/jwt')
 
 ```php
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
-->label('cache', true)
-->label('cache.resource', 'file/{request.fileId}')
+    ->label('cache', true)
+    ->label('cache.resource', 'file/{request.fileId}')
 ```
 
 #### Abuse
@@ -132,7 +132,7 @@ param() aspects 7 parameters :
 * An array of injections
 ```php
 App::get('/v1/account/logs')
-   ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
 ```
 
 
@@ -141,7 +141,7 @@ inject is used to inject dependencies pre-bounded to the app.
 
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
-->inject('user')
+    ->inject('user')
 ```
 
 In the example above, the user object is injected into the route pre-bounded using `App::setResource()`.
