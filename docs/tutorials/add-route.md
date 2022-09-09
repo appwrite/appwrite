@@ -40,7 +40,7 @@ along the road.
 Labels can be used to pass a pattern in order to be replaced in the other end.
 Appwrite uses different labels to achieve different things, for example:
 
-### Scope
+#### Scope
 * scope - Defines the route permissions scope.
 
 ```php
