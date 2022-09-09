@@ -1000,7 +1000,7 @@ App::post('/v1/functions/:functionId/executions')
             'statusCode' => 0,
             'response' => '',
             'stderr' => '',
-            'time' => 0.0,
+            'duration' => 0.0,
             'search' => implode(' ', [$functionId, $executionId]),
         ])));
 
@@ -1087,11 +1087,11 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('response', $executionResponse['response']);
             $execution->setAttribute('stdout', $executionResponse['stdout']);
             $execution->setAttribute('stderr', $executionResponse['stderr']);
-            $execution->setAttribute('time', $executionResponse['time']);
+            $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution
-                ->setAttribute('time', (float)$interval->format('%s.%f'))
+                ->setAttribute('duration', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
@@ -1105,7 +1105,7 @@ App::post('/v1/functions/:functionId/executions')
         ->setParam('functionId', $function->getId())
         ->setParam('executions.{scope}.compute', 1)
         ->setParam('executionStatus', $execution->getAttribute('status', ''))
-        ->setParam('executionTime', $execution->getAttribute('time')); // ms
+        ->setParam('executionTime', $execution->getAttribute('duration')); // ms
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
