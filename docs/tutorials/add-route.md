@@ -61,7 +61,7 @@ App::post('/v1/account/create')
 ->label('audits.userId', '{response.$id}')
 ```
 
-### Sdk
+#### SDK
 * sdk.auth - Array of authentication types is passed in order to impose different authentication methods in different situations.
 * sdk.namespace - Refers to the route namespace.
 * sdk.method - Refers to the sdk method that needs to called.
