@@ -505,7 +505,7 @@ class UsageTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertEquals($functionId, $execution['body']['functionId']);
-        $executionTime += (int) ($execution['body']['time'] * 1000);
+        $executionTime += (int) ($execution['body']['duration'] * 1000);
         if ($execution['body']['status'] == 'failed') {
             $failures++;
         } elseif ($execution['body']['status'] == 'completed') {
