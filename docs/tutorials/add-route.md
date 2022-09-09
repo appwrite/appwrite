@@ -121,7 +121,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 ```
 
 ### 5. Param
-As the name applies param() is used to setting up a request parameter.
+As the name implies, `param()` is used to define a request parameter.
 
 param() aspects 7 parameters :
 * A key (name) 
