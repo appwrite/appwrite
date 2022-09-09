@@ -21,7 +21,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 Groups array is used to group one or more routes with one or more hooks functionality.
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
-->groups(['api'])
+    ->groups(['api'])
 ```
 In the above example groups() is used to define the current route as part of the routes that shares a common init middleware hook. 
 ```php
