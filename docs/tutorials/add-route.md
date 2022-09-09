@@ -33,7 +33,7 @@ App::init()
 ```
 
 
-### 4. The labels mechanism
+### 4. The Labels Mechanism
 Labels are very strait forward and easy to use and understand, but in the same time very robust.
 Labels are passed from the controllers route, and used to pick up key value pairs to be handled in a centralized place
 along the road.
