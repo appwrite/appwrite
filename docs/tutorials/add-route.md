@@ -93,13 +93,16 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 #### Abuse
 * abuse-key - Specifies routes unique abuse key.
 * abuse-limit - Specifies the number of times the route can be requested in a time frame, per route.
-* abuse-time - Specifies the time frame relevancy of the all other abuse definitions, per route.
+* abuse-time - Specifies the time frame (in seconds) relevancy of the all other abuse definitions, per route.
+
+When using the example below, we configure the abuse mechanism to allow this key combination
+constructed from the uniq combination of the ip, http method, url, userId to hit the route maximum 60 times in 1 hour (60 seconds * 60 minutes).
 
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('abuse-limit', 60)
+    ->label('abuse-time', 3600)  
 ```
 
 #### Events
