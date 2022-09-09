@@ -81,7 +81,7 @@ App::post('/v1/account/jwt')
 ```
 
 ### Cache
-* cache - When set to ture, signal the use of file cache. 
+* cache - When set to true, signal the use of file cache. 
 * cache.resource - Identifies the cached resource.
 
 ```php
