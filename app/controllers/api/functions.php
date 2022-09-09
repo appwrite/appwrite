@@ -1376,6 +1376,9 @@ App::get('/v1/functions/:functionId/variables')
             $queries[] = Query::search('search', $search);
         }
 
+        // Apply internal queries
+        $queries[] = Query::equal('functionInternalId', [$function->getInternalId()]);
+
         // Get cursor document if there was a cursor query
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
         $cursor = reset($cursor);
