@@ -26,8 +26,7 @@ class UsageTest extends Scope
         parent::setUp();
     }
 
-    #[Retry(count: 1)]
-    public function testUsersStats(): array
+    public function testPrepareUsersStats(): array
     {
         $project = $this->getProject(true);
         $projectId = $project['$id'];
@@ -63,7 +62,26 @@ class UsageTest extends Scope
             }
         }
 
+        return [
+            'projectId' => $projectId,
+            'headers' => $headers,
+            'usersCount' => $usersCount,
+            'requestsCount' => $requestsCount
+        ];
+    }
+
+    /**
+     * @depends testPrepareUsersStats
+     */
+    #[Retry(count: 1)]
+    public function testUsersStats(array $data): array
+    {
         sleep(35);
+
+        $projectId = $data['projectId'];
+        $headers = $data['headers'];
+        $usersCount = $data['usersCount'];
+        $requestsCount = $data['requestsCount'];
 
         // console request
         $cheaders = [
@@ -94,8 +112,7 @@ class UsageTest extends Scope
     }
 
     /** @depends testUsersStats */
-    #[Retry(count: 1)]
-    public function testStorageStats(array $data): array
+    public function testPrepareStorageStats(array $data): array
     {
         $projectId = $data['projectId'];
         $headers = $data['headers'];
@@ -190,6 +207,40 @@ class UsageTest extends Scope
             }
         }
 
+        return array_merge($data, [
+            'bucketId' => $bucketId,
+            'bucketsCount' => $bucketsCount,
+            'requestsCount' => $requestsCount,
+            'storageTotal' => $storageTotal,
+            'bucketsCreate' => $bucketsCreate,
+            'bucketsDelete' => $bucketsDelete,
+            'bucketsRead' => $bucketsRead,
+            'filesCount' => $filesCount,
+            'filesRead' => $filesRead,
+            'filesCreate' => $filesCreate,
+            'filesDelete' => $filesDelete,
+        ]);
+    }
+
+    /**
+     * @depends testPrepareStorageStats
+     */
+    #[Retry(count: 1)]
+    public function testStorageStats(array $data): array
+    {
+        $projectId = $data['projectId'];
+        $bucketId = $data['bucketId'];
+        $bucketsCount = $data['bucketsCount'];
+        $requestsCount = $data['requestsCount'];
+        $storageTotal = $data['storageTotal'];
+        $bucketsCreate = $data['bucketsCreate'];
+        $bucketsDelete = $data['bucketsDelete'];
+        $bucketsRead = $data['bucketsRead'];
+        $filesCount = $data['filesCount'];
+        $filesRead = $data['filesRead'];
+        $filesCreate = $data['filesCreate'];
+        $filesDelete = $data['filesDelete'];
+
         sleep(35);
 
         // console request
@@ -239,8 +290,7 @@ class UsageTest extends Scope
     }
 
     /** @depends testStorageStats */
-    #[Retry(count: 1)]
-    public function testDatabaseStats(array $data): array
+    public function testPrepareDatabaseStats(array $data): array
     {
         $headers = $data['headers'];
         $projectId = $data['projectId'];
@@ -366,6 +416,58 @@ class UsageTest extends Scope
             }
         }
 
+        $data = array_merge($data, [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+
+            'requestsCount' => $requestsCount,
+            'databasesCount' => $databasesCount,
+            'databasesCreate' => $databasesCreate,
+            'databasesRead' => $databasesRead,
+            'databasesDelete' => $databasesDelete,
+
+            'collectionsCount' => $collectionsCount,
+            'collectionsCreate' => $collectionsCreate,
+            'collectionsRead' => $collectionsRead,
+            'collectionsUpdate' => $collectionsUpdate,
+            'collectionsDelete' => $collectionsDelete,
+
+            'documentsCount' => $documentsCount,
+            'documentsCreate' => $documentsCreate,
+            'documentsRead' => $documentsRead,
+            'documentsDelete' => $documentsDelete,
+        ]);
+
+        return $data;
+    }
+
+    /** @depends testPrepareDatabaseStats */
+    #[Retry(count: 1)]
+    public function testDatabaseStats(array $data): array
+    {
+        $headers = $data['headers'];
+        $projectId = $data['projectId'];
+
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        $requestsCount = $data['requestsCount'];
+        $databasesCount = $data['databasesCount'];
+        $databasesCreate = $data['databasesCreate'];
+        $databasesRead = $data['databasesRead'];
+        $databasesDelete = $data['databasesDelete'];
+
+        $collectionsCount = $data['collectionsCount'];
+        $collectionsCreate = $data['collectionsCreate'];
+        $collectionsRead = $data['collectionsRead'];
+        $collectionsUpdate = $data['collectionsUpdate'];
+        $collectionsDelete = $data['collectionsDelete'];
+
+        $documentsCount = $data['documentsCount'];
+        $documentsCreate = $data['documentsCreate'];
+        $documentsRead = $data['documentsRead'];
+        $documentsDelete = $data['documentsDelete'];
+
         sleep(35);
 
         // check datbase stats
@@ -440,8 +542,7 @@ class UsageTest extends Scope
 
 
     /** @depends testDatabaseStats */
-    #[Retry(count: 1)]
-    public function testFunctionsStats(array $data): void
+    public function testPrepareFunctionsStats(array $data): array
     {
         $headers = $data['headers'];
         $functionId = '';
@@ -525,6 +626,26 @@ class UsageTest extends Scope
             $executions++;
         }
         $executionTime += (int) ($execution['body']['time'] * 1000);
+
+        $data = array_merge($data, [
+            'functionId' => $functionId,
+            'executionTime' => $executionTime,
+            'executions' => $executions,
+            'failures' => $failures,
+        ]);
+
+        return $data;
+    }
+
+    /** @depends testPrepareFunctionsStats */
+    #[Retry(count: 1)]
+    public function testFunctionsStats(array $data): void
+    {
+        $headers = $data['headers'];
+        $functionId = $data['functionId'];
+        $executionTime = $data['executionTime'];
+        $executions = $data['executions'];
+        $failures = $data['failures'];
 
         sleep(25);
 
