@@ -228,7 +228,7 @@ $regions = $this->getParam('regions', []);
                 <?php endforeach; ?>
             </select>
         <?php else: ?>
-            <input type="hidden" name="region" value="<?php array_key_first($regions) ?>" class="margin-bottom-xl" />
+            <input type="hidden" name="region" value="<?php echo array_key_first($regions) ?>" class="margin-bottom-xl" />
         <?php endif; ?>
 
         <footer>
