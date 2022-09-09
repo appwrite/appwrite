@@ -11,7 +11,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 ```
 
 ### 2. Description
-Used as an  abstract description of the route. 
+Used as an abstract description of the route. 
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
 ->desc('Create File')
