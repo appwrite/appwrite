@@ -96,7 +96,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 * abuse-time - Specifies the time frame (in seconds) relevancy of the all other abuse definitions, per route.
 
 When using the example below, we configure the abuse mechanism to allow this key combination
-constructed from the uniq combination of the ip, http method, url, userId to hit the route maximum 60 times in 1 hour (60 seconds * 60 minutes).
+constructed from the combination of the ip, http method, url, userId to hit the route maximum 60 times in 1 hour (60 seconds * 60 minutes).
 
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
@@ -126,13 +126,14 @@ App::post('/v1/storage/buckets/:bucketId/files')
 ### 5. Param
 As the name implies, `param()` is used to define a request parameter.
 
-param() accepts 7 parameters :
+`param()` accepts 6 parameters :
 * A key (name) 
 * A default value
-* An instance of a relevant validator class
+* An instance of a validator class,This can also accept a callback that returns a validator instance. Dependency injection is supported for the callback.
 * Description of the parameter
 * Is the route optional
 * An array of injections
+
 ```php
 App::get('/v1/account/logs')
     ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
