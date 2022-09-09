@@ -434,7 +434,7 @@ Database::addFilter(
         }
         $value = json_decode($value, true);
         $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
-
+        var_dump(OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag'])));
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }
 );

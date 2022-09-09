@@ -965,7 +965,7 @@ class V15 extends Migration
                     break;
 
                 default:
-                    continue;
+                    break;
             }
 
             usleep(50000);
@@ -1000,6 +1000,15 @@ class V15 extends Migration
                  * Populate permissions attribute.
                  */
                 $this->populatePermissionsAttribute($document, addCreatePermission: false);
+                $document->setAttribute('$permissions', Permission::read(Role::any()), Document::SET_TYPE_APPEND);
+                break;
+
+            case 'sessions':
+                $userId = $document->getAttribute('userId');
+                $document
+                    ->setAttribute('$permissions', Permission::read(Role::user($userId)), Document::SET_TYPE_APPEND)
+                    ->setAttribute('$permissions', Permission::update(Role::user($userId)), Document::SET_TYPE_APPEND)
+                    ->setAttribute('$permissions', Permission::delete(Role::user($userId)), Document::SET_TYPE_APPEND);
                 break;
         }
 
