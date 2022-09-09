@@ -10,7 +10,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->alias('/v1/storage/files', ['bucketId' => 'default'])
 ```
 
-### 2. desc
+### 2. Description
 Used as an  abstract description of the route. 
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
