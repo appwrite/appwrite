@@ -58,9 +58,26 @@ $escapedPermissions = \array_map(function ($perm) {
         </thead>
         <tbody>
         <template x-for="(permission, index) in permissions">
-            <tr>
+            <tr x-data="permissionsRow"
+            @addrow<?php echo \strtolower($form); ?>.window="addPermission('<?php echo $form; ?>', role, { <?php echo \implode(',', $escapedPermissions) ?> })">
                 <td>
-                    <p x-text="permission.role"></p>
+                    <datalist id="types">
+                        <option value="user:">
+                        <option value="team:">
+                        <option value="users">
+                        <option value="guests">
+                        <option value="any">
+                    </datalist>
+
+                    <input
+                        required
+                        id="<?php echo $form; ?>Input"
+                        name="<?php echo $form; ?>"
+                        form="<?php echo $form ?>"
+                        list="types"
+                        type="text"
+                        x-model="permission.role"
+                        @keyup="updatePermission(index)"/>
                 </td>
                 <?php foreach ($escapedPermissions as $permission): ?>
                     <td>
@@ -78,35 +95,6 @@ $escapedPermissions = \array_map(function ($perm) {
                 </td>
             </tr>
         </template>
-        <tr x-data="permissionsRow"
-            @addrow<?php echo \strtolower($form); ?>.window="addPermission('<?php echo $form; ?>', role, { <?php echo \implode(',', $escapedPermissions) ?> })">
-            <td>
-                <datalist id="types">
-                    <option value="user:">
-                    <option value="team:">
-                    <option value="users">
-                    <option value="guests">
-                    <option value="any">
-                </datalist>
-
-                <input
-                    required
-                    autocomplete="off"
-                    id="<?php echo $form; ?>Input"
-                    name="<?php echo $form; ?>"
-                    form="<?php echo $form ?>"
-                    list="types"
-                    type="text"
-                    x-model="role"
-                    @keydown.enter="prevent($event)" />
-            </td>
-            <?php foreach ($escapedPermissions as $permission): ?>
-                <td>
-                    <input type="checkbox" name="<?php echo $permission ?>" x-model="<?php echo $permission; ?>"/>
-                </td>
-            <?php endforeach; ?>
-            <td></td>
-        </tr>
         </tbody>
         <tfoot>
         <tr>

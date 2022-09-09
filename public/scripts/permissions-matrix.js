@@ -32,21 +32,13 @@
                         this.permissions[index] = existing;
                     }
                 });
+
+                this.permissions.push({role: ''});
             },
             addPermission(formId, role, permissions) {
-                if (!this.validate(formId, role, permissions)) {
-                    return;
-                }
-                Object.entries(permissions).forEach(entry => {
-                    let [type, enabled] = entry;
-                    type = this.parseOutputPermission(type);
-                    if (enabled) {
-                        this.rawPermissions.push(this.buildPermission(type, role));
-                    }
-                });
+
                 this.permissions.push({
-                    role,
-                    ...permissions,
+                    role: '',
                 });
                 this.reset();
             },
@@ -62,15 +54,7 @@
                         }
                         const parsedKey = this.parseOutputPermission(key);
                         const permissionString = this.buildPermission(parsedKey, permission.role);
-                        if (permission[key]) {
-                            if (!this.rawPermissions.includes(permissionString)) {
-                                this.rawPermissions.push(permissionString);
-                            }
-                        } else {
-                            this.rawPermissions = this.rawPermissions.filter(p => {
-                                return !p.includes(permissionString);
-                            });
-                        }
+                        this.rawPermissions[index] = permissionString;
                     });
                 });
             },
