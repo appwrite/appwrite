@@ -34,7 +34,7 @@ App::init()
 
 
 ### 4. The Labels Mechanism
-Labels are very strait forward and easy to use and understand, but in the same time very robust.
+Labels are very strait forward and easy to use and understand, but in the same time are very robust.
 Labels are passed from the controllers route and used to pick up key-value pairs to be handled in a centralized place
 along the road.
 Labels can be used to pass a pattern in order to be replaced in the other end.
@@ -61,7 +61,7 @@ App::post('/v1/account/create')
 ->label('audits.userId', '{response.$id}')
 ```
 
-#### SDK
+#### Sdk
 * sdk.auth - Array of authentication types is passed in order to impose different authentication methods in different situations.
 * sdk.namespace - Refers to the route namespace.
 * sdk.method - Refers to the sdk method that needs to called.
@@ -80,7 +80,7 @@ App::post('/v1/account/jwt')
 ->label('sdk.response.model', Response::MODEL_JWT)
 ```
 
-### Cache
+#### Cache
 * cache - When set to true, signal the use of file cache. 
 * cache.resource - Identifies the cached resource.
 
@@ -90,7 +90,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 ->label('cache.resource', 'file/{request.fileId}')
 ```
 
-### Abuse
+#### Abuse
 * abuse-key - Specifies routes unique abuse key.
 * abuse-limit - Specifies the number of times the route can be requested in a time frame, per route.
 * abuse-time - Specifies the time frame relevancy of the all other abuse definitions, per route.
@@ -102,7 +102,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
 ```
 
-### Events
+#### Events
 * event - A pattern that is associated with the route in behalf of realtime messaging.
   Placeholders marked as `[]` are parsed and replaced with their real values.
 
@@ -111,7 +111,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('event', 'buckets.[bucketId].files.[fileId].create')
 ```
 
-### Usage
+#### Usage
 * usage.metric - The metric the route generates.
 * usage.params - Additional parameters the metrics can have.
 ```php
