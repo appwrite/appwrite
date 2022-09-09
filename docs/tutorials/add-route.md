@@ -4,7 +4,7 @@ This document is part of the Appwrite contributors' guide. Before you continue r
 
 ### 1. Alias
 Setting an alias allows the route to be also accessible from the alias URL.
-second parameter is used to push default values to the route.
+The first parameter specifies the alias URL, the second parameter specifies default values for route parameters. 
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
     ->alias('/v1/storage/files', ['bucketId' => 'default'])
