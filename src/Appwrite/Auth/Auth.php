@@ -431,11 +431,14 @@ class Auth
                 continue;
             }
 
-            if (isset($node['teamId']) && isset($node['roles'])) {
+            if (isset($node['$id']) && isset($node['teamId'])) {
                 $roles[] = Role::team($node['teamId'])->toString();
+                $roles[] = Role::member($node['$id'])->toString();
 
-                foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                    $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
+                if (isset($node['roles'])) {
+                    foreach ($node['roles'] as $nodeRole) { // Set all team roles
+                        $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
+                    }
                 }
             }
         }
