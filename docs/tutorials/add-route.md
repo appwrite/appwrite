@@ -35,7 +35,7 @@ App::init()
 
 ### 4. The Labels Mechanism
 Labels are very strait forward and easy to use and understand, but in the same time very robust.
-Labels are passed from the controllers route, and used to pick up key value pairs to be handled in a centralized place
+Labels are passed from the controllers route and used to pick up key-value pairs to be handled in a centralized place
 along the road.
 Labels can be used to pass a pattern in order to be replaced in the other end.
 Appwrite uses different labels to achieve different things, for example:
