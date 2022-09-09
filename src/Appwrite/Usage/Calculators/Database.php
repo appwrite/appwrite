@@ -3,6 +3,7 @@
 namespace Appwrite\Usage\Calculators;
 
 use Exception;
+use Utopia\App;
 use Appwrite\Usage\Calculator;
 use DateTime;
 use Utopia\Database\Database as UtopiaDatabase;
@@ -95,6 +96,7 @@ class Database extends Calculator
                     'time' => $time,
                     'metric' => $metric,
                     'value' => $value,
+                    'region' => App::getEnv('region', 'default'),
                     'type' => 2, // these are cumulative metrics
                 ]));
             } else {

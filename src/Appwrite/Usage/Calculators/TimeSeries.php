@@ -2,6 +2,7 @@
 
 namespace Appwrite\Usage\Calculators;
 
+use Utopia\App;
 use Appwrite\Usage\Calculator;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -315,6 +316,7 @@ class TimeSeries extends Calculator
                     'metric' => $metric,
                     'value' => $value,
                     'type' => $type,
+                    'region' => App::getEnv('region', 'default'),
                 ]));
             } else {
                 $this->database->updateDocument(

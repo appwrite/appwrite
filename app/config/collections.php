@@ -3012,6 +3012,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('region'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('value'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
