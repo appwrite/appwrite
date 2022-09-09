@@ -96,7 +96,7 @@
                 'x-sdk-name': 'Console',
                 'x-sdk-platform': 'console',
                 'x-sdk-language': 'web',
-                'x-sdk-version': '6.1.0-RC1',
+                'x-sdk-version': '7.0.0-RC2',
                 'X-Appwrite-Response-Format': '1.0.0-RC1',
             };
             this.realtime = {
@@ -1567,12 +1567,11 @@
          * @param {string} name
          * @param {number} width
          * @param {number} height
-         * @param {string} color
          * @param {string} background
          * @throws {AppwriteException}
          * @returns {URL}
          */
-        getInitials(name, width, height, color, background) {
+        getInitials(name, width, height, background) {
             let path = '/avatars/initials';
             let payload = {};
             if (typeof name !== 'undefined') {
@@ -1583,9 +1582,6 @@
             }
             if (typeof height !== 'undefined') {
                 payload['height'] = height;
-            }
-            if (typeof color !== 'undefined') {
-                payload['color'] = color;
             }
             if (typeof background !== 'undefined') {
                 payload['background'] = background;
@@ -1856,12 +1852,6 @@
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
                 }
-                if (typeof permissions === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "permissions"');
-                }
-                if (typeof documentSecurity === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "documentSecurity"');
-                }
                 let path = '/databases/{databaseId}/collections'.replace('{databaseId}', databaseId);
                 let payload = {};
                 if (typeof collectionId !== 'undefined') {
@@ -1917,13 +1907,13 @@
          * @param {string} databaseId
          * @param {string} collectionId
          * @param {string} name
-         * @param {boolean} documentSecurity
          * @param {string[]} permissions
+         * @param {boolean} documentSecurity
          * @param {boolean} enabled
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updateCollection(databaseId, collectionId, name, documentSecurity, permissions, enabled) {
+        updateCollection(databaseId, collectionId, name, permissions, documentSecurity, enabled) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof databaseId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "databaseId"');
@@ -1933,9 +1923,6 @@
                 }
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
-                }
-                if (typeof documentSecurity === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "documentSecurity"');
                 }
                 let path = '/databases/{databaseId}/collections/{collectionId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
                 let payload = {};
@@ -4097,6 +4084,7 @@
          * @param {string} projectId
          * @param {string} name
          * @param {string} teamId
+         * @param {string} region
          * @param {string} description
          * @param {string} logo
          * @param {string} url
@@ -4109,7 +4097,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        create(projectId, name, teamId, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) {
+        create(projectId, name, teamId, region, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof projectId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "projectId"');
@@ -4119,6 +4107,9 @@
                 }
                 if (typeof teamId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "teamId"');
+                }
+                if (typeof region === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "region"');
                 }
                 let path = '/projects';
                 let payload = {};
@@ -4130,6 +4121,9 @@
                 }
                 if (typeof teamId !== 'undefined') {
                     payload['teamId'] = teamId;
+                }
+                if (typeof region !== 'undefined') {
+                    payload['region'] = region;
                 }
                 if (typeof description !== 'undefined') {
                     payload['description'] = description;
@@ -4191,6 +4185,7 @@
          *
          * @param {string} projectId
          * @param {string} name
+         * @param {string} region
          * @param {string} description
          * @param {string} logo
          * @param {string} url
@@ -4203,7 +4198,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        update(projectId, name, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) {
+        update(projectId, name, region, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof projectId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "projectId"');
@@ -4211,10 +4206,16 @@
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
                 }
+                if (typeof region === 'undefined') {
+                    throw new AppwriteException('Missing required parameter: "region"');
+                }
                 let path = '/projects/{projectId}'.replace('{projectId}', projectId);
                 let payload = {};
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
+                }
+                if (typeof region !== 'undefined') {
+                    payload['region'] = region;
                 }
                 if (typeof description !== 'undefined') {
                     payload['description'] = description;
@@ -5126,8 +5127,8 @@
          *
          * @param {string} bucketId
          * @param {string} name
-         * @param {boolean} fileSecurity
          * @param {string[]} permissions
+         * @param {boolean} fileSecurity
          * @param {boolean} enabled
          * @param {number} maximumFileSize
          * @param {string[]} allowedFileExtensions
@@ -5137,16 +5138,13 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        createBucket(bucketId, name, fileSecurity, permissions, enabled, maximumFileSize, allowedFileExtensions, compression, encryption, antivirus) {
+        createBucket(bucketId, name, permissions, fileSecurity, enabled, maximumFileSize, allowedFileExtensions, compression, encryption, antivirus) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
                 }
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
-                }
-                if (typeof fileSecurity === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "fileSecurity"');
                 }
                 let path = '/storage/buckets';
                 let payload = {};
@@ -5216,8 +5214,8 @@
          *
          * @param {string} bucketId
          * @param {string} name
-         * @param {boolean} fileSecurity
          * @param {string[]} permissions
+         * @param {boolean} fileSecurity
          * @param {boolean} enabled
          * @param {number} maximumFileSize
          * @param {string[]} allowedFileExtensions
@@ -5227,16 +5225,13 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        updateBucket(bucketId, name, fileSecurity, permissions, enabled, maximumFileSize, allowedFileExtensions, compression, encryption, antivirus) {
+        updateBucket(bucketId, name, permissions, fileSecurity, enabled, maximumFileSize, allowedFileExtensions, compression, encryption, antivirus) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof bucketId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "bucketId"');
                 }
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
-                }
-                if (typeof fileSecurity === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "fileSecurity"');
                 }
                 let path = '/storage/buckets/{bucketId}'.replace('{bucketId}', bucketId);
                 let payload = {};
