@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Utopia\Database\Validator;
+namespace Tests\Unit\Utopia\Database\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 use Appwrite\Utopia\Request\Filters\V15;
@@ -160,7 +160,7 @@ class V15Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function permissionProvider(): array
+    public function collectionPermissionProvider(): array
     {
         return [
             'permission collection' => [
@@ -244,7 +244,7 @@ class V15Test extends TestCase
     }
 
     /**
-     * @dataProvider permissionProvider
+     * @dataProvider collectionPermissionProvider
      * @dataProvider readWriteProvider
      */
     public function testCreateCollection(array $content, array $expected): void
@@ -284,7 +284,7 @@ class V15Test extends TestCase
     }
 
     /**
-     * @dataProvider permissionProvider
+     * @dataProvider collectionPermissionProvider
      * @dataProvider readWriteProvider
      */
     public function testUpdateCollection(array $content, array $expected): void
@@ -389,7 +389,7 @@ class V15Test extends TestCase
 
         $result = $this->filter->parse($content, $model);
 
-        $this->assertEquals($expected, $result, 'fail');
+        $this->assertEquals($expected, $result);
     }
 
     /**
@@ -416,7 +416,8 @@ class V15Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function executeProvider() : array {
+    public function executeProvider(): array
+    {
         return [
             'all roles' => [
                 [
@@ -526,7 +527,7 @@ class V15Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    public function expireProvider() : array
+    public function expireProvider(): array
     {
         return [
             'empty' => [
@@ -562,6 +563,177 @@ class V15Test extends TestCase
     public function testUpdateKey(array $content, array $expected)
     {
         $model = 'projects.updateKey';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function bucketPermissionProvider(): array
+    {
+        return [
+            'permission bucket' => [
+                ['permission' => 'bucket'],
+                ['fileSecurity' => false],
+            ],
+            'permission document' => [
+                ['permission' => 'file'],
+                ['fileSecurity' => true],
+            ],
+            'permission empty' => [
+                [],
+                [],
+            ],
+            'permission invalid' => [
+                ['permission' => 'invalid'],
+                ['fileSecurity' => false],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider bucketPermissionProvider
+     * @dataProvider readWriteProvider
+     */
+    public function testCreateBucket(array $content, array $expected)
+    {
+        $model = 'storage.createBucket';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider limitOffsetCursorOrderTypeProvider
+     * @dataProvider limitOffsetProvider
+     * @dataProvider cursorProvider
+     * @dataProvider orderTypeProvider
+     */
+    public function testListBuckets(array $content, array $expected): void
+    {
+        $model = 'storage.listBuckets';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider bucketPermissionProvider
+     * @dataProvider readWriteProvider
+     */
+    public function testUpdateBucket(array $content, array $expected)
+    {
+        $model = 'storage.updateBucket';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider readWriteProvider
+     */
+    public function testCreateFile(array $content, array $expected)
+    {
+        $model = 'storage.createFile';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider limitOffsetCursorOrderTypeProvider
+     * @dataProvider limitOffsetProvider
+     * @dataProvider cursorProvider
+     * @dataProvider orderTypeProvider
+     */
+    public function testListFiles(array $content, array $expected): void
+    {
+        $model = 'storage.listFiles';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider readWriteProvider
+     */
+    public function testUpdateFile(array $content, array $expected)
+    {
+        $model = 'storage.updateFile';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider limitOffsetCursorOrderTypeProvider
+     * @dataProvider limitOffsetProvider
+     * @dataProvider cursorProvider
+     * @dataProvider orderTypeProvider
+     */
+    public function testListTeams(array $content, array $expected): void
+    {
+        $model = 'teams.list';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider limitOffsetCursorOrderTypeProvider
+     * @dataProvider limitOffsetProvider
+     * @dataProvider cursorProvider
+     * @dataProvider orderTypeProvider
+     */
+    public function testGetTeamMemberships(array $content, array $expected): void
+    {
+        $model = 'teams.getMemberships';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider limitOffsetProvider
+     */
+    public function testListTeamLogs(array $content, array $expected): void
+    {
+        $model = 'teams.listLogs';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider limitOffsetCursorOrderTypeProvider
+     * @dataProvider limitOffsetProvider
+     * @dataProvider cursorProvider
+     * @dataProvider orderTypeProvider
+     */
+    public function testListUsers(array $content, array $expected): void
+    {
+        $model = 'users.list';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider limitOffsetProvider
+     */
+    public function testGetUserLogs(array $content, array $expected): void
+    {
+        $model = 'users.getLogs';
 
         $result = $this->filter->parse($content, $model);
 

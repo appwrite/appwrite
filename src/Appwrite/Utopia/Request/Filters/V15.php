@@ -4,6 +4,9 @@ namespace Appwrite\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Database;
+use Utopia\Database\Permission;
+use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 class V15 extends Filter
 {
@@ -15,6 +18,8 @@ class V15 extends Filter
             case 'databases.listLogs':
             case 'databases.listCollectionLogs':
             case 'databases.listDocumentLogs':
+            case 'teams.listLogs':
+            case 'users.getLogs':
                 $content = $this->convertLimitAndOffset($content);
                 break;
             case 'account.initials':
@@ -25,6 +30,11 @@ class V15 extends Filter
             case 'functions.list':
             case 'functions.listDeployments':
             case 'projects.list':
+            case 'storage.listBuckets':
+            case 'storage.listFiles':
+            case 'teams.list':
+            case 'teams.getMemberships':
+            case 'users.list':
                 $content = $this->convertLimitAndOffset($content);
                 $content = $this->convertCursor($content);
                 $content = $this->convertOrderType($content);
@@ -36,6 +46,8 @@ class V15 extends Filter
                 break;
             case 'databases.createDocument':
             case 'databases.updateDocument':
+            case 'storage.createFile':
+            case 'storage.updateFile':
                 $content = $this->convertReadWrite($content);
                 break;
             case 'databases.listDocuments':
@@ -55,6 +67,11 @@ class V15 extends Filter
             case 'projects.createKey':
             case 'projects.updateKey':
                 $content = $this->convertExpire($content);
+                break;
+            case 'storage.createBucket':
+            case 'storage.updateBucket':
+                $content = $this->convertBucketPermission($content);
+                $content = $this->convertReadWrite($content);
                 break;
         }
 
@@ -145,13 +162,13 @@ class V15 extends Filter
         if (isset($content['read'])) {
             foreach ($content['read'] as $read) {
                 if ($read === 'role:all') {
-                    $content['permissions'][] = 'read("any")';
+                    $content['permissions'][] = Permission::read(Role::any());
                 } elseif ($read === 'role:guest') {
-                    $content['permissions'][] = 'read("guests")';
+                    $content['permissions'][] = Permission::read(Role::guests());
                 } elseif ($read === 'role:member') {
-                    $content['permissions'][] = 'read("users")';
+                    $content['permissions'][] = Permission::read(Role::users());
                 } elseif (str_contains($read, ':')) {
-                    $content['permissions'][] = 'read("' . $read . '")';
+                    $content['permissions'][] = Permission::read(Role::parse($read));
                 }
             }
         }
@@ -159,12 +176,12 @@ class V15 extends Filter
         if (isset($content['write'])) {
             foreach ($content['write'] as $write) {
                 if ($write === 'role:all' || $write === 'role:member') {
-                    $content['permissions'][] = 'write("users")';
+                    $content['permissions'][] = Permission::write(Role::users());
                 } elseif ($write === 'role:guest') {
                     // don't add because, historically,
                     // role:guest for write did nothing
                 } elseif (str_contains($write, ':')) {
-                    $content['permissions'][] = 'write("' . $write . '")';
+                    $content['permissions'][] = Permission::write(Role::parse($write));
                 }
             }
         }
@@ -182,13 +199,13 @@ class V15 extends Filter
         }
 
         $operations = [
-            'equal' => 'equal',
-            'notEqual' => 'notEqual',
-            'lesser' => 'lessThan',
-            'lesserEqual' => 'lessThanEqual',
-            'greater' => 'greaterThan',
-            'greaterEqual' => 'greaterThanEqual',
-            'search' => 'search',
+            'equal' => Query::TYPE_EQUAL,
+            'notEqual' => Query::TYPE_NOTEQUAL,
+            'lesser' => Query::TYPE_LESSER,
+            'lesserEqual' => Query::TYPE_LESSEREQUAL,
+            'greater' => Query::TYPE_GREATER,
+            'greaterEqual' => Query::TYPE_GREATEREQUAL,
+            'search' => Query::TYPE_SEARCH,
         ];
         foreach ($content['queries'] as $i => $query) {
             foreach ($operations as $oldOperation => $newOperation) {
@@ -215,7 +232,7 @@ class V15 extends Filter
         $execute = [];
         foreach ($content['execute'] as $role) {
             if ($role === 'role:all' || $role === 'role:member') {
-                $execute[] = 'users';
+                $execute[] = Role::users()->toString();
             } elseif ($role === 'role:guest') {
                 // don't add because, historically,
                 // role:guest for write did nothing
@@ -241,6 +258,17 @@ class V15 extends Filter
         } else {
             $content['expire'] = date(\DateTime::RFC3339_EXTENDED, $expire);
         }
+
+        return $content;
+    }
+
+    protected function convertBucketPermission($content)
+    {
+        if (isset($content['permission'])) {
+            $content['fileSecurity'] = $content['permission'] === 'file';
+        }
+
+        unset($content['permission']);
 
         return $content;
     }
