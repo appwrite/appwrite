@@ -3,7 +3,7 @@
 This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](https://github.com/appwrite/appwrite/blob/master/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md).
 
 ### 1. Alias
-Setting an alias  is used to permit access the route from an alias url as well,
+Setting an alias allows the route to be also accessible from the alias URL.
 second parameter is used to push default values to the route.
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
