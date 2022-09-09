@@ -562,7 +562,7 @@ $permissions = $this->getParam('permissions', null);
 
                                 <hr class="margin-top-no" />
 
-                                <button>Update</button>
+                                <button x-data @click="$dispatch('addrow<?php echo \strtolower($permissions->getParam('form')) ?>')">Update</button>
                         </form>
                     </div>
                 </div>
