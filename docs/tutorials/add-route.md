@@ -137,7 +137,7 @@ App::get('/v1/account/logs')
 
 
 ### 6. inject
-inject is used to inject dependencies pre bounded to the app.
+inject is used to inject dependencies pre-bounded to the app.
 
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
