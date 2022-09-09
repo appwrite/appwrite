@@ -91,7 +91,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 ```
 
 ### Abuse
-* abuse-key - Specifies routes uniq abuse key.
+* abuse-key - Specifies routes unique abuse key.
 * abuse-limit - Specifies the number of times the route can be requested in a time frame, per route.
 * abuse-time - Specifies the time frame relevancy of the all other abuse definitions, per route.
 
