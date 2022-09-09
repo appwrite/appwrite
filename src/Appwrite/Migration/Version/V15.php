@@ -28,7 +28,7 @@ class V15 extends Migration
         /**
          * Disable SubQueries for Performance.
          */
-        foreach (['subQueryAttributes', 'subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subqueryVariables'] as $name) {
+        foreach (['subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subqueryVariables'] as $name) {
             Database::addFilter(
                 $name,
                 fn () => null,
@@ -151,12 +151,32 @@ class V15 extends Migration
                 $this->projectDB->updateDocument($databaseTable, $collection->getId(), $collection);
 
                 Console::info("Migrating Documents of {$collection->getId()} ({$collection->getAttribute('name')})");
+                $requiredAttributes = array_reduce($collection->getAttribute('attributes', []), function (array $carry, Document $item) {
+                    if ($item->getAttribute('required', false)) {
+                        $carry = array_merge($carry, [
+                            $item->getAttribute('key') => $item->getAttribute('default')
+                        ]);
+                    }
+                    return $carry;
+                }, []);
+
                 foreach ($this->documentsIterator($collectionTable) as $document) {
+                    foreach ($document->getAttributes() as $attribute => $default) {
+                        if (array_key_exists($attribute, $requiredAttributes)) {
+                            if (is_null($default)) {
+                                Console::warning("Skipping migration for Document {$document->getId()} in Collection {$collection->getId()} ({$collection->getAttribute('name')}) because of missing required attribute \"{$attribute}\" without default value.");
+
+                                continue 2;
+                            }
+                            $document->setAttribute($attribute, $default);
+                        }
+                    }
                     $this->populatePermissionsAttribute(
                         document: $document,
                         table: $collectionTable,
                         addCreatePermission: false
                     );
+
                     $this->projectDB->updateDocument($collectionTable, $document->getId(), $document);
                 }
                 $this->removeWritePermissions($collectionTable);
