@@ -48,7 +48,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('scope', 'files.write')
 ```
 
-### Audit
+#### Audit
 * audits.event - Identify the log in human-readable text.
 * audits.userId - Signals the extraction of $userId in places that it's not available natively.
 * audits.resource - Signals the extraction part of the resource.
