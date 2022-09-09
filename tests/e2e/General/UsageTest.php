@@ -524,7 +524,7 @@ class UsageTest extends Scope
         } elseif ($execution['body']['status'] == 'completed') {
             $executions++;
         }
-        $executionTime += (int) ($execution['body']['time'] * 1000);
+        $executionTime += (int) ($execution['body']['duration'] * 1000);
 
         sleep(25);
 
