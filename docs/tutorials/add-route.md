@@ -153,7 +153,7 @@ some code...
 ```
 
 ### 6. Action
-Action populates the actual routes code and has to be very clear and understandable. 
+Action populates the actual routes code and has to be very clear and understandable. A good route stay simple and doesn't contain complex logic. An action is where we describe our business need in code, and combine different libraries to work together and tell our story.
 
 ```php
 App::post('/v1/account/sessions/anonymous')
