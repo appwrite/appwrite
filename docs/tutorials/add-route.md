@@ -144,7 +144,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 ->inject('user')
 ```
 
-In the example above user object is injected to the route pre bounded using App::setResource().
+In the example above, the user object is injected into the route pre-bounded using `App::setResource()`.
 
 ```php
 App::setResource('user', function() {
