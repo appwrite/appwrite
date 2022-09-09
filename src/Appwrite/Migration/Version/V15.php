@@ -26,13 +26,17 @@ class V15 extends Migration
         $this->pdo = $register->get('db');
 
         /**
-         * Disable SubQueries for Speed.
+         * Disable SubQueries for Performance.
          */
         foreach (['subQueryAttributes', 'subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subqueryVariables'] as $name) {
-            Database::addFilter($name, fn () => null, fn () => []);
+            Database::addFilter(
+                $name,
+                fn () => null,
+                fn () => []
+            );
         }
 
-        Console::log('Migrating project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
+        Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         Console::info('Migrating Collections');
         $this->migrateCollections();
         Console::info('Migrating Databases');
@@ -49,6 +53,13 @@ class V15 extends Migration
         }
     }
 
+    /**
+     * Migrating all Bucket tables.
+     *
+     * @return void
+     * @throws \Exception
+     * @throws \PDOException
+     */
     protected function migrateBuckets(): void
     {
         foreach ($this->documentsIterator('buckets') as $bucket) {
@@ -92,6 +103,13 @@ class V15 extends Migration
         }
     }
 
+    /**
+     * Migrating all Database and Collection tables.
+     *
+     * @return void
+     * @throws \Exception
+     * @throws \PDOException
+     */
     protected function migrateDatabases(): void
     {
         foreach ($this->documentsIterator('databases') as $database) {
@@ -154,9 +172,10 @@ class V15 extends Migration
     }
 
     /**
-     * 
-     * @param string $table 
-     * @return void 
+     * Removes all 'write' permissions from a table.
+     *
+     * @param string $table
+     * @return void
      */
     protected function removeWritePermissions(string $table): void
     {
@@ -169,6 +188,7 @@ class V15 extends Migration
 
     /**
      * Returns all columns from the Table.
+     *
      * @param string $table
      * @return array
      * @throws \Exception
@@ -187,7 +207,8 @@ class V15 extends Migration
     }
 
     /**
-     * Migrates all Integer colums for timestamps to DateTime
+     * Migrates all Integer colums for timestamps to DateTime.
+     *
      * @return void
      * @throws \Exception
      */
@@ -239,6 +260,14 @@ class V15 extends Migration
         $this->projectDB->deleteCachedCollection($table);
     }
 
+    /**
+     * Create the '_permissions' column to a table.
+     *
+     * @param string $table
+     * @return void
+     * @throws \Exception
+     * @throws \PDOException
+     */
     protected function createPermissionsColumn(string $table): void
     {
         $columns = $this->getSQLColumnTypes($table);
@@ -252,6 +281,16 @@ class V15 extends Migration
         }
     }
 
+    /**
+     * Populate '$permissions' from '$read' and '$write'.
+     *
+     * @param \Utopia\Database\Document $document
+     * @param null|string $table
+     * @param bool $addCreatePermission
+     * @return void
+     * @throws \Exception
+     * @throws \PDOException
+     */
     protected function populatePermissionsAttribute(Document &$document, ?string $table = null, bool $addCreatePermission = true): void
     {
         $table ??= $document->getCollection();
@@ -263,7 +302,7 @@ class V15 extends Migration
 
         foreach ($results as $result) {
             $type = $result['_type'];
-            $permission = $result['_permission'];
+            $permission = $this->migratePermission($result['_permission']);
 
             if ($type === 'write') {
                 $permissions[] = "update(\"{$permission}\")";
@@ -280,6 +319,21 @@ class V15 extends Migration
     }
 
     /**
+     * Migrates a permission string
+     *
+     * @param string $permission
+     * @return string
+     */
+    protected function migratePermission(string $permission): string
+    {
+        return match ($permission) {
+            'role:all' => 'any',
+            'role:guest' => 'guests',
+            default => $permission
+        };
+    }
+
+    /**
      * Migrate all Collections.
      *
      * @return void
@@ -289,7 +343,7 @@ class V15 extends Migration
         foreach ($this->collections as $collection) {
             $id = $collection['$id'];
 
-            Console::log("- {$id}");
+            Console::log("Migrating Collection \"{$id}\"");
 
             $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
@@ -298,9 +352,9 @@ class V15 extends Migration
                     $this->createPermissionsColumn($id);
                     $this->migrateDateTimeAttribute($id, '_createdAt');
                     $this->migrateDateTimeAttribute($id, '_updatedAt');
-                    Console::log('  - create "cache" collection');
+                    Console::log('Created new Collection "cache" collection');
                     $this->createCollection('cache');
-                    Console::log('  - create "variables" collection');
+                    Console::log('Created new Collection "variables" collection');
                     $this->createCollection('variables');
                     $this->projectDB->deleteCachedCollection($id);
                     break;
@@ -536,11 +590,15 @@ class V15 extends Migration
                     $this->migrateDateTimeAttribute($id, 'schedulePrevious');
 
                     /**
-                     * Migrate function variables.
+                     * Migrate function variables into a new table.
                      */
-                    Console::info("Migrating Variables");
+                    Console::log("Migrating Collection \"{$id}\" Variables");
+
                     foreach ($this->documentsIterator('functions') as $function) {
                         foreach ($function->getAttribute('vars', []) as $key => $value) {
+                            if ($value instanceof Document) {
+                                continue;
+                            }
                             $variableId = ID::unique();
                             $variable = new Document([
                                 '$id' => $variableId,
@@ -647,6 +705,14 @@ class V15 extends Migration
                     $this->migrateDateTimeAttribute($id, '_updatedAt');
                     $this->migrateDateTimeAttribute($id, 'expire');
 
+                    try {
+                        /**
+                         * Update 'expire' default value
+                         */
+                        $this->projectDB->updateAttributeDefault('keys', 'expire', null);
+                    } catch (\Throwable $th) {
+                        Console::warning("'expire' from {$id}: {$th->getMessage()}");
+                    }
                     try {
                         /**
                          * Create 'accessedAt' attribute
@@ -859,7 +925,8 @@ class V15 extends Migration
                     /**
                      * Update user password before adding encrypt filter.
                      */
-                    Console::info("Migrating Passwords");
+                    Console::log("Migrating Collection \"{$id}\" Passwords");
+
                     foreach ($this->documentsIterator('users') as $user) {
                         /**
                          * Skip when no password.
@@ -889,6 +956,11 @@ class V15 extends Migration
                          * Encrypt hashed password.
                          */
                         $user->setAttribute('password', $this->encryptFilter($user->getAttribute('password')));
+
+                        /**
+                         * Migrate permissions.
+                         */
+                        $this->populatePermissionsAttribute($user, addCreatePermission: false);
 
                         $this->projectDB->updateDocument('users', $user->getId(), $user);
                     }
@@ -983,7 +1055,151 @@ class V15 extends Migration
         switch ($document->getCollection()) {
             case 'cache':
             case 'variables':
+            case 'users':
+                /**
+                 * skipping migration for 'cache' and 'variables'.
+                 * 'users' already migrated.
+                 */
                 return null;
+
+            case '_metadata':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'abuse':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'attributes':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'audit':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'buckets':
+                /**
+                 * Populate permissions attribute.
+                 *
+                 * Note: Buckets need to migrate 'create' permissions.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'builds':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'certificates':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'databases':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'deployments':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'domains':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'executions':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'functions':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                /**
+                 * Migrate execute permissions.
+                 */
+                $document->setAttribute('execute', array_map(
+                    fn ($p) => $this->migratePermission($p),
+                    $document->getAttribute('execute', [])
+                ));
+
+                break;
+
+            case 'indexes':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'keys':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'memberships':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'platforms':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
             case 'projects':
                 /**
                  * Populate permissions attribute.
@@ -995,27 +1211,73 @@ class V15 extends Migration
                 $document->setAttribute('version', '1.0.0-RC1');
                 break;
 
+            case 'realtime':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'sessions':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'stats':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'teams':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
+            case 'tokens':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
+                break;
+
             case 'users':
                 /**
                  * Populate permissions attribute.
                  */
                 $this->populatePermissionsAttribute($document, addCreatePermission: false);
-                $document->setAttribute('$permissions', Permission::read(Role::any()), Document::SET_TYPE_APPEND);
+
                 break;
 
-            case 'sessions':
-                $userId = $document->getAttribute('userId');
-                $document
-                    ->setAttribute('$permissions', Permission::read(Role::user($userId)), Document::SET_TYPE_APPEND)
-                    ->setAttribute('$permissions', Permission::update(Role::user($userId)), Document::SET_TYPE_APPEND)
-                    ->setAttribute('$permissions', Permission::delete(Role::user($userId)), Document::SET_TYPE_APPEND);
+            case 'webhooks':
+                /**
+                 * Populate permissions attribute.
+                 */
+                $this->populatePermissionsAttribute($document, addCreatePermission: false);
+
                 break;
         }
 
         return $document;
     }
 
-    protected function encryptFilter(string $value)
+    /**
+     * Filter from the 'encrypt' filter.
+     *
+     * @param string $value
+     * @return string|false
+     */
+    protected function encryptFilter(string $value): string
     {
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));

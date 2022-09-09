@@ -147,9 +147,11 @@ abstract class Migration
     }
 
     /**
-     * @param string $collectionId 
+     * Provides an iterator for all documents on a collection.
+     *
+     * @param string $collectionId
      * @return iterable<Document>
-     * @throws \Exception 
+     * @throws \Exception
      */
     public function documentsIterator(string $collectionId): iterable
     {
@@ -299,7 +301,7 @@ abstract class Migration
 
     /**
      * Creates index from collections.php
-     * 
+     *
      * @param \Utopia\Database\Database $database
      * @param string $collectionId
      * @param string $indexId
