@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Utopia\Database\Request\Filters;
+namespace Tests\Unit\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
 use Appwrite\Utopia\Request\Filters\V15;

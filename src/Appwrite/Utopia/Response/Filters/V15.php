@@ -4,7 +4,9 @@ namespace Appwrite\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
+use Utopia\Database\Database;
 use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class V15 extends Filter
 {
@@ -14,26 +16,28 @@ class V15 extends Filter
         $parsedResponse = $content;
 
         switch ($model) {
+            case Response::MODEL_ACCOUNT:
             case Response::MODEL_USER:
-                $parsedResponse = $this->handleDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'registration', 'passwordUpdate']);
-                $parsedResponse = $this->handleUser($parsedResponse);
+                $parsedResponse = $this->parseUser($parsedResponse);
                 break;
             case Response::MODEL_METRIC:
-                $parsedResponse = $this->handleMetricAttributes($content);
+                $parsedResponse = $this->parseMetric($parsedResponse);
                 break;
             case Response::MODEL_BUILD:
-                $parsedResponse = $this->handleDatetimeAttributes($content, ['startTime', 'endTime']);
+                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['startTime', 'endTime']);
                 break;
             case Response::MODEL_BUCKET:
-                $parsedResponse = $this->handleBucketAttributes($content);
+                $parsedResponse = $this->parseBucket($parsedResponse);
                 break;
             case Response::MODEL_COLLECTION:
-                $parsedResponse = $this->handleCollectionAttributes($content);
+                $parsedResponse = $this->parseCollection($parsedResponse);
                 break;
             case Response::MODEL_DEPLOYMENT:
             case Response::MODEL_DOCUMENT:
+                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', '$updatedAt']);
+                break;
             case Response::MODEL_EXECUTION:
-                $parsedResponse = $this->handleExecutionAttributes($content);
+                $parsedResponse = $this->parseExecution($parsedResponse);
                 break;
             case Response::MODEL_PLATFORM:
             case Response::MODEL_PROJECT:
@@ -42,51 +46,62 @@ class V15 extends Filter
             case Response::MODEL_WEBHOOK:
             case Response::MODEL_DOMAIN:
             case Response::MODEL_DATABASE:
-                $parsedResponse = $this->handleDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
+                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', '$updatedAt']);
                 break;
             case Response::MODEL_FUNCTION:
-                $parsedResponse = $this->handleFunctionAttribtues($content);
+                $parsedResponse = $this->parseFunction($parsedResponse);
                 break;
             case Response::MODEL_KEY:
-                $parsedResponse = $this->handleDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'expire']);
+                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', '$updatedAt', 'expire']);
                 break;
             case Response::MODEL_LOG:
-                $parsedResponse = $this->handleDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'time']);
+                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', '$updatedAt', 'time']);
                 break;
             case Response::MODEL_MEMBERSHIP:
-                $parsedResponse = $this->handleDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'invited', 'joined']);
+                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', '$updatedAt', 'invited', 'joined']);
                 break;
             case Response::MODEL_SESSION:
-                $parsedResponse = $this->handleDatetimeAttributes($content, ['$createdAt', 'expire', 'providerAccessTokenExpiry']);
+                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', 'expire', 'providerAccessTokenExpiry']);
                 break;
             case Response::MODEL_TOKEN:
-                $parsedResponse = $this->handleDatetimeAttributes($content, ['$createdAt', 'expire']);
+                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', 'expire']);
                 break;
             case Response::MODEL_USAGE_FUNCTIONS:
-                $parsedResponse = $this->handleModelUsageFuncAttributes($content);
+                $parsedResponse = $this->parseModelUsageFunc($parsedResponse);
+                break;
+            case Response::MODEL_USAGE_PROJECT:
+                $parsedResponse = $this->parseUsageProject($parsedResponse);
+                break;
+            case Response::MODEL_USAGE_STORAGE:
+                $parsedResponse = $this->parseUsageStorage($parsedResponse);
+                break;
         }
 
         // Downgrade Permissions for all models
-        $parsedResponse = $this->handleDowngradePermissions($parsedResponse);
+        $parsedResponse = $this->parsePermissions($parsedResponse);
 
         return $parsedResponse;
     }
 
-    protected function handleBucketAttributes(array $content)
+    protected function parseBucket(array $content)
     {
-        if ($content['fileSecurity']) {
-            $content['permssion'] = 'file';
-        } else {
-            $content['permssion'] = 'bucket';
+        if (isset($content['fileSecurity'])) {
+            if ($content['fileSecurity']) {
+                $content['permission'] = 'file';
+            } else {
+                $content['permission'] = 'bucket';
+            }
         }
 
         unset($content['fileSecurity']);
         unset($content['compression']);
 
-        $content = $this->handleDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
+        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
+
+        return $content;
     }
 
-    protected function handleDatetimeAttributes(array $content, array $attributes): array
+    protected function parseDatetimeAttributes(array $content, array $attributes): array
     {
         foreach ($attributes as $attribute) {
             if (isset($content[$attribute])) {
@@ -96,117 +111,141 @@ class V15 extends Filter
         return $content;
     }
 
-    protected function handleUser(array $content): array
+    protected function parseUser(array $content): array
     {
         unset($content['password']);
         unset($content['hash']);
         unset($content['hashOptions']);
 
-        $content = $this->handleDatetimeAttributes($content, ['registration', 'passwordUpdate', '$createdAt', '$updatedAt']);
+        $content = $this->parseDatetimeAttributes($content, ['registration', 'passwordUpdate', '$createdAt', '$updatedAt']);
         return $content;
     }
 
-    protected function handleMetricAttributes(array $content)
+    protected function parseMetric(array $content)
     {
-        $content['timestamp'] = $content['date'];
-        unset($content['date']);
+        $content = $this->parseDatetimeAttributes($content, ['date']);
+        return $content;
     }
 
-    protected function handleDowngradePermissions(array $content)
+    protected function parsePermissions(array $content)
     {
         if (!isset($content['$permissions'])) {
             return $content;
         }
-        $content = array_merge($content, $this->downgradePermissions($content['permissions']));
-        unset($content['permissions']);
-        return $content;
-    }
 
-    protected function downgradePermissionSelector(string $permSelector)
-    {
-        switch ($permSelector) {
-            case 'any':
-                return 'role:all';
-            case 'users':
-                return 'role:user';
-            case 'guests':
-                return 'role:guest';
-        }
-
-        return $permSelector;
-    }
-
-    protected function downgradePermissions(array $model)
-    {
-        if (!isset($model['$permissions'])) {
-            return $model;
-        }
-
-        $permissions = $model['$permissions'];
-
-        $result = [
-            '$read' => [],
-            '$write' => []
-        ];
+        $read = [];
+        $write = [];
 
         // downgrade the permissions
-        foreach ($permissions as $permission) {
+        foreach ($content['$permissions'] as $permission) {
             $permission = Permission::parse($permission);
-            // permission = "read('any')" = ["$read" => "role:all"]
+            $permission_value = $permission->getRole();
+            if ($permission->getIdentifier()) {
+                $permission_value .= ':' . $permission->getIdentifier();
+            }
+            if ($permission->getDimension()) {
+                $permission_value .= '/' . $permission->getDimension();
+            }
 
             // Old type permissions meant that 'write' is equivalent to 'create', 'update' and 'delete'
-
             switch ($permission->getPermission()) {
-                case 'update':
-                case 'delete':
-                case 'write':
-                case 'create':
-                    if (!in_array($this->downgradePermissionSelector($permission_value), $result['write'])) {
-                        $result['$write'][] = $this->downgradePermissionSelector($permission_value);
-                    }
+                case Database::PERMISSION_UPDATE:
+                case Database::PERMISSION_DELETE:
+                case Database::PERMISSION_WRITE:
+                case Database::PERMISSION_CREATE:
+                    $write[$this->parseRole($permission_value)] = true;
                     break;
-                case 'read':
-                    if (!in_array($this->downgradePermissionSelector($permission_value), $result['read'])) {
-                        $result['$read'][] = $this->downgradePermissionSelector($permission_value);
-                    }
+                case Database::PERMISSION_READ:
+                    $read[$this->parseRole($permission_value)] = true;
                     break;
             }
         }
 
-        unset($model['$permissions']);
-        return array_merge($model, $result);
+        $content['$read'] = array_keys($read);
+        $content['$write'] = array_keys($write);
+
+        unset($content['$permissions']);
+
+        return $content;
     }
 
-    protected function handleCollectionAttributes(array $content)
+    protected function parseRole(string $role)
     {
-        $content['permission'] = $content['documentSecurity'];
+        switch ($role) {
+            case Role::any()->toString():
+                return 'role:all';
+            case Role::users()->toString():
+                return 'role:member';
+            case Role::guests()->toString():
+                return 'role:guest';
+            default:
+                return $role;
+        }
+
+        return $role;
+    }
+
+    protected function parseCollection(array $content)
+    {
+        if (isset($content['documentSecurity'])) {
+            if ($content['documentSecurity']) {
+                $content['permission'] = 'document';
+            } else {
+                $content['permission'] = 'collection';
+            }
+        }
 
         unset($content['documentSecurity']);
-        $content = $this->handleDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
+        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
         return $content;
     }
 
-    private function handleExecutionAttributes($content)
+    private function parseExecution($content)
     {
         unset($content['stdout']);
-
-        $content = $this->handleDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
+        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'startTime', 'endTime']);
         return $content;
     }
 
-    private function handleFunctionAttribtues($content)
+    private function parseFunction($content)
     {
-        $content['execute'] = array_map($this->downgradePermissionSelector, $content['execute']);
+        if (isset($content['execute'])) {
+            foreach ($content['execute'] as $i => $role) {
+                $content['execute'][$i] = $this->parseRole($role);
+            }
+        }
 
-        $content = $this->handleDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'scheduleNext', 'schedulePrevious']);
+        if (isset($content['vars'])) {
+            $vars = [];
+            foreach ($content['vars'] as $i => $var) {
+                $vars[$var['key']] = $var['value'];
+            }
+            $content['vars'] = $vars;
+        }
+
+        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'scheduleNext', 'schedulePrevious']);
         return $content;
     }
 
-    private function handleModelUsageFuncAttributes($content)
+    private function parseModelUsageFunc($content)
     {
-        $content['functiosnExecutions'] = $content['executionsTotal'];
-        $content['functionsFailures'] = $content['executionsFailure'];
-        $content['functionsCompute'] = $content['executionsTime'];
+        $mapping = [
+            'executionsTotal' => 'functionsExecutions',
+            'executionsFailure' => 'functionsFailures',
+            'executionsTime' => 'functionsCompute',
+        ];
+
+        foreach ($mapping as $new => $old) {
+            if (isset($content[$new])) {
+                $data = [];
+                foreach ($content[$new] as $metric) {
+                    $data[] = $this->parseMetric($metric);
+                }
+                $content[$old] = $data;
+                unset($content[$new]);
+            }
+        }
+
         unset($content['functionExecutions']);
         unset($content['functionFailure']);
         unset($content['executionsTime']);
@@ -219,18 +258,59 @@ class V15 extends Filter
         return $content;
     }
 
-    private function handleUsageProjectAttributes($content)
+    private function parseUsageProject($content)
     {
         $content['functions'] = $content['executions'];
         unset($content['executions']);
 
+        $usage = [
+            'collections',
+            'documents',
+            'functions',
+            'network',
+            'requests',
+            'storage',
+            'users',
+        ];
+
+        foreach ($usage as $name) {
+            $data = [];
+            foreach ($content[$name] as $metric) {
+                $data[] = $this->parseMetric($metric);
+            }
+            $content[$name] = $data;
+        }
+
         return $content;
     }
 
-    private function handleUsageStorageAttribtues($content)
+    private function parseUsageStorage($content)
     {
         $content['filesStorage'] = $content['storage'];
-        $content['tagsStorage'] = [];
         unset($content['storage']);
+
+        $usage = [
+            'bucketsCount',
+            'bucketsCreate',
+            'bucketsDelete',
+            'bucketsRead',
+            'bucketsUpdate',
+            'filesCount',
+            'filesCreate',
+            'filesDelete',
+            'filesRead',
+            'filesStorage',
+            'filesUpdate',
+        ];
+
+        foreach ($usage as $name) {
+            $data = [];
+            foreach ($content[$name] as $metric) {
+                $data[] = $this->parseMetric($metric);
+            }
+            $content[$name] = $data;
+        }
+
+        return $content;
     }
 }
