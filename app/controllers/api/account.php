@@ -134,8 +134,9 @@ App::post('/v1/account')
 
         $events->setParam('userId', $user->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_ACCOUNT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::post('/v1/account/sessions/email')
@@ -1250,8 +1251,9 @@ App::post('/v1/account/jwt')
 
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic(new Document(['jwt' => $jwt->encode([
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(['jwt' => $jwt->encode([
             // 'uid'    => 1,
             // 'aud'    => 'http://site.com',
             // 'scopes' => ['user'],
@@ -1979,8 +1981,9 @@ App::post('/v1/account/recovery')
         // Hide secret for clients
         $recovery->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($recovery, Response::MODEL_TOKEN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($recovery, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/recovery')
@@ -2135,8 +2138,9 @@ App::post('/v1/account/verification')
         // Hide secret for clients
         $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($verification, Response::MODEL_TOKEN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/verification')
@@ -2276,8 +2280,9 @@ App::post('/v1/account/verification/phone')
         // Hide secret for clients
         $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($verification, Response::MODEL_TOKEN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/verification/phone')

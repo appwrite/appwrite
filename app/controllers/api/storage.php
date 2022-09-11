@@ -48,7 +48,7 @@ App::post('/v1/storage/buckets')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
     ->label('event', 'buckets.[bucketId].create')
-    ->label('audits.resource', 'buckets/{response.$id}')
+    ->label('audits.resource', 'bucket/{response.$id}')
     ->label('usage.metric', 'buckets.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
@@ -136,8 +136,9 @@ App::post('/v1/storage/buckets')
             ->setParam('bucketId', $bucket->getId())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($bucket, Response::MODEL_BUCKET);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
 App::get('/v1/storage/buckets')
@@ -218,7 +219,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
     ->label('event', 'buckets.[bucketId].update')
-    ->label('audits.resource', 'buckets/{response.$id}')
+    ->label('audits.resource', 'bucket/{response.$id}')
     ->label('usage.metric', 'buckets.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
@@ -284,7 +285,7 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
     ->label('event', 'buckets.[bucketId].delete')
-    ->label('audits.resource', 'buckets/{request.bucketId}')
+    ->label('audits.resource', 'bucket/{request.bucketId}')
     ->label('usage.metric', 'buckets.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
@@ -326,7 +327,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('event', 'buckets.[bucketId].files.[fileId].create')
-    ->label('audits.resource', 'files/{response.$id}')
+    ->label('audits.resource', 'file/{response.$id}')
     ->label('usage.metric', 'files.{scope}.requests.create')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -344,7 +345,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new CustomId(), 'File ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('file', [], new File(), 'Binary file.', false)
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE]), 'An array of permission strings. By default the current user is granted with all permissions. [Learn more about permissions](/docs/permissions).', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission strings. By default the current user is granted with all permissions. [Learn more about permissions](/docs/permissions).', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -643,8 +644,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $metadata = null; // was causing leaks as it was passed by reference
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($file, Response::MODEL_FILE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($file, Response::MODEL_FILE);
     });
 
 App::get('/v1/storage/buckets/:bucketId/files')
@@ -1236,7 +1238,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('event', 'buckets.[bucketId].files.[fileId].update')
-    ->label('audits.resource', 'files/{response.$id}')
+    ->label('audits.resource', 'file/{response.$id}')
     ->label('usage.metric', 'files.{scope}.requests.update')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -1251,7 +1253,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('bucketId', null, new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission string. By default the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission string. By default the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')

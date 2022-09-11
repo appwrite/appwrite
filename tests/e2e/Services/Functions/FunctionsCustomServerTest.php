@@ -727,6 +727,7 @@ class FunctionsCustomServerTest extends Scope
     /**
      * @depends testUpdateDeployment
      */
+    #[Retry(count: 2)]
     public function testSyncCreateExecution($data): array
     {
         /**
@@ -737,7 +738,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'async' => false,
+            // Testing default value, should be 'async' => false
         ]);
 
         $this->assertEquals(201, $execution['headers']['status-code']);
@@ -978,6 +979,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => 'foobar',
+            'async' => true
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
@@ -1092,6 +1094,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => 'foobar',
+            'async' => true
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
@@ -1204,6 +1207,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => 'foobar',
+            'async' => true
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
@@ -1317,6 +1321,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => 'foobar',
+            'async' => true
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
@@ -1430,6 +1435,7 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => 'foobar',
+            'async' => true
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
