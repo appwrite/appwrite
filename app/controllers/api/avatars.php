@@ -360,7 +360,7 @@ App::get('/v1/avatars/initials')
     ->action(function (string $name, int $width, int $height, string $background, Response $response, Document $user) {
 
         $themes = [
-            ['background' => '#F2F2F8'], // Default
+            ['background' => '#FFA1CE'], // Default (Pink)
             ['background' => '#FDC584'], // Orange
             ['background' => '#94DBD1'], // Green
             ['background' => '#A1C4FF'], // Blue
