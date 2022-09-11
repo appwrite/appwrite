@@ -12,6 +12,7 @@ use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\DateTime;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Orchestration\Adapter\DockerCLI;
@@ -188,8 +189,9 @@ App::post('/v1/runtimes')
         $containerId = '';
         $stdout = '';
         $stderr = '';
-        $startTime = \time();
-        $endTime = 0;
+        $startTime = DateTime::now();
+        $startTimeUnix = (new \DateTime($startTime))->getTimestamp();
+        $endTimeUnix = 0;
         $orchestration = $orchestrationPool->get();
 
         $secret = \bin2hex(\random_bytes(16));
@@ -198,8 +200,8 @@ App::post('/v1/runtimes')
             $activeRuntimes->set($runtimeId, [
                 'id' => $containerId,
                 'name' => $runtimeId,
-                'created' => $startTime,
-                'updated' => $endTime,
+                'created' => $startTimeUnix,
+                'updated' => $endTimeUnix,
                 'status' => 'pending',
                 'key' => $secret,
             ]);
@@ -262,7 +264,7 @@ App::post('/v1/runtimes')
                 labels: [
                     'openruntimes-id' => $runtimeId,
                     'openruntimes-type' => 'runtime',
-                    'openruntimes-created' => strval($startTime),
+                    'openruntimes-created' => strval($startTimeUnix),
                     'openruntimes-runtime' => $runtime,
                 ],
                 workdir: $workdir,
@@ -319,28 +321,32 @@ App::post('/v1/runtimes')
                 $stdout = 'Build Successful!';
             }
 
-            $endTime = \time();
+            $endTime = DateTime::now();
+            $endTimeUnix = (new \DateTime($endTime))->getTimestamp();
+            $duration = $endTimeUnix - $startTimeUnix;
+
             $container = array_merge($container, [
                 'status' => 'ready',
                 'response' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
                 'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
                 'startTime' => $startTime,
                 'endTime' => $endTime,
-                'duration' => $endTime - $startTime,
+                'duration' => $duration,
             ]);
+
 
             if (!$remove) {
                 $activeRuntimes->set($runtimeId, [
                     'id' => $containerId,
                     'name' => $runtimeId,
-                    'created' => $startTime,
-                    'updated' => $endTime,
-                    'status' => 'Up ' . \round($endTime - $startTime, 2) . 's',
+                    'created' => $startTimeUnix,
+                    'updated' => $endTimeUnix,
+                    'status' => 'Up ' . \round($duration, 2) . 's',
                     'key' => $secret,
                 ]);
             }
 
-            Console::success('Build Stage completed in ' . ($endTime - $startTime) . ' seconds');
+            Console::success('Build Stage completed in ' . ($duration) . ' seconds');
         } catch (Throwable $th) {
             Console::error('Build failed: ' . $th->getMessage() . $stdout);
 
@@ -568,7 +574,7 @@ App::post('/v1/execution')
                 'response' => \mb_strcut($res, 0, 1000000), // Limit to 1MB
                 'stdout' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
                 'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
-                'time' => $executionTime,
+                'duration' => $executionTime,
             ];
 
             /** Update swoole table */

@@ -3,9 +3,13 @@
 namespace Tests\Unit\Auth;
 
 use Appwrite\Auth\Auth;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Database;
 
 class AuthTest extends TestCase
 {
@@ -15,7 +19,7 @@ class AuthTest extends TestCase
     public function tearDown(): void
     {
         Authorization::cleanRoles();
-        Authorization::setRole('role:all');
+        Authorization::setRole(Role::any()->toString());
     }
 
     public function testCookieName(): void
@@ -203,15 +207,15 @@ class AuthTest extends TestCase
         $hash = Auth::hash($secret);
         $tokens1 = [
             new Document([
-                '$id' => 'token1',
-                'expire' => time() + 60 * 60 * 24,
+                '$id' => ID::custom('token1'),
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60 * 60 * 24)),
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
             ]),
             new Document([
-                '$id' => 'token2',
-                'expire' => time() - 60 * 60 * 24,
+                '$id' => ID::custom('token2'),
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
@@ -220,15 +224,15 @@ class AuthTest extends TestCase
 
         $tokens2 = [
             new Document([ // Correct secret and type time, wrong expire time
-                '$id' => 'token1',
-                'expire' => time() - 60 * 60 * 24,
+                '$id' => ID::custom('token1'),
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
             ]),
             new Document([
-                '$id' => 'token2',
-                'expire' => time() - 60 * 60 * 24,
+                '$id' => ID::custom('token2'),
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
@@ -247,45 +251,45 @@ class AuthTest extends TestCase
         $hash = Auth::hash($secret);
         $tokens1 = [
             new Document([
-                '$id' => 'token1',
+                '$id' => ID::custom('token1'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() + 60 * 60 * 24,
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60 * 60 * 24)),
                 'secret' => $hash,
             ]),
             new Document([
-                '$id' => 'token2',
+                '$id' => ID::custom('token2'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => 'secret2',
             ]),
         ];
 
         $tokens2 = [
             new Document([ // Correct secret and type time, wrong expire time
-                '$id' => 'token1',
+                '$id' => ID::custom('token1'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => $hash,
             ]),
             new Document([
-                '$id' => 'token2',
+                '$id' => ID::custom('token2'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => 'secret2',
             ]),
         ];
 
         $tokens3 = [ // Correct secret and expire time, wrong type
             new Document([
-                '$id' => 'token1',
+                '$id' => ID::custom('token1'),
                 'type' => Auth::TOKEN_TYPE_INVITE,
-                'expire' => time() + 60 * 60 * 24,
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60 * 60 * 24)),
                 'secret' => $hash,
             ]),
             new Document([
-                '$id' => 'token2',
+                '$id' => ID::custom('token2'),
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'expire' => time() - 60 * 60 * 24,
+                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => 'secret2',
             ]),
         ];
@@ -301,35 +305,35 @@ class AuthTest extends TestCase
     public function testIsPrivilegedUser(): void
     {
         $this->assertEquals(false, Auth::isPrivilegedUser([]));
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_GUEST]));
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_MEMBER]));
-        $this->assertEquals(true, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_ADMIN]));
-        $this->assertEquals(true, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_DEVELOPER]));
-        $this->assertEquals(true, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_OWNER]));
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_APP]));
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_SYSTEM]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Role::guests()->toString()]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Role::users()->toString()]));
+        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_ADMIN]));
+        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_DEVELOPER]));
+        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_SYSTEM]));
 
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_APP, 'role:' . Auth::USER_ROLE_APP]));
-        $this->assertEquals(false, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_APP, 'role:' . Auth::USER_ROLE_GUEST]));
-        $this->assertEquals(true, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_OWNER, 'role:' . Auth::USER_ROLE_GUEST]));
-        $this->assertEquals(true, Auth::isPrivilegedUser(['role:' . Auth::USER_ROLE_OWNER, 'role:' . Auth::USER_ROLE_ADMIN, 'role:' . Auth::USER_ROLE_DEVELOPER]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_APPS]));
+        $this->assertEquals(false, Auth::isPrivilegedUser([Auth::USER_ROLE_APPS, Role::guests()->toString()]));
+        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER, Role::guests()->toString()]));
+        $this->assertEquals(true, Auth::isPrivilegedUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_ADMIN, Auth::USER_ROLE_DEVELOPER]));
     }
 
     public function testIsAppUser(): void
     {
         $this->assertEquals(false, Auth::isAppUser([]));
-        $this->assertEquals(false, Auth::isAppUser(['role:' . Auth::USER_ROLE_GUEST]));
-        $this->assertEquals(false, Auth::isAppUser(['role:' . Auth::USER_ROLE_MEMBER]));
-        $this->assertEquals(false, Auth::isAppUser(['role:' . Auth::USER_ROLE_ADMIN]));
-        $this->assertEquals(false, Auth::isAppUser(['role:' . Auth::USER_ROLE_DEVELOPER]));
-        $this->assertEquals(false, Auth::isAppUser(['role:' . Auth::USER_ROLE_OWNER]));
-        $this->assertEquals(true, Auth::isAppUser(['role:' . Auth::USER_ROLE_APP]));
-        $this->assertEquals(false, Auth::isAppUser(['role:' . Auth::USER_ROLE_SYSTEM]));
+        $this->assertEquals(false, Auth::isAppUser([Role::guests()->toString()]));
+        $this->assertEquals(false, Auth::isAppUser([Role::users()->toString()]));
+        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_ADMIN]));
+        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_DEVELOPER]));
+        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER]));
+        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS]));
+        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_SYSTEM]));
 
-        $this->assertEquals(true, Auth::isAppUser(['role:' . Auth::USER_ROLE_APP, 'role:' . Auth::USER_ROLE_APP]));
-        $this->assertEquals(true, Auth::isAppUser(['role:' . Auth::USER_ROLE_APP, 'role:' . Auth::USER_ROLE_GUEST]));
-        $this->assertEquals(false, Auth::isAppUser(['role:' . Auth::USER_ROLE_OWNER, 'role:' . Auth::USER_ROLE_GUEST]));
-        $this->assertEquals(false, Auth::isAppUser(['role:' . Auth::USER_ROLE_OWNER, 'role:' . Auth::USER_ROLE_ADMIN, 'role:' . Auth::USER_ROLE_DEVELOPER]));
+        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS, Auth::USER_ROLE_APPS]));
+        $this->assertEquals(true, Auth::isAppUser([Auth::USER_ROLE_APPS, Role::guests()->toString()]));
+        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER, Role::guests()->toString()]));
+        $this->assertEquals(false, Auth::isAppUser([Auth::USER_ROLE_OWNER, Auth::USER_ROLE_ADMIN, Auth::USER_ROLE_DEVELOPER]));
     }
 
     public function testGuestRoles(): void
@@ -340,23 +344,67 @@ class AuthTest extends TestCase
 
         $roles = Auth::getRoles($user);
         $this->assertCount(1, $roles);
-        $this->assertContains('role:guest', $roles);
+        $this->assertContains(Role::guests()->toString(), $roles);
     }
 
     public function testUserRoles(): void
     {
         $user  = new Document([
-            '$id' => '123',
+            '$id' => ID::custom('123'),
             'memberships' => [
                 [
-                    'teamId' => 'abc',
+                    '$id' => ID::custom('456'),
+                    'teamId' => ID::custom('abc'),
+                    'confirm' => true,
                     'roles' => [
                         'administrator',
                         'moderator'
                     ]
                 ],
                 [
-                    'teamId' => 'def',
+                    '$id' => ID::custom('abc'),
+                    'teamId' => ID::custom('def'),
+                    'confirm' => true,
+                    'roles' => [
+                        'guest'
+                    ]
+                ]
+            ]
+        ]);
+
+        $roles = Auth::getRoles($user);
+
+        $this->assertCount(9, $roles);
+        $this->assertContains(Role::users()->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('123'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'), 'administrator')->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('def'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('456'))->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
+    }
+
+    public function testPrivilegedUserRoles(): void
+    {
+        Authorization::setRole(Auth::USER_ROLE_OWNER);
+        $user  = new Document([
+            '$id' => ID::custom('123'),
+            'memberships' => [
+                [
+                    '$id' => ID::custom('def'),
+                    'teamId' => ID::custom('abc'),
+                    'confirm' => true,
+                    'roles' => [
+                        'administrator',
+                        'moderator'
+                    ]
+                ],
+                [
+                    '$id' => ID::custom('abc'),
+                    'teamId' => ID::custom('def'),
+                    'confirm' => true,
                     'roles' => [
                         'guest'
                     ]
@@ -367,64 +415,36 @@ class AuthTest extends TestCase
         $roles = Auth::getRoles($user);
 
         $this->assertCount(7, $roles);
-        $this->assertContains('role:member', $roles);
-        $this->assertContains('user:123', $roles);
-        $this->assertContains('team:abc', $roles);
-        $this->assertContains('team:abc/administrator', $roles);
-        $this->assertContains('team:abc/moderator', $roles);
-        $this->assertContains('team:def', $roles);
-        $this->assertContains('team:def/guest', $roles);
-    }
-
-    public function testPrivilegedUserRoles(): void
-    {
-        Authorization::setRole('role:' . Auth::USER_ROLE_OWNER);
-        $user  = new Document([
-            '$id' => '123',
-            'memberships' => [
-                [
-                    'teamId' => 'abc',
-                    'roles' => [
-                        'administrator',
-                        'moderator'
-                    ]
-                ],
-                [
-                    'teamId' => 'def',
-                    'roles' => [
-                        'guest'
-                    ]
-                ]
-            ]
-        ]);
-
-        $roles = Auth::getRoles($user);
-
-        $this->assertCount(5, $roles);
-        $this->assertNotContains('role:member', $roles);
-        $this->assertNotContains('user:123', $roles);
-        $this->assertContains('team:abc', $roles);
-        $this->assertContains('team:abc/administrator', $roles);
-        $this->assertContains('team:abc/moderator', $roles);
-        $this->assertContains('team:def', $roles);
-        $this->assertContains('team:def/guest', $roles);
+        $this->assertNotContains(Role::users()->toString(), $roles);
+        $this->assertNotContains(Role::user(ID::custom('123'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'), 'administrator')->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('def'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('def'))->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
     }
 
     public function testAppUserRoles(): void
     {
-        Authorization::setRole('role:' . Auth::USER_ROLE_APP);
+        Authorization::setRole(Auth::USER_ROLE_APPS);
         $user  = new Document([
-            '$id' => '123',
+            '$id' => ID::custom('123'),
             'memberships' => [
                 [
-                    'teamId' => 'abc',
+                    '$id' => ID::custom('def'),
+                    'teamId' => ID::custom('abc'),
+                    'confirm' => true,
                     'roles' => [
                         'administrator',
                         'moderator'
                     ]
                 ],
                 [
-                    'teamId' => 'def',
+                    '$id' => ID::custom('abc'),
+                    'teamId' => ID::custom('def'),
+                    'confirm' => true,
                     'roles' => [
                         'guest'
                     ]
@@ -434,13 +454,15 @@ class AuthTest extends TestCase
 
         $roles = Auth::getRoles($user);
 
-        $this->assertCount(5, $roles);
-        $this->assertNotContains('role:member', $roles);
-        $this->assertNotContains('user:123', $roles);
-        $this->assertContains('team:abc', $roles);
-        $this->assertContains('team:abc/administrator', $roles);
-        $this->assertContains('team:abc/moderator', $roles);
-        $this->assertContains('team:def', $roles);
-        $this->assertContains('team:def/guest', $roles);
+        $this->assertCount(7, $roles);
+        $this->assertNotContains(Role::users()->toString(), $roles);
+        $this->assertNotContains(Role::user(ID::custom('123'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'), 'administrator')->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('def'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('def'))->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
+use Utopia\Database\ID;
 
 trait ProjectCustom
 {
@@ -12,11 +13,12 @@ trait ProjectCustom
     protected static $project = [];
 
     /**
+     * @param bool $fresh
      * @return array
      */
-    public function getProject(): array
+    public function getProject(bool $fresh = false): array
     {
-        if (!empty(self::$project)) {
+        if (!empty(self::$project) && !$fresh) {
             return self::$project;
         }
 
@@ -26,7 +28,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Demo Project Team',
         ]);
         $this->assertEquals(201, $team['headers']['status-code']);
@@ -39,7 +41,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Demo Project',
             'teamId' => $team['body']['$id'],
             'description' => 'Demo Project Description',
@@ -115,13 +117,17 @@ trait ProjectCustom
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']);
 
-        self::$project = [
+        $project = [
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
             'webhookId' => $webhook['body']['$id'],
             'signatureKey' => $webhook['body']['signatureKey'],
         ];
+        if ($fresh) {
+            return $project;
+        }
+        self::$project = $project;
 
         return self::$project;
     }

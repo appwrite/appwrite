@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Role;
 
 class Execution extends Model
 {
@@ -17,22 +18,22 @@ class Execution extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Execution creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Execution creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Execution update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
-            ])
-            ->addRule('$read', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Execution read permissions.',
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Execution upate date in ISO 8601 format.',
                 'default' => '',
-                'example' => 'role:all',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$permissions', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Execution roles.',
+                'default' => '',
+                'example' => [Role::any()->toString()],
                 'array' => true,
             ])
             ->addRule('functionId', [
@@ -77,9 +78,9 @@ class Execution extends Model
                 'default' => '',
                 'example' => '',
             ])
-            ->addRule('time', [
+            ->addRule('duration', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'The script execution time in seconds.',
+                'description' => 'The script execution duration in seconds.',
                 'default' => 0,
                 'example' => 0.400,
             ])

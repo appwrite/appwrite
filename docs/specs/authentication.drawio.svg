@@ -342,7 +342,7 @@
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
                                 Guset
                                 <br/>
-                                role:guest
+                                guests
                             </div>
                         </div>
                     </div>
@@ -363,7 +363,7 @@
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
                                 Member
                                 <br/>
-                                role:member
+                                users
                             </div>
                         </div>
                     </div>

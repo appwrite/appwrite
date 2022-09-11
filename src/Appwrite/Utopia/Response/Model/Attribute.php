@@ -38,6 +38,7 @@ class Attribute extends Model
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is attribute an array?',
                 'default' => false,
+                'required' => false,
                 'example' => false,
             ])
         ;

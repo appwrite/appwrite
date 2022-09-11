@@ -27,14 +27,14 @@ class AttributeEmail extends Attribute
             ->addRule('format', [
                 'type' => self::TYPE_STRING,
                 'description' => 'String format.',
-                'default' => 'email',
-                'example' => 'email',
-                'required' => true,
+                'default' => APP_DATABASE_ATTRIBUTE_EMAIL,
+                'example' => APP_DATABASE_ATTRIBUTE_EMAIL,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
+                'required' => false,
                 'example' => 'default@example.com',
             ])
         ;

@@ -2,6 +2,7 @@
 
 $new = $this->getParam('new', false);
 $logs = $this->getParam('logs', null);
+$permissions = $this->getParam('permissions', null);
 
 ?>
 <div
@@ -52,6 +53,8 @@ $logs = $this->getParam('logs', null);
 
                     <div class="row responsive">
                         <div class="col span-8 margin-bottom">
+                            <form id="<?php echo $permissions->getParam('form') ?>"></form>
+
                             <form
                                 data-analytics
                                 data-analytics-activity
@@ -139,6 +142,16 @@ $logs = $this->getParam('logs', null);
                                                                     type="checkbox"
                                                                     :name="attr.key"
                                                                     :checked="doc[attr.key]" />
+                                                            </template>
+                                                            <template x-if="attr.type === 'datetime'">
+                                                                <input
+                                                                    type="datetime-local"
+                                                                    step=".001"
+                                                                    :placeholder="attr.default"
+                                                                    :name="attr.key"
+                                                                    :required="attr.required"
+                                                                    x-model="doc[attr.key]"
+                                                                    data-cast-to="string" />
                                                             </template>
                                                             <template x-if="attr.type === 'string' && !attr.format">
                                                                 <textarea 
@@ -240,6 +253,16 @@ $logs = $this->getParam('logs', null);
                                                                                 :value="attr.key"
                                                                                 :checked="doc[attr.key][index]" />
                                                                         </template>
+                                                                        <template x-if="attr.type === 'datetime'">
+                                                                            <input
+                                                                                type="datetime-local"
+                                                                                step=".001"
+                                                                                :placeholder="attr.default"
+                                                                                :name="attr.key"
+                                                                                :required="attr.required"
+                                                                                x-model="doc[attr.key][index]"
+                                                                                data-cast-to="string" />
+                                                                        </template>
                                                                         <template x-if="attr.type === 'string' && !attr.format">
                                                                             <textarea 
                                                                                 data-forms-text-resize
@@ -313,19 +336,13 @@ $logs = $this->getParam('logs', null);
                                         </ul>
                                     </fieldset>
 
-                                    <div class="toggle margin-bottom" data-ls-ui-open data-button-aria="Open Permissions">
+                                    <div class="toggle margin-bottom" data-ls-if="{{project-collection.documentSecurity}}" data-ls-ui-open data-button-aria="Open Permissions">
                                         <i class="icon-plus pull-end margin-top-tiny"></i>
                                         <i class="icon-minus pull-end margin-top-tiny"></i>
 
                                         <h3 class="margin-bottom-large">Permissions</h3>
 
-                                        <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$read}}" placeholder="User ID, Team ID or Role" />
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
-
-                                        <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$write}}" placeholder="User ID, Team ID or Role" />
-                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                        <?php echo $permissions->render() ?>
                                     </div>
 
                                     <button data-ls-if="({{project-document.$id}})">Update</button>
@@ -364,8 +381,8 @@ $logs = $this->getParam('logs', null);
                                         View as JSON
                                     </button>
                                 </li>
-                                <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-document.$updatedAt|dateText}}"></span></li>
-                                <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-document.$createdAt|dateText}}"></span></li>
+                                <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-document.$updatedAt|date}}"></span></li>
+                                <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-document.$createdAt|date}}"></span></li>
                             </ul>
 
                             <div data-ls-if="({{project-document.$id}})">
@@ -396,7 +413,7 @@ $logs = $this->getParam('logs', null);
                     </div>
                 </li>
                 <?php if(!$new): ?>
-                    <li data-state="/console/databases/document/activity?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
+                    <li data-state="/console/databases/document/activity?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}&databaseId={{router.params.databaseId}}">
                         <h2>Activity</h2>
 
                         <?php echo $logs->render(); ?>

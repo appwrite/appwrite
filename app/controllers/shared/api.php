@@ -7,7 +7,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Stats\Stats;
+use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
 use Utopia\App;
@@ -17,6 +17,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
@@ -69,7 +70,7 @@ App::init()
             throw new Exception(Exception::PROJECT_UNKNOWN);
         }
 
-        /**
+        /*
         * Abuse Check
         */
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
@@ -80,10 +81,11 @@ App::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
             $timeLimit
-                ->setParam('{userId}', $user->getId())
-                ->setParam('{userAgent}', $request->getUserAgent(''))
-                ->setParam('{ip}', $request->getIP())
-                ->setParam('{url}', $request->getHostname() . $route->getPath());
+            ->setParam('{userId}', $user->getId())
+            ->setParam('{userAgent}', $request->getUserAgent(''))
+            ->setParam('{ip}', $request->getIP())
+            ->setParam('{url}', $request->getHostname() . $route->getPath())
+            ->setParam('{method}', $request->getMethod());
             $timeLimitArray[] = $timeLimit;
         }
 
@@ -101,27 +103,34 @@ App::init()
             }
 
             $abuse = new Abuse($timeLimit);
+            $remaining = $timeLimit->remaining();
+            $limit = $timeLimit->limit();
+            $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
 
-            if ($timeLimit->limit() && ($timeLimit->remaining() < $closestLimit || is_null($closestLimit))) {
-                $closestLimit = $timeLimit->remaining();
+            if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
+                $closestLimit = $remaining;
                 $response
-                    ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
-                    ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
-                    ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600));
+                    ->addHeader('X-RateLimit-Limit', $limit)
+                    ->addHeader('X-RateLimit-Remaining', $remaining)
+                    ->addHeader('X-RateLimit-Reset', $time)
+                ;
             }
 
+            $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+
             if (
-                (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled' // Route is rate-limited
-                    && $abuse->check()) // Abuse is not disabled
-                && (!$isAppUser && !$isPrivilegedUser)
-            ) { // User is not an admin or API key
+                $enabled                // Abuse is enabled
+                && !$isAppUser          // User is not API key
+                && !$isPrivilegedUser   // User is not an admin
+                && $abuse->check()      // Route is rate-limited
+            ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
         }
 
-        /*
-        * Background Jobs
-        */
+    /*
+     * Background Jobs
+     */
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
@@ -141,13 +150,10 @@ App::init()
 
         $usage
             ->setParam('projectId', $project->getId())
-            ->setParam('httpRequest', 1)
-            ->setParam('httpUrl', $request->getHostname() . $request->getURI())
+            ->setParam('project.{scope}.network.requests', 1)
             ->setParam('httpMethod', $request->getMethod())
-            ->setParam('httpPath', $route->getPath())
-            ->setParam('networkRequestSize', 0)
-            ->setParam('networkResponseSize', 0)
-            ->setParam('storage', 0);
+            ->setParam('project.{scope}.network.inbound', 0)
+            ->setParam('project.{scope}.network.outbound', 0);
 
         $deletes->setProject($project);
         $database->setProject($project);
@@ -281,7 +287,7 @@ App::shutdown()
                 $bucket = $events->getContext('bucket');
 
                 $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
+                    // Pass first, most verbose event pattern
                     event: $allEvents[0],
                     payload: $payload,
                     project: $project,
@@ -357,6 +363,7 @@ App::shutdown()
         if ($useCache) {
             $resource = null;
             $data = $response->getPayload();
+
             if (!empty($data['payload'])) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
@@ -364,7 +371,6 @@ App::shutdown()
                 }
 
                 $key = md5($request->getURI() . implode('*', $request->getParams()));
-
                 $data = json_encode([
                 'content-type' => $response->getContentType(),
                 'payload' => base64_encode($data['payload']),
@@ -372,15 +378,17 @@ App::shutdown()
 
                 $signature = md5($data);
                 $cacheLog  = $dbForProject->getDocument('cache', $key);
+                $accessedAt = $cacheLog->getAttribute('accessedAt', '');
+                $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
                     'resource' => $resource,
-                    'accessedAt' => \time(),
+                    'accessedAt' => $now,
                     'signature' => $signature,
                     ])));
-                } elseif (date('Y/m/d', \time()) > date('Y/m/d', $cacheLog->getAttribute('accessedAt'))) {
-                    $cacheLog->setAttribute('accessedAt', \time());
+                } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
+                    $cacheLog->setAttribute('accessedAt', $now);
                     Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                 }
 
@@ -398,10 +406,31 @@ App::shutdown()
             && $project->getId()
             && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
             && !empty($route->getLabel('sdk.namespace', null))
-        ) {
+        ) { // Don't calculate console usage on admin mode
+            $metric = $route->getLabel('usage.metric', '');
+            $usageParams = $route->getLabel('usage.params', []);
+
+            if (!empty($metric)) {
+                $usage->setParam($metric, 1);
+                foreach ($usageParams as $param) {
+                    $param = $parseLabel($param, $responsePayload, $requestParams, $user);
+                    $parts = explode(':', $param);
+                    if (count($parts) != 2) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Usage params not properly set');
+                    }
+                    $usage->setParam($parts[0], $parts[1]);
+                }
+            }
+
+            $fileSize = 0;
+            $file = $request->getFiles('file');
+            if (!empty($file)) {
+                $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+            }
+
             $usage
-            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
-            ->setParam('networkResponseSize', $response->getSize())
-            ->submit();
+                ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
+                ->setParam('project.{scope}.network.outbound', $response->getSize())
+                ->submit();
         }
     });

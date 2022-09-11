@@ -11,6 +11,7 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -57,7 +58,7 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_EXECUTIONS)
-                ->setTimestamp(time() - $interval)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
@@ -65,7 +66,7 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_ABUSE)
-                ->setTimestamp(time() - $interval)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
@@ -73,7 +74,7 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_AUDIT)
-                ->setTimestamp(time() - $interval)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
@@ -81,8 +82,8 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_USAGE)
-                ->setTimestamp1d(time() - $interval1d)
-                ->setTimestamp30m(time() - $interval30m)
+                ->setDateTime1d(DateTime::addSeconds(new \DateTime(), -1 * $interval1d))
+                ->setDateTime30m(DateTime::addSeconds(new \DateTime(), -1 * $interval30m))
                 ->trigger();
         }
 
@@ -90,7 +91,7 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_REALTIME)
-                ->setTimestamp(time() - 60)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -60))
                 ->trigger();
         }
 
@@ -98,17 +99,19 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_SESSIONS)
-                ->setTimestamp(time() - Auth::TOKEN_EXPIRATION_LOGIN_LONG)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * Auth::TOKEN_EXPIRATION_LOGIN_LONG))
                 ->trigger();
         }
 
         function renewCertificates($dbForConsole)
         {
-            $time = date('d-m-Y H:i:s', time());
+            $time = DateTime::now();
+
             $certificates = $dbForConsole->find('certificates', [
-                new Query('attempts', Query::TYPE_LESSEREQUAL, [5]), // Maximum 5 attempts
-                new Query('renewDate', Query::TYPE_LESSEREQUAL, [\time()]) // includes 60 days cooldown (we have 30 days to renew)
-            ], 200); // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
+               Query::lessThan('attempts', 5), // Maximum 5 attempts
+               Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
+               Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
+            ]);
 
 
             if (\count($certificates) > 0) {
@@ -132,7 +135,7 @@ $cli
 
             (new Delete())
                 ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
-                ->setTimestamp(time() - $interval)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
@@ -148,7 +151,8 @@ $cli
         Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
             $database = getConsoleDB();
 
-            $time = date('d-m-Y H:i:s', time());
+            $time = DateTime::now();
+
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
             notifyDeleteExecutionLogs($executionLogsRetention);
             notifyDeleteAbuseLogs($abuseLogsRetention);

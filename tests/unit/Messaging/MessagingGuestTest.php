@@ -4,6 +4,8 @@ namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\ID;
+use Utopia\Database\Role;
 
 class MessagingGuestTest extends TestCase
 {
@@ -14,13 +16,13 @@ class MessagingGuestTest extends TestCase
         $realtime->subscribe(
             '1',
             1,
-            ['role:guest'],
+            [Role::guests()->toString()],
             ['files' => 0, 'documents' => 0, 'documents.789' => 0, 'account.123' => 0]
         );
 
         $event = [
             'project' => '1',
-            'roles' => ['role:all'],
+            'roles' => [Role::any()->toString()],
             'data' => [
                 'channels' => [
                     0 => 'documents',
@@ -34,68 +36,68 @@ class MessagingGuestTest extends TestCase
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['role:guest'];
+        $event['roles'] = [Role::guests()->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertCount(1, $receivers);
         $this->assertEquals(1, $receivers[0]);
 
-        $event['roles'] = ['role:member'];
+        $event['roles'] = [Role::users()->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['user:123'];
+        $event['roles'] = [Role::user(ID::custom('123'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['team:abc'];
+        $event['roles'] = [Role::team(ID::custom('abc'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['team:abc/administrator'];
+        $event['roles'] = [Role::team(ID::custom('abc'), 'administrator')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['team:abc/god'];
+        $event['roles'] = [Role::team(ID::custom('abc'), 'god')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['team:def'];
+        $event['roles'] = [Role::team(ID::custom('def'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['team:def/guest'];
+        $event['roles'] = [Role::team(ID::custom('def'), 'guest')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['user:456'];
+        $event['roles'] = [Role::user(ID::custom('456'))->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['team:def/member'];
+        $event['roles'] = [Role::team(ID::custom('def'), 'member')->toString()];
 
         $receivers = $realtime->getSubscribers($event);
 
         $this->assertEmpty($receivers);
 
-        $event['roles'] = ['role:all'];
+        $event['roles'] = [Role::any()->toString()];
         $event['data']['channels'] = ['documents.123'];
 
         $receivers = $realtime->getSubscribers($event);

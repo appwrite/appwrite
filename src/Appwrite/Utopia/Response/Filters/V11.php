@@ -278,7 +278,7 @@ class V11 extends Filter
         $content['rules'] = \array_map(function ($attribute) use ($content) {
             return [
                 '$id' => $attribute['key'],
-                '$collection' => $content['$id'],
+                '$collection' => ID::custom($content['$id']),
                 'type' => $attribute['type'],
                 'key' => $attribute['key'],
                 'label' => $attribute['key'],

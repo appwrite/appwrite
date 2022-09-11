@@ -5,6 +5,7 @@ namespace Tests\Unit\Migration;
 use ReflectionClass;
 use Appwrite\Migration\Version\V13;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
 
 class MigrationV13Test extends MigrationTest
 {
@@ -19,8 +20,8 @@ class MigrationV13Test extends MigrationTest
     public function testMigrateFunctions(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'func',
-            '$collection' => 'functions',
+            '$id' => ID::custom('func'),
+            '$collection' => ID::custom('functions'),
             'events' => ['account.create', 'users.create']
         ]));
 
@@ -30,8 +31,8 @@ class MigrationV13Test extends MigrationTest
     public function testMigrationWebhooks(): void
     {
         $document = $this->fixDocument(new Document([
-            '$id' => 'webh',
-            '$collection' => 'webhooks',
+            '$id' => ID::custom('webh'),
+            '$collection' => ID::custom('webhooks'),
             'events' => ['account.create', 'users.create']
         ]));
 
