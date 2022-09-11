@@ -140,7 +140,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("status", "disabled")' ]
+            'queries' => [ 'equal("enabled", true)' ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -150,7 +150,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("status", "enabled")' ]
+            'queries' => [ 'equal("enabled", false)' ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
