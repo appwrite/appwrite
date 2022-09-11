@@ -129,7 +129,7 @@ class FunctionsV1 extends Worker
                 break;
 
             case 'schedule':
-                $scheduleOriginal = $execution->getAttribute('scheduleOriginal', '');
+                $functionOriginal = $function;
                 /*
                  * 1. Get Original Task
                  * 2. Check for updates
@@ -150,21 +150,25 @@ class FunctionsV1 extends Worker
                     throw new Exception('Function not found (' . $function->getId() . ')');
                 }
 
-                if ($scheduleOriginal && $scheduleOriginal !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
+                if ($functionOriginal->getAttribute('schedule') !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
+                    return;
+                }
+
+                if ($functionOriginal->getAttribute('scheduleUpdatedAt') !== $function->getAttribute('scheduleUpdatedAt')) { // Double execution due to rapid cron changes, ignore this run.
                     return;
                 }
 
                 $cron = new CronExpression($function->getAttribute('schedule'));
                 $next = DateTime::format($cron->getNextRunDate());
 
-                $function
+                $function = $function
                     ->setAttribute('scheduleNext', $next)
                     ->setAttribute('schedulePrevious', DateTime::now());
 
                 $function = $database->updateDocument(
                     'functions',
                     $function->getId(),
-                    $function->setAttribute('scheduleNext', $next)
+                    $function
                 );
 
                 $reschedule = new Func();

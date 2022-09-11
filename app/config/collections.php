@@ -2150,6 +2150,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('scheduleUpdatedAt'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
+            [
                 '$id' => ID::custom('schedulePrevious'),
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
