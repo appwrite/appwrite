@@ -26,7 +26,6 @@
                     }
                     break;
                 case 'string-datetime':
-                    value = value.toString();
                     if (value.length === 0) {
                         value = null;
                     } else {
