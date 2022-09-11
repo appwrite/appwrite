@@ -382,8 +382,8 @@ class AuthTest extends TestCase
         $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('def'))->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
-        $this->assertContains(Role::member(ID::custom('456'))->toString(), $roles);
-        $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('456'))->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('abc'))->toString(), $roles);
     }
 
     public function testPrivilegedUserRoles(): void
@@ -422,8 +422,8 @@ class AuthTest extends TestCase
         $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('def'))->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
-        $this->assertContains(Role::member(ID::custom('def'))->toString(), $roles);
-        $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('def'))->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('abc'))->toString(), $roles);
     }
 
     public function testAppUserRoles(): void
@@ -462,7 +462,7 @@ class AuthTest extends TestCase
         $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('def'))->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
-        $this->assertContains(Role::member(ID::custom('def'))->toString(), $roles);
-        $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('def'))->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('abc'))->toString(), $roles);
     }
 }
