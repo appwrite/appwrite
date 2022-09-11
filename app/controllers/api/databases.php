@@ -1672,22 +1672,17 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $indexes = $collection->getAttribute('indexes');
+        $keyIndex = $collection->find('key', $key, 'indexes');
 
-        // Search for index
-        $indexIndex = \array_search($key, \array_map(fn($index) => $index->getAttribute('key'), $indexes));
-
-        if ($indexIndex === false) {
+        if ($keyIndex === false) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
         }
-
-        $index = $indexes[$indexIndex];
 
         $usage
             ->setParam('databaseId', $databaseId)
             ->setParam('databases.collections.read', 1);
 
-        $response->dynamic($index, Response::MODEL_INDEX);
+        $response->dynamic($keyIndex, Response::MODEL_INDEX);
     });
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
