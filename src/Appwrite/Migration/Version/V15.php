@@ -5,8 +5,10 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Appwrite\OpenSSL\OpenSSL;
 use Exception;
+use PDO;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\ID;
@@ -20,10 +22,26 @@ class V15 extends Migration
      */
     private $pdo;
 
+    /**
+     * @var array<string>
+     */
+    protected array $providers;
+
     public function execute(): void
     {
         global $register;
         $this->pdo = $register->get('db');
+
+        /**
+         * Populate providers.
+         */
+        $this->providers = \array_merge(
+            ['email', 'anonymous'],
+            \array_map(
+                fn ($value) => "oauth-" . $value,
+                \array_keys(Config::getParam('providers', []))
+            )
+        );
 
         /**
          * Disable SubQueries for Performance.
@@ -37,6 +55,12 @@ class V15 extends Migration
         }
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
+        Console::info('Migrating Stats');
+        $this->migrateStatsMetric('requests', 'project.$all.network.requests');
+        $this->migrateStatsMetric('network', 'project.$all.network.bandwidth');
+        $this->migrateStatsMetric('executions', 'executions.$all.compute.total');
+        $this->migrateStatsMetric('storage.total', 'project.$all.storage.size');
+
         Console::info('Migrating Collections');
         $this->migrateCollections();
         Console::info('Migrating Databases');
@@ -62,6 +86,21 @@ class V15 extends Migration
      */
     protected function migrateBuckets(): void
     {
+        /**
+         * Migrating stats for all Buckets.
+         */
+        $this->migrateStatsMetric('storage.files.total', 'files.$all.storage.size',);
+        $this->migrateStatsMetric('storage.files.count', 'files.$all.count.total');
+        $this->migrateStatsMetric('storage.buckets.count', 'buckets.$all.count.total');
+        $this->migrateStatsMetric('storage.buckets.create', 'buckets.$all.requests.create');
+        $this->migrateStatsMetric('storage.buckets.read', 'buckets.$all.requests.read');
+        $this->migrateStatsMetric('storage.buckets.update', 'buckets.$all.requests.update');
+        $this->migrateStatsMetric('storage.buckets.delete', 'buckets.$all.requests.delete');
+        $this->migrateStatsMetric('storage.files.create', 'files.$all.requests.create');
+        $this->migrateStatsMetric('storage.files.read', 'files.$all.requests.read');
+        $this->migrateStatsMetric('storage.files.update', 'files.$all.requests.update');
+        $this->migrateStatsMetric('storage.files.delete', 'files.$all.requests.delete');
+
         foreach ($this->documentsIterator('buckets') as $bucket) {
             $bucketTable = "bucket_{$bucket->getInternalId()}";
 
@@ -83,6 +122,17 @@ class V15 extends Migration
             }
 
             $this->projectDB->updateDocument('buckets', $bucket->getId(), $bucket);
+
+            /**
+             * Migrating stats for every Bucket.
+             */
+            $bucketId = $bucket->getId();
+            $this->migrateStatsMetric("storage.buckets.$bucketId.files.count", "files.$bucketId.count.total");
+            $this->migrateStatsMetric("storage.buckets.$bucketId.files.total", "files.$bucketId.storage.size");
+            $this->migrateStatsMetric("storage.buckets.$bucketId.files.create", "files.$bucketId.requests.create");
+            $this->migrateStatsMetric("storage.buckets.$bucketId.files.read", "files.$bucketId.requests.read");
+            $this->migrateStatsMetric("storage.buckets.$bucketId.files.update", "files.$bucketId.requests.update");
+            $this->migrateStatsMetric("storage.buckets.$bucketId.files.delete", "files.$bucketId.requests.delete");
 
             Console::info("Migrating Files of {$bucket->getId()} ({$bucket->getAttribute('name')})");
             foreach ($this->documentsIterator($bucketTable) as $file) {
@@ -112,6 +162,28 @@ class V15 extends Migration
      */
     protected function migrateDatabases(): void
     {
+        /**
+         * Migrating stats for all Databases.
+         */
+        $this->migrateStatsMetric('databases.count', 'databases.$all.count.total');
+        $this->migrateStatsMetric('databases.documents.count', 'documents.$all.count.total');
+        $this->migrateStatsMetric('databases.collections.count', 'collections.$all.count.total');
+        $this->migrateStatsMetric('databases.create', 'databases.$all.requests.create');
+        $this->migrateStatsMetric('databases.read', 'databases.$all.requests.read');
+        $this->migrateStatsMetric('databases.update', 'databases.$all.requests.update');
+        $this->migrateStatsMetric('databases.delete', 'databases.$all.requests.delete');
+        $this->migrateStatsMetric('databases.collections.create', 'collections.$all.requests.create');
+        $this->migrateStatsMetric('databases.collections.read', 'collections.$all.requests.read');
+        $this->migrateStatsMetric('databases.collections.update', 'collections.$all.requests.update');
+        $this->migrateStatsMetric('databases.collections.delete', 'collections.$all.requests.delete');
+        $this->migrateStatsMetric('databases.documents.create', 'documents.$all.requests.create');
+        $this->migrateStatsMetric('databases.documents.read', 'documents.$all.requests.read');
+        $this->migrateStatsMetric('databases.documents.update', 'documents.$all.requests.update');
+        $this->migrateStatsMetric('databases.documents.delete', 'documents.$all.requests.delete');
+
+        /**
+         * Migrate every Database.
+         */
         foreach ($this->documentsIterator('databases') as $database) {
             $databaseTable = "database_{$database->getInternalId()}";
             $this->createPermissionsColumn($databaseTable);
@@ -131,6 +203,24 @@ class V15 extends Migration
                 Console::warning("'documentSecurity' from {$databaseTable}: {$th->getMessage()}");
             }
 
+            /**
+             * Migrating stats for single Databases.
+             */
+            $databaseId = $database->getId();
+            $this->migrateStatsMetric("databases.$databaseId.collections.count", "collections.$databaseId.count.total");
+            $this->migrateStatsMetric("databases.$databaseId.collections.create", "collections.$databaseId.requests.create");
+            $this->migrateStatsMetric("databases.$databaseId.collections.read", "collections.$databaseId.requests.read");
+            $this->migrateStatsMetric("databases.$databaseId.collections.update", "collections.$databaseId.requests.update");
+            $this->migrateStatsMetric("databases.$databaseId.collections.delete", "collections.$databaseId.requests.delete");
+            $this->migrateStatsMetric("databases.$databaseId.documents.count", "documents.$databaseId.count.total");
+            $this->migrateStatsMetric("databases.$databaseId.documents.create", "documents.$databaseId.requests.create");
+            $this->migrateStatsMetric("databases.$databaseId.documents.read", "documents.$databaseId.requests.read");
+            $this->migrateStatsMetric("databases.$databaseId.documents.update", "documents.$databaseId.requests.update");
+            $this->migrateStatsMetric("databases.$databaseId.documents.delete", "documents.$databaseId.requests.delete");
+
+            /**
+             * Migrate every Collection.
+             */
             Console::info("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
             foreach ($this->documentsIterator($databaseTable) as $collection) {
                 $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
@@ -149,6 +239,16 @@ class V15 extends Migration
                 }
 
                 $this->projectDB->updateDocument($databaseTable, $collection->getId(), $collection);
+
+                /**
+                 * Migrating stats for single Collections.
+                 */
+                $collectionId = $collection->getId();
+                $this->migrateStatsMetric("databases.{$databaseId}.collections.{$collectionId}.documents.count", "documents.{$databaseId}/{$collectionId}.count.total");
+                $this->migrateStatsMetric("databases.{$databaseId}.collections.{$collectionId}.documents.create", "documents.{$databaseId}/{$collectionId}.requests.create");
+                $this->migrateStatsMetric("databases.{$databaseId}.collections.{$collectionId}.documents.read", "documents.{$databaseId}/{$collectionId}.requests.read");
+                $this->migrateStatsMetric("databases.{$databaseId}.collections.{$collectionId}.documents.update", "documents.{$databaseId}/{$collectionId}.requests.update");
+                $this->migrateStatsMetric("databases.{$databaseId}.collections.{$collectionId}.documents.delete", "documents.{$databaseId}/{$collectionId}.requests.delete");
 
                 Console::info("Migrating Documents of {$collection->getId()} ({$collection->getAttribute('name')})");
                 $requiredAttributes = array_reduce($collection->getAttribute('attributes', []), function (array $carry, Document $item) {
@@ -630,7 +730,7 @@ class V15 extends Migration
                      */
                     Console::log("Migrating Collection \"{$id}\" Variables");
 
-                    foreach ($this->documentsIterator('functions') as $function) {
+                    foreach ($this->documentsIterator($id) as $function) {
                         foreach ($function->getAttribute('vars', []) as $key => $value) {
                             if ($value instanceof Document) {
                                 continue;
@@ -1064,6 +1164,18 @@ class V15 extends Migration
                         Console::warning("'_key_phoneVerification' from {$id}: {$th->getMessage()}");
                     }
 
+                    $this->migrateStatsMetric('users.count', 'users.$all.requests.count');
+                    $this->migrateStatsMetric('users.create', 'users.$all.requests.create');
+                    $this->migrateStatsMetric('users.read', 'users.$all.requests.read');
+                    $this->migrateStatsMetric('users.update', 'users.$all.requests.update');
+                    $this->migrateStatsMetric('users.delete', 'users.$all.requests.delete');
+                    $this->migrateStatsMetric('users.sessions.create', 'sessions.$all.requests.create');
+                    $this->migrateStatsMetric('users.sessions.delete', 'sessions.$all.requests.delete');
+
+                    foreach ($this->providers as $provider) {
+                        $this->migrateStatsMetric("users.sessions.{$provider}.create", "sessions.$provider.requests.create");
+                    }
+
                     break;
 
                 case 'webhooks':
@@ -1202,6 +1314,14 @@ class V15 extends Migration
                     $document->getAttribute('execute', [])
                 ));
 
+                /**
+                 * Migrate functions stats.
+                 */
+                $functionId = $document->getId();
+                $this->migrateStatsMetric("functions.$functionId.executions", "executions.$functionId.compute.total");
+                $this->migrateStatsMetric("functions.$functionId.failures", "executions.$functionId.compute.failure");
+                $this->migrateStatsMetric("functions.$functionId.compute", "executions.$functionId.compute.time");
+
                 break;
 
             case 'indexes':
@@ -1305,6 +1425,18 @@ class V15 extends Migration
         }
 
         return $document;
+    }
+
+    protected function migrateStatsMetric(string $from, string $to): void
+    {
+        try {
+            $from = $this->pdo->quote($from);
+            $to = $this->pdo->quote($to);
+
+            $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats` SET metric = {$to} WHERE metric = {$from}")->execute();
+        } catch (\Throwable $th) {
+            Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
+        }
     }
 
     /**
