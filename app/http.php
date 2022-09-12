@@ -83,12 +83,13 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         App::setResource('db', fn () => $db);
         App::setResource('cache', fn () => $redis);
 
-        $dbForConsole = $app->getResource('dbForConsole');
         /** @var Utopia\Database\Database $dbForConsole */
+        $dbForConsole = $app->getResource('dbForConsole');
 
         Console::success('[Setup] - Server database init started...');
-        $collections = Config::getParam('collections', []);
+
         /** @var array $collections */
+        $collections = Config::getParam('collections', []);
 
         if (!$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
             $redis->flushAll();
