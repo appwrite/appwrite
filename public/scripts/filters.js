@@ -47,13 +47,7 @@ window.ls.filter
   .add("timeSince", function ($value) {
     $value = new Date($value).getTime();
 
-    /**
-     * Adapt to timezone UTC.
-     */
-    let now = new Date();
-    now.setMinutes(now.getMinutes() + now.getTimezoneOffset());
-
-    let timestamp = new Date(now.toISOString()).getTime();
+    let timestamp = new Date().getTime();
     let seconds = Math.floor((timestamp - $value) / 1000);
     let unit = "second";
     let direction = "ago";

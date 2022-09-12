@@ -574,7 +574,7 @@ App::post('/v1/execution')
                 'response' => \mb_strcut($res, 0, 1000000), // Limit to 1MB
                 'stdout' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
                 'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
-                'time' => $executionTime,
+                'duration' => $executionTime,
             ];
 
             /** Update swoole table */
