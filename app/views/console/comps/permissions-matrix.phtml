@@ -46,6 +46,15 @@ $escapedPermissions = \array_map(function ($perm) {
         <?php endif; ?>
         :value="rawPermissions"/>
 
+    <datalist id="types">
+        <option value="user:">
+        <option value="team:">
+        <option value="member:">
+        <option value="users">
+        <option value="guests">
+        <option value="any">
+    </datalist>
+
     <table
         class="u-table-layout-normal"
         data-ls-attrs="x-init=load({{<?php if (!empty($data)) echo $data . '.$permissions' ?>}})">
@@ -63,15 +72,6 @@ $escapedPermissions = \array_map(function ($perm) {
         <template x-for="(permission, index) in permissions">
             <tr x-data="permissionsRow">
                 <td>
-                    <datalist id="types">
-                        <option value="user:">
-                        <option value="team:">
-                        <option value="member:">
-                        <option value="users">
-                        <option value="guests">
-                        <option value="any">
-                    </datalist>
-
                     <input
                         required
                         autocomplete="off"
