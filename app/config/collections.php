@@ -2673,7 +2673,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('time'),
+                '$id' => ID::custom('duration'),
                 'type' => Database::VAR_FLOAT,
                 'format' => '',
                 'size' => 0,
@@ -2732,9 +2732,9 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_time'),
+                '$id' => ID::custom('_key_duration'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['time'],
+                'attributes' => ['duration'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],

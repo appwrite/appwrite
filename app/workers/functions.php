@@ -248,7 +248,7 @@ class FunctionsV1 extends Worker
                 'statusCode' => 0,
                 'response' => '',
                 'stderr' => '',
-                'time' => 0.0,
+                'duration' => 0.0,
                 'search' => implode(' ', [$functionId, $executionId]),
             ]));
 
@@ -301,11 +301,11 @@ class FunctionsV1 extends Worker
                 ->setAttribute('response', $executionResponse['response'])
                 ->setAttribute('stdout', $executionResponse['stdout'])
                 ->setAttribute('stderr', $executionResponse['stderr'])
-                ->setAttribute('time', $executionResponse['time']);
+                ->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution
-                ->setAttribute('time', (float)$interval->format('%s.%f'))
+                ->setAttribute('duration', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
@@ -367,7 +367,7 @@ class FunctionsV1 extends Worker
                 ->setParam('functionId', $function->getId())
                 ->setParam('executions.{scope}.compute', 1)
                 ->setParam('executionStatus', $execution->getAttribute('status', ''))
-                ->setParam('executionTime', $execution->getAttribute('time'))
+                ->setParam('executionTime', $execution->getAttribute('duration'))
                 ->setParam('networkRequestSize', 0)
                 ->setParam('networkResponseSize', 0)
                 ->submit();
