@@ -325,6 +325,13 @@ class V15 extends Migration
             $permission = $this->migratePermission($result['_permission']);
 
             if ($type === 'write') {
+                /**
+                 * Migrate write permissions from 'role:all' to 'role:member'.
+                 */
+                if ($permission === 'role:all') {
+                    $permission = 'role:member';
+                }
+
                 $permissions[] = "update(\"{$permission}\")";
                 $permissions[] = "delete(\"{$permission}\")";
                 if ($addCreatePermission) {
@@ -566,6 +573,15 @@ class V15 extends Migration
 
                     try {
                         /**
+                         * Rename 'time' to 'duration'
+                         */
+                        $this->projectDB->renameAttribute($id, 'time', 'duration');
+                    } catch (\Throwable $th) {
+                        Console::warning("'duration' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
                          * Create '_key_trigger' index
                          */
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_trigger');
@@ -593,11 +609,11 @@ class V15 extends Migration
 
                     try {
                         /**
-                         * Create '_key_time' index
+                         * Create '_key_duration' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_time');
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_duration');
                     } catch (\Throwable $th) {
-                        Console::warning("'_key_time' from {$id}: {$th->getMessage()}");
+                        Console::warning("'_key_duration' from {$id}: {$th->getMessage()}");
                     }
 
                     break;
