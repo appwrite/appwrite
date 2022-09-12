@@ -32,15 +32,9 @@
                         this.permissions[index] = existing;
                     }
                 });
-
-                this.permissions.push({role: ''});
             },
-            addPermission(formId, role, permissions) {
-
-                this.permissions.push({
-                    role: '',
-                });
-                this.reset();
+            addPermission() {
+                this.permissions.push({ role: '' });
             },
             updatePermission(index) {
                 // Because the x-model does not update before the click event,
