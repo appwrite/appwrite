@@ -74,7 +74,8 @@ $escapedPermissions = \array_map(function ($perm) {
 
                     <input
                         required
-                        id="<?php echo $form; ?>Input"
+                        autocomplete="off"
+                        :id="'<?php echo $form; ?>Input' + index"
                         name="<?php echo $form; ?>"
                         form="<?php echo $form ?>"
                         list="types"

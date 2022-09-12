@@ -33,8 +33,12 @@
                     }
                 });
             },
-            addPermission() {
-                this.permissions.push({ role: '' });
+            addPermission(formId) {
+                if (this.permissions.length > 0
+                    && !this.validate(formId, this.permissions.length - 1)) {
+                    return;
+                }
+                this.permissions.push({role: ''});
             },
             updatePermission(index) {
                 // Because the x-model does not update before the click event,
