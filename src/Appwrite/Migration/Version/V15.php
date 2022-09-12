@@ -89,7 +89,7 @@ class V15 extends Migration
         /**
          * Migrating stats for all Buckets.
          */
-        $this->migrateStatsMetric('storage.files.total', 'files.$all.storage.size',);
+        $this->migrateStatsMetric('storage.files.total', 'files.$all.storage.size');
         $this->migrateStatsMetric('storage.files.count', 'files.$all.count.total');
         $this->migrateStatsMetric('storage.buckets.count', 'buckets.$all.count.total');
         $this->migrateStatsMetric('storage.buckets.create', 'buckets.$all.requests.create');
