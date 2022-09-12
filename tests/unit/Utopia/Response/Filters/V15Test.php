@@ -1103,6 +1103,390 @@ class V15Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
+    public function usageDatabasesProvider(): array
+    {
+        return [
+            'basic usage databases' => [
+                [
+                    'databasesCount' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsCount' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'collectionsCount' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'databasesCreate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'databasesRead' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'databasesUpdate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'databasesDelete' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsCreate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsRead' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsUpdate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsDelete' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'collectionsCreate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'collectionsRead' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'collectionsUpdate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'collectionsDelete' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                ],
+                [
+                    'databasesCount' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsCount' => [
+                        ['date' => 1592981250],
+                    ],
+                    'collectionsCount' => [
+                        ['date' => 1592981250],
+                    ],
+                    'databasesCreate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'databasesRead' => [
+                        ['date' => 1592981250],
+                    ],
+                    'databasesUpdate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'databasesDelete' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsCreate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsRead' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsUpdate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsDelete' => [
+                        ['date' => 1592981250],
+                    ],
+                    'collectionsCreate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'collectionsRead' => [
+                        ['date' => 1592981250],
+                    ],
+                    'collectionsUpdate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'collectionsDelete' => [
+                        ['date' => 1592981250],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider usageDatabasesProvider
+     */
+    public function testUsageDatabases(array $content, array $expected): void
+    {
+        $model = Response::MODEL_USAGE_DATABASES;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function usageDatabaseProvider(): array
+    {
+        return [
+            'basic usage database' => [
+                [
+                    'documentsCount' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'collectionsCount' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsCreate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsRead' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsUpdate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsDelete' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'collectionsCreate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'collectionsRead' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'collectionsUpdate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'collectionsDelete' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                ],
+                [
+                    'documentsCount' => [
+                        ['date' => 1592981250],
+                    ],
+                    'collectionsCount' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsCreate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsRead' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsUpdate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsDelete' => [
+                        ['date' => 1592981250],
+                    ],
+                    'collectionsCreate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'collectionsRead' => [
+                        ['date' => 1592981250],
+                    ],
+                    'collectionsUpdate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'collectionsDelete' => [
+                        ['date' => 1592981250],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider usageDatabaseProvider
+     */
+    public function testUsageDatabase(array $content, array $expected): void
+    {
+        $model = Response::MODEL_USAGE_DATABASE;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function usageCollectionProvider(): array
+    {
+        return [
+            'basic usage collection' => [
+                [
+                    'documentsCount' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsCreate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsRead' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsUpdate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'documentsDelete' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                ],
+                [
+                    'documentsCount' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsCreate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsRead' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsUpdate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'documentsDelete' => [
+                        ['date' => 1592981250],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider usageCollectionProvider
+     */
+    public function testUsageCollection(array $content, array $expected): void
+    {
+        $model = Response::MODEL_USAGE_COLLECTION;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function usageUsersProvider(): array
+    {
+        return [
+            'basic usage users' => [
+                [
+                    'usersCount' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'usersCreate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'usersRead' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'usersUpdate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'usersDelete' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'sessionsCreate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'sessionsProviderCreate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'sessionsDelete' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                ],
+                [
+                    'usersCount' => [
+                        ['date' => 1592981250],
+                    ],
+                    'usersCreate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'usersRead' => [
+                        ['date' => 1592981250],
+                    ],
+                    'usersUpdate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'usersDelete' => [
+                        ['date' => 1592981250],
+                    ],
+                    'sessionsCreate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'sessionsProviderCreate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'sessionsDelete' => [
+                        ['date' => 1592981250],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider usageUsersProvider
+     */
+    public function testUsageUsers(array $content, array $expected): void
+    {
+        $model = Response::MODEL_USAGE_USERS;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function usageBucketsProvider(): array
+    {
+        return [
+            'basic usage buckets' => [
+                [
+                    'filesCount' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'filesStorage' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'filesCreate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'filesRead' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'filesUpdate' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                    'filesDelete' => [
+                        ['date' => '2020-06-24T06:47:30.000Z'],
+                    ],
+                ],
+                [
+                    'filesCount' => [
+                        ['date' => 1592981250],
+                    ],
+                    'filesStorage' => [
+                        ['date' => 1592981250],
+                    ],
+                    'filesCreate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'filesRead' => [
+                        ['date' => 1592981250],
+                    ],
+                    'filesUpdate' => [
+                        ['date' => 1592981250],
+                    ],
+                    'filesDelete' => [
+                        ['date' => 1592981250],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider usageBucketsProvider
+     */
+    public function testUsageBuckets(array $content, array $expected): void
+    {
+        $model = Response::MODEL_USAGE_BUCKETS;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
     public function usageFunctionsProvider(): array
     {
         return [

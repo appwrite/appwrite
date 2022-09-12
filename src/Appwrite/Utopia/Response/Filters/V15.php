@@ -152,8 +152,23 @@ class V15 extends Filter
             case Response::MODEL_TOKEN:
                 $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', 'expire']);
                 break;
+            case Response::MODEL_USAGE_DATABASES:
+                $parsedResponse = $this->parseUsageDatabases($parsedResponse);
+                break;
+            case Response::MODEL_USAGE_DATABASE:
+                $parsedResponse = $this->parseUsageDatabase($parsedResponse);
+                break;
+            case Response::MODEL_USAGE_COLLECTION:
+                $parsedResponse = $this->parseUsageCollection($parsedResponse);
+                break;
+            case Response::MODEL_USAGE_USERS:
+                $parsedResponse = $this->parseUsageUsers($parsedResponse);
+                break;
+            case Response::MODEL_USAGE_BUCKETS:
+                $parsedResponse = $this->parseUsageBuckets($parsedResponse);
+                break;
             case Response::MODEL_USAGE_FUNCTIONS:
-                $parsedResponse = $this->parseModelUsageFunc($parsedResponse);
+                $parsedResponse = $this->parseUsageFuncs($parsedResponse);
                 break;
             case Response::MODEL_USAGE_PROJECT:
                 $parsedResponse = $this->parseUsageProject($parsedResponse);
@@ -357,7 +372,114 @@ class V15 extends Filter
         return $content;
     }
 
-    private function parseModelUsageFunc($content)
+    private function parseUsage($content, $keys)
+    {
+        foreach ($keys as $key) {
+            $data = [];
+            foreach ($content[$key] as $metric) {
+                $data[] = $this->parseMetric($metric);
+            }
+            $content[$key] = $data;
+        }
+
+        return $content;
+    }
+
+    private function parseUsageDatabases($content)
+    {
+        $keys = [
+            'databasesCount',
+            'documentsCount',
+            'collectionsCount',
+            'databasesCreate',
+            'databasesRead',
+            'databasesUpdate',
+            'databasesDelete',
+            'documentsCreate',
+            'documentsRead',
+            'documentsUpdate',
+            'documentsDelete',
+            'collectionsCreate',
+            'collectionsRead',
+            'collectionsUpdate',
+            'collectionsDelete',
+        ];
+
+        $content = $this->parseUsage($content, $keys);
+
+        return $content;
+    }
+
+    private function parseUsageDatabase($content)
+    {
+        $keys = [
+            'documentsCount',
+            'collectionsCount',
+            'documentsCreate',
+            'documentsRead',
+            'documentsUpdate',
+            'documentsDelete',
+            'collectionsCreate',
+            'collectionsRead',
+            'collectionsUpdate',
+            'collectionsDelete',
+        ];
+
+        $content = $this->parseUsage($content, $keys);
+
+        return $content;
+    }
+
+    private function parseUsageCollection($content)
+    {
+        $keys = [
+            'documentsCount',
+            'documentsCreate',
+            'documentsRead',
+            'documentsUpdate',
+            'documentsDelete',
+        ];
+
+        $content = $this->parseUsage($content, $keys);
+
+        return $content;
+    }
+
+    private function parseUsageUsers($content)
+    {
+        $keys = [
+            'usersCount',
+            'usersCreate',
+            'usersRead',
+            'usersUpdate',
+            'usersDelete',
+            'sessionsCreate',
+            'sessionsProviderCreate',
+            'sessionsDelete',
+        ];
+
+        $content = $this->parseUsage($content, $keys);
+
+        return $content;
+    }
+
+    private function parseUsageBuckets($content)
+    {
+        $keys = [
+            'filesCount',
+            'filesStorage',
+            'filesCreate',
+            'filesRead',
+            'filesUpdate',
+            'filesDelete',
+        ];
+
+        $content = $this->parseUsage($content, $keys);
+
+        return $content;
+    }
+
+    private function parseUsageFuncs($content)
     {
         $mapping = [
             'executionsTotal' => 'functionsExecutions',
@@ -393,7 +515,7 @@ class V15 extends Filter
         $content['functions'] = $content['executions'];
         unset($content['executions']);
 
-        $usage = [
+        $keys = [
             'collections',
             'documents',
             'functions',
@@ -403,13 +525,7 @@ class V15 extends Filter
             'users',
         ];
 
-        foreach ($usage as $name) {
-            $data = [];
-            foreach ($content[$name] as $metric) {
-                $data[] = $this->parseMetric($metric);
-            }
-            $content[$name] = $data;
-        }
+        $content = $this->parseUsage($content, $keys);
 
         return $content;
     }
@@ -419,7 +535,7 @@ class V15 extends Filter
         $content['filesStorage'] = $content['storage'];
         unset($content['storage']);
 
-        $usage = [
+        $keys = [
             'bucketsCount',
             'bucketsCreate',
             'bucketsDelete',
@@ -433,13 +549,7 @@ class V15 extends Filter
             'filesUpdate',
         ];
 
-        foreach ($usage as $name) {
-            $data = [];
-            foreach ($content[$name] as $metric) {
-                $data[] = $this->parseMetric($metric);
-            }
-            $content[$name] = $data;
-        }
+        $content = $this->parseUsage($content, $keys);
 
         return $content;
     }
