@@ -89,11 +89,11 @@ $permissions = $this->getParam('permissions', null);
                                     <template x-for="doc in documents">
                                         <tr>
                                             <td data-title="$id: ">
-                                                <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collection}&databaseId=${databaseId}&project=${project}`" x-text="doc.$id"></a>
+                                                <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collectionId}&databaseId=${databaseId}&project=${project}`" x-text="doc.$id"></a>
                                             </td>
                                             <template x-for="attr in attributes">
                                                 <td x-show="attr.status === 'available'" :data-title="attr.key + ':'">
-                                                    <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collection}&databaseId=${databaseId}&project=${project}`">
+                                                    <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collectionId}&databaseId=${databaseId}&project=${project}`">
                                                         <span x-text="doc[attr.key] ?? 'n/a'"></span>
                                                     </a>
                                                 </td>
