@@ -735,6 +735,7 @@ class V15 extends Migration
                             if ($value instanceof Document) {
                                 continue;
                             }
+
                             $variableId = ID::unique();
                             $variable = new Document([
                                 '$id' => $variableId,
@@ -745,8 +746,8 @@ class V15 extends Migration
                                 ],
                                 'functionId' => $function->getId(),
                                 'functionInternalId' => $function->getInternalId(),
-                                'key' => $key,
-                                'value' => $value,
+                                'key' => (string) $key,
+                                'value' => (string) $value,
                                 'search' => implode(' ', [$variableId, $key, $function->getId()])
                             ]);
                             $this->projectDB->createDocument('variables', $variable);
