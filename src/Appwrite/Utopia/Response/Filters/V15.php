@@ -20,48 +20,134 @@ class V15 extends Filter
             case Response::MODEL_USER:
                 $parsedResponse = $this->parseUser($parsedResponse);
                 break;
+            case Response::MODEL_USER_LIST:
+                $listKey = 'users';
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseUser($content), $parsedResponse[$listKey]);
+                break;
             case Response::MODEL_METRIC:
                 $parsedResponse = $this->parseMetric($parsedResponse);
                 break;
             case Response::MODEL_BUILD:
-                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['startTime', 'endTime']);
+                $parsedResponse = $this->parseBuild($parsedResponse);
+                break;
+            case Response::MODEL_BUILD_LIST:
+                $listKey = 'builds';
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseBuild($content), $parsedResponse[$listKey]);
                 break;
             case Response::MODEL_BUCKET:
                 $parsedResponse = $this->parseBucket($parsedResponse);
                 break;
+            case Response::MODEL_BUCKET_LIST:
+                $listKey = 'buckets';
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseBucket($content), $parsedResponse[$listKey]);
+                break;
             case Response::MODEL_COLLECTION:
                 $parsedResponse = $this->parseCollection($parsedResponse);
                 break;
+            case Response::MODEL_COLLECTION_LIST:
+                $listKey = 'collections';
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseCollection($content), $parsedResponse[$listKey]);
+                break;
+            case Response::MODEL_DATABASE:
             case Response::MODEL_DEPLOYMENT:
+            case Response::MODEL_DOMAIN:
+            case Response::MODEL_PLATFORM:
+            case Response::MODEL_PROJECT:
+            case Response::MODEL_TEAM:
+            case Response::MODEL_WEBHOOK:
+                $parsedResponse = $this->parseCreatedAtUpdatedAt($parsedResponse);
+                break;
+            case Response::MODEL_DATABASE_LIST:
+            case Response::MODEL_DEPLOYMENT_LIST:
+            case Response::MODEL_DOMAIN_LIST:
+            case Response::MODEL_PLATFORM_LIST:
+            case Response::MODEL_PROJECT_LIST:
+            case Response::MODEL_TEAM_LIST:
+            case Response::MODEL_WEBHOOK_LIST:
+                $listKey = '';
+                switch ($model) {
+                    case Response::MODEL_DATABASE_LIST:
+                        $listKey = 'databases';
+                        break;
+                    case Response::MODEL_DEPLOYMENT_LIST:
+                        $listKey = 'deployments';
+                        break;
+                    case Response::MODEL_DOMAIN_LIST:
+                        $listKey = 'domains';
+                        break;
+                    case Response::MODEL_PLATFORM_LIST:
+                        $listKey = 'platforms';
+                        break;
+                    case Response::MODEL_PROJECT_LIST:
+                        $listKey = 'projects';
+                        break;
+                    case Response::MODEL_TEAM_LIST:
+                        $listKey = 'teams';
+                        break;
+                    case Response::MODEL_WEBHOOK_LIST:
+                        $listKey = 'webhooks';
+                        break;
+                }
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseCreatedAtUpdatedAt($content), $parsedResponse[$listKey]);
+                break;
             case Response::MODEL_DOCUMENT:
-                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', '$updatedAt']);
+            case Response::MODEL_FILE:
+                $parsedResponse = $this->parsePermissionsCreatedAtUpdatedAt($parsedResponse);
+                break;
+            case Response::MODEL_DOCUMENT_LIST:
+            case Response::MODEL_FILE_LIST:
+                $listKey = '';
+                switch ($model) {
+                    case Response::MODEL_DOCUMENT_LIST:
+                        $listKey = 'documents';
+                        break;
+                    case Response::MODEL_FILE_LIST:
+                        $listKey = 'files';
+                        break;
+                }
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parsePermissionsCreatedAtUpdatedAt($content), $parsedResponse[$listKey]);
                 break;
             case Response::MODEL_EXECUTION:
                 $parsedResponse = $this->parseExecution($parsedResponse);
                 break;
-            case Response::MODEL_PLATFORM:
-            case Response::MODEL_PROJECT:
-            case Response::MODEL_TEAM:
-            case Response::MODEL_FILE:
-            case Response::MODEL_WEBHOOK:
-            case Response::MODEL_DOMAIN:
-            case Response::MODEL_DATABASE:
-                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', '$updatedAt']);
+            case Response::MODEL_EXECUTION_LIST:
+                $listKey = 'executions';
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseExecution($content), $parsedResponse[$listKey]);
                 break;
             case Response::MODEL_FUNCTION:
                 $parsedResponse = $this->parseFunction($parsedResponse);
                 break;
+            case Response::MODEL_FUNCTION_LIST:
+                $listKey = 'functions';
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseFunction($content), $parsedResponse[$listKey]);
+                break;
             case Response::MODEL_KEY:
-                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', '$updatedAt', 'expire']);
+                $parsedResponse = $this->parseKey($parsedResponse);
+                break;
+            case Response::MODEL_KEY_LIST:
+                $listKey = 'keys';
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseKey($content), $parsedResponse[$listKey]);
                 break;
             case Response::MODEL_LOG:
-                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', '$updatedAt', 'time']);
+                $parsedResponse = $this->parseLog($parsedResponse);
+                break;
+            case Response::MODEL_LOG_LIST:
+                $listKey = 'logs';
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseLog($content), $parsedResponse[$listKey]);
                 break;
             case Response::MODEL_MEMBERSHIP:
-                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', '$updatedAt', 'invited', 'joined']);
+                $parsedResponse = $this->parseMembership($parsedResponse);
+                break;
+            case Response::MODEL_MEMBERSHIP_LIST:
+                $listKey = 'memberships';
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseMembership($content), $parsedResponse[$listKey]);
                 break;
             case Response::MODEL_SESSION:
-                $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', 'expire', 'providerAccessTokenExpiry']);
+                $parsedResponse = $this->parseSession($parsedResponse);
+                break;
+            case Response::MODEL_SESSION_LIST:
+                $listKey = 'sessions';
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseSession($content), $parsedResponse[$listKey]);
                 break;
             case Response::MODEL_TOKEN:
                 $parsedResponse = $this->parseDatetimeAttributes($parsedResponse, ['$createdAt', 'expire']);
@@ -77,10 +163,14 @@ class V15 extends Filter
                 break;
         }
 
-        // Downgrade Permissions for all models
-        $parsedResponse = $this->parsePermissions($parsedResponse);
-
         return $parsedResponse;
+    }
+
+    protected function parseBuild(array $content)
+    {
+        $content = $this->parseDatetimeAttributes($content, ['startTime', 'endTime']);
+
+        return $content;
     }
 
     protected function parseBucket(array $content)
@@ -96,6 +186,7 @@ class V15 extends Filter
         unset($content['fileSecurity']);
         unset($content['compression']);
 
+        $content = $this->parsePermissions($content);
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
 
         return $content;
@@ -196,6 +287,14 @@ class V15 extends Filter
         }
 
         unset($content['documentSecurity']);
+        $content = $this->parsePermissions($content);
+        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
+        return $content;
+    }
+
+    protected function parsePermissionsCreatedAtUpdatedAt(array $content)
+    {
+        $content = $this->parsePermissions($content);
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
         return $content;
     }
@@ -203,7 +302,14 @@ class V15 extends Filter
     private function parseExecution($content)
     {
         unset($content['stdout']);
+        $content = $this->parsePermissions($content);
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'startTime', 'endTime']);
+        return $content;
+    }
+
+    private function parseCreatedAtUpdatedAt($content)
+    {
+        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
         return $content;
     }
 
@@ -224,6 +330,30 @@ class V15 extends Filter
         }
 
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'scheduleNext', 'schedulePrevious']);
+        return $content;
+    }
+
+    private function parseKey($content)
+    {
+        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'expire']);
+        return $content;
+    }
+
+    private function parseLog($content)
+    {
+        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'time']);
+        return $content;
+    }
+
+    private function parseMembership($content)
+    {
+        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'invited', 'joined']);
+        return $content;
+    }
+
+    private function parseSession($content)
+    {
+        $content = $this->parseDatetimeAttributes($content, ['$createdAt', 'expire', 'providerAccessTokenExpiry']);
         return $content;
     }
 

@@ -7,6 +7,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class V15Test extends TestCase
 {
@@ -240,6 +241,49 @@ class V15Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     * @dataProvider permissionsProvider
+     * @dataProvider bucketProvider
+     */
+    public function testBucketList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_BUCKET_LIST;
+
+        $content = [
+            'buckets' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'buckets' => [$expected],
+            'total' => 1,
+        ];
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function buildProvider(): array
+    {
+        return [
+            'build start and end time' => [
+                [
+                    'startTime' => '2020-06-24T06:47:30.000Z',
+                    'endTime' => '2020-06-24T06:47:30.000Z',
+                ],
+                [
+                    'startTime' => 1592981250,
+                    'endTime' => 1592981250,
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * @dataProvider buildProvider
+     */
     public function testBuild(): void
     {
         $model = Response::MODEL_BUILD;
@@ -252,6 +296,28 @@ class V15Test extends TestCase
         $expected = [
             'startTime' => 1592981250,
             'endTime' => 1592981250,
+        ];
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider buildProvider
+     */
+    public function testBuildList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_BUILD_LIST;
+
+        $content = [
+            'builds' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'builds' => [$expected],
+            'total' => 1,
         ];
 
         $result = $this->filter->parse($content, $model);
@@ -346,6 +412,30 @@ class V15Test extends TestCase
 
     /**
      * @dataProvider createdAtUpdatedAtProvider
+     * @dataProvider permissionsProvider
+     * @dataProvider collectionProvider
+     */
+    public function testCollectionList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_COLLECTION_LIST;
+
+        $content = [
+            'collections' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'collections' => [$expected],
+            'total' => 1,
+        ];
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
      */
     public function testDatabase(array $content, array $expected): void
     {
@@ -359,9 +449,53 @@ class V15Test extends TestCase
     /**
      * @dataProvider createdAtUpdatedAtProvider
      */
+    public function testDatabaseList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_DATABASE_LIST;
+
+        $content = [
+            'databases' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'databases' => [$expected],
+            'total' => 1,
+        ];
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     */
     public function testDeployment(array $content, array $expected): void
     {
         $model = Response::MODEL_DEPLOYMENT;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     */
+    public function testDeploymentList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_DEPLOYMENT_LIST;
+
+        $content = [
+            'deployments' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'deployments' => [$expected],
+            'total' => 1,
+        ];
 
         $result = $this->filter->parse($content, $model);
 
@@ -383,10 +517,55 @@ class V15Test extends TestCase
 
     /**
      * @dataProvider createdAtUpdatedAtProvider
+     * @dataProvider permissionsProvider
+     */
+    public function testDocumentList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_DOCUMENT_LIST;
+
+        $content = [
+            'documents' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'documents' => [$expected],
+            'total' => 1,
+        ];
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
      */
     public function testDomain(array $content, array $expected): void
     {
         $model = Response::MODEL_DOMAIN;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     */
+    public function testDomainList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_DOMAIN_LIST;
+
+        $content = [
+            'domains' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'domains' => [$expected],
+            'total' => 1,
+        ];
 
         $result = $this->filter->parse($content, $model);
 
@@ -420,10 +599,57 @@ class V15Test extends TestCase
     /**
      * @dataProvider createdAtUpdatedAtProvider
      * @dataProvider permissionsProvider
+     * @dataProvider executionProvider
+     */
+    public function testExecutionList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_EXECUTION_LIST;
+
+        $content = [
+            'executions' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'executions' => [$expected],
+            'total' => 1,
+        ];
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     * @dataProvider permissionsProvider
      */
     public function testFile(array $content, array $expected): void
     {
         $model = Response::MODEL_FILE;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     * @dataProvider permissionsProvider
+     */
+    public function testFileList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_FILE_LIST;
+
+        $content = [
+            'files' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'files' => [$expected],
+            'total' => 1,
+        ];
 
         $result = $this->filter->parse($content, $model);
 
@@ -502,6 +728,29 @@ class V15Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     * @dataProvider functionProvider
+     */
+    public function testFuncList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_FUNCTION_LIST;
+
+        $content = [
+            'functions' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'functions' => [$expected],
+            'total' => 1,
+        ];
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
     public function keyProvider(): array
     {
         return [
@@ -519,6 +768,29 @@ class V15Test extends TestCase
     public function testKey(array $content, array $expected): void
     {
         $model = Response::MODEL_KEY;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     * @dataProvider keyProvider
+     */
+    public function testKeyList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_KEY_LIST;
+
+        $content = [
+            'keys' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'keys' => [$expected],
+            'total' => 1,
+        ];
 
         $result = $this->filter->parse($content, $model);
 
@@ -548,6 +820,29 @@ class V15Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     * @dataProvider logProvider
+     */
+    public function testLogList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_LOG_LIST;
+
+        $content = [
+            'logs' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'logs' => [$expected],
+            'total' => 1,
+        ];
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
     public function membershipProvider(): array
     {
         return [
@@ -571,6 +866,29 @@ class V15Test extends TestCase
     public function testMembership(array $content, array $expected): void
     {
         $model = Response::MODEL_MEMBERSHIP;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     * @dataProvider membershipProvider
+     */
+    public function testMembershipList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_MEMBERSHIP_LIST;
+
+        $content = [
+            'memberships' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'memberships' => [$expected],
+            'total' => 1,
+        ];
 
         $result = $this->filter->parse($content, $model);
 
@@ -618,9 +936,53 @@ class V15Test extends TestCase
     /**
      * @dataProvider createdAtUpdatedAtProvider
      */
+    public function testPlatformList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_PLATFORM_LIST;
+
+        $content = [
+            'platforms' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'platforms' => [$expected],
+            'total' => 1,
+        ];
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     */
     public function testProject(array $content, array $expected): void
     {
         $model = Response::MODEL_PROJECT;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     */
+    public function testProjectList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_PROJECT_LIST;
+
+        $content = [
+            'projects' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'projects' => [$expected],
+            'total' => 1,
+        ];
 
         $result = $this->filter->parse($content, $model);
 
@@ -658,11 +1020,55 @@ class V15Test extends TestCase
     }
 
     /**
+     * @dataProvider sessionProvider
+     */
+    public function testSessionList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_SESSION_LIST;
+
+        $content = [
+            'sessions' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'sessions' => [$expected],
+            'total' => 1,
+        ];
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
      * @dataProvider createdAtUpdatedAtProvider
      */
     public function testTeam(array $content, array $expected): void
     {
         $model = Response::MODEL_TEAM;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     */
+    public function testTeamList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_TEAM_LIST;
+
+        $content = [
+            'teams' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'teams' => [$expected],
+            'total' => 1,
+        ];
 
         $result = $this->filter->parse($content, $model);
 
@@ -904,6 +1310,119 @@ class V15Test extends TestCase
     public function testUsageStorage(array $content, array $expected): void
     {
         $model = Response::MODEL_USAGE_STORAGE;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function userProvider(): array
+    {
+        return [
+            'basic user' => [
+                [
+                    '$id' => '5e5ea5c16897e',
+                    '$createdAt' => '2020-06-24T06:47:30.000Z',
+                    '$updatedAt' => '2020-06-24T06:47:30.000Z',
+                    'name' => 'John Doe',
+                    'password' => '$argon2id$v=19$m=2048,t=4,p=3$aUZjLnliVWRINmFNTWMudg$5S+x+7uA31xFnrHFT47yFwcJeaP0w92L/4LdgrVRXxE',
+                    'hash' => 'argon2',
+                    'hashOptions' => [
+                        'memoryCost' => 65536,
+                        'timeCost' => 4,
+                        'threads' => 3,
+                    ],
+                    'registration' => '2020-06-24T06:47:30.000Z',
+                    'status' => true,
+                    'passwordUpdate' => '2020-06-24T06:47:30.000Z',
+                    'email' => 'john@appwrite.io',
+                    'phone' => '+4930901820',
+                    'emailVerification' => true,
+                    'phoneVerification' => true,
+                    'prefs' => new \stdClass(),
+                ],
+                [
+                    '$id' => '5e5ea5c16897e',
+                    '$createdAt' => 1592981250,
+                    '$updatedAt' => 1592981250,
+                    'name' => 'John Doe',
+                    'registration' => 1592981250,
+                    'status' => true,
+                    'passwordUpdate' => 1592981250,
+                    'email' => 'john@appwrite.io',
+                    'phone' => '+4930901820',
+                    'emailVerification' => true,
+                    'phoneVerification' => true,
+                    'prefs' => new \stdClass(),
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     * @dataProvider userProvider
+     */
+    public function testUser(array $content, array $expected): void
+    {
+        $model = Response::MODEL_USER;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     * @dataProvider userProvider
+     */
+    public function testUserList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_USER_LIST;
+
+        $content = [
+            'users' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'users' => [$expected],
+            'total' => 1,
+        ];
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     */
+    public function testWebhook(array $content, array $expected): void
+    {
+        $model = Response::MODEL_WEBHOOK;
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     */
+    public function testWebhookList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_WEBHOOK_LIST;
+
+        $content = [
+            'webhooks' => [$content],
+            'total' => 1,
+        ];
+
+        $expected = [
+            'webhooks' => [$expected],
+            'total' => 1,
+        ];
 
         $result = $this->filter->parse($content, $model);
 
