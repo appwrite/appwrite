@@ -54,7 +54,15 @@
                         }
                         const parsedKey = this.parseOutputPermission(key);
                         const permissionString = this.buildPermission(parsedKey, permission.role);
-                        this.rawPermissions[index] = permissionString;
+                        if (permission[key]) {
+                            if (!this.rawPermissions.includes(permissionString)) {
+                                this.rawPermissions.push(permissionString);
+                            }
+                        } else {
+                            this.rawPermissions = this.rawPermissions.filter(p => {
+                                return !p.includes(permissionString);
+                            });
+                        }
                     });
                 });
             },
