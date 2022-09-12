@@ -103,7 +103,7 @@ $escapedPermissions = \array_map(function ($perm) {
         <tfoot>
         <tr>
             <td colspan="<?php \count($permissions) + 2 ?>">
-                <button type="button" class="margin-top-small reverse" @click="addPermission()">Add Role</button>
+                <button type="button" class="margin-top-small reverse" @click="addPermission('<?php echo $form  ?>')">Add Role</button>
             </td>
         </tr>
         </tfoot>

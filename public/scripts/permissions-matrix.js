@@ -96,19 +96,21 @@
                 }
                 return key;
             },
-            validate(formId, role, permissions) {
+            validate(formId, index) {
                 const form = document.getElementById(formId);
-                const input = document.getElementById(`${formId}Input`);
+                const input = document.getElementById(`${formId}Input${index}`);
+                const permission = this.permissions[index];
 
                 input.setCustomValidity('');
 
-                if (!Object.values(permissions).some(p => p)) {
+                if (permission.role === '') {
+                    input.setCustomValidity('Role is required');
+                } else if (!Object.entries(permission).some(([k, v]) => !k.includes('role') && v)) {
                     input.setCustomValidity('No permissions selected');
-                }
-                if (this.permissions.some(p => p.role === role)) {
+                } else if (this.permissions.some(p => p.role === permission.role && p !== permission)) {
                     input.setCustomValidity('Role entry already exists');
                 }
-                
+
                 return form.reportValidity();
             },
             prevent(event) {
