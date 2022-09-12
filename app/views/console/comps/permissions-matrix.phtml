@@ -91,12 +91,14 @@ $escapedPermissions = \array_map(function ($perm) {
 
                 <input
                     required
+                    autocomplete="off"
                     id="<?php echo $form; ?>Input"
                     name="<?php echo $form; ?>"
                     form="<?php echo $form ?>"
                     list="types"
                     type="text"
-                    x-model="role" />
+                    x-model="role"
+                    @keydown.enter="prevent($event)" />
             </td>
             <?php foreach ($escapedPermissions as $permission): ?>
                 <td>
