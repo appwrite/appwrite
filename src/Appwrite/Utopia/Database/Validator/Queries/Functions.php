@@ -6,7 +6,7 @@ class Functions extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'name',
-        'status',
+        'enabled',
         'runtime',
         'deployment',
         'schedule',
