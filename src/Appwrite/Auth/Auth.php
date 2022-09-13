@@ -433,7 +433,7 @@ class Auth
 
             if (isset($node['$id']) && isset($node['teamId'])) {
                 $roles[] = Role::team($node['teamId'])->toString();
-                $roles[] = Role::user($node['$id'])->toString();
+                $roles[] = Role::member($node['$id'])->toString();
 
                 if (isset($node['roles'])) {
                     foreach ($node['roles'] as $nodeRole) { // Set all team roles

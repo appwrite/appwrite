@@ -260,7 +260,7 @@ class MessagingChannelsTest extends TestCase
 
             for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
                 $permissions[] = Role::team(ID::custom('team' . $i))->toString();
-                $permissions[] = Role::user(ID::custom('member' . $i))->toString();
+                $permissions[] = Role::member(ID::custom('member' . $i))->toString();
             }
             $event = [
                 'project' => '1',
@@ -292,7 +292,7 @@ class MessagingChannelsTest extends TestCase
 
             $permissions = [
                 Role::team(ID::custom('team' . $index), $role)->toString(),
-                Role::user(ID::custom('member' . $index))->toString()
+                Role::member(ID::custom('member' . $index))->toString()
             ];
 
             $event = [
