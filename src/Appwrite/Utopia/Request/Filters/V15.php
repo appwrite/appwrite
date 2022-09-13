@@ -33,7 +33,7 @@ class V15 extends Filter
             case 'storage.listBuckets':
             case 'storage.listFiles':
             case 'teams.list':
-            case 'teams.getMemberships':
+            case 'teams.listMemberships':
             case 'users.list':
                 $content = $this->convertLimitAndOffset($content);
                 $content = $this->convertCursor($content);
