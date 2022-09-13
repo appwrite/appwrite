@@ -102,7 +102,7 @@ $permissions = $this->getParam('permissions', null);
                                     <?php endif; ?>
 
                                     <fieldset name="data" data-cast-to="object" data-ls-attrs="x-init=doc = {{project-document}}" x-data="{doc: {}}">
-                                        <ul data-ls-attrs="x-init=attributes = {{project-collection.attributes}}.map(function(attr) { if(attr.type === 'datetime' && doc[attr.key]) { doc[attr.key] = isoToLocal(doc[attr.key]) } return attr; })" x-data="{attributes: [], prefixWithZero(value, minLength = 2) { value = value + ''; while (value.length < minLength) { value = '0' + value; } return value; }, isoToLocal(isoTime) { const date = new Date(isoTime); const localTime = `${date.getFullYear()}-${this.prefixWithZero(date.getMonth() + 1)}-${this.prefixWithZero(date.getDate())}T${this.prefixWithZero(date.getHours())}:${this.prefixWithZero(date.getMinutes())}:${this.prefixWithZero(date.getSeconds())}.${this.prefixWithZero(date.getMilliseconds(), 3)}`; return localTime; } }">
+                                        <ul data-ls-attrs="x-init=attributes = {{project-collection.attributes}}.map(function(attr) { if(attr.type === 'datetime' && doc[attr.key]) { doc[attr.key] = isoToLocal(doc[attr.key]) } return attr; })" x-data="{attributes: [], isoToLocal(isoTime) { const date = new Date(isoTime); const localTime = date.toLocaleString('sv').slice(0, 16).replace(' ', 'T'); return localTime; } }">
                                             <template x-for="attr in attributes.filter(a => a.status === 'available')">
                                                 <li>
                                                     <label>
