@@ -832,14 +832,57 @@ class V15Test extends TestCase
     {
         return [
             'basic log' => [
-                ['time' => '2020-06-24T06:47:30.000Z'],
-                ['time' => 1592981250],
+                [
+                    'event' => 'account.sessions.create',
+                    'userId' => '610fc2f985ee0',
+                    'userEmail' => 'john@appwrite.io',
+                    'userName' => 'John Doe',
+                    'mode' => 'admin',
+                    'ip' => '127.0.0.1',
+                    'time' => '2020-06-24T06:47:30.000Z',
+                    'osCode' => 'Mac',
+                    'osName' => 'Mac',
+                    'osVersion' => 'Mac',
+                    'clientType' => 'browser',
+                    'clientCode' => 'CM',
+                    'clientName' => 'Chrome Mobile iOS',
+                    'clientVersion' => '84.0',
+                    'clientEngine' => 'WebKit',
+                    'clientEngineVersion' => '605.1.15',
+                    'deviceName' => 'smartphone',
+                    'deviceBrand' => 'Google',
+                    'deviceModel' => 'Nexus 5',
+                    'countryCode' => 'US',
+                    'countryName' => 'United States'
+                ],
+                [
+                    'event' => 'account.sessions.create',
+                    'userId' => '610fc2f985ee0',
+                    'userEmail' => 'john@appwrite.io',
+                    'userName' => 'John Doe',
+                    'mode' => 'admin',
+                    'ip' => '127.0.0.1',
+                    'time' => 1592981250,
+                    'osCode' => 'Mac',
+                    'osName' => 'Mac',
+                    'osVersion' => 'Mac',
+                    'clientType' => 'browser',
+                    'clientCode' => 'CM',
+                    'clientName' => 'Chrome Mobile iOS',
+                    'clientVersion' => '84.0',
+                    'clientEngine' => 'WebKit',
+                    'clientEngineVersion' => '605.1.15',
+                    'deviceName' => 'smartphone',
+                    'deviceBrand' => 'Google',
+                    'deviceModel' => 'Nexus 5',
+                    'countryCode' => 'US',
+                    'countryName' => 'United States'
+                ]
             ],
         ];
     }
 
     /**
-     * @dataProvider createdAtUpdatedAtProvider
      * @dataProvider logProvider
      */
     public function testLog(array $content, array $expected): void
@@ -852,7 +895,6 @@ class V15Test extends TestCase
     }
 
     /**
-     * @dataProvider createdAtUpdatedAtProvider
      * @dataProvider logProvider
      */
     public function testLogList(array $content, array $expected): void

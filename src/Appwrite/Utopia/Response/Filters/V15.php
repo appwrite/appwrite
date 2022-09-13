@@ -377,7 +377,7 @@ class V15 extends Filter
 
     private function parseLog($content)
     {
-        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'time']);
+        $content = $this->parseDatetimeAttributes($content, ['time']);
         return $content;
     }
 
