@@ -353,16 +353,58 @@ class AuthTest extends TestCase
             '$id' => ID::custom('123'),
             'memberships' => [
                 [
-                    'confirm' => true,
+                    '$id' => ID::custom('456'),
                     'teamId' => ID::custom('abc'),
+                    'confirm' => true,
                     'roles' => [
                         'administrator',
                         'moderator'
                     ]
                 ],
                 [
-                    'confirm' => true,
+                    '$id' => ID::custom('abc'),
                     'teamId' => ID::custom('def'),
+                    'confirm' => true,
+                    'roles' => [
+                        'guest'
+                    ]
+                ]
+            ]
+        ]);
+
+        $roles = Auth::getRoles($user);
+
+        $this->assertCount(9, $roles);
+        $this->assertContains(Role::users()->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('123'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'), 'administrator')->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('def'))->toString(), $roles);
+        $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('456'))->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
+    }
+
+    public function testPrivilegedUserRoles(): void
+    {
+        Authorization::setRole(Auth::USER_ROLE_OWNER);
+        $user  = new Document([
+            '$id' => ID::custom('123'),
+            'memberships' => [
+                [
+                    '$id' => ID::custom('def'),
+                    'teamId' => ID::custom('abc'),
+                    'confirm' => true,
+                    'roles' => [
+                        'administrator',
+                        'moderator'
+                    ]
+                ],
+                [
+                    '$id' => ID::custom('abc'),
+                    'teamId' => ID::custom('def'),
+                    'confirm' => true,
                     'roles' => [
                         'guest'
                     ]
@@ -373,42 +415,6 @@ class AuthTest extends TestCase
         $roles = Auth::getRoles($user);
 
         $this->assertCount(7, $roles);
-        $this->assertContains(Role::users()->toString(), $roles);
-        $this->assertContains(Role::user(ID::custom('123'))->toString(), $roles);
-        $this->assertContains(Role::team(ID::custom('abc'))->toString(), $roles);
-        $this->assertContains(Role::team(ID::custom('abc'), 'administrator')->toString(), $roles);
-        $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
-        $this->assertContains(Role::team(ID::custom('def'))->toString(), $roles);
-        $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
-    }
-
-    public function testPrivilegedUserRoles(): void
-    {
-        Authorization::setRole(Auth::USER_ROLE_OWNER);
-        $user  = new Document([
-            '$id' => ID::custom('123'),
-            'memberships' => [
-                [
-                    'confirm' => true,
-                    'teamId' => ID::custom('abc'),
-                    'roles' => [
-                        'administrator',
-                        'moderator'
-                    ]
-                ],
-                [
-                    'confirm' => true,
-                    'teamId' => ID::custom('def'),
-                    'roles' => [
-                        'guest'
-                    ]
-                ]
-            ]
-        ]);
-
-        $roles = Auth::getRoles($user);
-
-        $this->assertCount(5, $roles);
         $this->assertNotContains(Role::users()->toString(), $roles);
         $this->assertNotContains(Role::user(ID::custom('123'))->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('abc'))->toString(), $roles);
@@ -416,6 +422,8 @@ class AuthTest extends TestCase
         $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('def'))->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('def'))->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
     }
 
     public function testAppUserRoles(): void
@@ -425,16 +433,18 @@ class AuthTest extends TestCase
             '$id' => ID::custom('123'),
             'memberships' => [
                 [
-                    'confirm' => true,
+                    '$id' => ID::custom('def'),
                     'teamId' => ID::custom('abc'),
+                    'confirm' => true,
                     'roles' => [
                         'administrator',
                         'moderator'
                     ]
                 ],
                 [
-                    'confirm' => true,
+                    '$id' => ID::custom('abc'),
                     'teamId' => ID::custom('def'),
+                    'confirm' => true,
                     'roles' => [
                         'guest'
                     ]
@@ -444,7 +454,7 @@ class AuthTest extends TestCase
 
         $roles = Auth::getRoles($user);
 
-        $this->assertCount(5, $roles);
+        $this->assertCount(7, $roles);
         $this->assertNotContains(Role::users()->toString(), $roles);
         $this->assertNotContains(Role::user(ID::custom('123'))->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('abc'))->toString(), $roles);
@@ -452,5 +462,7 @@ class AuthTest extends TestCase
         $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('def'))->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('def'))->toString(), $roles);
+        $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
     }
 }

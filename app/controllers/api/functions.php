@@ -90,8 +90,9 @@ App::post('/v1/functions')
 
         $eventsInstance->setParam('functionId', $function->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($function, Response::MODEL_FUNCTION);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($function, Response::MODEL_FUNCTION);
     });
 
 App::get('/v1/functions')
@@ -754,8 +755,9 @@ App::post('/v1/functions/:functionId/deployments')
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
 App::get('/v1/functions/:functionId/deployments')
@@ -936,7 +938,7 @@ App::post('/v1/functions/:functionId/executions')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('data', '', new Text(8192), 'String of custom data to send to function.', true)
-    ->param('async', true, new Boolean(), 'Execute code asynchronously. Default value is true.', true)
+    ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -998,7 +1000,7 @@ App::post('/v1/functions/:functionId/executions')
             'statusCode' => 0,
             'response' => '',
             'stderr' => '',
-            'time' => 0.0,
+            'duration' => 0.0,
             'search' => implode(' ', [$functionId, $executionId]),
         ])));
 
@@ -1041,9 +1043,9 @@ App::post('/v1/functions/:functionId/executions')
 
             $event->trigger();
 
-            $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-
-            return $response->dynamic($execution, Response::MODEL_EXECUTION);
+            return $response
+                ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                ->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
@@ -1085,11 +1087,11 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('response', $executionResponse['response']);
             $execution->setAttribute('stdout', $executionResponse['stdout']);
             $execution->setAttribute('stderr', $executionResponse['stderr']);
-            $execution->setAttribute('time', $executionResponse['time']);
+            $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution
-                ->setAttribute('time', (float)$interval->format('%s.%f'))
+                ->setAttribute('duration', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
@@ -1103,7 +1105,7 @@ App::post('/v1/functions/:functionId/executions')
         ->setParam('functionId', $function->getId())
         ->setParam('executions.{scope}.compute', 1)
         ->setParam('executionStatus', $execution->getAttribute('status', ''))
-        ->setParam('executionTime', $execution->getAttribute('time')); // ms
+        ->setParam('executionTime', $execution->getAttribute('duration')); // ms
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -1340,8 +1342,9 @@ App::post('/v1/functions/:functionId/variables')
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($variable, Response::MODEL_VARIABLE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
 App::get('/v1/functions/:functionId/variables')

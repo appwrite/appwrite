@@ -8,6 +8,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
 
@@ -100,8 +101,11 @@ class CertificatesV1 extends Worker
                 throw new Exception('Renew isn\'t required.');
             }
 
+            // Prepare folder name for certbot. Using this helps prevent miss-match in LetsEncrypt configuration when renewing certificate
+            $folder = ID::unique();
+
             // Generate certificate files using Let's Encrypt
-            $letsEncryptData = $this->issueCertificate($domain->get(), $email);
+            $letsEncryptData = $this->issueCertificate($folder, $domain->get(), $email);
 
             // Command succeeded, store all data into document
             // We store stderr too, because it may include warnings
@@ -111,7 +115,7 @@ class CertificatesV1 extends Worker
             ]));
 
             // Give certificates to Traefik
-            $this->applyCertificateFiles($domain->get(), $letsEncryptData);
+            $this->applyCertificateFiles($folder, $domain->get(), $letsEncryptData);
 
             // Update certificate info stored in database
             $certificate->setAttribute('renewDate', $this->getRenewDate($domain->get()));
@@ -124,6 +128,9 @@ class CertificatesV1 extends Worker
             // Increase attempts count
             $attempts = $certificate->getAttribute('attempts', 0) + 1;
             $certificate->setAttribute('attempts', $attempts);
+
+            // Store cuttent time as renew date to ensure another attempt in next maintenance cycle
+            $certificate->setAttribute('renewDate', DateTime::now());
 
             // Send email to security email
             $this->notifyError($domain->get(), $e->getMessage(), $attempts);
@@ -259,11 +266,12 @@ class CertificatesV1 extends Worker
     /**
      * LetsEncrypt communication to issue certificate (using certbot CLI)
      *
+     * @param string $folder Folder into which certificates should be generated
      * @param string $domain Domain to generate certificate for
      *
      * @return array Named array with keys 'stdout' and 'stderr', both string
      */
-    private function issueCertificate(string $domain, string $email): array
+    private function issueCertificate(string $folder, string $domain, string $email): array
     {
         $stdout = '';
         $stderr = '';
@@ -271,6 +279,7 @@ class CertificatesV1 extends Worker
         $staging = (App::isProduction()) ? '' : ' --dry-run';
         $exit = Console::execute("certbot certonly --webroot --noninteractive --agree-tos{$staging}"
             . " --email " . $email
+            . " --cert-name " . $folder
             . " -w " . APP_STORAGE_CERTIFICATES
             . " -d {$domain}", '', $stdout, $stderr);
 
@@ -290,9 +299,9 @@ class CertificatesV1 extends Worker
      *
      * @param string $domain Domain which certificate was generated for
      *
-     * @return int
+     * @return string
      */
-    private function getRenewDate(string $domain): int
+    private function getRenewDate(string $domain): string
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         $certData = openssl_x509_parse(file_get_contents($certPath));
@@ -305,11 +314,12 @@ class CertificatesV1 extends Worker
      * Method to take files from Let's Encrypt, and put it into Traefik.
      *
      * @param string $domain Domain which certificate was generated for
+     * @param string $folder Folder in which certificates were generated
      * @param array $letsEncryptData Let's Encrypt logs to use for additional info when throwing error
      *
      * @return void
      */
-    private function applyCertificateFiles(string $domain, array $letsEncryptData): void
+    private function applyCertificateFiles(string $folder, string $domain, array $letsEncryptData): void
     {
         // Prepare folder in storage for domain
         $path = APP_STORAGE_CERTIFICATES . '/' . $domain;
@@ -319,20 +329,20 @@ class CertificatesV1 extends Worker
             }
         }
 
-        // Move generated files from certbot into our storage
-        if (!@\rename('/etc/letsencrypt/live/' . $domain . '/cert.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem')) {
+        // Move generated files
+        if (!@\rename('/etc/letsencrypt/live/' . $folder . '/cert.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem')) {
             throw new Exception('Failed to rename certificate cert.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
-        if (!@\rename('/etc/letsencrypt/live/' . $domain . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/chain.pem')) {
+        if (!@\rename('/etc/letsencrypt/live/' . $folder . '/chain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/chain.pem')) {
             throw new Exception('Failed to rename certificate chain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
-        if (!@\rename('/etc/letsencrypt/live/' . $domain . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/fullchain.pem')) {
+        if (!@\rename('/etc/letsencrypt/live/' . $folder . '/fullchain.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/fullchain.pem')) {
             throw new Exception('Failed to rename certificate fullchain.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 
-        if (!@\rename('/etc/letsencrypt/live/' . $domain . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/privkey.pem')) {
+        if (!@\rename('/etc/letsencrypt/live/' . $folder . '/privkey.pem', APP_STORAGE_CERTIFICATES . '/' . $domain . '/privkey.pem')) {
             throw new Exception('Failed to rename certificate privkey.pem. Let\'s Encrypt log: ' . $letsEncryptData['stderr'] . ' ; ' . $letsEncryptData['stdout']);
         }
 

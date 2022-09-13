@@ -22,10 +22,15 @@
                         }
                     })
                     if (existing === undefined) {
-                        this.permissions.push({
+                        let newPermission = {
                             role,
-                            [type]: true,
-                        });
+                            create: false,
+                            read: false,
+                            update: false,
+                            xdelete: false,
+                        };
+                        newPermission[type] = true;
+                        this.permissions.push(newPermission);
                     }
                     if (index !== -1) {
                         existing[type] = true;
@@ -33,22 +38,18 @@
                     }
                 });
             },
-            addPermission(formId, role, permissions) {
-                if (!this.validate(formId, role, permissions)) {
+            addPermission(formId) {
+                if (this.permissions.length > 0
+                    && !this.validate(formId, this.permissions.length - 1)) {
                     return;
                 }
-                Object.entries(permissions).forEach(entry => {
-                    let [type, enabled] = entry;
-                    type = this.parseOutputPermission(type);
-                    if (enabled) {
-                        this.rawPermissions.push(this.buildPermission(type, role));
-                    }
-                });
                 this.permissions.push({
-                    role,
-                    ...permissions,
+                    role: '',
+                    create: false,
+                    read: false,
+                    update: false,
+                    xdelete: false,
                 });
-                this.reset();
             },
             updatePermission(index) {
                 // Because the x-model does not update before the click event,
@@ -106,31 +107,26 @@
                 }
                 return key;
             },
-            validate(formId, role, permissions) {
+            validate(formId, index) {
                 const form = document.getElementById(formId);
-                const input = document.getElementById(`${formId}Input`);
+                const input = document.getElementById(`${formId}Input${index}`);
+                const permission = this.permissions[index];
 
                 input.setCustomValidity('');
 
-                if (!Object.values(permissions).some(p => p)) {
+                if (permission.role === '') {
+                    input.setCustomValidity('Role is required');
+                } else if (!Object.entries(permission).some(([k, v]) => !k.includes('role') && v)) {
                     input.setCustomValidity('No permissions selected');
-                }
-                if (this.permissions.some(p => p.role === role)) {
+                } else if (this.permissions.some(p => p.role === permission.role && p !== permission)) {
                     input.setCustomValidity('Role entry already exists');
                 }
-                
+
                 return form.reportValidity();
-            }
-        }));
-        Alpine.data('permissionsRow', () => ({
-            role: '',
-            read: false,
-            create: false,
-            update: false,
-            xdelete: false,
-            reset() {
-                this.role = '';
-                this.read = this.create = this.update = this.xdelete = false;
+            },
+            prevent(event) {
+                event.preventDefault();
+                event.stopPropagation();
             }
         }));
     });
