@@ -456,6 +456,7 @@ class V15 extends Migration
         return match ($permission) {
             'role:all' => 'any',
             'role:guest' => 'guests',
+            'role:member' => 'users',
             default => $permission
         };
     }
