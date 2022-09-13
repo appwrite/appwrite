@@ -2150,7 +2150,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('scheduleUpdatedAt'),
+                '$id' => ID::custom('scheduleUpdatedAt'), // Used to fix duplicate executions bug. Can be removed once new queue library is used
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
