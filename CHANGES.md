@@ -12,7 +12,7 @@
 - `createExecution` parameter `async` default value was changed from `true` to `false` [#3781](https://github.com/appwrite/appwrite/pull/3781)
 - String attribute `status` has been refactored to a Boolean attribute `enabled` in the functions collection [#3798](https://github.com/appwrite/appwrite/pull/3798)
 - `time` attribute in Execution response model has been reanamed to `duration` to be more consistent with other response models. [#3801](https://github.com/appwrite/appwrite/pull/3801) 
-- Updated the `getMemberships` endpoint to `listMemberships` to stay stay consistent with other endpoints
+- Updated the `getMemberships` endpoint to `listMemberships` to stay stay consistent with other endpoints [#3825](https://github.com/appwrite/appwrite/pull/3825)
 
 ## Features
 - Added the UI to see the Parent ID of all resources within the UI. [#3653](https://github.com/appwrite/appwrite/pull/3653)
