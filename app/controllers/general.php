@@ -70,7 +70,7 @@ App::init()
                 case version_compare($requestFormat, '0.14.0', '<'):
                     Request::setFilter(new RequestV14());
                     break;
-                case version_compare($requestFormat, '0.15.0', '<'):
+                case version_compare($requestFormat, '0.15.3', '<'):
                     Request::setFilter(new RequestV15());
                     break;
                 default:
@@ -199,7 +199,7 @@ App::init()
                 case version_compare($responseFormat, '0.14.0', '<='):
                     Response::setFilter(new ResponseV14());
                     break;
-                case version_compare($responseFormat, '0.15.0', '<='):
+                case version_compare($responseFormat, '0.15.3', '<='):
                     Response::setFilter(new ResponseV15());
                     break;
                 default:
