@@ -19,6 +19,12 @@
   - `getLogs` to `listLogs` in Accounts API
   - `getSessions` to `listSessions` in Accounts API
   - `getSessions` to `listSessions` in Users API
+  - `getCountries` to `listCountries` in Locale API
+  - `getCountriesEU` to `listCountriesEU` in Locale API
+  - `getCountriesPhones` to `listCountriesPhones` in Locale API
+  - `getContinents` to `listContinents` in Locale API
+  - `getCurrencies` to `listCurrencies` in Locale API
+  - `getLanguages` to `listLanguages` in Locale API
 
 
 ## Features

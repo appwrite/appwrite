@@ -88,7 +88,7 @@ if(typeof secret!=='undefined'){payload['secret']=secret;}
 if(typeof password!=='undefined'){payload['password']=password;}
 if(typeof passwordAgain!=='undefined'){payload['passwordAgain']=passwordAgain;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('put',uri,{'content-type':'application/json',},payload);});}
-getSessions(){return __awaiter(this,void 0,void 0,function*(){let path='/account/sessions';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
+listSessions(){return __awaiter(this,void 0,void 0,function*(){let path='/account/sessions';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 deleteSessions(){return __awaiter(this,void 0,void 0,function*(){let path='/account/sessions';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('delete',uri,{'content-type':'application/json',},payload);});}
 createAnonymousSession(){return __awaiter(this,void 0,void 0,function*(){let path='/account/sessions/anonymous';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 createEmailSession(email,password){return __awaiter(this,void 0,void 0,function*(){if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
@@ -509,12 +509,12 @@ getStorageLocal(){return __awaiter(this,void 0,void 0,function*(){let path='/hea
 getTime(){return __awaiter(this,void 0,void 0,function*(){let path='/health/time';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}}
 class Locale extends Service{constructor(client){super(client);}
 get(){return __awaiter(this,void 0,void 0,function*(){let path='/locale';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-getContinents(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/continents';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-getCountries(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/countries';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-getCountriesEU(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/countries/eu';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-getCountriesPhones(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/countries/phones';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-getCurrencies(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/currencies';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
-getLanguages(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/languages';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}}
+listContinents(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/continents';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
+listCountries(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/countries';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
+listCountriesEU(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/countries/eu';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
+listCountriesPhones(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/countries/phones';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
+listCurrencies(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/currencies';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
+listLanguages(){return __awaiter(this,void 0,void 0,function*(){let path='/locale/languages';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}}
 class Projects extends Service{constructor(client){super(client);}
 list(queries,search){return __awaiter(this,void 0,void 0,function*(){let path='/projects';let payload={};if(typeof queries!=='undefined'){payload['queries']=queries;}
 if(typeof search!=='undefined'){payload['search']=search;}
@@ -936,7 +936,7 @@ updatePrefs(userId,prefs){return __awaiter(this,void 0,void 0,function*(){if(typ
 if(typeof prefs==='undefined'){throw new AppwriteException('Missing required parameter: "prefs"');}
 let path='/users/{userId}/prefs'.replace('{userId}',userId);let payload={};if(typeof prefs!=='undefined'){payload['prefs']=prefs;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}
-getSessions(userId){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+listSessions(userId){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
 let path='/users/{userId}/sessions'.replace('{userId}',userId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 deleteSessions(userId){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
 let path='/users/{userId}/sessions'.replace('{userId}',userId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('delete',uri,{'content-type':'application/json',},payload);});}

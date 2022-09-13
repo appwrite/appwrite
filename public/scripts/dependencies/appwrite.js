@@ -814,7 +814,7 @@
             });
         }
         /**
-         * Get Account Sessions
+         * List Account Sessions
          *
          * Get currently logged in user list of active sessions across different
          * devices.
@@ -822,7 +822,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getSessions() {
+        listSessions() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/account/sessions';
                 let payload = {};
@@ -3940,7 +3940,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getContinents() {
+        listContinents() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/continents';
                 let payload = {};
@@ -3959,7 +3959,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getCountries() {
+        listCountries() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/countries';
                 let payload = {};
@@ -3978,7 +3978,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getCountriesEU() {
+        listCountriesEU() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/countries/eu';
                 let payload = {};
@@ -3997,7 +3997,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getCountriesPhones() {
+        listCountriesPhones() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/countries/phones';
                 let payload = {};
@@ -4017,7 +4017,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getCurrencies() {
+        listCurrencies() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/currencies';
                 let payload = {};
@@ -4036,7 +4036,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getLanguages() {
+        listLanguages() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/languages';
                 let payload = {};
@@ -6821,7 +6821,7 @@
             });
         }
         /**
-         * Get User Sessions
+         * List User Sessions
          *
          * Get the user sessions list by its unique ID.
          *
@@ -6829,7 +6829,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getSessions(userId) {
+        listSessions(userId) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
