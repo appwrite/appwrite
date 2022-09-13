@@ -14,12 +14,12 @@ class V15 extends Filter
     public function parse(array $content, string $model): array
     {
         switch ($model) {
-            case 'account.logs':
+            case 'account.listLogs':
             case 'databases.listLogs':
             case 'databases.listCollectionLogs':
             case 'databases.listDocumentLogs':
             case 'teams.listLogs':
-            case 'users.getLogs':
+            case 'users.listLogs':
                 $content = $this->convertLimitAndOffset($content);
                 break;
             case 'account.initials':

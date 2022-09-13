@@ -36,9 +36,9 @@ class V15Test extends TestCase
     /**
      * @dataProvider limitOffsetProvider
      */
-    public function testGetAccountLogs(array $content, array $expected): void
+    public function testListAccountLogs(array $content, array $expected): void
     {
-        $model = 'account.logs';
+        $model = 'account.listLogs';
 
         $result = $this->filter->parse($content, $model);
 
@@ -692,9 +692,9 @@ class V15Test extends TestCase
      * @dataProvider cursorProvider
      * @dataProvider orderTypeProvider
      */
-    public function testGetTeamMemberships(array $content, array $expected): void
+    public function testListTeamMemberships(array $content, array $expected): void
     {
-        $model = 'teams.getMemberships';
+        $model = 'teams.listMemberships';
 
         $result = $this->filter->parse($content, $model);
 
@@ -731,9 +731,9 @@ class V15Test extends TestCase
     /**
      * @dataProvider limitOffsetProvider
      */
-    public function testGetUserLogs(array $content, array $expected): void
+    public function testListUserLogs(array $content, array $expected): void
     {
-        $model = 'users.getLogs';
+        $model = 'users.listLogs';
 
         $result = $this->filter->parse($content, $model);
 
