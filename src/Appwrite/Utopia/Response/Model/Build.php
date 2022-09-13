@@ -59,7 +59,7 @@ class Build extends Model
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'The build time in seconds.',
+                'description' => 'The build duration in seconds.',
                 'default' => 0,
                 'example' => 0,
             ])

@@ -140,7 +140,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("status", "disabled")' ]
+            'queries' => [ 'equal("enabled", true)' ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -150,7 +150,7 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("status", "enabled")' ]
+            'queries' => [ 'equal("enabled", false)' ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -608,7 +608,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(0, $execution['body']['statusCode']);
         $this->assertEquals('', $execution['body']['response']);
         $this->assertEquals('', $execution['body']['stderr']);
-        $this->assertEquals(0, $execution['body']['time']);
+        $this->assertEquals(0, $execution['body']['duration']);
 
         sleep(5);
 
@@ -631,7 +631,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('8.0', $execution['body']['response']);
         $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertEquals('', $execution['body']['stderr']);
-        $this->assertLessThan(0.500, $execution['body']['time']);
+        $this->assertLessThan(0.500, $execution['body']['duration']);
 
         /**
          * Test for FAILURE
@@ -750,7 +750,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('PHP', $execution['body']['response']);
         $this->assertStringContainsString('8.0', $execution['body']['response']);
         $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
-        $this->assertLessThan(0.500, $execution['body']['time']);
+        $this->assertLessThan(0.500, $execution['body']['duration']);
 
         return $data;
     }
@@ -909,9 +909,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
         $this->assertEquals($executions['body']['executions'][0]['statusCode'], 500);
-        $this->assertGreaterThan(2, $executions['body']['executions'][0]['time']);
-        $this->assertLessThan(6, $executions['body']['executions'][0]['time']);
-        $this->assertGreaterThan(4, $executions['body']['executions'][0]['time']);
+        $this->assertGreaterThan(2, $executions['body']['executions'][0]['duration']);
+        $this->assertLessThan(6, $executions['body']['executions'][0]['duration']);
+        $this->assertGreaterThan(4, $executions['body']['executions'][0]['duration']);
         $this->assertEquals($executions['body']['executions'][0]['response'], '');
         $this->assertEquals($executions['body']['executions'][0]['stderr'], 'An internal curl error has occurred within the executor! Error Msg: Operation timed out');
 
