@@ -21,8 +21,8 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 ```typescript
 let users = new sdk.Users(client);
 
-let response = await users.create('[USER_ID]', 'email@example.com', 'password');
-console.log(response);
+let user = await users.create(ID.unique(), 'email@example.com', 'password');
+console.log(user);
 ```
 
 ### Full Example
@@ -39,8 +39,8 @@ client
     .setSelfSigned() // Use only on dev mode with a self-signed SSL cert
 ;
 
-let response = await users.create('[USER_ID]', 'email@example.com', 'password');
-console.log(response);
+let user = await users.create(ID.unique(), 'email@example.com', 'password');
+console.log(user);
 ```
 
 ### Error Handling
@@ -50,7 +50,7 @@ The Appwrite Deno SDK raises `AppwriteException` object with `message`, `code` a
 let users = new sdk.Users(client);
 
 try {
-    let response = await users.create('[USER_ID]', 'email@example.com', 'password');
+    let user = await users.create(ID.unique(), 'email@example.com', 'password');
 } catch(e) {
     console.log(e.message);
 }
