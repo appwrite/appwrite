@@ -416,7 +416,7 @@ sort($patterns);
                                             <span data-ls-bind="{{execution.trigger}}"></span>
                                         </td>
                                         <td data-title="Time: ">
-                                            <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>
+                                            <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.duration|seconds2hum}}"></span>
                                             <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'processing'">-</span>
                                         </td>
                                         <td data-title="">
