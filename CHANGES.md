@@ -17,6 +17,9 @@
   - `getMemberships` to `listMemberships` in Users API
   - `getLogs` to `listLogs` in Users API
   - `getLogs` to `listLogs` in Accounts API
+  - `getSessions` to `listSessions` in Accounts API
+  - `getSessions` to `listSessions` in Users API
+
 
 ## Features
 - Added the UI to see the Parent ID of all resources within the UI. [#3653](https://github.com/appwrite/appwrite/pull/3653)
