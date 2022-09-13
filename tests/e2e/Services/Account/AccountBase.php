@@ -363,7 +363,7 @@ trait AccountBase
         $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
 
-        $this->assertContains($response['body']['logs'][2]['event'], ["account.create"]);
+        $this->assertContains($response['body']['logs'][2]['event'], ["user.create"]);
         $this->assertEquals($response['body']['logs'][2]['ip'], filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP));
         $this->assertEquals(true, DateTime::isValid($response['body']['logs'][2]['time']));
 
