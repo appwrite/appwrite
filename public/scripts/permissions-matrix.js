@@ -22,10 +22,15 @@
                         }
                     })
                     if (existing === undefined) {
-                        this.permissions.push({
+                        let newPermission = {
                             role,
-                            [type]: true,
-                        });
+                            create: false,
+                            read: false,
+                            update: false,
+                            xdelete: false,
+                        };
+                        newPermission[type] = true;
+                        this.permissions.push(newPermission);
                     }
                     if (index !== -1) {
                         existing[type] = true;
@@ -38,7 +43,13 @@
                     && !this.validate(formId, this.permissions.length - 1)) {
                     return;
                 }
-                this.permissions.push({role: ''});
+                this.permissions.push({
+                    role: '',
+                    create: false,
+                    read: false,
+                    update: false,
+                    xdelete: false,
+                });
             },
             updatePermission(index) {
                 // Because the x-model does not update before the click event,
