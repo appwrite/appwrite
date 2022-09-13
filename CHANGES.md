@@ -10,7 +10,7 @@
 - Queries have been improved to allow even more flexibility, and introduced to new endpoints. See the Queries V2 section in the document for more information [#3702](https://github.com/appwrite/appwrite/pull/3702)
 - Compound indexes are now more flexible [#151](https://github.com/utopia-php/database/pull/151)
 - `createExecution` parameter `async` default value was changed from `true` to `false` [#3781](https://github.com/appwrite/appwrite/pull/3781)
-- String attribute `status` has been refactored to a boolean attribute `enabled` in the functions collection [#3798](https://github.com/appwrite/appwrite/pull/3798)
+- String attribute `status` has been refactored to a Boolean attribute `enabled` in the functions collection [#3798](https://github.com/appwrite/appwrite/pull/3798)
 
 ## Features
 - Added the UI to see the Parent ID of all resources within the UI. [#3653](https://github.com/appwrite/appwrite/pull/3653)
