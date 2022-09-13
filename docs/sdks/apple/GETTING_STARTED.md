@@ -122,7 +122,7 @@ func main() {
     let account = Account(client)
     
     do {
-        let account = try await account.get()
+        let user = try await account.get()
         print(String(describing: user.toMap()))
     } catch {
         print(error.localizedDescription)
