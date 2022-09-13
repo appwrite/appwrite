@@ -6659,7 +6659,7 @@
             });
         }
         /**
-         * Get User Memberships
+         * List User Memberships
          *
          * Get the user membership list by its unique ID.
          *
@@ -6667,7 +6667,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getMemberships(userId) {
+        listMemberships(userId) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
