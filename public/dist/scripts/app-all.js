@@ -56,7 +56,7 @@ let path='/account/email';let payload={};if(typeof email!=='undefined'){payload[
 if(typeof password!=='undefined'){payload['password']=password;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}
 createJWT(){return __awaiter(this,void 0,void 0,function*(){let path='/account/jwt';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
-getLogs(queries){return __awaiter(this,void 0,void 0,function*(){let path='/account/logs';let payload={};if(typeof queries!=='undefined'){payload['queries']=queries;}
+listLogs(queries){return __awaiter(this,void 0,void 0,function*(){let path='/account/logs';let payload={};if(typeof queries!=='undefined'){payload['queries']=queries;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 updateName(name){return __awaiter(this,void 0,void 0,function*(){if(typeof name==='undefined'){throw new AppwriteException('Missing required parameter: "name"');}
 let path='/account/name';let payload={};if(typeof name!=='undefined'){payload['name']=name;}
@@ -913,7 +913,7 @@ updateEmail(userId,email){return __awaiter(this,void 0,void 0,function*(){if(typ
 if(typeof email==='undefined'){throw new AppwriteException('Missing required parameter: "email"');}
 let path='/users/{userId}/email'.replace('{userId}',userId);let payload={};if(typeof email!=='undefined'){payload['email']=email;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}
-getLogs(userId,queries){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
+listLogs(userId,queries){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}
 let path='/users/{userId}/logs'.replace('{userId}',userId);let payload={};if(typeof queries!=='undefined'){payload['queries']=queries;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 listMemberships(userId){return __awaiter(this,void 0,void 0,function*(){if(typeof userId==='undefined'){throw new AppwriteException('Missing required parameter: "userId"');}

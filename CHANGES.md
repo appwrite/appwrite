@@ -15,6 +15,8 @@
 - Renamed the following list endpoints to stay consistent with other endpoints [#3825](https://github.com/appwrite/appwrite/pull/3825)
   - `getMemberships` to `listMemberships` in Teams API
   - `getMemberships` to `listMemberships` in Users API
+  - `getLogs` to `listLogs` in Users API
+  - `getLogs` to `listLogs` in Accounts API
 
 ## Features
 - Added the UI to see the Parent ID of all resources within the UI. [#3653](https://github.com/appwrite/appwrite/pull/3653)

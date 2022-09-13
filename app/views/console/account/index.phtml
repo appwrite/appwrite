@@ -298,7 +298,7 @@
             <h2>Activity</h2>
 
             <div
-                data-service="account.getLogs"
+                data-service="account.listLogs"
                 data-scope="console"
                 data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}})"
                 data-param-queries-cast-to="array"
@@ -340,7 +340,7 @@
                 </div>
                 <div class="pull-end text-align-center paging">
                     <form
-                        data-service="account.getLogs"
+                        data-service="account.listLogs"
                         data-event="submit"
                         data-scope="console"
                         data-name="securityLogs"
@@ -353,7 +353,7 @@
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{securityLogs.total|pageTotal}}"></span>
 
                     <form
-                        data-service="account.getLogs"
+                        data-service="account.listLogs"
                         data-event="submit"
                         data-scope="console"
                         data-name="securityLogs"

@@ -561,7 +561,7 @@
             });
         }
         /**
-         * Get Account Logs
+         * List Account Logs
          *
          * Get currently logged in user list of latest security activity logs. Each
          * log returns user IP address, location and date and time of log.
@@ -570,7 +570,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getLogs(queries) {
+        listLogs(queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/account/logs';
                 let payload = {};
@@ -6633,7 +6633,7 @@
             });
         }
         /**
-         * Get User Logs
+         * List User Logs
          *
          * Get the user activity logs list by its unique ID.
          *
@@ -6642,7 +6642,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getLogs(userId, queries) {
+        listLogs(userId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
