@@ -317,8 +317,23 @@ class V15 extends Filter
     private function parseExecution($content)
     {
         unset($content['stdout']);
-        $content = $this->parsePermissions($content);
-        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'startTime', 'endTime']);
+
+        if (isset($content['$permissions'])) {
+            $read = [];
+            foreach ($content['$permissions'] as $role) {
+                $read[] = $this->parseRole($role);
+            }
+            $content['$read'] = $read;
+            unset($content['$permissions']);
+        }
+
+        if (isset($content['duration'])) {
+            $content['time'] = $content['duration'];
+            unset($content['duration']);
+        }
+
+        $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
+
         return $content;
     }
 
@@ -344,7 +359,13 @@ class V15 extends Filter
             $content['vars'] = $vars;
         }
 
+        if (isset($content['enabled'])) {
+            $content['status'] = $content['enabled'] ? 'enabled' : 'disabled';
+            unset($content['enabled']);
+        }
+
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'scheduleNext', 'schedulePrevious']);
+
         return $content;
     }
 

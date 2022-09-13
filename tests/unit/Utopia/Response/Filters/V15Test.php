@@ -576,15 +576,43 @@ class V15Test extends TestCase
     {
         return [
             'basic execution' => [
-                ['stdout' => ''],
-                [],
+                [
+                    '$id' => '5e5ea5c16897e',
+                    '$createdAt' => '2020-06-24T06:47:30.000Z',
+                    '$updatedAt' => '2020-06-24T06:47:30.000Z',
+                    '$permissions' => [
+                        "any"
+                    ],
+                    'functionId' => '5e5ea6g16897e',
+                    'trigger' => 'http',
+                    'status' => 'processing',
+                    'statusCode' => 0,
+                    'response' => '',
+                    'stdout' => '',
+                    'stderr' => '',
+                    'duration' => 0.4
+                ],
+                [
+                    '$id' => '5e5ea5c16897e',
+                    '$createdAt' => 1592981250,
+                    '$updatedAt' => 1592981250,
+                    '$read' => [
+                        "role:all"
+                    ],
+                    'functionId' => '5e5ea6g16897e',
+                    'trigger' => 'http',
+                    'status' => 'processing',
+                    'statusCode' => 0,
+                    'response' => '',
+                    'stderr' => '',
+                    'time' => 0.4
+                ],
             ],
         ];
     }
 
     /**
      * @dataProvider createdAtUpdatedAtProvider
-     * @dataProvider permissionsProvider
      * @dataProvider executionProvider
      */
     public function testExecution(array $content, array $expected): void
@@ -598,7 +626,6 @@ class V15Test extends TestCase
 
     /**
      * @dataProvider createdAtUpdatedAtProvider
-     * @dataProvider permissionsProvider
      * @dataProvider executionProvider
      */
     public function testExecutionList(array $content, array $expected): void
@@ -668,7 +695,7 @@ class V15Test extends TestCase
                         Role::users()->toString(),
                     ],
                     'name' => 'My Function',
-                    'status' => 'enabled',
+                    'enabled' => true,
                     'runtime' => 'python-3.8',
                     'deployment' => '5e5ea5c16897e',
                     'vars' => [
@@ -711,6 +738,10 @@ class V15Test extends TestCase
                     'schedulePrevious' => 1592981237,
                     'timeout' => 1592981237
                 ],
+            ],
+            'enabled false' => [
+                ['enabled' => false],
+                ['status' => 'disabled'],
             ],
         ];
     }
