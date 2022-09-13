@@ -109,29 +109,6 @@ class Audit extends Event
     }
 
     /**
-     * Set description for this audit event
-     *
-     * @param string $event
-     * @return self
-     */
-    public function setEvent(string $event): self
-    {
-        $this->event = $event;
-
-        return $this;
-    }
-
-    /**
-     * Returns the  audit event description.
-     *
-     * @return string
-     */
-    public function getEvent(): string
-    {
-        return $this->event;
-    }
-
-    /**
      * Executes the event and sends it to the audit worker.
      *
      * @return string|bool
