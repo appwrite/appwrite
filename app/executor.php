@@ -503,7 +503,7 @@ App::post('/v1/execution')
 
             $ch = \curl_init();
             $body = \json_encode([
-                'env' => $vars,
+                'variables' => $vars,
                 'payload' => $data,
                 'timeout' => $timeout
             ]);
