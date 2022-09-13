@@ -118,16 +118,5 @@
                 event.stopPropagation();
             }
         }));
-        Alpine.data('permissionsRow', () => ({
-            role: '',
-            read: false,
-            create: false,
-            update: false,
-            xdelete: false,
-            reset() {
-                this.role = '';
-                this.read = this.create = this.update = this.xdelete = false;
-            }
-        }));
     });
 })(window);
