@@ -503,7 +503,7 @@ App::post('/v1/execution')
 
             $ch = \curl_init();
             $body = \json_encode([
-                'env' => $vars,
+                'variables' => $vars,
                 'payload' => $data,
                 'timeout' => $timeout
             ]);
@@ -574,7 +574,7 @@ App::post('/v1/execution')
                 'response' => \mb_strcut($res, 0, 1000000), // Limit to 1MB
                 'stdout' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
                 'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
-                'time' => $executionTime,
+                'duration' => $executionTime,
             ];
 
             /** Update swoole table */
