@@ -525,6 +525,7 @@ request.onerror=function(){reject(new Error("Network Error"));};request.send(par
 return new Intl.DateTimeFormat(navigator.languages,{hourCycle:'h24',...format}).format(new Date(datetime));}
 return{format:format,}}(),true);})(window);(function(window){"use strict";window.ls.container.set('env',function(){return APP_ENV;},true);})(window);(function(window){"use strict";window.ls.container.set('form',function(){function cast(value,from,to,){if(value&&Array.isArray(value)&&to!=='array'){value=value.map(element=>cast(element,from,to));return value;}
 switch(to){case'int':case'integer':value=parseInt(value);break;case'numeric':value=Number(value);break;case'float':value=parseFloat(value);break;case'string':value=value.toString();if(value.length===0){value=null;}
+break;case'string-datetime':if(value.length===0){value=null;}else{const date=new Date(value);value=date.toISOString();}
 break;case'json':value=(value)?JSON.parse(value):[];break;case'array':if(value&&value.constructor&&value.constructor===Array){break;}
 if(from==='csv'){if(value.length===0){value=[];}else{value=value.split(',');}}else{value=[value];}
 break;case'array-empty':value=[];break;case'bool':case'boolean':value=(value==='false')?false:value;value=!!value;break;}
