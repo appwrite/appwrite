@@ -162,7 +162,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '7.0.0-RC2',
+                'version' => '7.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'package' => '',
                 'enabled' => true,

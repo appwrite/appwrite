@@ -438,7 +438,7 @@
                 <h2>Memberships</h2>
 
                 <div
-                    data-service="users.getMemberships"
+                    data-service="users.listMemberships"
                     data-name="memberships"
                     data-param-user-id="{{router.params.id}}"
                     data-event="load,users.update,teams.deleteMembership">
@@ -493,7 +493,7 @@
                 <h2>Sessions</h2>
 
                 <div
-                    data-service="users.getSessions"
+                    data-service="users.listSessions"
                     data-name="sessions"
                     data-param-user-id="{{router.params.id}}"
                     data-event="load,users.update">
@@ -570,7 +570,7 @@
                 <h2>Activity</h2>
 
                 <div
-                    data-service="users.getLogs"
+                    data-service="users.listLogs"
                     data-name="logs"
                     data-param-user-id="{{router.params.id}}"
                     data-event="load,logs-load">
