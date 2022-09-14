@@ -1,13 +1,6 @@
 services:
   appwrite:
-    container_name: appwrite
     image: appwrite-dev
-    build:
-      context: .
-      args:
-        - DEBUG=false
-        - TESTING=true
-        - VERSION=dev
 
   appwrite-realtime:
     image: appwrite-dev
