@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5f6efc85afae8c174f16937974392ffa",
+    "content-hash": "aca68a1c1c7d762cabd02ce02cf40df4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2060,16 +2060,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-refactor-permission-validators",
+            "version": "0.25.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "1338f5945623a6739087a7358edd7e0d14b80bdc"
+                "reference": "40c5cd4762b0c647df8fdb21813392b8ef5d211b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/1338f5945623a6739087a7358edd7e0d14b80bdc",
-                "reference": "1338f5945623a6739087a7358edd7e0d14b80bdc",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/40c5cd4762b0c647df8fdb21813392b8ef5d211b",
+                "reference": "40c5cd4762b0c647df8fdb21813392b8ef5d211b",
                 "shasum": ""
             },
             "require": {
@@ -2118,9 +2118,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/refactor-permission-validators"
+                "source": "https://github.com/utopia-php/database/tree/0.25.3"
             },
-            "time": "2022-09-13T14:34:07+00:00"
+            "time": "2022-09-13T18:37:36+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5358,18 +5358,9 @@
             "time": "2022-08-12T06:47:24+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-refactor-permission-validators",
-            "alias": "0.25.2",
-            "alias_normalized": "0.25.2.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5393,5 +5384,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
