@@ -3,14 +3,13 @@
 Init your Appwrite client:
 
 ```dart
-  Client client = Client();
+Client client = Client();
 
-  client
-      .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
-      .setProject('5e8cf4f46b5e8') // Your project ID
-      .setSelfSigned() // Remove in production
-  ;
-
+client
+    .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
+    .setProject('5e8cf4f46b5e8') // Your project ID
+    .setSelfSigned() // Remove in production
+;
 ```
 
 Create a new user and session:
@@ -18,9 +17,9 @@ Create a new user and session:
 ```dart
 Account account = Account(client);
 
-Response user = await account.create(userId: '[USER_ID]', email: 'me@appwrite.io', password: 'password', name: 'My Name');
+final user = await account.create(userId: '[USER_ID]', email: 'me@appwrite.io', password: 'password', name: 'My Name');
  
-Response session = await account.createSession(email: 'me@appwrite.io', password: 'password');
+final session = await account.createEmailSession(email: 'me@appwrite.io', password: 'password');
 
 ```
 
@@ -29,7 +28,7 @@ Fetch user profile:
 ```dart
 Account account = Account(client);
 
-Response profile = await account.get();
+final profile = await account.get();
 ```
 
 Upload File:
@@ -40,7 +39,7 @@ Storage storage = Storage(client);
 late InputFile file;
 
 if(kIsWeb) {
-    file = InputFile(file: await MultipartFile.fromFile('file', './path-to-file/image.jpg', filename: 'image.jpg'));
+    file = InputFile(bytes: pickedFile.bytes, filename: 'image.jpg');
 } else {
     file = InputFile(path: './path-to-file/image.jpg', filename: 'image.jpg');
 }
@@ -49,8 +48,9 @@ storage.createFile(
     bucketId: '[BUCKET_ID]',
     fileId: '[FILE_ID]', // use 'unique()' to automatically generate a unique ID
     file: file,
-    read: ['role:all'],
-    write: []
+    permissions: [
+      Permission.read(Role.any()),
+    ],
 )
 .then((response) {
     print(response); // File uploaded!
