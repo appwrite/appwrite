@@ -391,9 +391,9 @@ sort($patterns);
                                     <tr>
                                         <th width="30"></th>
                                         <th width="160">Created</th>
-                                        <th width="100">Status</th>
-                                        <th width="80">Trigger</th>
-                                        <th width="60">Runtime</th>
+                                        <th width="150">Status</th>
+                                        <th width="120">Trigger</th>
+                                        <th width="80">Runtime</th>
                                         <th width=""></th>
                                     </tr>
                                 </thead>
@@ -416,17 +416,17 @@ sort($patterns);
                                             <span data-ls-bind="{{execution.trigger}}"></span>
                                         </td>
                                         <td data-title="Time: ">
-                                            <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>
+                                            <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.duration|seconds2hum}}"></span>
                                             <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'processing'">-</span>
                                         </td>
                                         <td data-title="">
                                             <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="" style="display: flex;">
                                                 <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Stderr</button>
-                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button>
+                                                <!--button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button-->
                                                 <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-response-{{execution.$id}}">Response</button>
 
                                                 <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-response-{{execution.$id}}">Response</button>
-                                                <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button>
+                                                <!--button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button-->
                                                 <button class="phones-only-inline tablets-only-inline link text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Stderr</button>
 
                                                 <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-response-{{execution.$id}}">
@@ -523,8 +523,6 @@ sort($patterns);
                 data-service="functions.listVariables"
                 data-event="load,project.update,functions.createVariable,functions.updateVariable,functions.deleteVariable"
                 data-name="function-variables"
-                data-param-queries="limit(100)"
-                data-param-queries-cast-to="array" data-param-queries-cast-from="csv"
                 data-param-function-id="{{router.params.id}}"
                 data-scope="sdk">Variables</h2>
 

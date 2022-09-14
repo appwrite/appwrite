@@ -43,11 +43,11 @@ class Func extends Model
                 'default' => '',
                 'example' => 'My Function',
             ])
-            ->addRule('status', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Function status. Possible values: `disabled`, `enabled`',
-                'default' => '',
-                'example' => 'enabled',
+            ->addRule('enabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Function enabled.',
+                'default' => true,
+                'example' => false,
             ])
             ->addRule('runtime', [
                 'type' => self::TYPE_STRING,

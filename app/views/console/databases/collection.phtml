@@ -607,7 +607,7 @@ $permissions = $this->getParam('permissions', null);
                             data-success="alert,trigger,redirect"
                             data-success-param-alert-text="Collection deleted successfully"
                             data-success-param-trigger-events="databases.deleteCollection"
-                            data-success-param-redirect-url="/console/databases?project={{router.params.project}}"
+                            data-success-param-redirect-url="/console/databases?project={{router.params.project}}&databaseId={{router.params.databaseId}}"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to delete collection"
                             data-failure-param-alert-classname="error">
