@@ -763,6 +763,14 @@ class V15 extends Migration
                     }
                     try {
                         /**
+                         * Create 'scheduleUpdatedAt' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleUpdatedAt');
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduleUpdatedAt' from {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        /**
                          * Create 'enabled' attribute
                          */
                         @$this->projectDB->deleteAttribute($id, 'status');
