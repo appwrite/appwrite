@@ -1093,6 +1093,14 @@ class V15 extends Migration
                         if (is_null($user->getAttribute('password'))) {
                             continue;
                         }
+
+                        /**
+                         * Skip if hash is set to default value.
+                         */
+                        if ($user->getAttribute('hash') === 'bcrypt') {
+                            continue;
+                        }
+
                         /**
                          * Skip when password is JSON.
                          */
