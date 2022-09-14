@@ -1341,7 +1341,14 @@ class V15 extends Migration
                  * Migrate execute permissions.
                  */
                 $document->setAttribute('execute', array_map(
-                    fn ($p) => $this->migratePermission($p),
+                    function (string $permission) {
+                        $permission = $this->migratePermission($permission);
+                        if ($permission === 'any') {
+                            $permission = 'users';
+                        }
+
+                        return $permission;
+                    },
                     $document->getAttribute('execute', [])
                 ));
 
