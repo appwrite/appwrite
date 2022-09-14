@@ -40,8 +40,6 @@
 - Fixed a bug where you could not search users by phone [#3619](https://github.com/appwrite/appwrite/pull/3619)
 - Fixed a bug where unaccepted invitations would grant access to projects [#3738](https://github.com/appwrite/appwrite/pull/3738)
 
-**Full Changelog**: https://github.com/appwrite/appwrite/compare/0.15.3...1.0.0
-
 # Version 0.15.3
 ## Features
 - Added hint during Installation for DNS Configuration by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/2450
