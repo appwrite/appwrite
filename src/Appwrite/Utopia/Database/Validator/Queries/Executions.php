@@ -8,7 +8,7 @@ class Executions extends Base
         'trigger',
         'status',
         'statusCode',
-        'time'
+        'duration'
     ];
 
     /**

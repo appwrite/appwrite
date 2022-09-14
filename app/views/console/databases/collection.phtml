@@ -508,7 +508,7 @@ $permissions = $this->getParam('permissions', null);
             <li data-state="/console/databases/collection/settings?id={{router.params.id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}">
                 <h2>Settings</h2>
 
-                <div class="row responsive margin-top-negative">
+                <div class="row responsive">
                     <div class="col span-8 margin-bottom">
                         <form id="<?php echo $permissions->getParam('form') ?>"></form>
 
@@ -607,7 +607,7 @@ $permissions = $this->getParam('permissions', null);
                             data-success="alert,trigger,redirect"
                             data-success-param-alert-text="Collection deleted successfully"
                             data-success-param-trigger-events="databases.deleteCollection"
-                            data-success-param-redirect-url="/console/databases?project={{router.params.project}}"
+                            data-success-param-redirect-url="/console/databases?project={{router.params.project}}&databaseId={{router.params.databaseId}}"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to delete collection"
                             data-failure-param-alert-classname="error">
