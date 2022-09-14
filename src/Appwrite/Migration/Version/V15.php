@@ -426,10 +426,10 @@ class V15 extends Migration
 
             if ($type === 'write') {
                 /**
-                 * Migrate write permissions from 'role:all' to 'role:member'.
+                 * Migrate write permissions from 'any' to 'users'.
                  */
-                if ($permission === 'role:all') {
-                    $permission = 'role:member';
+                if ($permission === 'any') {
+                    $permission = 'users';
                 }
 
                 $permissions[] = "update(\"{$permission}\")";
