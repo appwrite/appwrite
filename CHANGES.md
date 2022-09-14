@@ -1,15 +1,13 @@
-# Version 1.0.0
-
 ## BREAKING CHANGES
 - All Date values are now stored as ISO-8601 instead of UNIX timestamps [#3516](https://github.com/appwrite/appwrite/pull/3516)
 - Permission levels and syntax have been reworked. See the Permissions V2 section in the document for more information [#3700](https://github.com/appwrite/appwrite/pull/3700)
-- Function Variables are now stored in a seperate collection with their own API endpoints [#3634](https://github.com/appwrite/appwrite/pull/3634)
+- Function Variables are now stored in a separate collection with their own API endpoints [#3634](https://github.com/appwrite/appwrite/pull/3634)
 - Resources that are computed asynchronously, such as function deployments, will now return a `202 Accepted` status code instead of `200 OK` [#3547](https://github.com/appwrite/appwrite/pull/3547)
 - Queries have been improved to allow even more flexibility, and introduced to new endpoints. See the Queries V2 section in the document for more information [#3702](https://github.com/appwrite/appwrite/pull/3702)
 - Compound indexes are now more flexible [#151](https://github.com/utopia-php/database/pull/151)
 - `createExecution` parameter `async` default value was changed from `true` to `false` [#3781](https://github.com/appwrite/appwrite/pull/3781)
 - String attribute `status` has been refactored to a Boolean attribute `enabled` in the functions collection [#3798](https://github.com/appwrite/appwrite/pull/3798)
-- `time` attribute in Execution response model has been reanamed to `duration` to be more consistent with other response models. [#3801](https://github.com/appwrite/appwrite/pull/3801) 
+- `time` attribute in Execution response model has been renamed to `duration` to be more consistent with other response models. [#3801](https://github.com/appwrite/appwrite/pull/3801) 
 - Renamed the following list endpoints to stay consistent with other endpoints [#3825](https://github.com/appwrite/appwrite/pull/3825)
   - `getMemberships` to `listMemberships` in Teams API
   - `getMemberships` to `listMemberships` in Users API
@@ -23,7 +21,6 @@
   - `getContinents` to `listContinents` in Locale API
   - `getCurrencies` to `listCurrencies` in Locale API
   - `getLanguages` to `listLanguages` in Locale API
-
 
 ## Features
 - Added the UI to see the Parent ID of all resources within the UI. [#3653](https://github.com/appwrite/appwrite/pull/3653)
@@ -43,7 +40,7 @@
 - Fixed a bug where you could not search users by phone [#3619](https://github.com/appwrite/appwrite/pull/3619)
 - Fixed a bug where unaccepted invitations would grant access to projects [#3738](https://github.com/appwrite/appwrite/pull/3738)
 
-For more information on the changes, please see our [1.0-RC1 Documentation](https://warm-tray-285.notion.site/Appwrite-1-0-0-RC1-a5eab87e115d454db0259f707fc88535).
+**Full Changelog**: https://github.com/appwrite/appwrite/compare/0.15.3...1.0.0
 
 # Version 0.15.3
 ## Features
