@@ -761,7 +761,15 @@ class V15 extends Migration
                         $this->projectDB->deleteAttribute('functions', 'vars');
                         $this->createAttributeFromCollection($this->projectDB, 'functions', 'vars');
                     }
-
+                    try {
+                        /**
+                         * Create 'enabled' attribute
+                         */
+                        @$this->projectDB->deleteAttribute($id, 'status');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
+                    } catch (\Throwable $th) {
+                        Console::warning("'enabled' from {$id}: {$th->getMessage()}");
+                    }
                     try {
                         /**
                          * Create '_key_name' index
@@ -773,11 +781,11 @@ class V15 extends Migration
 
                     try {
                         /**
-                         * Create '_key_status' index
+                         * Create '_key_enabled' index
                          */
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_status');
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_enabled');
                     } catch (\Throwable $th) {
-                        Console::warning("'_key_status' from {$id}: {$th->getMessage()}");
+                        Console::warning("'_key_enabled' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
@@ -1321,6 +1329,10 @@ class V15 extends Migration
                     $document->getAttribute('execute', [])
                 ));
 
+                /**
+                 * Set 'enabled' default.
+                 */
+                $document->setAttribute('enabled', true);
                 /**
                  * Migrate functions stats.
                  */
