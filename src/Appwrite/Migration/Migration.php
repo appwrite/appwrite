@@ -41,7 +41,8 @@ abstract class Migration
      * @var array
      */
     public static array $versions = [
-        '1.0.0-RC1' => 'V15'
+        '1.0.0-RC1' => 'V15',
+        '1.0.0' => 'V15'
     ];
 
     /**
@@ -123,10 +124,6 @@ abstract class Migration
                         } catch (\Throwable $th) {
                             Console::error('Failed to update document: ' . $th->getMessage());
                             return;
-
-                            if ($document && $new->getId() !== $document->getId()) {
-                                throw new Exception('Duplication Error');
-                            }
                         }
                     }, $document, $callback);
                 }

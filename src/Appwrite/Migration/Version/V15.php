@@ -732,7 +732,12 @@ class V15 extends Migration
                     Console::log("Migrating Collection \"{$id}\" Variables");
 
                     foreach ($this->documentsIterator($id) as $function) {
-                        foreach ($function->getAttribute('vars', []) as $key => $value) {
+                        $vars = $function->getAttribute('vars', []);
+                        if (!is_array($vars)) {
+                            continue;
+                        }
+
+                        foreach ($vars as $key => $value) {
                             if ($value instanceof Document) {
                                 continue;
                             }
