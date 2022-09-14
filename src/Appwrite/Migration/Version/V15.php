@@ -1097,7 +1097,7 @@ class V15 extends Migration
                         /**
                          * Skip if hash is set to default value.
                          */
-                        if ($user->getAttribute('hash') === 'bcrypt') {
+                        if (in_array($user->getAttribute('hash'), ['bcrypt', 'argon2'])) {
                             continue;
                         }
 
