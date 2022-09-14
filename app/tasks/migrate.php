@@ -15,7 +15,7 @@ use Utopia\Validator\Text;
 
 $cli
     ->task('migrate')
-    ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
+    ->param('version', APP_VERSION_STABLE, new Text(32), 'Version to migrate to.', true)
     ->action(function ($version) use ($register) {
         Authorization::disable();
         if (!array_key_exists($version, Migration::$versions)) {
@@ -45,6 +45,9 @@ $cli
         $limit = 30;
         $sum = 30;
         $offset = 0;
+        /**
+         * @var \Utopia\Database\Document[] $projects
+         */
         $projects = [$console];
         $count = 0;
 
@@ -60,6 +63,13 @@ $cli
 
         while (!empty($projects)) {
             foreach ($projects as $project) {
+                /**
+                 * Skip user projects with id 'console'
+                 */
+                if ($project->getId() === 'console' && $project->getInternalId() !== 'console') {
+                    continue;
+                }
+
                 try {
                     $migration
                         ->setProject($project, $projectDB, $consoleDB)

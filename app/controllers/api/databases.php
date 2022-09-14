@@ -1941,7 +1941,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         try {
             $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data));
-            $document->setAttribute('$collection', $collectionId);
+            $document->setAttribute('$collectionId', $collectionId);
+            $document->setAttribute('$databaseId', $databaseId);
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
         } catch (DuplicateException $exception) {
@@ -2046,7 +2047,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         /**
          * Reset $collection attribute to remove prefix.
          */
-        $documents = array_map(fn(Document $document) => $document->setAttribute('$collection', $collectionId), $documents);
+        $documents = array_map(function (Document $document) use ($collectionId, $databaseId) {
+            $document->setAttribute('$collectionId', $collectionId);
+            $document->setAttribute('$databaseId', $databaseId);
+            return $document;
+        }, $documents);
 
         $response->dynamic(new Document([
             'total' => $total,
@@ -2110,7 +2115,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         /**
          * Reset $collection attribute to remove prefix.
          */
-        $document->setAttribute('$collection', $collectionId);
+        $document->setAttribute('$collectionId', $collectionId);
+        $document->setAttribute('$databaseId', $databaseId);
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -2329,7 +2335,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             /**
              * Reset $collection attribute to remove prefix.
              */
-            $document->setAttribute('$collection', $collectionId);
+            $document->setAttribute('$collectionId', $collectionId);
+            $document->setAttribute('$databaseId', $databaseId);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (DuplicateException) {
@@ -2421,7 +2428,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         /**
          * Reset $collection attribute to remove prefix.
          */
-        $document->setAttribute('$collection', $collectionId);
+        $document->setAttribute('$collectionId', $collectionId);
+        $document->setAttribute('$databaseId', $databaseId);
 
         $deletes
             ->setType(DELETE_TYPE_AUDIT)

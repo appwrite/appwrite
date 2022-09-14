@@ -36,9 +36,15 @@ class Document extends Any
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('$collection', [
+            ->addRule('$collectionId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Collection ID.',
+                'default' => '',
+                'example' => '5e5ea5c15117e',
+            ])
+            ->addRule('$databaseId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Database ID.',
                 'default' => '',
                 'example' => '5e5ea5c15117e',
             ])
@@ -60,13 +66,13 @@ class Document extends Any
                 'default' => '',
                 'example' => ['read("any")'],
                 'array' => true,
-            ])
-        ;
+            ]);
     }
 
     public function filter(DatabaseDocument $document): DatabaseDocument
     {
         $document->removeAttribute('$internalId');
+        $document->removeAttribute('$collection'); // $collection is the internal collection ID
 
         return $document;
     }
