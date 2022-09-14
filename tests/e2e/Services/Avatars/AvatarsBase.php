@@ -491,7 +491,6 @@ trait AvatarsBase
             'name' => 'W W',
             'width' => 200,
             'height' => 200,
-            'color' => 'ffffff',
             'background' => '000000',
         ]);
 
@@ -508,34 +507,33 @@ trait AvatarsBase
             'name' => 'W W',
             'width' => 200000,
             'height' => 200,
-            'color' => 'ffffff',
             'background' => '000000',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
 
+    public function testInitialImage()
+    {
         $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'name' => 'W W',
             'width' => 200,
             'height' => 200,
-            'color' => 'white',
-            'background' => '000000',
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
-            'name' => 'W W',
-            'width' => 200,
-            'height' => 200,
-            'color' => 'ffffff',
-            'background' => 'black',
-        ]);
+        $image = new \Imagick();
+        $image->readImageBlob($response['body']);
+        $original = new \Imagick(__DIR__ . '/../../../resources/initials.png');
 
-        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
+        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
+        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertEquals(strlen(\file_get_contents(__DIR__ . '/../../../resources/initials.png')), strlen($response['body']));
     }
 }
