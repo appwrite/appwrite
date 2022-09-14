@@ -1313,7 +1313,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,

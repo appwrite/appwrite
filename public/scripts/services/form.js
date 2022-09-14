@@ -25,6 +25,14 @@
                         value = null;
                     }
                     break;
+                case 'string-datetime':
+                    if (value.length === 0) {
+                        value = null;
+                    } else {
+                        const date = new Date(value);
+                        value = date.toISOString();
+                    }
+                    break;
                 case 'json':
                     value = (value) ? JSON.parse(value) : [];
                     break;
