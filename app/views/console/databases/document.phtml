@@ -7,7 +7,7 @@ $permissions = $this->getParam('permissions', null);
 ?>
 <div
     data-service="databases.getCollection"
-    data-param-collection-id="{{router.params.collection}}"
+    data-param-collection-id="{{router.params.collectionId}}"
     data-param-database-id="{{router.params.databaseId}}"
     data-scope="sdk"
     data-event="load,databases.updateDocument"
@@ -15,7 +15,7 @@ $permissions = $this->getParam('permissions', null);
 
     <div
         data-service="databases.getDocument"
-        data-param-collection-id="{{router.params.collection}}"
+        data-param-collection-id="{{router.params.collectionId}}"
         data-param-database-id="{{router.params.databaseId}}"
         data-param-document-id="{{router.params.id}}"
         data-scope="sdk"
@@ -25,7 +25,7 @@ $permissions = $this->getParam('permissions', null);
 
         <div class="cover">
             <h1 class="zone xl margin-bottom-large">
-                <a data-ls-attrs="href=/console/databases/collection?id={{router.params.collection}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <span data-ls-bind="{{project-collection.name}}"></span></a>
+                <a data-ls-attrs="href=/console/databases/collection?id={{router.params.collectionId}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> <span data-ls-bind="{{project-collection.name}}"></span></a>
 
                 <br />
 
@@ -48,7 +48,7 @@ $permissions = $this->getParam('permissions', null);
 
         <div class="zone xl margin-bottom-no">
             <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
-                <li data-state="/console/databases/document?id={{router.params.id}}&collection={{router.params.collection}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}">
+                <li data-state="/console/databases/document?id={{router.params.id}}&collectionId={{router.params.collectionId}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}">
                     <h2 class="margin-bottom">Overview</h2>
 
                     <div class="row responsive">
@@ -362,7 +362,7 @@ $permissions = $this->getParam('permissions', null);
 
                             <label>Collection ID</label>
                             <div class="input-copy margin-bottom">
-                                <input type="text" autocomplete="off" placeholder="" data-ls-bind="{{router.params.collection}}" disabled data-forms-copy class="margin-bottom-no" />
+                                <input type="text" autocomplete="off" placeholder="" data-ls-bind="{{router.params.collectionId}}" disabled data-forms-copy class="margin-bottom-no" />
                             </div>
 
                             <label>Database ID</label>
@@ -395,13 +395,13 @@ $permissions = $this->getParam('permissions', null);
                                     data-service="databases.deleteDocument"
                                     data-event="submit"
                                     data-param-database-id="{{router.params.databaseId}}"
-                                    data-param-collection-id="{{router.params.collection}}"
+                                    data-param-collection-id="{{router.params.collectionId}}"
                                     data-param-document-id="{{project-document.$id}}"
                                     data-confirm="Are you sure you want to delete this document?"
                                     data-success="alert,trigger,redirect"
                                     data-success-param-alert-text="Document deleted successfully"
                                     data-success-param-trigger-events="databases.deleteDocument"
-                                    data-success-param-redirect-url="/console/databases/collection?id={{router.params.collection}}&project={{router.params.project}}&databaseId={{router.params.databaseId}}"
+                                    data-success-param-redirect-url="/console/databases/collection?id={{router.params.collectionId}}&project={{router.params.project}}&databaseId={{router.params.databaseId}}"
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to delete collection"
                                     data-failure-param-alert-classname="error">
@@ -413,7 +413,7 @@ $permissions = $this->getParam('permissions', null);
                     </div>
                 </li>
                 <?php if(!$new): ?>
-                    <li data-state="/console/databases/document/activity?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}&databaseId={{router.params.databaseId}}">
+                    <li data-state="/console/databases/document/activity?id={{router.params.id}}&collectionId={{router.params.collectionId}}&project={{router.params.project}}&databaseId={{router.params.databaseId}}">
                         <h2>Activity</h2>
 
                         <?php echo $logs->render(); ?>
