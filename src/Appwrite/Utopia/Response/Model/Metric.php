@@ -17,12 +17,11 @@ class Metric extends Model
                 'example' => 1,
             ])
             ->addRule('date', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'The UNIX timestamp at which this metric was aggregated.',
-                'default' => 0,
-                'example' => 1592981250
-            ])
-        ;
+                'type' => self::TYPE_DATETIME,
+                'description' => 'The date at which this metric was aggregated in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE
+            ]);
     }
 
     /**
