@@ -12,8 +12,8 @@
     "scripts": {
         "start": "docker compose up -d",
         "test": "docker compose exec appwrite test",
-        "test-unit": "@test /usr/src/code/tests/unit",
-        "test-e2e": "@test /usr/src/code/tests/e2e",
+        "test-unit": "@test --testsuite unit",
+        "test-e2e": "@test --testsuite e2e",
         "lint": "vendor/bin/phpcs",
         "format": "vendor/bin/phpcbf"
     },
