@@ -29,8 +29,8 @@ jobs:
         export BUILDKIT_PROGRESS=plain
         docker pull composer:2.0
         docker pull php:8.0-cli-alpine
-        docker compose build
-        docker compose up -d
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml build
+        docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
         sleep 30
     - name: Doctor
       run: docker compose exec -T appwrite doctor
