@@ -102,7 +102,7 @@ $permissions = $this->getParam('permissions', null);
                                     <?php endif; ?>
 
                                     <fieldset name="data" data-cast-to="object" data-ls-attrs="x-init=doc = {{project-document}}" x-data="{doc: {}}">
-                                        <ul data-ls-attrs="x-init=attributes = {{project-collection.attributes}}" x-data="{attributes: []}">
+                                        <ul data-ls-attrs="x-init=attributes = {{project-collection.attributes}}.map(function(attr) { if(attr.type === 'datetime' && doc[attr.key]) { doc[attr.key] = isoToLocal(doc[attr.key]) } return attr; })" x-data="{attributes: [], isoToLocal(isoTime) { const date = new Date(isoTime); const localTime = date.toLocaleString('sv').slice(0, 16).replace(' ', 'T'); return localTime; } }">
                                             <template x-for="attr in attributes.filter(a => a.status === 'available')">
                                                 <li>
                                                     <label>
@@ -151,7 +151,7 @@ $permissions = $this->getParam('permissions', null);
                                                                     :name="attr.key"
                                                                     :required="attr.required"
                                                                     x-model="doc[attr.key]"
-                                                                    data-cast-to="string" />
+                                                                    data-cast-to="string-datetime" />
                                                             </template>
                                                             <template x-if="attr.type === 'string' && !attr.format">
                                                                 <textarea 
@@ -261,7 +261,7 @@ $permissions = $this->getParam('permissions', null);
                                                                                 :name="attr.key"
                                                                                 :required="attr.required"
                                                                                 x-model="doc[attr.key][index]"
-                                                                                data-cast-to="string" />
+                                                                                data-cast-to="string-datetime" />
                                                                         </template>
                                                                         <template x-if="attr.type === 'string' && !attr.format">
                                                                             <textarea 

@@ -121,13 +121,20 @@ class MessagingChannelsTest extends TestCase
 
         /**
          * Check for correct amount of subscriptions:
-         *  - XXX users
+         *  - XXX users (2 roles per user)
          *  - XXX teams
-         *  - XXX team roles (3 roles per team)
+         *  - XXX team roles (2 roles per team)
+         *  - XXX member roles (2 roles per team)
          *  - 1 guests
          *  - 1 users
+         *  - 1 users unverified
          */
-        $this->assertCount(($this->connectionsAuthenticated + (4 * $this->connectionsPerChannel) + 2), $this->realtime->subscriptions['1']);
+        $userRoles = 2 * $this->connectionsAuthenticated;
+        $userGroupRoles = 2;
+        $teamRoles = 2 * $this->connectionsPerChannel;
+        $memberRoles = 2 * $this->connectionsPerChannel;
+        $guestRoles = 1;
+        $this->assertCount(($userRoles + $userGroupRoles + $teamRoles + $memberRoles + $guestRoles), $this->realtime->subscriptions['1']);
 
         /**
          * Check for connections
@@ -139,7 +146,7 @@ class MessagingChannelsTest extends TestCase
         $this->realtime->unsubscribe(-1);
 
         $this->assertCount($this->connectionsTotal, $this->realtime->connections);
-        $this->assertCount(($this->connectionsAuthenticated + (4 * $this->connectionsPerChannel) + 2), $this->realtime->subscriptions['1']);
+        $this->assertCount(($userRoles + $userGroupRoles + $teamRoles + $memberRoles + $guestRoles), $this->realtime->subscriptions['1']);
 
         for ($i = 0; $i < $this->connectionsCount; $i++) {
             $this->realtime->unsubscribe($i);

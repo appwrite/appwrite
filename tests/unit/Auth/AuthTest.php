@@ -351,6 +351,8 @@ class AuthTest extends TestCase
     {
         $user  = new Document([
             '$id' => ID::custom('123'),
+            'emailVerification' => true,
+            'phoneVerification' => true,
             'memberships' => [
                 [
                     '$id' => ID::custom('456'),
@@ -374,9 +376,11 @@ class AuthTest extends TestCase
 
         $roles = Auth::getRoles($user);
 
-        $this->assertCount(9, $roles);
+        $this->assertCount(11, $roles);
         $this->assertContains(Role::users()->toString(), $roles);
         $this->assertContains(Role::user(ID::custom('123'))->toString(), $roles);
+        $this->assertContains(Role::users(Database::DIMENSION_VERIFIED)->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('123'), Database::DIMENSION_VERIFIED)->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('abc'))->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('abc'), 'administrator')->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
@@ -384,6 +388,21 @@ class AuthTest extends TestCase
         $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
         $this->assertContains(Role::member(ID::custom('456'))->toString(), $roles);
         $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
+
+        // Disable all verification
+        $user['emailVerification'] = false;
+        $user['phoneVerification'] = false;
+
+        $roles = Auth::getRoles($user);
+        $this->assertContains(Role::users(Database::DIMENSION_UNVERIFIED)->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('123'), Database::DIMENSION_UNVERIFIED)->toString(), $roles);
+
+        // Enable single verification type
+        $user['emailVerification'] = true;
+
+        $roles = Auth::getRoles($user);
+        $this->assertContains(Role::users(Database::DIMENSION_VERIFIED)->toString(), $roles);
+        $this->assertContains(Role::user(ID::custom('123'), Database::DIMENSION_VERIFIED)->toString(), $roles);
     }
 
     public function testPrivilegedUserRoles(): void
@@ -391,6 +410,8 @@ class AuthTest extends TestCase
         Authorization::setRole(Auth::USER_ROLE_OWNER);
         $user  = new Document([
             '$id' => ID::custom('123'),
+            'emailVerification' => true,
+            'phoneVerification' => true,
             'memberships' => [
                 [
                     '$id' => ID::custom('def'),
@@ -417,6 +438,8 @@ class AuthTest extends TestCase
         $this->assertCount(7, $roles);
         $this->assertNotContains(Role::users()->toString(), $roles);
         $this->assertNotContains(Role::user(ID::custom('123'))->toString(), $roles);
+        $this->assertNotContains(Role::users(Database::DIMENSION_VERIFIED)->toString(), $roles);
+        $this->assertNotContains(Role::user(ID::custom('123'), Database::DIMENSION_VERIFIED)->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('abc'))->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('abc'), 'administrator')->toString(), $roles);
         $this->assertContains(Role::team(ID::custom('abc'), 'moderator')->toString(), $roles);
