@@ -20,9 +20,8 @@ static async Task Main(string[] args)
   var users = Users(client);
 
   try {
-    var request = await users.create('[USER_ID]', 'email@example.com', 'password', 'name');
-    var response = await request.Content.ReadAsStringAsync();
-    Console.WriteLine(response);
+    var user = await users.Create(ID.Unique(), 'email@example.com', 'password', 'name');
+    Console.WriteLine(user.ToMap());
   } catch (AppwriteException e) {
     Console.WriteLine(e.Message);
   }
@@ -36,9 +35,8 @@ The Appwrite .NET SDK raises `AppwriteException` object with `message`, `code` a
 var users = Users(client);
 
 try {
-  var request = await users.create('[USER_ID]', 'email@example.com', 'password', 'name');
-  var response = await request.Content.ReadAsStringAsync();
-  Console.WriteLine(response);
+  var user = await users.Create(ID.Unique(), 'email@example.com', 'password', 'name');
+  Console.WriteLine(user.ToMap());
 } catch (AppwriteException e) {
   Console.WriteLine(e.Message);
 }

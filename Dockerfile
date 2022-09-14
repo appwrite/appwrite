@@ -34,7 +34,8 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_SWOOLE_VERSION=v4.8.10 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
-    PHP_MAXMINDDB_VERSION=v1.11.0
+    PHP_MAXMINDDB_VERSION=v1.11.0 \
+    PHP_ZSTD_VERSION="4504e4186e79b197cfcb75d4d09aa47ef7d92fe9 "
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -50,7 +51,8 @@ RUN \
   yaml-dev \
   imagemagick \
   imagemagick-dev \
-  libmaxminddb-dev
+  libmaxminddb-dev \
+  zstd-dev
 
 RUN docker-php-ext-install sockets
 
@@ -123,6 +125,43 @@ RUN \
   ./configure && \
   make && make install
 
+# Zstd Compression
+FROM compile as zstd
+RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
+  && cd php-ext-zstd \
+  && git checkout $PHP_ZSTD_VERSION \
+  && phpize \
+  && ./configure --with-libzstd \
+  && make && make install
+
+
+# Rust Extensions Compile Image
+FROM php:8.0.18-cli as rust_compile
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+ENV PATH=/root/.cargo/bin:$PATH
+
+RUN apt-get update && apt-get install musl-tools build-essential clang-11 git -y
+RUN rustup target add $(uname -m)-unknown-linux-musl
+
+# Install ZigBuild for easier cross-compilation
+RUN curl https://ziglang.org/builds/zig-linux-$(uname -m)-0.10.0-dev.2674+d980c6a38.tar.xz --output /tmp/zig.tar.xz
+RUN tar -xf /tmp/zig.tar.xz -C /tmp/ && cp -r /tmp/zig-linux-$(uname -m)-0.10.0-dev.2674+d980c6a38 /tmp/zig/
+ENV PATH=/tmp/zig:$PATH
+RUN cargo install cargo-zigbuild
+ENV RUSTFLAGS="-C target-feature=-crt-static"
+
+FROM rust_compile as scrypt
+
+WORKDIR /usr/local/lib/php/extensions/
+
+RUN \
+  git clone --depth 1 https://github.com/appwrite/php-scrypt.git && \
+  cd php-scrypt && \
+  cargo zigbuild --workspace --all-targets --target $(uname -m)-unknown-linux-musl --release && \
+  mv target/$(uname -m)-unknown-linux-musl/release/libphp_scrypt.so target/libphp_scrypt.so
+
 FROM php:8.0.18-cli-alpine3.15 as final
 
 LABEL maintainer="team@appwrite.io"
@@ -193,8 +232,8 @@ ENV _APP_SERVER=swoole \
     _APP_SMTP_SECURE= \
     _APP_SMTP_USERNAME= \
     _APP_SMTP_PASSWORD= \
-    _APP_PHONE_PROVIDER= \
-    _APP_PHONE_FROM= \
+    _APP_SMS_PROVIDER= \
+    _APP_SMS_FROM= \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CONTAINERS=10 \
@@ -207,6 +246,8 @@ ENV _APP_SERVER=swoole \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
     _APP_USAGE_STATS=enabled \
+    _APP_USAGE_TIMESERIES_INTERVAL=30 \
+    _APP_USAGE_DATABASE_INTERVAL=900 \
     # 14 Days = 1209600 s
     _APP_MAINTENANCE_RETENTION_EXECUTION=1209600 \
     _APP_MAINTENANCE_RETENTION_AUDIT=1209600 \
@@ -263,6 +304,8 @@ COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imag
 COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=scrypt  /usr/local/lib/php/extensions/php-scrypt/target/libphp_scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -319,6 +362,8 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
 RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
+RUN echo extension=libphp_scrypt.so >> /usr/local/etc/php/conf.d/libphp_scrypt.ini
+RUN echo extension=zstd.so >> /usr/local/etc/php/conf.d/zstd.ini
 RUN if [ "$DEBUG" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.init_file=/usr/local/dev/yasd_init.php \nyasd.remote_port=9005 \nyasd.log_level=-1" >> /usr/local/etc/php/conf.d/yasd.ini; fi
 
 RUN if [ "$DEBUG" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/appwrite.ini; fi

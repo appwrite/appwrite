@@ -16,9 +16,9 @@
                 data-service="databases.list"
                 data-event="load,databases.create,databases.update,databases.delete"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                data-param-offset="{{router.params.offset}}"
-                data-param-order-type="ASC"
+                data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}})"
+                data-param-queries-cast-to="array"
+                data-param-queries-cast-from="csv"
                 data-scope="sdk"
                 data-name="project-databases">
 
@@ -47,13 +47,12 @@
                         data-service="databases.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
-                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-order-type="ASC"
                         data-scope="sdk"
                         data-name="project-databases"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-databases.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                        <input type="hidden" name="offset">
+                        <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-databases.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                     </form>
 
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-databases.total|pageTotal}}"></span>
@@ -62,13 +61,12 @@
                         data-service="databases.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
-                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-order-type="ASC"
                         data-scope="sdk"
                         data-name="project-databases"
                         data-success="state"
                         data-success-param-state-keys="search,offset">
-                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-databases.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                        <input type="hidden" name="offset">
+                        <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-databases.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                     </form>
                 </div>
 
