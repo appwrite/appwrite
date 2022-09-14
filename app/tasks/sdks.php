@@ -30,7 +30,7 @@ $cli
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
 
-        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.0', 'latest'])) {
+        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', 'latest'])) {
             throw new Exception('Unknown version given');
         }
 
