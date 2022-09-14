@@ -489,6 +489,7 @@ class V15 extends Migration
 
                 case 'abuse':
                     $this->createPermissionsColumn($id);
+                    $this->migrateDateTimeAttribute($id, 'time');
                     $this->migrateDateTimeAttribute($id, '_createdAt');
                     $this->migrateDateTimeAttribute($id, '_updatedAt');
                     break;
