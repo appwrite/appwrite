@@ -103,7 +103,7 @@ To get proper autocompletion for all the different functions and classes in the 
 ```bash
 docker run --rm --interactive --tty \
   --volume $PWD:/app \
-  composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
+  composer update
 ```
 
 ### User Interface
@@ -363,25 +363,25 @@ In settings, go to **Languages & Frameworks** > **PHP** > **Debug**, there under
 To run all tests manually, use the Appwrite Docker CLI from your terminal:
 
 ```bash
-docker compose exec appwrite test
+composer test
 ```
 
 To run unit tests use:
 
 ```bash
-docker compose exec appwrite test /usr/src/code/tests/unit
+composer test-unit
 ```
 
 To run end-2-end tests use:
 
 ```bash
-docker compose exec appwrite test /usr/src/code/tests/e2e
+composer test-e2e
 ```
 
 To run end-2-end tests for a spcific service use:
 
 ```bash
-docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
+compose test-e2e -- -filter 'Services\\[ServiceName]'
 ```
 
 ## Benchmarking
