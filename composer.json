@@ -94,12 +94,13 @@
         "optimize-autoloader": true,
         "platform": {
             "php": "8.0",
-            "ext-imagick": "3.7.0",
-            "ext-yaml": "2.2.2",
-            "ext-redis": "5.3.7",
-            "ext-swoole": "4.8.10",
-            "ext-zstd": "0.11.0",
-            "ext-mongodb": "1.13.0"
+            "ext-imagick": "0.0.0",
+            "ext-yaml": "0.0.0",
+            "ext-redis": "0.0.0",
+            "ext-swoole": "0.0.0",
+            "ext-zstd": "0.0.0",
+            "ext-mongodb": "1.8.1",
+            "ext-sockets": "0.0.0"
         }
     }
 }
