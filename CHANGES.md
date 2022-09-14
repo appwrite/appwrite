@@ -1,6 +1,4 @@
-# Version 1.0.0-RC1
-
-# DO NOT INSTALL THIS VERSION ON ANY EXISTING INSTANCES OF APPWRITE, THIS IS A TEST RELEASE AND DOES NOT HAVE BACKWARDS COMPATIBILITY!!
+# Version 1.0.0
 
 ## BREAKING CHANGES
 - All Date values are now stored as ISO-8601 instead of UNIX timestamps [#3516](https://github.com/appwrite/appwrite/pull/3516)

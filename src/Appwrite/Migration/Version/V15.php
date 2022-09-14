@@ -1391,7 +1391,7 @@ class V15 extends Migration
                 /**
                  * Bump version number.
                  */
-                $document->setAttribute('version', '1.0.0-RC1');
+                $document->setAttribute('version', '1.0.0');
                 break;
 
             case 'realtime':
