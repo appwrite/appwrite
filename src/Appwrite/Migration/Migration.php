@@ -42,7 +42,8 @@ abstract class Migration
      */
     public static array $versions = [
         '1.0.0-RC1' => 'V15',
-        '1.0.0' => 'V15'
+        '1.0.0' => 'V15',
+        '1.0.1' => 'V15',
     ];
 
     /**
