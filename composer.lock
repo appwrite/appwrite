@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fca1e9492b5c12b6dbf6607418ca8ec8",
+    "content-hash": "97f462fc9437c015a6b5c6c4db575f3e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2840,16 +2840,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.26.0",
+            "version": "0.27.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "b356ccc0f0188422741fb79f2a52da087809ca26"
+                "reference": "d3eebcd1e48287e32512171037c73740833eb056"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b356ccc0f0188422741fb79f2a52da087809ca26",
-                "reference": "b356ccc0f0188422741fb79f2a52da087809ca26",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d3eebcd1e48287e32512171037c73740833eb056",
+                "reference": "d3eebcd1e48287e32512171037c73740833eb056",
                 "shasum": ""
             },
             "require": {
@@ -2884,9 +2884,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.26.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.27.0"
             },
-            "time": "2022-09-13T18:39:36+00:00"
+            "time": "2022-09-14T19:37:36+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -4124,16 +4124,16 @@
         },
         {
             "name": "sebastian/comparator",
-            "version": "4.0.7",
+            "version": "4.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/comparator.git",
-                "reference": "7fa545db548c90bdebeb9da0583001a252be5578"
+                "reference": "fa0f136dd2334583309d32b62544682ee972b51a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/7fa545db548c90bdebeb9da0583001a252be5578",
-                "reference": "7fa545db548c90bdebeb9da0583001a252be5578",
+                "url": "https://api.github.com/repos/sebastianbergmann/comparator/zipball/fa0f136dd2334583309d32b62544682ee972b51a",
+                "reference": "fa0f136dd2334583309d32b62544682ee972b51a",
                 "shasum": ""
             },
             "require": {
@@ -4186,7 +4186,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/comparator/issues",
-                "source": "https://github.com/sebastianbergmann/comparator/tree/4.0.7"
+                "source": "https://github.com/sebastianbergmann/comparator/tree/4.0.8"
             },
             "funding": [
                 {
@@ -4194,7 +4194,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-09-14T06:33:43+00:00"
+            "time": "2022-09-14T12:41:17+00:00"
         },
         {
             "name": "sebastian/complexity",
