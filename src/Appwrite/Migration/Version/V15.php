@@ -491,6 +491,7 @@ class V15 extends Migration
                     $this->createPermissionsColumn($id);
                     $this->migrateDateTimeAttribute($id, '_createdAt');
                     $this->migrateDateTimeAttribute($id, '_updatedAt');
+                    $this->migrateDateTimeAttribute($id, 'time');
                     break;
 
                 case 'attributes':
