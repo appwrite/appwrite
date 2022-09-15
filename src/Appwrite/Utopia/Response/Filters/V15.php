@@ -210,7 +210,11 @@ class V15 extends Filter
     protected function parseDatetimeAttributes(array $content, array $attributes): array
     {
         foreach ($attributes as $attribute) {
-            if (isset($content[$attribute])) {
+            if (array_key_exists($attribute, $content)) {
+                if (empty($content[$attribute])) {
+                    $content[$attribute] = 0;
+                    continue;
+                }
                 $content[$attribute] = strtotime($content[$attribute]);
             }
         }

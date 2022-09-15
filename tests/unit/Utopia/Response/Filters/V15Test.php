@@ -1077,6 +1077,14 @@ class V15Test extends TestCase
                     'providerAccessTokenExpiry' => 1592981250,
                 ],
             ],
+            'empty values' => [
+                [
+                    'providerAccessTokenExpiry' => '',
+                ],
+                [
+                    'providerAccessTokenExpiry' => 0,
+                ],
+            ],
         ];
     }
 
@@ -1089,7 +1097,7 @@ class V15Test extends TestCase
 
         $result = $this->filter->parse($content, $model);
 
-        $this->assertEquals($expected, $result);
+        $this->assertSame($expected, $result);
     }
 
     /**
