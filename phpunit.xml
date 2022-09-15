@@ -1,19 +1,19 @@
 <phpunit backupGlobals="false"
          backupStaticAttributes="false"
-         bootstrap="vendor/autoload.php"
+         bootstrap="app/init.php"
          colors="true"
          convertErrorsToExceptions="true"
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="true"
-        >
+>
     <extensions>
         <extension class="Appwrite\Tests\TestHook" />
     </extensions>
     <testsuites>
         <testsuite name="unit">
-            <directory>./tests/unit/</directory>
+            <directory>./tests/unit</directory>
         </testsuite>
         <testsuite name="e2e">
             <file>./tests/e2e/Client.php</file>

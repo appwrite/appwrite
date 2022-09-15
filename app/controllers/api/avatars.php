@@ -7,8 +7,6 @@ use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Utopia\App;
-use Utopia\Cache\Adapter\Filesystem;
-use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Image\Image;
@@ -25,56 +23,34 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $set = Config::getParam('avatar-' . $type, []);
 
     if (empty($set)) {
-        throw new Exception('Avatar set not found', 404, Exception::AVATAR_SET_NOT_FOUND);
+        throw new Exception(Exception::AVATAR_SET_NOT_FOUND);
     }
 
     if (!\array_key_exists($code, $set)) {
-        throw new Exception('Avatar not found', 404, Exception::AVATAR_NOT_FOUND);
+        throw new Exception(Exception::AVATAR_NOT_FOUND);
     }
 
     if (!\extension_loaded('imagick')) {
-        throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
     }
 
     $output = 'png';
-    $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-    $key = \md5('/v1/avatars/' . $type . '/:code-' . $code . $width . $height . $quality . $output);
     $path = $set[$code];
     $type = 'png';
 
     if (!\is_readable($path)) {
-        throw new Exception('File not readable in ' . $path, 500, Exception::GENERAL_SERVER_ERROR);
-    }
-
-    $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
-    $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
-
-    if ($data) {
-        //$output = (empty($output)) ? $type : $output;
-
-        return $response
-            ->setContentType('image/png')
-            ->addHeader('Expires', $date)
-            ->addHeader('X-Appwrite-Cache', 'hit')
-            ->send($data);
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'File not readable in ' . $path);
     }
 
     $image = new Image(\file_get_contents($path));
-
     $image->crop((int) $width, (int) $height);
-
     $output = (empty($output)) ? $type : $output;
-
     $data = $image->output($output, $quality);
-
-    $cache->save($key, $data);
-
     $response
+        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
         ->setContentType('image/png')
-        ->addHeader('Expires', $date)
-        ->addHeader('X-Appwrite-Cache', 'miss')
-        ->send($data, null);
-
+        ->file($data)
+    ;
     unset($image);
 };
 
@@ -82,6 +58,8 @@ App::get('/v1/avatars/credit-cards/:code')
     ->desc('Get Credit Card Icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
+    ->label('cache', true)
+    ->label('cache.resource', 'avatar/credit-card')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getCreditCard')
@@ -100,6 +78,8 @@ App::get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
+    ->label('cache', true)
+    ->label('cache.resource', 'avatar/browser')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getBrowser')
@@ -118,6 +98,8 @@ App::get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
+    ->label('cache', true)
+    ->label('cache.resource', 'avatar/flag')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getFlag')
@@ -136,6 +118,8 @@ App::get('/v1/avatars/image')
     ->desc('Get Image from URL')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
+    ->label('cache', true)
+    ->label('cache.resource', 'avatar/image')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getImage')
@@ -151,50 +135,33 @@ App::get('/v1/avatars/image')
 
         $quality = 80;
         $output = 'png';
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-        $key = \md5('/v2/avatars/images-' . $url . '-' . $width . '/' . $height . '/' . $quality);
         $type = 'png';
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
-        $data = $cache->load($key, 60 * 60 * 24 * 7/* 1 week */);
-
-        if ($data) {
-            return $response
-                ->setContentType('image/png')
-                ->addHeader('Expires', $date)
-                ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data);
-        }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
         $fetch = @\file_get_contents($url, false);
 
         if (!$fetch) {
-            throw new Exception('Image not found', 404, Exception::AVATAR_IMAGE_NOT_FOUND);
+            throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 
         try {
             $image = new Image($fetch);
         } catch (\Exception $exception) {
-            throw new Exception('Unable to parse image', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to parse image');
         }
 
         $image->crop((int) $width, (int) $height);
-
         $output = (empty($output)) ? $type : $output;
-
         $data = $image->output($output, $quality);
 
-        $cache->save($key, $data);
-
         $response
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType('image/png')
-            ->addHeader('Expires', $date)
-            ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send($data);
-
+            ->file($data)
+        ;
         unset($image);
     });
 
@@ -202,6 +169,8 @@ App::get('/v1/avatars/favicon')
     ->desc('Get Favicon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
+    ->label('cache', true)
+    ->label('cache.resource', 'avatar/favicon')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getFavicon')
@@ -217,22 +186,10 @@ App::get('/v1/avatars/favicon')
         $height = 56;
         $quality = 80;
         $output = 'png';
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-        $key = \md5('/v2/avatars/favicon-' . $url);
         $type = 'png';
-        $cache = new Cache(new Filesystem(APP_STORAGE_CACHE . '/app-0')); // Limit file number or size
-        $data = $cache->load($key, 60 * 60 * 24 * 30 * 3/* 3 months */);
-
-        if ($data) {
-            return $response
-                ->setContentType('image/png')
-                ->addHeader('Expires', $date)
-                ->addHeader('X-Appwrite-Cache', 'hit')
-                ->send($data);
-        }
 
         if (!\extension_loaded('imagick')) {
-            throw new Exception('Imagick extension is missing', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
         $curl = \curl_init();
@@ -254,7 +211,7 @@ App::get('/v1/avatars/favicon')
         \curl_close($curl);
 
         if (!$html) {
-            throw new Exception('Failed to fetch remote URL', 404, Exception::AVATAR_REMOTE_URL_FAILED);
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
         $doc = new DOMDocument();
@@ -312,40 +269,31 @@ App::get('/v1/avatars/favicon')
             $data = @\file_get_contents($outputHref, false);
 
             if (empty($data) || (\mb_substr($data, 0, 5) === '<html') || \mb_substr($data, 0, 5) === '<!doc') {
-                throw new Exception('Favicon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
+                throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
-
-            $cache->save($key, $data);
-
-            return $response
+            $response
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
                 ->setContentType('image/x-icon')
-                ->addHeader('Expires', $date)
-                ->addHeader('X-Appwrite-Cache', 'miss')
-                ->send($data);
+                ->file($data)
+            ;
         }
 
         $fetch = @\file_get_contents($outputHref, false);
 
         if (!$fetch) {
-            throw new Exception('Icon not found', 404, Exception::AVATAR_ICON_NOT_FOUND);
+            throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
         }
 
         $image = new Image($fetch);
-
         $image->crop((int) $width, (int) $height);
-
         $output = (empty($output)) ? $type : $output;
-
         $data = $image->output($output, $quality);
 
-        $cache->save($key, $data);
-
         $response
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType('image/png')
-            ->addHeader('Expires', $date)
-            ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send($data);
-
+            ->file($data)
+        ;
         unset($image);
     });
 
@@ -381,19 +329,21 @@ App::get('/v1/avatars/qr')
         }
 
         $image = new Image($qrcode->render($text));
-
         $image->crop((int) $size, (int) $size);
 
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->output('png', 9));
+            ->send($image->output('png', 9))
+        ;
     });
 
 App::get('/v1/avatars/initials')
     ->desc('Get User Initials')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
+    ->label('cache', true)
+    ->label('cache.resource', 'avatar/initials')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getInitials')
@@ -404,26 +354,19 @@ App::get('/v1/avatars/initials')
     ->param('name', '', new Text(128), 'Full Name. When empty, current user name or email will be used. Max length: 128 chars.', true)
     ->param('width', 500, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 500, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
-    ->param('color', '', new HexColor(), 'Changes text color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->param('background', '', new HexColor(), 'Changes background color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->inject('response')
     ->inject('user')
-    ->action(function (string $name, int $width, int $height, string $color, string $background, Response $response, Document $user) {
+    ->action(function (string $name, int $width, int $height, string $background, Response $response, Document $user) {
 
         $themes = [
-            ['color' => '#27005e', 'background' => '#e1d2f6'], // VIOLET
-            ['color' => '#5e2700', 'background' => '#f3d9c6'], // ORANGE
-            ['color' => '#006128', 'background' => '#c9f3c6'], // GREEN
-            ['color' => '#580061', 'background' => '#f2d1f5'], // FUSCHIA
-            ['color' => '#00365d', 'background' => '#c6e1f3'], // BLUE
-            ['color' => '#00075c', 'background' => '#d2d5f6'], // INDIGO
-            ['color' => '#610038', 'background' => '#f5d1e6'], // PINK
-            ['color' => '#386100', 'background' => '#dcf1bd'], // LIME
-            ['color' => '#615800', 'background' => '#f1ecba'], // YELLOW
-            ['color' => '#610008', 'background' => '#f6d2d5'], // RED
+            ['background' => '#FFA1CE'], // Default (Pink)
+            ['background' => '#FDC584'], // Orange
+            ['background' => '#94DBD1'], // Green
+            ['background' => '#A1C4FF'], // Blue
+            ['background' => '#FFA1CE'], // Pink
+            ['background' => '#CBB1FC'] // Purple
         ];
-
-        $rand = \rand(0, \count($themes) - 1);
 
         $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
         $words = \explode(' ', \strtoupper($name));
@@ -443,30 +386,40 @@ App::get('/v1/avatars/initials')
         }
 
         $rand = \substr($code, -1);
+
+        // Wrap rand value to avoid out of range
+        $rand = ($rand > \count($themes) - 1) ? $rand % \count($themes) : $rand;
+
         $background = (!empty($background)) ? '#' . $background : $themes[$rand]['background'];
-        $color = (!empty($color)) ? '#' . $color : $themes[$rand]['color'];
 
         $image = new \Imagick();
+        $punch = new \Imagick();
         $draw = new \ImagickDraw();
         $fontSize = \min($width, $height) / 2;
+
+        $punch->newImage($width, $height, 'transparent');
 
         $draw->setFont(__DIR__ . "/../../../public/fonts/poppins-v9-latin-500.ttf");
         $image->setFont(__DIR__ . "/../../../public/fonts/poppins-v9-latin-500.ttf");
 
-        $draw->setFillColor(new \ImagickPixel($color));
+        $draw->setFillColor(new ImagickPixel('black'));
         $draw->setFontSize($fontSize);
 
         $draw->setTextAlignment(\Imagick::ALIGN_CENTER);
         $draw->annotation($width / 1.97, ($height / 2) + ($fontSize / 3), $initials);
 
+        $punch->drawImage($draw);
+        $punch->negateImage(true, Imagick::CHANNEL_ALPHA);
+
         $image->newImage($width, $height, $background);
         $image->setImageFormat("png");
-        $image->drawImage($draw);
+        $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
 
         //$image->setImageCompressionQuality(9 - round(($quality / 100) * 9));
 
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->getImageBlob());
+            ->file($image->getImageBlob())
+        ;
     });

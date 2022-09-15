@@ -28,19 +28,27 @@ window.ls.filter
     $value = parseInt($value);
     return !Number.isNaN($value) ? $value.toLocaleString() : "";
   })
-  .add("date", function ($value, date) {
-    return $value ? date.format("Y-m-d", $value) : "";
-  })
   .add("dateTime", function ($value, date) {
-    return $value ? date.format("Y-m-d H:i", $value) : "";
+    return $value ? date.format({
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }, $value) : "";
   })
-  .add("dateText", function ($value, date) {
-    return $value ? date.format("d M Y", $value) : "";
+  .add("date", function ($value, date) {
+    return $value ? date.format({
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+    }, $value) : "";
   })
   .add("timeSince", function ($value) {
-    $value = $value * 1000;
+    $value = new Date($value).getTime();
 
-    let seconds = Math.floor((Date.now() - $value) / 1000);
+    let timestamp = new Date().getTime();
+    let seconds = Math.floor((timestamp - $value) / 1000);
     let unit = "second";
     let direction = "ago";
 
@@ -75,34 +83,28 @@ window.ls.filter
     return value + " " + unit + " " + direction;
   })
   .add("ms2hum", function ($value) {
-    let temp = $value;
-    const years = Math.floor(temp / 31536000),
-      days = Math.floor((temp %= 31536000) / 86400),
-      hours = Math.floor((temp %= 86400) / 3600),
-      minutes = Math.floor((temp %= 3600) / 60),
-      seconds = temp % 60;
+    $value = $value / 1000;
+    var seconds = ($value).toFixed(3);
+    var minutes = ($value / (60)).toFixed(1);
+    var hours = ($value / (60 * 60)).toFixed(1);
+    var days = ($value / (60 * 60 * 24)).toFixed(1);
 
-    if (days || hours || seconds || minutes) {
-      return (
-        (years ? years + "y " : "") +
-        (days ? days + "d " : "") +
-        (hours ? hours + "h " : "") +
-        (minutes ? minutes + "m " : "") +
-        Number.parseFloat(seconds).toFixed(0) +
-        "s"
-      );
+    if(seconds < 1) {
+      return "< 1s";
+    } else if (seconds < 60) {
+      return seconds + "s";
+    } else if (minutes < 60) {
+      return minutes + "m";
+    } else if (hours < 24) {
+      return hours + "h";
+    } else {
+      return days + "d";
     }
-
-    return "< 1s";
   })
   .add("seconds2hum", function ($value) {
-
     var seconds = ($value).toFixed(3);
-
     var minutes = ($value / (60)).toFixed(1);
-
     var hours = ($value / (60 * 60)).toFixed(1);
-
     var days = ($value / (60 * 60 * 24)).toFixed(1);
 
     if (seconds < 60) {
@@ -112,7 +114,7 @@ window.ls.filter
     } else if (hours < 24) {
       return hours + "h";
     } else {
-      return days + "d"
+      return days + "d";
     }
   })
   .add("markdown", function ($value, markdown) {
@@ -303,6 +305,9 @@ window.ls.filter
   })
   .add("last", function ($value) {
     return $value[$value.length - 1].$id;
+  })
+  .add("orZero", function ($value) {
+    return $value ? $value : 0;
   })
   ;
 

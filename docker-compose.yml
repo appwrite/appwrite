@@ -173,10 +173,11 @@ services:
       - _APP_STATSD_PORT
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
-      - _APP_PHONE_PROVIDER
-      - _APP_PHONE_SECRET
+      - _APP_SMS_PROVIDER
+      - _APP_SMS_FROM
 
   appwrite-realtime:
     entrypoint: realtime
@@ -207,7 +208,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      # - ./vendor:/usr/src/code/vendor
     depends_on:
       - mongo
       - redis
@@ -331,7 +331,7 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      # - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
+      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
       - mongo
@@ -546,8 +546,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_PHONE_PROVIDER
-      - _APP_PHONE_FROM
+      - _APP_SMS_PROVIDER
+      - _APP_SMS_FROM
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -562,6 +562,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
     environment:
@@ -580,13 +581,54 @@ services:
       - _APP_DB_PASS
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
+      - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
 
-  appwrite-usage:
-    entrypoint: usage
+  appwrite-usage-timeseries:
+    entrypoint:
+      - usage
+      - --type=timeseries
     <<: *x-logging
-    container_name: appwrite-usage
+    container_name: appwrite-usage-timeseries
+    build:
+      context: .
+      args:
+        - DEBUG=false
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./dev:/usr/local/dev
+    depends_on:
+      - influxdb
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+      - _APP_USAGE_TIMESERIES_INTERVAL
+      - _APP_USAGE_DATABASE_INTERVAL
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
+  
+  appwrite-usage-database:
+    entrypoint:
+      - usage
+      - --type=database
+    <<: *x-logging
+    container_name: appwrite-usage-database
     build:
       context: .
       args:
@@ -610,7 +652,8 @@ services:
       - _APP_DB_PASS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
-      - _APP_USAGE_AGGREGATION_INTERVAL
+      - _APP_USAGE_TIMESERIES_INTERVAL
+      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -650,7 +693,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_PASS}
 
   redis:
-    image: redis:6.2-alpine
+    image: redis:7.0.4-alpine
     <<: *x-logging
     container_name: appwrite-redis
     command: >

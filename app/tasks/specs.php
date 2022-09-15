@@ -16,7 +16,7 @@ use Utopia\Validator\WhiteList;
 
 $cli
     ->task('specs')
-    ->param('version', 'latest', new Text(8), 'Spec version', true)
+    ->param('version', 'latest', new Text(16), 'Spec version', true)
     ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
     ->action(function ($version, $mode) use ($register) {
         $db = $register->get('db');

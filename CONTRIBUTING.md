@@ -142,7 +142,7 @@ Learn more at our [Technology Stack](#technology-stack) section.
 
 ##### Security
 
-- [Appwrite Auth and ACL](https://github.com/appwrite/appwrite/blob/0.7.x/docs/specs/authentication.drawio.svg)
+- [Appwrite Auth and ACL](https://github.com/appwrite/appwrite/blob/master/docs/specs/authentication.drawio.svg)
 - [OAuth](https://en.wikipedia.org/wiki/OAuth)
 - [Encryption](https://medium.com/searchencrypt/what-is-encryption-how-does-it-work-e8f20e340537#:~:text=Encryption%20is%20a%20process%20that,%2C%20or%20decrypt%2C%20the%20information.)
 - [Hashing](https://searchsqlserver.techtarget.com/definition/hashing#:~:text=Hashing%20is%20the%20transformation%20of,it%20using%20the%20original%20value.)
@@ -317,7 +317,7 @@ The Runtimes for all supported cloud functions (multicore builds) can be found a
 
 For generating a new console SDK follow the next steps:
 
-1. Update the console spec file located at `app/config/specs/swagger2-0.12.x.console.json` from the dynamic version located at `https://localhost/specs/swagger2?platform=console`
+1. Update the console spec file located at `app/config/specs/swagger2-<version-number>.console.json` using Appwrite Tasks. Run the `php app/cli.php specs <version-number> normal` command in a running `appwrite/appwrite` container.
 2. Generate a new SDK using the command `php app/cli.php sdks`
 3. Change your working dir using `cd app/sdks/console-web`
 4. Build the new SDK `npm run build`

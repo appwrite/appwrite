@@ -1,0 +1,1 @@
+Create a new function variable. These variables can be accessed within function in the `env` object under the request variable.

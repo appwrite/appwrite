@@ -12,6 +12,7 @@ use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\DateTime;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Orchestration\Adapter\DockerCLI;
@@ -188,8 +189,9 @@ App::post('/v1/runtimes')
         $containerId = '';
         $stdout = '';
         $stderr = '';
-        $startTime = \time();
-        $endTime = 0;
+        $startTime = DateTime::now();
+        $startTimeUnix = (new \DateTime($startTime))->getTimestamp();
+        $endTimeUnix = 0;
         $orchestration = $orchestrationPool->get();
 
         $secret = \bin2hex(\random_bytes(16));
@@ -198,8 +200,8 @@ App::post('/v1/runtimes')
             $activeRuntimes->set($runtimeId, [
                 'id' => $containerId,
                 'name' => $runtimeId,
-                'created' => $startTime,
-                'updated' => $endTime,
+                'created' => $startTimeUnix,
+                'updated' => $endTimeUnix,
                 'status' => 'pending',
                 'key' => $secret,
             ]);
@@ -262,7 +264,7 @@ App::post('/v1/runtimes')
                 labels: [
                     'openruntimes-id' => $runtimeId,
                     'openruntimes-type' => 'runtime',
-                    'openruntimes-created' => strval($startTime),
+                    'openruntimes-created' => strval($startTimeUnix),
                     'openruntimes-runtime' => $runtime,
                 ],
                 workdir: $workdir,
@@ -319,28 +321,32 @@ App::post('/v1/runtimes')
                 $stdout = 'Build Successful!';
             }
 
-            $endTime = \time();
+            $endTime = DateTime::now();
+            $endTimeUnix = (new \DateTime($endTime))->getTimestamp();
+            $duration = $endTimeUnix - $startTimeUnix;
+
             $container = array_merge($container, [
                 'status' => 'ready',
                 'response' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
                 'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
                 'startTime' => $startTime,
                 'endTime' => $endTime,
-                'duration' => $endTime - $startTime,
+                'duration' => $duration,
             ]);
+
 
             if (!$remove) {
                 $activeRuntimes->set($runtimeId, [
                     'id' => $containerId,
                     'name' => $runtimeId,
-                    'created' => $startTime,
-                    'updated' => $endTime,
-                    'status' => 'Up ' . \round($endTime - $startTime, 2) . 's',
+                    'created' => $startTimeUnix,
+                    'updated' => $endTimeUnix,
+                    'status' => 'Up ' . \round($duration, 2) . 's',
                     'key' => $secret,
                 ]);
             }
 
-            Console::success('Build Stage completed in ' . ($endTime - $startTime) . ' seconds');
+            Console::success('Build Stage completed in ' . ($duration) . ' seconds');
         } catch (Throwable $th) {
             Console::error('Build failed: ' . $th->getMessage() . $stdout);
 
@@ -488,6 +494,7 @@ App::post('/v1/execution')
             $executionStart = \microtime(true);
             $stdout = '';
             $stderr = '';
+            $res = '';
             $statusCode = 0;
             $errNo = -1;
             $executorResponse = '';
@@ -496,7 +503,7 @@ App::post('/v1/execution')
 
             $ch = \curl_init();
             $body = \json_encode([
-                'env' => $vars,
+                'variables' => $vars,
                 'payload' => $data,
                 'timeout' => $timeout
             ]);
@@ -515,6 +522,7 @@ App::post('/v1/execution')
             ]);
 
             $executorResponse = \curl_exec($ch);
+            $executorResponse = json_decode($executorResponse, true);
 
             $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -538,13 +546,19 @@ App::post('/v1/execution')
 
             switch (true) {
                 case $statusCode >= 500:
-                    $stderr = $executorResponse ?? 'Internal Runtime error.';
+                    $stderr = ($executorResponse ?? [])['stderr'] ?? 'Internal Runtime error.';
+                    $stdout = ($executorResponse ?? [])['stdout'] ?? 'Internal Runtime error.';
                     break;
                 case $statusCode >= 100:
-                    $stdout = $executorResponse;
+                    $stdout = $executorResponse['stdout'];
+                    $res = $executorResponse['response'];
+                    if (is_array($res)) {
+                        $res = json_encode($res, JSON_UNESCAPED_UNICODE);
+                    }
                     break;
                 default:
-                    $stderr = $executorResponse ?? 'Execution failed.';
+                    $stderr = ($executorResponse ?? [])['stderr'] ?? 'Execution failed.';
+                    $stdout = ($executorResponse ?? [])['stdout'] ?? '';
                     break;
             }
 
@@ -557,9 +571,10 @@ App::post('/v1/execution')
             $execution = [
                 'status' => $functionStatus,
                 'statusCode' => $statusCode,
-                'response' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
+                'response' => \mb_strcut($res, 0, 1000000), // Limit to 1MB
+                'stdout' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
                 'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
-                'time' => $executionTime,
+                'duration' => $executionTime,
             ];
 
             /** Update swoole table */
@@ -581,57 +596,64 @@ App::setResource('orchestrationPool', fn() => $orchestrationPool);
 App::setResource('activeRuntimes', fn() => $activeRuntimes);
 
 /** Set callbacks */
-App::error(function ($utopia, $error, $request, $response) {
-    $route = $utopia->match($request);
-    logError($error, "httpError", $route);
+App::error()
+    ->inject('utopia')
+    ->inject('error')
+    ->inject('request')
+    ->inject('response')
+    ->action(function (App $utopia, throwable $error, Request $request, Response $response) {
+        $route = $utopia->match($request);
+        logError($error, "httpError", $route);
 
-    switch ($error->getCode()) {
-        case 400: // Error allowed publicly
-        case 401: // Error allowed publicly
-        case 402: // Error allowed publicly
-        case 403: // Error allowed publicly
-        case 404: // Error allowed publicly
-        case 406: // Error allowed publicly
-        case 409: // Error allowed publicly
-        case 412: // Error allowed publicly
-        case 425: // Error allowed publicly
-        case 429: // Error allowed publicly
-        case 501: // Error allowed publicly
-        case 503: // Error allowed publicly
-            $code = $error->getCode();
-            break;
-        default:
-            $code = 500; // All other errors get the generic 500 server error status code
-    }
+        switch ($error->getCode()) {
+            case 400: // Error allowed publicly
+            case 401: // Error allowed publicly
+            case 402: // Error allowed publicly
+            case 403: // Error allowed publicly
+            case 404: // Error allowed publicly
+            case 406: // Error allowed publicly
+            case 409: // Error allowed publicly
+            case 412: // Error allowed publicly
+            case 425: // Error allowed publicly
+            case 429: // Error allowed publicly
+            case 501: // Error allowed publicly
+            case 503: // Error allowed publicly
+                $code = $error->getCode();
+                break;
+            default:
+                $code = 500; // All other errors get the generic 500 server error status code
+        }
 
-    $output = [
-        'message' => $error->getMessage(),
-        'code' => $error->getCode(),
-        'file' => $error->getFile(),
-        'line' => $error->getLine(),
-        'trace' => $error->getTrace(),
-        'version' => App::getEnv('_APP_VERSION', 'UNKNOWN')
-    ];
+        $output = [
+            'message' => $error->getMessage(),
+            'code' => $error->getCode(),
+            'file' => $error->getFile(),
+            'line' => $error->getLine(),
+            'trace' => $error->getTrace(),
+            'version' => App::getEnv('_APP_VERSION', 'UNKNOWN')
+        ];
 
-    $response
-        ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
-        ->addHeader('Expires', '0')
-        ->addHeader('Pragma', 'no-cache')
-        ->setStatusCode($code);
+        $response
+            ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->addHeader('Expires', '0')
+            ->addHeader('Pragma', 'no-cache')
+            ->setStatusCode($code);
 
-    $response->json($output);
-}, ['utopia', 'error', 'request', 'response']);
+        $response->json($output);
+    });
 
-App::init(function ($request, $response) {
-     $secretKey = $request->getHeader('x-appwrite-executor-key', '');
-    if (empty($secretKey)) {
-        throw new Exception('Missing executor key', 401);
-    }
+App::init()
+    ->inject('request')
+    ->action(function (Request $request) {
+        $secretKey = $request->getHeader('x-appwrite-executor-key', '');
+        if (empty($secretKey)) {
+            throw new Exception('Missing executor key', 401);
+        }
 
-    if ($secretKey !== App::getEnv('_APP_EXECUTOR_SECRET', '')) {
-        throw new Exception('Missing executor key', 401);
-    }
-}, ['request', 'response']);
+        if ($secretKey !== App::getEnv('_APP_EXECUTOR_SECRET', '')) {
+            throw new Exception('Missing executor key', 401);
+        }
+    });
 
 
 $http->on('start', function ($http) {
@@ -641,7 +663,7 @@ $http->on('start', function ($http) {
     /**
      * Warmup: make sure images are ready to run fast 🚀
      */
-    $runtimes = new Runtimes('v1');
+    $runtimes = new Runtimes('v2');
     $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
     $runtimes = $runtimes->getAll(true, $allowList);
     foreach ($runtimes as $runtime) {

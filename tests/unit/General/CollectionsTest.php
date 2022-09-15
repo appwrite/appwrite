@@ -1,23 +1,19 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\General;
 
 use PHPUnit\Framework\TestCase;
 
 class CollectionsTest extends TestCase
 {
-    protected $collections;
+    protected array $collections;
 
     public function setUp(): void
     {
         $this->collections = require('app/config/collections.php');
     }
 
-    public function tearDown(): void
-    {
-    }
-
-    public function testDuplicateRules()
+    public function testDuplicateRules(): void
     {
         foreach ($this->collections as $key => $collection) {
             if (array_key_exists('attributes', $collection)) {

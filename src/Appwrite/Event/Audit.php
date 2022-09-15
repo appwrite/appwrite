@@ -124,7 +124,7 @@ class Audit extends Event
             'mode' => $this->mode,
             'ip' => $this->ip,
             'userAgent' => $this->userAgent,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+            'event' => $this->event,
         ]);
     }
 }

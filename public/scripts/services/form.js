@@ -3,9 +3,9 @@
 
     window.ls.container.set('form', function () {
 
-        function cast(value, to) {
+        function cast(value, from, to,) {
             if (value && Array.isArray(value) && to !== 'array') {
-                value = value.map(element => cast(element, to));
+                value = value.map(element => cast(element, from, to));
                 return value;
             }
             switch (to) {
@@ -25,11 +25,30 @@
                         value = null;
                     }
                     break;
+                case 'string-datetime':
+                    if (value.length === 0) {
+                        value = null;
+                    } else {
+                        const date = new Date(value);
+                        value = date.toISOString();
+                    }
+                    break;
                 case 'json':
                     value = (value) ? JSON.parse(value) : [];
                     break;
                 case 'array':
-                    value = (value && value.constructor && value.constructor === Array) ? value : [value];
+                    if (value && value.constructor && value.constructor === Array) {
+                        break;
+                    }
+                    if (from === 'csv') {
+                        if (value.length === 0) {
+                            value = [];
+                        } else {
+                            value = value.split(',');
+                        }
+                    } else {
+                        value = [value];
+                    }
                     break;
                 case 'array-empty':
                     value = [];
@@ -49,6 +68,7 @@
             let name = element.getAttribute('name');
             let type = element.getAttribute('type');
             let castTo = element.getAttribute('data-cast-to');
+            let castFrom = element.getAttribute('data-cast-from');
             let ref = json;
 
             if (name && 'FORM' !== element.tagName) {
@@ -121,7 +141,7 @@
                         }
                     }
 
-                    json[name] = cast(json[name], castTo); // Apply casting
+                    json[name] = cast(json[name], castFrom, castTo); // Apply casting
                 }
             }
 

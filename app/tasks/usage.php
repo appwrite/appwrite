@@ -4,22 +4,25 @@ global $cli, $register;
 
 use Appwrite\Stats\Usage;
 use Appwrite\Stats\UsageDB;
+use Appwrite\Usage\Calculators\Aggregator;
+use Appwrite\Usage\Calculators\Database;
+use Appwrite\Usage\Calculators\TimeSeries;
 use InfluxDB\Database as InfluxDatabase;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Adapter\Mongo\MongoDBAdapter;
-use Utopia\Database\Database;
+use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
+use Utopia\Validator\WhiteList;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
 
-function getDatabase(Registry &$register, string $namespace): Database
+function getDatabase(Registry &$register, string $namespace): UtopiaDatabase
 {
     $attempts = 0;
 
@@ -39,7 +42,7 @@ function getDatabase(Registry &$register, string $namespace): Database
                 throw new Exception('Projects collection not ready');
             }
             break; // leave loop if successful
-        } catch (\Exception$e) {
+        } catch (\Exception $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
             if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
                 throw new \Exception('Failed to connect to database: ' . $e->getMessage());
@@ -66,7 +69,7 @@ function getInfluxDB(Registry &$register): InfluxDatabase
             if (in_array('telegraf', $client->listDatabases())) {
                 break; // leave the do-while if successful
             }
-        } catch (\Throwable$th) {
+        } catch (\Throwable $th) {
             Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
             if ($attempts >= $max) {
                 throw new \Exception('InfluxDB database not ready yet');
@@ -111,55 +114,63 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
     Console::warning($error->getTraceAsString());
 };
 
+
+function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB, callable $logError): void
+{
+    $interval = (int) App::getEnv('_APP_USAGE_TIMESERIES_INTERVAL', '30'); // 30 seconds (by default)
+    $usage = new TimeSeries($database, $influxDB, $logError);
+
+    Console::loop(function () use ($interval, $usage) {
+        $now = date('d-m-Y H:i:s', time());
+        Console::info("[{$now}] Aggregating Timeseries Usage data every {$interval} seconds");
+        $loopStart = microtime(true);
+
+        $usage->collect();
+
+        $loopTook = microtime(true) - $loopStart;
+        $now = date('d-m-Y H:i:s', time());
+        Console::info("[{$now}] Aggregation took {$loopTook} seconds");
+    }, $interval);
+}
+
+function aggregateDatabase(UtopiaDatabase $database, callable $logError): void
+{
+    $interval = (int) App::getEnv('_APP_USAGE_DATABASE_INTERVAL', '900'); // 15 minutes (by default)
+    $usage = new Database($database, $logError);
+    $aggregrator = new Aggregator($database, $logError);
+
+    Console::loop(function () use ($interval, $usage, $aggregrator) {
+        $now = date('d-m-Y H:i:s', time());
+        Console::info("[{$now}] Aggregating database usage every {$interval} seconds.");
+        $loopStart = microtime(true);
+        $usage->collect();
+        $aggregrator->collect();
+        $loopTook = microtime(true) - $loopStart;
+        $now = date('d-m-Y H:i:s', time());
+
+        Console::info("[{$now}] Aggregation took {$loopTook} seconds");
+    }, $interval);
+}
+
 $cli
     ->task('usage')
+    ->param('type', 'timeseries', new WhiteList(['timeseries', 'database']))
     ->desc('Schedules syncing data from influxdb to Appwrite console db')
-    ->action(function () use ($register, $logError) {
+    ->action(function (string $type) use ($register, $logError) {
         Console::title('Usage Aggregation V1');
         Console::success(APP_NAME . ' usage aggregation process v1 has started');
-
-        $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
 
         $database = getDatabase($register, '_console');
         $influxDB = getInfluxDB($register);
 
-        $usage = new Usage($database, $influxDB, $logError);
-        $usageDB = new UsageDB($database, $logError);
-
-        $iterations = 0;
-        Console::loop(function () use ($interval, $usage, $usageDB, &$iterations) {
-            $now = date('d-m-Y H:i:s', time());
-            Console::info("[{$now}] Aggregating usage data every {$interval} seconds");
-
-            $loopStart = microtime(true);
-
-            /**
-             * Aggregate InfluxDB every 30 seconds
-             */
-            $usage->collect();
-
-            if ($iterations % 30 != 0) { // return if 30 iterations has not passed
-                $iterations++;
-                $loopTook = microtime(true) - $loopStart;
-                $now = date('d-m-Y H:i:s', time());
-                Console::info("[{$now}] Aggregation took {$loopTook} seconds");
-                return;
-            }
-
-            $iterations = 0; // Reset iterations to prevent overflow when running for long time
-            /**
-             * Aggregate MariaDB every 15 minutes
-             * Some of the queries here might contain full-table scans.
-             */
-            $now = date('d-m-Y H:i:s', time());
-            Console::info("[{$now}] Aggregating database counters.");
-
-            $usageDB->collect();
-
-            $iterations++;
-            $loopTook = microtime(true) - $loopStart;
-            $now = date('d-m-Y H:i:s', time());
-
-            Console::info("[{$now}] Aggregation took {$loopTook} seconds");
-        }, $interval);
+        switch ($type) {
+            case 'timeseries':
+                aggregateTimeseries($database, $influxDB, $logError);
+                break;
+            case 'database':
+                aggregateDatabase($database, $logError);
+                break;
+            default:
+                Console::error("Unsupported usage aggregation type");
+        }
     });
