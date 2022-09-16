@@ -32,9 +32,10 @@ class MailsV1 extends Worker
             return;
         }
 
-        $project = new Document($this->args['project']);
+        $project = new Document($this->args['project'] ?? []);
         $user = new Document($this->args['user'] ?? []);
         $team = new Document($this->args['team'] ?? []);
+        $payload = $this->args['payload'] ?? [];
 
         $recipient = $this->args['recipient'];
         $url = $this->args['url'];
@@ -42,20 +43,20 @@ class MailsV1 extends Worker
         $type = $this->args['type'];
         $prefix = $this->getPrefix($type);
         $locale = new Locale($this->args['locale']);
-        $projectName = $project->getAttribute('name', '[APP-NAME]');
+        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
         if (!$this->doesLocaleExist($locale, $prefix)) {
             $locale->setDefault('en');
         }
 
-        $from = $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
+        $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
         $subject = '';
         switch ($type) {
             case MAIL_TYPE_CERTIFICATE:
-                $domain = $this->args['domain'];
-                $error = $this->args['error'];
-                $attempt = $this->args['attempt'];
+                $domain = $payload['domain'];
+                $error = $payload['error'];
+                $attempt = $payload['attempt'];
 
                 $subject = \sprintf($locale->getText("$prefix.subject"), $domain);
                 $body->setParam('{{domain}}', $domain);

@@ -109,6 +109,8 @@ class BuildsV1 extends Worker
 
         /** Trigger Webhook */
         $deploymentModel = new Deployment();
+
+        // TODO: Use Webhook() event here. If doesnt exist, create class for it
         $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
         $deploymentUpdate
             ->setProject($project)
