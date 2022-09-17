@@ -9,6 +9,7 @@ use Appwrite\SMS\Adapter\Msg91;
 use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\DSN\DSN;
 use Appwrite\Resque\Worker;
+use Appwrite\SMS\Adapter;
 use Utopia\App;
 use Utopia\CLI\Console;
 
@@ -19,7 +20,7 @@ Console::success(APP_NAME . ' messaging worker v1 has started' . "\n");
 
 class MessagingV1 extends Worker
 {
-    protected ?SMS $sms = null;
+    protected ?Adapter $sms = null;
     protected ?string $from = null;
 
     public function getName(): string
