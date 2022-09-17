@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\SMS;
 use Appwrite\SMS\Adapter\Mock;
 use Appwrite\SMS\Adapter\Telesign;
 use Appwrite\SMS\Adapter\TextMagic;
