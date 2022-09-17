@@ -1,6 +1,6 @@
 # Contributing
 
-We would ❤️ for you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, new docs as well as updates and tweaks, blog posts, workshops, and more.
+We would ❤️ for you to contribute to Appwrite and help make it better! We want to contribute to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, new docs as well as updates and tweaks, blog posts, workshops, and more.
 
 ## How to Start?
 
@@ -34,7 +34,7 @@ When `TYPE` can be:
 
 For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
 
-1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
+1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up-to-date.
 
 ```
 $ git pull
@@ -338,7 +338,7 @@ Things to remember when releasing SDKs
 
 Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection.
 
-First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger wont connect. And you also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and then change the IP address to your development machine's IP. Without the proper IP address debugger won't connect. And you also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 
 ### VS Code Launch Configuration
 
@@ -378,7 +378,7 @@ To run end-2-end tests use:
 docker compose exec appwrite test /usr/src/code/tests/e2e
 ```
 
-To run end-2-end tests for a spcific service use:
+To run end-2-end tests for a specific service use:
 
 ```bash
 docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
