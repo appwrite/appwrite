@@ -52,6 +52,7 @@ App::post('/v1/functions')
     ->desc('Create Function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].create')
+    ->label('audits.event', 'function.create')
     ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -67,21 +68,23 @@ App::post('/v1/functions')
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
+    ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Event $eventsInstance) {
 
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
             '$id' => $functionId,
             'execute' => $execute,
-            'status' => 'disabled',
+            'enabled' => $enabled,
             'name' => $name,
             'runtime' => $runtime,
             'deployment' => '',
             'events' => $events,
             'schedule' => $schedule,
+            'scheduleUpdatedAt' => DateTime::now(),
             'schedulePrevious' => null,
             'scheduleNext' => null,
             'timeout' => $timeout,
@@ -90,8 +93,9 @@ App::post('/v1/functions')
 
         $eventsInstance->setParam('functionId', $function->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($function, Response::MODEL_FUNCTION);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($function, Response::MODEL_FUNCTION);
     });
 
 App::get('/v1/functions')
@@ -409,6 +413,7 @@ App::put('/v1/functions/:functionId')
     ->desc('Update Function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].update')
+    ->label('audits.event', 'function.update')
     ->label('audits.resource', 'function/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -423,12 +428,13 @@ App::put('/v1/functions/:functionId')
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
+    ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -440,13 +446,18 @@ App::put('/v1/functions/:functionId')
         $cron = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
         $next = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
 
+        $scheduleUpdatedAt = $schedule !== $original ? DateTime::now() : $function->getAttribute('scheduleUpdatedAt');
+        $enabled ??= $function->getAttribute('enabled', true);
+
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
             'events' => $events,
             'schedule' => $schedule,
+            'scheduleUpdatedAt' => $scheduleUpdatedAt,
             'scheduleNext' => $next,
             'timeout' => $timeout,
+            'enabled' => $enabled,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
@@ -471,6 +482,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->desc('Update Function Deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
+    ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -537,6 +549,7 @@ App::delete('/v1/functions/:functionId')
     ->desc('Delete Function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].delete')
+    ->label('audits.event', 'function.delete')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -575,6 +588,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->desc('Create Deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
+    ->label('audits.event', 'deployment.create')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -754,8 +768,9 @@ App::post('/v1/functions/:functionId/deployments')
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-        $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
 App::get('/v1/functions/:functionId/deployments')
@@ -866,6 +881,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->desc('Delete Deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].delete')
+    ->label('audits.event', 'deployment.delete')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -936,19 +952,22 @@ App::post('/v1/functions/:functionId/executions')
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('data', '', new Text(8192), 'String of custom data to send to function.', true)
-    ->param('async', true, new Boolean(), 'Execute code asynchronously. Default value is true.', true)
+    ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('events')
     ->inject('usage')
-    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage) {
+    ->inject('mode')
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception(Exception::FUNCTION_NOT_FOUND);
+            }
         }
 
         $runtimes = Config::getParam('runtimes', []);
@@ -998,7 +1017,7 @@ App::post('/v1/functions/:functionId/executions')
             'statusCode' => 0,
             'response' => '',
             'stderr' => '',
-            'time' => 0.0,
+            'duration' => 0.0,
             'search' => implode(' ', [$functionId, $executionId]),
         ])));
 
@@ -1041,9 +1060,9 @@ App::post('/v1/functions/:functionId/executions')
 
             $event->trigger();
 
-            $response->setStatusCode(Response::STATUS_CODE_ACCEPTED);
-
-            return $response->dynamic($execution, Response::MODEL_EXECUTION);
+            return $response
+                ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+                ->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
@@ -1085,11 +1104,11 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('response', $executionResponse['response']);
             $execution->setAttribute('stdout', $executionResponse['stdout']);
             $execution->setAttribute('stderr', $executionResponse['stderr']);
-            $execution->setAttribute('time', $executionResponse['time']);
+            $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution
-                ->setAttribute('time', (float)$interval->format('%s.%f'))
+                ->setAttribute('duration', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
@@ -1103,11 +1122,12 @@ App::post('/v1/functions/:functionId/executions')
         ->setParam('functionId', $function->getId())
         ->setParam('executions.{scope}.compute', 1)
         ->setParam('executionStatus', $execution->getAttribute('status', ''))
-        ->setParam('executionTime', $execution->getAttribute('time')); // ms
+        ->setParam('executionTime', $execution->getAttribute('duration')); // ms
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
+
         if (!$isPrivilegedUser && !$isAppUser) {
             $execution->setAttribute('stdout', '');
             $execution->setAttribute('stderr', '');
@@ -1134,12 +1154,15 @@ App::get('/v1/functions/:functionId/executions')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject) {
+    ->inject('mode')
+    ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception(Exception::FUNCTION_NOT_FOUND);
+            }
         }
 
         $queries = Query::parseQueries($queries);
@@ -1203,12 +1226,15 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->param('executionId', '', new UID(), 'Execution ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject) {
+    ->inject('mode')
+    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, string $mode) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception(Exception::FUNCTION_NOT_FOUND);
+            }
         }
 
         $execution = $dbForProject->getDocument('executions', $executionId);
@@ -1237,6 +1263,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->desc('Retry Build')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
+    ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
@@ -1296,6 +1323,8 @@ App::post('/v1/functions/:functionId/variables')
     ->desc('Create Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
+    ->label('audits.event', 'variable.create')
+    ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createVariable')
@@ -1339,8 +1368,9 @@ App::post('/v1/functions/:functionId/variables')
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($variable, Response::MODEL_VARIABLE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
 App::get('/v1/functions/:functionId/variables')
@@ -1355,43 +1385,18 @@ App::get('/v1/functions/:functionId/variables')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE_LIST)
     ->param('functionId', null, new UID(), 'Function unique ID.', false)
-    ->param('queries', [], new Variables(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Variables::ALLOWED_ATTRIBUTES), true)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, Response $response, Database $dbForProject) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
-
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
-        }
-
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
-            $variableId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getDocument('variables', $variableId);
-
-            if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Variable '{$variableId}' for the 'cursor' value not found.");
-            }
-
-            $cursor->setValue($cursorDocument);
-        }
-
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         $response->dynamic(new Document([
-            'variables' => $dbForProject->find('variables', $queries),
-            'total' => $dbForProject->count('variables', $filterQueries, APP_LIMIT_COUNT),
+            'variables' => $function->getAttribute('vars'),
+            'total' => \count($function->getAttribute('vars')),
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
@@ -1433,6 +1438,8 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->desc('Update Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
+    ->label('audits.event', 'variable.update')
+    ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'updateVariable')
@@ -1484,6 +1491,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->desc('Delete Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
+    ->label('audits.event', 'variable.delete')
+    ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'deleteVariable')

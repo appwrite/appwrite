@@ -54,8 +54,9 @@ class MessagingChannelsTest extends TestCase
                     '$id' => ID::custom('user' . $this->connectionsCount),
                     'memberships' => [
                         [
-                            'confirm' => true,
+                            '$id' => ID::custom('member' . $i),
                             'teamId' => ID::custom('team' . $i),
+                            'confirm' => true,
                             'roles' => [
                                 empty($index % 2)
                                     ? Auth::USER_ROLE_ADMIN
@@ -120,13 +121,20 @@ class MessagingChannelsTest extends TestCase
 
         /**
          * Check for correct amount of subscriptions:
-         *  - XXX users
+         *  - XXX users (2 roles per user)
          *  - XXX teams
          *  - XXX team roles (2 roles per team)
+         *  - XXX member roles (2 roles per team)
          *  - 1 guests
          *  - 1 users
+         *  - 1 users unverified
          */
-        $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 2), $this->realtime->subscriptions['1']);
+        $userRoles = 2 * $this->connectionsAuthenticated;
+        $userGroupRoles = 2;
+        $teamRoles = 2 * $this->connectionsPerChannel;
+        $memberRoles = 2 * $this->connectionsPerChannel;
+        $guestRoles = 1;
+        $this->assertCount(($userRoles + $userGroupRoles + $teamRoles + $memberRoles + $guestRoles), $this->realtime->subscriptions['1']);
 
         /**
          * Check for connections
@@ -138,7 +146,7 @@ class MessagingChannelsTest extends TestCase
         $this->realtime->unsubscribe(-1);
 
         $this->assertCount($this->connectionsTotal, $this->realtime->connections);
-        $this->assertCount(($this->connectionsAuthenticated + (3 * $this->connectionsPerChannel) + 2), $this->realtime->subscriptions['1']);
+        $this->assertCount(($userRoles + $userGroupRoles + $teamRoles + $memberRoles + $guestRoles), $this->realtime->subscriptions['1']);
 
         for ($i = 0; $i < $this->connectionsCount; $i++) {
             $this->realtime->unsubscribe($i);
@@ -259,6 +267,7 @@ class MessagingChannelsTest extends TestCase
 
             for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
                 $permissions[] = Role::team(ID::custom('team' . $i))->toString();
+                $permissions[] = Role::member(ID::custom('member' . $i))->toString();
             }
             $event = [
                 'project' => '1',
@@ -284,13 +293,13 @@ class MessagingChannelsTest extends TestCase
                 $this->assertStringEndsWith($index, $receiver);
             }
 
+            $role = empty($index % 2)
+                ? Auth::USER_ROLE_ADMIN
+                : 'member';
+
             $permissions = [
-                Role::team(
-                    ID::custom('team' . $index),
-                    (empty($index % 2)
-                        ? Auth::USER_ROLE_ADMIN
-                        : 'member')
-                )->toString()
+                Role::team(ID::custom('team' . $index), $role)->toString(),
+                Role::member(ID::custom('member' . $index))->toString()
             ];
 
             $event = [

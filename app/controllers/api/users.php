@@ -88,6 +88,7 @@ App::post('/v1/users')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -108,8 +109,9 @@ App::post('/v1/users')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/bcrypt')
@@ -117,6 +119,7 @@ App::post('/v1/users/bcrypt')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -136,8 +139,9 @@ App::post('/v1/users/bcrypt')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/md5')
@@ -145,6 +149,7 @@ App::post('/v1/users/md5')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -164,8 +169,9 @@ App::post('/v1/users/md5')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/argon2')
@@ -173,6 +179,7 @@ App::post('/v1/users/argon2')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -192,8 +199,9 @@ App::post('/v1/users/argon2')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/sha')
@@ -201,6 +209,7 @@ App::post('/v1/users/sha')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -227,8 +236,9 @@ App::post('/v1/users/sha')
 
         $user = createUser('sha', $options, $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/phpass')
@@ -236,6 +246,7 @@ App::post('/v1/users/phpass')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -255,8 +266,9 @@ App::post('/v1/users/phpass')
     ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/scrypt')
@@ -264,6 +276,7 @@ App::post('/v1/users/scrypt')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -296,8 +309,9 @@ App::post('/v1/users/scrypt')
 
         $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::post('/v1/users/scrypt-modified')
@@ -305,6 +319,7 @@ App::post('/v1/users/scrypt-modified')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -327,8 +342,9 @@ App::post('/v1/users/scrypt-modified')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Database $dbForProject, Event $events) {
         $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $dbForProject, $events);
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($user, Response::MODEL_USER);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_USER);
     });
 
 App::get('/v1/users')
@@ -433,14 +449,14 @@ App::get('/v1/users/:userId/prefs')
     });
 
 App::get('/v1/users/:userId/sessions')
-    ->desc('Get User Sessions')
+    ->desc('List User Sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'getSessions')
-    ->label('sdk.description', '/docs/references/users/get-user-sessions.md')
+    ->label('sdk.method', 'listSessions')
+    ->label('sdk.description', '/docs/references/users/list-user-sessions.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SESSION_LIST)
@@ -475,14 +491,14 @@ App::get('/v1/users/:userId/sessions')
     });
 
 App::get('/v1/users/:userId/memberships')
-    ->desc('Get User Memberships')
+    ->desc('List User Memberships')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'getMemberships')
-    ->label('sdk.description', '/docs/references/users/get-user-memberships.md')
+    ->label('sdk.method', 'listMemberships')
+    ->label('sdk.description', '/docs/references/users/list-user-memberships.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
@@ -515,14 +531,14 @@ App::get('/v1/users/:userId/memberships')
     });
 
 App::get('/v1/users/:userId/logs')
-    ->desc('Get User Logs')
+    ->desc('List User Logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'getLogs')
-    ->label('sdk.description', '/docs/references/users/get-user-logs.md')
+    ->label('sdk.method', 'listLogs')
+    ->label('sdk.description', '/docs/references/users/list-user-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
@@ -601,6 +617,7 @@ App::patch('/v1/users/:userId/status')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.status')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
@@ -637,6 +654,7 @@ App::patch('/v1/users/:userId/verification')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -672,6 +690,7 @@ App::patch('/v1/users/:userId/verification/phone')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -707,6 +726,7 @@ App::patch('/v1/users/:userId/name')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.name')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
@@ -747,6 +767,7 @@ App::patch('/v1/users/:userId/password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.password')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
@@ -788,6 +809,7 @@ App::patch('/v1/users/:userId/email')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.email')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
@@ -834,6 +856,7 @@ App::patch('/v1/users/:userId/phone')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.phone')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -878,6 +901,7 @@ App::patch('/v1/users/:userId/verification')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('audits.userId', '{request.userId}')
     ->label('usage.metric', 'users.{scope}.requests.update')
@@ -947,6 +971,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('usage.metric', 'sessions.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -989,6 +1014,7 @@ App::delete('/v1/users/:userId/sessions')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('usage.metric', 'sessions.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -1031,6 +1057,7 @@ App::delete('/v1/users/:userId')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.delete')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('usage.metric', 'users.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])

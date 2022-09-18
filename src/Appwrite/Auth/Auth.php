@@ -9,6 +9,7 @@ use Appwrite\Auth\Hash\Phpass;
 use Appwrite\Auth\Hash\Scrypt;
 use Appwrite\Auth\Hash\Scryptmodified;
 use Appwrite\Auth\Hash\Sha;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Role;
@@ -421,6 +422,17 @@ class Auth
             if ($user->getId()) {
                 $roles[] = Role::user($user->getId())->toString();
                 $roles[] = Role::users()->toString();
+
+                $emailVerified = $user->getAttribute('emailVerification', false);
+                $phoneVerified = $user->getAttribute('phoneVerification', false);
+
+                if ($emailVerified || $phoneVerified) {
+                    $roles[] = Role::user($user->getId(), Database::DIMENSION_VERIFIED)->toString();
+                    $roles[] = Role::users(Database::DIMENSION_VERIFIED)->toString();
+                } else {
+                    $roles[] = Role::user($user->getId(), Database::DIMENSION_UNVERIFIED)->toString();
+                    $roles[] = Role::users(Database::DIMENSION_UNVERIFIED)->toString();
+                }
             } else {
                 return [Role::guests()->toString()];
             }
@@ -431,11 +443,14 @@ class Auth
                 continue;
             }
 
-            if (isset($node['teamId']) && isset($node['roles'])) {
+            if (isset($node['$id']) && isset($node['teamId'])) {
                 $roles[] = Role::team($node['teamId'])->toString();
+                $roles[] = Role::member($node['$id'])->toString();
 
-                foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                    $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
+                if (isset($node['roles'])) {
+                    foreach ($node['roles'] as $nodeRole) { // Set all team roles
+                        $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
+                    }
                 }
             }
         }

@@ -45,6 +45,7 @@ App::post('/v1/teams')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].create')
     ->label('scope', 'teams.write')
+    ->label('audits.event', 'team.create')
     ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
@@ -116,8 +117,9 @@ App::post('/v1/teams')
             $events->setParam('userId', $user->getId());
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($team, Response::MODEL_TEAM);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($team, Response::MODEL_TEAM);
     });
 
 App::get('/v1/teams')
@@ -199,6 +201,7 @@ App::put('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update')
     ->label('scope', 'teams.write')
+    ->label('audits.event', 'team.update')
     ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
@@ -234,6 +237,7 @@ App::delete('/v1/teams/:teamId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].delete')
     ->label('scope', 'teams.write')
+    ->label('audits.event', 'team.delete')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
@@ -288,6 +292,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
     ->label('scope', 'teams.write')
     ->label('auth.type', 'invites')
+    ->label('audits.event', 'membership.create')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('audits.userId', '{request.userId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -446,24 +451,25 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('membershipId', $membership->getId())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic(
-            $membership
-            ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $invitee->getAttribute('name'))
-            ->setAttribute('userEmail', $invitee->getAttribute('email')),
-            Response::MODEL_MEMBERSHIP
-        );
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(
+                $membership
+                    ->setAttribute('teamName', $team->getAttribute('name'))
+                    ->setAttribute('userName', $invitee->getAttribute('name'))
+                    ->setAttribute('userEmail', $invitee->getAttribute('email')),
+                Response::MODEL_MEMBERSHIP
+            );
     });
 
 App::get('/v1/teams/:teamId/memberships')
-    ->desc('Get Team Memberships')
+    ->desc('List Team Memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'getMemberships')
-    ->label('sdk.description', '/docs/references/teams/get-team-members.md')
+    ->label('sdk.method', 'listMemberships')
+    ->label('sdk.description', '/docs/references/teams/list-team-members.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
@@ -582,6 +588,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update')
     ->label('scope', 'teams.write')
+    ->label('audits.event', 'membership.update')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
@@ -652,6 +659,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
     ->label('scope', 'public')
+    ->label('audits.event', 'membership.update')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('audits.userId', '{request.userId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -785,6 +793,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
     ->label('scope', 'teams.write')
+    ->label('audits.event', 'membership.delete')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
