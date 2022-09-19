@@ -153,7 +153,12 @@ class Line extends OAuth2
      */
     protected function getUser(string $accessToken): array
     {
+        if (empty($this->user)) {
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
+            $user = $this->request('GET', 'https://api.line.me/v2/profile', $headers);
+            $this->user = \json_decode($user, true);
+        }
 
-        return [];
+        return $this->user;
     }
 }
