@@ -171,6 +171,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'line' => [
+        'name' => 'Line',
+        'developers' => 'https://developers.line.biz/en/docs/line-login/integrate-line-login/',
+        'icon' => 'icon-line',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'linkedin' => [
         'name' => 'LinkedIn',
         'developers' => 'https://developer.linkedin.com/',
