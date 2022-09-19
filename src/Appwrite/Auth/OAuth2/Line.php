@@ -21,6 +21,7 @@ class Line extends OAuth2
      */
     protected array $scopes = [
         'profile',
+        'openid',
         'email',
     ];
 
@@ -77,7 +78,22 @@ class Line extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
-        return [];
+        $this->tokens = \json_decode($this->request(
+            'POST',
+            'https://api.line.me/v2/oauth/accessToken',
+            ['Content-Type: application/x-www-form-urlencoded'],
+            \http_build_query([
+                'grant_type' => 'refresh_token',
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'refresh_token' => $refreshToken
+            ])
+        ), true);
+
+        if (empty($this->tokens['refresh_token'])) {
+            $this->tokens['refresh_token'] = $refreshToken;
+        }
+        return $this->tokens;
     }
 
     /**
@@ -89,7 +105,7 @@ class Line extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return '';
+        return $user['userId'] ?? '';
     }
 
     /**
@@ -99,7 +115,7 @@ class Line extends OAuth2
      */
     public function getUserEmail(string $accessToken): string
     {
-
+        // TODO : MAKE A SAMPLE REQUEST
         return '';
     }
 
@@ -113,7 +129,8 @@ class Line extends OAuth2
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
-    {
+    {   
+        //TODO : DON'T THINK IT RETURNS THIS INFO
         return false;
     }
 
@@ -124,7 +141,9 @@ class Line extends OAuth2
      */
     public function getUserName(string $accessToken): string
     {
-        return '';
+        $user = $this->getUser($accessToken);
+
+        return $user['displayName'] ?? '';
     }
 
     /**
@@ -135,6 +154,6 @@ class Line extends OAuth2
     protected function getUser(string $accessToken): array
     {
 
-        return '';
+        return [];
     }
 }
