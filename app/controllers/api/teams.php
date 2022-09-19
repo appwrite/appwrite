@@ -160,10 +160,8 @@ App::get('/v1/teams')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         $results = $dbForProject->find('teams', $queries);
-        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('teams', $queries, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -338,7 +336,7 @@ App::post('/v1/teams/:teamId/memberships')
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0 && $project->getId() !== 'console') { // check users limit, console invites are allways allowed.
-                $total = $dbForProject->count('users', [], APP_LIMIT_USERS);
+                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
                 if ($total >= $limit) {
                     throw new Exception(Exception::USER_COUNT_EXCEEDED, 'Project registration is restricted. Contact your administrator for more information.');
@@ -510,18 +508,8 @@ App::get('/v1/teams/:teamId/memberships')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
-        $memberships = $dbForProject->find(
-            collection: 'memberships',
-            queries: $queries,
-        );
-
-        $total = $dbForProject->count(
-            collection: 'memberships',
-            queries: $filterQueries,
-            max: APP_LIMIT_COUNT
-        );
+        $memberships = $dbForProject->find('memberships', $queries);
+        $total = $dbForProject->count('memberships', $queries, APP_LIMIT_COUNT);
 
         $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
 

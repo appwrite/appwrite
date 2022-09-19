@@ -386,11 +386,9 @@ App::get('/v1/users')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         $response->dynamic(new Document([
             'users' => $dbForProject->find('users', $queries),
-            'total' => $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('users', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_USER_LIST);
     });
 

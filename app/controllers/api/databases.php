@@ -262,11 +262,9 @@ App::get('/v1/databases')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         $response->dynamic(new Document([
             'databases' => $dbForProject->find('databases', $queries),
-            'total' => $dbForProject->count('databases', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('databases', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_DATABASE_LIST);
     });
 
@@ -587,11 +585,9 @@ App::get('/v1/databases/:databaseId/collections')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         $response->dynamic(new Document([
             'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries),
-            'total' => $dbForProject->count('database_' . $database->getInternalId(), $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('database_' . $database->getInternalId(), $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
@@ -2034,14 +2030,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         if ($documentSecurity && !$valid) {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
-            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
         } else {
             $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
-            $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+            $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT));
         }
 
         /**

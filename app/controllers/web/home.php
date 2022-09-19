@@ -55,7 +55,7 @@ App::get('/')
             $whitelistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled');
 
             if ($whitelistRoot !== 'disabled') {
-                $count = $dbForConsole->count('users', [], 1);
+                $count = $dbForConsole->count('users', max: 1);
 
                 if ($count !== 0) {
                     return $response->redirect('/auth/signin');

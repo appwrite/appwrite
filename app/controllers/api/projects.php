@@ -209,11 +209,9 @@ App::get('/v1/projects')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
-
         $response->dynamic(new Document([
             'projects' => $dbForConsole->find('projects', $queries),
-            'total' => $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_PROJECT_LIST);
     });
 
