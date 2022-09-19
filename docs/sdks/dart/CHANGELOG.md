@@ -1,3 +1,38 @@
+## 7.0.0-dev.2
+### NEW
+* Support for Appwrite 1.0.0-RC1
+* More verbose headers have been included in the Clients - `x-sdk-name`, `x-sdk-platform`, `x-sdk-language`, `x-sdk-version`
+* Helper classes and methods for Permissions, Roles and IDs
+* Helper methods to suport new queries
+* All Dates and times are now returned in the ISO 8601 format
+* Execution Model now has an additional `stdout` attribute
+* Endpoint for creating DateTime attribute
+* User imports API with support for multiple hashing algorithms
+* CRUD API for functions environment variables
+* `createBucket` now supports different compression algorithms
+
+### BREAKING CHANGES
+
+* `databaseId` is no longer part of the `Database` Service constructor. `databaseId` will be part of the respective methods of the database service.
+* The `Users.create()` method signature has now been updated to include a `phone` parameter
+* `color` attribute is no longer supported in the Avatars Service
+* The `number` argument in phone endpoints have been renamed to `phone`
+* List endpoints no longer support `limit`, `offset`, `cursor`, `cursorDirection`, `orderAttributes`, `orderTypes` as they have been moved to the `queries` array
+* `read` and `write` permission have been deprecated and they are now included in the `permissions` array
+* Parameter `permission` for collections and buckets are now renamed to `documentSecurity` & `fileSecurity` respectively
+* Renamed methods of the Query helper
+    1.  `lesser` renamed to `lessThan`
+    2.  `lesserEqual` renamed to `lessThanEqual`
+    3.  `greater` renamed to `greaterThan`
+    4.  `greaterEqual` renamed to `greaterThanEqual`
+
+**Full Changelog for Appwrite 1.0.0-RC1 can be found here**: https://github.com/appwrite/appwrite/blob/master/CHANGES.md
+
+## 6.0.1
+* Dependency upgrades
+* Doc comments updates
+* Cleanup code
+
 ## 6.0.0
 * Support for Appwrite 0.15
 * **BREAKING** `Database` -> `Databases`

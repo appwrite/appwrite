@@ -15,7 +15,7 @@ $array = $this->getParam('array', false);
 
 <?php if($parent): ?>
 <input name="documentId" type="hidden" data-ls-bind="{{router.params.id}}" />
-<input name="collectionId" type="hidden" data-ls-bind="{{router.params.collection}}" />
+<input name="collectionId" type="hidden" data-ls-bind="{{router.params.collectionId}}" />
 <?php else: ?>
 <?php  /*<div class="margin-bottom-small text-size-small" data-ls-if="({{<?php echo $this->escape($namespace); ?>.$id}})">
     <span data-ls-bind="Document #{{<?php echo $this->escape($namespace); ?>.$id}}"></span> &nbsp;

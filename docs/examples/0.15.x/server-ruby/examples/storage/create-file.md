@@ -1,6 +1,7 @@
 require 'appwrite'
 
 client = Appwrite::Client.new
+InputFile = Appwrite::InputFile
 
 client
     .set_endpoint('https://[HOSTNAME_OR_IP]/v1') # Your API Endpoint
@@ -9,6 +10,6 @@ client
 
 storage = Appwrite::Storage.new(client)
 
-response = storage.create_file(bucket_id: '[BUCKET_ID]', file_id: '[FILE_ID]', file: InputFile.fromPath('dir/file.png'))
+response = storage.create_file(bucket_id: '[BUCKET_ID]', file_id: '[FILE_ID]', file: Appwrite::InputFile.from_path('dir/file.png'))
 
 puts response.inspect

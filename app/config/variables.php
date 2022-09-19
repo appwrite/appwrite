@@ -68,7 +68,7 @@ return [
                 'default' => 'localhost',
                 'required' => true,
                 'question' => 'Enter a DNS A record hostname to serve as a CNAME for your custom domains.' . PHP_EOL . 'You can use the same value as used for the Appwrite hostname.',
-                'filter' => ''
+                'filter' => 'domainTarget'
             ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
@@ -170,9 +170,27 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to mariadb from InfluxDB. The default value is 30 seconds.',
+                'description' => 'Deprecated since 1.0.0, use `_APP_USAGE_TIMESERIES_INTERVAL` and `_APP_USAGE_DATABASE_INTERVAL` instead.',
                 'introduction' => '0.10.0',
                 'default' => '30',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_USAGE_TIMESERIES_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Appwrite Database from Timeseries Database. The default value is 30 seconds.',
+                'introduction' => '1.0.0',
+                'default' => '30',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_USAGE_DATABASE_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats from data in Appwrite Database. The default value is 15 minutes.',
+                'introduction' => '1.0.0',
+                'default' => '900',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -394,8 +412,8 @@ return [
         'description' => '',
         'variables' => [
             [
-                'name' => '_APP_PHONE_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'phone://[USER]:[SECRET]@[PROVIDER]'. \n\nAvailable providers are twilio, text-magic and telesign.",
+                'name' => '_APP_SMS_PROVIDER',
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'. \n\nAvailable providers are twilio, text-magic and telesign.",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
@@ -403,7 +421,7 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_PHONE_FROM',
+                'name' => '_APP_SMS_FROM',
                 'description' => 'Phone number used for sending out messages. Must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789).',
                 'introduction' => '0.15.0',
                 'default' => '',
@@ -647,7 +665,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_TIMEOUT',
-                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds.',
+                'description' => 'The maximum number of seconds allowed as a timeout value when creating a new function. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the function\'s settings or in appwrite.json.',
                 'introduction' => '0.7.0',
                 'default' => '900',
                 'required' => false,
@@ -800,6 +818,15 @@ return [
                 'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_CACHE',
+                'description' => 'The maximum duration (in seconds) upto which to retain cached files. The default value is 2592000 seconds (30 days).',
+                'introduction' => '1.0.0',
+                'default' => '2592000',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

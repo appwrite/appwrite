@@ -9,7 +9,7 @@ client
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-const promise = functions.update('[FUNCTION_ID]', '[NAME]', []);
+const promise = functions.update('[FUNCTION_ID]', '[NAME]', ["role:all"]);
 
 promise.then(function (response) {
     console.log(response); // Success

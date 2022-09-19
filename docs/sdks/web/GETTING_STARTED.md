@@ -25,7 +25,7 @@ Once your SDK object is set, access any of the Appwrite services and choose any 
 const account = new Account(client);
 
 // Register User
-account.create('[USER_ID]', 'me@example.com', 'password', 'Jane Doe')
+account.create(ID.unique(), 'me@example.com', 'password', 'Jane Doe')
     .then(function (response) {
         console.log(response);
     }, function (error) {
@@ -47,7 +47,7 @@ client
 const account = new Account(client);
 
 // Register User
-account.create('[USER_ID]', 'me@example.com', 'password', 'Jane Doe')
+account.create(ID.unique(), 'me@example.com', 'password', 'Jane Doe')
     .then(function (response) {
         console.log(response);
     }, function (error) {
