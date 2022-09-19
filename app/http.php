@@ -38,8 +38,7 @@ $http
         'http_compression_level' => 6,
         'package_max_length' => $payloadSize,
         'buffer_output_size' => $payloadSize,
-    ])
-;
+    ]);
 
 $http->on('WorkerStart', function ($server, $workerId) {
     Console::success('Worker ' . ++$workerId . ' started successfully');
@@ -81,13 +80,16 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             }
         } while ($attempts < $max);
 
-        App::setResource('db', fn() => $db);
-        App::setResource('cache', fn() => $redis);
+        App::setResource('db', fn () => $db);
+        App::setResource('cache', fn () => $redis);
 
-        $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+        /** @var Utopia\Database\Database $dbForConsole */
+        $dbForConsole = $app->getResource('dbForConsole');
 
         Console::success('[Setup] - Server database init started...');
-        $collections = Config::getParam('collections', []); /** @var array $collections */
+
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
 
         if (!$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
             $redis->flushAll();
@@ -122,9 +124,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 continue;
             }
             /**
-             * Skip to prevent 0.15 migration issues.
+             * Skip to prevent 0.16 migration issues.
              */
-            if ($key === 'databases' && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'collections')) {
+            if (in_array($key, ['cache', 'variables']) && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
                 continue;
             }
 
@@ -160,7 +162,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty()) {
+        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForConsole->createDocument('buckets', new Document([
                 '$id' => ID::custom('default'),
@@ -244,8 +246,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             ->setContentType(Files::getFileMimeType($request->getURI()))
             ->addHeader('Cache-Control', 'public, max-age=' . $time)
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
-            ->send(Files::getFileContents($request->getURI()))
-        ;
+            ->send(Files::getFileContents($request->getURI()));
 
         return;
     }
@@ -255,8 +256,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $db = $register->get('dbPool')->get();
     $redis = $register->get('redisPool')->get();
 
-    App::setResource('db', fn() => $db);
-    App::setResource('cache', fn() => $redis);
+    App::setResource('db', fn () => $db);
+    App::setResource('cache', fn () => $redis);
 
     try {
         Authorization::cleanRoles();

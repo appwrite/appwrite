@@ -144,7 +144,7 @@ App::init()
             ->setMode($mode)
             ->setUserAgent($request->getUserAgent(''))
             ->setIP($request->getIP())
-            ->setEvent($route->getLabel('event', ''))
+            ->setEvent($route->getLabel('audits.event', ''))
             ->setProject($project)
             ->setUser($user);
 

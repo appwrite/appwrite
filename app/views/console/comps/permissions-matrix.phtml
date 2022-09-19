@@ -46,8 +46,20 @@ $escapedPermissions = \array_map(function ($perm) {
         <?php endif; ?>
         :value="rawPermissions"/>
 
-    <table class="u-table-layout-normal" data-ls-attrs="x-init=load({{<?php if (!empty($data)) echo $data . '.$permissions' ?>}})">
-        <thead>
+    <datalist id="types">
+        <option value="user:">
+        <option value="team:">
+        <option value="member:">
+        <option value="users">
+        <option value="guests">
+        <option value="any">
+    </datalist>
+
+    <table
+        class="u-table-layout-normal"
+        data-ls-attrs="x-init=load({{<?php if (!empty($data)) echo $data . '.$permissions' ?>}})">
+
+        <thead x-show="permissions.length > 0">
         <tr>
             <th>Role</th>
             <?php foreach ($permissions as $permission): ?>
@@ -60,7 +72,16 @@ $escapedPermissions = \array_map(function ($perm) {
         <template x-for="(permission, index) in permissions">
             <tr>
                 <td>
-                    <p x-text="permission.role"></p>
+                    <input
+                        required
+                        autocomplete="off"
+                        :id="'<?php echo $form; ?>Input' + index"
+                        name="<?php echo $form; ?>"
+                        form="<?php echo $form ?>"
+                        list="types"
+                        type="text"
+                        x-model="permission.role"
+                        @keyup="updatePermission(index)"/>
                 </td>
                 <?php foreach ($escapedPermissions as $permission): ?>
                     <td>
@@ -78,38 +99,11 @@ $escapedPermissions = \array_map(function ($perm) {
                 </td>
             </tr>
         </template>
-        <tr x-data="permissionsRow"
-            @addrow<?php echo \strtolower($form); ?>.window="addPermission('<?php echo $form; ?>', role, { <?php echo \implode(',', $escapedPermissions) ?> })">
-            <td>
-                <datalist id="types">
-                    <option value="user:">
-                    <option value="team:">
-                    <option value="users">
-                    <option value="guests">
-                    <option value="any">
-                </datalist>
-
-                <input
-                    required
-                    id="<?php echo $form; ?>Input"
-                    name="<?php echo $form; ?>"
-                    form="<?php echo $form ?>"
-                    list="types"
-                    type="text"
-                    x-model="role" />
-            </td>
-            <?php foreach ($escapedPermissions as $permission): ?>
-                <td>
-                    <input type="checkbox" name="<?php echo $permission ?>" x-model="<?php echo $permission; ?>"/>
-                </td>
-            <?php endforeach; ?>
-            <td></td>
-        </tr>
         </tbody>
         <tfoot>
         <tr>
             <td colspan="<?php \count($permissions) + 2 ?>">
-                <button type="button" class="margin-top-small reverse" @click="$dispatch('addrow<?php echo \strtolower($form); ?>')">Add</button>
+                <button type="button" class="margin-top reverse" @click="addPermission('<?php echo $form  ?>')">Add Role</button>
             </td>
         </tr>
         </tfoot>

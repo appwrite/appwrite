@@ -1122,7 +1122,6 @@ class RealtimeCustomClientTest extends Scope
         ], $this->getHeaders()), [
             'permissions' => [
                 Permission::read(Role::any()),
-                Permission::create(Role::any()),
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
@@ -1263,7 +1262,9 @@ class RealtimeCustomClientTest extends Scope
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()), [
+            'async' => true
+        ]);
 
         $this->assertEquals($execution['headers']['status-code'], 202);
         $this->assertNotEmpty($execution['body']['$id']);

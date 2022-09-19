@@ -129,7 +129,7 @@ class FunctionsV1 extends Worker
                 break;
 
             case 'schedule':
-                $scheduleOriginal = $execution->getAttribute('scheduleOriginal', '');
+                $functionOriginal = $function;
                 /*
                  * 1. Get Original Task
                  * 2. Check for updates
@@ -150,21 +150,25 @@ class FunctionsV1 extends Worker
                     throw new Exception('Function not found (' . $function->getId() . ')');
                 }
 
-                if ($scheduleOriginal && $scheduleOriginal !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
+                if ($functionOriginal->getAttribute('schedule') !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
+                    return;
+                }
+
+                if ($functionOriginal->getAttribute('scheduleUpdatedAt') !== $function->getAttribute('scheduleUpdatedAt')) { // Double execution due to rapid cron changes, ignore this run.
                     return;
                 }
 
                 $cron = new CronExpression($function->getAttribute('schedule'));
                 $next = DateTime::format($cron->getNextRunDate());
 
-                $function
+                $function = $function
                     ->setAttribute('scheduleNext', $next)
                     ->setAttribute('schedulePrevious', DateTime::now());
 
                 $function = $database->updateDocument(
                     'functions',
                     $function->getId(),
-                    $function->setAttribute('scheduleNext', $next)
+                    $function
                 );
 
                 $reschedule = new Func();
@@ -248,7 +252,7 @@ class FunctionsV1 extends Worker
                 'statusCode' => 0,
                 'response' => '',
                 'stderr' => '',
-                'time' => 0.0,
+                'duration' => 0.0,
                 'search' => implode(' ', [$functionId, $executionId]),
             ]));
 
@@ -301,11 +305,11 @@ class FunctionsV1 extends Worker
                 ->setAttribute('response', $executionResponse['response'])
                 ->setAttribute('stdout', $executionResponse['stdout'])
                 ->setAttribute('stderr', $executionResponse['stderr'])
-                ->setAttribute('time', $executionResponse['time']);
+                ->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution
-                ->setAttribute('time', (float)$interval->format('%s.%f'))
+                ->setAttribute('duration', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
@@ -367,7 +371,7 @@ class FunctionsV1 extends Worker
                 ->setParam('functionId', $function->getId())
                 ->setParam('executions.{scope}.compute', 1)
                 ->setParam('executionStatus', $execution->getAttribute('status', ''))
-                ->setParam('executionTime', $execution->getAttribute('time'))
+                ->setParam('executionTime', $execution->getAttribute('duration'))
                 ->setParam('networkRequestSize', 0)
                 ->setParam('networkResponseSize', 0)
                 ->submit();
