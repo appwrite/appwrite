@@ -96,8 +96,8 @@
                 'x-sdk-name': 'Console',
                 'x-sdk-platform': 'console',
                 'x-sdk-language': 'web',
-                'x-sdk-version': '7.0.0-RC2',
-                'X-Appwrite-Response-Format': '1.0.0-RC1',
+                'x-sdk-version': '7.0.0',
+                'X-Appwrite-Response-Format': '1.0.0',
             };
             this.realtime = {
                 socket: undefined,
@@ -561,7 +561,7 @@
             });
         }
         /**
-         * Get Account Logs
+         * List Account Logs
          *
          * Get currently logged in user list of latest security activity logs. Each
          * log returns user IP address, location and date and time of log.
@@ -570,7 +570,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getLogs(queries) {
+        listLogs(queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/account/logs';
                 let payload = {};
@@ -814,7 +814,7 @@
             });
         }
         /**
-         * Get Account Sessions
+         * List Account Sessions
          *
          * Get currently logged in user list of active sessions across different
          * devices.
@@ -822,7 +822,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getSessions() {
+        listSessions() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/account/sessions';
                 let payload = {};
@@ -3027,10 +3027,11 @@
          * @param {string[]} events
          * @param {string} schedule
          * @param {number} timeout
+         * @param {boolean} enabled
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        create(functionId, name, execute, runtime, events, schedule, timeout) {
+        create(functionId, name, execute, runtime, events, schedule, timeout, enabled) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
@@ -3066,6 +3067,9 @@
                 }
                 if (typeof timeout !== 'undefined') {
                     payload['timeout'] = timeout;
+                }
+                if (typeof enabled !== 'undefined') {
+                    payload['enabled'] = enabled;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
@@ -3145,10 +3149,11 @@
          * @param {string[]} events
          * @param {string} schedule
          * @param {number} timeout
+         * @param {boolean} enabled
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        update(functionId, name, execute, events, schedule, timeout) {
+        update(functionId, name, execute, events, schedule, timeout, enabled) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
@@ -3175,6 +3180,9 @@
                 }
                 if (typeof timeout !== 'undefined') {
                     payload['timeout'] = timeout;
+                }
+                if (typeof enabled !== 'undefined') {
+                    payload['enabled'] = enabled;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('put', uri, {
@@ -3556,24 +3564,16 @@
          * Get a list of all variables of a specific function.
          *
          * @param {string} functionId
-         * @param {string[]} queries
-         * @param {string} search
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        listVariables(functionId, queries, search) {
+        listVariables(functionId) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
                 }
                 let path = '/functions/{functionId}/variables'.replace('{functionId}', functionId);
                 let payload = {};
-                if (typeof queries !== 'undefined') {
-                    payload['queries'] = queries;
-                }
-                if (typeof search !== 'undefined') {
-                    payload['search'] = search;
-                }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
                     'content-type': 'application/json',
@@ -3940,7 +3940,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getContinents() {
+        listContinents() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/continents';
                 let payload = {};
@@ -3959,7 +3959,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getCountries() {
+        listCountries() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/countries';
                 let payload = {};
@@ -3978,7 +3978,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getCountriesEU() {
+        listCountriesEU() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/countries/eu';
                 let payload = {};
@@ -3997,7 +3997,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getCountriesPhones() {
+        listCountriesPhones() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/countries/phones';
                 let payload = {};
@@ -4017,7 +4017,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getCurrencies() {
+        listCurrencies() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/currencies';
                 let payload = {};
@@ -4036,7 +4036,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getLanguages() {
+        listLanguages() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/locale/languages';
                 let payload = {};
@@ -5861,7 +5861,7 @@
             });
         }
         /**
-         * Get Team Memberships
+         * List Team Memberships
          *
          * Use this endpoint to list a team's members using the team's ID. All team
          * members have read access to this endpoint.
@@ -5872,7 +5872,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getMemberships(teamId, queries, search) {
+        listMemberships(teamId, queries, search) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof teamId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "teamId"');
@@ -6647,7 +6647,7 @@
             });
         }
         /**
-         * Get User Logs
+         * List User Logs
          *
          * Get the user activity logs list by its unique ID.
          *
@@ -6656,7 +6656,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getLogs(userId, queries) {
+        listLogs(userId, queries) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
@@ -6673,7 +6673,7 @@
             });
         }
         /**
-         * Get User Memberships
+         * List User Memberships
          *
          * Get the user membership list by its unique ID.
          *
@@ -6681,7 +6681,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getMemberships(userId) {
+        listMemberships(userId) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');
@@ -6835,7 +6835,7 @@
             });
         }
         /**
-         * Get User Sessions
+         * List User Sessions
          *
          * Get the user sessions list by its unique ID.
          *
@@ -6843,7 +6843,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        getSessions(userId) {
+        listSessions(userId) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof userId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "userId"');

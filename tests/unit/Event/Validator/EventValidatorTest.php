@@ -4,7 +4,6 @@ namespace Tests\Unit\Event\Validator;
 
 use Appwrite\Event\Validator\Event;
 use PHPUnit\Framework\TestCase;
-use Utopia\Config\Config;
 
 class EventValidatorTest extends TestCase
 {
@@ -12,7 +11,6 @@ class EventValidatorTest extends TestCase
 
     public function setUp(): void
     {
-        Config::load('events', __DIR__ . '/../../../../app/config/events.php');
         $this->object = new Event();
     }
 

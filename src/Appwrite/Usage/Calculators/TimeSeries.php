@@ -325,7 +325,6 @@ class TimeSeries extends Calculator
                     $document->setAttribute('value', $value)
                 );
             }
-            $this->latestTime[$metric][$period] = $time;
         } catch (\Exception $e) { // if projects are deleted this might fail
             if (is_callable($this->errorHandler)) {
                 call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
@@ -399,6 +398,7 @@ class TimeSeries extends Calculator
                         $value,
                         0
                     );
+                    $this->latestTime[$metric][$period['key']] = $point['time'];
                 }
             }
         } catch (\Exception $e) { // if projects are deleted this might fail

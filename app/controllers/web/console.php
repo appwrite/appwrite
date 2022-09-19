@@ -329,9 +329,9 @@ App::get('/console/databases/document')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->param('databaseId', '', new UID(), 'Database unique ID.')
-    ->param('collection', '', new UID(), 'Collection unique ID.')
+    ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->action(function (string $databaseId, string $collection, View $layout) {
+    ->action(function (string $databaseId, string $collectionId, View $layout) {
 
         $logs = new View(__DIR__ . '/../../views/console/comps/logs.phtml');
         $logs
@@ -339,7 +339,7 @@ App::get('/console/databases/document')
             ->setParam('method', 'databases.listDocumentLogs')
             ->setParam('params', [
                 'database-id' => '{{router.params.databaseId}}',
-                'collection-id' => '{{router.params.collection}}',
+                'collection-id' => '{{router.params.collectionId}}',
                 'document-id' => '{{router.params.id}}',
             ])
         ;
@@ -356,7 +356,7 @@ App::get('/console/databases/document')
                 Database::PERMISSION_DELETE,
             ])
             ->setParam('params', [
-                'collection-id' => '{{router.params.collection}}',
+                'collection-id' => '{{router.params.collectionId}}',
                 'database-id' => '{{router.params.databaseId}}',
                 'document-id' => '{{router.params.id}}',
             ]);
@@ -366,7 +366,7 @@ App::get('/console/databases/document')
         $page
             ->setParam('new', false)
             ->setParam('database', $databaseId)
-            ->setParam('collection', $collection)
+            ->setParam('collection', $collectionId)
             ->setParam('permissions', $permissions)
             ->setParam('logs', $logs)
         ;
@@ -381,9 +381,9 @@ App::get('/console/databases/document/new')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->param('databaseId', '', new UID(), 'Database unique ID.')
-    ->param('collection', '', new UID(), 'Collection unique ID.')
+    ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->action(function (string $databaseId, string $collection, View $layout) {
+    ->action(function (string $databaseId, string $collectionId, View $layout) {
 
         $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
 
@@ -396,7 +396,7 @@ App::get('/console/databases/document/new')
                 Database::PERMISSION_DELETE,
             ])
             ->setParam('params', [
-                'collection-id' => '{{router.params.collection}}',
+                'collection-id' => '{{router.params.collectionId}}',
                 'database-id' => '{{router.params.databaseId}}',
                 'document-id' => '{{router.params.id}}',
             ]);
@@ -406,7 +406,7 @@ App::get('/console/databases/document/new')
         $page
             ->setParam('new', true)
             ->setParam('database', $databaseId)
-            ->setParam('collection', $collection)
+            ->setParam('collection', $collectionId)
             ->setParam('permissions', $permissions)
             ->setParam('logs', new View())
         ;

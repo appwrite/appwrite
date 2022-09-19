@@ -378,13 +378,13 @@ $smtpEnabled = $this->getParam('smtpEnabled', false);
                 <h2>Members</h2>
 
                 <div class="zone xl"
-                    data-service="teams.getMemberships"
+                    data-service="teams.listMemberships"
                     data-scope="console"
                     data-event="load,teams.createMembership,teams.deleteMembership,teams.createMembership.resent"
                     data-name="members"
                     data-param-team-id="{{console-project.teamId}}"
                     data-success="trigger"
-                    data-success-param-trigger-events="teams.getMemberships">
+                    data-success-param-trigger-events="teams.listMemberships">
 
                     <div class="box margin-bottom">
                         <ul data-ls-loop="members.memberships" data-ls-as="member" class="list">

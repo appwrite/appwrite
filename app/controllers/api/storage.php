@@ -48,7 +48,8 @@ App::post('/v1/storage/buckets')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
     ->label('event', 'buckets.[bucketId].create')
-    ->label('audits.resource', 'buckets/{response.$id}')
+    ->label('audits.event', 'bucket.create')
+    ->label('audits.resource', 'bucket/{response.$id}')
     ->label('usage.metric', 'buckets.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
@@ -136,8 +137,9 @@ App::post('/v1/storage/buckets')
             ->setParam('bucketId', $bucket->getId())
         ;
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($bucket, Response::MODEL_BUCKET);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
 App::get('/v1/storage/buckets')
@@ -218,7 +220,8 @@ App::put('/v1/storage/buckets/:bucketId')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
     ->label('event', 'buckets.[bucketId].update')
-    ->label('audits.resource', 'buckets/{response.$id}')
+    ->label('audits.event', 'bucket.update')
+    ->label('audits.resource', 'bucket/{response.$id}')
     ->label('usage.metric', 'buckets.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
@@ -283,8 +286,9 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->desc('Delete Bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
+    ->label('audits.event', 'bucket.delete')
     ->label('event', 'buckets.[bucketId].delete')
-    ->label('audits.resource', 'buckets/{request.bucketId}')
+    ->label('audits.resource', 'bucket/{request.bucketId}')
     ->label('usage.metric', 'buckets.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
@@ -325,8 +329,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
+    ->label('audits.event', 'file.create')
     ->label('event', 'buckets.[bucketId].files.[fileId].create')
-    ->label('audits.resource', 'files/{response.$id}')
+    ->label('audits.resource', 'file/{response.$id}')
     ->label('usage.metric', 'files.{scope}.requests.create')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -643,8 +648,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $metadata = null; // was causing leaks as it was passed by reference
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($file, Response::MODEL_FILE);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($file, Response::MODEL_FILE);
     });
 
 App::get('/v1/storage/buckets/:bucketId/files')
@@ -1236,7 +1242,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('event', 'buckets.[bucketId].files.[fileId].update')
-    ->label('audits.resource', 'files/{response.$id}')
+    ->label('audits.event', 'file.update')
+    ->label('audits.resource', 'file/{response.$id}')
     ->label('usage.metric', 'files.{scope}.requests.update')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -1338,6 +1345,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('event', 'buckets.[bucketId].files.[fileId].delete')
+    ->label('audits.event', 'file.delete')
     ->label('audits.resource', 'file/{request.fileId}')
     ->label('usage.metric', 'files.{scope}.requests.delete')
     ->label('usage.params', ['bucketId:{request.bucketId}'])

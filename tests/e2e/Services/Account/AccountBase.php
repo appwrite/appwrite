@@ -341,7 +341,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['logs']);
         $this->assertCount(3, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['total']);
-        $this->assertContains($response['body']['logs'][1]['event'], ["users.{$userId}.create", "users.{$userId}.sessions.{$sessionId}.create"]);
+        $this->assertContains($response['body']['logs'][1]['event'], ["session.create"]);
         $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
         $this->assertEquals(true, DateTime::isValid($response['body']['logs'][1]['time']));
 
@@ -363,7 +363,7 @@ trait AccountBase
         $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
 
-        $this->assertContains($response['body']['logs'][2]['event'], ["users.{$userId}.create", "users.{$userId}.sessions.{$sessionId}.create"]);
+        $this->assertContains($response['body']['logs'][2]['event'], ["user.create"]);
         $this->assertEquals($response['body']['logs'][2]['ip'], filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP));
         $this->assertEquals(true, DateTime::isValid($response['body']['logs'][2]['time']));
 
@@ -1185,6 +1185,7 @@ trait AccountBase
     /**
      * @depends testCreateAccountRecovery
      */
+    #[Retry(count: 1)]
     public function testUpdateAccountRecovery($data): array
     {
         $id = $data['id'] ?? '';
