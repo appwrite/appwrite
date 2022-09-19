@@ -1,6 +1,6 @@
 <?php
 
-use Appwrite\Auth\SMS;
+use Appwrite\SMS\Adapter;
 use Appwrite\SMS\Adapter\Mock;
 use Appwrite\SMS\Adapter\Telesign;
 use Appwrite\SMS\Adapter\TextMagic;
@@ -19,7 +19,7 @@ Console::success(APP_NAME . ' messaging worker v1 has started' . "\n");
 
 class MessagingV1 extends Worker
 {
-    protected ?SMS $sms = null;
+    protected ?Adapter $sms = null;
     protected ?string $from = null;
 
     public function getName(): string
@@ -34,7 +34,7 @@ class MessagingV1 extends Worker
         $secret = $dsn->getPassword();
 
         $this->sms = match ($dsn->getHost()) {
-            'mock' => new Mock('', ''), // used for tests
+            'mock' => new Mock($user, $secret), // used for tests
             'twilio' => new Twilio($user, $secret),
             'text-magic' => new TextMagic($user, $secret),
             'telesign' => new Telesign($user, $secret),
