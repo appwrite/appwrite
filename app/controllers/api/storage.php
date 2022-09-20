@@ -761,7 +761,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         if ($fileSecurity && !$valid) {
@@ -829,7 +829,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' === $output)) { // Fallback webp to jpeg when no browser support
@@ -978,7 +978,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         if ($fileSecurity && !$valid) {
@@ -1118,7 +1118,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         if ($fileSecurity && !$valid) {
@@ -1276,7 +1276,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         $validator = new Authorization(Database::PERMISSION_UPDATE);
         $valid = $validator->isValid($bucket->getUpdate());
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         // Read permission should not be required for update
@@ -1324,7 +1324,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             try {
                 $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
             } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
+                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
             }
         } else {
             $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
@@ -1377,7 +1377,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $validator = new Authorization(Database::PERMISSION_DELETE);
         $valid = $validator->isValid($bucket->getDelete());
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         // Read permission should not be required for delete
@@ -1412,7 +1412,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                 try {
                     $deleted = $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId);
                 } catch (AuthorizationException) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                 }
             } else {
                 $deleted = Authorization::skip(fn() => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
