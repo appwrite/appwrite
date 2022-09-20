@@ -93,8 +93,7 @@ App::post('/v1/projects')
 
         $secret = Authorization::skip(fn() => $dbForConsole->createDocument('secrets', new Document([
             '$id' => ID::unique(),
-            '$read' => [],
-            '$write' => [],
+            '$permissions' => [],
             '$collection' => 'secrets',
             'secret' => OpenSSL::secretString(),
         ])));
