@@ -1394,7 +1394,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
         // Make sure we don't delete the file before the document permission check occurs
         if ($fileSecurity && !$valid && !$validator->isValid($file->getDelete())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
         $deviceDeleted = false;
