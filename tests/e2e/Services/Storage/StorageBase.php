@@ -27,10 +27,10 @@ trait StorageBase
             'maximumFileSize' => 2000000, //2MB
             'allowedFileExtensions' => ["jpg", "png"],
             'permissions' => [
-                Permission::read(Role::any()),
-                Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
+                Permission::read(Role::users()),
+                Permission::create(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
             ],
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
@@ -45,9 +45,9 @@ trait StorageBase
             'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
             ],
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -345,14 +345,26 @@ trait StorageBase
         $this->assertEquals(0, count($files['body']['files']));
 
         /**
-         * Test for FAILURE unknown Bucket
+         * Test for FAILURE
          */
 
+        // Unkown bucket
         $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+
         $this->assertEquals(404, $files['headers']['status-code']);
+
+        // No permissions
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $files['headers']['status-code']);
+        $this->assertEquals(0, $files['body']['total']);
+        $this->assertEquals([], $files['body']['files']);
 
         return $data;
     }

@@ -2663,7 +2663,7 @@ trait DatabasesBase
         ]);
 
         // Current user has no collection permissions and document permissions are disabled
-        $this->assertEquals(401, $document3GetWithDocumentRead['headers']['status-code']);
+        $this->assertEquals(404, $document3GetWithDocumentRead['headers']['status-code']);
 
         $documentsUser2 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
             'origin' => 'http://localhost',
@@ -2673,8 +2673,9 @@ trait DatabasesBase
         ]);
 
         // Current user has no collection permissions and document permissions are disabled
-        $this->assertEquals(401, $documentsUser2['headers']['status-code']);
-
+        $this->assertEquals(200, $documentsUser2['headers']['status-code']);
+        $this->assertEquals(0, $documentsUser2['body']['total']);
+        $this->assertEquals([], $documentsUser2['body']['documents']);
 
         // Enable document permissions
         $collection = $this->client->call(CLient::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId, [

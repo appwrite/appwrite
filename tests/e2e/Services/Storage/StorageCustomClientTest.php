@@ -196,7 +196,7 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
             'content-type' => 'multipart/form-data',
@@ -215,14 +215,14 @@ class StorageCustomClientTest extends Scope
             'permissions' => [],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         /**
          * Test for SUCCESS
@@ -321,7 +321,7 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        $this->assertEquals(401, $file['headers']['status-code']);
+        $this->assertEquals(404, $file['headers']['status-code']);
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
             'content-type' => 'multipart/form-data',
@@ -331,23 +331,25 @@ class StorageCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
-        $this->client->call(CLient::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+        $this->assertEquals(401, $file['headers']['status-code']);
+
+        $file = $this->client->call(CLient::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'name' => 'permissions.png',
         ]);
 
-        $this->assertEquals(401, $file['headers']['status-code']);
+        $this->assertEquals(404, $file['headers']['status-code']);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         $email = ID::unique() . '@localhost.test';
         $password = 'password';
@@ -359,7 +361,7 @@ class StorageCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
             'content-type' => 'multipart/form-data',
@@ -380,7 +382,7 @@ class StorageCustomClientTest extends Scope
             'permissions' => [],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'application/json',
@@ -388,7 +390,7 @@ class StorageCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         /**
          * Test for SUCCESS
@@ -551,7 +553,7 @@ class StorageCustomClientTest extends Scope
             'permissions' => [],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         // Team 2 delete failure
         $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
@@ -560,7 +562,7 @@ class StorageCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         /**
          * Test for SUCCESS
@@ -662,7 +664,7 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        $this->assertEquals(401, $file['headers']['status-code']);
+        $this->assertEquals(404, $file['headers']['status-code']);
     }
 
     public function testFileUsersPermissions(): void
@@ -751,7 +753,7 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(401, $file['headers']['status-code']);
+        $this->assertEquals(404, $file['headers']['status-code']);
     }
 
     public function testFileUserPermissions(): void
@@ -840,7 +842,7 @@ class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals(401, $file['headers']['status-code']);
+        $this->assertEquals(404, $file['headers']['status-code']);
 
         $user2 = $this->createUser(ID::unique(), uniqid() . '@localhost.test', 'password');
 
@@ -871,7 +873,7 @@ class StorageCustomClientTest extends Scope
             'permissions' => [],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'application/json',
@@ -879,7 +881,7 @@ class StorageCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
     }
 
     public function testFileTeamPermissions(): void
@@ -1040,7 +1042,7 @@ class StorageCustomClientTest extends Scope
             'permissions' => [],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         // Team 2 delete failure
         $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
@@ -1049,7 +1051,7 @@ class StorageCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
         ]);
 
-        $this->assertEquals($file['headers']['status-code'], 401);
+        $this->assertEquals($file['headers']['status-code'], 404);
 
         /**
          * Test for SUCCESS
