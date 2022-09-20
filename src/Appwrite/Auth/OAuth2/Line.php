@@ -26,6 +26,11 @@ class Line extends OAuth2
     ];
 
     /**
+     * @var array
+     */
+    protected array $idToken = [];
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -62,9 +67,10 @@ class Line extends OAuth2
                 \http_build_query([
                     'grant_type' => 'authorization_code',
                     'code' => $code,
+                    'redirect_uri' => $this->callback,
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
-                    'redirect_uri' => $this->callback
+                    
                 ])
             ), true);
         }
@@ -80,13 +86,14 @@ class Line extends OAuth2
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://api.line.me/v2/oauth/accessToken',
+            'https://api.line.me/oauth2/v2.1/token',
             ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
-                'refresh_token' => $refreshToken
+                
             ])
         ), true);
 
@@ -104,8 +111,9 @@ class Line extends OAuth2
     public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
+        $userInfo = $this->verifyToken();
 
-        return $user['userId'] ?? '';
+        return ($user) ? $userInfo['sub'] : '';
     }
 
     /**
@@ -115,8 +123,10 @@ class Line extends OAuth2
      */
     public function getUserEmail(string $accessToken): string
     {
-        // TODO : MAKE A SAMPLE REQUEST
-        return '';
+        $user = $this->getUser($accessToken);
+        $userInfo = $this->verifyToken();
+
+        return ($user) ? $userInfo['email'] : '';
     }
 
     /**
@@ -130,8 +140,10 @@ class Line extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {   
-        //TODO : DON'T THINK IT RETURNS THIS INFO
-        return false;
+        $user = $this->getUser($accessToken);
+        $userInfo = $this->verifyToken();
+    
+        return ($user && $userInfo['email']) ? true : false ;
     }
 
     /**
@@ -142,8 +154,9 @@ class Line extends OAuth2
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-
-        return $user['displayName'] ?? '';
+        $userInfo = $this->verifyToken();
+    
+        return ($user) ? $userInfo['name'] : '';
     }
 
     /**
@@ -155,10 +168,33 @@ class Line extends OAuth2
     {
         if (empty($this->user)) {
             $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
-            $user = $this->request('GET', 'https://api.line.me/v2/profile', $headers);
+            $user = $this->request('GET', ' https://api.line.me/oauth2/v2.1/userinfo', $headers);
             $this->user = \json_decode($user, true);
         }
 
         return $this->user;
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return array
+     */
+    protected function verifyToken(): array
+    {
+        if (empty($this->idToken)) {
+            $this->idToken = \json_decode($this->request(
+                'POST',
+                'https://api.line.me/oauth2/v2.1/verify',
+                ['Content-Type: application/x-www-form-urlencoded'],
+                \http_build_query([
+                    'id_token' => $this->tokens['id_token'],
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    
+                ])
+            ), true);
+        }
+        return $this->idToken;
     }
 }
