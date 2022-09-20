@@ -35,6 +35,7 @@ class TypeRegistry
             Model::TYPE_JSON => self::json(),
             Response::MODEL_NONE => self::json(),
             Response::MODEL_ANY => self::json(),
+            Model::TYPE_DATETIME => Type::string(),
         ];
         self::$defaultDocumentArgs = [
             'id' => [
