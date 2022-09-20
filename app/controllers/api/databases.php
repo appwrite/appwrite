@@ -2002,7 +2002,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($collection->getRead());
         if (!$documentSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            $response->dynamic(new Document([
+                'total' => 0,
+                'documents' => [],
+            ]), Response::MODEL_DOCUMENT_LIST);
+
+            return;
         }
 
         // Validate queries
