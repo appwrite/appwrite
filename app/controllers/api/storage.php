@@ -685,7 +685,12 @@ App::get('/v1/storage/buckets/:bucketId/files')
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($bucket->getRead());
         if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            $response->dynamic(new Document([
+                'total' => 0,
+                'files' => [],
+            ]), Response::MODEL_FILE_LIST);
+
+            return;
         }
 
         $queries = Query::parseQueries($queries);
