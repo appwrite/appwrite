@@ -176,7 +176,7 @@ class Line extends OAuth2
     }
 
     /**
-     * @param string $accessToken
+     * 
      *
      * @return array
      */
