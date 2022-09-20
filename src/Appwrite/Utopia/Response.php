@@ -9,6 +9,14 @@ use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\Account;
+use Appwrite\Utopia\Response\Model\AlgoArgon2;
+use Appwrite\Utopia\Response\Model\AlgoBcrypt;
+use Appwrite\Utopia\Response\Model\AlgoMd5;
+use Appwrite\Utopia\Response\Model\AlgoPhpass;
+use Appwrite\Utopia\Response\Model\AlgoScrypt;
+use Appwrite\Utopia\Response\Model\AlgoScryptModified;
+use Appwrite\Utopia\Response\Model\AlgoSha;
 use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\Attribute;
@@ -21,6 +29,7 @@ use Appwrite\Utopia\Response\Model\AttributeEmail;
 use Appwrite\Utopia\Response\Model\AttributeEnum;
 use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
+use Appwrite\Utopia\Response\Model\AttributeDatetime;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Database;
@@ -67,10 +76,12 @@ use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
 use Appwrite\Utopia\Response\Model\UsageDatabases;
+use Appwrite\Utopia\Response\Model\UsageFunction;
 use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
+use Appwrite\Utopia\Response\Model\Variable;
 
 /**
  * @method int getStatusCode()
@@ -95,6 +106,7 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_BUCKETS = 'usageBuckets';
     public const MODEL_USAGE_STORAGE = 'usageStorage';
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
+    public const MODEL_USAGE_FUNCTION = 'usageFunction';
     public const MODEL_USAGE_PROJECT = 'usageProject';
 
     // Database
@@ -118,8 +130,10 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
     public const MODEL_ATTRIBUTE_IP = 'attributeIp';
     public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
+    public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
 
     // Users
+    public const MODEL_ACCOUNT = 'account';
     public const MODEL_USER = 'user';
     public const MODEL_USER_LIST = 'userList';
     public const MODEL_SESSION = 'session';
@@ -127,6 +141,15 @@ class Response extends SwooleResponse
     public const MODEL_TOKEN = 'token';
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
+
+    // Users password algos
+    public const MODEL_ALGO_MD5 = 'algoMd5';
+    public const MODEL_ALGO_SHA = 'algoSha';
+    public const MODEL_ALGO_SCRYPT = 'algoScrypt';
+    public const MODEL_ALGO_SCRYPT_MODIFIED = 'algoScryptModified';
+    public const MODEL_ALGO_BCRYPT = 'algoBcrypt';
+    public const MODEL_ALGO_ARGON2 = 'algoArgon2';
+    public const MODEL_ALGO_PHPASS = 'algoPhpass';
 
     // Storage
     public const MODEL_FILE = 'file';
@@ -177,6 +200,8 @@ class Response extends SwooleResponse
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_DOMAIN = 'domain';
     public const MODEL_DOMAIN_LIST = 'domainList';
+    public const MODEL_VARIABLE = 'variable';
+    public const MODEL_VARIABLE_LIST = 'variableList';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -201,7 +226,7 @@ class Response extends SwooleResponse
     /**
      * @var array
      */
-    protected $payload = [];
+    protected array $payload = [];
 
     /**
      * @var string
@@ -249,6 +274,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
+            ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -262,10 +288,19 @@ class Response extends SwooleResponse
             ->setModel(new AttributeEnum())
             ->setModel(new AttributeIP())
             ->setModel(new AttributeURL())
+            ->setModel(new AttributeDatetime())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
             ->setModel(new Log())
             ->setModel(new User())
+            ->setModel(new AlgoMd5())
+            ->setModel(new AlgoSha())
+            ->setModel(new AlgoPhpass())
+            ->setModel(new AlgoBcrypt())
+            ->setModel(new AlgoScrypt())
+            ->setModel(new AlgoScryptModified())
+            ->setModel(new AlgoArgon2())
+            ->setModel(new Account())
             ->setModel(new Preferences())
             ->setModel(new Session())
             ->setModel(new Token())
@@ -285,6 +320,7 @@ class Response extends SwooleResponse
             ->setModel(new Key())
             ->setModel(new Domain())
             ->setModel(new Platform())
+            ->setModel(new Variable())
             ->setModel(new Country())
             ->setModel(new Continent())
             ->setModel(new Language())
@@ -303,12 +339,12 @@ class Response extends SwooleResponse
             ->setModel(new UsageStorage())
             ->setModel(new UsageBuckets())
             ->setModel(new UsageFunctions())
+            ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
             // Verification
             // Recovery
             // Tests (keep last)
-            ->setModel(new Mock())
-        ;
+            ->setModel(new Mock());
 
         parent::__construct($response);
     }
@@ -434,12 +470,13 @@ class Response extends SwooleResponse
 
         if ($model->isAny()) {
             $this->payload = $document->getArrayCopy();
+
             return $this->payload;
         }
 
         foreach ($model->getRules() as $key => $rule) {
-            if (!$document->isSet($key) && $rule['require']) { // do not set attribute in response if not required
-                if (!is_null($rule['default'])) {
+            if (!$document->isSet($key) && $rule['required']) { // do not set attribute in response if not required
+                if (\array_key_exists('default', $rule)) {
                     $document->setAttribute($key, $rule['default']);
                 } else {
                     throw new Exception('Model ' . $model->getName() . ' is missing response key: ' . $key);
@@ -451,7 +488,7 @@ class Response extends SwooleResponse
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
-                foreach ($data[$key] as &$item) {
+                foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
@@ -475,8 +512,12 @@ class Response extends SwooleResponse
                             throw new Exception('Missing model for rule: ' . $ruleType);
                         }
 
-                        $item = $this->output($item, $ruleType);
+                        $data[$key][$index] = $this->output($item, $ruleType);
                     }
+                }
+            } else {
+                if ($data[$key] instanceof Document) {
+                    $data[$key] = $this->output($data[$key], $rule['type']);
                 }
             }
 
@@ -486,6 +527,24 @@ class Response extends SwooleResponse
         $this->payload = $output;
 
         return $this->payload;
+    }
+
+    /**
+     * Output response
+     *
+     * Generate HTTP response output including the response header (+cookies) and body and prints them.
+     *
+     * @param string $body
+     *
+     * @return void
+     */
+    public function file(string $body = ''): void
+    {
+        $this->payload = [
+            'payload' => $body
+        ];
+
+        $this->send($body);
     }
 
     /**
@@ -508,8 +567,7 @@ class Response extends SwooleResponse
 
         $this
             ->setContentType(Response::CONTENT_TYPE_YAML)
-            ->send(yaml_emit($data, YAML_UTF8_ENCODING))
-        ;
+            ->send(yaml_emit($data, YAML_UTF8_ENCODING));
     }
 
     /**
@@ -519,7 +577,6 @@ class Response extends SwooleResponse
     {
         return $this->payload;
     }
-
 
     /**
      * Function to set a response filter

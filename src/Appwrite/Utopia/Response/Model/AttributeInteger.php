@@ -28,25 +28,22 @@ class AttributeInteger extends Attribute
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Minimum value to enforce for new documents.',
                 'default' => null,
+                'required' => false,
                 'example' => 1,
-                'array' => false,
-                'require' => false,
             ])
             ->addRule('max', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Maximum value to enforce for new documents.',
                 'default' => null,
+                'required' => false,
                 'example' => 10,
-                'array' => false,
-                'require' => false,
             ])
             ->addRule('default', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
+                'required' => false,
                 'example' => 10,
-                'array' => false,
-                'require' => false,
             ])
         ;
     }

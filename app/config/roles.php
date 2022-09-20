@@ -7,7 +7,6 @@ $member = [
     'home',
     'console',
     'account',
-    'graphql',
     'teams.read',
     'teams.write',
     'documents.read',
@@ -23,7 +22,6 @@ $member = [
 ];
 
 $admins = [
-    'graphql',
     'teams.read',
     'teams.write',
     'documents.read',
@@ -54,21 +52,24 @@ $admins = [
 ];
 
 return [
-    Auth::USER_ROLE_GUEST => [
-        'label' => 'Guest',
+    Auth::USER_ROLE_GUESTS => [
+        'label' => 'Guests',
         'scopes' => [
             'public',
             'home',
             'console',
             'graphql',
             'documents.read',
+            'documents.write',
             'files.read',
+            'files.write',
             'locale.read',
             'avatars.read',
+            'execution.write',
         ],
     ],
-    Auth::USER_ROLE_MEMBER => [
-        'label' => 'Member',
+    Auth::USER_ROLE_USERS => [
+        'label' => 'Users',
         'scopes' => \array_merge($member, []),
     ],
     Auth::USER_ROLE_ADMIN => [
@@ -83,8 +84,8 @@ return [
         'label' => 'Owner',
         'scopes' => \array_merge($member, $admins, []),
     ],
-    Auth::USER_ROLE_APP => [
-        'label' => 'Application',
-        'scopes' => ['health.read', 'graphql'],
+    Auth::USER_ROLE_APPS => [
+        'label' => 'Applications',
+        'scopes' => ['health.read'],
     ],
 ];

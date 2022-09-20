@@ -5,6 +5,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Utopia\App;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Domains\Domain;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Storage;
@@ -289,9 +290,23 @@ App::get('/console/databases/collection')
             ])
         ;
 
+        $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $permissions
+            ->setParam('method', 'databases.getCollection')
+            ->setParam('events', 'load,databases.updateCollection')
+            ->setParam('form', 'collectionPermissions')
+            ->setParam('data', 'project-collection')
+            ->setParam('params', [
+                'collection-id' => '{{router.params.id}}',
+                'database-id' => '{{router.params.databaseId}}'
+            ]);
+
         $page = new View(__DIR__ . '/../../views/console/databases/collection.phtml');
 
-        $page->setParam('logs', $logs);
+        $page
+            ->setParam('permissions', $permissions)
+            ->setParam('logs', $logs)
+        ;
 
         $layout
             ->setParam('title', APP_NAME . ' - Database Collection')
@@ -310,28 +325,45 @@ App::get('/console/databases/document')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->param('databaseId', '', new UID(), 'Database unique ID.')
-    ->param('collection', '', new UID(), 'Collection unique ID.')
+    ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->action(function (string $databaseId, string $collection, View $layout) {
+    ->action(function (string $databaseId, string $collectionId, View $layout) {
 
         $logs = new View(__DIR__ . '/../../views/console/comps/logs.phtml');
-
         $logs
             ->setParam('interval', App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 0))
             ->setParam('method', 'databases.listDocumentLogs')
             ->setParam('params', [
                 'database-id' => '{{router.params.databaseId}}',
-                'collection-id' => '{{router.params.collection}}',
+                'collection-id' => '{{router.params.collectionId}}',
                 'document-id' => '{{router.params.id}}',
             ])
         ;
+
+        $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $permissions
+            ->setParam('method', 'databases.getDocument')
+            ->setParam('events', 'load,databases.updateDocument')
+            ->setParam('form', 'documentPermissions')
+            ->setParam('data', 'project-document')
+            ->setParam('permissions', [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ])
+            ->setParam('params', [
+                'collection-id' => '{{router.params.collectionId}}',
+                'database-id' => '{{router.params.databaseId}}',
+                'document-id' => '{{router.params.id}}',
+            ]);
 
         $page = new View(__DIR__ . '/../../views/console/databases/document.phtml');
 
         $page
             ->setParam('new', false)
             ->setParam('database', $databaseId)
-            ->setParam('collection', $collection)
+            ->setParam('collection', $collectionId)
+            ->setParam('permissions', $permissions)
             ->setParam('logs', $logs)
         ;
 
@@ -345,16 +377,33 @@ App::get('/console/databases/document/new')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->param('databaseId', '', new UID(), 'Database unique ID.')
-    ->param('collection', '', new UID(), 'Collection unique ID.')
+    ->param('collectionId', '', new UID(), 'Collection unique ID.')
     ->inject('layout')
-    ->action(function (string $databaseId, string $collection, View $layout) {
+    ->action(function (string $databaseId, string $collectionId, View $layout) {
+
+        $permissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+
+        $permissions
+            ->setParam('data', 'project-document')
+            ->setParam('form', 'documentPermissions')
+            ->setParam('permissions', [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ])
+            ->setParam('params', [
+                'collection-id' => '{{router.params.collectionId}}',
+                'database-id' => '{{router.params.databaseId}}',
+                'document-id' => '{{router.params.id}}',
+            ]);
 
         $page = new View(__DIR__ . '/../../views/console/databases/document.phtml');
 
         $page
             ->setParam('new', true)
             ->setParam('database', $databaseId)
-            ->setParam('collection', $collection)
+            ->setParam('collection', $collectionId)
+            ->setParam('permissions', $permissions)
             ->setParam('logs', new View())
         ;
 
@@ -392,11 +441,47 @@ App::get('/console/storage/bucket')
     ->inject('layout')
     ->action(function (string $id, Response $response, View $layout) {
 
+        $bucketPermissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $bucketPermissions
+            ->setParam('method', 'databases.getBucket')
+            ->setParam('events', 'load,databases.updateBucket')
+            ->setParam('data', 'project-bucket')
+            ->setParam('form', 'bucketPermissions')
+            ->setParam('params', [
+                'bucket-id' => '{{router.params.id}}',
+            ]);
+
+        $fileCreatePermissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $fileCreatePermissions
+            ->setParam('form', 'fileCreatePermissions')
+            ->setParam('permissions', [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ]);
+
+        $fileUpdatePermissions = new View(__DIR__ . '/../../views/console/comps/permissions-matrix.phtml');
+        $fileUpdatePermissions
+            ->setParam('method', 'storage.getFile')
+            ->setParam('data', 'file')
+            ->setParam('form', 'fileUpdatePermissions')
+            ->setParam('permissions', [
+                Database::PERMISSION_READ,
+                Database::PERMISSION_UPDATE,
+                Database::PERMISSION_DELETE,
+            ])
+            ->setParam('params', [
+                'bucket-id' => '{{router.params.id}}',
+            ]);
+
         $page = new View(__DIR__ . '/../../views/console/storage/bucket.phtml');
         $page
             ->setParam('home', App::getEnv('_APP_HOME', 0))
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
             ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
+            ->setParam('bucketPermissions', $bucketPermissions)
+            ->setParam('fileCreatePermissions', $fileCreatePermissions)
+            ->setParam('fileUpdatePermissions', $fileUpdatePermissions)
         ;
 
         $layout
@@ -512,9 +597,9 @@ App::get('/console/version')
             if ($version && isset($version['version'])) {
                 return $response->json(['version' => $version['version']]);
             } else {
-                throw new Exception('Failed to check for a newer version', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to check for a newer version');
             }
         } catch (\Throwable $th) {
-            throw new Exception('Failed to check for a newer version', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to check for a newer version');
         }
     });
