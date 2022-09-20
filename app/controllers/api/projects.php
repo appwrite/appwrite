@@ -91,6 +91,13 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
+        $secret = Authorization::skip(fn() => $dbForConsole->createDocument('secrets', new Document([
+            '$id' => ID::unique(),
+            '$permissions' => [],
+            '$collection' => 'secrets',
+            'secret' => OpenSSL::secretString(),
+        ])));
+
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
             '$permissions' => [
@@ -104,6 +111,8 @@ App::post('/v1/projects')
             'teamInternalId' => $team->getInternalId(),
             'teamId' => $team->getId(),
             'description' => $description,
+            'keyId' => $secret->getId(),
+            'keyRotationDate' => time() + App::getEnv('_APP_KEY_ROTATION_INTERVAL', 60 * 60 * 24 * 90),
             'logo' => $logo,
             'url' => $url,
             'version' => APP_VERSION_STABLE,

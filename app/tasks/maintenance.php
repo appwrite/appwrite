@@ -6,6 +6,7 @@ global $register;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
+use Appwrite\Event\Encrypt;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -103,7 +104,7 @@ $cli
                 ->trigger();
         }
 
-        function renewCertificates($dbForConsole)
+        function renewCertificates(Database $dbForConsole)
         {
             $time = DateTime::now();
 
@@ -127,6 +128,28 @@ $cli
                 }
             } else {
                 Console::info("[{$time}] No certificates for renewal.");
+            }
+        }
+
+        function rotateKeys(Database $dbForConsole)
+        {
+            $time = date('d-m-Y H:i:s', time());
+            $projects = $dbForConsole->find('projects', [
+                new Query('keyRotationDate', Query::TYPE_LESSEREQUAL, [\time()])
+            ], 200);
+
+            if (\count($projects) > 0) {
+                Console::info("[{$time}] Found " . \count($projects) . " projects for key rotation, scheduling jobs.");
+
+                $event = new Encrypt();
+                foreach ($projects as $project) {
+                    $event
+                        ->setType(APP_ENCRYPTION_TYPE_PROJECT_MASTER_KEY)
+                        ->setProject($project)
+                        ->trigger();
+                }
+            } else {
+                Console::info("[{$time}] No projects for key rotation.");
             }
         }
 

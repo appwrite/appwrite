@@ -167,6 +167,8 @@ const APP_AUTH_TYPE_SESSION = 'Session';
 const APP_AUTH_TYPE_JWT = 'JWT';
 const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
+// Encryption rotation types
+const APP_ENCRYPTION_TYPE_PROJECT_MASTER_KEY = 'projectMasterKey';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
 
@@ -414,28 +416,39 @@ Database::addFilter(
 );
 
 Database::addFilter(
-    'encrypt',
-    function (mixed $value) {
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+    'masterEncrypt',
+    function (mixed $value, Document $document, Database $database) {
+        $keyId = $document->getAttribute('keyId', '');
+        $database->setNamespace('_console');
+        $key = Authorization::skip(fn() => $database->getDocument('secrets', $keyId));
+        if ($key->isEmpty()) {
+            throw new Exception("Unable to find master key with ID ($keyId} to encrypt.");
+        }
+
+        $secret = $key->getAttribute('secret');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
-
         return json_encode([
-            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $secret, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
             'iv' => \bin2hex($iv),
             'tag' => \bin2hex($tag ?? ''),
-            'version' => 'v1',
+            'version' => $keyId,
         ]);
     },
-    function (mixed $value) {
+    function (mixed $value, Document $document, Database $database) {
         if (is_null($value)) {
             return null;
         }
         $value = json_decode($value, true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
-
-        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+        $keyId = $value['version'];
+        $database->setNamespace('_console');
+        $key = Authorization::skip(fn() => $database->getDocument('secrets', $keyId));
+        if ($key->isEmpty()) {
+            throw new Exception("Unable to find master key with ID {$keyId} to decrypt.");
+        }
+        $secret = $key->getAttribute('secret');
+        return OpenSSL::decrypt($value['data'], $value['method'], $secret, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }
 );
 

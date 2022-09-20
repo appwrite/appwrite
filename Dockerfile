@@ -191,6 +191,7 @@ ENV _APP_SERVER=swoole \
     _APP_OPTIONS_ABUSE=enabled \
     _APP_OPTIONS_FORCE_HTTPS=disabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
+    _APP_KEY_ROTATION_INTERVAL=7776000 \
     _APP_STORAGE_LIMIT=10000000 \
     _APP_STORAGE_ANTIVIRUS=enabled \
     _APP_STORAGE_ANTIVIRUS_HOST=clamav \
@@ -351,6 +352,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
+    chmod +x /usr/local/bin/worker-encryption && \
     chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions

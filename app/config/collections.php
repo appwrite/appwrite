@@ -513,6 +513,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('keyId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -642,7 +653,7 @@ $collections = [
                 'required' => false,
                 'default' => [],
                 'array' => false,
-                'filters' => ['json', 'encrypt'],
+                'filters' => ['json', 'masterEncrypt'],
             ],
             [
                 '$id' => ID::custom('jwtSecrets'),
@@ -653,7 +664,7 @@ $collections = [
                 'required' => false,
                 'default' => [],
                 'array' => false,
-                'filters' => ['encrypt'],
+                'filters' => ['masterEncrypt'],
             ],
             [
                 '$id' => ID::custom('services'),
@@ -743,6 +754,17 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => 'keyRotationDate',
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ]
         ],
         'indexes' => [
             [
@@ -760,6 +782,26 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
         ],
+    ],
+
+    'secrets' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'secrets',
+        'name' => 'Secrets',
+        'attributes' => [
+            [
+                '$id' => 'secret',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => '',
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [],
     ],
 
     'platforms' => [

@@ -283,11 +283,6 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
 
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
-            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
-        }
-
         if (empty($appId) || empty($appSecret)) {
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
         }
@@ -394,11 +389,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $validateURL = new URL();
         $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
-
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
-            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
-        }
 
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
