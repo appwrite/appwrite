@@ -75,6 +75,14 @@
                     });
                 });
             },
+            clearPermission(index) {
+                let currentRole =  this.permissions[index].role;
+                this.rawPermissions = this.rawPermissions.filter(p => {
+                    let {type, role} = this.parsePermission(p);
+
+                    return role !== currentRole;
+                });
+            },
             removePermission(index) {
                 let row = this.permissions.splice(index, 1);
                 if (row.length === 1) {

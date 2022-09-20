@@ -81,6 +81,7 @@ $escapedPermissions = \array_map(function ($perm) {
                         list="types"
                         type="text"
                         x-model="permission.role"
+                        @keydown="clearPermission(index)"
                         @keyup="updatePermission(index)"/>
                 </td>
                 <?php foreach ($escapedPermissions as $permission): ?>
