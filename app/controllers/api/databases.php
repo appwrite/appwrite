@@ -2099,7 +2099,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($collection->getRead());
         if (!$documentSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
         if ($documentSecurity && !$valid) {
@@ -2277,7 +2277,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $validator = new Authorization(Database::PERMISSION_UPDATE);
         $valid = $validator->isValid($collection->getUpdate());
         if (!$documentSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
         // Read permission should not be required for update
@@ -2338,7 +2338,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             $document->setAttribute('$collectionId', $collectionId);
             $document->setAttribute('$databaseId', $databaseId);
         } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         } catch (DuplicateException) {
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         } catch (StructureException $exception) {
@@ -2403,7 +2403,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $validator = new Authorization(Database::PERMISSION_DELETE);
         $valid = $validator->isValid($collection->getDelete());
         if (!$documentSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
         // Read permission should not be required for delete
@@ -2417,7 +2417,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             try {
                 $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
             } catch (AuthorizationException) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
+                throw new Exception(Exception::DOCUMENT_NOT_FOUND);
             }
         } else {
             Authorization::skip(fn() => $dbForProject->deleteDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
