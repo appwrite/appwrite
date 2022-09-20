@@ -23,5 +23,4 @@ tests/*/*/*/* linguist-detectable=false
 tests/*/*/*/*/* linguist-detectable=false
 tests/*/*/*/*/*/* linguist-detectable=false
 public/scripts/* linguist-detectable=false
-public/scripts/*/*/* linguist-detectable=false
 public/dist/scripts/* linguist-detectable=false
