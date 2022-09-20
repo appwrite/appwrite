@@ -1350,12 +1350,12 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_DATABASE_STACK:
-                return 'mutation complex($databaseId: String!, $databaseName: String!, $collectionId: String!, $collectionName: String!, $collectionDocumentSecurity: Boolean!, $collectionPermissions: [String!]!) {
+                return 'mutation complex($databaseId: String!, $databaseName: String!, $collectionId: String!, $collectionName: String!, $documentSecurity: Boolean!, $collectionPermissions: [String!]!) {
                     databasesCreate(databaseId: $databaseId, name: $databaseName) {
                         _id
                         name
                     }
-                    databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $collectionName, documentSecurity: $documentSecurity, permissions $collectionPermissions) {
+                    databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $collectionName, documentSecurity: $documentSecurity, permissions: $collectionPermissions) {
                         _id
                         _createdAt
                         _updatedAt

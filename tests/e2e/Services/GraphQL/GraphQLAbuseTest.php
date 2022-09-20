@@ -7,6 +7,8 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\App;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class GraphQLAbuseTest extends Scope
 {
@@ -28,13 +30,13 @@ class GraphQLAbuseTest extends Scope
                 'databaseName' => 'database',
                 'collectionId' => 'collection',
                 'collectionName' => 'collection',
-                'collectionPermission' => 'collection',
-                'collectionRead' => ['role:member'],
-                'collectionWrite' => ['role:member'],
-                'documentId' => 'document',
-                'documentData' => ['name' => 'foobar'],
-                'documentRead' => ['role:member'],
-                'documentWrite' => ['role:member'],
+                'collectionPermissions' => [
+                    Permission::read(Role::users()),
+                    Permission::create(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ],
+                'documentSecurity' => false,
             ],
         ];
 
