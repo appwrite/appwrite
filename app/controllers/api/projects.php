@@ -92,7 +92,7 @@ App::post('/v1/projects')
         }
 
         $secret = Authorization::skip(fn() => $dbForConsole->createDocument('secrets', new Document([
-            '$id' => $dbForConsole->getId(),
+            '$id' => ID::unique(),
             '$read' => [],
             '$write' => [],
             '$collection' => 'secrets',
