@@ -44,40 +44,15 @@ class TypeRegistry
                 ],
             ],
             'list' => [
-                'limit' => [
-                    'type' => Type::int(),
-                    'defaultValue' => 25,
-                ],
-                'offset' => [
-                    'type' => Type::int(),
-                    'defaultValue' => 0,
-                ],
-                'cursor' => [
-                    'type' => Type::string(),
-                    'defaultValue' => '',
-                ],
-                'cursorDirection' => [
-                    'type' => Type::string(),
-                    'defaultValue' => Database::CURSOR_AFTER,
-                ],
-                'orderAttributes' => [
+                'queries' => [
                     'type' => Type::listOf(Type::string()),
-                    'defaultValue' => [],
-                ],
-                'orderTypes' => [
-                    'type' => Type::listOf(Type::string()),
-                    'defaultValue' => [],
                 ],
             ],
             'mutate' => [
-                'read' => [
+                'permissions' => [
                     'type' => Type::listOf(Type::string()),
-                    'defaultValue' => ['role:member'],
-                ],
-                'write' => [
-                    'type' => Type::listOf(Type::string()),
-                    'defaultValue' => ['role:member'],
-                ],
+                    'defaultValue' => [],
+                ]
             ],
         ];
 

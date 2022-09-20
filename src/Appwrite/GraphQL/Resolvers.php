@@ -7,6 +7,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
+use Utopia\Database\ID;
 use Utopia\Exception;
 use Utopia\Route;
 
@@ -114,12 +115,7 @@ class Resolvers
                 $swoole->post = [
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
-                    'limit' => $args['limit'],
-                    'offset' => $args['offset'],
-                    'cursor' => $args['cursor'],
-                    'cursorDirection' => $args['cursorDirection'],
-                    'orderAttributes' => $args['orderAttributes'],
-                    'orderType' => $args['orderType'],
+                    'queries' => $args['queries'],
                 ];
                 $swoole->server['request_method'] = 'GET';
                 $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
@@ -154,13 +150,11 @@ class Resolvers
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
 
-                $id = $args['id'] ?? 'unique()';
-                $read = $args['read'];
-                $write = $args['write'];
+                $id = $args['id'] ?? ID::unique();
+                $permissions = $args['permissions'];
 
                 unset($args['id']);
-                unset($args['read']);
-                unset($args['write']);
+                unset($args['permissions']);
 
                 // Order must be the same as the route params
                 $swoole->post = [
@@ -168,8 +162,7 @@ class Resolvers
                     'documentId' => $id,
                     'collectionId' => $collectionId,
                     'data' => $args,
-                    'read' => $read,
-                    'write' => $write,
+                    'permissions' => $permissions,
                 ];
                 $swoole->server['request_method'] = $method;
                 $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
@@ -256,9 +249,9 @@ class Resolvers
             return;
         }
 
-        if (\array_key_exists('$id', $payload)) {
-            $payload['_id'] = $payload['$id'];
-        }
+        $payload = \array_map(function ($property) {
+            return \str_replace('$', '_', $property);
+        }, $payload);
 
         $resolve($payload);
     }

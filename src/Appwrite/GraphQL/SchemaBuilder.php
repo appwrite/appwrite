@@ -10,6 +10,7 @@ use Swoole\Coroutine\WaitGroup;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\Database\Database;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Utopia\Route;
@@ -124,7 +125,7 @@ class SchemaBuilder
                 foreach ($responseModels as $responseModel) {
                     $type = TypeRegistry::get($responseModel->getType());
                     $description = $route->getDesc();
-                    $args = [];
+                    $params = [];
 
                     foreach ($route->getParams() as $key => $value) {
                         $argType = TypeMapper::typeFromParameter(
@@ -133,7 +134,7 @@ class SchemaBuilder
                             !$value['optional'],
                             $value['injections']
                         );
-                        $args[$key] = [
+                        $params[$key] = [
                             'type' => $argType,
                             'description' => $value['description'],
                             'defaultValue' => $value['default']
@@ -143,7 +144,7 @@ class SchemaBuilder
                     $field = [
                         'type' => $type,
                         'description' => $description,
-                        'args' => $args,
+                        'args' => $params,
                         'resolve' => Resolvers::resolveAPIRequest($utopia, $route)
                     ];
 
@@ -196,9 +197,11 @@ class SchemaBuilder
 
         while (
             !empty($attrs = Authorization::skip(fn() => $dbForProject->find(
-                'attributes',
-                limit: $limit,
-                offset: $offset
+                collection: 'attributes',
+                queries: [
+                Query::limit($limit),
+                Query::offset($offset),
+                ]
             )))
         ) {
             $wg->add();
@@ -223,10 +226,12 @@ class SchemaBuilder
                 foreach ($collections as $collectionId => $attributes) {
                     $objectType = new ObjectType([
                         'name' => $collectionId,
-                        'fields' => \array_merge(
-                            ["_id" => ['type' => Type::string()]],
-                            $attributes
-                        ),
+                        'fields' => [
+                            "_id" => [
+                                'type' => Type::string()
+                            ],
+                            ...$attributes
+                        ],
                     ]);
                     $attributes = \array_merge(
                         $attributes,
