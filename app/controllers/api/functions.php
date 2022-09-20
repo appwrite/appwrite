@@ -1000,8 +1000,8 @@ App::post('/v1/functions/:functionId/executions')
 
         $validator = new Authorization('execute');
 
-        if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
-            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
+        if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has access to execute function
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $executionId = ID::unique();
