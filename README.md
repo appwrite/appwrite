@@ -22,7 +22,7 @@
 
 English | [简体中文](README-CN.md)
 
-[**Appwrite 0.15 has been released! Learn what's new!**](https://dev.to/appwrite/announcing-appwrite-015-with-phone-authentication-more-5cjj)
+[**Appwrite 1.0 has been released! Learn what's new!**](https://appwrite.io/1.0)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
@@ -65,7 +65,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:0.15.2
+    appwrite/appwrite:1.0.1
 ```
 
 ### Windows
@@ -77,7 +77,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:0.15.2
+    appwrite/appwrite:1.0.1
 ```
 
 #### PowerShell
@@ -87,7 +87,7 @@ docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
     --entrypoint="install" ,
-    appwrite/appwrite:0.15.2
+    appwrite/appwrite:1.0.1
 ```
 
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after installation completes.
@@ -98,6 +98,30 @@ For advanced production and custom installation, check out our Docker [environme
 ### Upgrade from an Older Version
 
 If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
+
+
+## One-Click Setups
+
+In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to get up and running with Appwrite quickly without installing Docker on your local machine.
+
+Choose from one of the providers below:
+
+<table border="0">
+  <tr>
+    <td align="center" width="100" height="100">
+      <a href="https://marketplace.digitalocean.com/apps/appwrite">
+        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
+          <br /><sub><b>DigitalOcean</b></sub></a>
+        </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
+        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
+          <br /><sub><b>Gitpod</b></sub></a>    
+      </a>
+    </td>
+  </tr>
+</table>
 
 ## Getting Started
 

@@ -1,16 +1,13 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\CNAME;
 use PHPUnit\Framework\TestCase;
 
 class CNAMETest extends TestCase
 {
-    /**
-     * @var CNAME
-     */
-    protected $object = null;
+    protected ?CNAME $object = null;
 
     public function setUp(): void
     {
@@ -21,7 +18,7 @@ class CNAMETest extends TestCase
     {
     }
 
-    public function testValues()
+    public function testValues(): void
     {
         $this->assertEquals($this->object->isValid(''), false);
         $this->assertEquals($this->object->isValid(null), false);
