@@ -68,7 +68,7 @@
                         <h3 class="margin-bottom">Members</h3>
 
                         <div
-                            data-service="teams.getMemberships"
+                            data-service="teams.listMemberships"
                             data-event="load,teams.create,teams.update,teams.delete,teams.deleteMembership,teams.createMembership"
                             data-param-team-id="{{router.params.id}}"
                             data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
@@ -168,7 +168,7 @@
 
                             <div class="clear text-align-center paging pull-end">
                                 <form
-                                    data-service="teams.getMemberships"
+                                    data-service="teams.listMemberships"
                                     data-event="submit"
                                     data-param-team-id="{{router.params.id}}"
                                     data-param-search="{{router.params.search}}"
@@ -183,7 +183,7 @@
                                 <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-members.total|pageTotal}}"></span>
 
                                 <form
-                                    data-service="teams.getMemberships"
+                                    data-service="teams.listMemberships"
                                     data-event="submit"
                                     data-param-team-id="{{router.params.id}}"
                                     data-param-search="{{router.params.search}}"

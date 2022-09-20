@@ -84,6 +84,7 @@ App::post('/v1/functions')
             'deployment' => '',
             'events' => $events,
             'schedule' => $schedule,
+            'scheduleUpdatedAt' => DateTime::now(),
             'schedulePrevious' => null,
             'scheduleNext' => null,
             'timeout' => $timeout,
@@ -445,6 +446,7 @@ App::put('/v1/functions/:functionId')
         $cron = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
         $next = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
 
+        $scheduleUpdatedAt = $schedule !== $original ? DateTime::now() : $function->getAttribute('scheduleUpdatedAt');
         $enabled ??= $function->getAttribute('enabled', true);
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
@@ -452,6 +454,7 @@ App::put('/v1/functions/:functionId')
             'name' => $name,
             'events' => $events,
             'schedule' => $schedule,
+            'scheduleUpdatedAt' => $scheduleUpdatedAt,
             'scheduleNext' => $next,
             'timeout' => $timeout,
             'enabled' => $enabled,

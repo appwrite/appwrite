@@ -938,6 +938,9 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(201, $document1['headers']['status-code']);
+        $this->assertEquals($data['moviesId'], $document1['body']['$collectionId']);
+        $this->assertArrayNotHasKey('$collection', $document1['body']);
+        $this->assertEquals($databaseId, $document1['body']['$databaseId']);
         $this->assertEquals($document1['body']['title'], 'Captain America');
         $this->assertEquals($document1['body']['releaseYear'], 1944);
         $this->assertIsArray($document1['body']['$permissions']);
@@ -948,6 +951,9 @@ trait DatabasesBase
         $this->assertEquals($document1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
 
         $this->assertEquals(201, $document2['headers']['status-code']);
+        $this->assertEquals($data['moviesId'], $document2['body']['$collectionId']);
+        $this->assertArrayNotHasKey('$collection', $document2['body']);
+        $this->assertEquals($databaseId, $document2['body']['$databaseId']);
         $this->assertEquals($document2['body']['title'], 'Spider-Man: Far From Home');
         $this->assertEquals($document2['body']['releaseYear'], 2019);
         $this->assertEquals($document2['body']['duration'], null);
@@ -960,6 +966,9 @@ trait DatabasesBase
         $this->assertEquals($document2['body']['birthDay'], null);
 
         $this->assertEquals(201, $document3['headers']['status-code']);
+        $this->assertEquals($data['moviesId'], $document3['body']['$collectionId']);
+        $this->assertArrayNotHasKey('$collection', $document3['body']);
+        $this->assertEquals($databaseId, $document3['body']['$databaseId']);
         $this->assertEquals($document3['body']['title'], 'Spider-Man: Homecoming');
         $this->assertEquals($document3['body']['releaseYear'], 2017);
         $this->assertEquals($document3['body']['duration'], 0);
@@ -968,7 +977,7 @@ trait DatabasesBase
         $this->assertCount(2, $document3['body']['actors']);
         $this->assertEquals($document3['body']['actors'][0], 'Tom Holland');
         $this->assertEquals($document3['body']['actors'][1], 'Zendaya Maree Stoermer');
-        $this->assertEquals($document3['body']['birthDay'], '1975-06-12T18:12:55.000+00:00');// UTC for NY
+        $this->assertEquals($document3['body']['birthDay'], '1975-06-12T18:12:55.000+00:00'); // UTC for NY
 
         $this->assertEquals(400, $document4['headers']['status-code']);
 
@@ -985,7 +994,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'orderAsc("releaseYear")' ],
+            'queries' => ['orderAsc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -998,14 +1007,16 @@ trait DatabasesBase
         $this->assertCount(3, $documents['body']['documents']);
 
         foreach ($documents['body']['documents'] as $document) {
-            $this->assertEquals($data['moviesId'], $document['$collection']);
+            $this->assertEquals($data['moviesId'], $document['$collectionId']);
+            $this->assertArrayNotHasKey('$collection', $document);
+            $this->assertEquals($databaseId, $document['$databaseId']);
         }
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'orderDesc("releaseYear")' ],
+            'queries' => ['orderDesc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1080,14 +1091,16 @@ trait DatabasesBase
     {
         $databaseId = $data['databaseId'];
         foreach ($data['documents'] as $document) {
-            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collection'] . '/documents/' . $document['$id'], array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
 
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals($response['body']['$id'], $document['$id']);
-            $this->assertEquals($response['body']['$collection'], $document['$collection']);
+            $this->assertEquals($document['$collectionId'], $response['body']['$collectionId']);
+            $this->assertArrayNotHasKey('$collection', $response['body']);
+            $this->assertEquals($document['$databaseId'], $response['body']['$databaseId']);
             $this->assertEquals($response['body']['title'], $document['title']);
             $this->assertEquals($response['body']['releaseYear'], $document['releaseYear']);
             $this->assertEquals($response['body']['$permissions'], $document['$permissions']);
@@ -1120,7 +1133,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("' . $base['body']['documents'][0]['$id'] . '")' ],
+            'queries' => ['cursorAfter("' . $base['body']['documents'][0]['$id'] . '")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1132,7 +1145,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("' . $base['body']['documents'][2]['$id'] . '")' ],
+            'queries' => ['cursorAfter("' . $base['body']['documents'][2]['$id'] . '")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1145,7 +1158,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'orderAsc("releaseYear")' ],
+            'queries' => ['orderAsc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $base['headers']['status-code']);
@@ -1158,7 +1171,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("' . $base['body']['documents'][1]['$id'] . '")', 'orderAsc("releaseYear")' ],
+            'queries' => ['cursorAfter("' . $base['body']['documents'][1]['$id'] . '")', 'orderAsc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1172,7 +1185,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'orderDesc("releaseYear")' ],
+            'queries' => ['orderDesc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $base['headers']['status-code']);
@@ -1185,7 +1198,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("' . $base['body']['documents'][1]['$id'] . '")', 'orderDesc("releaseYear")' ],
+            'queries' => ['cursorAfter("' . $base['body']['documents'][1]['$id'] . '")', 'orderDesc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1199,7 +1212,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("unknown")' ],
+            'queries' => ['cursorAfter("unknown")'],
         ]);
 
         $this->assertEquals(400, $documents['headers']['status-code']);
@@ -1231,7 +1244,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorBefore("' . $base['body']['documents'][2]['$id'] . '")' ],
+            'queries' => ['cursorBefore("' . $base['body']['documents'][2]['$id'] . '")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1243,7 +1256,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorBefore("' . $base['body']['documents'][0]['$id'] . '")' ],
+            'queries' => ['cursorBefore("' . $base['body']['documents'][0]['$id'] . '")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1256,7 +1269,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'orderAsc("releaseYear")' ],
+            'queries' => ['orderAsc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $base['headers']['status-code']);
@@ -1269,7 +1282,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorBefore("' . $base['body']['documents'][1]['$id'] . '")', 'orderAsc("releaseYear")' ],
+            'queries' => ['cursorBefore("' . $base['body']['documents'][1]['$id'] . '")', 'orderAsc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1283,7 +1296,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'orderDesc("releaseYear")' ],
+            'queries' => ['orderDesc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $base['headers']['status-code']);
@@ -1296,7 +1309,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorBefore("' . $base['body']['documents'][1]['$id'] . '")', 'orderDesc("releaseYear")' ],
+            'queries' => ['cursorBefore("' . $base['body']['documents'][1]['$id'] . '")', 'orderDesc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1316,7 +1329,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)', 'orderAsc("releaseYear")' ],
+            'queries' => ['limit(1)', 'orderAsc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1327,7 +1340,7 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(2)', 'offset(1)', 'orderAsc("releaseYear")' ],
+            'queries' => ['limit(2)', 'offset(1)', 'orderAsc("releaseYear")'],
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);
@@ -1514,6 +1527,9 @@ trait DatabasesBase
         $id = $document['body']['$id'];
 
         $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertEquals($data['moviesId'], $document['body']['$collectionId']);
+        $this->assertArrayNotHasKey('$collection', $document['body']);
+        $this->assertEquals($databaseId, $document['body']['$databaseId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
         $this->assertEquals(true, DateTime::isValid($document['body']['$createdAt']));
@@ -1538,7 +1554,9 @@ trait DatabasesBase
 
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals($document['body']['$id'], $id);
-        $this->assertEquals($document['body']['$collection'], $data['moviesId']);
+        $this->assertEquals($data['moviesId'], $document['body']['$collectionId']);
+        $this->assertArrayNotHasKey('$collection', $document['body']);
+        $this->assertEquals($databaseId, $document['body']['$databaseId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
         $this->assertContains(Permission::read(Role::users()), $document['body']['$permissions']);
@@ -1553,6 +1571,9 @@ trait DatabasesBase
         $id = $document['body']['$id'];
 
         $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals($data['moviesId'], $document['body']['$collectionId']);
+        $this->assertArrayNotHasKey('$collection', $document['body']);
+        $this->assertEquals($databaseId, $document['body']['$databaseId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
 
