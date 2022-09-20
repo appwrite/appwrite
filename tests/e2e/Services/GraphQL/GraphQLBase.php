@@ -218,6 +218,8 @@ trait GraphQLBase
                 return 'query getCollection($databaseId: String!, $collectionId: String!) {
                     databasesGetCollection(databaseId: $databaseId, collectionId: $collectionId) {
                         _id
+                        _permissions
+                        documentSecurity
                         name
                     }
                 }';
@@ -227,28 +229,28 @@ trait GraphQLBase
                         total
                         collections {
                             _id
+                            _permissions
+                            documentSecurity
                             name
                         }
                     }
                 }';
             case self::$CREATE_COLLECTION:
-                return 'mutation createCollection($databaseId: String!, $collectionId: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!) {
-                    databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $name, permission: $permission, read: $read, write: $write) {
+                return 'mutation createCollection($databaseId: String!, $collectionId: String!, $name: String!, $documentSecurity: Boolean!, $permissions: [String!]!) {
+                    databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $name, documentSecurity: $documentSecurity, permissions: $permissions) {
                         _id
-                        _read
-                        _write
+                        _permissions
+                        documentSecurity
                         name
-                        permission
                     }
                 }';
             case self::$UPDATE_COLLECTION:
-                return 'mutation updateCollection($databaseId: String!, $collectionId: String!, $name: String!, $permission: String!, $read: [String!], $write: [String!], $enabled: Boolean){
-                    databasesUpdateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $name, permission: $permission, read: $read, write: $write, enabled: $enabled) {
+                return 'mutation updateCollection($databaseId: String!, $collectionId: String!, $name: String!, $documentSecurity: Boolean!, $permissions: [String!]!, $enabled: Boolean){
+                    databasesUpdateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $name, documentSecurity: $documentSecurity, permissions: $permissions, enabled: $enabled) {
                         _id
-                        _read
-                        _write
+                        _permissions
+                        documentSecurity
                         name
-                        permission
                     }
                 }';
             case self::$DELETE_COLLECTION:
@@ -393,9 +395,8 @@ trait GraphQLBase
                 return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!){
                     databasesGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
                         _id
-                        _collection
-                        _read
-                        _write
+                        _collectionId
+                        _permissions
                         data
                     }
                 }';
@@ -405,7 +406,8 @@ trait GraphQLBase
                         total
                         documents {
                             _id
-                            _collection
+                            _collectionId
+                            _permissions
                             data
                         }
                     }   
@@ -414,9 +416,8 @@ trait GraphQLBase
                 return 'mutation createDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $read: [String!]!, $write: [String!]!){
                     databasesCreateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
                         _id
-                        _collection
-                        _read
-                        _write
+                        _collectionId
+                        _permissions
                     }
                 }';
             case self::$CREATE_CUSTOM_ENTITY:
@@ -1349,20 +1350,19 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_DATABASE_STACK:
-                return 'mutation complex($databaseId: String!, $databaseName: String!, $collectionId: String!, $collectionName: String!, $collectionPermission: String!, $collectionRead: [String!]!, $collectionWrite: [String!]!) {
+                return 'mutation complex($databaseId: String!, $databaseName: String!, $collectionId: String!, $collectionName: String!, $collectionDocumentSecurity: Boolean!, $collectionPermissions: [String!]!) {
                     databasesCreate(databaseId: $databaseId, name: $databaseName) {
                         _id
                         name
                     }
-                    databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $collectionName, permission: $collectionPermission, read: $collectionRead, write: $collectionWrite) {
+                    databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $collectionName, documentSecurity: $documentSecurity, permissions $collectionPermissions) {
                         _id
                         _createdAt
                         _updatedAt
-                        _read
-                        _write
+                        _permissions
                         databaseId
                         name
-                        permission
+                        documentSecurity
                         attributes {
                             key
                             type
@@ -1398,12 +1398,12 @@ trait GraphQLBase
                         _createdAt
                         _updatedAt
                         name
-                        registration
-                        status
-                        passwordUpdate
-                        email
-                        emailVerification
                         phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
                         phoneVerification
                         prefs {
                             data
