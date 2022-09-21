@@ -28,6 +28,13 @@ Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend app
 
 Using Appwrite, you can easily integrate your app with user authentication & multiple sign-in methods, a database for storing and querying users and team data, storage and file management, image manipulation, Cloud Functions, and [more services](https://appwrite.io/docs).
 
+<p align="center">
+    <br />
+    <a href="https://www.producthunt.com/posts/appwrite-2?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-appwrite&#0045;2" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=360315&theme=light" alt="Appwrite - 100&#0037;&#0032;open&#0032;source&#0032;alternative&#0032;for&#0032;Firebase | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+    <br />
+    <br />
+</p>
+
 ![Appwrite](public/images/github.png)
 
 Find out more at: [https://appwrite.io](https://appwrite.io)
