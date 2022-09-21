@@ -1392,6 +1392,14 @@ trait GraphQLBase
                         default
                         array
                     }
+                    databasesCreateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: "alive", required: false, default: true) {
+                        key
+                        type
+                        status
+                        required
+                        default
+                        array
+                    }
                     usersCreate(userId: "unique()", email: "test1@appwrite.io", password: "password", name: "Tester 1") {
                         _id
                         _createdAt
