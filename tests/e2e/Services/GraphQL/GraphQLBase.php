@@ -25,6 +25,7 @@ trait GraphQLBase
     public static string $CREATE_EMAIL_ATTRIBUTE = 'create_email_attribute';
     public static string $CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
     public static string $CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
+    public static string $CREATE_DATETIME_ATTRIBUTE = 'create_datetime_attribute';
     public static string $GET_ATTRIBUTES = 'get_attributes';
     public static string $GET_ATTRIBUTE = 'get_attribute';
     public static string $DELETE_ATTRIBUTE = 'delete_attribute';
@@ -334,6 +335,15 @@ trait GraphQLBase
                         array
                     }
                 }';
+            case self::$CREATE_DATETIME_ATTRIBUTE:
+                return 'mutation createDatetimeAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String, $array: Boolean){
+                    databasesCreateDatetimeAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default, array: $array) {
+                        key
+                        required
+                        default
+                        array
+                    }
+                }';
             case self::$CREATE_INDEX:
                 return 'mutation createIndex($databaseId: String!, $collectionId: String!, $key: String!, $type: String!, $attributes: [String!]!, $orders: [String!]){
                     databasesCreateIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key, type: $type, attributes: $attributes, orders: $orders) {
@@ -421,8 +431,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_CUSTOM_ENTITY:
-                return 'mutation createActor($name: String!, $age: Int!, $alive: Boolean!, $salary: Float, $email: String!, $role: String!, $ip: String, $url: String){
-                    actorsCreate(name: $name, age: $age, alive: $alive, salary: $salary, email: $email, role: $role, ip: $ip, url: $url) {
+                return 'mutation createActor($name: String!, $age: Int!, $alive: Boolean!, $salary: Float, $email: String!, $role: String!, $dob: String!, $ip: String, $url: String){
+                    actorsCreate(name: $name, age: $age, alive: $alive, salary: $salary, email: $email, role: $role, dob: $dob, ip: $ip, url: $url) {
                         _id
                         name
                         age
@@ -464,8 +474,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_CUSTOM_ENTITY:
-                return 'mutation updateCustomEntity($id: String!, $name: String!, $age: Int!, $alive: Boolean!, $salary: Float, $email: String!, $role: String!, $ip: String, $url: String){
-                    actorsUpdate(id: $id, name: $name, age: $age, alive: $alive, salary: $salary, email: $email, role: $role, ip: $ip, url: $url) {
+                return 'mutation updateCustomEntity($id: String!, $name: String, $age: Int, $alive: Boolean, $salary: Float, $email: String, $role: String, $dob: String, $ip: String, $url: String){
+                    actorsUpdate(id: $id, name: $name, age: $age, alive: $alive, salary: $salary, email: $email, role: $role, dob: $dob, ip: $ip, url: $url) {
                         name
                         age
                         alive

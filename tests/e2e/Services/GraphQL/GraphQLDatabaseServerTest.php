@@ -275,6 +275,36 @@ class GraphQLDatabaseServerTest extends Scope
      * @depends testCreateCollection
      * @throws Exception
      */
+    public function testCreateDatetimeAttribute($data): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$CREATE_DATETIME_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'dob',
+                'required' => true,
+            ]
+        ];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertArrayNotHasKey('errors', $attribute['body']);
+        $this->assertIsArray($attribute['body']['data']);
+        $this->assertIsArray($attribute['body']['data']['databasesCreateDatetimeAttribute']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateCollection
+     * @throws Exception
+     */
     public function testCreateIPAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -399,6 +429,7 @@ class GraphQLDatabaseServerTest extends Scope
                     'alive' => true,
                     'salary' => 9999.9,
                     'role' => 'crew',
+                    'dob' => '2000-01-01T00:00:00Z',
                 ],
                 'permissions' => [
                     Permission::read(Role::any()),
@@ -448,6 +479,7 @@ class GraphQLDatabaseServerTest extends Scope
                 'salary' => 9999.9,
                 'email' => 'johndoe@appwrite.io',
                 'role' => 'crew',
+                'dob' => '2000-01-01T00:00:00Z',
             ]
         ];
 
