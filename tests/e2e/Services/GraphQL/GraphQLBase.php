@@ -413,8 +413,8 @@ trait GraphQLBase
                     }   
                 }';
             case self::$CREATE_DOCUMENT:
-                return 'mutation createDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $read: [String!]!, $write: [String!]!){
-                    databasesCreateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
+                return 'mutation createDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!]){
+                    databasesCreateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
                         _id
                         _collectionId
                         _permissions
@@ -479,8 +479,8 @@ trait GraphQLBase
                         actorsDelete(id: $id)
                     }';
             case self::$UPDATE_DOCUMENT:
-                return 'mutation updateDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $read: [String!], $write: [String!]){
-                    databasesUpdateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, read: $read, write: $write) {
+                return 'mutation updateDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!]){
+                    databasesUpdateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
                         _id
                         _collection
                         data
@@ -1197,8 +1197,8 @@ trait GraphQLBase
                     functionsRetryBuild(functionId: $functionId, deploymentId: $deploymentId, buildId: $buildId)
                 }';
             case self::$CREATE_BUCKET:
-                return 'mutation createBucket($bucketId: String!, $name: String!, $permission: String!, $read: [String!]!, $write: [String!]!) {
-                    storageCreateBucket(bucketId: $bucketId, name: $name, permission: $permission, read: $read, write: $write) {
+                return 'mutation createBucket($bucketId: String!, $name: String!, $fileSecurity: Boolean, $permissions: [String!]) {
+                    storageCreateBucket(bucketId: $bucketId, name: $name, permission: $permission, permissions: $permissions) {
                         _id
                         name
                         enabled
@@ -1224,8 +1224,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_BUCKET:
-                return 'mutation updateBucket($bucketId: String!, $name: String!, $permission: String!, $read: [String!], $write: [String!]) {
-                    storageUpdateBucket(bucketId: $bucketId, name: $name, permission: $permission, read: $read, write: $write) {
+                return 'mutation updateBucket($bucketId: String!, $name: String!, $fileSecurity: Boolean, $permissions: [String!]) {
+                    storageUpdateBucket(bucketId: $bucketId, name: $name, permission: $permission, permissions: $permissions) {
                         _id
                         name
                         enabled
@@ -1236,8 +1236,8 @@ trait GraphQLBase
                     storageDeleteBucket(bucketId: $bucketId)
                 }';
             case self::$CREATE_FILE:
-                return 'mutation createFile($bucketId: String!, $fileId: String!, $file: InputFile!, $read: [String!]!, $write: [String!]!) {
-                    storageCreateFile(bucketId: $bucketId, fileId: $fileId, file: $file, read: $read, write: $write) {
+                return 'mutation createFile($bucketId: String!, $fileId: String!, $file: InputFile!, $permissions: [String!]) {
+                    storageCreateFile(bucketId: $bucketId, fileId: $fileId, file: $file, permissions: $permissions) {
                         _id
                         bucketId
                         name
@@ -1273,8 +1273,8 @@ trait GraphQLBase
                     storageGetFileView(bucketId: $bucketId, fileId: $fileId)
                 }';
             case self::$UPDATE_FILE:
-                return 'mutation updateFile($bucketId: String!, $fileId: String!, $read: [String!], $write: [String!]) {
-                    storageUpdateFile(bucketId: $bucketId, fileId: $fileId, read: $read, write: $write) {
+                return 'mutation updateFile($bucketId: String!, $fileId: String!, $permissions: [String!]) {
+                    storageUpdateFile(bucketId: $bucketId, fileId: $fileId, permissions: $permissions) {
                         _id
                         name
                     }

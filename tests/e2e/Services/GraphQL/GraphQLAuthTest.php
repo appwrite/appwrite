@@ -6,6 +6,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\Role;
+use Utopia\Database\Permission;
 
 class GraphQLAuthTest extends Scope
 {
@@ -100,15 +102,17 @@ class GraphQLAuthTest extends Scope
 
         // Create collection
         $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
                 'collectionId' => 'unique()',
                 'name' => 'Actors',
-                'permission' => 'document',
-                'read' => ['role:member'],
-                'write' => ['role:member'],
+                'documentSecurity' => true,
+                'permissions' => [
+                    Permission::create(Role::user($userId))
+                ]
             ]
         ];
         $this->collection = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -144,6 +148,7 @@ class GraphQLAuthTest extends Scope
 
         // Create document as account 1
         $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -153,8 +158,11 @@ class GraphQLAuthTest extends Scope
                 'data' => [
                     'name' => 'John Doe',
                 ],
-                'read' => ['user:' . $this->account1['body']['data']['accountCreate']['_id']],
-                'write' => ['user:' . $this->account1['body']['data']['accountCreate']['_id']],
+                'permissions' => [
+                    Permission::read(Role::user($userId)),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ]
             ]
         ];
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -189,9 +197,8 @@ class GraphQLAuthTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $this->token2,
         ], $gqlPayload);
 
-        $message = 'No document found';
         $this->assertArrayHasKey('errors', $document['body']);
-        $this->assertEquals($message, $document['body']['errors'][0]['message']);
+        $this->assertEquals('Document with the requested ID could not be found.', $document['body']['errors'][0]['message']);
     }
 
     public function testValidAuth()
