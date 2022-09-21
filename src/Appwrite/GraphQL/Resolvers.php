@@ -249,9 +249,13 @@ class Resolvers
             return;
         }
 
-        $payload = \array_map(function ($property) {
-            return \str_replace('$', '_', $property);
-        }, $payload);
+        foreach ($payload as $key => $value) {
+            if (\str_starts_with($key, '$')) {
+                $escapedKey = \str_replace('$', '_', $key);
+                $payload[$escapedKey] = $value;
+                unset($payload[$key]);
+            }
+        }
 
         $resolve($payload);
     }
