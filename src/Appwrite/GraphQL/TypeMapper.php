@@ -75,6 +75,7 @@ class TypeMapper
                 break;
             case 'Utopia\Database\Validator\Authorization':
             case 'Utopia\Database\Validator\Permissions':
+            case 'Utopia\Database\Validator\Roles':
                 $type = Type::listOf(Type::string());
                 break;
             case 'Utopia\Validator\Assoc':

@@ -120,7 +120,6 @@ class TypeRegistry
                 $fields[$escapedKey] = [
                     'type' => $type,
                     'description' => $props['description'],
-                    'resolve' => static fn($object, $args, $context, $info) => $object[$key],
                 ];
             }
         }
