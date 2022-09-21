@@ -692,6 +692,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
+            'region' => 'default'
         ]);
 
         $this->assertEquals(201, $project['headers']['status-code']);
