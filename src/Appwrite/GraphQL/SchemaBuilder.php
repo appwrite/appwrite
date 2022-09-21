@@ -226,12 +226,10 @@ class SchemaBuilder
                 foreach ($collections as $collectionId => $attributes) {
                     $objectType = new ObjectType([
                         'name' => $collectionId,
-                        'fields' => [
-                            "_id" => [
-                                'type' => Type::string()
-                            ],
-                            ...$attributes
-                        ],
+                        'fields' => \array_merge(
+                            ["_id" => ['type' => Type::string()]],
+                            $attributes
+                        ),
                     ]);
                     $attributes = \array_merge(
                         $attributes,
