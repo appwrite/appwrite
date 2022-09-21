@@ -42,6 +42,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
+            'region' => 'default',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -64,6 +65,7 @@ class ProjectsConsoleClientTest extends Scope
             'projectId' => ID::unique(),
             'name' => '',
             'teamId' => $team['body']['$id'],
+            'region' => 'default'
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -74,6 +76,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test',
+            'region' => 'default'
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
