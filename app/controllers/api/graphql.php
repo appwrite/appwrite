@@ -118,14 +118,14 @@ function executeRequest(
         $query = [$query];
     }
     if (empty($query)) {
-        throw new Exception('No query supplied.', 400, Exception::GRAPHQL_NO_QUERY);
+        throw new Exception(Exception::GRAPHQL_NO_QUERY);
     }
     if (\count($query) > $maxBatchSize) {
-        throw new Exception('Too many queries.', 400, Exception::GRAPHQL_TOO_MANY_QUERIES);
+        throw new Exception(Exception::GRAPHQL_TOO_MANY_QUERIES);
     }
     foreach ($query as $item) {
         if (empty($item['query'])) {
-            throw new Exception('Invalid query.', 400, Exception::GRAPHQL_INVALID_QUERY);
+            throw new Exception(Exception::GRAPHQL_INVALID_QUERY);
         }
     }
 
