@@ -169,7 +169,7 @@ class GraphQLUsersTest extends Scope
 
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
-        $this->assertIsArray($user['body']['data']['usersGetLogs']);
+        $this->assertIsArray($user['body']['data']['usersListLogs']);
     }
 
     public function testUpdateUserStatus()

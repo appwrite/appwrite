@@ -15,8 +15,8 @@ class GraphQLBatchTest extends Scope
     public function testArrayBatchedQueries()
     {
         $projectId = $this->getProject()['$id'];
-        $query1 = 'query { localeGetCountries { total countries { code } } }';
-        $query2 = 'query { localeGetContinents { total continents { code } } }';
+        $query1 = 'query { localeListCountries { total countries { code } } }';
+        $query2 = 'query { localeListContinents { total continents { code } } }';
         $graphQLPayload = [
             ['query' => $query1],
             ['query' => $query2],
@@ -28,16 +28,16 @@ class GraphQLBatchTest extends Scope
 
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeGetCountries', $response['body']['data']);
-        $this->assertArrayHasKey('localeGetContinents', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeGetCountries']['total']);
-        $this->assertEquals(7, $response['body']['data']['localeGetContinents']['total']);
+        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
+        $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
+        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
+        $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
     }
 
     public function testArrayBatchedQueriesOfSameType()
     {
         $projectId = $this->getProject()['$id'];
-        $query = 'query { localeGetCountries { total countries { code } } }';
+        $query = 'query { localeListCountries { total countries { code } } }';
         $graphQLPayload = [
             ['query' => $query],
             ['query' => $query],
@@ -49,10 +49,10 @@ class GraphQLBatchTest extends Scope
 
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeGetCountries', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeGetCountries']['total'][0]);
-        $this->assertEquals(194, $response['body']['data']['localeGetCountries']['total'][1]);
-        $this->assertEquals(388, \count($response['body']['data']['localeGetCountries']['countries']));
+        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
+        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total'][0]);
+        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total'][1]);
+        $this->assertEquals(388, \count($response['body']['data']['localeListCountries']['countries']));
     }
 
     public function testArrayBatchedMutations()
@@ -145,8 +145,8 @@ class GraphQLBatchTest extends Scope
         $projectId = $this->getProject()['$id'];
         $email = 'tester' . \uniqid() . '@example.com';
         $graphQLPayload = [
-            ['query' => 'query { localeGetCountries { total countries { code } } }'],
-            ['query' => 'query { localeGetContinents { total continents { code } } }'],
+            ['query' => 'query { localeListCountries { total countries { code } } }'],
+            ['query' => 'query { localeListContinents { total continents { code } } }'],
             [
                 'query' => 'mutation CreateAccount($userId: String!, $email: String!, $password: String!, $name: String) {
                     accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
@@ -168,11 +168,11 @@ class GraphQLBatchTest extends Scope
 
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeGetCountries', $response['body']['data']);
-        $this->assertArrayHasKey('localeGetContinents', $response['body']['data']);
+        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
+        $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
         $this->assertArrayHasKey('accountCreate', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeGetCountries']['total']);
-        $this->assertEquals(7, $response['body']['data']['localeGetContinents']['total']);
+        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
+        $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
         $this->assertEquals('Tester 1', $response['body']['data']['accountCreate']['name']);
     }
 
@@ -180,7 +180,7 @@ class GraphQLBatchTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $email = 'tester' . \uniqid() . '@example.com';
-        $query = 'query { localeGetCountries { total countries { code } } }';
+        $query = 'query { localeListCountries { total countries { code } } }';
         $graphQLPayload = [
             ['query' => $query],
             ['query' => $query],
@@ -205,10 +205,10 @@ class GraphQLBatchTest extends Scope
 
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeGetCountries', $response['body']['data']);
+        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
         $this->assertArrayHasKey('accountCreate', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeGetCountries']['total'][0]);
-        $this->assertEquals(388, \count($response['body']['data']['localeGetCountries']['countries']));
+        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total'][0]);
+        $this->assertEquals(388, \count($response['body']['data']['localeListCountries']['countries']));
         $this->assertArrayHasKey('_id', $response['body']['data']['accountCreate']);
     }
 
@@ -217,8 +217,8 @@ class GraphQLBatchTest extends Scope
         $projectId = $this->getProject()['$id'];
         $query = '
             query {
-                localeGetCountries { total countries { code } }
-                localeGetContinents { total continents { code } }
+                localeListCountries { total countries { code } }
+                localeListContinents { total continents { code } }
             }
         ';
         $graphQLPayload = [
@@ -231,10 +231,10 @@ class GraphQLBatchTest extends Scope
 
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeGetCountries', $response['body']['data']);
-        $this->assertArrayHasKey('localeGetContinents', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeGetCountries']['total']);
-        $this->assertEquals(7, $response['body']['data']['localeGetContinents']['total']);
+        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
+        $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
+        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
+        $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
     }
 
     public function testQueryBatchedQueriesOfSameType()
@@ -242,8 +242,8 @@ class GraphQLBatchTest extends Scope
         $projectId = $this->getProject()['$id'];
         $query = '
             query {
-                localeGetCountries { total countries { code } }
-                localeGetCountries { total countries { code } }
+                localeListCountries { total countries { code } }
+                localeListCountries { total countries { code } }
             }
         ';
         $graphQLPayload = [
@@ -256,8 +256,8 @@ class GraphQLBatchTest extends Scope
 
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeGetCountries', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeGetCountries']['total']);
+        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
+        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
     }
 
     public function testQueryBatchedMutations()

@@ -187,7 +187,7 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_DATABASES:
-                return 'query getDatabases {
+                return 'query listDatabases {
                     databasesList {
                         total
                         databases {
@@ -343,7 +343,7 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_INDEXES:
-                return 'query getIndexes($databaseId: String!, $collectionId: String!) {
+                return 'query listIndexes($databaseId: String!, $collectionId: String!) {
                     databasesListIndexes(databaseId: $databaseId, collectionId: $collectionId) {
                         total
                         indexes {
@@ -366,7 +366,7 @@ trait GraphQLBase
                     databasesDeleteIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key)
                 }';
             case self::$GET_ATTRIBUTES:
-                return 'query getAttributes($databaseId: String!, $collectionId: String!) {
+                return 'query listAttributes($databaseId: String!, $collectionId: String!) {
                     databasesListAttributes(databaseId: $databaseId, collectionId: $collectionId) {
                         total
                         attributes {
@@ -509,8 +509,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_USER_SESSIONS:
-                return 'query getUserSessions($userId : String!) {
-                    usersGetSessions(userId : $userId) {
+                return 'query listUserSessions($userId : String!) {
+                    usersListSessions(userId : $userId) {
                         total 
                         sessions {
                             _id
@@ -519,8 +519,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_USER_MEMBERSHIPS:
-                return 'query getUserMemberships($userId : String!) {
-                    usersGetMemberships(userId : $userId) {
+                return 'query listUserMemberships($userId : String!) {
+                    usersListMemberships(userId : $userId) {
                         total
                         memberships {
                             _id
@@ -530,8 +530,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_USER_LOGS:
-                return 'query getUserLogs($userId : String!) {
-                    usersGetLogs(userId : $userId) {
+                return 'query listUserLogs($userId : String!) {
+                    usersListLogs(userId : $userId) {
                         total
                         logs {
                             event
@@ -657,7 +657,7 @@ trait GraphQLBase
                 }';
             case self::$LIST_COUNTRIES:
                 return 'query listCountries {
-                    localeGetCountries{
+                    localeListCountries{
                         total
                         countries {
                             name
@@ -667,7 +667,7 @@ trait GraphQLBase
                 }';
             case self::$LIST_EU_COUNTRIES:
                 return 'query listEuCountries {
-                    localeGetCountriesEU{
+                    localeListCountriesEU{
                         total
                         countries {
                             name
@@ -677,7 +677,7 @@ trait GraphQLBase
                 }';
             case self::$LIST_COUNTRY_PHONE_CODES:
                 return 'query listCountryPhoneCodes {
-                    localeGetCountriesPhones {
+                    localeListCountriesPhones {
                         total
                         phones {
                             code
@@ -687,7 +687,7 @@ trait GraphQLBase
                 }';
             case self::$LIST_CONTINENTS:
                 return 'query listContinents {
-                    localeGetContinents{
+                    localeListContinents{
                         total
                         continents {
                             name
@@ -697,7 +697,7 @@ trait GraphQLBase
                 }';
             case self::$LIST_CURRENCIES:
                 return 'query listCurrencies {
-                    localeGetCurrencies{
+                    localeListCurrencies{
                         total
                         currencies {
                             name
@@ -708,7 +708,7 @@ trait GraphQLBase
                 }';
             case self::$LIST_LANGUAGES:
                 return 'query listLanguages {
-                    localeGetLanguages{
+                    localeListLanguages{
                         total
                         languages {
                             name
@@ -883,8 +883,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_ACCOUNT_SESSIONS:
-                return 'query getAccountSessions {
-                    accountGetSessions {
+                return 'query listAccountSessions {
+                    accountListSessions {
                         total
                         sessions {
                             _id
@@ -895,7 +895,7 @@ trait GraphQLBase
                 }';
             case self::$GET_ACCOUNT_LOGS:
                 return 'query getAccountLogs {
-                    accountGetLogs {
+                    accountListLogs {
                         total
                         logs {
                             event
@@ -1004,12 +1004,13 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_TEAM_MEMBERSHIPS:
-                return 'query getTeamMemberships($teamId: String!){
-                    teamsGetMemberships(teamId: $teamId) {
+                return 'query listTeamMemberships($teamId: String!){
+                    teamsListMemberships(teamId: $teamId) {
                         total
                         memberships {
                             _id
                             teamId
+                            userId
                             userName
                             userEmail
                         }

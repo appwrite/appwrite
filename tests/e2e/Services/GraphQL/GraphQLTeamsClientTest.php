@@ -134,7 +134,7 @@ class GraphQLTeamsClientTest extends Scope
 
         $this->assertIsArray($memberships['body']['data']);
         $this->assertArrayNotHasKey('errors', $memberships['body']);
-        $this->assertIsArray($memberships['body']['data']['teamsGetMemberships']);
+        $this->assertIsArray($memberships['body']['data']['teamsListMemberships']);
     }
 
     /**
@@ -158,7 +158,7 @@ class GraphQLTeamsClientTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsArray($membership['body']['data']['teamsGetMembership']);
+        $this->assertIsArray($membership['body']['data']['teamsListMembership']);
         $this->assertArrayNotHasKey('errors', $membership['body']);
     }
 

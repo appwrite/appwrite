@@ -46,7 +46,7 @@ class GraphQLLocalizationTest extends Scope
 
         $this->assertIsArray($countries['body']['data']);
         $this->assertArrayNotHasKey('errors', $countries['body']);
-        $countries = $countries['body']['data']['localeGetCountries'];
+        $countries = $countries['body']['data']['localeListCountries'];
         $this->assertIsArray($countries);
         $this->assertGreaterThan(0, \count($countries));
 
@@ -68,7 +68,7 @@ class GraphQLLocalizationTest extends Scope
 
         $this->assertIsArray($countries['body']['data']);
         $this->assertArrayNotHasKey('errors', $countries['body']);
-        $countries = $countries['body']['data']['localeGetCountriesEU'];
+        $countries = $countries['body']['data']['localeListCountriesEU'];
         $this->assertIsArray($countries);
         $this->assertGreaterThan(0, \count($countries));
 
@@ -90,7 +90,7 @@ class GraphQLLocalizationTest extends Scope
 
         $this->assertIsArray($countries['body']['data']);
         $this->assertArrayNotHasKey('errors', $countries['body']);
-        $countries = $countries['body']['data']['localeGetCountriesPhones'];
+        $countries = $countries['body']['data']['localeListCountriesPhones'];
         $this->assertIsArray($countries);
         $this->assertGreaterThan(0, \count($countries));
 
@@ -112,7 +112,7 @@ class GraphQLLocalizationTest extends Scope
 
         $this->assertIsArray($continents['body']['data']);
         $this->assertArrayNotHasKey('errors', $continents['body']);
-        $continents = $continents['body']['data']['localeGetContinents'];
+        $continents = $continents['body']['data']['localeListContinents'];
         $this->assertIsArray($continents);
         $this->assertGreaterThan(0, \count($continents));
 
@@ -134,7 +134,7 @@ class GraphQLLocalizationTest extends Scope
 
         $this->assertIsArray($currencies['body']['data']);
         $this->assertArrayNotHasKey('errors', $currencies['body']);
-        $currencies = $currencies['body']['data']['localeGetCurrencies'];
+        $currencies = $currencies['body']['data']['localeListCurrencies'];
         $this->assertIsArray($currencies);
         $this->assertGreaterThan(0, \count($currencies));
 
@@ -156,7 +156,7 @@ class GraphQLLocalizationTest extends Scope
 
         $this->assertIsArray($languages['body']['data']);
         $this->assertArrayNotHasKey('errors', $languages['body']);
-        $languages = $languages['body']['data']['localeGetLanguages'];
+        $languages = $languages['body']['data']['localeListLanguages'];
         $this->assertIsArray($languages);
         $this->assertGreaterThan(0, \count($languages));
 

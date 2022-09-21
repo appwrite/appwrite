@@ -17,7 +17,7 @@ class GraphQLContentTypeTest extends Scope
     public function testGraphQLContentType()
     {
         $projectId = $this->getProject()['$id'];
-        $query = 'query { localeGetCountries { total countries { code } } }';
+        $query = 'query { localeListCountries { total countries { code } } }';
         $graphQLPayload = [$query]; // Needs to be an array because the test client expects it
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/graphql',
@@ -26,14 +26,14 @@ class GraphQLContentTypeTest extends Scope
 
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
-        $response = $response['body']['data']['localeGetCountries'];
+        $response = $response['body']['data']['localeListCountries'];
         $this->assertEquals(194, $response['total']);
     }
 
     public function testSingleQueryJSONContentType()
     {
         $projectId = $this->getProject()['$id'];
-        $query = 'query { localeGetCountries { total countries { code } } }';
+        $query = 'query { localeListCountries { total countries { code } } }';
         $graphQLPayload = ['query' => $query];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -42,15 +42,15 @@ class GraphQLContentTypeTest extends Scope
 
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
-        $response = $response['body']['data']['localeGetCountries'];
+        $response = $response['body']['data']['localeListCountries'];
         $this->assertEquals(194, $response['total']);
     }
 
     public function testArrayBatchedJSONContentType()
     {
         $projectId = $this->getProject()['$id'];
-        $query1 = 'query { localeGetCountries { total countries { code } } }';
-        $query2 = 'query { localeGetContinents { total continents { code } } }';
+        $query1 = 'query { localeListCountries { total countries { code } } }';
+        $query2 = 'query { localeListContinents { total continents { code } } }';
         $graphQLPayload = [
             ['query' => $query1],
             ['query' => $query2],
@@ -62,10 +62,10 @@ class GraphQLContentTypeTest extends Scope
 
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeGetCountries', $response['body']['data']);
-        $this->assertArrayHasKey('localeGetContinents', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeGetCountries']['total']);
-        $this->assertEquals(7, $response['body']['data']['localeGetContinents']['total']);
+        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
+        $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
+        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
+        $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
     }
 
     public function testQueryBatchedJSONContentType()
@@ -73,8 +73,8 @@ class GraphQLContentTypeTest extends Scope
         $projectId = $this->getProject()['$id'];
         $query = '
             query {
-                localeGetCountries { total countries { code } }
-                localeGetContinents { total continents { code } }
+                localeListCountries { total countries { code } }
+                localeListContinents { total continents { code } }
             }
         ';
         $graphQLPayload = [
@@ -87,10 +87,10 @@ class GraphQLContentTypeTest extends Scope
 
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeGetCountries', $response['body']['data']);
-        $this->assertArrayHasKey('localeGetContinents', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeGetCountries']['total']);
-        $this->assertEquals(7, $response['body']['data']['localeGetContinents']['total']);
+        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
+        $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
+        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
+        $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
     }
 
     public function testMultipartFormDataContentType()

@@ -260,7 +260,7 @@ class GraphQLAccountTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $sessions['body']);
         $this->assertIsArray($sessions['body']['data']);
-        $this->assertIsArray($sessions['body']['data']['accountGetSessions']);
+        $this->assertIsArray($sessions['body']['data']['accountListSessions']);
 
         return $sessions;
     }
@@ -304,7 +304,7 @@ class GraphQLAccountTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $logs['body']);
         $this->assertIsArray($logs['body']['data']);
-        $this->assertIsArray($logs['body']['data']['accountGetLogs']);
+        $this->assertIsArray($logs['body']['data']['accountListLogs']);
 
         return $logs;
     }
