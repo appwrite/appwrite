@@ -402,7 +402,6 @@ class GraphQLDatabaseServerTest extends Scope
                 ],
                 'permissions' => [
                     Permission::read(Role::any()),
-                    Permission::create(Role::any()),
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],
@@ -456,7 +455,6 @@ class GraphQLDatabaseServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
-
 
         $this->assertArrayNotHasKey('errors', $actor['body']);
         $this->assertIsArray($actor['body']['data']);

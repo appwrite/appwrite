@@ -245,7 +245,7 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_COLLECTION:
-                return 'mutation updateCollection($databaseId: String!, $collectionId: String!, $name: String!, $documentSecurity: Boolean!, $permissions: [String!]!, $enabled: Boolean){
+                return 'mutation updateCollection($databaseId: String!, $collectionId: String!, $name: String!, $documentSecurity: Boolean!, $permissions: [String!], $enabled: Boolean){
                     databasesUpdateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $name, documentSecurity: $documentSecurity, permissions: $permissions, enabled: $enabled) {
                         _id
                         _permissions
@@ -443,6 +443,7 @@ trait GraphQLBase
                             salary
                             email
                             role
+                            dob
                             ip
                             url
                         }
@@ -457,6 +458,7 @@ trait GraphQLBase
                         salary
                         email
                         role
+                        dob
                         ip
                         url
                     }
@@ -470,6 +472,7 @@ trait GraphQLBase
                         salary
                         email
                         role
+                        dob
                         ip
                         url
                     }
@@ -482,7 +485,7 @@ trait GraphQLBase
                 return 'mutation updateDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!]){
                     databasesUpdateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
                         _id
-                        _collection
+                        _collectionId
                         data
                     }
                 }';

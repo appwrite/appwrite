@@ -7,6 +7,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class GraphQLStorageServerTest extends Scope
 {
@@ -62,10 +64,9 @@ class GraphQLStorageServerTest extends Scope
                     'file' => null,
                     'fileSecurity' => true,
                     'permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::create(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
                     ],
                 ]
             ]),
