@@ -6,6 +6,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class GraphQLDatabaseClientTest extends Scope
 {
@@ -52,9 +54,13 @@ class GraphQLDatabaseClientTest extends Scope
                 'databaseId' => $database['_id'],
                 'collectionId' => 'actors',
                 'name' => 'Actors',
-                'permission' => 'collection',
-                'read' => ['role:all'],
-                'write' => ['role:member'],
+                'documentSecurity' => false,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ],
             ]
         ];
 
@@ -158,8 +164,11 @@ class GraphQLDatabaseClientTest extends Scope
                     'name' => 'John Doe',
                     'age' => 35,
                 ],
-                'read' => ['role:all'],
-                'write' => ['role:all'],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
             ]
         ];
 

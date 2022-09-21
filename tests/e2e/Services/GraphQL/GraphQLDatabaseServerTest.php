@@ -7,6 +7,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class GraphQLDatabaseServerTest extends Scope
 {
@@ -52,9 +54,13 @@ class GraphQLDatabaseServerTest extends Scope
                 'databaseId' => $database['_id'],
                 'collectionId' => 'actors',
                 'name' => 'Actors',
-                'permission' => 'collection',
-                'read' => ['role:all'],
-                'write' => ['role:member'],
+                'documentSecurity' => false,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ],
             ]
         ];
 
@@ -394,8 +400,12 @@ class GraphQLDatabaseServerTest extends Scope
                     'salary' => 9999.9,
                     'role' => 'crew',
                 ],
-                'read' => ['role:all'],
-                'write' => ['role:all'],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
             ]
         ];
 
@@ -775,7 +785,7 @@ class GraphQLDatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
                 'name' => 'New Collection Name',
-                'permission' => 'collection',
+                'documentSecurity' => false,
             ]
         ];
 

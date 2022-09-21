@@ -1196,10 +1196,14 @@ trait GraphQLBase
                 }';
             case self::$CREATE_BUCKET:
                 return 'mutation createBucket($bucketId: String!, $name: String!, $fileSecurity: Boolean, $permissions: [String!]) {
-                    storageCreateBucket(bucketId: $bucketId, name: $name, permission: $permission, permissions: $permissions) {
+                    storageCreateBucket(bucketId: $bucketId, name: $name, fileSecurity: $fileSecurity, permissions: $permissions) {
                         _id
+                        _createdAt
+                        _updatedAt
+                        _permissions
                         name
                         enabled
+                        fileSecurity
                     }
                 }';
             case self::$GET_BUCKETS:
@@ -1223,7 +1227,7 @@ trait GraphQLBase
                 }';
             case self::$UPDATE_BUCKET:
                 return 'mutation updateBucket($bucketId: String!, $name: String!, $fileSecurity: Boolean, $permissions: [String!]) {
-                    storageUpdateBucket(bucketId: $bucketId, name: $name, permission: $permission, permissions: $permissions) {
+                    storageUpdateBucket(bucketId: $bucketId, name: $name, fileSecurity: $fileSecurity, permissions: $permissions) {
                         _id
                         name
                         enabled

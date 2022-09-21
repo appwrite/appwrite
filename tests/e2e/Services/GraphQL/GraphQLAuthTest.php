@@ -207,6 +207,7 @@ class GraphQLAuthTest extends Scope
 
         // Create document as account 1
         $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -216,8 +217,11 @@ class GraphQLAuthTest extends Scope
                 'data' => [
                     'name' => 'John Doe',
                 ],
-                'read' => ['user:' . $this->account1['body']['data']['accountCreate']['_id']],
-                'write' => ['user:' . $this->account1['body']['data']['accountCreate']['_id']],
+                'permissions' => [
+                    Permission::read(Role::user($userId)),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
             ]
         ];
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [

@@ -23,9 +23,13 @@ class GraphQLStorageServerTest extends Scope
             'variables' => [
                 'bucketId' => 'actors',
                 'name' => 'Actors',
-                'permission' => 'bucket',
-                'read' => ['role:all'],
-                'write' => ['role:all'],
+                'fileSecurity' => false,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
             ]
         ];
 
@@ -56,9 +60,13 @@ class GraphQLStorageServerTest extends Scope
                     'bucketId' => $bucket['_id'],
                     'fileId' => 'unique()',
                     'file' => null,
-                    'permissions' => 'file',
-                    'read' => ['role:all'],
-                    'write' => ['role:all'],
+                    'fileSecurity' => true,
+                    'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                    ],
                 ]
             ]),
             'map' => \json_encode([
@@ -286,7 +294,7 @@ class GraphQLStorageServerTest extends Scope
             'variables' => [
                 'bucketId' => $bucket['_id'],
                 'name' => 'Actors Updated',
-                'permission' => 'bucket',
+                'fileSecurity' => false,
             ]
         ];
 
@@ -318,8 +326,12 @@ class GraphQLStorageServerTest extends Scope
             'variables' => [
                 'bucketId' => $file['bucketId'],
                 'fileId' => $file['_id'],
-                'read' => ['role:all'],
-                'write' => ['role:all'],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
             ]
         ];
 

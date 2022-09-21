@@ -7,6 +7,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class GraphQLContentTypeTest extends Scope
 {
@@ -103,9 +105,13 @@ class GraphQLContentTypeTest extends Scope
             'variables' => [
                 'bucketId' => 'unique()',
                 'name' => 'Test Bucket',
-                'permission' => 'bucket',
-                'read' => ['role:all'],
-                'write' => ['role:all'],
+                'fileSecurity' => false,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
             ]
         ];
         $bucket = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -123,9 +129,12 @@ class GraphQLContentTypeTest extends Scope
                     'bucketId' => $bucket['_id'],
                     'fileId' => 'unique()',
                     'file' => null,
-                    'permissions' => 'file',
-                    'read' => ['role:all'],
-                    'write' => ['role:all'],
+                    'fileSecurity' => true,
+                    'permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
                 ]
             ]),
             'map' => \json_encode([
@@ -152,7 +161,7 @@ class GraphQLContentTypeTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
 
-        $this->assertEquals('No query supplied.', $response['body']['message']);
+        $this->assertEquals('No query passed in the request.', $response['body']['message']);
     }
 
     public function testPostEmptyBody()
@@ -163,7 +172,7 @@ class GraphQLContentTypeTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), []);
 
-        $this->assertEquals('No query supplied.', $response['body']['message']);
+        $this->assertEquals('No query passed in the request.', $response['body']['message']);
     }
 
     public function testPostRandomBody()
@@ -185,7 +194,7 @@ class GraphQLContentTypeTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
 
-        $this->assertEquals('No query supplied.', $response['body']['message']);
+        $this->assertEquals('No query passed in the request.', $response['body']['message']);
     }
 
     public function testGetEmptyQuery()
@@ -207,6 +216,6 @@ class GraphQLContentTypeTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
 
-        $this->assertEquals('No query supplied.', $response['body']['message']);
+        $this->assertEquals('No query passed in the request.', $response['body']['message']);
     }
 }
