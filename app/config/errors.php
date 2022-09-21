@@ -551,12 +551,12 @@ return [
     ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,
-        'description' => 'No query supplied.',
+        'description' => 'No query passed in the request.',
         'code' => 400,
     ],
     Exception::GRAPHQL_INVALID_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,
-        'description' => 'Invalid query supplied.',
+        'description' => 'Invalid query.',
         'code' => 400,
     ],
     Exception::GRAPHQL_TOO_MANY_QUERIES => [
