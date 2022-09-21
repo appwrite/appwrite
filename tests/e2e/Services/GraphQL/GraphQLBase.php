@@ -606,8 +606,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_USER_PHONE:
-                return 'mutation updateUserPhone($userId: String!, $number: String!){
-                    usersUpdatePhone(userId: $userId, number: $number) {
+                return 'mutation updateUserPhone($userId: String!, $phone: String!){
+                    usersUpdatePhone(userId: $userId, phone: $phone) {
                         name
                         phone
                         email
@@ -795,8 +795,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_ACCOUNT_PHONE:
-                return 'mutation updateAccountPhone($number: String!, $password: String!){
-                    accountUpdatePhone(number: $number, password: $password) {
+                return 'mutation updateAccountPhone($phone: String!, $password: String!){
+                    accountUpdatePhone(phone: $phone, password: $password) {
                         _id
                         name
                         status

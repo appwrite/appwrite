@@ -316,7 +316,7 @@ class GraphQLUsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-                'number' => '+123456789'
+                'phone' => '+123456789'
             ],
         ];
 

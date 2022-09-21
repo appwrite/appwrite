@@ -389,7 +389,7 @@ class GraphQLAccountTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'number' => '+123456789',
+                'phone' => '+123456789',
                 'password' => 'password',
             ]
         ];
