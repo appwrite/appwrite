@@ -60,6 +60,7 @@ return [
             'public',
             'home',
             'console',
+            'graphql',
             'documents.read',
             'documents.write',
             'files.read',
