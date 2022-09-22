@@ -150,7 +150,7 @@ class TypeRegistry
      * @param string $key
      * @return array
      */
-    public static function defaultArgsFor(string $key): array
+    public static function argumentsFor(string $key): array
     {
         if (isset(self::$defaultDocumentArgs[$key])) {
             return self::$defaultDocumentArgs[$key];

@@ -65,6 +65,30 @@ class Resolvers
      * @param string $collectionId
      * @return callable
      */
+    public static function resolveDocument(
+        App $utopia,
+        Database $dbForProject,
+        string $databaseId,
+        string $collectionId,
+        string $methodType,
+    ): callable {
+        return [self::class, 'resolveDocument' . \ucfirst($methodType)](
+            $utopia,
+            $dbForProject,
+            $databaseId,
+            $collectionId
+        );
+    }
+
+    /**
+     * Create a resolver for getting a document in a specified database and collection.
+     *
+     * @param App $utopia
+     * @param Database $dbForProject
+     * @param string $databaseId
+     * @param string $collectionId
+     * @return callable
+     */
     public static function resolveDocumentGet(
         App $utopia,
         Database $dbForProject,
@@ -127,6 +151,42 @@ class Resolvers
     }
 
     /**
+     * Create a resolver for creating a document in a specified database and collection.
+     *
+     * @param App $utopia
+     * @param Database $dbForProject
+     * @param string $databaseId
+     * @param string $collectionId
+     * @return callable
+     */
+    public static function resolveDocumentCreate(
+        App $utopia,
+        Database $dbForProject,
+        string $databaseId,
+        string $collectionId,
+    ): callable {
+        return self::resolveDocumentMutate($utopia, $dbForProject, $databaseId, $collectionId, 'POST');
+    }
+
+    /**
+     * Create a resolver for updating a document in a specified database and collection.
+     *
+     * @param App $utopia
+     * @param Database $dbForProject
+     * @param string $databaseId
+     * @param string $collectionId
+     * @return callable
+     */
+    public static function resolveDocumentUpdate(
+        App $utopia,
+        Database $dbForProject,
+        string $databaseId,
+        string $collectionId,
+    ): callable {
+        return self::resolveDocumentMutate($utopia, $dbForProject, $databaseId, $collectionId, 'PATCH');
+    }
+
+    /**
      * Create a resolver for mutating a document in a specified database and collection.
      *
      * @param App $utopia
@@ -136,7 +196,7 @@ class Resolvers
      * @param string $method
      * @return callable
      */
-    public static function resolveDocumentMutate(
+    private static function resolveDocumentMutate(
         App $utopia,
         Database $dbForProject,
         string $databaseId,

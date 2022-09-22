@@ -21,7 +21,7 @@ class TypeMapper
      * @return Type
      * @throws Exception
      */
-    public static function typeFromParameter(
+    public static function fromRouteParameter(
         App $utopia,
         Validator|callable $validator,
         bool $required,
@@ -58,7 +58,7 @@ class TypeMapper
                 break;
             case 'Utopia\Validator\ArrayList':
                 /** @noinspection PhpPossiblePolymorphicInvocationInspection */
-                $type = Type::listOf(self::typeFromParameter(
+                $type = Type::listOf(self::fromRouteParameter(
                     $utopia,
                     $validator->getValidator(),
                     $required,
@@ -118,10 +118,10 @@ class TypeMapper
      * @return Type
      * @throws Exception
      */
-    public static function typeFromAttribute(string $type, bool $array, bool $required): Type
+    public static function fromCollectionAttribute(string $type, bool $array, bool $required): Type
     {
         if ($array) {
-            return Type::listOf(self::typeFromAttribute($type, false, $required));
+            return Type::listOf(self::fromCollectionAttribute($type, false, $required));
         }
 
         $type = match ($type) {

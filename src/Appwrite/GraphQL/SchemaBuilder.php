@@ -128,7 +128,7 @@ class SchemaBuilder
                     $params = [];
 
                     foreach ($route->getParams() as $key => $value) {
-                        $argType = TypeMapper::typeFromParameter(
+                        $argType = TypeMapper::fromRouteParameter(
                             $utopia,
                             $value['validator'],
                             !$value['optional'],
@@ -199,8 +199,8 @@ class SchemaBuilder
             !empty($attrs = Authorization::skip(fn() => $dbForProject->find(
                 collection: 'attributes',
                 queries: [
-                Query::limit($limit),
-                Query::offset($offset),
+                    Query::limit($limit),
+                    Query::offset($offset),
                 ]
             )))
         ) {
@@ -233,11 +233,12 @@ class SchemaBuilder
                     ]);
                     $attributes = \array_merge(
                         $attributes,
-                        TypeRegistry::defaultArgsFor('mutate')
+                        TypeRegistry::argumentsFor('mutate')
                     );
+                    
                     $queryFields[$collectionId . 'Get'] = [
                         'type' => $objectType,
-                        'args' => TypeRegistry::defaultArgsFor('id'),
+                        'args' => TypeRegistry::argumentsFor('id'),
                         'resolve' => Resolvers::resolveDocumentGet(
                             $utopia,
                             $dbForProject,
@@ -247,24 +248,25 @@ class SchemaBuilder
                     ];
                     $queryFields[$collectionId . 'List'] = [
                         'type' => $objectType,
-                        'args' => TypeRegistry::defaultArgsFor('list'),
+                        'args' => TypeRegistry::argumentsFor('list'),
                         'resolve' => Resolvers::resolveDocumentList(
                             $utopia,
                             $dbForProject,
                             $databaseId,
                             $collectionId
                         ),
-                        'complexity' => fn(int $complexity, array $args) => $complexity * $args['limit'],
+                        'complexity' => function(int $complexity, array $args) {
+                            return $complexity * $args['limit'];
+                        },
                     ];
                     $mutationFields[$collectionId . 'Create'] = [
                         'type' => $objectType,
                         'args' => $attributes,
-                        'resolve' => Resolvers::resolveDocumentMutate(
+                        'resolve' => Resolvers::resolveDocumentCreate(
                             $utopia,
                             $dbForProject,
                             $databaseId,
                             $collectionId,
-                            'POST'
                         )
                     ];
                     $mutationFields[$collectionId . 'Update'] = [
@@ -275,12 +277,11 @@ class SchemaBuilder
                             $dbForProject,
                             $databaseId,
                             $collectionId,
-                            'PATCH'
                         )
                     ];
                     $mutationFields[$collectionId . 'Delete'] = [
                         'type' => $objectType,
-                        'args' => TypeRegistry::defaultArgsFor('id'),
+                        'args' => TypeRegistry::argumentsFor('id'),
                         'resolve' => Resolvers::resolveDocumentDelete(
                             $utopia,
                             $dbForProject,
