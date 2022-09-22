@@ -10,11 +10,11 @@ use Utopia\App;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
-class GraphQLAbuseTest extends Scope
+class AbuseTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
-    use GraphQLBase;
+    use Base;
 
     public function testComplexQueryBlocked()
     {

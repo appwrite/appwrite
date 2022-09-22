@@ -11,11 +11,11 @@ use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
-class GraphQLContentTypeTest extends Scope
+class ContentTypeTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
-    use GraphQLBase;
+    use Base;
 
     public function testGraphQLContentType()
     {

@@ -8,7 +8,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\ID;
 
-class GraphQLBatchTest extends Scope
+class BatchTest extends Scope
 {
     use ProjectCustom;
     use SideClient;

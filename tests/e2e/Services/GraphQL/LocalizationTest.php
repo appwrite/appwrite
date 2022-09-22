@@ -7,11 +7,11 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
-class GraphQLLocalizationTest extends Scope
+class LocalizationTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
-    use GraphQLBase;
+    use Base;
 
     public function testGetLocale(): array
     {

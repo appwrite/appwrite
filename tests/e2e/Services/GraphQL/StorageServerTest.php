@@ -11,11 +11,11 @@ use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
-class GraphQLStorageServerTest extends Scope
+class StorageServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
-    use GraphQLBase;
+    use Base;
 
     public function testCreateBucket(): array
     {

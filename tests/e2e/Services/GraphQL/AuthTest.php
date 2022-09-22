@@ -10,11 +10,11 @@ use Utopia\Database\ID;
 use Utopia\Database\Role;
 use Utopia\Database\Permission;
 
-class GraphQLAuthTest extends Scope
+class AuthTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
-    use GraphQLBase;
+    use Base;
 
     private array $account1;
     private array $account2;
@@ -79,6 +79,7 @@ class GraphQLAuthTest extends Scope
 
         // Create session 2
         $graphQLPayload['variables']['email'] = $email2;
+
         $session2 = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,

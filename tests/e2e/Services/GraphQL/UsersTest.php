@@ -9,11 +9,11 @@ use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\ID;
 use Utopia\Database\Query;
 
-class GraphQLUsersTest extends Scope
+class UsersTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
-    use GraphQLBase;
+    use Base;
 
     public function testCreateUser(): array
     {

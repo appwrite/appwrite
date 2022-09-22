@@ -10,11 +10,11 @@ use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
-class GraphQLDatabaseClientTest extends Scope
+class DatabaseClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
-    use GraphQLBase;
+    use Base;
 
     public function testCreateDatabase(): array
     {

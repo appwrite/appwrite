@@ -9,11 +9,11 @@ use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\ID;
 
-class GraphQLScopeTest extends Scope
+class ScopeTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
-    use GraphQLBase;
+    use Base;
 
     public function testInvalidScope()
     {

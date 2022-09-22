@@ -8,10 +8,10 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\ID;
 
-class GraphQLTeamsClientTest extends Scope
+class TeamsClientTest extends Scope
 {
     use ProjectCustom;
-    use GraphQLBase;
+    use Base;
     use SideClient;
 
     public function testCreateTeam(): array

@@ -11,11 +11,11 @@ use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
-class GraphQLDatabaseServerTest extends Scope
+class DatabaseServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
-    use GraphQLBase;
+    use Base;
 
     public function testCreateDatabase(): array
     {
@@ -862,6 +862,37 @@ class GraphQLDatabaseServerTest extends Scope
         $this->assertStringContainsString('New Document Name', $document['data']);
     }
 
+//    /**
+//     * @depends testCreateCustomEntity
+//     * @throws Exception
+//     */
+//    public function testUpdateCustomEntity(array $data) {
+//        $projectId = $this->getProject()['$id'];
+//        $query = $this->getQuery(self::$UPDATE_CUSTOM_ENTITY);
+//        $gqlPayload = [
+//            'query' => $query,
+//            'variables' => [
+//                'id' => $data['_id'],
+//                'data' => [
+//                    'name' => 'New Custom Entity Name',
+//                ],
+//            ]
+//        ];
+//
+//        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+//            'content-type' => 'application/json',
+//            'x-appwrite-project' => $projectId,
+//        ], $this->getHeaders()), $gqlPayload);
+//
+//        \var_dump($entity);
+//
+//        $this->assertArrayNotHasKey('errors', $entity['body']);
+//        $this->assertIsArray($entity['body']['data']);
+//        $entity = $entity['body']['data']['actorsUpdate'];
+//        $this->assertIsArray($entity);
+//        $this->assertStringContainsString('New Custom Entity Name', $entity['data']);
+//    }
+
     /**
      * @depends testCreateDocument
      * @throws Exception
@@ -965,4 +996,27 @@ class GraphQLDatabaseServerTest extends Scope
         $this->assertIsNotArray($database['body']);
         $this->assertEquals(204, $database['headers']['status-code']);
     }
+
+//    /**
+//     * @depends testCreateCustomEntity
+//     * @throws Exception
+//     */
+//    public function testDeleteCustomEntity(array $data) {
+//        $projectId = $this->getProject()['$id'];
+//        $query = $this->getQuery(self::$DELETE_CUSTOM_ENTITY);
+//        $gqlPayload = [
+//            'query' => $query,
+//            'variables' => [
+//                'id' => $data['_id'],
+//            ]
+//        ];
+//
+//        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+//            'content-type' => 'application/json',
+//            'x-appwrite-project' => $projectId,
+//        ], $this->getHeaders()), $gqlPayload);
+//
+//        $this->assertIsNotArray($entity['body']);
+//        $this->assertEquals(204, $entity['headers']['status-code']);
+//    }
 }

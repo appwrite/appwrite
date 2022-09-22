@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
-trait GraphQLBase
+trait Base
 {
     // Databases
     public static string $CREATE_DATABASE = 'create_database';
@@ -560,8 +560,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_USERS:
-                return 'query listUsers($search: String, $queries: [String!]) {
-                    usersList(search: $search, queries: $queries) {
+                return 'query listUsers($queries: [String!], $search: String) {
+                    usersList(queries: $queries, search: $search) {
                         total
                         users {
                             _id

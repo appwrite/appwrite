@@ -8,11 +8,11 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\ID;
 
-class GraphQLAccountTest extends Scope
+class AccountTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
-    use GraphQLBase;
+    use Base;
 
     public function testCreateAccount(): array
     {

@@ -10,11 +10,11 @@ use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\ID;
 use Utopia\Database\Role;
 
-class GraphQLFunctionsClientTest extends Scope
+class FunctionsClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
-    use GraphQLBase;
+    use Base;
 
     public function testCreateFunction(): array
     {
