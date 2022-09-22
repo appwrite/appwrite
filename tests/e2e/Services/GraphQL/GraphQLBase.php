@@ -1013,7 +1013,7 @@ trait GraphQLBase
                 }';
             case self::$GET_TEAM_MEMBERSHIP:
                 return 'query getTeamMembership($teamId: String!, $membershipId: String!){
-                    teamsListMembership(teamId: $teamId, membershipId: $membershipId) {
+                    teamsGetMembership(teamId: $teamId, membershipId: $membershipId) {
                         _id
                         teamId
                         userId

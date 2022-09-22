@@ -51,7 +51,9 @@ class GraphQLAuthTest extends Scope
         ], $graphQLPayload);
 
         // Create account 2
+        $graphQLPayload['variables']['userId'] = ID::unique();
         $graphQLPayload['variables']['email'] = $email2;
+
         $account2 = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,

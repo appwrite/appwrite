@@ -64,8 +64,6 @@ class GraphQLUsersTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        \var_dump($users);
-
         $this->assertIsArray($users['body']['data']);
         $this->assertArrayNotHasKey('errors', $users['body']);
         $this->assertIsArray($users['body']['data']['usersList']);
