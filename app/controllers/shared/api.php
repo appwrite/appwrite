@@ -404,7 +404,6 @@ App::shutdown()
         if (
             App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
             && $project->getId()
-            && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
             && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
             $metric = $route->getLabel('usage.metric', '');
