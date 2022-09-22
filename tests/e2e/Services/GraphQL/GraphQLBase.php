@@ -115,6 +115,13 @@ trait GraphQLBase
     public static string $GET_RUNTIMES = 'list_runtimes';
     public static string $UPDATE_FUNCTION = 'update_function';
     public static string $DELETE_FUNCTION = 'delete_function';
+    // Variables
+    public static string $CREATE_VARIABLE = 'create_variable';
+    public static string $GET_VARIABLES = 'list_variables';
+    public static string $GET_VARIABLE = 'get_variable';
+    public static string $UPDATE_VARIABLE = 'update_variable';
+    public static string $DELETE_VARIABLE = 'delete_variable';
+
     //Deployments
     public static string $CREATE_DEPLOYMENT = 'create_deployment';
     public static string $GET_DEPLOYMENTS = 'list_deployments';
@@ -1126,8 +1133,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$CREATE_FUNCTION:
-                return 'mutation createFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $vars: Json, $events: [String], $schedule: String, $timeout: Int) {
-                    functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, vars: $vars, events: $events, schedule: $schedule, timeout: $timeout) {
+                return 'mutation createFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $events: [String], $schedule: String, $timeout: Int) {
+                    functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, events: $events, schedule: $schedule, timeout: $timeout) {
                         _id
                         name
                         runtime
@@ -1135,8 +1142,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_FUNCTION:
-                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $vars: Json, $events: [String], $schedule: String, $timeout: Int) {
-                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, vars: $vars, events: $events, schedule: $schedule, timeout: $timeout) {
+                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $events: [String], $schedule: String, $timeout: Int) {
+                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, events: $events, schedule: $schedule, timeout: $timeout) {
                         _id
                         name
                         runtime
@@ -1155,6 +1162,45 @@ trait GraphQLBase
             case self::$DELETE_FUNCTION:
                 return 'mutation deleteFunction($functionId: String!) {
                     functionsDelete(functionId: $functionId)
+                }';
+            case self::$CREATE_VARIABLE:
+                return 'mutation createVariable($functionId: String!, $key: String!, $value: String!) {
+                    functionsCreateVariable(functionId: $functionId, key: $key, value: $value) {
+                        _id
+                        key
+                        value
+                    }
+                }';
+            case self::$GET_VARIABLES:
+                return 'query listVariables($functionId: String!) {
+                    functionsListVariables(functionId: $functionId) {
+                        total
+                        variables {
+                            _id
+                            key
+                            value
+                        }
+                    }
+                }';
+            case self::$GET_VARIABLE:
+                return 'query getVariable($functionId: String!, $variableId: String!) {
+                    functionsGetVariable(functionId: $functionId, variableId: $variableId) {
+                        _id
+                        key
+                        value
+                    }
+                }';
+            case self::$UPDATE_VARIABLE:
+                return 'mutation updateVariable($functionId: String!, $variableId: String!, $key: String!, $value: String) {
+                    functionsUpdateVariable(functionId: $functionId, variableId: $variableId, key: $key, value: $value) {
+                        _id
+                        key
+                        value
+                    }
+                }';
+            case self::$DELETE_VARIABLE:
+                return 'mutation deleteVariable($functionId: String!, $variableId: String!) {
+                    functionsDeleteVariable(functionId: $functionId, variableId: $variableId)
                 }';
             case self::$CREATE_DEPLOYMENT:
                 return 'mutation createDeployment($functionId: String!, $entrypoint: String!, $code: InputFile!, $activate: Boolean!) {
