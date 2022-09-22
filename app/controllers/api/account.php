@@ -40,6 +40,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -2090,6 +2091,7 @@ App::post('/v1/account/verification')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
+    ->param('code', false, new Boolean(), 'Whether the email verification email must contain a URL or a secret code.', true) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -2098,7 +2100,7 @@ App::post('/v1/account/verification')
     ->inject('locale')
     ->inject('events')
     ->inject('mails')
-    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
+    ->action(function (string $url, bool $code, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -2109,6 +2111,14 @@ App::post('/v1/account/verification')
         $isAppUser = Auth::isAppUser($roles);
         $verificationSecret = Auth::tokenGenerator();
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+
+        if ($code === true) {
+            $verificationSecret = Auth::codeGenerator();
+            $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE);
+        } else {
+            $verificationSecret = Auth::tokenGenerator();
+            $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        }
 
         $verification = new Document([
             '$id' => ID::unique(),
