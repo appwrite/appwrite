@@ -108,12 +108,12 @@ class Stats
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
                 $this->statsd->increment($metric . $tags);
-            }
-            if($metric == $usersMetrics[0]) {
-                $this->statsd->increment('users.{scope}.count.total' . $tags);
-            }
-            if($metric == $usersMetrics[3]) {
-                $this->statsd->decrement('users.{scope}.count.total' . $tags);
+                if($metric == $usersMetrics[0]) {
+                    $this->statsd->increment('users.{scope}.count.total' . $tags);
+                }
+                if($metric == $usersMetrics[3]) {
+                    $this->statsd->decrement('users.{scope}.count.total' . $tags);
+                }
             }
         }
 
