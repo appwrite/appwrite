@@ -101,11 +101,7 @@ class Resolvers
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
-                $swoole->post = [
-                    'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
-                    'documentId' => $args['id'],
-                ];
+
                 $swoole->server['request_method'] = 'GET';
                 $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
                 $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
@@ -145,7 +141,11 @@ class Resolvers
                 $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
                 $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
 
-                self::resolve($utopia, $request, $response, $resolve, $reject);
+                $beforeResolve = function ($payload) {
+                    return $payload['documents'];
+                };
+
+                self::resolve($utopia, $request, $response, $resolve, $reject, $beforeResolve);
             }
         );
     }
@@ -283,6 +283,8 @@ class Resolvers
         Response $response,
         callable $resolve,
         callable $reject,
+        ?callable $beforeResolve = null,
+        ?callable $beforeReject = null,
     ): void {
         // Drop json content type so post args are used directly
         if ($request->getHeader('content-type') === 'application/json') {
@@ -298,6 +300,9 @@ class Resolvers
 
             $utopia->execute($route, $request);
         } catch (\Throwable $e) {
+            if ($beforeReject) {
+                $e = $beforeReject($e);
+            }
             $reject($e);
             return;
         }
@@ -305,6 +310,9 @@ class Resolvers
         $payload = $response->getPayload();
 
         if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 400) {
+            if ($beforeReject) {
+                $payload = $beforeReject($payload);
+            }
             $reject(new GQLException(
                 message: $payload['message'],
                 code: $response->getStatusCode()
@@ -318,6 +326,10 @@ class Resolvers
                 $payload[$escapedKey] = $value;
                 unset($payload[$key]);
             }
+        }
+
+        if ($beforeResolve) {
+            $payload = $beforeResolve($payload);
         }
 
         $resolve($payload);

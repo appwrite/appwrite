@@ -450,24 +450,22 @@ trait Base
                     }
                 }';
             case self::$GET_CUSTOM_ENTITIES:
-                return 'query getCustomEntities($name: String!){
-                    actorsList(name: $name) {
-                        total
-                        actors {
-                            name
-                            age
-                            alive
-                            salary
-                            email
-                            role
-                            dob
-                            ip
-                            url
-                        }
+                return 'query getCustomEntities {
+                    actorsList {
+                        _id
+                        name
+                        age
+                        alive
+                        salary
+                        email
+                        role
+                        dob
+                        ip
+                        url
                     }
                 }';
             case self::$GET_CUSTOM_ENTITY:
-                return 'query getCustomEntity($id: String!){
+                return 'query getCustomEntity($id: String!) {
                     actorsGet(id: $id) {
                         name
                         age

@@ -3,6 +3,7 @@
 namespace Appwrite\GraphQL;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model\None;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
@@ -217,9 +218,15 @@ class SchemaBuilder
                     $type = $attr->getAttribute('type');
                     $array = $attr->getAttribute('array');
                     $required = $attr->getAttribute('required');
+                    $default = $attr->getAttribute('default');
                     $escapedKey = str_replace('$', '_', $key);
                     $collections[$collectionId][$escapedKey] = [
-                        'type' => TypeMapper::typeFromAttribute($type, $array, $required),
+                        'type' => TypeMapper::fromCollectionAttribute(
+                            $type,
+                            $array,
+                            $required
+                        ),
+                        'defaultValue' => $default,
                     ];
                 }
 
@@ -235,7 +242,7 @@ class SchemaBuilder
                         $attributes,
                         TypeRegistry::argumentsFor('mutate')
                     );
-                    
+
                     $queryFields[$collectionId . 'Get'] = [
                         'type' => $objectType,
                         'args' => TypeRegistry::argumentsFor('id'),
@@ -247,7 +254,7 @@ class SchemaBuilder
                         )
                     ];
                     $queryFields[$collectionId . 'List'] = [
-                        'type' => $objectType,
+                        'type' => Type::listOf($objectType),
                         'args' => TypeRegistry::argumentsFor('list'),
                         'resolve' => Resolvers::resolveDocumentList(
                             $utopia,
@@ -255,8 +262,9 @@ class SchemaBuilder
                             $databaseId,
                             $collectionId
                         ),
-                        'complexity' => function(int $complexity, array $args) {
-                            return $complexity * $args['limit'];
+                        'complexity' => function (int $complexity, array $args) {
+                            // FIXME: Update this for query limit
+                            return $complexity; //* $args['limit'];
                         },
                     ];
                     $mutationFields[$collectionId . 'Create'] = [

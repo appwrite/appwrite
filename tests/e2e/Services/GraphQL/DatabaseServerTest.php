@@ -465,6 +465,7 @@ class DatabaseServerTest extends Scope
      * @depends testCreateFloatAttribute
      * @depends testCreateEmailAttribute
      * @depends testCreateEnumAttribute
+     * @depends testCreateDatetimeAttribute
      * @throws Exception
      */
     public function testCreateCustomEntity(): array
@@ -749,6 +750,28 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
         $this->assertIsArray($document['body']['data']['databasesGetDocument']);
+    }
+
+    /**
+     * @depends testCreateCustomEntity
+     * @throws Exception
+     */
+    public function testGetCustomEntities($data)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$GET_CUSTOM_ENTITIES);
+        $gqlPayload = [
+            'query' => $query,
+        ];
+
+        $customEntities = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertArrayNotHasKey('errors', $customEntities['body']);
+        $this->assertIsArray($customEntities['body']['data']);
+        $this->assertIsArray($customEntities['body']['data']['actorsList']);
     }
 
     /**
