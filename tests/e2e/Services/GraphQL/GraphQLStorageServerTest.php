@@ -330,7 +330,6 @@ class GraphQLStorageServerTest extends Scope
                 'fileId' => $file['_id'],
                 'permissions' => [
                     Permission::read(Role::any()),
-                    Permission::create(Role::any()),
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],

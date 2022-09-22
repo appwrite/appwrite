@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\ID;
+use Utopia\Database\Query;
 
 class GraphQLUsersTest extends Scope
 {
@@ -51,8 +52,10 @@ class GraphQLUsersTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'limit' => 100,
-                'offset' => 0,
+                'queries' => [
+                    'limit(100)',
+                    'offset(0)',
+                ],
             ]
         ];
 
@@ -60,6 +63,8 @@ class GraphQLUsersTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
+
+        \var_dump($users);
 
         $this->assertIsArray($users['body']['data']);
         $this->assertArrayNotHasKey('errors', $users['body']);
@@ -149,7 +154,7 @@ class GraphQLUsersTest extends Scope
 
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
-        $this->assertIsArray($user['body']['data']['usersGetMemberships']);
+        $this->assertIsArray($user['body']['data']['usersListMemberships']);
     }
 
     public function testGetUserLogs()
@@ -329,7 +334,7 @@ class GraphQLUsersTest extends Scope
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersUpdatePhone']);
-        $this->assertEquals('+123456789', $user['body']['data']['usersUpdatePhone']['number']);
+        $this->assertEquals('+123456789', $user['body']['data']['usersUpdatePhone']['phone']);
     }
 
     public function testUpdateUserPrefs()

@@ -76,6 +76,21 @@ class TypeMapper
             case 'Utopia\Database\Validator\Authorization':
             case 'Utopia\Database\Validator\Permissions':
             case 'Utopia\Database\Validator\Roles':
+            case 'Appwrite\Utopia\Database\Validator\Queries':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Base':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Files':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Users':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
                 $type = Type::listOf(Type::string());
                 break;
             case 'Utopia\Validator\Assoc':
