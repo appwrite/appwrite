@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\ID;
 
 class GraphQLBatchTest extends Scope
 {
@@ -66,7 +67,7 @@ class GraphQLBatchTest extends Scope
                 }
             }',
             'variables' => [
-                'userId' => 'unique()',
+                'userId' => ID::unique(),
                 'email' => $email,
                 'password' => 'password',
                 'name' => 'Tester 1',
@@ -79,7 +80,7 @@ class GraphQLBatchTest extends Scope
                 }
             }',
             'variables' => [
-                'teamId' => 'unique()',
+                'teamId' => ID::unique(),
                 'name' => 'Team 1',
             ],
         ]];
@@ -112,7 +113,7 @@ class GraphQLBatchTest extends Scope
             [
                 'query' => $query,
                 'variables' => [
-                    'userId' => 'unique()',
+                    'userId' => ID::unique(),
                     'email' => $email1,
                     'password' => 'password',
                     'name' => 'Tester 1',
@@ -121,7 +122,7 @@ class GraphQLBatchTest extends Scope
             [
                 'query' => $query,
                 'variables' => [
-                    'userId' => 'unique()',
+                    'userId' => ID::unique(),
                     'email' => $email2,
                     'password' => 'password',
                     'name' => 'Tester 2',
@@ -154,7 +155,7 @@ class GraphQLBatchTest extends Scope
                     }
                 }',
                 'variables' => [
-                    'userId' => 'unique()',
+                    'userId' => ID::unique(),
                     'email' => $email,
                     'password' => 'password',
                     'name' => 'Tester 1',
@@ -191,7 +192,7 @@ class GraphQLBatchTest extends Scope
                     }
                 }',
                 'variables' => [
-                    'userId' => 'unique()',
+                    'userId' => ID::unique(),
                     'email' => $email,
                     'password' => 'password',
                     'name' => 'Tester 1',
@@ -274,7 +275,7 @@ class GraphQLBatchTest extends Scope
                 }
             }',
             'variables' => [
-                'userId' => 'unique()',
+                'userId' => ID::unique(),
                 'email' => $email,
                 'password' => 'password',
                 'name' => 'Tester',
@@ -309,7 +310,7 @@ class GraphQLBatchTest extends Scope
                 }
             }',
             'variables' => [
-                'userId' => 'unique()',
+                'userId' => ID::unique(),
                 'email1' => $email1,
                 'email2' => $email2,
                 'name1' => 'Tester 1',
@@ -341,7 +342,7 @@ class GraphQLBatchTest extends Scope
                 }
             }',
             'variables' => [
-                'userId' => 'unique()',
+                'userId' => ID::unique(),
                 'email1' => $email1,
                 'email2' => $email2,
                 'name1' => 'Tester 1',

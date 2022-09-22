@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\ID;
 
 class GraphQLUsersTest extends Scope
 {
@@ -21,7 +22,7 @@ class GraphQLUsersTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => 'unique()',
+                'userId' => ID::unique(),
                 'email' => $email,
                 'password' => 'password',
                 'name' => 'Project User',

@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\ID;
 
 class GraphQLAccountTest extends Scope
 {
@@ -21,7 +22,7 @@ class GraphQLAccountTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => 'unique()',
+                'userId' => ID::unique(),
                 'name' => 'User Name',
                 'email' => $email,
                 'password' => 'password',
@@ -74,7 +75,7 @@ class GraphQLAccountTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => 'unique()',
+                'userId' => ID::unique(),
                 'email' => $email,
             ]
         ];

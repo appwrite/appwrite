@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
@@ -421,7 +422,7 @@ class GraphQLDatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-                'documentId' => 'unique()',
+                'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
                     'email' => 'example@appwrite.io',

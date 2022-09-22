@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\ID;
 
 class GraphQLScopeTest extends Scope
 {
@@ -22,7 +23,7 @@ class GraphQLScopeTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => 'unique()',
+                'databaseId' => ID::unique(),
                 'name' => 'Actors',
             ]
         ];
@@ -46,7 +47,7 @@ class GraphQLScopeTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => 'unique()',
+                'databaseId' => ID::unique(),
                 'name' => 'Actors',
             ]
         ];

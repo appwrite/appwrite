@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\ID;
 
 class GraphQLTeamsServerTest extends Scope
 {
@@ -20,7 +21,7 @@ class GraphQLTeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => 'unique()',
+                'teamId' => ID::unique(),
                 'name' => 'Team Name',
                 'roles' => ['admin', 'developer', 'guest'],
             ],

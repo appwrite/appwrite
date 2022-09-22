@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
@@ -103,7 +104,7 @@ class GraphQLContentTypeTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'bucketId' => 'unique()',
+                'bucketId' => ID::unique(),
                 'name' => 'Test Bucket',
                 'fileSecurity' => false,
                 'permissions' => [
@@ -127,7 +128,7 @@ class GraphQLContentTypeTest extends Scope
                 'query' => $query,
                 'variables' => [
                     'bucketId' => $bucket['_id'],
-                    'fileId' => 'unique()',
+                    'fileId' => ID::unique(),
                     'file' => null,
                     'fileSecurity' => true,
                     'permissions' => [

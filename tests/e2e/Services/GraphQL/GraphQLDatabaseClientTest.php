@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
@@ -22,7 +23,7 @@ class GraphQLDatabaseClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => 'unique()',
+                'databaseId' => ID::unique(),
                 'name' => 'Actors',
             ]
         ];
@@ -159,7 +160,7 @@ class GraphQLDatabaseClientTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-                'documentId' => 'unique()',
+                'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
                     'age' => 35,

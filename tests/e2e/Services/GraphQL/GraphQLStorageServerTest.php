@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
@@ -60,7 +61,7 @@ class GraphQLStorageServerTest extends Scope
                 'query' => $query,
                 'variables' => [
                     'bucketId' => $bucket['_id'],
-                    'fileId' => 'unique()',
+                    'fileId' => ID::unique(),
                     'file' => null,
                     'fileSecurity' => true,
                     'permissions' => [

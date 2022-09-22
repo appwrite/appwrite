@@ -7,6 +7,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\ID;
+use Utopia\Database\Role;
 
 class GraphQLFunctionsClientTest extends Scope
 {
@@ -21,14 +23,14 @@ class GraphQLFunctionsClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => 'unique()',
+                'functionId' => ID::unique(),
                 'name' => 'Test Function',
                 'runtime' => 'ruby-3.0',
-                'execute' => ['role:all'],
                 'vars' => [
                     'name' => 'John Doe',
                     'age' => 42,
                 ]
+                'execute' => [Role::any()],
             ]
         ];
 

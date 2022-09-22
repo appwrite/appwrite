@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\ID;
 use Utopia\Database\Role;
 use Utopia\Database\Permission;
 
@@ -38,7 +39,7 @@ class GraphQLAuthTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => 'unique()',
+                'userId' => ID::unique(),
                 'name' => 'User Name',
                 'email' => $email1,
                 'password' => 'password',
@@ -90,7 +91,7 @@ class GraphQLAuthTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => 'unique()',
+                'databaseId' => ID::unique(),
                 'name' => 'Actors',
             ]
         ];
@@ -107,7 +108,7 @@ class GraphQLAuthTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
-                'collectionId' => 'unique()',
+                'collectionId' => ID::unique(),
                 'name' => 'Actors',
                 'documentSecurity' => true,
                 'permissions' => [
@@ -154,7 +155,7 @@ class GraphQLAuthTest extends Scope
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
                 'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
-                'documentId' => 'unique()',
+                'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
                 ],
@@ -213,7 +214,7 @@ class GraphQLAuthTest extends Scope
             'variables' => [
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
                 'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
-                'documentId' => 'unique()',
+                'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
                 ],
