@@ -553,8 +553,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$GET_USERS:
-                return 'query listUsers($search: String, $limit: Int, $offset: Int, $cursor: String, $cursorDirection: String, $orderType: String) {
-                    usersList(search: $search, limit: $limit, offset: $offset, cursor: $cursor, cursorDirection: $cursorDirection, orderType: $orderType) {
+                return 'query listUsers($search: String, $queries: [String!]) {
+                    usersList(search: $search, queries: $queries) {
                         total
                         users {
                             _id
@@ -619,8 +619,8 @@ trait GraphQLBase
                     }
                 }';
             case self::$UPDATE_USER_PHONE:
-                return 'mutation updateUserPhone($userId: String!, $phone: String!){
-                    usersUpdatePhone(userId: $userId, phone: $phone) {
+                return 'mutation updateUserPhone($userId: String!, $number: String!){
+                    usersUpdatePhone(userId: $userId, number: $number) {
                         name
                         phone
                         email

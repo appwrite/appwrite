@@ -128,7 +128,7 @@ class GraphQLUsersTest extends Scope
 
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
-        $this->assertIsArray($user['body']['data']['usersGetSessions']);
+        $this->assertIsArray($user['body']['data']['usersListSessions']);
     }
 
     public function testGetUserMemberships()
@@ -317,7 +317,7 @@ class GraphQLUsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-                'phone' => '+123456789'
+                'number' => '+123456789'
             ],
         ];
 
@@ -329,7 +329,7 @@ class GraphQLUsersTest extends Scope
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersUpdatePhone']);
-        $this->assertEquals('+123456789', $user['body']['data']['usersUpdatePhone']['phone']);
+        $this->assertEquals('+123456789', $user['body']['data']['usersUpdatePhone']['number']);
     }
 
     public function testUpdateUserPrefs()
