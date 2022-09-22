@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Template;
 
 use Appwrite\Template\Template;
 use PHPUnit\Framework\TestCase;
@@ -24,12 +24,12 @@ class TemplateTest extends TestCase
     {
     }
 
-    public function testRender()
+    public function testRender(): void
     {
         $this->assertEquals($this->object->render(), 'Hello WORLD');
     }
 
-    public function testParseURL()
+    public function testParseURL(): void
     {
         $url = $this->object->parseURL('https://appwrite.io/demo');
 
@@ -38,7 +38,7 @@ class TemplateTest extends TestCase
         $this->assertEquals($url['path'], '/demo');
     }
 
-    public function testUnParseURL()
+    public function testUnParseURL(): void
     {
         $url = $this->object->parseURL('https://appwrite.io/demo');
 
@@ -49,18 +49,18 @@ class TemplateTest extends TestCase
         $this->assertEquals($this->object->unParseURL($url), 'http://example.com/new');
     }
 
-    public function testMergeQuery()
+    public function testMergeQuery(): void
     {
         $this->assertEquals($this->object->mergeQuery('key1=value1&key2=value2', ['key1' => 'value3', 'key4' => 'value4']), 'key1=value3&key2=value2&key4=value4');
     }
 
-    public function testFromCamelCaseToSnake()
+    public function testFromCamelCaseToSnake(): void
     {
         $this->assertEquals('app_write', Template::fromCamelCaseToSnake('appWrite'));
         $this->assertEquals('app_write', Template::fromCamelCaseToSnake('App Write'));
     }
 
-    public function testFromCamelCaseToDash()
+    public function testFromCamelCaseToDash(): void
     {
         $this->assertEquals('app-write', Template::fromCamelCaseToDash('appWrite'));
         $this->assertEquals('app-write', Template::fromCamelCaseToDash('App Write'));

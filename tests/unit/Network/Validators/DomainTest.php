@@ -1,16 +1,13 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\Domain;
 use PHPUnit\Framework\TestCase;
 
 class DomainTest extends TestCase
 {
-    /**
-     * @var Domain
-     */
-    protected $domain = null;
+    protected ?Domain $domain = null;
 
     public function setUp(): void
     {
@@ -22,7 +19,7 @@ class DomainTest extends TestCase
         $this->domain = null;
     }
 
-    public function testIsValid()
+    public function testIsValid(): void
     {
         // Assertions
         $this->assertEquals(true, $this->domain->isValid('example.com'));

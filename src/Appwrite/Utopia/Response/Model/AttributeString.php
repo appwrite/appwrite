@@ -22,9 +22,8 @@ class AttributeString extends Attribute
                 'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
+                'required' => false,
                 'example' => 'default',
-                'array' => false,
-                'require' => false,
             ])
         ;
     }
