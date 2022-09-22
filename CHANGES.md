@@ -1,3 +1,8 @@
+# Version 1.0.1
+## Bugs
+- Fixed migration for abuse by migrating the `time` attribute [3839](https://github.com/appwrite/appwrite/pull/3839)
+
+# Version 1.0.0
 ## BREAKING CHANGES
 - All Date values are now stored as ISO-8601 instead of UNIX timestamps [#3516](https://github.com/appwrite/appwrite/pull/3516)
 - Permission levels and syntax have been reworked. See the Permissions V2 section in the document for more information [#3700](https://github.com/appwrite/appwrite/pull/3700)
