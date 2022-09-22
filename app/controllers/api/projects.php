@@ -330,7 +330,7 @@ App::get('/v1/projects/:projectId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }

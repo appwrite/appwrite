@@ -1176,7 +1176,7 @@ App::get('/v1/users/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
