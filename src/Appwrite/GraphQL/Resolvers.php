@@ -254,14 +254,12 @@ class Resolvers
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
-                $swoole->post = [
-                    'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
-                    'documentId' => $args['id'],
-                ];
+
+                $documentId = $args['id'];
+                
                 $swoole->server['request_method'] = 'DELETE';
-                $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
-                $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
+                $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents/$documentId";
+                $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents/$documentId";
 
                 self::resolve($utopia, $request, $response, $resolve, $reject);
             }

@@ -943,14 +943,35 @@ class DatabaseServerTest extends Scope
     }
 
     /**
+     * @depends testCreateCustomEntity
+     * @throws Exception
+     */
+    public function testDeleteCustomEntity(array $data)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$DELETE_CUSTOM_ENTITY);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'id' => $data['_id'],
+            ]
+        ];
+
+        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertIsNotArray($entity['body']);
+        $this->assertEquals(204, $entity['headers']['status-code']);
+    }
+
+    /**
      * @depends testCreateStringAttribute
      * @throws Exception
      */
     public function testDeleteAttribute($data): void
     {
-        // Wait for attributes to be available
-        sleep(3);
-
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$DELETE_ATTRIBUTE);
         $gqlPayload = [
@@ -1020,26 +1041,4 @@ class DatabaseServerTest extends Scope
         $this->assertEquals(204, $database['headers']['status-code']);
     }
 
-//    /**
-//     * @depends testCreateCustomEntity
-//     * @throws Exception
-//     */
-//    public function testDeleteCustomEntity(array $data) {
-//        $projectId = $this->getProject()['$id'];
-//        $query = $this->getQuery(self::$DELETE_CUSTOM_ENTITY);
-//        $gqlPayload = [
-//            'query' => $query,
-//            'variables' => [
-//                'id' => $data['_id'],
-//            ]
-//        ];
-//
-//        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $projectId,
-//        ], $this->getHeaders()), $gqlPayload);
-//
-//        $this->assertIsNotArray($entity['body']);
-//        $this->assertEquals(204, $entity['headers']['status-code']);
-//    }
 }

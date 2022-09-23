@@ -288,7 +288,7 @@ class SchemaBuilder
                         )
                     ];
                     $mutationFields[$collectionId . 'Delete'] = [
-                        'type' => $objectType,
+                        'type' => TypeRegistry::get(Response::MODEL_NONE),
                         'args' => TypeRegistry::argumentsFor('id'),
                         'resolve' => Resolvers::resolveDocumentDelete(
                             $utopia,
