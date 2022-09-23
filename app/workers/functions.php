@@ -150,13 +150,20 @@ class FunctionsV1 extends Worker
                     throw new Exception('Function not found (' . $function->getId() . ')');
                 }
 
+                \var_dump("Got here");
+
                 if ($functionOriginal->getAttribute('schedule') !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
                     return;
                 }
 
+
+                \var_dump("Got here 2");
+
                 if ($functionOriginal->getAttribute('scheduleUpdatedAt') !== $function->getAttribute('scheduleUpdatedAt')) { // Double execution due to rapid cron changes, ignore this run.
                     return;
                 }
+
+                \var_dump("Got here 3");
 
                 $cron = new CronExpression($function->getAttribute('schedule'));
                 $next = DateTime::format($cron->getNextRunDate());
