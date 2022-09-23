@@ -32,25 +32,26 @@ class TypeRegistry
             Model::TYPE_STRING => Type::string(),
             Model::TYPE_INTEGER => Type::int(),
             Model::TYPE_FLOAT => Type::float(),
-            Model::TYPE_JSON => self::json(),
-            Response::MODEL_NONE => self::json(),
-            Response::MODEL_ANY => self::json(),
             Model::TYPE_DATETIME => Type::string(),
+            Model::TYPE_JSON => static::json(),
+            Response::MODEL_NONE => static::json(),
+            Response::MODEL_ANY => static::json(),
         ];
         self::$defaultDocumentArgs = [
             'id' => [
                 'id' => [
-                    'type' => Type::string(),
+                    'type' => Type::nonNull(Type::string()),
                 ],
             ],
             'list' => [
                 'queries' => [
-                    'type' => Type::listOf(Type::string()),
+                    'type' => Type::listOf(Type::nonNull(Type::string())),
+                    'defaultValue' => [],
                 ],
             ],
             'mutate' => [
                 'permissions' => [
-                    'type' => Type::listOf(Type::string()),
+                    'type' => Type::listOf(Type::nonNull(Type::string())),
                     'defaultValue' => [],
                 ]
             ],
