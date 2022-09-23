@@ -165,7 +165,34 @@ class Resolvers
         string $databaseId,
         string $collectionId,
     ): callable {
-        return self::resolveDocumentMutate($utopia, $dbForProject, $databaseId, $collectionId, 'POST');
+        return static fn($type, $args, $context, $info) => new CoroutinePromise(
+            function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
+                $utopia = $utopia->getResource('current', true);
+                $request = $utopia->getResource('request', true);
+                $response = $utopia->getResource('response', true);
+                $swoole = $request->getSwoole();
+
+                $id = $args['id'] ?? ID::unique();
+                $permissions = $args['permissions'] ?? null;
+
+                unset($args['id']);
+                unset($args['permissions']);
+
+                // Order must be the same as the route params
+                $swoole->post = [
+                    'databaseId' => $databaseId,
+                    'documentId' => $id,
+                    'collectionId' => $collectionId,
+                    'data' => $args,
+                    'permissions' => $permissions,
+                ];
+                $swoole->server['request_method'] = 'POST';
+                $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
+                $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
+
+                self::resolve($utopia, $request, $response, $resolve, $reject);
+            }
+        );
     }
 
     /**
@@ -183,35 +210,15 @@ class Resolvers
         string $databaseId,
         string $collectionId,
     ): callable {
-        return self::resolveDocumentMutate($utopia, $dbForProject, $databaseId, $collectionId, 'PATCH');
-    }
-
-    /**
-     * Create a resolver for mutating a document in a specified database and collection.
-     *
-     * @param App $utopia
-     * @param Database $dbForProject
-     * @param string $databaseId
-     * @param string $collectionId
-     * @param string $method
-     * @return callable
-     */
-    private static function resolveDocumentMutate(
-        App $utopia,
-        Database $dbForProject,
-        string $databaseId,
-        string $collectionId,
-        string $method,
-    ): callable {
         return static fn($type, $args, $context, $info) => new CoroutinePromise(
-            function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $method, $type, $args) {
+            function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
 
-                $id = $args['id'] ?? ID::unique();
-                $permissions = $args['permissions'];
+                $documentId = $args['id'];
+                $permissions = $args['permissions'] ?? null;
 
                 unset($args['id']);
                 unset($args['permissions']);
@@ -219,14 +226,14 @@ class Resolvers
                 // Order must be the same as the route params
                 $swoole->post = [
                     'databaseId' => $databaseId,
-                    'documentId' => $id,
                     'collectionId' => $collectionId,
+                    'documentId' => $documentId,
                     'data' => $args,
                     'permissions' => $permissions,
                 ];
-                $swoole->server['request_method'] = $method;
-                $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
-                $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents";
+                $swoole->server['request_method'] = 'PATCH';
+                $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents/$documentId";
+                $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents/$documentId";
 
                 self::resolve($utopia, $request, $response, $resolve, $reject);
             }
@@ -256,7 +263,7 @@ class Resolvers
                 $swoole = $request->getSwoole();
 
                 $documentId = $args['id'];
-                
+
                 $swoole->server['request_method'] = 'DELETE';
                 $swoole->server['request_uri'] = "/v1/databases/$databaseId/collections/$collectionId/documents/$documentId";
                 $swoole->server['path_info'] = "/v1/databases/$databaseId/collections/$collectionId/documents/$documentId";

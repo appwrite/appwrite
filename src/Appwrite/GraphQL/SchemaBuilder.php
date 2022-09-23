@@ -279,8 +279,14 @@ class SchemaBuilder
                     ];
                     $mutationFields[$collectionId . 'Update'] = [
                         'type' => $objectType,
-                        'args' => $attributes,
-                        'resolve' => Resolvers::resolveDocumentMutate(
+                        'args' => \array_merge(
+                            TypeRegistry::argumentsFor('id'),
+                            \array_map(
+                                fn($attr) => $attr['type'] = Type::getNullableType($attr['type']),
+                                $attributes
+                            )
+                        ),
+                        'resolve' => Resolvers::resolveDocumentUpdate(
                             $utopia,
                             $dbForProject,
                             $databaseId,

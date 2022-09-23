@@ -372,7 +372,7 @@ class DatabaseServerTest extends Scope
     public function testCreateIndex($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(2);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_INDEX);
@@ -885,36 +885,33 @@ class DatabaseServerTest extends Scope
         $this->assertStringContainsString('New Document Name', $document['data']);
     }
 
-//    /**
-//     * @depends testCreateCustomEntity
-//     * @throws Exception
-//     */
-//    public function testUpdateCustomEntity(array $data) {
-//        $projectId = $this->getProject()['$id'];
-//        $query = $this->getQuery(self::$UPDATE_CUSTOM_ENTITY);
-//        $gqlPayload = [
-//            'query' => $query,
-//            'variables' => [
-//                'id' => $data['_id'],
-//                'data' => [
-//                    'name' => 'New Custom Entity Name',
-//                ],
-//            ]
-//        ];
-//
-//        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $projectId,
-//        ], $this->getHeaders()), $gqlPayload);
-//
-//        \var_dump($entity);
-//
-//        $this->assertArrayNotHasKey('errors', $entity['body']);
-//        $this->assertIsArray($entity['body']['data']);
-//        $entity = $entity['body']['data']['actorsUpdate'];
-//        $this->assertIsArray($entity);
-//        $this->assertStringContainsString('New Custom Entity Name', $entity['data']);
-//    }
+    /**
+     * @depends testCreateCustomEntity
+     * @throws Exception
+     */
+    public function testUpdateCustomEntity(array $data)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$UPDATE_CUSTOM_ENTITY);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'id' => $data['_id'],
+                'name' => 'New Custom Entity Name',
+            ]
+        ];
+
+        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertArrayNotHasKey('errors', $entity['body']);
+        $this->assertIsArray($entity['body']['data']);
+        $entity = $entity['body']['data']['actorsUpdate'];
+        $this->assertIsArray($entity);
+        $this->assertStringContainsString('New Custom Entity Name', $entity['name']);
+    }
 
     /**
      * @depends testCreateDocument
@@ -1040,5 +1037,4 @@ class DatabaseServerTest extends Scope
         $this->assertIsNotArray($database['body']);
         $this->assertEquals(204, $database['headers']['status-code']);
     }
-
 }
