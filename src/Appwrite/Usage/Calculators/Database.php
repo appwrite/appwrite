@@ -96,7 +96,7 @@ class Database extends Calculator
                     'time' => $time,
                     'metric' => $metric,
                     'value' => $value,
-                    'region' => App::getEnv('region', 'default'),
+                    'region' => App::getEnv('_APP_REGION', 'default'),
                     'type' => 2, // these are cumulative metrics
                 ]));
             } else {

@@ -316,7 +316,7 @@ class TimeSeries extends Calculator
                     'metric' => $metric,
                     'value' => $value,
                     'type' => $type,
-                    'region' => App::getEnv('region', 'default'),
+                    'region' => App::getEnv('_APP_REGION', 'default'),
                 ]));
             } else {
                 $this->database->updateDocument(
