@@ -157,7 +157,8 @@ const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
 const COMPRESSION_TYPE_ZSTD = 'zstd';
 // Mail Types
-const MAIL_TYPE_VERIFICATION = 'verification';
+const MAIL_TYPE_VERIFICATION_URL = 'verificationUrl';
+const MAIL_TYPE_VERIFICATION_CODE = 'verificationCode';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
 const MAIL_TYPE_RECOVERY = 'recovery';
 const MAIL_TYPE_INVITATION = 'invitation';

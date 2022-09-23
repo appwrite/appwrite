@@ -38,6 +38,7 @@ class MailsV1 extends Worker
 
         $recipient = $this->args['recipient'];
         $url = $this->args['url'];
+        $code = $this->args['code'];
         $name = $this->args['name'];
         $type = $this->args['type'];
         $prefix = $this->getPrefix($type);
@@ -68,7 +69,8 @@ class MailsV1 extends Worker
                 $body->setParam('{{team}}', $team->getAttribute('name'));
                 break;
             case MAIL_TYPE_RECOVERY:
-            case MAIL_TYPE_VERIFICATION:
+            case MAIL_TYPE_VERIFICATION_CODE:
+            case MAIL_TYPE_VERIFICATION_URL:
             case MAIL_TYPE_MAGIC_SESSION:
                 $subject = $locale->getText("$prefix.subject");
                 break;
@@ -76,11 +78,14 @@ class MailsV1 extends Worker
                 throw new Exception('Undefined Mail Type : ' . $type, 500);
         }
 
+        var_dump($code);
+
         $body
             ->setParam('{{subject}}', $subject)
             ->setParam('{{hello}}', $locale->getText("$prefix.hello"))
             ->setParam('{{name}}', $name)
             ->setParam('{{body}}', $locale->getText("$prefix.body"))
+            ->setParam('{{code}}', $code)
             ->setParam('{{redirect}}', $url)
             ->setParam('{{footer}}', $locale->getText("$prefix.footer"))
             ->setParam('{{thanks}}', $locale->getText("$prefix.thanks"))
@@ -146,8 +151,10 @@ class MailsV1 extends Worker
                 return 'emails.certificate';
             case MAIL_TYPE_INVITATION:
                 return 'emails.invitation';
-            case MAIL_TYPE_VERIFICATION:
-                return 'emails.verification';
+            case MAIL_TYPE_VERIFICATION_URL:
+                return 'emails.verificationUrl';
+            case MAIL_TYPE_VERIFICATION_CODE:
+                    return 'emails.verificationCode';
             case MAIL_TYPE_MAGIC_SESSION:
                 return 'emails.magicSession';
             default:

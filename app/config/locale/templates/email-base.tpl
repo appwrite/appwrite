@@ -82,6 +82,15 @@
       word-break: break-all;
     }
 
+    .code {
+      font-family: sans-serif;
+      font-size: 28px;
+      font-weight: bold;
+      margin: 0;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+
     @media only screen and (max-width: 620px) {
       .container {
         padding: 0;
@@ -139,6 +148,7 @@
                     <td>
                       <p>{{hello}}</p>
                       <p>{{body}}</p>
+                      <p class="code">{{code}}</p>
                       <a href="{{redirect}}" target="_blank">{{redirect}}</a>
                       <p></br>{{footer}}</p>
                       <p>{{thanks}}

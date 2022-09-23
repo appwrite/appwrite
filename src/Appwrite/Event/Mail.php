@@ -9,6 +9,7 @@ class Mail extends Event
 {
     protected string $recipient = '';
     protected string $url = '';
+    protected string $code = '';
     protected string $type = '';
     protected string $name = '';
     protected string $locale = '';
@@ -86,6 +87,29 @@ class Mail extends Event
     public function getURL(): string
     {
         return $this->url;
+    }
+
+    /**
+     * Sets code for the mail event.
+     *
+     * @param string $code
+     * @return self
+     */
+    public function setCode(string $code): self
+    {
+        $this->code = $code;
+
+        return $this;
+    }
+
+    /**
+     * Returns set code for the mail event.
+     *
+     * @return string
+     */
+    public function getCode(): string
+    {
+        return $this->code;
     }
 
     /**
@@ -171,6 +195,7 @@ class Mail extends Event
             'payload' => $this->payload,
             'recipient' => $this->recipient,
             'url' => $this->url,
+            'code' => $this->code,
             'locale' => $this->locale,
             'type' => $this->type,
             'name' => $this->name,
