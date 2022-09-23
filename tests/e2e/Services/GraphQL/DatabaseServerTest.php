@@ -372,7 +372,7 @@ class DatabaseServerTest extends Scope
     public function testCreateIndex($data): array
     {
         // Wait for attributes to be available
-        sleep(2);
+        sleep(3);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_INDEX);

@@ -127,8 +127,12 @@ class SchemaBuilder
                     $type = TypeRegistry::get($responseModel->getType());
                     $description = $route->getDesc();
                     $params = [];
+                    $list = false;
 
                     foreach ($route->getParams() as $key => $value) {
+                        if ($key === 'queries') {
+                            $list = true;
+                        }
                         $argType = TypeMapper::fromRouteParameter(
                             $utopia,
                             $value['validator'],
@@ -148,6 +152,16 @@ class SchemaBuilder
                         'args' => $params,
                         'resolve' => Resolvers::resolveAPIRequest($utopia, $route)
                     ];
+
+                    if ($list) {
+                        $field['complexity'] = function (int $complexity, array $args) {
+                            $queries = Query::parseQueries($args['queries'] ?? []);
+                            $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+                            $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
+
+                            return $complexity * $limit;
+                        };
+                    }
 
                     switch ($method) {
                         case 'GET':
@@ -263,10 +277,14 @@ class SchemaBuilder
                             $collectionId
                         ),
                         'complexity' => function (int $complexity, array $args) {
-                            // FIXME: Update this for query limit
-                            return $complexity; //* $args['limit'];
+                            $queries = Query::parseQueries($args['queries'] ?? []);
+                            $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+                            $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
+
+                            return $complexity * $limit;
                         },
                     ];
+
                     $mutationFields[$collectionId . 'Create'] = [
                         'type' => $objectType,
                         'args' => $attributes,
