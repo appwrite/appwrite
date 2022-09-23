@@ -105,8 +105,8 @@ function executeRequest(
     $contentType = $request->getHeader('content-type');
 
     $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
-    $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 50);
-    $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_QUERY_DEPTH', 3);
+    $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
+    $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
 
     if (\str_starts_with($contentType, 'application/graphql')) {
         $query = parseGraphqlRequest($request);
