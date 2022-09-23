@@ -281,7 +281,7 @@ App::get('/v1/functions/:functionId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
@@ -384,7 +384,7 @@ App::get('/v1/functions/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
@@ -1332,7 +1332,7 @@ App::post('/v1/functions/:functionId/variables')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', false)
     ->inject('response')
@@ -1384,7 +1384,7 @@ App::get('/v1/functions/:functionId/variables')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE_LIST)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, Response $response, Database $dbForProject) {
@@ -1411,8 +1411,8 @@ App::get('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
-    ->param('variableId', null, new UID(), 'Variable unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject) {
@@ -1447,8 +1447,8 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
-    ->param('variableId', null, new UID(), 'Variable unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', true)
     ->inject('response')
@@ -1499,8 +1499,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.description', '/docs/references/functions/delete-variable.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
-    ->param('variableId', null, new UID(), 'Variable unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject) {

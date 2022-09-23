@@ -1783,7 +1783,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Index Key.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1856,7 +1856,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default the current user is granted with all permissions. [Learn more about permissions](/docs/permissions).', true)
     ->inject('response')
@@ -2074,8 +2074,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('documentId', null, new UID(), 'Document ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('documentId', '', new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
@@ -2137,7 +2137,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
-    ->param('documentId', null, new UID(), 'Document ID.')
+    ->param('documentId', '', new UID(), 'Document ID.')
     ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -2243,8 +2243,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', null, new UID(), 'Collection ID.')
-    ->param('documentId', null, new UID(), 'Document ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('documentId', '', new UID(), 'Document ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
     ->inject('response')
@@ -2376,8 +2376,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', null, new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('documentId', null, new UID(), 'Document ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('documentId', '', new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
@@ -2534,7 +2534,7 @@ App::get('/v1/databases/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
@@ -2648,7 +2648,7 @@ App::get('/v1/databases/:databaseId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
@@ -2763,7 +2763,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
