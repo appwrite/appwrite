@@ -510,12 +510,12 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->param('status', false, new Boolean(true), 'Set the status of this auth method.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $method, bool $status, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $method, mixed $statusLoose, Response $response, Database $dbForConsole) {
+        $status = in_array($statusLoose, ['1', 'true', 1, true], true);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
         $auth = Config::getParam('auth')[$method] ?? [];
         $authKey = $auth['key'] ?? '';
-        $status = ($status === '1' || $status === 'true' || $status === 1 || $status === true);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -593,15 +593,14 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $name, array $events, string $url, mixed $securityLoose, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+        $security = in_array($securityLoose, ['1', 'true', 1, true], true);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
-
-        $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
         $webhook = new Document([
             '$id' => ID::unique(),
@@ -716,15 +715,14 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, mixed $securityLoose, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+        $security = in_array($securityLoose, ['1', 'true', 1, true], true);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
-
-        $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
         $webhook = $dbForConsole->findOne('webhooks', [
             Query::equal('_uid', [$webhookId]),

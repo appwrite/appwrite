@@ -610,7 +610,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->action(function (string $functionId, string $entrypoint, mixed $code, mixed $activateLoose, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+        $activate = in_array($activateLoose, ['1', 'true', 1, true], true);
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -688,8 +689,6 @@ App::post('/v1/functions/:functionId/deployments')
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
         }
-
-        $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
         if ($chunksUploaded === $chunks) {
             if ($activate) {

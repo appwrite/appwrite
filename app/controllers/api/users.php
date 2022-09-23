@@ -633,7 +633,8 @@ App::patch('/v1/users/:userId/status')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, mixed $statusLoose, Response $response, Database $dbForProject, Event $events) {
+        $status = in_array($statusLoose, ['1', 'true', 1, true], true);
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -641,7 +642,7 @@ App::patch('/v1/users/:userId/status')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', $status));
 
         $events
             ->setParam('userId', $user->getId());

@@ -313,9 +313,9 @@ App::get('/v1/avatars/qr')
     ->param('margin', 1, new Range(0, 10), 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
     ->param('download', false, new Boolean(true), 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->inject('response')
-    ->action(function (string $text, int $size, int $margin, bool $download, Response $response) {
+    ->action(function (string $text, int $size, int $margin, mixed $downloadLoose, Response $response) {
+        $download = in_array($downloadLoose, ['1', 'true', 1, true], true);
 
-        $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
         $options = new QROptions([
             'addQuietzone' => true,
             'quietzoneSize' => $margin,
