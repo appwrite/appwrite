@@ -981,7 +981,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('sessionId', null, new UID(), 'Session ID.')
+    ->param('sessionId', '', new UID(), 'Session ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
@@ -1176,7 +1176,7 @@ App::get('/v1/users/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
