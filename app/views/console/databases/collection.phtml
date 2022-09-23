@@ -1,6 +1,7 @@
 <?php
 
 $logs = $this->getParam('logs', null);
+$permissions = $this->getParam('permissions', null);
 
 ?>
 <div
@@ -51,9 +52,9 @@ $logs = $this->getParam('logs', null);
                     data-event="load,databases.createDocument,databases.updateDocument,databases.deleteDocument"
                     data-param-collection-id="{{router.params.id}}"
                     data-param-database-id="{{router.params.databaseId}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-order-types="DESC"
-                    data-param-order-types-cast-to="array"
+                    data-param-queries="limit(<?php echo APP_PAGING_LIMIT; ?>),offset({{router.params.offset|orZero}}),orderDesc('')"
+                    data-param-queries-cast-to="array"
+                    data-param-queries-cast-from="csv"
                     data-scope="sdk"
                     data-name="project-documents"
                     x-data="{ project: new URLSearchParams(location.search).get('project') }">
@@ -88,11 +89,11 @@ $logs = $this->getParam('logs', null);
                                     <template x-for="doc in documents">
                                         <tr>
                                             <td data-title="$id: ">
-                                                <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collection}&databaseId=${databaseId}&project=${project}`" x-text="doc.$id"></a>
+                                                <a :href="`/console/databases/document?id=${doc.$id}&collectionId=${doc.$collectionId}&databaseId=${databaseId}&project=${project}`" x-text="doc.$id"></a>
                                             </td>
                                             <template x-for="attr in attributes">
                                                 <td x-show="attr.status === 'available'" :data-title="attr.key + ':'">
-                                                    <a :href="`/console/databases/document?id=${doc.$id}&collection=${doc.$collection}&databaseId=${databaseId}&project=${project}`">
+                                                    <a :href="`/console/databases/document?id=${doc.$id}&collectionId=${doc.$collectionId}&databaseId=${databaseId}&project=${project}`">
                                                         <span x-text="doc[attr.key] ?? 'n/a'"></span>
                                                     </a>
                                                 </td>
@@ -111,14 +112,12 @@ $logs = $this->getParam('logs', null);
                             data-event="submit"
                             data-param-database-id="{{router.params.databaseId}}"
                             data-param-collection-id="{{router.params.id}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-types="DESC"
-                            data-param-order-types-cast-to="array"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                            <input type="hidden" name="offset">
+                            <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-back data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                         </form>
 
                         <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-documents.total|pageTotal}}"></span>
@@ -128,18 +127,16 @@ $logs = $this->getParam('logs', null);
                             data-event="submit"
                             data-param-database-id="{{router.params.databaseId}}"
                             data-param-collection-id="{{router.params.id}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-types="DESC"
-                            data-param-order-types-cast-to="array"
                             data-scope="sdk"
                             data-name="project-documents"
                             data-success="state"
                             data-success-param-state-keys="search,offset">
-                            <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                            <input type="hidden" name="offset">
+                            <button name="queries" data-cast-to="array" data-cast-from="csv" data-paging-next data-paging-desc data-offset="{{router.params.offset}}" data-total="{{project-documents.total}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                         </form>
                     </div>
 
-                    <a data-ls-if="0 < {{project-collection.attributes.length}}" data-ls-attrs="href=/console/databases/document/new?collection={{router.params.id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}" class="button">
+                    <a data-ls-if="0 < {{project-collection.attributes.length}}" data-ls-attrs="href=/console/databases/document/new?collectionId={{router.params.id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}" class="button">
                         Add Document
                     </a>
                     <a data-ls-if="!{{project-collection.attributes.length}}" data-ls-attrs="href=/console/databases/collection/attributes?id={{router.params.id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}" class="button">
@@ -318,6 +315,9 @@ $logs = $this->getParam('logs', null);
                             <div class="link new-attribute-boolean"><i class="avatar icon-boolean"></i> New Boolean Attribute</div>
                         </li>
                         <li>
+                            <div class="link new-attribute-datetime"><i class="avatar icon-datetime"></i> New DateTime Attribute</div>
+                        </li>
+                        <li>
                             <div class="link new-attribute-url"><i class="avatar icon-link"></i> New URL Attribute</div>
                         </li>
                         <li>
@@ -486,8 +486,8 @@ $logs = $this->getParam('logs', null);
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                             <div class="chart background-image-no border-no margin-bottom-no">
-                                <input 
-                                    type="hidden" 
+                                <input
+                                    type="hidden"
                                     data-ls-bind="{{usage}}"
                                     data-forms-chart="Created=documentsCreate,Read=documentsRead,Updated=documentsUpdate,Deleted=documentsDelete"
                                     data-show-y-axis="true"
@@ -508,8 +508,10 @@ $logs = $this->getParam('logs', null);
             <li data-state="/console/databases/collection/settings?id={{router.params.id}}&databaseId={{router.params.databaseId}}&project={{router.params.project}}">
                 <h2>Settings</h2>
 
-                <div class="row responsive margin-top-negative">
+                <div class="row responsive">
                     <div class="col span-8 margin-bottom">
+                        <form id="<?php echo $permissions->getParam('form') ?>"></form>
+
                         <form
                             data-analytics
                             data-analytics-activity
@@ -528,8 +530,6 @@ $logs = $this->getParam('logs', null);
                             data-failure-param-alert-text="Failed to update collection"
                             data-failure-param-alert-classname="error">
 
-                            <label>&nbsp;</label>
-
                             <div class="box">
                                 <label for="collection-name">Name</label>
                                 <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" maxlength="128" />
@@ -538,36 +538,25 @@ $logs = $this->getParam('logs', null);
                                     <input name="enabled" type="hidden" data-forms-switch data-cast-to="boolean" data-ls-bind="{{project-collection.enabled}}" /> &nbsp; Enabled <span class="tooltip" data-tooltip="Mark whether collection is enabled"><i class="icon-info-circled"></i></span>
                                 </div>
 
+                                <hr class="margin-top-small" />
+
                                 <label class="margin-bottom-small">Permissions</label>
 
-                                <p class="text-fade text-size-small">Choose the permissions model for this collection.</p>
+                                <p class="text-fade text-size-small">Configure the permissions for this collection.</p>
 
                                 <hr class="margin-top-small" />
 
-                                <div class="row">
-                                    <div class="col span-1"><input name="permission" value="collection" type="radio" class="margin-top-tiny" data-ls-bind="{{project-collection.permission}}" /></div>
-                                    <div class="col span-11">
-                                        <b>Collection Level</b>
-                                        <p class="text-fade margin-top-tiny">With Collection Level permissions, you assign permissions only once in the collection.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level, permissions assigned to collection takes the precedence and documents permissions are ignored.</p>
-                                        <div data-ls-if="{{project-collection.permission}} === 'collection'">
-                                            <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</span></label>
-                                            <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$read}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
+                                <?php echo $permissions->render(); ?>
 
-                                            <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank" rel="noopener">Learn more</a>)</label>
-                                            <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$write}}" placeholder="User ID, Team ID or Role" />
-                                            <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add 'role:all' for wildcard access</div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <hr class="margin-top-no" />
+
+                                <label class="margin-bottom-small">Document Security</label>
 
                                 <div class="row">
-                                    <div class="col span-1"><input name="permission" value="document" type="radio" class="margin-top-no" data-ls-bind="{{project-collection.permission}}" /></div>
+                                    <div class="col span-1"><input name="documentSecurity" value="false" type="checkbox" class="margin-top-no" data-ls-bind="{{project-collection.documentSecurity}}" /></div>
                                     <div class="col span-11">
-                                        <b>Document Level</b>
-                                        <p class="text-fade margin-top-tiny">With Document Level permissions, you have granular access control over every document. Users will only be able to access documents for which they have explicit permissions.</p>
-                                        <p class="text-fade margin-top-tiny">In this permission level, document permissions take precedence and collection permissions are ignored.</p>
+                                        <b>Enabled</b>
+                                        <p class="text-fade margin-top-tiny">With Document Security enabled, users will be able to access documents for which they have been granted <b>either</b> Document or Collection permissions.</p>
                                     </div>
                                 </div>
 
@@ -583,10 +572,15 @@ $logs = $this->getParam('logs', null);
                         <input id="id" type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-collection.$id}}" disabled data-forms-copy class="margin-bottom-no" />
                     </div>
 
+                    <label>Database ID</label>
+                    <div class="input-copy margin-bottom">
+                        <input type="text" autocomplete="off" placeholder="" data-ls-bind="{{router.params.databaseId}}" disabled data-forms-copy class="margin-bottom-no" />
+                    </div>
+
                     <ul class="margin-bottom-large text-fade text-size-small">
-                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> 
-                            <button data-ls-ui-trigger="open-json" 
-                                class="link text-size-small" 
+                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i>
+                            <button data-ls-ui-trigger="open-json"
+                                class="link text-size-small"
                                 data-analytics
                                 data-analytics-event="click"
                                 data-analytics-category="console"
@@ -594,8 +588,8 @@ $logs = $this->getParam('logs', null);
                                 View as JSON
                             </button>
                         </li>
-                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-collection.$updatedAt|dateText}}"></span></li>
-                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-collection.$createdAt|dateText}}"></span></li>
+                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-collection.$updatedAt|date}}"></span></li>
+                        <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-collection.$createdAt|date}}"></span></li>
                     </ul>
 
                         <form
@@ -613,7 +607,7 @@ $logs = $this->getParam('logs', null);
                             data-success="alert,trigger,redirect"
                             data-success-param-alert-text="Collection deleted successfully"
                             data-success-param-trigger-events="databases.deleteCollection"
-                            data-success-param-redirect-url="/console/database?project={{router.params.project}}"
+                            data-success-param-redirect-url="/console/databases?project={{router.params.project}}&databaseId={{router.params.databaseId}}"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to delete collection"
                             data-failure-param-alert-classname="error">
@@ -675,6 +669,60 @@ $logs = $this->getParam('logs', null);
         </template>
         <template x-if="(array || required)">
             <input name="xdefault" type="text" class="margin-bottom-large" autocomplete="off" disabled value="">
+        </template>
+
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+</div>
+
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".new-attribute-datetime">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Add DateTime Attribute</h1>
+
+    <form
+        id="add-datetime-attribute"
+        data-analytics
+        data-analytics-activity
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Collection Attribute (datetime)"
+        data-service="databases.createDatetimeAttribute"
+        data-scope="sdk"
+        data-event="submit"
+        data-success="alert,trigger,reset"
+        data-success-param-alert-text="Created new attribute successfully"
+        data-success-param-trigger-events="databases.createAttribute"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create attribute"
+        data-failure-param-alert-classname="error"
+        @reset="array = required = false"
+        x-data="{ array: false, required: false, size: null }">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="collectionId" data-ls-bind="{{router.params.id}}" />
+        <input type="hidden" name="databaseId" data-ls-bind="{{router.params.databaseId}}" />
+
+        <label for="string-key">Attribute ID</label>
+        <input id="string-key" type="text" class="full-width" name="key" required autocomplete="off" maxlength="36" pattern="^[a-zA-Z0-9][a-zA-Z0-9._-]{0,35}$" />
+        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Allowed Characters A-Z, a-z, 0-9, and non-leading underscore, hyphen and dot</div>
+
+        <div class="margin-bottom">
+            <input x-model="required" name="required" class="button switch" type="checkbox" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <div class="margin-bottom">
+            <input x-model="array" name="array" class="button switch" type="checkbox" /> &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+        </div>
+
+        <label for="xdefault">Default Value</label>
+        <template x-if="!(array || required)">
+            <input name="xdefault" type="datetime-local" step=".001" data-cast-to="string-datetime" class="margin-bottom-large">
+        </template>
+        <template x-if="(array || required)">
+            <input name="xdefault" type="datetime-local" step=".001" data-cast-to="string-datetime" class="margin-bottom-large" disabled value="">
         </template>
 
         <footer>

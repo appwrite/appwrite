@@ -12,7 +12,7 @@ class Project extends Model
     /**
      * @var bool
      */
-    protected $public = false;
+    protected bool $public = false;
 
     public function __construct()
     {
@@ -24,16 +24,16 @@ class Project extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Project creation date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Project creation date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Project update date in Unix timestamp.',
-                'default' => 0,
-                'example' => 1592981250,
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Project update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Task\Validator;
 
 use Appwrite\Task\Validator\Cron;
 use PHPUnit\Framework\TestCase;
@@ -21,7 +21,7 @@ class CronTest extends TestCase
     {
     }
 
-    public function testValues()
+    public function testValues(): void
     {
         $this->assertEquals($this->object->isValid('0 2 * * *'), true); // execute at 2am daily
         $this->assertEquals($this->object->isValid('0 5,17 * * *'), true); // execute twice a day

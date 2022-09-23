@@ -1,10 +1,12 @@
 <?php
 
-use Appwrite\Auth\Phone;
-use Appwrite\Auth\Phone\Mock;
-use Appwrite\Auth\Phone\Telesign;
-use Appwrite\Auth\Phone\TextMagic;
-use Appwrite\Auth\Phone\Twilio;
+use Appwrite\Auth\SMS;
+use Appwrite\SMS\Adapter\Mock;
+use Appwrite\SMS\Adapter\Telesign;
+use Appwrite\SMS\Adapter\TextMagic;
+use Appwrite\SMS\Adapter\Twilio;
+use Appwrite\SMS\Adapter\Msg91;
+use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\DSN\DSN;
 use Appwrite\Resque\Worker;
 use Utopia\App;
@@ -17,7 +19,7 @@ Console::success(APP_NAME . ' messaging worker v1 has started' . "\n");
 
 class MessagingV1 extends Worker
 {
-    protected ?Phone $phone = null;
+    protected ?SMS $sms = null;
     protected ?string $from = null;
 
     public function getName(): string
@@ -27,24 +29,26 @@ class MessagingV1 extends Worker
 
     public function init(): void
     {
-        $dsn = new DSN(App::getEnv('_APP_PHONE_PROVIDER'));
+        $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
         $user = $dsn->getUser();
         $secret = $dsn->getPassword();
 
-        $this->phone = match ($dsn->getHost()) {
+        $this->sms = match ($dsn->getHost()) {
             'mock' => new Mock('', ''), // used for tests
             'twilio' => new Twilio($user, $secret),
             'text-magic' => new TextMagic($user, $secret),
             'telesign' => new Telesign($user, $secret),
+            'msg91' => new Msg91($user, $secret),
+            'vonage' => new Vonage($user, $secret),
             default => null
         };
 
-        $this->from = App::getEnv('_APP_PHONE_FROM');
+        $this->from = App::getEnv('_APP_SMS_FROM');
     }
 
     public function run(): void
     {
-        if (empty(App::getEnv('_APP_PHONE_PROVIDER'))) {
+        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             Console::info('Skipped sms processing. No Phone provider has been set.');
             return;
         }
@@ -58,7 +62,7 @@ class MessagingV1 extends Worker
         $message = $this->args['message'];
 
         try {
-            $this->phone->send($this->from, $recipient, $message);
+            $this->sms->send($this->from, $recipient, $message);
         } catch (\Exception $error) {
             throw new Exception('Error sending message: ' . $error->getMessage(), 500);
         }

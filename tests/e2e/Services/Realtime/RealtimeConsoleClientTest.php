@@ -6,12 +6,120 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 class RealtimeConsoleClientTest extends Scope
 {
     use RealtimeBase;
     use ProjectCustom;
     use SideConsole;
+
+    public function testManualAuthentication()
+    {
+        $user = $this->getUser();
+        $userId = $user['$id'] ?? '';
+        $session = $user['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getWebsocket(['account'], [
+            'origin' => 'http://localhost'
+        ]);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('account', $response['data']['channels']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => [
+                'session' => $session
+            ]
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('response', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals('authentication', $response['data']['to']);
+        $this->assertTrue($response['data']['success']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($userId, $response['data']['user']['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => [
+                'session' => 'invalid_session'
+            ]
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Session is not valid.', $response['data']['message']);
+
+        $client->send(\json_encode([
+            'type' => 'authentication',
+            'data' => []
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Payload is not valid.', $response['data']['message']);
+
+        $client->send(\json_encode([
+            'type' => 'unknown',
+            'data' => [
+                'session' => 'invalid_session'
+            ]
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Message type is not valid.', $response['data']['message']);
+
+        $client->send(\json_encode([
+            'test' => '123',
+        ]));
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('error', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertEquals('Message format is not valid.', $response['data']['message']);
+
+
+        $client->close();
+    }
 
     public function testAttributes()
     {
@@ -40,7 +148,7 @@ class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'databaseId' => 'unique()',
+            'databaseId' => ID::unique(),
             'name' => 'Actors DB',
         ]);
 
@@ -52,11 +160,14 @@ class RealtimeConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'collectionId' => 'unique()',
+            'collectionId' => ID::unique(),
             'name' => 'Actors',
-            'read' => ['role:all'],
-            'write' => ['role:all'],
-            'permission' => 'collection'
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
         ]);
 
         $actorsId = $actors['body']['$id'];
@@ -72,7 +183,7 @@ class RealtimeConsoleClientTest extends Scope
 
         $attributeKey = $name['body']['key'];
 
-        $this->assertEquals($name['headers']['status-code'], 201);
+        $this->assertEquals($name['headers']['status-code'], 202);
         $this->assertEquals($name['body']['key'], 'name');
         $this->assertEquals($name['body']['type'], 'string');
         $this->assertEquals($name['body']['size'], 256);
@@ -161,7 +272,7 @@ class RealtimeConsoleClientTest extends Scope
             ],
         ]);
 
-        $this->assertEquals($index['headers']['status-code'], 201);
+        $this->assertEquals($index['headers']['status-code'], 202);
         $indexKey = $index['body']['key'];
 
         $response = json_decode($client->receive(), true);

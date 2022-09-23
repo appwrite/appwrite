@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Database\ID;
 
 class StorageConsoleClientTest extends Scope
 {
@@ -38,9 +39,9 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 13);
+        $this->assertEquals(12, count($response['body']));
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['filesStorage']);
+        $this->assertIsArray($response['body']['storage']);
         $this->assertIsArray($response['body']['filesCount']);
     }
 
@@ -51,7 +52,7 @@ class StorageConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => 'unique()',
+            'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
             'permission' => 'file'
         ]);

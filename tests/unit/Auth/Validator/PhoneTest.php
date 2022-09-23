@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\Auth\Validator;
 
 use Appwrite\Auth\Validator\Phone;
 use PHPUnit\Framework\TestCase;
@@ -14,11 +14,7 @@ class PhoneTest extends TestCase
         $this->object = new Phone();
     }
 
-    public function tearDown(): void
-    {
-    }
-
-    public function testValues()
+    public function testValues(): void
     {
         $this->assertEquals($this->object->isValid(false), false);
         $this->assertEquals($this->object->isValid(null), false);

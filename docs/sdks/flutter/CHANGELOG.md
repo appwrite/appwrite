@@ -1,3 +1,35 @@
+## 8.0.0-dev.2 Latest
+
+### NEW
+* Support for Appwrite 1.0.0-RC1
+* More verbose headers have been included in the Clients - `x-sdk-name`, `x-sdk-platform`, `x-sdk-language`, `x-sdk-version`
+* Helper classes and methods for Permissions, Roles and IDs
+* Helper methods to suport new queries
+* All Dates and times are now returned in the ISO 8601 format
+
+### BREAKING CHANGES
+
+* `databaseId` is no longer part of the `Database` Service constructor. `databaseId` will be part of the respective methods of the database service.
+* `color` attribute is no longer supported in the Avatars Service
+* The `number` argument in phone endpoints have been renamed to `phone`
+* List endpoints no longer support `limit`, `offset`, `cursor`, `cursorDirection`, `orderAttributes`, `orderTypes` as they have been moved to the `queries` array
+* `read` and `write` permission have been deprecated and they are now included in the `permissions` array
+* Renamed methods of the Query helper
+    1.  `lesser` renamed to `lessThan`
+    2.  `lesserEqual` renamed to `lessThanEqual`
+    3.  `greater` renamed to `greaterThan`
+    4.  `greaterEqual` renamed to `greaterThanEqual`
+* `User` response model is now renamed to `Account`
+
+**Full Changelog for Appwrite 1.0.0-RC1 can be found here**: 
+https://github.com/appwrite/appwrite/blob/master/CHANGES.md
+
+## 7.0.0
+* **BREAKING** Switched to using [flutter_web_auth_2](https://pub.dev/packages/flutter_web_auth_2), check Getting Started section in Readme for changes (Android and Web will require adjustments for OAuth to work properly)
+* Fixes Concurrent modification issue
+* Upgrade dependencies
+* **Windows** support for OAuth sessions
+
 ## 6.0.0
 * Support for Appwrite 0.15
 * **NEW** Phone authentication `account.createPhoneSession()`
@@ -6,8 +38,8 @@
 * **BREAKING** `dateCreated` attribute removed from `Team`, `Execution`, `File` models
 * **BREAKING** `dateCreated` and `dateUpdated` attribute removed from `Func`, `Deployment`, `Bucket` models
 * **BREAKING** Realtime channels
-    * collections.[COLLECTION_ID] is now databases.[DATABASE_ID].ollections.[COLLECTION_ID]
-    * collections.[COLLECTION_ID].documents is now databases.[DATABASE_ID].ollections.[COLLECTION_ID].documents
+    * collections.[COLLECTION_ID] is now databases.[DATABASE_ID].collections.[COLLECTION_ID]
+    * collections.[COLLECTION_ID].documents is now databases.[DATABASE_ID].collections.[COLLECTION_ID].documents
 
 **Full Changelog for Appwrite 0.15 can be found here**: https://github.com/appwrite/appwrite/blob/master/CHANGES.md#version-0150
 

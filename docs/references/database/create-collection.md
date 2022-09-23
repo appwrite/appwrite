@@ -1,1 +1,0 @@
-Create a new Collection. Before using this route, you should create a new database resource using either a [server integration](/docs/server/database#databaseCreateCollection) API or directly from your database console.

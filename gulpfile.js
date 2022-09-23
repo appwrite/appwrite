@@ -35,6 +35,7 @@ const configApp = {
         'public/scripts/app.js',
         'public/scripts/upload-modal.js',
         'public/scripts/events.js',
+        'public/scripts/permissions-matrix.js',
 
         'public/scripts/views/service.js',
 
