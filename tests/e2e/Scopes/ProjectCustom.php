@@ -42,6 +42,7 @@ trait ProjectCustom
             'x-appwrite-project' => 'console',
         ], [
             'projectId' => ID::unique(),
+            'region' => 'default',
             'name' => 'Demo Project',
             'teamId' => $team['body']['$id'],
             'description' => 'Demo Project Description',

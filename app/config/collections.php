@@ -524,6 +524,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('region'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('description'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -3001,6 +3012,17 @@ $collections = [
         'attributes' => [
             [
                 '$id' => ID::custom('metric'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('region'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 255,
