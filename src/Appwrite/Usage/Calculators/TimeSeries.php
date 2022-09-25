@@ -279,8 +279,9 @@ class TimeSeries extends Calculator
         'startTime' => '-24 hours',
     ];
 
-    public function __construct(Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
+    public function __construct(string $region, Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
     {
+        parent::__construct($region);
         $this->database = $database;
         $this->influxDB = $influxDB;
         $this->errorHandler = $errorHandler;
@@ -316,7 +317,7 @@ class TimeSeries extends Calculator
                     'metric' => $metric,
                     'value' => $value,
                     'type' => $type,
-                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'region' => $this->region,
                 ]));
             } else {
                 $this->database->updateDocument(

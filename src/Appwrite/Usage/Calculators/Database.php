@@ -25,8 +25,9 @@ class Database extends Calculator
         ],
     ];
 
-    public function __construct(UtopiaDatabase $database, callable $errorHandler = null)
+    public function __construct(string $region, UtopiaDatabase $database, callable $errorHandler = null)
     {
+        parent::__construct($region);
         $this->database = $database;
         $this->errorHandler = $errorHandler;
     }
@@ -96,7 +97,7 @@ class Database extends Calculator
                     'time' => $time,
                     'metric' => $metric,
                     'value' => $value,
-                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'region' => $this->region,
                     'type' => 2, // these are cumulative metrics
                 ]));
             } else {
