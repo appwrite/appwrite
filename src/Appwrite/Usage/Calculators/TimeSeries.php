@@ -22,10 +22,6 @@ class TimeSeries extends Calculator
         [
             'key' => '1d',
             'startTime' => '-30 days'
-        ],
-        [
-            'key' => '1mo',
-            'startTime' => '-12 months'
         ]
     ];
     // all the mertics that we are collecting
