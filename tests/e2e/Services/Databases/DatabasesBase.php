@@ -1441,6 +1441,15 @@ trait DatabasesBase
 
         $this->assertCount(0, $documents['body']['documents']);
 
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['equal("releaseYear", [0])'],
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+
         /**
          * Test for Failure
          */
