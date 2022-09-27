@@ -612,11 +612,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
+      - _APP_DB_CONSOLE
+      - _APP_DB_PROJECT
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_USAGE_TIMESERIES_INTERVAL
