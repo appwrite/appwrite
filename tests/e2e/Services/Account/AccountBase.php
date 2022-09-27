@@ -795,7 +795,7 @@ trait AccountBase
     /**
      * @depends testUpdateAccountPrefs
      */
-    public function testCreateAccountVerification($data): array
+    public function testCreateAccountVerificationUrl($data): array
     {
         $email = $data['email'] ?? '';
         $name = $data['name'] ?? '';
@@ -868,9 +868,9 @@ trait AccountBase
     }
 
     /**
-     * @depends testCreateAccountVerification
+     * @depends testCreateAccountVerificationUrl
      */
-    public function testUpdateAccountVerification($data): array
+    public function testUpdateAccountVerificationUrl($data): array
     {
         $id = $data['id'] ?? '';
         $session = $data['session'] ?? '';
@@ -922,7 +922,54 @@ trait AccountBase
     }
 
     /**
-     * @depends testUpdateAccountVerification
+     * @depends testUpdateAccountPrefs
+     */
+    public function testCreateAccountVerificationCode($data): array
+    {
+        $email = $data['email'] ?? '';
+        $name = $data['name'] ?? '';
+        $session = $data['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+
+        ]), [
+            'url' => 'http://localhost/verification',
+            'code' => true
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEmpty($response['body']['secret']);
+        $this->assertEquals(true, DateTime::isValid($response['body']['expire']));
+
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertEquals($name, $lastEmail['to'][0]['name']);
+        $this->assertEquals('Account Verification', $lastEmail['subject']);
+
+
+        $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '15 minutes', 0) + 34, 6);
+        $this->assertNotFalse($verification);
+
+        /**
+         * Test for FAILURE
+         * Same as tests for create account verification with URL. Skipping...
+         */
+        $data['verification'] = $verification;
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateAccountVerificationUrl
      */
     public function testDeleteAccountSession($data): array
     {
