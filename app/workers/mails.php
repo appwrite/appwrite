@@ -154,7 +154,7 @@ class MailsV1 extends Worker
             case MAIL_TYPE_VERIFICATION_URL:
                 return 'emails.verificationUrl';
             case MAIL_TYPE_VERIFICATION_CODE:
-                    return 'emails.verificationCode';
+                return 'emails.verificationCode';
             case MAIL_TYPE_MAGIC_SESSION:
                 return 'emails.magicSession';
             default:
