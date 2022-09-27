@@ -20,12 +20,13 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 ```php
 $users = new Users($client);
 
-$result = $users->create('email@example.com', 'password');
+$user = $users->create(ID::unique(), 'email@example.com', 'password');
 ```
 
 ### Full Example
 ```php
 use Appwrite\Client;
+use Appwrite\ID;
 use Appwrite\Services\Users;
 
 $client = new Client();
@@ -39,7 +40,7 @@ $client
 
 $users = new Users($client);
 
-$result = $users->create('[USER_ID]', 'email@example.com', 'password');
+$user = $users->create(ID::unique(), 'email@example.com', 'password');
 ```
 
 ### Error Handling
@@ -48,7 +49,7 @@ The Appwrite PHP SDK raises `AppwriteException` object with `message`, `code` an
 ```php
 $users = new Users($client);
 try {
-    $result = $users->create('[USER_ID]', 'email@example.com', 'password');
+    $user = $users->create(ID::unique(), 'email@example.com', 'password');
 } catch(AppwriteException $error) {
     echo $error->message;
 }

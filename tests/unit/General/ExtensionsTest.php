@@ -1,116 +1,77 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\General;
 
-use Appwrite\Network\Validator\CNAME;
 use PHPUnit\Framework\TestCase;
 
 class ExtensionsTest extends TestCase
 {
-    public function setUp(): void
-    {
-        // Core
-        // ctype
-        // curl
-        // date
-        // fileinfo
-        // filter
-        // ftp
-        // hash
-        // iconv
-        // libxml
-        // mysqlnd
-        // pcre
-        // pdo_mysql
-        // pdo_sqlite
-        // Phar
-        // posix
-        // readline
-        // Reflection
-        // session
-        // SimpleXML
-        // sockets
-        // sodium
-        // SPL
-        // sqlite3
-        // standard
-        // tokenizer
-        // xml
-        // xmlreader
-        // xmlwriter
-        // zlib
-    }
-
-    public function tearDown(): void
-    {
-    }
-
-    public function testPHPRedis()
+    public function testPHPRedis(): void
     {
         $this->assertEquals(true, extension_loaded('redis'));
     }
 
-    public function testSwoole()
+    public function testSwoole(): void
     {
         $this->assertEquals(true, extension_loaded('swoole'));
     }
 
-    public function testYAML()
+    public function testYAML(): void
     {
         $this->assertEquals(true, extension_loaded('yaml'));
     }
 
-    public function testOPCache()
+    public function testOPCache(): void
     {
         $this->assertEquals(true, extension_loaded('Zend OPcache'));
     }
 
-    public function testDOM()
+    public function testDOM(): void
     {
         $this->assertEquals(true, extension_loaded('dom'));
     }
 
-    public function testPDO()
+    public function testPDO(): void
     {
         $this->assertEquals(true, extension_loaded('PDO'));
     }
 
-    public function testImagick()
+    public function testImagick(): void
     {
         $this->assertEquals(true, extension_loaded('imagick'));
     }
 
-    public function testJSON()
+    public function testJSON(): void
     {
         $this->assertEquals(true, extension_loaded('json'));
     }
 
-    public function testCURL()
+    public function testCURL(): void
     {
         $this->assertEquals(true, extension_loaded('curl'));
     }
 
-    public function testMBString()
+    public function testMBString(): void
     {
         $this->assertEquals(true, extension_loaded('mbstring'));
     }
 
-    public function testOPENSSL()
+    public function testOPENSSL(): void
     {
         $this->assertEquals(true, extension_loaded('openssl'));
     }
 
-    public function testZLIB()
+    public function testZLIB(): void
     {
         $this->assertEquals(true, extension_loaded('zlib'));
     }
 
-    public function testSockets()
+    public function testSockets(): void
     {
         $this->assertEquals(true, extension_loaded('sockets'));
     }
 
-    public function testMaxminddb()
+    public function testMaxminddb(): void
     {
         $this->assertEquals(true, extension_loaded('maxminddb'));
     }

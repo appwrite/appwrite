@@ -5,6 +5,8 @@ namespace Appwrite\Specification\Format;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Validator;
 
 class OpenAPI3 extends Format
@@ -17,15 +19,32 @@ class OpenAPI3 extends Format
     protected function getNestedModels(Model $model, array &$usedModels): void
     {
         foreach ($model->getRules() as $rule) {
-            if (
-                in_array($model->getType(), $usedModels)
-                && !in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float', 'double'])
-            ) {
-                $usedModels[] = $rule['type'];
-                foreach ($this->models as $m) {
-                    if ($m->getType() === $rule['type']) {
-                        $this->getNestedModels($m, $usedModels);
-                        return;
+            if (!in_array($model->getType(), $usedModels)) {
+                continue;
+            }
+
+            if (\is_array($rule['type'])) {
+                foreach ($rule['type'] as $ruleType) {
+                    if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
+                        $usedModels[] = $ruleType;
+
+                        foreach ($this->models as $m) {
+                            if ($m->getType() === $ruleType) {
+                                $this->getNestedModels($m, $usedModels);
+                                continue;
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
+                    $usedModels[] = $rule['type'];
+
+                    foreach ($this->models as $m) {
+                        if ($m->getType() === $rule['type']) {
+                            $this->getNestedModels($m, $usedModels);
+                            continue;
+                        }
                     }
                 }
             }
@@ -282,6 +301,11 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
                         break;
+                    case 'Utopia\Database\Validator\DatetimeValidator':
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'datetime';
+                        $node['schema']['x-example'] = Model::TYPE_DATETIME_EXAMPLE;
+                        break;
                     case 'Appwrite\Network\Validator\Email':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'email';
@@ -306,6 +330,20 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'binary';
                         break;
                     case 'Utopia\Validator\ArrayList':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Files':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Users':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
+                    case 'Appwrite\Utopia\Database\Validator\Queries':
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',
@@ -316,6 +354,14 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
+                        $node['schema']['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        break;
+                    case 'Utopia\Database\Validator\Roles':
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['items'] = [
+                            'type' => 'string',
+                        ];
+                        $node['schema']['x-example'] = '["' . Role::any()->toString() . '"]';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['schema']['type'] = $validator->getType();
@@ -447,6 +493,7 @@ class OpenAPI3 extends Format
 
                 switch ($rule['type']) {
                     case 'string':
+                    case 'datetime':
                         $type = 'string';
                         break;
 

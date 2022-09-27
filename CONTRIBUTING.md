@@ -142,7 +142,7 @@ Learn more at our [Technology Stack](#technology-stack) section.
 
 ##### Security
 
-- [Appwrite Auth and ACL](https://github.com/appwrite/appwrite/blob/0.7.x/docs/specs/authentication.drawio.svg)
+- [Appwrite Auth and ACL](https://github.com/appwrite/appwrite/blob/master/docs/specs/authentication.drawio.svg)
 - [OAuth](https://en.wikipedia.org/wiki/OAuth)
 - [Encryption](https://medium.com/searchencrypt/what-is-encryption-how-does-it-work-e8f20e340537#:~:text=Encryption%20is%20a%20process%20that,%2C%20or%20decrypt%2C%20the%20information.)
 - [Hashing](https://searchsqlserver.techtarget.com/definition/hashing#:~:text=Hashing%20is%20the%20transformation%20of,it%20using%20the%20original%20value.)
@@ -338,7 +338,7 @@ Things to remember when releasing SDKs
 
 Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection.
 
-First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger wont connect. And you also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger won't connect. And you also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 
 ### VS Code Launch Configuration
 
@@ -378,7 +378,7 @@ To run end-2-end tests use:
 docker compose exec appwrite test /usr/src/code/tests/e2e
 ```
 
-To run end-2-end tests for a spcific service use:
+To run end-2-end tests for a specific service use:
 
 ```bash
 docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]

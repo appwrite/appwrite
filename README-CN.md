@@ -59,7 +59,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:0.15.3
+    appwrite/appwrite:1.0.1
 ```
 
 ### Windows
@@ -71,7 +71,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:0.15.3
+    appwrite/appwrite:1.0.1
 ```
 
 #### PowerShell
@@ -81,7 +81,7 @@ docker run -it --rm ,
     --volume /var/run/docker.sock:/var/run/docker.sock ,
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
     --entrypoint="install" ,
-    appwrite/appwrite:0.15.3
+    appwrite/appwrite:1.0.1
 ```
 
 运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
@@ -128,7 +128,7 @@ docker run -it --rm ,
 
 #### 服务器
 * ✅  &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (由 Appwrite 团队维护)
-* ✅  &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (由 Appwr实验 团队维护)
+* ✅  &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (由 Appwrite 团队维护)
 * ✅  &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (由 Appwrite 团队维护)
 * ✅  &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **公测** (由 Appwrite 团队维护)
 * ✅  &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (由 Appwrite 团队维护)

@@ -9,6 +9,6 @@ client
 
 functions = Appwrite::Functions.new(client)
 
-response = functions.update(function_id: '[FUNCTION_ID]', name: '[NAME]', execute: [])
+response = functions.update(function_id: '[FUNCTION_ID]', name: '[NAME]', execute: ["role:all"])
 
 puts response.inspect

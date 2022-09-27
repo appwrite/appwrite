@@ -14,7 +14,10 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\ID;
+use Utopia\Database\Role;
 use Utopia\Logger\Log;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -123,7 +126,7 @@ function getDatabase(Registry &$register, string $projectId)
 
 $server->onStart(function () use ($stats, $register, $containerId, &$statsDocument, $logError) {
     sleep(5); // wait for the initial database schema to be ready
-    Console::success('Server started succefully');
+    Console::success('Server started successfully');
 
     /**
      * Create document for this worker to share stats across Containers.
@@ -135,12 +138,11 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
             try {
                 $attempts++;
                 $document = new Document([
-                    '$id' => $database->getId(),
-                    '$collection' => 'realtime',
-                    '$read' => [],
-                    '$write' => [],
+                    '$id' => ID::unique(),
+                    '$collection' => ID::custom('realtime'),
+                    '$permissions' => [],
                     'container' => $containerId,
-                    'timestamp' => time(),
+                    'timestamp' => DateTime::now(),
                     'value' => '{}'
                 ]);
 
@@ -170,7 +172,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
             [$database, $returnDatabase] = getDatabase($register, 'console');
 
             $statsDocument
-                ->setAttribute('timestamp', time())
+                ->setAttribute('timestamp', DateTime::now())
                 ->setAttribute('value', json_encode($payload));
 
             Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
@@ -192,13 +194,13 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
-        if ($realtime->hasSubscriber('console', 'role:member', 'project')) {
-            [$database, $returnDatabase] = getDatabase($register, 'console');
+        if ($realtime->hasSubscriber('console', Role::users()->toString(), 'project')) {
+            [$database, $returnDatabase] = getDatabase($register, '_console');
 
             $payload = [];
 
             $list = Authorization::skip(fn () => $database->find('realtime', [
-                new Query('timestamp', Query::TYPE_GREATER, [(time() - 15)])
+                Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
             ]));
 
             /**
@@ -225,7 +227,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'data' => [
                         'events' => ['stats.connections'],
                         'channels' => ['project'],
-                        'timestamp' => time(),
+                        'timestamp' => DateTime::now(),
                         'payload' => [
                             $projectId => $payload[$projectId]
                         ]
@@ -243,16 +245,16 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
          */
-        if ($realtime->hasSubscriber('console', 'role:guest', 'tests')) {
+        if ($realtime->hasSubscriber('console', Role::guests()->toString(), 'tests')) {
             $payload = ['response' => 'WS:/v1/realtime:passed'];
 
             $event = [
                 'project' => 'console',
-                'roles' => ['role:guest'],
+                'roles' => [Role::guests()->toString()],
                 'data' => [
                     'events' => ['test.event'],
                     'channels' => ['tests'],
-                    'timestamp' => time(),
+                    'timestamp' => DateTime::now(),
                     'payload' => $payload
                 ]
             ];
@@ -419,7 +421,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $realtime->subscribe($project->getId(), $connection, $roles, $channels);
 
-        $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_USER);
+        $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
 
         $server->send([$connection], json_encode([
             'type' => 'connected',
@@ -536,7 +538,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 
-                $user = $response->output($user, Response::MODEL_USER);
+                $user = $response->output($user, Response::MODEL_ACCOUNT);
                 $server->send([$connection], json_encode([
                     'type' => 'response',
                     'data' => [
