@@ -716,7 +716,19 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $data['token'] = Mock::$digits;
+        \sleep(2);
+
+        $smsRequest = $this->getLastRequest();
+
+        $this->assertEquals('http://request-catcher:5000/mock-sms', $smsRequest['url']);
+        $this->assertEquals('Appwrite Mock Message Sender', $smsRequest['headers']['User-Agent']);
+        $this->assertEquals('username', $smsRequest['headers']['X-Username']);
+        $this->assertEquals('password', $smsRequest['headers']['X-Key']);
+        $this->assertEquals('POST', $smsRequest['method']);
+        $this->assertEquals('+123456789', $smsRequest['data']['from']);
+        $this->assertEquals($number, $smsRequest['data']['to']);
+
+        $data['token'] = $smsRequest['data']['message'];
         $data['id'] = $userId;
         $data['number'] = $number;
 

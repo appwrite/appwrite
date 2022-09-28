@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "568151395a8877f87d9bdce048adc2dc",
+    "content-hash": "3322a1fdc38f00e20390df83e7e41a40",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2393,6 +2393,65 @@
                 "source": "https://github.com/utopia-php/logger/tree/0.3.0"
             },
             "time": "2022-03-18T10:56:57+00:00"
+        },
+        {
+            "name": "utopia-php/messaging",
+            "version": "dev-feat-base",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/messaging",
+                "reference": "52bc71093f0f689a4d5ab1081645ceff07e9c21d"
+            },
+            "require": {
+                "php": ">=8.0.0"
+            },
+            "require-dev": {
+                "phpmailer/phpmailer": "6.6.*",
+                "phpunit/phpunit": "9.5.*",
+                "squizlabs/php_codesniffer": "^3.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Messaging\\": "src/Utopia/Messaging"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\E2E\\": "tests/e2e",
+                    "Tests\\Unit\\": "tests/unit"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "vendor/bin/phpcs"
+                ],
+                "format": [
+                    "vendor/bin/phpcbf"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jake Barnby",
+                    "email": "jake@appwrite.io"
+                }
+            ],
+            "description": "A simple, light and advanced PHP messaging library",
+            "keywords": [
+                "library",
+                "messaging",
+                "php",
+                "upf",
+                "utopia",
+                "utopia-php"
+            ],
+            "time": "2022-09-28T02:51:05+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -5360,7 +5419,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/messaging": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
