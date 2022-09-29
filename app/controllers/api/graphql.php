@@ -131,11 +131,11 @@ function executeRequest(
 
     $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
-    $validations[] = new QueryComplexity($maxComplexity);
-    $validations[] = new QueryDepth($maxDepth);
 
     if (App::isProduction()) {
         $validations[] = new DisableIntrospection();
+        $validations[] = new QueryComplexity($maxComplexity);
+        $validations[] = new QueryDepth($maxDepth);
         $flags = DebugFlag::NONE;
     }
 
