@@ -2,12 +2,55 @@
 
 namespace Appwrite\GraphQL;
 
+use Appwrite\Auth\Validator\Password;
+use Appwrite\Event\Validator\Event;
+use Appwrite\Network\Validator\CNAME;
+use Appwrite\Network\Validator\Domain;
+use Appwrite\Network\Validator\Email;
+use Appwrite\Network\Validator\Host;
+use Appwrite\Network\Validator\IP;
+use Appwrite\Network\Validator\Origin;
+use Appwrite\Network\Validator\URL;
+use Appwrite\Task\Validator\Cron;
+use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries;
+use Appwrite\Utopia\Database\Validator\Queries\Base;
+use Appwrite\Utopia\Database\Validator\Queries\Buckets;
+use Appwrite\Utopia\Database\Validator\Queries\Collections;
+use Appwrite\Utopia\Database\Validator\Queries\Databases;
+use Appwrite\Utopia\Database\Validator\Queries\Deployments;
+use Appwrite\Utopia\Database\Validator\Queries\Documents;
+use Appwrite\Utopia\Database\Validator\Queries\Executions;
+use Appwrite\Utopia\Database\Validator\Queries\Files;
+use Appwrite\Utopia\Database\Validator\Queries\Functions;
+use Appwrite\Utopia\Database\Validator\Queries\Memberships;
+use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Appwrite\Utopia\Database\Validator\Queries\Teams;
+use Appwrite\Utopia\Database\Validator\Queries\Users;
+use Appwrite\Utopia\Database\Validator\Queries\Variables;
 use Appwrite\Utopia\Response\Model\Attribute;
 use Exception;
 use GraphQL\Type\Definition\Type;
 use Utopia\App;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Key;
+use Utopia\Database\Validator\Permissions;
+use Utopia\Database\Validator\Roles;
+use Utopia\Database\Validator\UID;
 use Utopia\Route;
+use Utopia\Storage\Validator\File;
 use Utopia\Validator;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Assoc;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\FloatValidator;
+use Utopia\Validator\HexColor;
+use Utopia\Validator\Integer;
+use Utopia\Validator\JSON;
+use Utopia\Validator\Numeric;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class TypeMapper
 {
@@ -31,32 +74,50 @@ class TypeMapper
             ? \call_user_func_array($validator, $utopia->getResources($injections))
             : $validator;
 
-        switch ((!empty($validator)) ? \get_class($validator) : '') {
-            case 'Appwrite\Auth\Validator\Password':
-            case 'Appwrite\Event\Validator\Event':
-            case 'Appwrite\Network\Validator\CNAME':
-            case 'Appwrite\Network\Validator\Domain':
-            case 'Appwrite\Network\Validator\Email':
-            case 'Appwrite\Network\Validator\Host':
-            case 'Appwrite\Network\Validator\IP':
-            case 'Appwrite\Network\Validator\Origin':
-            case 'Appwrite\Network\Validator\URL':
-            case 'Appwrite\Task\Validator\Cron':
-            case 'Appwrite\Utopia\Database\Validator\CustomId':
-            case 'Utopia\Database\Validator\Key':
-            case 'Utopia\Database\Validator\CustomId':
-            case 'Utopia\Database\Validator\UID':
-            case 'Utopia\Validator\HexColor':
-            case 'Utopia\Validator\Length':
-            case 'Utopia\Validator\Text':
-            case 'Utopia\Validator\WhiteList':
+        switch ((!empty($validator)) ? $validator::class : '') {
+            case CNAME::class:
+            case Cron::class:
+            case CustomId::class:
+            case Domain::class:
+            case Email::class:
+            case Event::class:
+            case HexColor::class:
+            case Host::class:
+            case IP::class:
+            case Key::class:
+            case Origin::class:
+            case Password::class:
+            case Text::class:
+            case UID::class:
+            case URL::class:
+            case WhiteList::class:
             default:
                 $type = Type::string();
                 break;
-            case 'Utopia\Validator\Boolean':
+            case Authorization::class:
+            case Base::class:
+            case Buckets::class:
+            case Collections::class:
+            case Databases::class:
+            case Deployments::class:
+            case Documents::class:
+            case Executions::class:
+            case Files::class:
+            case Functions::class:
+            case Memberships::class:
+            case Permissions::class:
+            case Projects::class:
+            case Queries::class:
+            case Roles::class:
+            case Teams::class:
+            case Users::class:
+            case Variables::class:
+                $type = Type::listOf(Type::string());
+                break;
+            case Boolean::class:
                 $type = Type::boolean();
                 break;
-            case 'Utopia\Validator\ArrayList':
+            case ArrayList::class:
                 /** @noinspection PhpPossiblePolymorphicInvocationInspection */
                 $type = Type::listOf(self::fromRouteParameter(
                     $utopia,
@@ -65,39 +126,19 @@ class TypeMapper
                     $injections
                 ));
                 break;
-            case 'Utopia\Validator\Numeric':
-            case 'Utopia\Validator\Integer':
-            case 'Utopia\Validator\Range':
+            case Integer::class:
+            case Numeric::class:
+            case Range::class:
                 $type = Type::int();
                 break;
-            case 'Utopia\Validator\FloatValidator':
+            case FloatValidator::class:
                 $type = Type::float();
                 break;
-            case 'Utopia\Database\Validator\Authorization':
-            case 'Utopia\Database\Validator\Permissions':
-            case 'Utopia\Database\Validator\Roles':
-            case 'Appwrite\Utopia\Database\Validator\Queries':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Base':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Files':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Users':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
-                $type = Type::listOf(Type::string());
-                break;
-            case 'Utopia\Validator\Assoc':
-            case 'Utopia\Validator\JSON':
+            case Assoc::class:
+            case JSON::class:
                 $type = TypeRegistry::json();
                 break;
-            case 'Utopia\Storage\Validator\File':
+            case File::class:
                 $type = TypeRegistry::inputFile();
                 break;
         }
