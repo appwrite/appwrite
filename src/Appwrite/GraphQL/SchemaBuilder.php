@@ -124,7 +124,7 @@ class SchemaBuilder
                     : [$models[$responseModelNames]];
 
                 foreach ($responseModels as $responseModel) {
-                    $type = TypeRegistry::get($responseModel->getType());
+                    $type = TypeRegistry::get(\ucfirst($responseModel->getType()));
                     $description = $route->getDesc();
                     $params = [];
                     $list = false;

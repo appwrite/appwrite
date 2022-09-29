@@ -85,12 +85,12 @@ class TypeRegistry
 
         $fields = [];
 
-        $model = self::$models[$name];
+        $model = self::$models[\lcfirst($name)];
 
         if ($model->isAny()) {
             $fields['data'] = [
                 'type' => Type::string(),
-                'description' => 'Data field',
+                'description' => 'Additional data',
                 'resolve' => static fn($object, $args, $context, $info) => \json_encode($object, JSON_FORCE_OBJECT),
             ];
         }
