@@ -133,21 +133,23 @@ class SchemaBuilder
                     $params = [];
                     $list = false;
 
-                    foreach ($route->getParams() as $key => $value) {
-                        if ($key === 'queries') {
+                    foreach ($route->getParams() as $name => $parameter) {
+                        if ($name === 'queries') {
                             $list = true;
                         }
                         $argType = TypeMapper::fromRouteParameter(
                             $utopia,
-                            $value['validator'],
-                            !$value['optional'],
-                            $value['injections']
+                            $parameter['validator'],
+                            !$parameter['optional'],
+                            $parameter['injections']
                         );
-                        $params[$key] = [
+                        $params[$name] = [
                             'type' => $argType,
-                            'description' => $value['description'],
-                            'defaultValue' => $value['default']
+                            'description' => $parameter['description'],
                         ];
+                        if ($parameter['optional']) {
+                            $params[$name]['defaultValue'] = $parameter['default'];
+                        }
                     }
 
                     $field = [
