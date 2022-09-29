@@ -21,12 +21,12 @@ class Json extends ScalarType
 
     public function serialize($value)
     {
-        return $this->identity($value);
+        return \json_encode($value);
     }
 
     public function parseValue($value)
     {
-        return $this->identity($value);
+        return \json_decode($value, associative: true);
     }
 
     public function parseLiteral(Node $valueNode, ?array $variables = null)
@@ -50,10 +50,5 @@ class Json extends ScalarType
             default:
                 return null;
         }
-    }
-
-    private function identity($value)
-    {
-        return $value;
     }
 }

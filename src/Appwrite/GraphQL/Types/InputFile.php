@@ -16,7 +16,7 @@ class InputFile extends ScalarType
 
     public function serialize($value)
     {
-        throw new InvariantViolation('`InputFile` cannot be serialized');
+        return '';
     }
 
     public function parseValue($value)
