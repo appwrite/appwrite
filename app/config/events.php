@@ -1,7 +1,7 @@
 <?php
 
 /**
- * List of publicly accessiable system events
+ * List of publicly accessible system events
  */
 
 use Appwrite\Utopia\Response;
