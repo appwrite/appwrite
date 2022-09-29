@@ -70,20 +70,26 @@ class SchemaBuilder
             $register->set($collectionsDirtyKey, static fn() => false);
         }
 
+        $queryFields = \array_merge_recursive(
+            $apiSchema['query'],
+            $collectionSchema['query']
+        );
+        $mutationFields = \array_merge_recursive(
+            $apiSchema['mutation'],
+            $collectionSchema['mutation']
+        );
+
+        \ksort($queryFields);
+        \ksort($mutationFields);
+
         $schema = new Schema([
             'query' => new ObjectType([
                 'name' => 'Query',
-                'fields' => \array_merge_recursive(
-                    $apiSchema['query'],
-                    $collectionSchema['query']
-                )
+                'fields' => $queryFields
             ]),
             'mutation' => new ObjectType([
                 'name' => 'Mutation',
-                'fields' => \array_merge_recursive(
-                    $apiSchema['mutation'],
-                    $collectionSchema['mutation']
-                )
+                'fields' => $mutationFields
             ])
         ]);
 
