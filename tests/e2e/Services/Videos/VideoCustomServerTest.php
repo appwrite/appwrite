@@ -7,8 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\VideoCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Tests\E2E\Services\Videos\VideosPermissionsScope;
-use Utopia\Database\ID;
+use Tests\E2E\Services\Videos\VideoPermissionsScope;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
@@ -17,7 +16,7 @@ class VideoCustomServerTest extends Scope
     use ProjectCustom;
     use VideoCustom;
     use SideServer;
-    use StoragePermissionsScope;
+    use VideoPermissionsScope;
 
     public function testCreateProfile(): string
     {
@@ -94,7 +93,6 @@ class VideoCustomServerTest extends Scope
     {
 
         $source = __DIR__ . "/../../../resources/disk-a/video-srt.mp4";
-        var_dump($source);
         $totalSize = \filesize($source);
         $chunkSize = 5 * 1024 * 1024;
         $handle = @fopen($source, "rb");
@@ -143,9 +141,7 @@ class VideoCustomServerTest extends Scope
 
         var_dump($response['body']);
         exit;
-
     }
-
 
     /**
      * @depends testCreateProfile

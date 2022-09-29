@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Videos;
 
 use Tests\E2E\Client;
 
-trait VideosPermissionsScope
+trait VideoPermissionsScope
 {
     public array $users = [];
     public array $teams = [];
