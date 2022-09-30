@@ -1,10 +1,12 @@
 # Version 1.0.2
 ## Bugs
-- Fixed migration for audit by migrating the `time` attribute [4038](https://github.com/appwrite/appwrite/pull/4038)
+- Fixed default value for creating Boolean Attribute [#4040](https://github.com/appwrite/appwrite/pull/404)
+- Fixed migration for audit by migrating the `time` attribute [#4038](https://github.com/appwrite/appwrite/pull/4038)
+- Fixed phone authentication code to be hashed in the internal database [#3906](https://github.com/appwrite/appwrite/pull/3906)
 
 # Version 1.0.1
 ## Bugs
-- Fixed migration for abuse by migrating the `time` attribute [3839](https://github.com/appwrite/appwrite/pull/3839)
+- Fixed migration for abuse by migrating the `time` attribute [#3839](https://github.com/appwrite/appwrite/pull/3839)
 
 # Version 1.0.0
 ## BREAKING CHANGES
