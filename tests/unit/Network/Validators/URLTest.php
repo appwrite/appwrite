@@ -36,6 +36,7 @@ class URLTest extends TestCase
         $this->assertEquals('Value must be a valid URL', $this->url->getDescription());
         $this->assertEquals(true, $this->url->isValid('http://example.com'));
         $this->assertEquals(true, $this->url->isValid('https://example.com'));
+        $this->assertEquals(true, $this->url->isValid('https://exämple.com'));
         $this->assertEquals(true, $this->url->isValid('htts://example.com')); // does not validate protocol
         $this->assertEquals(false, $this->url->isValid('example.com')); // though, requires some kind of protocol
         $this->assertEquals(false, $this->url->isValid('http:/example.com'));
