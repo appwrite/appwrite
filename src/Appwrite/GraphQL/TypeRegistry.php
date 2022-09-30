@@ -13,9 +13,6 @@ use Utopia\Database\Database;
 
 class TypeRegistry
 {
-    private static ?Json $jsonType = null;
-    private static ?InputFile $inputFile = null;
-
     private static array $typeMapping = [];
     private static array $defaultDocumentArgs = [];
     private static array $models = [];
@@ -158,30 +155,5 @@ class TypeRegistry
         }
         return [];
     }
-
-    /**
-     * Get the JSON type.
-     *
-     * @return Json
-     */
-    public static function json(): Json
-    {
-        if (\is_null(self::$jsonType)) {
-            self::$jsonType = new Json();
-        }
-        return self::$jsonType;
-    }
-
-    /**
-     * Get the InputFile type.
-     *
-     * @return InputFile
-     */
-    public static function inputFile(): InputFile
-    {
-        if (\is_null(self::$inputFile)) {
-            self::$inputFile = new InputFile();
-        }
-        return self::$inputFile;
     }
 }
