@@ -1,6 +1,10 @@
+# Version 1.0.2
+## Bugs
+- Fixed default value for creating Boolean Attribute [#4040](https://github.com/appwrite/appwrite/pull/404)
+
 # Version 1.0.1
 ## Bugs
-- Fixed migration for abuse by migrating the `time` attribute [3839](https://github.com/appwrite/appwrite/pull/3839)
+- Fixed migration for abuse by migrating the `time` attribute [#3839](https://github.com/appwrite/appwrite/pull/3839)
 
 # Version 1.0.0
 ## BREAKING CHANGES
