@@ -71,8 +71,13 @@ App::post('/v1/functions')
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+
+        $cron = !empty($schedule) ? new CronExpression($schedule) : null;
+        $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
 
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -86,10 +91,21 @@ App::post('/v1/functions')
             'schedule' => $schedule,
             'scheduleUpdatedAt' => DateTime::now(),
             'schedulePrevious' => null,
-            'scheduleNext' => null,
+            'scheduleNext' => $next,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime])
         ]));
+
+        if ($next) {
+            // Async task reschedule
+            $functionEvent = new Func();
+            $functionEvent
+                ->setFunction($function)
+                ->setType('schedule')
+                ->setUser($user)
+                ->setProject($project)
+                ->schedule(new \DateTime($next));
+        }
 
         $eventsInstance->setParam('functionId', $function->getId());
 
@@ -442,11 +458,9 @@ App::put('/v1/functions/:functionId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $original = $function->getAttribute('schedule', '');
-        $cron = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
+        $cron = !empty($schedule) ? new CronExpression($schedule) : null;
+        $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
 
-        $scheduleUpdatedAt = $schedule !== $original ? DateTime::now() : $function->getAttribute('scheduleUpdatedAt');
         $enabled ??= $function->getAttribute('enabled', true);
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
@@ -454,14 +468,14 @@ App::put('/v1/functions/:functionId')
             'name' => $name,
             'events' => $events,
             'schedule' => $schedule,
-            'scheduleUpdatedAt' => $scheduleUpdatedAt,
+            'scheduleUpdatedAt' => DateTime::now(),
             'scheduleNext' => $next,
             'timeout' => $timeout,
             'enabled' => $enabled,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
-        if ($next && $schedule !== $original) {
+        if ($next) {
             // Async task reschedule
             $functionEvent = new Func();
             $functionEvent
@@ -519,23 +533,9 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
-        $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
-
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-            'deployment' => $deployment->getId(),
-            'scheduleNext' => $next,
+            'deployment' => $deployment->getId()
         ])));
-
-        if ($next) { // Init first schedule
-            $functionEvent = new Func();
-            $functionEvent
-                ->setType('schedule')
-                ->setFunction($function)
-                ->setProject($project)
-                ->schedule(new \DateTime($next));
-        }
 
         $events
             ->setParam('functionId', $function->getId())
