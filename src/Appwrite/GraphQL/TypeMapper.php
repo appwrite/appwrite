@@ -209,7 +209,11 @@ class TypeMapper
         foreach ($model->getRules() as $key => $rule) {
             $escapedKey = str_replace('$', '_', $key);
 
+            if (\is_array($rule['type'])) {
+                $type = self::getUnionType($escapedKey, $rule);
+            } else {
                 $type = self::getObjectType($rule);
+            }
 
             if ($rule['array']) {
                 $type = Type::listOf($type);
@@ -372,4 +376,27 @@ class TypeMapper
         return self::fromResponseModel(\ucfirst($complexModel->getType()));
     }
 
+    private static function getUnionType(string $name, array $rule): Type
+    {
+        $unionName = \ucfirst($name);
+
+        if (TypeRegistry::has($unionName)) {
+            return TypeRegistry::get($unionName);
+        }
+
+        $types = [];
+        foreach ($rule['type'] as $type) {
+            $types[] = self::fromResponseModel(\ucfirst($type));
+        }
+
+        $unionType = new UnionType([
+            'name' => $unionName,
+            'types' => $types,
+            'resolveType' => static fn($object) => $object['type'],
+        ]);
+
+        TypeRegistry::set($unionName, $unionType);
+
+        return $unionType;
+    }
 }
