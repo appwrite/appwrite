@@ -89,11 +89,11 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     }
 
     // Must throw here since dbForProject->createAttribute is performed by db worker
-    if ($required && $default) {
+    if ($required && isset($default)) {
         throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for required attribute');
     }
 
-    if ($array && $default) {
+    if ($array && isset($default)) {
         throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array attributes');
     }
 
