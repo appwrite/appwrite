@@ -118,7 +118,8 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
 function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB, callable $logError): void
 {
     $interval = (int) App::getEnv('_APP_USAGE_TIMESERIES_INTERVAL', '30'); // 30 seconds (by default)
-    $usage = new TimeSeries($database, $influxDB, $logError);
+    $region = App::getEnv('region', 'default');
+    $usage = new TimeSeries($region, $database, $influxDB, $logError);
 
     Console::loop(function () use ($interval, $usage) {
         $now = date('d-m-Y H:i:s', time());
@@ -136,8 +137,9 @@ function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB,
 function aggregateDatabase(UtopiaDatabase $database, callable $logError): void
 {
     $interval = (int) App::getEnv('_APP_USAGE_DATABASE_INTERVAL', '900'); // 15 minutes (by default)
-    $usage = new Database($database, $logError);
-    $aggregrator = new Aggregator($database, $logError);
+    $region = App::getEnv('region', 'default');
+    $usage = new Database($region, $database, $logError);
+    $aggregrator = new Aggregator($region, $database, $logError);
 
     Console::loop(function () use ($interval, $usage, $aggregrator) {
         $now = date('d-m-Y H:i:s', time());
