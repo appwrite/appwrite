@@ -23,7 +23,7 @@
               )
             ); //convert to JSON string
 
-            console.projects.create(formData["projectId"], formData["name"], team, formData['region']).then(
+            console.projects.create(formData["projectId"], formData["name"], team).then(
               function(project) {
                 alerts.remove(loaderId);
                 //router.change("/console/home?project=" + project["$id"]);
