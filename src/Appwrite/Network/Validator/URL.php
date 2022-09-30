@@ -49,7 +49,13 @@ class URL extends Validator
      */
     public function isValid($value): bool
     {
-        if (\filter_var($value, FILTER_VALIDATE_URL) === false) {
+        $sanitized_url = '';
+
+        foreach (str_split($value) as $character) {
+            $sanitized_url .= (ord($character) > 127) ? rawurlencode($character) : $character;
+        }
+
+        if (\filter_var($sanitized_url, FILTER_VALIDATE_URL) === false) {
             return false;
         }
 
