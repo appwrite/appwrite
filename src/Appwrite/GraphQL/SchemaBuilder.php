@@ -3,12 +3,10 @@
 namespace Appwrite\GraphQL;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\None;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
 use Swoole\Coroutine\WaitGroup;
-use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
@@ -108,100 +106,55 @@ class SchemaBuilder
      */
     public static function &buildAPISchema(App $utopia): array
     {
-        $queryFields = [];
-        $mutationFields = [];
-        $response = new Response(new SwooleResponse());
-        $models = $response->getModels();
+        $models = $utopia
+            ->getResource('response')
+            ->getModels();
 
-        TypeRegistry::init($models);
+        TypeMapper::init($models);
 
-        foreach (App::getRoutes() as $method => $routes) {
+        $queries = [];
+        $mutations = [];
+
+        foreach (App::getRoutes() as $type => $routes) {
             foreach ($routes as $route) {
                 /** @var Route $route */
 
-                if (\str_starts_with($route->getPath(), '/v1/mock/')) {
+                $namespace = $route->getLabel('sdk.namespace', '');
+                $method = $route->getLabel('sdk.method', '');
+                $name = $namespace . \ucfirst($method);
+
+                if (empty($name)) {
                     continue;
                 }
-                $namespace = $route->getLabel('sdk.namespace', '');
-                $methodName = $namespace . \ucfirst($route->getLabel('sdk.method', ''));
-                $responseModelNames = $route->getLabel('sdk.response.model', 'none');
-                $responseModels = \is_array($responseModelNames)
-                    ? \array_map(static fn($m) => $models[$m], $responseModelNames)
-                    : [$models[$responseModelNames]];
 
-                foreach ($responseModels as $responseModel) {
-                    if (empty($responseModel->getRules())) {
-                        continue;
-                    }
-
-                    $type = TypeRegistry::get(\ucfirst($responseModel->getType()));
-                    $description = $route->getDesc();
-                    $params = [];
-                    $list = false;
-
-                    foreach ($route->getParams() as $name => $parameter) {
-                        if ($name === 'queries') {
-                            $list = true;
-                        }
-                        $argType = TypeMapper::fromRouteParameter(
-                            $utopia,
-                            $parameter['validator'],
-                            !$parameter['optional'],
-                            $parameter['injections']
-                        );
-                        $params[$name] = [
-                            'type' => $argType,
-                            'description' => $parameter['description'],
-                        ];
-                        if ($parameter['optional']) {
-                            $params[$name]['defaultValue'] = $parameter['default'];
-                        }
-                    }
-
-                    $field = [
-                        'type' => $type,
-                        'description' => $description,
-                        'args' => $params,
-                        'resolve' => Resolvers::resolveAPIRequest($utopia, $route)
-                    ];
-
-                    if ($list) {
-                        $field['complexity'] = function (int $complexity, array $args) {
-                            $queries = Query::parseQueries($args['queries'] ?? []);
-                            $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
-                            $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
-
-                            return $complexity * $limit;
-                        };
-                    }
-
-                    switch ($method) {
+                foreach (TypeMapper::fromRoute($utopia, $route) as $field) {
+                    switch ($route->getMethod()) {
                         case 'GET':
-                            $queryFields[$methodName] = $field;
+                            $queries[$name] = $field;
                             break;
                         case 'POST':
                         case 'PUT':
                         case 'PATCH':
                         case 'DELETE':
-                            $mutationFields[$methodName] = $field;
+                            $mutations[$name] = $field;
                             break;
                         default:
-                            throw new \Exception("Unsupported method: $method");
+                            throw new \Exception("Unsupported method: {$route->getMethod()}");
                     }
                 }
             }
         }
 
         $schema = [
-            'query' => $queryFields,
-            'mutation' => $mutationFields
+            'query' => $queries,
+            'mutation' => $mutations
         ];
 
         return $schema;
     }
 
     /**
-     * Iterates all a projects attributes and builds GraphQL
+     * Iterates all of a projects attributes and builds GraphQL
      * queries and mutations for the collections they make up.
      *
      * @param App $utopia
@@ -223,13 +176,10 @@ class SchemaBuilder
         $wg = new WaitGroup();
 
         while (
-            !empty($attrs = Authorization::skip(fn() => $dbForProject->find(
-                collection: 'attributes',
-                queries: [
-                    Query::limit($limit),
-                    Query::offset($offset),
-                ]
-            )))
+            !empty($attrs = Authorization::skip(fn() => $dbForProject->find('attributes', [
+            Query::limit($limit),
+            Query::offset($offset),
+            ])))
         ) {
             $wg->add();
             $count += count($attrs);
@@ -266,12 +216,12 @@ class SchemaBuilder
                     ]);
                     $attributes = \array_merge(
                         $attributes,
-                        TypeRegistry::argumentsFor('mutate')
+                        TypeMapper::argumentsFor('mutate')
                     );
 
                     $queryFields[$collectionId . 'Get'] = [
                         'type' => $objectType,
-                        'args' => TypeRegistry::argumentsFor('id'),
+                        'args' => TypeMapper::argumentsFor('id'),
                         'resolve' => Resolvers::resolveDocumentGet(
                             $utopia,
                             $dbForProject,
@@ -281,7 +231,7 @@ class SchemaBuilder
                     ];
                     $queryFields[$collectionId . 'List'] = [
                         'type' => Type::listOf($objectType),
-                        'args' => TypeRegistry::argumentsFor('list'),
+                        'args' => TypeMapper::argumentsFor('list'),
                         'resolve' => Resolvers::resolveDocumentList(
                             $utopia,
                             $dbForProject,
@@ -310,7 +260,7 @@ class SchemaBuilder
                     $mutationFields[$collectionId . 'Update'] = [
                         'type' => $objectType,
                         'args' => \array_merge(
-                            TypeRegistry::argumentsFor('id'),
+                            TypeMapper::argumentsFor('id'),
                             \array_map(
                                 fn($attr) => $attr['type'] = Type::getNullableType($attr['type']),
                                 $attributes
@@ -324,8 +274,8 @@ class SchemaBuilder
                         )
                     ];
                     $mutationFields[$collectionId . 'Delete'] = [
-                        'type' => TypeRegistry::get(Response::MODEL_NONE),
-                        'args' => TypeRegistry::argumentsFor('id'),
+                        'type' => TypeMapper::fromResponseModel(Response::MODEL_NONE),
+                        'args' => TypeMapper::argumentsFor('id'),
                         'resolve' => Resolvers::resolveDocumentDelete(
                             $utopia,
                             $dbForProject,

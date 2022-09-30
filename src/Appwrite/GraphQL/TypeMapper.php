@@ -28,10 +28,16 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Database\Validator\Queries\Teams;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Database\Validator\Queries\Variables;
+use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Attribute;
 use Exception;
+use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
+use GraphQL\Type\Definition\UnionType;
 use Utopia\App;
+use Utopia\Database\Database;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
@@ -54,6 +60,181 @@ use Utopia\Validator\WhiteList;
 
 class TypeMapper
 {
+    private static array $models = [];
+    private static array $defaultArgs = [];
+
+    public static function init(array $models): void
+    {
+        self::$models = $models;
+
+        self::$defaultArgs = [
+            'id' => [
+                'id' => [
+                    'type' => Type::nonNull(Type::string()),
+                ],
+            ],
+            'list' => [
+                'queries' => [
+                    'type' => Type::listOf(Type::nonNull(Type::string())),
+                    'defaultValue' => [],
+                ],
+            ],
+            'mutate' => [
+                'permissions' => [
+                    'type' => Type::listOf(Type::nonNull(Type::string())),
+                    'defaultValue' => [],
+                ]
+            ],
+        ];
+
+        $defaultTypes = [
+            Model::TYPE_BOOLEAN => Type::boolean(),
+            Model::TYPE_STRING => Type::string(),
+            Model::TYPE_INTEGER => Type::int(),
+            Model::TYPE_FLOAT => Type::float(),
+            Model::TYPE_DATETIME => Type::string(),
+            Model::TYPE_JSON => Types::json(),
+            Response::MODEL_NONE => Types::json(),
+            Response::MODEL_ANY => Types::json(),
+        ];
+
+        foreach ($defaultTypes as $type => $default) {
+            TypeRegistry::set($type, $default);
+        }
+    }
+
+    /**
+     * Get the registered default arguments for a given key.
+     *
+     * @param string $key
+     * @return array
+     */
+    public static function argumentsFor(string $key): array
+    {
+        if (isset(self::$defaultArgs[$key])) {
+            return self::$defaultArgs[$key];
+        }
+        return [];
+    }
+
+    public static function fromRoute(App $utopia, Route $route): iterable
+    {
+        if (\str_starts_with($route->getPath(), '/v1/mock/')) {
+            return;
+        }
+        if ($route->getLabel('sdk.methodType', '') === 'webAuth') {
+            return;
+        }
+
+        $modelNames = $route->getLabel('sdk.response.model', 'none');
+        $models = \is_array($modelNames)
+            ? \array_map(static fn($m) => static::$models[$m], $modelNames)
+            : [static::$models[$modelNames]];
+
+        foreach ($models as $model) {
+//            if (empty($responseModel->getRules())) {
+//                \var_dump('No rules: ' . $responseModel->getType());
+//                continue;
+//            }
+
+            $type = TypeMapper::fromResponseModel(\ucfirst($model->getType()));
+            $description = $route->getDesc();
+            $params = [];
+            $list = false;
+
+            foreach ($route->getParams() as $name => $parameter) {
+                if ($name === 'queries') {
+                    $list = true;
+                }
+                $parameterType = TypeMapper::fromRouteParameter(
+                    $utopia,
+                    $parameter['validator'],
+                    !$parameter['optional'],
+                    $parameter['injections']
+                );
+                $params[$name] = [
+                    'type' => $parameterType,
+                    'description' => $parameter['description'],
+                ];
+                if ($parameter['optional']) {
+                    $params[$name]['defaultValue'] = $parameter['default'];
+                }
+            }
+
+            $field = [
+                'type' => $type,
+                'description' => $description,
+                'args' => $params,
+                'resolve' => Resolvers::resolveAPIRequest($utopia, $route)
+            ];
+
+            if ($list) {
+                $field['complexity'] = function (int $complexity, array $args) {
+                    $queries = Query::parseQueries($args['queries'] ?? []);
+                    $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+                    $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
+
+                    return $complexity * $limit;
+                };
+            }
+
+            yield $field;
+        }
+    }
+
+    /**
+     * Get a type from the registry, creating it if it does not already exist.
+     *
+     * @param string $name
+     * @return Type
+     */
+    public static function fromResponseModel(string $name): Type
+    {
+        if (TypeRegistry::has($name)) {
+            return TypeRegistry::get($name);
+        }
+
+        $fields = [];
+        $model = self::$models[\lcfirst($name)];
+
+        // If model has additional properties, explicitly add a 'data' field
+        if ($model->isAny()) {
+            $fields['data'] = [
+                'type' => Type::string(),
+                'description' => 'Additional data',
+                'resolve' => static fn($object, $args, $context, $info) => \json_encode($object, JSON_FORCE_OBJECT),
+            ];
+        }
+
+        foreach ($model->getRules() as $key => $rule) {
+            $escapedKey = str_replace('$', '_', $key);
+
+                $type = self::getObjectType($rule);
+
+            if ($rule['array']) {
+                $type = Type::listOf($type);
+            }
+
+            $fields[$escapedKey] = [
+                'type' => $type,
+                'description' => $rule['description'],
+            ];
+
+            if (!$rule['required']) {
+                $fields[$escapedKey]['defaultValue'] = $rule['default'];
+            }
+        }
+
+        $type = new ObjectType([
+            'name' => $name,
+            'fields' => $fields,
+        ]);
+
+        TypeRegistry::set($name, $type);
+
+        return $type;
+    }
+
     /**
      * Map a {@see Route} parameter to a GraphQL Type
      *
@@ -136,10 +317,10 @@ class TypeMapper
                 break;
             case Assoc::class:
             case JSON::class:
-                $type = TypeRegistry::json();
+                $type = Types::json();
                 break;
             case File::class:
-                $type = TypeRegistry::inputFile();
+                $type = Types::inputFile();
                 break;
         }
 
@@ -166,9 +347,9 @@ class TypeMapper
         }
 
         $type = match ($type) {
-            'boolean' => Type::boolean(),
-            'integer' => Type::int(),
-            'double' => Type::float(),
+            Database::VAR_BOOLEAN => Type::boolean(),
+            Database::VAR_INTEGER => Type::int(),
+            Database::VAR_FLOAT => Type::float(),
             default => Type::string(),
         };
 
@@ -178,4 +359,17 @@ class TypeMapper
 
         return $type;
     }
+
+    private static function getObjectType(array $rule): Type
+    {
+        $type = $rule['type'];
+
+        if (TypeRegistry::has($type)) {
+            return TypeRegistry::get($type);
+        }
+
+        $complexModel = self::$models[$type];
+        return self::fromResponseModel(\ucfirst($complexModel->getType()));
+    }
+
 }
