@@ -28,10 +28,6 @@ App::shutdown()
         $header = new View(__DIR__ . '/../../views/console/comps/header.phtml');
         $footer = new View(__DIR__ . '/../../views/console/comps/footer.phtml');
 
-        $header
-            ->setParam('regions', Config::getParam('regions', []))
-        ;
-
         $footer
             ->setParam('home', App::getEnv('_APP_HOME', ''))
             ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
