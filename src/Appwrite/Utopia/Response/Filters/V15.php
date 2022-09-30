@@ -91,20 +91,17 @@ class V15 extends Filter
                 $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseCreatedAtUpdatedAt($content), $parsedResponse[$listKey]);
                 break;
             case Response::MODEL_DOCUMENT:
+                $parsedResponse = $this->parseDocument($parsedResponse);
+                break;
             case Response::MODEL_FILE:
                 $parsedResponse = $this->parsePermissionsCreatedAtUpdatedAt($parsedResponse);
                 break;
             case Response::MODEL_DOCUMENT_LIST:
+                $listKey = 'documents';
+                $parsedResponse[$listKey] = array_map(fn ($content) => $this->parseDocument($content), $parsedResponse[$listKey]);
+                break;
             case Response::MODEL_FILE_LIST:
-                $listKey = '';
-                switch ($model) {
-                    case Response::MODEL_DOCUMENT_LIST:
-                        $listKey = 'documents';
-                        break;
-                    case Response::MODEL_FILE_LIST:
-                        $listKey = 'files';
-                        break;
-                }
+                $listKey = 'files';
                 $parsedResponse[$listKey] = array_map(fn ($content) => $this->parsePermissionsCreatedAtUpdatedAt($content), $parsedResponse[$listKey]);
                 break;
             case Response::MODEL_EXECUTION:
@@ -210,7 +207,11 @@ class V15 extends Filter
     protected function parseDatetimeAttributes(array $content, array $attributes): array
     {
         foreach ($attributes as $attribute) {
-            if (isset($content[$attribute])) {
+            if (array_key_exists($attribute, $content)) {
+                if (empty($content[$attribute])) {
+                    $content[$attribute] = 0;
+                    continue;
+                }
                 $content[$attribute] = strtotime($content[$attribute]);
             }
         }
@@ -311,6 +312,19 @@ class V15 extends Filter
     {
         $content = $this->parsePermissions($content);
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
+        return $content;
+    }
+
+    protected function parseDocument(array $content)
+    {
+        if (isset($content['$collectionId'])) {
+            $content['$collection'] = $content['$collectionId'];
+            unset($content['$collectionId']);
+        }
+
+        unset($content['$databaseId']);
+
+        $content = $this->parsePermissionsCreatedAtUpdatedAt($content);
         return $content;
     }
 

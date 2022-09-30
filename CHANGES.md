@@ -1,6 +1,7 @@
 # Version 1.0.2
 ## Bugs
 - Fixed nullable values in functions variables [#3885](https://github.com/appwrite/appwrite/pull/3885)
+- Fixed migration for audit by migrating the `time` attribute [#4038](https://github.com/appwrite/appwrite/pull/4038)
 
 # Version 1.0.1
 ## Bugs
