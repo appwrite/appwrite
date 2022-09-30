@@ -935,6 +935,67 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         $response->noContent();
     });
 
+App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+    ->groups(['api', 'functions'])
+    ->desc('Create Build')
+    ->label('scope', 'functions.write')
+    ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
+    ->label('audits.event', 'deployment.update')
+    ->label('audits.resource', 'function/{request.functionId}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'createBuild')
+    ->label('sdk.description', '/docs/references/functions/create-build.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
+    ->param('buildId', '', new UID(), 'Build unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('events')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project, Event $events) {
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        if ($deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
+
+        if ($build->isEmpty()) {
+            throw new Exception(Exception::BUILD_NOT_FOUND);
+        }
+
+        if ($build->getAttribute('status') !== 'failed') {
+            throw new Exception(Exception::BUILD_IN_PROGRESS, 'Build not failed');
+        }
+
+        $events
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId());
+
+        // Retry the build
+        $buildEvent = new Build();
+        $buildEvent
+            ->setType(BUILD_TYPE_RETRY)
+            ->setResource($function)
+            ->setDeployment($deployment)
+            ->setProject($project)
+            ->trigger();
+
+        $response->noContent();
+    });
+
+
+
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
@@ -1256,65 +1317,6 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);
-    });
-
-App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
-    ->groups(['api', 'functions'])
-    ->desc('Retry Build')
-    ->label('scope', 'functions.write')
-    ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
-    ->label('audits.event', 'deployment.update')
-    ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'retryBuild')
-    ->label('sdk.description', '/docs/references/functions/retry-build.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('deploymentId', '', new UID(), 'Deployment ID.')
-    ->param('buildId', '', new UID(), 'Build unique ID.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project, Event $events) {
-
-        $function = $dbForProject->getDocument('functions', $functionId);
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
-        }
-
-        if ($deployment->isEmpty()) {
-            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
-        }
-
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
-
-        if ($build->isEmpty()) {
-            throw new Exception(Exception::BUILD_NOT_FOUND);
-        }
-
-        if ($build->getAttribute('status') !== 'failed') {
-            throw new Exception(Exception::BUILD_IN_PROGRESS, 'Build not failed');
-        }
-
-        $events
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
-        // Retry the build
-        $buildEvent = new Build();
-        $buildEvent
-            ->setType(BUILD_TYPE_RETRY)
-            ->setResource($function)
-            ->setDeployment($deployment)
-            ->setProject($project)
-            ->trigger();
-
-        $response->noContent();
     });
 
 // Variables

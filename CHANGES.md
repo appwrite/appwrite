@@ -2,6 +2,8 @@
 ## Bugs
 - Fixed nullable values in functions variables [#3885](https://github.com/appwrite/appwrite/pull/3885)
 - Fixed migration for audit by migrating the `time` attribute [#4038](https://github.com/appwrite/appwrite/pull/4038)
+- Fixed default value for creating Boolean Attribute [#4040](https://github.com/appwrite/appwrite/pull/4040)
+- Fixed phone authentication code to be hashed in the internal database [#3906](https://github.com/appwrite/appwrite/pull/3906)
 
 # Version 1.0.1
 ## Bugs
