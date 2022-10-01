@@ -27,7 +27,7 @@ English | [简体中文](README-CN.md)
 
 [**Appwrite 1.0 has been released! Learn what's new!**](https://appwrite.io/1.0)
 
-Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
+<u>Appwrite</u> is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
 Using Appwrite, you can easily integrate your app with user authentication & multiple sign-in methods, a database for storing and querying users and team data, storage and file management, image manipulation, Cloud Functions, and [more services](https://appwrite.io/docs).
 
@@ -62,13 +62,13 @@ Table of Contents:
 - [Follow Us](#follow-us)
 - [License](#license)
 
-## Installation
+## Installation:
 
 Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm, or Rancher.
 
 The easiest way to start running your Appwrite server is by running our docker-compose file. Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
 
-### Unix
+### Unix:
 
 ```bash
 docker run -it --rm \
@@ -78,7 +78,7 @@ docker run -it --rm \
     appwrite/appwrite:1.0.1
 ```
 
-### Windows
+### Windows:
 
 #### CMD
 
@@ -90,7 +90,7 @@ docker run -it --rm ^
     appwrite/appwrite:1.0.1
 ```
 
-#### PowerShell
+#### PowerShell:
 
 ```powershell
 docker run -it --rm `
@@ -108,7 +108,7 @@ For advanced production and custom installation, check out our Docker [environme
 
 If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
 
-## One-Click Setups
+## One-Click Setups:
 
 In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to get up and running with Appwrite quickly without installing Docker on your local machine.
 
