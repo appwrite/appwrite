@@ -18,6 +18,7 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Appwrite\Event\SyncOut;
 use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
@@ -36,6 +37,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
+use Appwrite\Event\SyncIn;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
@@ -749,14 +751,31 @@ App::setResource('messaging', fn() => new Phone());
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
-
-App::setResource('clients', function ($request, $console, $project) {
+App::setResource('clients', function ($request, $console, $project) use ($register) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
         'type' => 'web',
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
+
+    $register->set('syncOut', function () {
+        return new SyncOut();
+    });
+
+    cache::on(cache::EVENT_PURGE, function ($key) use ($register) {
+        $register
+            ->get('syncOut')
+            ->addKey($key)
+            ->trigger();
+    });
+
+    cache::on(cache::EVENT_SAVE, function ($key) use ($register) {
+        $register
+            ->get('syncOut')
+            ->addKey($key)
+            ->trigger();
+    });
 
     /**
      * Get All verified client URLs for both console and current projects

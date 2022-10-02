@@ -107,6 +107,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
+      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
     depends_on:
       - mariadb
       - redis
@@ -253,6 +254,48 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+
+  appwrite-worker-syncs-out:
+    entrypoint: worker-syncs-out
+    <<: *x-logging
+    container_name: appwrite-worker-syncs-out
+    build:
+      context: .
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
+    depends_on:
+      - redis
+    environment:
+        - _APP_ENV
+        - _APP_REDIS_HOST
+        - _APP_REDIS_PORT
+        - _APP_REDIS_USER
+        - _APP_REDIS_PASS
+
+  appwrite-worker-syncs-in:
+    entrypoint: worker-syncs-in
+    <<: *x-logging
+    container_name: appwrite-worker-syncs-in
+    build:
+     context: .
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
