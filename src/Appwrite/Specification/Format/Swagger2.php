@@ -305,7 +305,7 @@ class Swagger2 extends Format
                     case 'Appwrite\Network\Validator\Email':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'email';
-                        $node['x-example'] = 'email@example.com';
+                        $node['x-example'] = 'email@examples.com';
                         break;
                     case 'Appwrite\Network\Validator\URL':
                         $node['type'] = $validator->getType();
@@ -364,6 +364,11 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         $node['format'] = 'password';
                         $node['x-example'] = 'password';
+                        break;
+                    case 'Appwrite\Auth\Validator\Phone':
+                        $node['type'] = $validator->getType();
+                        $node['format'] = 'phone';
+                        $node['x-example'] = '+12065550100';
                         break;
                     case 'Utopia\Validator\Range':
                         /** @var \Utopia\Validator\Range $validator */
