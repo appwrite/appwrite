@@ -55,7 +55,7 @@
         "utopia-php/image": "0.5.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.3.*",
-        "utopia-php/messaging": "dev-feat-base",
+        "utopia-php/messaging": "0.1.*",
         "utopia-php/orchestration": "0.6.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/registry": "0.5.*",
@@ -74,10 +74,6 @@
     "repositories": [
         {
             "url": "https://github.com/appwrite/runtimes.git",
-            "type": "git"
-        },
-        {
-            "url": "https://github.com/utopia-php/messaging",
             "type": "git"
         }
     ],
