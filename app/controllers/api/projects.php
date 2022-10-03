@@ -510,8 +510,8 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->param('status', false, new Boolean(true), 'Set the status of this auth method.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $method, mixed $statusLoose, Response $response, Database $dbForConsole) {
-        $status = in_array($statusLoose, ['1', 'true', 1, true], true);
+    ->action(function (string $projectId, string $method, mixed $status, Response $response, Database $dbForConsole) {
+        $status = in_array($status, ['1', 'true', 1, true], true);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
         $auth = Config::getParam('auth')[$method] ?? [];
@@ -593,8 +593,8 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, array $events, string $url, mixed $securityLoose, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
-        $security = in_array($securityLoose, ['1', 'true', 1, true], true);
+    ->action(function (string $projectId, string $name, array $events, string $url, mixed $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+        $security = in_array($security, ['1', 'true', 1, true], true);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -715,8 +715,8 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, mixed $securityLoose, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
-        $security = in_array($securityLoose, ['1', 'true', 1, true], true);
+    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, mixed $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+        $security = in_array($security, ['1', 'true', 1, true], true);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 

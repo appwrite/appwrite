@@ -633,8 +633,8 @@ App::patch('/v1/users/:userId/status')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, mixed $statusLoose, Response $response, Database $dbForProject, Event $events) {
-        $status = in_array($statusLoose, ['1', 'true', 1, true], true);
+    ->action(function (string $userId, mixed $status, Response $response, Database $dbForProject, Event $events) {
+        $status = in_array($status, ['1', 'true', 1, true], true);
 
         $user = $dbForProject->getDocument('users', $userId);
 

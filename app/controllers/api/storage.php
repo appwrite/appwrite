@@ -71,11 +71,11 @@ App::post('/v1/storage/buckets')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, ?array $permissions, mixed $fileSecurityLoose, mixed $enabledLoose, int $maximumFileSize, array $allowedFileExtensions, string $compression, mixed $encryptionLoose, mixed $antivirusLoose, Response $response, Database $dbForProject, Event $events) {
-        $fileSecurity = in_array($fileSecurityLoose, ['1', 'true', 1, true], true);
-        $enabled = in_array($enabledLoose, ['1', 'true', 1, true], true);
-        $encryption = in_array($encryptionLoose, ['1', 'true', 1, true], true);
-        $antivirus = in_array($antivirusLoose, ['1', 'true', 1, true], true);
+    ->action(function (string $bucketId, string $name, ?array $permissions, mixed $fileSecurity, mixed $enabled, int $maximumFileSize, array $allowedFileExtensions, string $compression, mixed $encryption, mixed $antivirus, Response $response, Database $dbForProject, Event $events) {
+        $fileSecurity = in_array($fileSecurity, ['1', 'true', 1, true], true);
+        $enabled = in_array($enabled, ['1', 'true', 1, true], true);
+        $encryption = in_array($encryption, ['1', 'true', 1, true], true);
+        $antivirus = in_array($antivirus, ['1', 'true', 1, true], true);
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
@@ -247,11 +247,11 @@ App::put('/v1/storage/buckets/:bucketId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $bucketId, string $name, ?array $permissions, mixed $fileSecurityLoose, mixed $enabledLoose, ?int $maximumFileSize, array $allowedFileExtensions, string $compression, mixed $encryptionLoose, mixed $antivirusLoose, Response $response, Database $dbForProject, Event $events) {
-        $fileSecurity = in_array($fileSecurityLoose, ['1', 'true', 1, true], true);
-        $enabled = in_array($enabledLoose, ['1', 'true', 1, true], true);
-        $encryption = in_array($encryptionLoose, ['1', 'true', 1, true], true);
-        $antivirus = in_array($antivirusLoose, ['1', 'true', 1, true], true);
+    ->action(function (string $bucketId, string $name, ?array $permissions, mixed $fileSecurity, mixed $enabled, ?int $maximumFileSize, array $allowedFileExtensions, string $compression, mixed $encryption, mixed $antivirus, Response $response, Database $dbForProject, Event $events) {
+        $fileSecurity = in_array($fileSecurity, ['1', 'true', 1, true], true);
+        $enabled = in_array($enabled, ['1', 'true', 1, true], true);
+        $encryption = in_array($encryption, ['1', 'true', 1, true], true);
+        $antivirus = in_array($antivirus, ['1', 'true', 1, true], true);
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 

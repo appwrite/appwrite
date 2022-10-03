@@ -496,8 +496,8 @@ App::post('/v1/databases/:databaseId/collections')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, mixed $documentSecurityLoose, Response $response, Database $dbForProject, Event $events) {
-        $documentSecurity = in_array($documentSecurityLoose, ['1', 'true', 1, true], true);
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, mixed $documentSecurity, Response $response, Database $dbForProject, Event $events) {
+        $documentSecurity = in_array($documentSecurity, ['1', 'true', 1, true], true);
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -753,8 +753,8 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, mixed $documentSecurityLoose, bool $enabled, Response $response, Database $dbForProject, Event $events) {
-        $documentSecurity = in_array($documentSecurityLoose, ['1', 'true', 1, true], true);
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, mixed $documentSecurity, bool $enabled, Response $response, Database $dbForProject, Event $events) {
+        $documentSecurity = in_array($documentSecurity, ['1', 'true', 1, true], true);
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
