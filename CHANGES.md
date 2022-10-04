@@ -4,6 +4,11 @@
 - Fixed migration for audit by migrating the `time` attribute [#4038](https://github.com/appwrite/appwrite/pull/4038)
 - Fixed default value for creating Boolean Attribute [#4040](https://github.com/appwrite/appwrite/pull/4040)
 - Fixed phone authentication code to be hashed in the internal database [#3906](https://github.com/appwrite/appwrite/pull/3906)
+- Fixed `/v1/teams/:teamId/memberships/:membershipId` response [#3883](https://github.com/appwrite/appwrite/pull/3883)
+- Fixed removing variables when function is deleted [#3884](https://github.com/appwrite/appwrite/pull/3884)
+- Fixed scheduled function not being triggered [#3908](https://github.com/appwrite/appwrite/pull/3908)
+- Fixed Phone Provider configuration [#3862](https://github.com/appwrite/appwrite/pull/3883)
+- Fixed Queries with `0` values [utopia-php/database#194](https://github.com/utopia-php/database/pull/194)
 
 # Version 1.0.1
 ## Bugs
