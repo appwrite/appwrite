@@ -7,7 +7,7 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
@@ -221,7 +221,7 @@ abstract class Worker
             try {
                 $attempts++;
                 $cache = new Cache(new RedisCache($register->get('cache')));
-                $database = new Database(new MariaDB($register->get('db')), $cache);
+                $database = new Database(new MySQL($register->get('db')), $cache);
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                 $database->setNamespace($namespace); // Main DB
 

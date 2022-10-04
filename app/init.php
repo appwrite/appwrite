@@ -52,7 +52,7 @@ use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Structure;
@@ -928,7 +928,7 @@ App::setResource('console', function () {
 App::setResource('dbForProject', function ($db, $cache, Document $project) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database(new MariaDB($db), $cache);
+    $database = new Database(new MySQL($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getInternalId()}");
 
@@ -938,7 +938,7 @@ App::setResource('dbForProject', function ($db, $cache, Document $project) {
 App::setResource('dbForConsole', function ($db, $cache) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database(new MariaDB($db), $cache);
+    $database = new Database(new MySQL($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace('_console');
 

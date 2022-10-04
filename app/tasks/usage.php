@@ -12,7 +12,7 @@ use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
@@ -34,7 +34,7 @@ function getDatabase(Registry &$register, string $namespace): UtopiaDatabase
             $redis = $register->get('cache');
 
             $cache = new Cache(new RedisCache($redis));
-            $database = new UtopiaDatabase(new MariaDB($db), $cache);
+            $database = new UtopiaDatabase(new MySQL($db), $cache);
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace($namespace);
 

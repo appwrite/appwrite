@@ -9,7 +9,7 @@ use Appwrite\Event\Delete;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -26,7 +26,7 @@ function getConsoleDB(): Database
         try {
             $attempts++;
             $cache = new Cache(new RedisCache($register->get('cache')));
-            $database = new Database(new MariaDB($register->get('db')), $cache);
+            $database = new Database(new MySQL($register->get('db')), $cache);
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace('_console'); // Main DB
 

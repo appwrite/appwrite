@@ -7,7 +7,7 @@ use Appwrite\Migration\Migration;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -33,10 +33,10 @@ $cli
         $redis->flushAll();
         $cache = new Cache(new RedisCache($redis));
 
-        $projectDB = new Database(new MariaDB($db), $cache);
+        $projectDB = new Database(new MySQL($db), $cache);
         $projectDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
-        $consoleDB = new Database(new MariaDB($db), $cache);
+        $consoleDB = new Database(new MySQL($db), $cache);
         $consoleDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $consoleDB->setNamespace('_project_console');
 
