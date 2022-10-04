@@ -1127,21 +1127,21 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
-            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+            $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
             return $carry;
         }, []);
 
         $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
-            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-            'APPWRITE_FUNCTION_TRIGGER' => 'http',
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-            'APPWRITE_FUNCTION_DATA' => $data,
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
-            'APPWRITE_FUNCTION_JWT' => $jwt,
+            'APPWRITE_FUNCTION_TRIGGER' => 'http',
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_FUNCTION_DATA' => $data ?? '',
+            'APPWRITE_FUNCTION_USER_ID' => $user->getId() ?? '',
+            'APPWRITE_FUNCTION_JWT' => $jwt ?? '',
         ]);
 
         /** Execute function */
