@@ -290,10 +290,10 @@ App::post('/v1/users/scrypt')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password hashed using Scrypt.')
     ->param('passwordSalt', '', new Text(128), 'Optional salt used to hash password.')
-    ->param('passwordCpu', '', new Integer(), 'Optional CPU cost used to hash password.')
-    ->param('passwordMemory', '', new Integer(), 'Optional memory cost used to hash password.')
-    ->param('passwordParallel', '', new Integer(), 'Optional parallelization cost used to hash password.')
-    ->param('passwordLength', '', new Integer(), 'Optional hash length used to hash password.')
+    ->param('passwordCpu', 8, new Integer(), 'Optional CPU cost used to hash password.')
+    ->param('passwordMemory', 14, new Integer(), 'Optional memory cost used to hash password.')
+    ->param('passwordParallel', 1, new Integer(), 'Optional parallelization cost used to hash password.')
+    ->param('passwordLength', 64, new Integer(), 'Optional hash length used to hash password.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -981,7 +981,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('sessionId', null, new UID(), 'Session ID.')
+    ->param('sessionId', '', new UID(), 'Session ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
@@ -1176,7 +1176,7 @@ App::get('/v1/users/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
