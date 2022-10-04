@@ -3,6 +3,9 @@
 - Fixed default value for creating Boolean Attribute [#4040](https://github.com/appwrite/appwrite/pull/404)
 - Fixed migration for audit by migrating the `time` attribute [#4038](https://github.com/appwrite/appwrite/pull/4038)
 - Fixed phone authentication code to be hashed in the internal database [#3906](https://github.com/appwrite/appwrite/pull/3906)
+- Fixed `/v1/teams/:teamId/memberships/:membershipId` response [#3883](https://github.com/appwrite/appwrite/pull/3883)
+- Fixed removing variables when function is deleted [#3884](https://github.com/appwrite/appwrite/pull/3884)
+- Fixed scheduled function not being triggered [#3908](https://github.com/appwrite/appwrite/pull/3908)
 
 # Version 1.0.1
 ## Bugs
