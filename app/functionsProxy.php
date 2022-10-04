@@ -38,7 +38,7 @@ $redisPool = new RedisPool(
     64
 );
 
-$adapter = new RoundRobin($redisPool);
+$adapter = new Random($redisPool);
 
 function markOffline(Cache $cache, string $executorId, string $error, bool $forceShowError = false)
 {

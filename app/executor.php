@@ -598,21 +598,23 @@ App::post('/v1/execution')
             $stderr = '';
             $res = '';
 
+            $executorResponse = json_decode($executorResponse ?? '{}', true);
+
             switch (true) {
                 case $statusCode >= 500:
-                    $stderr = ($executorResponse ?? [])['stderr'] ?? 'Internal Runtime error.';
-                    $stdout = ($executorResponse ?? [])['stdout'] ?? 'Internal Runtime error.';
+                    $stderr = $executorResponse['stderr'] ?? '';
+                    $stdout = $executorResponse['stdout'] ?? '';
                     break;
                 case $statusCode >= 100:
-                    $stdout = $executorResponse['stdout'];
-                    $res = $executorResponse['response'];
+                    $stdout = $executorResponse['stdout'] ?? '';
+                    $res = $executorResponse['response'] ?? '';
                     if (is_array($res)) {
                         $res = json_encode($res, JSON_UNESCAPED_UNICODE);
                     }
                     break;
                 default:
-                    $stderr = ($executorResponse ?? [])['stderr'] ?? 'Execution failed.';
-                    $stdout = ($executorResponse ?? [])['stdout'] ?? '';
+                    $stderr = $executorResponse['stderr'] ?? '';
+                    $stdout = $executorResponse['stdout'] ?? '';
                     break;
             }
 
@@ -764,6 +766,7 @@ $http->on('start', function ($http) {
 
     foreach ($orphans as $runtime) {
         go(function () use ($runtime, $orchestrationPool) {
+            // TODO: Only remove those that prefix with executor name
             try {
                 $orchestration = $orchestrationPool->get();
                 $orchestration->remove($runtime->getName(), true);

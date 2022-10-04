@@ -39,6 +39,7 @@ abstract class Adapter
 
                 $data = $cache->load('executors-' . $id, 60 * 60 * 24 * 30 * 3); // 3 months
 
+                // TODO: Somehow got thison below line: Warning: Trying to access array offset on value of type bool in /usr/src/code/src/FunctionsProxy/Adapter.php on line 42
                 if ($data['status'] !== 'online') {
                     continue;
                 }
