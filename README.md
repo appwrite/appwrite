@@ -186,7 +186,7 @@ Below is a list of currently supported platforms and languages. If you wish to h
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
-## Architecture
+## Architecture For these software
 
 ![Appwrite Architecture](docs/specs/overview.drawio.svg)
 
