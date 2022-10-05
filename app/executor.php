@@ -651,8 +651,16 @@ App::get('/v1/health')
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
             ->json([
-                'status' => 'pass'
-                // TODO: Add host machine stats using Utopia/System
+                'status' => 'pass',
+                /*
+                    TODO: Add host machine stats using Utopia/System and Utopia/orchestrator. Something like:
+
+                    'hostUsage' => 0.8,
+                    'functionRuntimeUsages' => [
+                        '[FUNCTION_ID]' => 0.2
+                    ]
+                */
+               
             ]);
     });
 
@@ -766,7 +774,11 @@ $http->on('start', function ($http) {
 
     foreach ($orphans as $runtime) {
         go(function () use ($runtime, $orchestrationPool) {
-            // TODO: Only remove those that prefix with executor name
+            // Print log, get logs over Docker API (utopia/orchestrator)
+            if(!(\str_starts_with($runtime->getName(), reeeee))) {
+                return;
+            }
+
             try {
                 $orchestration = $orchestrationPool->get();
                 $orchestration->remove($runtime->getName(), true);
