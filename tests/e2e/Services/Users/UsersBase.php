@@ -926,6 +926,62 @@ trait UsersBase
         return $data;
     }
 
+    /**
+     * @depends testGetUser
+     */
+    public function testUpdateUserNumber(array $data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $updatedNumber = "+910000000000"; //dummy number
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'number' => $updatedNumber,
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['phone'], $updatedNumber);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['phone'], $updatedNumber);
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateUserNumber
+     */
+    public function testUpdateUserNumberSearch($data): void
+    {
+        $id = $data['userId'] ?? '';
+        $newNumber = "+910000000000"; //dummy number
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $newNumber,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $id);
+        $this->assertEquals($response['body']['users'][0]['phone'], $newNumber);
+    }
+
 
     /**
      * @depends testGetUser
