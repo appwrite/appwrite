@@ -52,6 +52,7 @@ class URLTest extends TestCase
         $this->assertEquals('Value must be a valid URL with following schemes (http, https)', $this->url->getDescription());
         $this->assertEquals(true, $this->url->isValid('http://example.com'));
         $this->assertEquals(true, $this->url->isValid('https://example.com'));
+        $this->assertEquals(true, $this->url->isValid('https://exämple.com'));
         $this->assertEquals(false, $this->url->isValid('gopher://www.example.com'));
     }
 }
