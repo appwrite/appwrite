@@ -953,6 +953,25 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertEquals($user['body']['phone'], $updatedNumber);
 
+         /**
+         * Test for FAILURE
+         */
+
+        $errorType = "user_phone_already_exists";
+        $user1Id = "user1";
+        $statusCodeForUserPhoneAlredyExists = 409;
+
+        // adding same number ($updatedNumber) to different user i.e user1
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $user1Id . '/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'number' => $updatedNumber,
+        ]);
+        $this->assertEquals($response['headers']['status-code'], $statusCodeForUserPhoneAlredyExists);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals($response['body']['type'], $errorType);
+
         return $data;
     }
 
