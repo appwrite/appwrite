@@ -13,26 +13,26 @@ class AlgoScrypt extends Model
             ->addRule('costCpu', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'CPU complexity of computed hash.',
-                'default' => '',
+                'default' => 8,
                 'example' => 8,
             ])
             ->addRule('costMemory', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Memory complexity of computed hash.',
-                'default' => '',
+                'default' => 14,
                 'example' => 14,
             ])
             ->addRule('costParallel', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Parallelization of computed hash.',
-                'default' => '',
+                'default' => 1,
                 'example' => 1,
             ])
             ->addRule('length', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Length used to compute hash.',
-                'default' => '',
-                'example' => 1,
+                'default' => 64,
+                'example' => 64,
             ])
         ;
     }

@@ -73,9 +73,9 @@ services:
     build:
       context: .
       args:
-        - DEBUG=false
-        - TESTING=true
-        - VERSION=dev
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
     ports: 
       - 9501:80
     networks:
@@ -760,7 +760,7 @@ services:
   # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
   # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
   # RedisCommander - A nice UI for exploring Redis data
-  # Resque - A nice UI for exploring Reddis pub/sub, view the different queues workloads, pending and failed tasks
+  # Resque - A nice UI for exploring Redis pub/sub, view the different queues workloads, pending and failed tasks
   # Chronograf - A nice UI for exploring InfluxDB data
   # Webgrind - A nice UI for exploring and debugging code-level stuff
 

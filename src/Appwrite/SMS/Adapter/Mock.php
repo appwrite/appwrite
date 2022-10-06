@@ -4,12 +4,13 @@ namespace Appwrite\SMS\Adapter;
 
 use Appwrite\SMS\Adapter;
 
+// Mock adapter used to E2E test worker
 class Mock extends Adapter
 {
     /**
      * @var string
      */
-    public static string $digits = '123456';
+    private string $endpoint = 'http://request-catcher:5000/mock-sms';
 
     /**
      * @param string $from
@@ -19,6 +20,19 @@ class Mock extends Adapter
      */
     public function send(string $from, string $to, string $message): void
     {
-        return;
+        $this->request(
+            method: 'POST',
+            url: $this->endpoint,
+            payload: \json_encode([
+                'message' => $message,
+                'from' => $from,
+                'to' => $to
+            ]),
+            headers: [
+                "content-type: application/json",
+                "x-username: {$this->user}",
+                "x-key: {$this->secret}",
+            ]
+        );
     }
 }

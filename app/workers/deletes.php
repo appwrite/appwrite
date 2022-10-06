@@ -411,6 +411,14 @@ class DeletesV1 extends Worker
         $functionId = $document->getId();
 
         /**
+         * Delete Variables
+         */
+        Console::info("Deleting variables for function " . $functionId);
+        $this->deleteByGroup('variables', [
+            Query::equal('functionId', [$functionId])
+        ], $dbForProject);
+
+        /**
          * Delete Deployments
          */
         Console::info("Deleting deployments for function " . $functionId);
