@@ -12,7 +12,7 @@ class Exception extends \Exception
      * Naming the error types based on the following convention
      * <ENTITY>_<ERROR_TYPE>
      *
-     * Appwrite has the follwing entities:
+     * Appwrite has the following entities:
      * - General
      * - Users
      * - Teams
