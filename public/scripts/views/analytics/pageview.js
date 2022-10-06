@@ -12,7 +12,7 @@
 
       let project = router.params["project"] || 'None';
 
-      fetch('https://stats.appwrite.org/v1/analytics', {
+      fetch('https://growth.appwrite.io/v1/analytics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

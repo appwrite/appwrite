@@ -18,7 +18,7 @@
 
         appwrite.analytics.create(email, 'console', activity, window.location.href)
 
-        fetch('https://stats.appwrite.org/v1/analytics', {
+        fetch('https://growth.appwrite.io/v1/analytics', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
