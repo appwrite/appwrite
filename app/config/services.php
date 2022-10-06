@@ -186,4 +186,17 @@ return [
         'optional' => false,
         'icon' => '',
     ],
+    'syncs' => [
+        'key' => 'syncs',
+        'name' => 'syncs',
+        'subtitle' => 'Appwrite\'s cloud regions syncs Endpoint',
+        'description' => 'Syncs Endpoint',
+        'controller' => 'api/syncs.php',
+        'sdk' => false,
+        'docs' => false,
+        'docsUrl' => '',
+        'tests' => true,
+        'optional' => false,
+        'icon' => '',
+    ],
 ];
