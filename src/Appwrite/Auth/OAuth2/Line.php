@@ -39,11 +39,12 @@ class Line extends OAuth2
     public function getLoginURL(): string
     {
         return 'https://access.line.me/oauth2/v2.1/authorize?' . \http_build_query([
-            'response_type' => 'code',
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'state' => \json_encode($this->state),
-            'scope' => \implode('%20', $this->getScopes())
+            'response_type' => 'code',
+            'scope' => \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state)
+            
         ]);
     }
 
