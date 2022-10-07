@@ -59,7 +59,7 @@ class URL extends Validator
             return false;
         }
 
-        if (!empty($this->allowedSchemes) && !\in_array(\parse_url($value, PHP_URL_SCHEME), $this->allowedSchemes)) {
+        if (!empty($this->allowedSchemes) && !\in_array(\parse_url($sanitized_url, PHP_URL_SCHEME), $this->allowedSchemes)) {
             return false;
         }
 
