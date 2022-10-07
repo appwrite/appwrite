@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "568151395a8877f87d9bdce048adc2dc",
+    "content-hash": "ed42f5767ed3c24ad5bddccb4c164270",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2279,16 +2279,16 @@
         },
         {
             "name": "utopia-php/locale",
-            "version": "0.4.0",
+            "version": "dev-feat-get-languages",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/locale.git",
-                "reference": "c2d9358d0fe2f6b6ed5448369f9d1e430c615447"
+                "reference": "88f855c56445452a916f60282529f8c3d96a66b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/locale/zipball/c2d9358d0fe2f6b6ed5448369f9d1e430c615447",
-                "reference": "c2d9358d0fe2f6b6ed5448369f9d1e430c615447",
+                "url": "https://api.github.com/repos/utopia-php/locale/zipball/88f855c56445452a916f60282529f8c3d96a66b8",
+                "reference": "88f855c56445452a916f60282529f8c3d96a66b8",
                 "shasum": ""
             },
             "require": {
@@ -2324,9 +2324,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/locale/issues",
-                "source": "https://github.com/utopia-php/locale/tree/0.4.0"
+                "source": "https://github.com/utopia-php/locale/tree/feat-get-languages"
             },
-            "time": "2021-07-24T11:35:55+00:00"
+            "time": "2022-10-07T07:22:14+00:00"
         },
         {
             "name": "utopia-php/logger",
@@ -5358,9 +5358,18 @@
             "time": "2022-09-28T08:42:51+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/locale",
+            "version": "dev-feat-get-languages",
+            "alias": "0.4.0",
+            "alias_normalized": "0.4.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/locale": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5384,5 +5393,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
