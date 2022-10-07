@@ -12,7 +12,7 @@ Help us keep Appwrite open and inclusive. Please read and follow our [Code of Co
 
 ## Submit a Pull Request 🚀
 
-Branch naming convention is as following
+Branch naming convention is as follows
 
 `TYPE-ISSUE_ID-DESCRIPTION`
 
