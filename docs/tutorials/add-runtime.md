@@ -63,7 +63,7 @@ Internally the runtime can be anything you like as long as it follows the standa
 
 The best way to go about writing a runtime is like so:
 Initialize a web server that runs on port 3000 and uses any IP Address (0.0.0.0) and on each `POST` request do the following:
-1. Check that the `x-internal-challenge` header matches the `INTERNAL_RUNTIME_KEY` environment variable. If not return an error with a `401` status code and an `unauthorized` error message.
+1. Check that the `x-internal-challenge` header matches the `INTERNAL_RUNTIME_KEY` environment variable. If not, return an error with a `401` status code and an `unauthorized` error message.
 2. Decode the executor's JSON POST request. This normally looks like so:
 ```json
 {
@@ -90,13 +90,13 @@ The `Response` class must have two functions.
 For interpreted languages use the `path` and `file` parameters to find the file and require it.
 Please make sure to add appropriate checks to make sure the imported file is a function that you can execute.
 
-5. Finally execute the function and handle whatever response the user's code returns. Try to wrap the function into a `try catch` statement to handle any errors the user's function encounters and return them cleanly to the executor with the error schema.
+5. Finally execute the function and handle whatever response the user's code returns. Try to wrap the function into a `try catch ` statement to handle any errors the user's function encounters and return them cleanly to the executor with the error schema.
 
 ### 2.4 The Error Schema
 All errors that occur during the execution of a user's function **MUST** be returned using this JSON Object otherwise Appwrite will be unable to parse them for the user.
 ```json
 {
-    "code": 500, // (Int) Use 404 if function not found or use 401 if the x-internal-challenge check failed.
+    "code": 500, // (Int) Use 404 if function not found or use 401 if the x-internal-challenge check fails.
     "message": "Error: Tried to divide by 0 \n /usr/code/index.js:80:7", // (String) Try to return a stacktrace and detailed error message if possible. This is shown to the user.
 }
 ```
@@ -132,7 +132,7 @@ WORKDIR /usr/local/src
 COPY . /usr/local/src
 ```
 
-Next, you want to make sure you are adding execute permissions to any scripts you may run, the main ones are `build.sh` and `launch.sh`. You can run commands in Dockerfile's using the `RUN` prefix like so:
+Next, you want to make sure you are adding execute permissions to any scripts you may run, the main ones are `build.sh` and `launch.sh`. You can run commands in Dockerfile using the `RUN` prefix like so:
 ```
 RUN chmod +x ./build.sh
 RUN chmod +x ./launch.sh
@@ -184,7 +184,7 @@ $this->runtimes['dart'] = $dart;
 ```
 This is an example of what you would do for a compiled language such as dart.
 
-The first line is creating a new language entry, The first parameter is the internal name and the second one is the external one which is what the user will see in Appwrite.
+The first line is creating a new language entry. The first parameter is the internal name and the second one is the external one which is what the user will see in Appwrite.
 
 The second line adds a new version to the language entry, I'll break down the parameters:
 ```
@@ -237,7 +237,7 @@ Once you have found this, Add your own entry into this array like so:
     'entrypoint'  =>  'Test file', // Replace with the name of the test file you wrote in ./tests/resources/LANGUAGE_NAME
     'timeout'  =>  15,
     'runtime'  =>  'LANGUAGE_NAME-VERSION',
-    'tarname'  =>  'LANGUAGE_NAME-VERSION.tar.gz', // Note: If your version has a point in it replace it with a dash instead for this value.
+    'tarname'  =>  'LANGUAGE_NAME-VERSION.tar.gz', // Note: If your version has a point in it replace it, with a dash instead for this value.
 ],
 ```
 Make sure to replace all instances of `LANGUAGE_NAME` with your language's name and `VERSION` with your runtime's version.
