@@ -36,7 +36,6 @@ class URLTest extends TestCase
         $this->assertEquals('Value must be a valid URL', $this->url->getDescription());
         $this->assertEquals(true, $this->url->isValid('http://example.com'));
         $this->assertEquals(true, $this->url->isValid('https://example.com'));
-        $this->assertEquals(true, $this->url->isValid('https://exämple.com'));
         $this->assertEquals(true, $this->url->isValid('htts://example.com')); // does not validate protocol
         $this->assertEquals(false, $this->url->isValid('example.com')); // though, requires some kind of protocol
         $this->assertEquals(false, $this->url->isValid('http:/example.com'));
@@ -44,6 +43,7 @@ class URLTest extends TestCase
         $this->assertEquals(false, $this->url->isValid('htt@s://example.com'));
         $this->assertEquals(true, $this->url->isValid('http://www.example.com/foo%2\u00c2\u00a9zbar'));
         $this->assertEquals(true, $this->url->isValid('http://www.example.com/?q=%3Casdf%3E'));
+        $this->assertEquals(true, $this->url->isValid('https://example.com/foo%2\u00c2\u00ä9zbär'));
     }
 
     public function testIsValidAllowedSchemes(): void
@@ -52,7 +52,6 @@ class URLTest extends TestCase
         $this->assertEquals('Value must be a valid URL with following schemes (http, https)', $this->url->getDescription());
         $this->assertEquals(true, $this->url->isValid('http://example.com'));
         $this->assertEquals(true, $this->url->isValid('https://example.com'));
-        $this->assertEquals(true, $this->url->isValid('https://exämple.com'));
         $this->assertEquals(false, $this->url->isValid('gopher://www.example.com'));
     }
 }
