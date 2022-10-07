@@ -44,7 +44,7 @@ You can choose to contribute either directly on [**GitHub**](#21-manually-using-
 > Proceed to [Visually using PO Editor](#22-visually-using-po-editor) if you want to use graphical interface instead.
 
 
-We maintain a [`locale branch`](https://github.com/appwrite/appwrite/tree/locale/) under the [appwrite/appwrite repo](https://github.com/appwrite/appwrite/) exclusively for translations related PRs. Here are a few files that you need to refer to help with your contribution.
+We maintain a [`local branch`](https://github.com/appwrite/appwrite/tree/locale/) under the [appwrite/appwrite repo](https://github.com/appwrite/appwrite/) exclusively for translations related PRs. Here are a few files that you need to refer to help with your contribution.
 
 1. **terms.json**
 
@@ -125,7 +125,7 @@ Once you're happy with your translations, you can export them. Head over to the 
 
 > **Attention! 🛑** There are two JSON exports. Please make sure to export the one saying `Key-value JSON`. Refer to the screenshot if you are not sure which one is correct.
 
-After exporting a JSON file, we need to rename it to follow the **[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)** standards. You can use [languages.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/languages.php) file to find your language code when making a contribution for your language. For example, Spanish translation should have file called `es.json`.
+After exporting a JSON file, we need to rename it to follow the **[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)** standards. You can use [languages.php](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/languages.php) file to find your language code when making a contribution for your language. For example, Spanish translation should have a file called `es.json`.
 
 
 ## 3. Add the translations to the project
@@ -151,7 +151,7 @@ First of all, we need to start a local instance of Appwrite. Thanks to Docker, t
 docker compose up -d
 ```
 
-If this is your first time running Appwrite, it may take up to few minutes to download all images and start all containers. Once everything is started, you should see Appwrite running on `http://localhost:80`. When you visit this URL, it will ask you to sign up. After that, it will show you your empty dashboard where you need to create a new project - give it any name you want. Then you need to go to `Settings` of the project and copy `Project-ID`.
+If this is your first time running Appwrite, it may take up to a few minutes to download all images and start all containers. Once everything is started, you should see Appwrite running on `http://localhost:80`. When you visit this URL, it will ask you to sign up. After that, it will show you your empty dashboard where you need to create a new project - give it any name you want. Then you need to go to `Settings` of the project and copy `Project-ID`.
 
 If you are lost in the Appwrite dashboard, check out our [Article about Appwrite's dashboard](https://dev.to/appwrite/30daysofappwrite-appwrite-dashboard-15cc).
 
@@ -172,7 +172,7 @@ Once we add `X-Appwrite-Locale` header and send the request again, we will get t
 
 > Make sure to replace the locale code with the language code you are writing translations for.
 
-If you can see countries names translated, everything works, and you are ready for the last step. 😊
+If you can see countries' names translated, everything works, and you are ready for the last step. 😊
 
 ## 5. Raise a pull request
 
