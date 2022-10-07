@@ -24,7 +24,7 @@
             },
             reset() {
                 this.hasResource = this.hasSubResource = this.hasSubSubResource = this.hasAttribute = false;
-                this.type = this.subType = this.subResource = this.resource = this.attribute = this.selected = this.action = null;
+                this.type = this.subType = this.subSubResource = this.subResource = this.resource = this.attribute = this.selected = this.action = null;
             },
             setEvent() {
                 this.hasResource = this.hasSubResource = this.hasSubSubResource = this.hasAttribute = this.action = false;
@@ -114,19 +114,23 @@
                         break;
 
                     case 'attributes':
-                        this.hasResource = this.hasSubResource = true;
-                        this.type = 'collections';
-                        this.subType = type;
-                        this.resourceName = 'Collection ID';
-                        this.subResourceName = 'Attribute ID';
+                        this.hasResource = this.hasSubResource = this.hasSubSubResource = true;
+                        this.type = 'databases';
+                        this.subType = 'collections';
+                        this.subSubType = type;
+                        this.resourceName = 'Database ID';
+                        this.subResourceName = 'Collection ID';
+                        this.subSubResourceName = 'Attribute ID';
                         break;
 
                     case 'indexes':
-                        this.hasResource = this.hasSubResource = true;
-                        this.type = 'collections';
-                        this.subType = type;
-                        this.resourceName = 'Collection ID';
-                        this.subResourceName = 'Index ID';
+                        this.hasResource = this.hasSubResource = this.hasSubSubResource = true;
+                        this.type = 'databases';
+                        this.subType = 'collections';
+                        this.subSubType = type;
+                        this.resourceName = 'Database ID';
+                        this.subResourceName = 'Collection ID';
+                        this.subSubResourceName = 'Index ID';
                         break;
 
                     case 'files':
