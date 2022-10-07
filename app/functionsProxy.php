@@ -7,7 +7,8 @@ use FunctionsProxy\Adapter\RoundRobin;
 use Swoole\Coroutine\Http\Client;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
-use Swoole\Http\Server;
+use Swoole\Coroutine\Http\Server;
+use function Swoole\Coroutine\run;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Swoole\Http\Request as SwooleRequest;
@@ -188,8 +189,6 @@ go(function () use ($redisPool) {
 
 Swoole\Event::wait();
 
-$http = new Server("0.0.0.0", 80);
-
 $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter) {
     $secretKey = $request->header['x-appwrite-executor-key'] ?? '';
 
@@ -227,34 +226,35 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
     $response->end();
 };
 
-$http->on('start', function () use ($redisPool) {
-    // Keep updating executors state
+run(function () use ($redisPool, $run) {
     Timer::tick(30000, function (int $timerId) use ($redisPool) {
         fetchExecutorsState($redisPool, false);
     });
+
+    $server = new Server('0.0.0.0', 80, false);
+    // TODO: Wildcard endpoint support
+    $server->handle('/', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($run) {
+        try {
+            call_user_func($run, $swooleRequest, $swooleResponse);
+        } catch (\Throwable $th) {
+            logError($th, "serverError");
+    
+            $output = [
+                'message' => 'Error: ' . $th->getMessage(),
+                'code' => 500,
+                'file' => $th->getFile(),
+                'line' => $th->getLine(),
+                'trace' => $th->getTrace()
+            ];
+    
+            $swooleResponse->setStatusCode(500);
+            $swooleResponse->header('content-type', 'application/json; charset=UTF-8');
+            $swooleResponse->write(\json_encode($output));
+            $swooleResponse->end();
+        }
+    });
+
+    Console::success("Functions proxy is ready.");
+
+    $server->start();
 });
-
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($run) {
-    try {
-        call_user_func($run, $swooleRequest, $swooleResponse);
-    } catch (\Throwable $th) {
-        logError($th, "serverError");
-
-        $output = [
-            'message' => 'Error: ' . $th->getMessage(),
-            'code' => 500,
-            'file' => $th->getFile(),
-            'line' => $th->getLine(),
-            'trace' => $th->getTrace()
-        ];
-
-        $swooleResponse->setStatusCode(500);
-        $swooleResponse->header('content-type', 'application/json; charset=UTF-8');
-        $swooleResponse->write(\json_encode($output));
-        $swooleResponse->end();
-    }
-});
-
-Console::success("Functions proxy is ready.");
-
-$http->start();
