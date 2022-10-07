@@ -98,8 +98,8 @@ const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate 
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 500;
-const APP_VERSION_STABLE = '1.0.1';
+const APP_CACHE_BUSTER = 501;
+const APP_VERSION_STABLE = '1.0.2';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -1027,7 +1027,7 @@ App::setResource('sms', function () {
     $secret = $dsn->getPassword();
 
     return match ($dsn->getHost()) {
-        'mock' => new Mock('', ''), // used for tests
+        'mock' => new Mock($user, $secret), // used for tests
         'twilio' => new Twilio($user, $secret),
         'text-magic' => new TextMagic($user, $secret),
         'telesign' => new Telesign($user, $secret),

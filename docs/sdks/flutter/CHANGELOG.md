@@ -1,7 +1,11 @@
-## 8.0.0-dev.2 Latest
+## 8.1.0
+
+* Role helper update
+
+## 8.0.0
 
 ### NEW
-* Support for Appwrite 1.0.0-RC1
+* Support for Appwrite 1.0.0
 * More verbose headers have been included in the Clients - `x-sdk-name`, `x-sdk-platform`, `x-sdk-language`, `x-sdk-version`
 * Helper classes and methods for Permissions, Roles and IDs
 * Helper methods to suport new queries
@@ -21,7 +25,7 @@
     4.  `greaterEqual` renamed to `greaterThanEqual`
 * `User` response model is now renamed to `Account`
 
-**Full Changelog for Appwrite 1.0.0-RC1 can be found here**: 
+**Full Changelog for Appwrite 1.0.0 can be found here**: 
 https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 
 ## 7.0.0
