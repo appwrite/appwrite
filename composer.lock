@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "568151395a8877f87d9bdce048adc2dc",
+    "content-hash": "e9ae21307ca52eeb9bd18a950834630d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2060,16 +2060,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.25.4",
+            "version": "0.25.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "2883de82eee99e5744bf6e4123095a530c48a194"
+                "reference": "6d1c1d46d66553154975a3e8e72d30b5bd2413d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/2883de82eee99e5744bf6e4123095a530c48a194",
-                "reference": "2883de82eee99e5744bf6e4123095a530c48a194",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/6d1c1d46d66553154975a3e8e72d30b5bd2413d9",
+                "reference": "6d1c1d46d66553154975a3e8e72d30b5bd2413d9",
                 "shasum": ""
             },
             "require": {
@@ -2118,9 +2118,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.25.4"
+                "source": "https://github.com/utopia-php/database/tree/0.25.5"
             },
-            "time": "2022-09-14T06:22:33+00:00"
+            "time": "2022-09-30T15:01:32+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2556,20 +2556,15 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.11.0",
+            "version": "dev-feat-4002-add-snappy-compression",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/storage.git",
-                "reference": "59802cf281d1976560cf6e353f250a9b870efddc"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/59802cf281d1976560cf6e353f250a9b870efddc",
-                "reference": "59802cf281d1976560cf6e353f250a9b870efddc",
-                "shasum": ""
+                "url": "https://github.com/shtelzerartem/storage.git",
+                "reference": "f291c21101a1b69d5e5bfa0a3fdd18aed8fc599e"
             },
             "require": {
                 "ext-fileinfo": "*",
+                "ext-snappy": "*",
                 "ext-zlib": "*",
                 "ext-zstd": "*",
                 "php": ">=8.0",
@@ -2585,7 +2580,11 @@
                     "Utopia\\Storage\\": "src/Storage"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Storage"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -2603,11 +2602,7 @@
                 "upf",
                 "utopia"
             ],
-            "support": {
-                "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.11.0"
-            },
-            "time": "2022-08-31T09:17:31+00:00"
+            "time": "2022-10-02T20:27:12+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -5283,16 +5278,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.4.2",
+            "version": "v3.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "e07cdd3d430cd7e453c31b36eb5ad6c0c5e43077"
+                "reference": "c38fd6b0b7f370c198db91ffd02e23b517426b58"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/e07cdd3d430cd7e453c31b36eb5ad6c0c5e43077",
-                "reference": "e07cdd3d430cd7e453c31b36eb5ad6c0c5e43077",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/c38fd6b0b7f370c198db91ffd02e23b517426b58",
+                "reference": "c38fd6b0b7f370c198db91ffd02e23b517426b58",
                 "shasum": ""
             },
             "require": {
@@ -5343,7 +5338,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.4.2"
+                "source": "https://github.com/twigphp/Twig/tree/v3.4.3"
             },
             "funding": [
                 {
@@ -5355,12 +5350,14 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-08-12T06:47:24+00:00"
+            "time": "2022-09-28T08:42:51+00:00"
         }
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/storage": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5376,6 +5373,7 @@
         "ext-pdo": "*",
         "ext-openssl": "*",
         "ext-zlib": "*",
+        "ext-snappy": "*",
         "ext-sockets": "*"
     },
     "platform-dev": {

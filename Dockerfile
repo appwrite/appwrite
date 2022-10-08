@@ -137,9 +137,8 @@ RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
   
 # Snappy Compression
 FROM compile as snappy
-RUN git clone --recursive -n https://github.com/kjdev/php-ext-snappy.git \
+RUN git clone --recursive --depth 1 --branch $PHP_SNAPPY_VERSION https://github.com/kjdev/php-ext-snappy.git \
   && cd php-ext-snappy \
-  && git checkout $PHP_SNAPPY_VERSION \
   && phpize \
   && ./configure \
   && make && make install
