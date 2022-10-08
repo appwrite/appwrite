@@ -2,7 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Database\DatabasePool;
+use Appwrite\Database\Pools;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Validator\Event;
@@ -68,7 +68,7 @@ App::post('/v1/projects')
     ->inject('dbForConsole')
     ->inject('cache')
     ->inject('dbPool')
-    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, \Redis $cache, DatabasePool $dbPool) {
+    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, \Redis $cache, Pools $dbPool) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
