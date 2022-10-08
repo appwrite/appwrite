@@ -49,7 +49,7 @@ use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
-use Appwrite\Database\DatabasePool;
+use Appwrite\Database\Pools;
 use Appwrite\Event\Delete;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\Authorization;
@@ -475,7 +475,7 @@ $register->set('dbPool', function () {
         $projectDBs[$name] = $dsn;
     }
 
-    $pool = new DatabasePool($consoleDBs, $projectDBs);
+    $pool = new Pools($consoleDBs, $projectDBs);
     return $pool;
 });
 

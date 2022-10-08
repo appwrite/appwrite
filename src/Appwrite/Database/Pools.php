@@ -2,22 +2,16 @@
 
 namespace Appwrite\Database;
 
-use Appwrite\Database\PDO as DatabasePDO;
 use PDO;
 use Utopia\App;
 use Appwrite\DSN\DSN;
-use Utopia\CLI\Console;
-use Utopia\Cache\Cache;
 use Swoole\Database\PDOProxy;
 use Utopia\Database\Database;
 use Appwrite\Extend\Exception;
 use Appwrite\Database\PDOPool;
 use Swoole\Database\PDOConfig;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 
-class DatabasePool
+class Pools
 {
     /**
      * @var array
@@ -64,20 +58,20 @@ class DatabasePool
         foreach ($this->dsns as $name => $dsn) {
             $dsn = new DSN($dsn);
             $pdoConfig = (new PDOConfig())
-            ->withHost($dsn->getHost())
-            ->withPort($dsn->getPort())
-            ->withDbName($dsn->getDatabase())
-            ->withCharset('utf8mb4')
-            ->withUsername($dsn->getUser())
-            ->withPassword($dsn->getPassword())
-            ->withOptions([
-                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-                PDO::ATTR_TIMEOUT => 3, // Seconds
-                PDO::ATTR_PERSISTENT => true,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => true,
-                PDO::ATTR_STRINGIFY_FETCHES => true
-            ]);
+                ->withHost($dsn->getHost())
+                ->withPort($dsn->getPort())
+                ->withDbName($dsn->getDatabase())
+                ->withCharset('utf8mb4')
+                ->withUsername($dsn->getUser())
+                ->withPassword($dsn->getPassword())
+                ->withOptions([
+                    PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+                    PDO::ATTR_TIMEOUT => 3, // Seconds
+                    PDO::ATTR_PERSISTENT => true,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => true,
+                    PDO::ATTR_STRINGIFY_FETCHES => true
+                ]);
 
             $pool = new PDOPool($pdoConfig, $name, 64);
 
