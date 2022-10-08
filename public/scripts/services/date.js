@@ -8,7 +8,7 @@
             }
 
             return new Intl.DateTimeFormat(navigator.languages, {
-                hourCycle: 'h24',
+                hourCycle: 'h23',
                 ...format
             }).format(new Date(datetime));
         }
