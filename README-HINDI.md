@@ -62,11 +62,11 @@ Appwrite का उपयोग करते हुए, आप आसानी �
 - [Follow Us](#follow-us)
 - [License](#license)
 
-## Installation
+## Installation / स्थापित करना
 
-Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm, or Rancher.
+Appwrite backend server एक कंटेनर वातावरण में चलाने के लिए डिज़ाइन किया गया है.आप या तो  Appwrite को आपके localhost पर  docker-compose या किसी अन्य container orchestration tool जैसे Kubernetes, Docker Swarm, or Rancher की मदद से run कर सकते हैं . 
 
-The easiest way to start running your Appwrite server is by running our docker-compose file. Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
+सबसे आसान तरीका आपके Appwrite server को run करनेका है हमारी docker-compose file. इंस्टालेशन कमांड चलाने से पहले, आप सुनिश्चित करें कि आपके पास [Docker](https://www.docker.com/products/docker-desktop) आपकी मशीन पर स्थापित है:
 
 ### Unix
 
@@ -100,19 +100,19 @@ docker run -it --rm `
     appwrite/appwrite:1.0.2
 ```
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after installation completes.
+एक बार डॉकर इंस्टॉलेशन पूरा हो जाने पर,अपने ब्राउज़र से Appwrite कंसोल तक पहुँचने के लिए के लिए जाओ http://localhost पर. कृपया ध्यान दें कि non-Linux native hosts पर, स्थापना पूर्ण होने के बाद सर्वर को शुरू होने में कुछ मिनट लग सकते हैं.
 
-For advanced production and custom installation, check out our Docker [environment variables](https://appwrite.io/docs/environment-variables) docs. You can also use our public [docker-compose.yml](https://appwrite.io/install/compose) and [.env](https://appwrite.io/install/env) files to manually set up an environment.
+उन्नत उत्पादन और कस्टम स्थापना के लिए, हमारे विवरण यहां देखें Docker [environment variables](https://appwrite.io/docs/environment-variables) docs. आप हमारी जनता का भी उपयोग कर सकते हैं [docker-compose.yml](https://appwrite.io/install/compose) और [.env](https://appwrite.io/install/env) फ़ाइलों को मैन्युअल रूप से एक वातावरण स्थापित करने के लिए.
 
-### Upgrade from an Older Version
+### Upgrade from an Older Version / पुराने संस्करण से अपग्रेड करें
 
 If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
 
 ## One-Click Setups
 
-In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to get up and running with Appwrite quickly without installing Docker on your local machine.
+स्थानीय रूप से Appwrite चलाने के अलावा, आप पूर्व-कॉन्फ़िगर किए गए सेटअप का उपयोग करके Appwrite भी लॉन्च कर सकते हैं। यह आपको अपने स्थानीय मशीन पर डॉकर को स्थापित किए बिना जल्दी से ऐप्राइट के साथ उठने और चलने की अनुमति देता है।
 
-Choose from one of the providers below:
+नीचे दिए गए प्रदाताओं में से किसी एक को चुनें:
 
 <table border="0">
   <tr>
@@ -131,9 +131,9 @@ Choose from one of the providers below:
   </tr>
 </table>
 
-## Getting Started
+## Getting Started / शुरू करना
 
-Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
+Appwrite के साथ शुरुआत करना उतना ही आसान है जितना कि एक नया प्रोजेक्ट बनाना, अपना प्लेटफॉर्म चुनना और अपने एसडीके को अपने कोड में एकीकृत करना। आप हमारे गेटिंग स्टार्टेड ट्यूटोरियल्स में से किसी एक को पढ़कर आसानी से अपनी पसंद के प्लेटफॉर्म के साथ शुरुआत कर सकते हैं।
 
 - [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
 - [Getting Started for Flutter](https://appwrite.io/docs/getting-started-for-flutter)
@@ -142,23 +142,25 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 - [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
 - [Getting Started for CLI](https://appwrite.io/docs/command-line)
 
-### Services
+### Services / सेवाएं
 
-- [**Account**](https://appwrite.io/docs/client/account) - Manage current user authentication and account. Track and manage the user sessions, devices, sign-in methods, and security logs.
-- [**Users**](https://appwrite.io/docs/server/users) - Manage and list all project users when in admin mode.
-- [**Teams**](https://appwrite.io/docs/client/teams) - Manage and group users in teams. Manage memberships, invites, and user roles within a team.
-- [**Databases**](https://appwrite.io/docs/client/databases) - Manage databases, collections and documents. Read, create, update, and delete documents and filter lists of document collections using advanced filters.
-- [**Storage**](https://appwrite.io/docs/client/storage) - Manage storage files. Read, create, delete, and preview files. Manipulate the preview of your files to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
-- [**Functions**](https://appwrite.io/docs/server/functions) - Customize your Appwrite server by executing your custom code in a secure, isolated environment. You can trigger your code on any Appwrite system event, manually or using a CRON schedule.
-- [**Realtime**](https://appwrite.io/docs/realtime) - Listen to real-time events for any of your Appwrite services including users, storage, functions, databases and more.
-- [**Locale**](https://appwrite.io/docs/client/locale) - Track your user's location, and manage your app locale-based data.
-- [**Avatars**](https://appwrite.io/docs/client/avatars) - Manage your users' avatars, countries' flags, browser icons, credit card symbols, and generate QR codes.
+- [**Account**](https://appwrite.io/docs/client/account) - वर्तमान उपयोगकर्ता प्रमाणीकरण और खाता प्रबंधित करें। उपयोगकर्ता सत्रों, उपकरणों, साइन-इन विधियों और सुरक्षा लॉग को ट्रैक और प्रबंधित करें.
+- [**Users**](https://appwrite.io/docs/server/users) - व्यवस्थापक मोड में होने पर सभी प्रोजेक्ट उपयोगकर्ताओं को प्रबंधित और सूचीबद्ध करें.
+- [**Teams**](https://appwrite.io/docs/client/teams) - टीमों में उपयोगकर्ताओं को प्रबंधित और समूहित करें। एक टीम के भीतर सदस्यता, आमंत्रण और उपयोगकर्ता भूमिकाएं प्रबंधित करें.
+- [**Databases**](https://appwrite.io/docs/client/databases) डेटाबेस, संग्रह और दस्तावेज़ प्रबंधित करें। दस्तावेज़ों को पढ़ें, बनाएं, अपडेट करें, और हटाएं और उन्नत फ़िल्टर का उपयोग करके दस्तावेज़ संग्रह की फ़िल्टर सूचियाँ.
+- [**Storage**](https://appwrite.io/docs/client/storage) - Storage फ़ाइलें प्रबंधित करें। फ़ाइलें पढ़ें, बनाएं, हटाएं और पूर्वावलोकन करें। अपने ऐप को पूरी तरह से फिट करने के लिए अपनी फाइलों के पूर्वावलोकन में हेरफेर करें। क्लैमएवी द्वारा सभी फाइलों को स्कैन किया जाता है और सुरक्षित और एन्क्रिप्टेड तरीके से संग्रहीत किया जाता है.
+- [**Functions**](https://appwrite.io/docs/server/functions) - एक सुरक्षित, अलग वातावरण में अपना कस्टम कोड निष्पादित करके अपने Appwrite Service को अनुकूलित करें। आप अपने कोड को किसी भी ऐप्राइट सिस्टम ईवेंट पर मैन्युअल रूप से या CRON शेड्यूल का उपयोग करके ट्रिगर कर सकते हैं.
+- [**Realtime**](https://appwrite.io/docs/realtime) - उपयोगकर्ताओं, भंडारण, कार्यों, डेटाबेस और अधिक सहित अपनी किसी भी ऐप्राइट सेवाओं के लिए रीयल-टाइम ईवेंट सुनें.
+- [**Locale**](https://appwrite.io/docs/client/locale) - अपने उपयोगकर्ता के स्थान को ट्रैक करें, और अपना ऐप लोकेल-आधारित डेटा प्रबंधित करें.
+- [**Avatars**](https://appwrite.io/docs/client/avatars) - अपने उपयोगकर्ताओं के अवतार, देशों के झंडे, ब्राउज़र आइकन, क्रेडिट कार्ड के प्रतीकों को प्रबंधित करें और क्यूआर कोड उत्पन्न करें.
 
-For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io) and [Discord Server](https://discord.gg/GSeTUeA).
+संपूर्ण API दस्तावेज़ीकरण के लिए, देखे [https://appwrite.io/docs](https://appwrite.io/docs). अधिक ट्यूटोरियल, समाचार और घोषणाओं के लिए हमारे  [blog](https://medium.com/appwrite-io) और [Discord Server](https://discord.gg/GSeTUeA) देखें.
 
 ### SDKs
 
-Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
+
+
+नीचे वर्तमान में समर्थित प्लेटफॉर्म और भाषाओं की सूची दी गई है. यदि आप अपनी पसंद के प्लेटफॉर्म पर समर्थन जोड़ने में हमारी मदद करना चाहते हैं, आप हमारे  [SDK Generator](https://github.com/appwrite/sdk-generator) project और देखो हमारा [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md) जा सकते हैं.
 
 #### Client
 
@@ -196,18 +198,19 @@ The Appwrite API layer was designed to be extremely fast by leveraging in-memory
 
 ## Contributing
 
-All code contributions - including those of people having commit access - must go through a pull request and be approved by a core developer before being merged. This is to ensure a proper review of all the code.
+सभी कोड योगदानों के लिए - जिसमें वे लोग भी शामिल हैं जिनके पास  commit access है -  एक पुल अनुरोध के माध्यम से जाना चाहिए और विलय होने से पहले एक core developer द्वारा अनुमोदित होना चाहिए। यह सभी code की उचित समीक्षा सुनिश्चित करने के लिए है।.
 
-We truly ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
+हम सच में pull requests से ❤️  है! यदि आप मदद करना चाहते हैं, तो आप इस बारे में अधिक जान सकते हैं कि आप इस परियोजना में कैसे योगदान कर सकते हैं[contribution guide](CONTRIBUTING.md).
 
 ## Security
 
-For security issues, kindly email us at [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue on GitHub.
+सुरक्षा मुद्दों के लिए, कृपया हमें यहां ईमेल करें [security@appwrite.io](mailto:security@appwrite.io) GitHub पर एक सार्वजनिक मुद्दा पोस्ट करने के बजाय.
 
 ## Follow Us
 
-Join our growing community around the world! See our official [Blog](https://medium.com/appwrite-io). Follow us on [Twitter](https://twitter.com/appwrite), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) , [Dev Community](https://dev.to/appwrite) or join our live [Discord server](https://discord.gg/GSeTUeA) for more help, ideas, and discussions.
+दुनिया भर में हमारे बढ़ते समुदाय में शामिल हों ! हमारे अधिकृत links देखें  [Blog](https://medium.com/appwrite-io). Follow us on [Twitter](https://twitter.com/appwrite), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) , [Dev Community](https://dev.to/appwrite) or join our live [Discord server](https://discord.gg/GSeTUeA) for more help, ideas, and discussions.
 
 ## License
 
-This repository is available under the [BSD 3-Clause License](./LICENSE).
+
+यह Repository [BSD 3-Clause License](./LICENSE)  के तहत उपलब्ध है.
