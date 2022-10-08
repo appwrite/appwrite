@@ -908,14 +908,14 @@ App::setResource('dbForProject', function ($dbPool, $cache, Document $project) {
         $database = $dbPool->getConsoleDB();
     }
     $pdo = $dbPool->getPDOFromPool($database);
-    $database = DatabasePool::getDatabase($pdo->getConnection(), $cache, "_{$project->getInternalId()}");
+    $database = Pools::getDatabase($pdo->getConnection(), $cache, "_{$project->getInternalId()}");
     return $database;
 }, ['dbPool', 'cache', 'project']);
 
 App::setResource('dbForConsole', function ($dbPool, $cache) {
     $database = $dbPool->getConsoleDB();
     $pdo = $dbPool->getPDOFromPool($database);
-    $database = DatabasePool::getDatabase($pdo->getConnection(), $cache, '_console');
+    $database = Pools::getDatabase($pdo->getConnection(), $cache, '_console');
     return $database;
 }, ['dbPool', 'cache']);
 

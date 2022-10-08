@@ -2,7 +2,8 @@
 
 namespace Appwrite\Resque;
 
-use Appwrite\Database\DatabasePool;
+use Exception;
+use Appwrite\Database\Pools;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Storage\Device;
@@ -13,7 +14,6 @@ use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\S3;
-use Exception;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
@@ -175,8 +175,8 @@ abstract class Worker
         $dbPool = $register->get('dbPool');
         $namespace = "_$internalId";
         $pdo = $dbPool->getPDO($database);
-        $dbForProject = DatabasePool::wait(
-            DatabasePool::getDatabase($pdo, $cache, $namespace),
+        $dbForProject = Pools::wait(
+            Pools::getDatabase($pdo, $cache, $namespace),
             'projects'
         );
 
@@ -199,8 +199,8 @@ abstract class Worker
 
         $namespace = "_console";
         $pdo = $dbPool->getPDO($database);
-        $dbForConsole = DatabasePool::wait(
-            DatabasePool::getDatabase($pdo, $cache, $namespace),
+        $dbForConsole = Pools::wait(
+            Pools::getDatabase($pdo, $cache, $namespace),
             '_metadata'
         );
 

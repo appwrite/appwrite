@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\DatabasePool;
+use Appwrite\Database\Pools;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response;
@@ -100,8 +100,8 @@ function getDatabase(Registry &$register, string $projectId)
     /** Get the console DB */
     $database = $dbPool->getConsoleDB();
     $pdo = $dbPool->getPDOFromPool($database);
-    $database = DatabasePool::wait(
-        DatabasePool::getDatabase($pdo->getConnection(), $redis, '_console'),
+    $database = Pools::wait(
+        Pools::getDatabase($pdo->getConnection(), $redis, '_console'),
         'realtime'
     );
 
@@ -109,8 +109,8 @@ function getDatabase(Registry &$register, string $projectId)
         $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
         $database = $project->getAttribute('database', '');
         $pdo = $dbPool->getPDOFromPool($database);
-        $database = DatabasePool::wait(
-            DatabasePool::getDatabase($pdo->getConnection(), $redis, "_{$project->getInternalId()}"),
+        $database = Pools::wait(
+            Pools::getDatabase($pdo->getConnection(), $redis, "_{$project->getInternalId()}"),
             'realtime'
         );
     }
@@ -479,13 +479,13 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         /** Get the console DB */
         $database = $dbPool->getConsoleDB();
         $pdo = $dbPool->getPDOFromPool($database);
-        $database = DatabasePool::getDatabase($pdo->getConnection(), $redis, '_console');
+        $database = Pools::getDatabase($pdo->getConnection(), $redis, '_console');
 
         if ($projectId !== 'console') {
             $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
             $database = $project->getAttribute('database', '');
             $pdo = $dbPool->getPDOFromPool($database);
-            $database = DatabasePool::getDatabase($pdo->getConnection(), $redis, "_{$project->getInternalId()}");
+            $database = Pools::getDatabase($pdo->getConnection(), $redis, "_{$project->getInternalId()}");
         }
 
         /*

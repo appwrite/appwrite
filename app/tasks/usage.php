@@ -2,7 +2,7 @@
 
 global $cli, $register;
 
-use Appwrite\Database\DatabasePool;
+use Appwrite\Database\Pools;
 use Appwrite\Usage\Calculators\Aggregator;
 use Appwrite\Usage\Calculators\Database;
 use Appwrite\Usage\Calculators\TimeSeries;
@@ -131,8 +131,8 @@ $cli
 
         $database = $dbPool->getConsoleDB();
         $pdo = $dbPool->getPDO($database);
-        $database = DatabasePool::wait(
-            DatabasePool::getDatabase($pdo, $redis, '_console'),
+        $database = Pools::wait(
+            Pools::getDatabase($pdo, $redis, '_console'),
             'projects',
         );
 

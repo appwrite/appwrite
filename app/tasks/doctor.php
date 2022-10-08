@@ -96,7 +96,7 @@ $cli
         }
 
         try {
-            $dbPool = $register->get('dbPool'); /* @var $dbPool DatabasePool */
+            $dbPool = $register->get('dbPool'); /* @var $dbPool Pools */
             $database = $dbPool->getConsoleDB();
             $pdo = $dbPool->getPDO($database);
             Console::success('Database............connected 👍');

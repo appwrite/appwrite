@@ -3,7 +3,7 @@
 global $cli;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\DatabasePool;
+use Appwrite\Database\Pools;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
@@ -121,8 +121,8 @@ $cli
 
             $database = $dbPool->getConsoleDB();
             $pdo = $dbPool->getPDO($database);
-            $database = DatabasePool::wait(
-                DatabasePool::getDatabase($pdo, $redis, '_console'),
+            $database = Pools::wait(
+                Pools::getDatabase($pdo, $redis, '_console'),
                 'certificates',
             );
 
