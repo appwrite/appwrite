@@ -18,8 +18,8 @@ In order to capture the Appwrite OAuth callback url, the following activity need
     <application ...>
         ....
         <!-- Add this inside the <application> tag, along side the existing <activity> tags -->
-        <activity android:name="com.linusu.flutter_web_auth.CallbackActivity" >
-            <intent-filter android:label="flutter_web_auth">
+        <activity android:name="com.linusu.flutter_web_auth_2.CallbackActivity" >
+            <intent-filter android:label="flutter_web_auth_2">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
@@ -58,7 +58,7 @@ For web in order to capture the OAuth2 callback URL and send it to the applicati
 close the window.
 <script>
   window.opener.postMessage({
-    flutter-web-auth: window.location.href
+    flutter-web-auth-2: window.location.href
   }, window.location.origin);
   window.close();
 </script>
@@ -101,9 +101,9 @@ When trying to connect to Appwrite from an emulator or a mobile device, localhos
 ```dart
 // Register User
 Account account = Account(client);
-Response user = await account
+final user = await account
   .create(
-    userId: '[USER_ID]',
+    userId: ID.unique(),
     email: 'me@appwrite.io',
     password: 'password',
     name: 'My Name'
@@ -129,9 +129,9 @@ void main() {
   // Register User
   Account account = Account(client);
 
-  Response user = await account
+  final user = await account
     .create(
-      userId: '[USER_ID]',
+      userId: ID.unique(),
       email: 'me@appwrite.io',
       password: 'password',
       name: 'My Name'
@@ -140,14 +140,14 @@ void main() {
 ```
 
 ### Error Handling
-The Appwrite Flutter SDK raises `AppwriteException` object with `message`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+The Appwrite Flutter SDK raises `AppwriteException` object with `message`, `type`, `code` and `response` properties. You can handle any errors by catching `AppwriteException` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
 
 ```dart
-Users users = Users(client);
+Account account = Account(client);
 
 try {
-  final response = await users.create(userId: '[USER_ID]', email: ‘email@example.com’,password: ‘password’, name: ‘name’);
-  print(response.data);
+  final user = await account.create(userId: ID.unique(), email: ‘email@example.com’,password: ‘password’, name: ‘name’);
+  print(user.toMap());
 } on AppwriteException catch(e) {
   //show message to user or do other operation based on error as required
   print(e.message);

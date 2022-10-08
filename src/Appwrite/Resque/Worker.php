@@ -2,12 +2,9 @@
 
 namespace Appwrite\Resque;
 
+use Appwrite\Database\DatabasePool;
 use Utopia\App;
-use Utopia\Cache\Cache;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
@@ -17,7 +14,7 @@ use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\S3;
 use Exception;
-use PDO;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Worker
@@ -162,18 +159,27 @@ abstract class Worker
 
     /**
      * Get internal project database
-     * @param string $projectId
+     * @param Document $project
      * @return Database
      */
-    protected function getProjectDB(string $database): Database
+    protected function getProjectDB(Document $project): Database
     {
         global $register;
-        if (!$database) {
+        $database = $project->getAttribute('database', '');
+        $internalId = $project->getInternalId();
+        if (empty($database)) {
             throw new \Exception('Database name not provided - cannot get database');
         }
+
         $cache = $register->get('cache');
         $dbPool = $register->get('dbPool');
-        $dbForProject = $dbPool->getDB($projectId, $cache);
+        $namespace = "_$internalId";
+        $pdo = $dbPool->getPDO($database);
+        $dbForProject = DatabasePool::wait(
+            DatabasePool::getDatabase($pdo, $cache, $namespace),
+            'projects'
+        );
+
         return $dbForProject;
     }
 
@@ -186,8 +192,18 @@ abstract class Worker
         global $register;
         $cache = $register->get('cache');
         $dbPool = $register->get('dbPool');
+        $database = $dbPool->getConsoleDB();
+        if (empty($database)) {
+            throw new \Exception('Database name not provided - cannot get database');
+        }
 
-        $dbForConsole = $dbPool->getDB('console', $cache);
+        $namespace = "_console";
+        $pdo = $dbPool->getPDO($database);
+        $dbForConsole = DatabasePool::wait(
+            DatabasePool::getDatabase($pdo, $cache, $namespace),
+            '_metadata'
+        );
+
         return $dbForConsole;
     }
 

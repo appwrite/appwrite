@@ -10,6 +10,9 @@ use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -24,7 +27,6 @@ $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-
 $http
     ->set([
         'worker_num' => $workerNumber,
@@ -35,8 +37,7 @@ $http
         'http_compression_level' => 6,
         'package_max_length' => $payloadSize,
         'buffer_output_size' => $payloadSize,
-    ])
-;
+    ]);
 
 $http->on('WorkerStart', function ($server, $workerId) {
     Console::success('Worker ' . ++$workerId . ' started successfully');
@@ -85,7 +86,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         } while ($attempts < $max);
 
         Console::success('[Setup] - Server database init started...');
-        $collections = Config::getParam('collections', []); /** @var array $collections */
+
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
 
         if (!$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'))) {
             $redis->flushAll();
@@ -121,9 +124,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             }
 
             /**
-             * Skip to prevent 0.15 migration issues.
+             * Skip to prevent 0.16 migration issues.
              */
-            if ($key === 'databases' && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'collections')) {
+            if (in_array($key, ['cache', 'variables']) && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
                 continue;
             }
 
@@ -134,7 +137,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
             foreach ($collection['attributes'] as $attribute) {
                 $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
+                    '$id' => ID::custom($attribute['$id']),
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
@@ -148,7 +151,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
             foreach ($collection['indexes'] as $index) {
                 $indexes[] = new Document([
-                    '$id' => $index['$id'],
+                    '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],
@@ -159,20 +162,25 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty()) {
+        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForConsole->createDocument('buckets', new Document([
-                '$id' => 'default',
-                '$collection' => 'buckets',
+                '$id' => ID::custom('default'),
+                '$collection' => ID::custom('buckets'),
                 'name' => 'Default',
-                'permission' => 'file',
                 'maximumFileSize' => (int) App::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
                 'allowedFileExtensions' => [],
                 'enabled' => true,
+                'compression' => 'gzip',
                 'encryption' => true,
                 'antivirus' => true,
-                '$read' => ['role:all'],
-                '$write' => ['role:all'],
+                'fileSecurity' => true,
+                '$permissions' => [
+                    Permission::create(Role::any()),
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
                 'search' => 'buckets Default',
             ]));
 
@@ -189,7 +197,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
             foreach ($files['attributes'] as $attribute) {
                 $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
+                    '$id' => ID::custom($attribute['$id']),
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
                     'required' => $attribute['required'],
@@ -203,7 +211,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
             foreach ($files['indexes'] as $index) {
                 $indexes[] = new Document([
-                    '$id' => $index['$id'],
+                    '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],
@@ -240,8 +248,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             ->setContentType(Files::getFileMimeType($request->getURI()))
             ->addHeader('Cache-Control', 'public, max-age=' . $time)
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
-            ->send(Files::getFileContents($request->getURI()))
-        ;
+            ->send(Files::getFileContents($request->getURI()));
 
         return;
     }
@@ -256,7 +263,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     try {
         Authorization::cleanRoles();
-        Authorization::setRole('role:all');
+        Authorization::setRole(Role::any()->toString());
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
@@ -344,7 +351,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $swooleResponse->end(\json_encode($output));
     } finally {
         $dbPool->reset();
-        
         /** @var RedisPool $redisPool */
         $redisPool = $register->get('redisPool');
         $redisPool->put($redis);

@@ -2,12 +2,15 @@
 
 namespace Tests\E2E\Services\Projects;
 
+use Appwrite\Auth\Auth;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Projects\ProjectsBase;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\ID;
 
 class ProjectsConsoleClientTest extends Scope
 {
@@ -24,7 +27,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Project Test',
         ]);
 
@@ -36,9 +39,10 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
+            'region' => 'default',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -58,9 +62,10 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => '',
             'teamId' => $team['body']['$id'],
+            'region' => 'default'
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -69,8 +74,9 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Project Test',
+            'region' => 'default'
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -129,13 +135,13 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($response['body']['projects'][0]['$id'], $data['projectId']);
 
         /**
-         * Test after pagination
+         * Test pagination
          */
         $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Project Test 2',
         ]);
 
@@ -147,9 +153,10 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Project Test 2',
             'teamId' => $team['body']['$id'],
+            'region' => 'default'
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -159,6 +166,55 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'limit(1)' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'offset(1)' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("name", "Project Test 2")' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(1, $response['body']['projects']);
+        $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'orderDesc("")' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertCount(2, $response['body']['projects']);
+        $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
+        $this->assertEquals('Project Test', $response['body']['projects'][1]['name']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
@@ -175,7 +231,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $response['body']['projects'][0]['$id']
+            'queries' => [ 'cursorAfter("' . $response['body']['projects'][0]['$id'] . '")' ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -187,8 +243,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => $response['body']['projects'][0]['$id'],
-            'cursorDirection' => Database::CURSOR_BEFORE
+            'queries' => [ 'cursorBefore("' . $response['body']['projects'][0]['$id'] . '")' ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -203,7 +258,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'cursor' => 'unknown'
+            'queries' => [ 'cursorAfter("unknown")' ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -273,7 +328,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['requests']);
         $this->assertIsArray($response['body']['network']);
-        $this->assertIsArray($response['body']['functions']);
+        $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['documents']);
         $this->assertIsArray($response['body']['collections']);
         $this->assertIsArray($response['body']['users']);
@@ -314,7 +369,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Project Test 2',
         ]);
 
@@ -335,7 +390,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => '',
         ]);
 
@@ -419,7 +474,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $originalEmail,
             'password' => $originalPassword,
             'name' => $originalName,
@@ -472,7 +527,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -485,7 +540,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
             'cookie' => 'a_session_' . $id . '=' . $session,
         ]), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -579,7 +634,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -605,7 +660,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'userId' => 'unique()',
+            'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -623,7 +678,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Project Test',
         ]);
         $this->assertEquals(201, $team['headers']['status-code']);
@@ -634,9 +689,10 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
-            'projectId' => 'unique()',
+            'projectId' => ID::unique(),
             'name' => 'Project Test',
             'teamId' => $team['body']['$id'],
+            'region' => 'default'
         ]);
 
         $this->assertEquals(201, $project['headers']['status-code']);
@@ -767,7 +823,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
         ]), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Arsenal'
         ]);
 
@@ -848,6 +904,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $keySecret,
+            'x-sdk-name' => 'python'
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -856,12 +913,28 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
             'x-appwrite-key' => $keySecret,
+            'x-sdk-name' => 'php'
         ]), [
-            'teamId' => 'unique()',
+            'teamId' => ID::unique(),
             'name' => 'Arsenal'
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+
+        /** Check that the API key has been updated */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys/' . $keyId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('sdks', $response['body']);
+        $this->assertCount(2, $response['body']['sdks']);
+        $this->assertContains('python', $response['body']['sdks']);
+        $this->assertContains('php', $response['body']['sdks']);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+        $this->assertNotEmpty($response['body']['accessedAt']);
 
         // Cleanup
 
@@ -1180,6 +1253,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('teams.read', $response['body']['scopes']);
         $this->assertContains('teams.write', $response['body']['scopes']);
         $this->assertNotEmpty($response['body']['secret']);
+        $this->assertArrayHasKey('sdks', $response['body']);
+        $this->assertEmpty($response['body']['sdks']);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+        $this->assertEmpty($response['body']['accessedAt']);
 
         $data = array_merge($data, [
             'keyId' => $response['body']['$id'],
@@ -1249,6 +1326,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('teams.write', $response['body']['scopes']);
         $this->assertCount(2, $response['body']['scopes']);
         $this->assertNotEmpty($response['body']['secret']);
+        $this->assertArrayHasKey('sdks', $response['body']);
+        $this->assertEmpty($response['body']['sdks']);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+        $this->assertEmpty($response['body']['accessedAt']);
 
         /**
          * Test for FAILURE
@@ -1279,7 +1360,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => time() + 3600,
+            'expire' => DateTime::addSeconds(new \DateTime(), 3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/health', [
@@ -1299,7 +1380,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => 0,
+            'expire' => null,
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/health', [
@@ -1319,7 +1400,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test',
             'scopes' => ['health.read'],
-            'expire' => time() - 3600,
+            'expire' => DateTime::addSeconds(new \DateTime(), -3600),
         ]);
 
         $response = $this->client->call(Client::METHOD_GET, '/health', [
@@ -1346,7 +1427,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Key Test Update',
             'scopes' => ['users.read', 'users.write', 'collections.read'],
-            'expire' => time() + 360,
+            'expire' => DateTime::addSeconds(new \DateTime(), 360),
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1357,6 +1438,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
         $this->assertCount(3, $response['body']['scopes']);
+        $this->assertArrayHasKey('sdks', $response['body']);
+        $this->assertEmpty($response['body']['sdks']);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+        $this->assertEmpty($response['body']['accessedAt']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys/' . $keyId, array_merge([
             'content-type' => 'application/json',
@@ -1371,6 +1456,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('users.write', $response['body']['scopes']);
         $this->assertContains('collections.read', $response['body']['scopes']);
         $this->assertCount(3, $response['body']['scopes']);
+        $this->assertArrayHasKey('sdks', $response['body']);
+        $this->assertEmpty($response['body']['sdks']);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+        $this->assertEmpty($response['body']['accessedAt']);
 
         /**
          * Test for FAILURE

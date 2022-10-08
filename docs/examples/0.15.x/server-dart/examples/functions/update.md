@@ -13,7 +13,7 @@ void main() { // Init SDK
   Future result = functions.update(
     functionId: '[FUNCTION_ID]',
     name: '[NAME]',
-    execute: [],
+    execute: ["role:all"],
   );
 
   result

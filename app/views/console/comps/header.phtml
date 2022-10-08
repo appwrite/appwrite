@@ -1,3 +1,6 @@
+<?php
+$regions = $this->getParam('regions', []);
+?>
 <header class="clear" data-version>
     <a href="/console" class="logo pull-start">
         <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" loading="lazy" />
@@ -123,7 +126,7 @@
                         data-analytics-category="console/navigation"
                         data-analytics-label="Users Link">
                         <i class="icon-users"></i>
-                        Users
+                        Authentication
                     </a>
                 </li>
                 <li>
@@ -215,7 +218,18 @@
             name="projectId" />
 
         <label>Name</label>
-        <input type="text" class="full-width margin-bottom-xl" name="name" required autocomplete="off" maxlength="128" />
+        <input type="text" class="full-width" name="name" required autocomplete="off" maxlength="128" />
+
+        <?php if(count($regions) > 1): ?>
+            <label>Region</label>
+            <select name="region" class="margin-bottom-xl">
+                <?php foreach($regions as $key => $region): ?>
+                    <option <?php echo ($region['default'] ?? false) ? 'selected' : '' ?> <?php echo ($region['disabled'] ?? false ) ? 'disabled' : '' ?> value="<?php echo $key ?>"><?php echo $region['name'] ?></option>
+                <?php endforeach; ?>
+            </select>
+        <?php else: ?>
+            <input type="hidden" name="region" value="<?php echo array_key_first($regions) ?>" class="margin-bottom-xl" />
+        <?php endif; ?>
 
         <footer>
             <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

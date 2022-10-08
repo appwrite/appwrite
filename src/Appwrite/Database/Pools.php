@@ -5,11 +5,15 @@ namespace Appwrite\Database;
 use PDO;
 use Utopia\App;
 use Appwrite\DSN\DSN;
+use Utopia\Cache\Cache;
 use Swoole\Database\PDOProxy;
 use Utopia\Database\Database;
 use Appwrite\Extend\Exception;
 use Appwrite\Database\PDOPool;
 use Swoole\Database\PDOConfig;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\CLI\Console;
 
 class Pools
 {
@@ -80,7 +84,7 @@ class Pools
     }
 
     /**
-     * Get a PDO instance by database name
+     * Get a single PDO instance by database name
      *
      * @param string $name
      *
@@ -109,68 +113,6 @@ class Pools
         return $pdo;
     }
 
-    // /**
-    //  * Get the name of the database from the project ID
-    //  *
-    //  * @param string $projectID
-    //  *
-    //  * @return array
-    //  */
-    // private function getName(string $projectID, \Redis $redis): array
-    // {
-    //     if ($projectID === 'console') {
-    //         return [$this->consoleDB, 'console'];
-    //     }
-
-    //     $pdo = $this->getPDO($this->consoleDB);
-    //     $database = $this->getDatabase($pdo, $redis);
-
-    //     $namespace = "_console";
-    //     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    //     $database->setNamespace($namespace);
-
-    //     $project = Authorization::skip(fn() => $database->getDocument('projects', $projectID));
-    //     $internalID = $project->getInternalId();
-    //     $database = $project->getAttribute('database', '');
-
-    //     return [$database, $internalID];
-    // }
-
-    /**
-     * Function to get a single PDO instance for a project
-     *
-     * @param string $projectId
-     *
-     * @return ?Database
-     */
-    public function getDB(string $database, ?\Redis $redis): ?Database
-    {
-        /** Get a PDO instance using the databse name */
-        $pdo = $this->getPDO($database);
-        $database = $this->getDatabase($pdo, $redis);
-
-        $namespace = "_$internalID";
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace($namespace);
-
-        return $database;
-    }
-
-    // /**
-    //  * Get a database instance from a PDO and cache
-    //  *
-    //  * @param PDO|PDOProxy $pdo
-    //  * @param \Redis $redis
-    //  *
-    //  * @return Database
-    //  */
-    // private function getDatabase(PDO|PDOProxy $pdo, \Redis $redis): Database
-    // {
-    //     $cache = new Cache(new RedisCache($redis));
-    //     $database = new Database(new MariaDB($pdo), $cache);
-    //     return $database;
-    // }
-
     /**
      * Get a PDO instance from the list of available database pools. Meant to be used in co-routines
      *
@@ -178,36 +120,10 @@ class Pools
      *
      * @return array
      */
-    public function getDBFromPool(string $name): PDOWrapper
+    public function getPDOFromPool(string $name): PDOWrapper
     {
-        /** Get DB name from the console database */
-        // [$name, $internalID] = $this->getName($projectID, $redis);
         $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_DB_PROJECT in .env", 500);
         $pdo = $pool->get();
-
-        // $namespace = "_$internalID";
-        // $attempts = 0;
-        // do {
-        //     try {
-        //         $attempts++;
-        //         $pdo = $pool->get();
-        //         $database = $this->getDatabase($pdo, $redis);
-        //         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        //         $database->setNamespace($namespace);
-
-        //         // if (!$database->exists($database->getDefaultDatabase(), 'metadata')) {
-        //         //     throw new Exception('Collection not ready');
-        //         // }
-        //         break; // leave loop if successful
-        //     } catch (\Exception $e) {
-        //         Console::warning("Database not ready. Retrying connection ({$attempts})...");
-        //         if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-        //             throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-        //         }
-        //         sleep(DATABASE_RECONNECT_SLEEP);
-        //     }
-        // } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-
         return $pdo;
     }
 
@@ -260,5 +176,45 @@ class Pools
         };
 
         return $this->consoleDB;
+    }
+
+    public static function wait(Database $database, string $collection)
+    {
+        $attempts = 0;
+        do {
+            try {
+                $attempts++;
+                if (!$database->exists($database->getDefaultDatabase(), $collection)) {
+                    throw new Exception('Collection not ready');
+                }
+                break; // leave loop if successful
+            } catch (\Exception $e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
+                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                }
+                sleep(DATABASE_RECONNECT_SLEEP);
+            }
+        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
+
+        return $database;
+    }
+
+    /**
+     * Get a database instance from a PDO and cache
+     *
+     * @param PDO|PDOProxy $pdo
+     * @param \Redis $redis
+     * @param string $namespace
+     *
+     * @return Database
+     */
+    public static function getDatabase(PDO|PDOProxy $pdo, \Redis $redis, string $namespace = ''): Database
+    {
+        $cache = new Cache(new RedisCache($redis));
+        $database = new Database(new MariaDB($pdo), $cache);
+        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setNamespace($namespace);
+        return $database;
     }
 }

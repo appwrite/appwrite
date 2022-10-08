@@ -65,9 +65,9 @@ App::get('/v1/health/db')
 
         try {
             $dbPool = $utopia->getResource('dbPool');
-            $name = $dbPool->getConsoleDB();
+            $database = $dbPool->getConsoleDB();
             /* @var $consoleDB PDO */
-            $consoleDB = $dbPool->getPDO($name);
+            $consoleDB = $dbPool->getPDO($database);
 
             // Run a small test to check the connection
             $statement = $consoleDB->prepare("SELECT 1;");
@@ -76,7 +76,7 @@ App::get('/v1/health/db')
 
             $statement->execute();
         } catch (Exception $_e) {
-            throw new Exception('Database is not available', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Database is not available');
         }
 
         $output = [
@@ -107,7 +107,7 @@ App::get('/v1/health/cache')
         $redis = $utopia->getResource('cache');
 
         if (!$redis->ping(true)) {
-            throw new Exception('Cache is not available', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Cache is not available');
         }
 
         $output = [
@@ -163,7 +163,7 @@ App::get('/v1/health/time')
         $diff = ($timestamp - \time());
 
         if ($diff > $gap || $diff < ($gap * -1)) {
-            throw new Exception('Server time gaps detected', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Server time gaps detected');
         }
 
         $output = [
@@ -270,11 +270,11 @@ App::get('/v1/health/storage/local')
             $device = new Local($volume);
 
             if (!\is_readable($device->getRoot())) {
-                throw new Exception('Device ' . $key . ' dir is not readable', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Device ' . $key . ' dir is not readable');
             }
 
             if (!\is_writable($device->getRoot())) {
-                throw new Exception('Device ' . $key . ' dir is not writable', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Device ' . $key . ' dir is not writable');
             }
         }
 
@@ -318,7 +318,7 @@ App::get('/v1/health/anti-virus')
                 $output['version'] = @$antivirus->version();
                 $output['status'] = (@$antivirus->ping()) ? 'pass' : 'fail';
             } catch (\Exception $e) {
-                throw new Exception('Antivirus is not available', 500, Exception::GENERAL_SERVER_ERROR);
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Antivirus is not available');
             }
         }
 

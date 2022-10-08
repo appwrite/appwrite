@@ -12,16 +12,14 @@
  * @license The MIT License (MIT) <http://www.opensource.org/licenses/mit-license.php>
  */
 
-namespace Appwrite\Network\Validator;
+namespace Tests\Unit\Network\Validators;
 
+use Appwrite\Network\Validator\Host;
 use PHPUnit\Framework\TestCase;
 
 class HostTest extends TestCase
 {
-    /**
-     * @var Host
-     */
-    protected $host = null;
+    protected ?Host $host = null;
 
     public function setUp(): void
     {
@@ -33,7 +31,7 @@ class HostTest extends TestCase
         $this->host = null;
     }
 
-    public function testIsValid()
+    public function testIsValid(): void
     {
         // Assertions
         $this->assertEquals($this->host->isValid('https://appwrite.io/link'), true);

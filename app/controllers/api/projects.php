@@ -18,8 +18,13 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
+use Utopia\Database\DateTime;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
@@ -27,20 +32,22 @@ use Appwrite\Extend\Exception;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
+use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-App::init(function (Document $project) {
-
-    if ($project->getId() !== 'console') {
-        throw new Exception('Access to this API is forbidden.', 401, Exception::GENERAL_ACCESS_FORBIDDEN);
-    }
-}, ['project'], 'projects');
+App::init()
+    ->groups(['projects'])
+    ->inject('project')
+    ->action(function (Document $project) {
+        if ($project->getId() !== 'console') {
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
+        }
+    });
 
 App::post('/v1/projects')
     ->desc('Create Project')
@@ -55,6 +62,7 @@ App::post('/v1/projects')
     ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('region', '', new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn($config) => !$config['disabled']))), 'Project Region.')
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -68,12 +76,11 @@ App::post('/v1/projects')
     ->inject('dbForConsole')
     ->inject('cache')
     ->inject('dbPool')
-    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, \Redis $cache, Pools $dbPool) {
-
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, \Redis $cache, Pools $dbPool) {
         $team = $dbForConsole->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
-            throw new Exception('Team not found', 404, Exception::TEAM_NOT_FOUND);
+            throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
         $auth = Config::getParam('auth', []);
@@ -82,21 +89,27 @@ App::post('/v1/projects')
             $auths[$method['key'] ?? ''] = true;
         }
 
-        $projectId = ($projectId == 'unique()') ? $dbForConsole->getId() : $projectId;
+        $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
         if ($projectId === 'console') {
-            throw new Exception("'console' is a reserved project.", 400, Exception::PROJECT_RESERVED_PROJECT);
+            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
         $pdo = $dbPool->getAnyFromPool();
 
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
-            '$read' => ['team:' . $teamId],
-            '$write' => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+            '$permissions' => [
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            ],
             'name' => $name,
             'teamInternalId' => $team->getInternalId(),
             'teamId' => $team->getId(),
+            'region' => $region,
             'description' => $description,
             'logo' => $logo,
             'url' => $url,
@@ -106,7 +119,7 @@ App::post('/v1/projects')
             'legalState' => $legalState,
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
-            'legalTaxId' => $legalTaxId,
+            'legalTaxId' => ID::custom($legalTaxId),
             'services' => new stdClass(),
             'platforms' => null,
             'authProviders' => [],
@@ -118,9 +131,7 @@ App::post('/v1/projects')
             'database' => $pdo->getName()
         ]));
 
-        $cache = new Cache(new Redis($cache));
-        $dbForProject = new Database(new MariaDB($pdo->getConnection()), $cache);
-        $dbForProject->setNamespace("_{$project->getInternalId()}");
+        $dbForProject = DatabasePool::getDatabase($pdo->getConnection(), $cache, "_{$project->getInternalId()}");
         $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
         $audit = new Audit($dbForProject);
@@ -136,6 +147,7 @@ App::post('/v1/projects')
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
+
             $attributes = [];
             $indexes = [];
 
@@ -162,12 +174,12 @@ App::post('/v1/projects')
                     'orders' => $index['orders'],
                 ]);
             }
-
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($project, Response::MODEL_PROJECT);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($project, Response::MODEL_PROJECT);
     });
 
 App::get('/v1/projects')
@@ -180,36 +192,38 @@ App::get('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
+    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, new Range(0, APP_LIMIT_COUNT), 'Results offset. The default value is 0. Use this param to manage pagination. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursor', '', new UID(), 'ID of the project used as the starting point for the query, excluding the project itself. Should be used for efficient pagination when working with large sets of data. [learn more about pagination](https://appwrite.io/docs/pagination)', true)
-    ->param('cursorDirection', Database::CURSOR_AFTER, new WhiteList([Database::CURSOR_AFTER, Database::CURSOR_BEFORE]), 'Direction of the cursor, can be either \'before\' or \'after\'.', true)
-    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $search, int $limit, int $offset, string $cursor, string $cursorDirection, string $orderType, Response $response, Database $dbForConsole) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForConsole) {
 
-        if (!empty($cursor)) {
-            $cursorProject = $dbForConsole->getDocument('projects', $cursor);
-
-            if ($cursorProject->isEmpty()) {
-                throw new Exception("Project '{$cursor}' for the 'cursor' value not found.", 400, Exception::GENERAL_CURSOR_NOT_FOUND);
-            }
-        }
-
-        $queries = [];
+        $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
-            $queries[] = new Query('search', Query::TYPE_SEARCH, [$search]);
+            $queries[] = Query::search('search', $search);
         }
 
-        $results = $dbForConsole->find('projects', $queries, $limit, $offset, [], [$orderType], $cursorProject ?? null, $cursorDirection);
-        $total = $dbForConsole->count('projects', $queries, APP_LIMIT_COUNT);
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $projectId = $cursor->getValue();
+            $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$projectId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
 
         $response->dynamic(new Document([
-            'projects' => $results,
-            'total' => $total,
+            'projects' => $dbForConsole->find('projects', $queries),
+            'total' => $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_PROJECT_LIST);
     });
 
@@ -231,7 +245,7 @@ App::get('/v1/projects/:projectId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -258,7 +272,7 @@ App::get('/v1/projects/:projectId/usage')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $usage = [];
@@ -285,13 +299,13 @@ App::get('/v1/projects/:projectId/usage')
             $dbForProject->setNamespace("_{$project->getInternalId()}");
 
             $metrics = [
-                'requests',
-                'network',
-                'executions',
-                'users.count',
-                'databases.documents.count',
-                'databases.collections.count',
-                'storage.total'
+                'project.$all.network.requests',
+                'project.$all.network.bandwidth',
+                'project.$all.storage.size',
+                'users.$all.count.total',
+                'collections.$all.count.total',
+                'documents.$all.count.total',
+                'executions.$all.compute.total',
             ];
 
             $stats = [];
@@ -302,9 +316,11 @@ App::get('/v1/projects/:projectId/usage')
                     $period = $periods[$range]['period'];
 
                     $requestDocs = $dbForProject->find('stats', [
-                        new Query('period', Query::TYPE_EQUAL, [$period]),
-                        new Query('metric', Query::TYPE_EQUAL, [$metric]),
-                    ], $limit, 0, ['time'], [Database::ORDER_DESC]);
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
 
                     $stats[$metric] = [];
                     foreach ($requestDocs as $requestDoc) {
@@ -324,7 +340,7 @@ App::get('/v1/projects/:projectId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => ($stats[$metric][$last]['date'] ?? \time()) - $diff, // time of last metric minus period
+                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
                         ];
                         $backfill--;
                     }
@@ -334,13 +350,13 @@ App::get('/v1/projects/:projectId/usage')
 
             $usage = new Document([
                 'range' => $range,
-                'requests' => $stats['requests'],
-                'network' => $stats['network'],
-                'functions' => $stats['executions'],
-                'documents' => $stats['databases.documents.count'],
-                'collections' => $stats['databases.collections.count'],
-                'users' => $stats['users.count'],
-                'storage' => $stats['storage.total']
+                'requests' => $stats[$metrics[0]] ?? [],
+                'network' => $stats[$metrics[1]] ?? [],
+                'storage' => $stats[$metrics[2]] ?? [],
+                'users' => $stats[$metrics[3]] ?? [],
+                'collections' => $stats[$metrics[4]] ?? [],
+                'documents' => $stats[$metrics[5]] ?? [],
+                'executions' => $stats[$metrics[6]] ?? [],
             ]);
         }
 
@@ -375,7 +391,7 @@ App::patch('/v1/projects/:projectId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
@@ -414,7 +430,7 @@ App::patch('/v1/projects/:projectId/service')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $services = $project->getAttribute('services', []);
@@ -446,7 +462,7 @@ App::patch('/v1/projects/:projectId/oauth2')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $providers = $project->getAttribute('authProviders', []);
@@ -477,7 +493,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $auths = $project->getAttribute('auths', []);
@@ -512,7 +528,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
         $status = ($status === '1' || $status === 'true' || $status === 1 || $status === true);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $auths = $project->getAttribute('auths', []);
@@ -540,14 +556,14 @@ App::delete('/v1/projects/:projectId')
     ->inject('deletes')
     ->action(function (string $projectId, string $password, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
 
-        if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
-            throw new Exception('Invalid credentials', 401, Exception::USER_INVALID_CREDENTIALS);
+        if (!Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
+            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $deletes
@@ -556,11 +572,11 @@ App::delete('/v1/projects/:projectId')
         ;
 
         if (!$dbForConsole->deleteDocument('teams', $project->getAttribute('teamId', null))) {
-            throw new Exception('Failed to remove project team from DB', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project team from DB');
         }
 
         if (!$dbForConsole->deleteDocument('projects', $projectId)) {
-            throw new Exception('Failed to remove project from DB', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
         }
 
         $response->noContent();
@@ -592,15 +608,18 @@ App::post('/v1/projects/:projectId/webhooks')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $security = (bool) filter_var($security, FILTER_VALIDATE_BOOLEAN);
 
         $webhook = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'name' => $name,
@@ -616,8 +635,9 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
 App::get('/v1/projects/:projectId/webhooks')
@@ -638,12 +658,13 @@ App::get('/v1/projects/:projectId/webhooks')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $webhooks = $dbForConsole->find('webhooks', [
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
-        ], 5000);
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'webhooks' => $webhooks,
@@ -670,16 +691,16 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
-            throw new Exception('Webhook not found', 404, Exception::WEBHOOK_NOT_FOUND);
+            throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
@@ -710,18 +731,18 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
-            throw new Exception('Webhook not found', 404, Exception::WEBHOOK_NOT_FOUND);
+            throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
         $webhook
@@ -758,16 +779,16 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
-            throw new Exception('Webhook not found', 404, Exception::WEBHOOK_NOT_FOUND);
+            throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
         $webhook->setAttribute('signatureKey', \bin2hex(\random_bytes(64)));
@@ -796,16 +817,16 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            new Query('_uid', Query::TYPE_EQUAL, [$webhookId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$webhookId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($webhook === false || $webhook->isEmpty()) {
-            throw new Exception('Webhook not found', 404, Exception::WEBHOOK_NOT_FOUND);
+            throw new Exception(Exception::WEBHOOK_NOT_FOUND);
         }
 
         $dbForConsole->deleteDocument('webhooks', $webhook->getId());
@@ -830,26 +851,31 @@ App::post('/v1/projects/:projectId/keys')
     ->param('projectId', null, new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
-    ->param('expire', 0, new Integer(), 'Key expiration time in Unix timestamp. Use 0 for unlimited expiration.', true)
+    ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, array $scopes, int $expire, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $key = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'name' => $name,
             'scopes' => $scopes,
             'expire' => $expire,
+            'sdks' => [],
+            'accessedAt' => null,
             'secret' => \bin2hex(\random_bytes(128)),
         ]);
 
@@ -857,8 +883,9 @@ App::post('/v1/projects/:projectId/keys')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($key, Response::MODEL_KEY);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($key, Response::MODEL_KEY);
     });
 
 App::get('/v1/projects/:projectId/keys')
@@ -879,12 +906,13 @@ App::get('/v1/projects/:projectId/keys')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $keys = $dbForConsole->find('keys', [
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()]),
-        ], 5000);
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'keys' => $keys,
@@ -911,16 +939,16 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $key = $dbForConsole->findOne('keys', [
-            new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($key === false || $key->isEmpty()) {
-            throw new Exception('Key not found', 404, Exception::KEY_NOT_FOUND);
+            throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
         $response->dynamic($key, Response::MODEL_KEY);
@@ -940,24 +968,24 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', null, new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('expire', 0, new Integer(), 'Key expiration time in Unix timestamp. Use 0 for unlimited expiration.', true)
+    ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $keyId, string $name, array $scopes, int $expire, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $keyId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $key = $dbForConsole->findOne('keys', [
-            new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($key === false || $key->isEmpty()) {
-            throw new Exception('Key not found', 404, Exception::KEY_NOT_FOUND);
+            throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
         $key
@@ -991,16 +1019,16 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $key = $dbForConsole->findOne('keys', [
-            new Query('_uid', Query::TYPE_EQUAL, [$keyId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$keyId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($key === false || $key->isEmpty()) {
-            throw new Exception('Key not found', 404, Exception::KEY_NOT_FOUND);
+            throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
         $dbForConsole->deleteDocument('keys', $key->getId());
@@ -1034,13 +1062,16 @@ App::post('/v1/projects/:projectId/platforms')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $platform = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
             'type' => $type,
@@ -1054,8 +1085,9 @@ App::post('/v1/projects/:projectId/platforms')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($platform, Response::MODEL_PLATFORM);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
 App::get('/v1/projects/:projectId/platforms')
@@ -1076,12 +1108,13 @@ App::get('/v1/projects/:projectId/platforms')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $platforms = $dbForConsole->find('platforms', [
-            new Query('projectId', Query::TYPE_EQUAL, [$project->getId()])
-        ], 5000);
+            Query::equal('projectId', [$project->getId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'platforms' => $platforms,
@@ -1108,16 +1141,16 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$platformId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
-            throw new Exception('Platform not found', 404, Exception::PLATFORM_NOT_FOUND);
+            throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
@@ -1145,16 +1178,16 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$platformId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
-            throw new Exception('Platform not found', 404, Exception::PLATFORM_NOT_FOUND);
+            throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
         $platform
@@ -1189,16 +1222,16 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            new Query('_uid', Query::TYPE_EQUAL, [$platformId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$platformId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($platform === false || $platform->isEmpty()) {
-            throw new Exception('Platform not found', 404, Exception::PLATFORM_NOT_FOUND);
+            throw new Exception(Exception::PLATFORM_NOT_FOUND);
         }
 
         $dbForConsole->deleteDocument('platforms', $platformId);
@@ -1229,33 +1262,36 @@ App::post('/v1/projects/:projectId/domains')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $document = $dbForConsole->findOne('domains', [
-            new Query('domain', Query::TYPE_EQUAL, [$domain]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()]),
+            Query::equal('domain', [$domain]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($document && !$document->isEmpty()) {
-            throw new Exception('Domain already exists', 409, Exception::DOMAIN_ALREADY_EXISTS);
+            throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
         }
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
         }
 
         $domain = new Domain($domain);
 
         $domain = new Document([
-            '$id' => $dbForConsole->getId(),
-            '$read' => ['role:all'],
-            '$write' => ['role:all'],
+            '$id' => ID::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
             'projectInternalId' => $project->getInternalId(),
             'projectId' => $project->getId(),
-            'updated' => \time(),
+            'updated' => DateTime::now(),
             'domain' => $domain->get(),
             'tld' => $domain->getSuffix(),
             'registerable' => $domain->getRegisterable(),
@@ -1267,8 +1303,9 @@ App::post('/v1/projects/:projectId/domains')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($domain, Response::MODEL_DOMAIN);
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
 App::get('/v1/projects/:projectId/domains')
@@ -1289,12 +1326,13 @@ App::get('/v1/projects/:projectId/domains')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $domains = $dbForConsole->find('domains', [
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
-        ], 5000);
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
 
         $response->dynamic(new Document([
             'domains' => $domains,
@@ -1321,16 +1359,16 @@ App::get('/v1/projects/:projectId/domains/:domainId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$domainId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
-            throw new Exception('Domain not found', 404, Exception::DOMAIN_NOT_FOUND);
+            throw new Exception(Exception::DOMAIN_NOT_FOUND);
         }
 
         $response->dynamic($domain, Response::MODEL_DOMAIN);
@@ -1355,22 +1393,22 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$domainId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
-            throw new Exception('Domain not found', 404, Exception::DOMAIN_NOT_FOUND);
+            throw new Exception(Exception::DOMAIN_NOT_FOUND);
         }
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
         }
 
         if ($domain->getAttribute('verification') === true) {
@@ -1380,7 +1418,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $validator = new CNAME($target->get()); // Verify Domain with DNS records
 
         if (!$validator->isValid($domain->getAttribute('domain', ''))) {
-            throw new Exception('Failed to verify domain', 401, Exception::DOMAIN_VERIFICATION_FAILED);
+            throw new Exception(Exception::DOMAIN_VERIFICATION_FAILED);
         }
 
 
@@ -1415,16 +1453,16 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not found', 404, Exception::PROJECT_NOT_FOUND);
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            new Query('_uid', Query::TYPE_EQUAL, [$domainId]),
-            new Query('projectInternalId', Query::TYPE_EQUAL, [$project->getInternalId()])
+            Query::equal('_uid', [$domainId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
         if ($domain === false || $domain->isEmpty()) {
-            throw new Exception('Domain not found', 404, Exception::DOMAIN_NOT_FOUND);
+            throw new Exception(Exception::DOMAIN_NOT_FOUND);
         }
 
         $dbForConsole->deleteDocument('domains', $domain->getId());
