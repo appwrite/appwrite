@@ -23,7 +23,7 @@
 <!-- [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md) -->
 <!-- [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io) -->
 
-[English](README.md) | [简体中文](README-CN.md) | Brazilian Portuguese
+[English](README.md) | [简体中文](README-CN.md) | Português
 
 [**Appwrite 1.0 foi lançado! Saiba o que há de novo!**](https://appwrite.io/1.0)
 
