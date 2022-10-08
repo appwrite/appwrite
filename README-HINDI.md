@@ -164,22 +164,22 @@ Appwrite के साथ शुरुआत करना उतना ही �
 
 #### Client
 
-- ✅ &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (Maintained by the Appwrite Team)
+- ✅ &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (Appwrite Team द्वारा अनुरक्षित)
+- ✅ &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Appwrite Team द्वारा अनुरक्षित)
+- ✅ &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Appwrite Team द्वारा अनुरक्षित)
+- ✅ &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (Appwrite Team द्वारा अनुरक्षित)
 
 #### Server
 
-- ✅ &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Maintained by the Appwrite Team)
+- ✅ &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (Appwrite Team द्वारा अनुरक्षित)
+- ✅ &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (Appwrite Team द्वारा अनुरक्षित)
+- ✅ &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (Appwrite Team द्वारा अनुरक्षित)
+- ✅ &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **Beta** (Appwrite Team द्वारा अनुरक्षित)
+- ✅ &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (Appwrite Team द्वारा अनुरक्षित)
+- ✅ &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (Appwrite Team द्वारा अनुरक्षित)
+- ✅ &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **Beta** (Appwrite Team द्वारा अनुरक्षित)
+- ✅ &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Appwrite Team द्वारा अनुरक्षित)
+- ✅ &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Appwrite Team द्वारा अनुरक्षित)
 
 #### Community
 
@@ -192,25 +192,25 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 ![Appwrite Architecture](docs/specs/overview.drawio.svg)
 
-Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs (REST, WebSocket, and GraphQL-soon) to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
+Appwrite एक माइक्रोसर्विस आर्किटेक्चर का उपयोग करता है जिसे आसान स्केलिंग और जिम्मेदारियों के प्रतिनिधिमंडल के लिए डिज़ाइन किया गया था। इसके अलावा, एपराइट आपके मौजूदा ज्ञान और पसंद के प्रोटोकॉल का लाभ उठाकर आपको अपने संसाधनों के साथ बातचीत करने की अनुमति देने के लिए कई एपीआई (आरईएसटी, वेबसॉकेट, और ग्राफक्यूएल-जल्द) का समर्थन करता है.
 
-The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in the [contribution guide](CONTRIBUTING.md#architecture-1).
+Appwrite APAI परत को In-Memory caching का लाभ उठाकर और किसी भी भारी-भरकम कार्यों को Appwrite पृष्ठभूमि कार्यकर्ताओं को सौंपकर बेहद तेज़ होने के लिए डिज़ाइन किया गया था। पृष्ठभूमि कार्यकर्ता आपको लोड को संभालने के लिए एक संदेश कतार का उपयोग करके अपनी गणना क्षमता और लागतों को सटीक रूप से नियंत्रित करने की अनुमति देते हैं। आप हमारी वास्तुकला के बारे में अधिक जान सकते हैं[contribution guide / योगदान गाइड](CONTRIBUTING.md#architecture-1).
 
-## Contributing
+## Contributing / योगदान
 
 सभी कोड योगदानों के लिए - जिसमें वे लोग भी शामिल हैं जिनके पास  commit access है -  एक पुल अनुरोध के माध्यम से जाना चाहिए और विलय होने से पहले एक core developer द्वारा अनुमोदित होना चाहिए। यह सभी code की उचित समीक्षा सुनिश्चित करने के लिए है।.
 
 हम सच में pull requests से ❤️  है! यदि आप मदद करना चाहते हैं, तो आप इस बारे में अधिक जान सकते हैं कि आप इस परियोजना में कैसे योगदान कर सकते हैं[contribution guide](CONTRIBUTING.md).
 
-## Security
+## Security / सुरक्षा
 
 सुरक्षा मुद्दों के लिए, कृपया हमें यहां ईमेल करें [security@appwrite.io](mailto:security@appwrite.io) GitHub पर एक सार्वजनिक मुद्दा पोस्ट करने के बजाय.
 
-## Follow Us
+## Follow Us / फॉलो करें
 
-दुनिया भर में हमारे बढ़ते समुदाय में शामिल हों ! हमारे अधिकृत links देखें  [Blog](https://medium.com/appwrite-io). Follow us on [Twitter](https://twitter.com/appwrite), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) , [Dev Community](https://dev.to/appwrite) or join our live [Discord server](https://discord.gg/GSeTUeA) for more help, ideas, and discussions.
+दुनिया भर में हमारे बढ़ते समुदाय में शामिल हों ! हमारे अधिकृत links देखें  [Blog](https://medium.com/appwrite-io). Follow us on [Twitter](https://twitter.com/appwrite), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) , [Dev Community](https://dev.to/appwrite) या हमारे लाइव में शामिल हों [Discord server](https://discord.gg/GSeTUeA) अधिक सहायता, विचारों और चर्चाओं के लिए.
 
-## License
+## License / अनुज्ञप्ति
 
 
 यह Repository [BSD 3-Clause License](./LICENSE)  के तहत उपलब्ध है.
