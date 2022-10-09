@@ -90,7 +90,7 @@ The `Response` class must have two functions.
 For interpreted languages use the `path` and `file` parameters to find the file and require it.
 Please make sure to add appropriate checks to make sure the imported file is a function that you can execute.
 
-5. Finally execute the function and handle whatever response the user's code returns. Try to wrap the function into a `try catch ` statement to handle any errors the user's function encounters and return them cleanly to the executor with the error schema.
+5. Finally execute the function and handle whatever response the user's code returns. Try to wrap the function into a `try catch` statement to handle any errors the user's function encounters and return them cleanly to the executor with the error schema.
 
 ### 2.4 The Error Schema
 All errors that occur during the execution of a user's function **MUST** be returned using this JSON Object otherwise Appwrite will be unable to parse them for the user.
@@ -237,7 +237,7 @@ Once you have found this, Add your own entry into this array like so:
     'entrypoint'  =>  'Test file', // Replace with the name of the test file you wrote in ./tests/resources/LANGUAGE_NAME
     'timeout'  =>  15,
     'runtime'  =>  'LANGUAGE_NAME-VERSION',
-    'tarname'  =>  'LANGUAGE_NAME-VERSION.tar.gz', // Note: If your version has a point in it replace it, with a dash instead for this value.
+    'tarname'  =>  'LANGUAGE_NAME-VERSION.tar.gz', // Note: If your version has a point in it replace it with a dash instead for this value.
 ],
 ```
 Make sure to replace all instances of `LANGUAGE_NAME` with your language's name and `VERSION` with your runtime's version.
