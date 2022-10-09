@@ -21,7 +21,7 @@ Note that the class name should start with a capital letter as PHP FIG standards
 Always use properly named environment variables if any credentials are required.
 
 ### Introduce new device constant
-Introduce newly added device constants in `src/Storage/Storage.php` alongside existing device constants. The device constant should start with `const DEVICE_<name of device>` as the existing ones.
+Introduce newly added device constant in `src/Storage/Storage.php` alongside existing device constants. The device constant should start with `const DEVICE_<name of device>` as the existing ones.
 
 ### Introduce new device tests
 Add tests for the newly added device adapter inside `tests/Storage/Device`. Use the existing adapter tests as a reference. The test file and class should be properly named `<Adapter class name>Test.php` and class should be `<Adapter class name>Test`
