@@ -716,7 +716,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        \sleep(2);
+        \sleep(5);
 
         $smsRequest = $this->getLastRequest();
 
