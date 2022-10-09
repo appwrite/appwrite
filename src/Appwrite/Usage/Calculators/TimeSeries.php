@@ -342,9 +342,7 @@ class TimeSeries extends Calculator
     private function createOrUpdateMetric(string $projectId, string $time, string $period, string $metric, int $value, int $type): void
     {
         $id = \md5("{$time}_{$period}_{$metric}");
-        $this->database->setNamespace('_console');
-        $project = $this->database->getDocument('projects', $projectId);
-        $this->database->setNamespace('_' . $project->getInternalId());
+        $this->database->setNamespace('_' . $projectId);
 
         try {
             $document = $this->database->getDocument('stats', $id);
@@ -430,7 +428,7 @@ class TimeSeries extends Calculator
                     $value = (!empty($point['value'])) ? $point['value'] : 0;
 
                     $this->createOrUpdateMetric(
-                        $projectId,
+                        $point['projectInternalId'],
                         $point['time'],
                         $period['key'],
                         $metricUpdated,
