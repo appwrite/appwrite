@@ -44,7 +44,7 @@ You can choose to contribute either directly on [**GitHub**](#21-manually-using-
 > Proceed to [Visually using PO Editor](#22-visually-using-po-editor) if you want to use graphical interface instead.
 
 
-We maintain a [`local branch`](https://github.com/appwrite/appwrite/tree/locale/) under the [appwrite/appwrite repo](https://github.com/appwrite/appwrite/) exclusively for translations related PRs. Here are a few files that you need to refer to help with your contribution.
+We maintain a [`locale branch`](https://github.com/appwrite/appwrite/tree/locale/) under the [appwrite/appwrite repo](https://github.com/appwrite/appwrite/) exclusively for translations related PRs. Here are a few files that you need to refer to help with your contribution.
 
 1. **terms.json**
 
