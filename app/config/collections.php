@@ -748,6 +748,13 @@ $collections = [
                 'lengths' => [128],
                 'orders' => [Database::ORDER_ASC],
             ],
+            [
+                '$id' => ID::custom('_key_team'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['teamId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
         ],
     ],
 
