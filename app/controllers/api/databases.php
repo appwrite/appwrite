@@ -2467,8 +2467,8 @@ App::get('/v1/databases/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -2586,8 +2586,8 @@ App::get('/v1/databases/:databaseId/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -2706,8 +2706,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
