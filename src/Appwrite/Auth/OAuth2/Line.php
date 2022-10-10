@@ -44,7 +44,7 @@ class Line extends OAuth2
             'response_type' => 'code',
             'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state)
-            
+
         ]);
     }
 
@@ -66,13 +66,13 @@ class Line extends OAuth2
                     'redirect_uri' => $this->callback,
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
-                    
+
                 ])
             ), true);
         }
         return $this->tokens;
     }
-    
+
     /**
      * @param string $refreshToken
      *
@@ -89,7 +89,7 @@ class Line extends OAuth2
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
-                
+
             ])
         ), true);
 
@@ -117,7 +117,7 @@ class Line extends OAuth2
      * @return string
      */
     public function getUserEmail(string $accessToken): string
-    {   
+    {
         $userInfo = [];
         $userInfo = \json_decode($this->request(
             'POST',
@@ -127,7 +127,7 @@ class Line extends OAuth2
                 'id_token' => $this->tokens['id_token'],
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
-                
+
             ])
         ), true);
 
@@ -144,7 +144,7 @@ class Line extends OAuth2
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
-    {   
+    {
         $email = $this->getUserEmail($accessToken);
 
         return !empty($email);
@@ -158,7 +158,7 @@ class Line extends OAuth2
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-    
+
         return $user['name'] ?? '';
     }
 
@@ -171,11 +171,10 @@ class Line extends OAuth2
     {
         if (empty($this->user)) {
             $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
-            $user = $this->request('GET', ' https://api.line.me/oauth2/v2.1/userinfo', $headers);
+            $user = $this->request('GET', 'https://api.line.me/oauth2/v2.1/userinfo', $headers);
             $this->user = \json_decode($user, true);
         }
 
         return $this->user;
     }
-
 }
