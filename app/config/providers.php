@@ -17,7 +17,7 @@ return [ // Ordered by ABC.
         'icon' => 'icon-apple',
         'enabled' => true,
         'sandbox' => false,
-        'form' => 'apple.phtml', // Perperation for adding ability to customized OAuth UI forms, currently handled hardcoded.
+        'form' => 'apple.phtml', // Preparation for adding ability to customized OAuth UI forms, currently handled hardcoded.
         'beta' => true,
         'mock' => false,
     ],

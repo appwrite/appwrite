@@ -391,9 +391,9 @@ sort($patterns);
                                     <tr>
                                         <th width="30"></th>
                                         <th width="160">Created</th>
-                                        <th width="150">Status</th>
-                                        <th width="120">Trigger</th>
-                                        <th width="80">Runtime</th>
+                                        <th width="100">Status</th>
+                                        <th width="80">Trigger</th>
+                                        <th width="60">Runtime</th>
                                         <th width=""></th>
                                     </tr>
                                 </thead>
@@ -422,11 +422,11 @@ sort($patterns);
                                         <td data-title="">
                                             <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="" style="display: flex;">
                                                 <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Stderr</button>
-                                                <!--button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button-->
+                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button>
                                                 <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-response-{{execution.$id}}">Response</button>
 
                                                 <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-response-{{execution.$id}}">Response</button>
-                                                <!--button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button-->
+                                                <button class="phones-only-inline tablets-only-inline link margin-end-small" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Stdout</button>
                                                 <button class="phones-only-inline tablets-only-inline link text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Stderr</button>
 
                                                 <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-response-{{execution.$id}}">
@@ -840,6 +840,8 @@ sort($patterns);
         data-failure="alert"
         data-failure-param-alert-text="Failed to execute function"
         data-failure-param-alert-classname="error">
+
+        <input name="async" data-cast-to="bool" value="true" type="hidden" />
 
         <label for="execution-data">Custom Data</label>
         <textarea id="execution-data" name="data" autocomplete="off" class="margin-bottom" placeholder="Data string (optional)"></textarea>

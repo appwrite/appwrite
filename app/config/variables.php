@@ -413,7 +413,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMS_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'. \n\nAvailable providers are twilio, text-magic and telesign.",
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'. \n\nAvailable providers are twilio, text-magic, telesign, msg91, and vonage.",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
