@@ -395,11 +395,75 @@ class TypeMapper
         $unionType = new UnionType([
             'name' => $unionName,
             'types' => $types,
-            'resolveType' => static fn($object) => $object['type'],
+            'resolveType' => static function ($object) use ($unionName) {
+                return static::getUnionImplementation($unionName, $object);
+            },
         ]);
 
         TypeRegistry::set($unionName, $unionType);
 
         return $unionType;
+    }
+
+    private static function getUnionImplementation(string $name, array $object): Type
+    {
+        switch ($name) {
+            case 'Attributes':
+                return static::getAttributeImplementation($object);
+            case 'HashOptions':
+                return static::getHashOptionsImplementation($object);
+        }
+
+        throw new Exception('Unknown union type: ' . $name);
+    }
+
+    private static function getAttributeImplementation(array $object): Type
+    {
+        switch ($object['type']) {
+            case 'string':
+                switch ($object['format']) {
+                    case 'email':
+                        return static::fromResponseModel('AttributeEmail');
+                    case 'url':
+                        return static::fromResponseModel('AttributeUrl');
+                    case 'ip':
+                        return static::fromResponseModel('AttributeIp');
+                }
+                return static::fromResponseModel('AttributeString');
+            case 'integer':
+                return static::fromResponseModel('AttributeInteger');
+            case 'double':
+                return static::fromResponseModel('AttributeFloat');
+            case 'boolean':
+                return static::fromResponseModel('AttributeBoolean');
+            case 'datetime':
+                return static::fromResponseModel('AttributeDatetime');
+        }
+
+        throw new Exception('Unknown attribute implementation');
+    }
+
+    private static function getHashOptionsImplementation(array $object): Type
+    {
+        \var_dump($object);
+
+        switch ($object['type']) {
+            case 'argon2':
+                return static::fromResponseModel('AlgoArgon2');
+            case 'bcrypt':
+                return static::fromResponseModel('AlgoBcrypt');
+            case 'md5':
+                return static::fromResponseModel('AlgoMd5');
+            case 'phpass':
+                return static::fromResponseModel('AlgoPhpass');
+            case 'scrypt':
+                return static::fromResponseModel('AlgoScrypt');
+            case 'scryptMod':
+                return static::fromResponseModel('AlgoScryptModified');
+            case 'sha':
+                return static::fromResponseModel('AlgoSha');
+        }
+
+        throw new Exception('Unknown hash options implementation');
     }
 }
