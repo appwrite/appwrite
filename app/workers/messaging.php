@@ -2,7 +2,6 @@
 
 use Appwrite\DSN\DSN;
 use Appwrite\Resque\Worker;
-use Appwrite\SMS\Adapter;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Messaging\Adapter;
