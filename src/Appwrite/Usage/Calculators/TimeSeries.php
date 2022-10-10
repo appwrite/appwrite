@@ -319,6 +319,22 @@ class TimeSeries extends Calculator
         ],
     ];
 
+    protected array $cumulativeMetrics = [
+        'deployments.$all.storage.size' => [
+            'table' => 'appwrite_usage_deployments_{scope}_storage_size',
+        ],
+        'project.$all.storage.size' => [
+            'table' => 'appwrite_usage_project_{scope}_storage_size',
+        ],
+        'files.$all.storage.size' => [
+            'table' => 'appwrite_usage_files_{scope}_storage_size',
+        ],
+        'files.$bucketId.storage.size' => [
+            'table' => 'appwrite_usage_files_{scope}_storage_size',
+            'groupBy' => ['bucketId']
+        ],
+    ];
+
     public function __construct(Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
     {
         $this->database = $database;
@@ -465,6 +481,19 @@ class TimeSeries extends Calculator
                     } else {
                         throw $e;
                     }
+                }
+            }
+        }
+
+        // for cumulative metrics only get hourly metrics from timeseries
+        foreach ($this->cumulativeMetrics as $metric => $options) {
+            try {
+                $this->syncFromInfluxDB($metric, $options, $this->periods[0]);
+            } catch (\Exception $e) {
+                if (is_callable($this->errorHandler)) {
+                    call_user_func($this->errorHandler, $e);
+                } else {
+                    throw $e;
                 }
             }
         }
