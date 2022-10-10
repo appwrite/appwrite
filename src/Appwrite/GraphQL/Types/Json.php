@@ -21,12 +21,12 @@ class Json extends ScalarType
 
     public function serialize($value)
     {
-        return \json_encode($value);
+        return $value;
     }
 
     public function parseValue($value)
     {
-        return \json_decode($value, associative: true);
+        return $value;
     }
 
     public function parseLiteral(Node $valueNode, ?array $variables = null)

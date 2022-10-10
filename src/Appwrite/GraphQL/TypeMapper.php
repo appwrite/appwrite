@@ -445,8 +445,6 @@ class TypeMapper
 
     private static function getHashOptionsImplementation(array $object): Type
     {
-        \var_dump($object);
-
         switch ($object['type']) {
             case 'argon2':
                 return static::fromResponseModel('AlgoArgon2');
