@@ -184,6 +184,102 @@ trait Base
     // Complex queries
     public static string $CREATE_DATABASE_STACK = 'complex_query';
 
+    // Fragments
+    public static string $FRAGMENT_ATTRIBUTES = '
+        fragment attributeProperties on Attributes {
+            ... on AttributeString {
+                key
+                required
+                array
+                status
+                default
+                size
+            }
+            ... on AttributeInteger {
+                key
+                required
+                array
+                status
+                intDefault: default
+                intMin: min
+                intMax: max
+            }
+            ... on AttributeFloat {
+                key
+                required
+                array
+                status
+                floatDefault: default
+                floatMin: min
+                floatMax: max
+            }
+            ... on AttributeBoolean {
+                key
+                required
+                array
+                status
+                boolDefault:default
+            }
+            ... on AttributeUrl {
+                key
+                required
+                array
+                status
+                default
+            }
+            ... on AttributeEmail {
+                key
+                required
+                array
+                status
+                default
+            }
+            ... on AttributeIp {
+                key
+                required
+                array
+                status
+                default
+            }
+            ... on AttributeEnum {
+                key
+                required
+                array
+                status
+                default
+                elements
+            }
+            ... on AttributeDatetime {
+                key
+                required
+                array
+                status
+                default
+            }
+        }
+    ';
+
+    public static string $FRAGMENT_HASH_OPTIONS = '
+        fragment options on HashOptions {
+            ... on AlgoArgon2 {
+                memoryCost
+                timeCost
+                threads
+            }
+            ... on AlgoScrypt {
+                costCpu
+                costMemory
+                costParallel
+                length
+            }
+            ... on AlgoScryptModified {
+                salt
+                saltSeparator
+                signerKey
+            }
+        }
+    ';
+
     public function getQuery(string $name): string
     {
         switch ($name) {
@@ -220,7 +316,9 @@ trait Base
                 }';
             case self::$DELETE_DATABASE:
                 return 'mutation deleteDatabase($databaseId: String!) {
-                    databasesDelete(databaseId: $databaseId)
+                    databasesDelete(databaseId: $databaseId) {
+                        status
+                    }
                 }';
             case self::$GET_COLLECTION:
                 return 'query getCollection($databaseId: String!, $collectionId: String!) {
@@ -263,7 +361,9 @@ trait Base
                 }';
             case self::$DELETE_COLLECTION:
                 return 'mutation deleteCollection($databaseId: String!, $collectionId: String!){
-                    databasesDeleteCollection(databaseId: $databaseId, collectionId: $collectionId)
+                    databasesDeleteCollection(databaseId: $databaseId, collectionId: $collectionId) {
+                        status
+                    }
                 }';
             case self::$CREATE_STRING_ATTRIBUTE:
                 return 'mutation createStringAttribute($databaseId: String!, $collectionId: String!, $key: String!, $size: Int!, $required: Boolean!, $default: String, $array: Boolean){
@@ -379,37 +479,34 @@ trait Base
                     }
                 }';
             case self::$DELETE_INDEX:
-                return 'mutation deleteIndex($databaseId: String!, $collectionId: String!, $key: String!){
-                    databasesDeleteIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key)
+                return 'mutation deleteIndex($databaseId: String!, $collectionId: String!, $key: String!) {
+                    databasesDeleteIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
+                        status
+                    }
                 }';
             case self::$GET_ATTRIBUTES:
                 return 'query listAttributes($databaseId: String!, $collectionId: String!) {
                     databasesListAttributes(databaseId: $databaseId, collectionId: $collectionId) {
                         total
                         attributes {
-                            key
-                            required
-                            default
-                            array
-                            status
+                            ...attributeProperties
                         }
                     }
-                }';
+                }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
             case self::$GET_ATTRIBUTE:
                 return 'query getAttribute($databaseId: String!, $collectionId: String!, $key: String!) {
                     databasesGetAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
-                        key
-                        required
-                        default
-                        array
+                        ...attributeProperties
+                    }
+                }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
+            case self::$DELETE_ATTRIBUTE:
+                return 'mutation deleteAttribute($databaseId: String!, $collectionId: String!, $key: String!) {
+                    databasesDeleteAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
+                        status
                     }
                 }';
-            case self::$DELETE_ATTRIBUTE:
-                return 'mutation deleteAttribute($databaseId: String!, $collectionId: String!, $key: String!){
-                    databasesDeleteAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key)
-                }';
             case self::$GET_DOCUMENT:
-                return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!){
+                return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!) {
                     databasesGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
                         _id
                         _collectionId
@@ -506,7 +603,9 @@ trait Base
                 }';
             case self::$DELETE_DOCUMENT:
                 return 'mutation deleteDocument($databaseId: String!, $collectionId: String!, $documentId: String!){
-                    databasesDeleteDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId)
+                    databasesDeleteDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
+                        status
+                    }
                 }';
 
             case self::$GET_USER:
@@ -518,8 +617,12 @@ trait Base
                         status
                         email
                         emailVerification
+                        hash
+                        hashOptions {
+                            ...options
+                        }
                     }
-                }';
+                }' . PHP_EOL . self::$FRAGMENT_HASH_OPTIONS;
             case self::$GET_USER_PREFERENCES:
                 return 'query getUserPreferences($userId : String!) {
                     usersGetPrefs(userId : $userId) {
@@ -654,15 +757,21 @@ trait Base
                 }';
             case self::$DELETE_USER_SESSIONS:
                 return 'mutation deleteUserSessions($userId: String!){
-                    usersDeleteSessions(userId: $userId)
+                    usersDeleteSessions(userId: $userId) {
+                        status
+                    }
                 }';
             case self::$DELETE_USER_SESSION:
                 return 'mutation deleteUserSession($userId: String!, $sessionId: String!){
-                    usersDeleteSession(userId: $userId, sessionId: $sessionId)
+                    usersDeleteSession(userId: $userId, sessionId: $sessionId) {
+                        status
+                    }
                 }';
             case self::$DELETE_USER:
                 return 'mutation deleteUser($userId: String!) {
-                    usersDelete(userId: $userId)
+                    usersDelete(userId: $userId) {
+                        status
+                    }
                 }';
             case self::$GET_LOCALE:
                 return 'query getLocale {
@@ -736,31 +845,45 @@ trait Base
                 }';
             case self::$GET_CREDIT_CARD_ICON:
                 return 'query getCreditCardIcon($code: String!) {
-                    avatarsGetCreditCard(code: $code)
+                    avatarsGetCreditCard(code: $code) {
+                        status
+                    }
                 }';
             case self::$GET_BROWSER_ICON:
                 return 'query getBrowserIcon($code: String!) {
-                    avatarsGetBrowser(code: $code)
+                    avatarsGetBrowser(code: $code) {
+                        status
+                    }
                 }';
             case self::$GET_COUNTRY_FLAG:
                 return 'query getCountryFlag($code: String!) {
-                    avatarsGetFlag(code: $code)
+                    avatarsGetFlag(code: $code) {
+                        status
+                    }
                 }';
             case self::$GET_IMAGE_FROM_URL:
                 return 'query getImageFromUrl($url: String!) {
-                    avatarsGetImage(url: $url)
+                    avatarsGetImage(url: $url) {
+                        status
+                    }
                 }';
             case self::$GET_FAVICON:
                 return 'query getFavicon($url: String!) {
-                    avatarsGetFavicon(url: $url)
+                    avatarsGetFavicon(url: $url) {
+                        status
+                    }
                 }';
             case self::$GET_QRCODE:
                 return 'query getQrCode($text: String!) {
-                    avatarsGetQR(text: $text)
+                    avatarsGetQR(text: $text) {
+                        status
+                    }
                 }';
             case self::$GET_USER_INITIALS:
                 return 'query getUserInitials($name: String!) {
-                    avatarsGetInitials(name: $name)
+                    avatarsGetInitials(name: $name) {
+                        status
+                    }
                 }';
             case self::$GET_ACCOUNT:
                 return 'query getAccount {
@@ -859,11 +982,15 @@ trait Base
                 }';
             case self::$DELETE_ACCOUNT_SESSION:
                 return 'mutation deleteAccountSession($sessionId: String!){
-                    accountDeleteSession(sessionId: $sessionId)
+                    accountDeleteSession(sessionId: $sessionId) {
+                        status
+                    }
                 }';
             case self::$DELETE_ACCOUNT_SESSIONS:
                 return 'mutation deleteAccountSessions {
-                    accountDeleteSessions
+                    accountDeleteSessions {
+                        status
+                    }
                 }';
             case self::$CREATE_MAGIC_URL:
                 return 'mutation createMagicURL($userId: String!, $email: String!){
@@ -1007,7 +1134,9 @@ trait Base
                 }';
             case self::$DELETE_TEAM:
                 return 'mutation deleteTeam($teamId: String!){
-                    teamsDelete(teamId: $teamId)
+                    teamsDelete(teamId: $teamId) {
+                        status
+                    }
                 }';
             case self::$GET_TEAM_MEMBERSHIP:
                 return 'query getTeamMembership($teamId: String!, $membershipId: String!){
@@ -1076,7 +1205,9 @@ trait Base
                 }';
             case self::$DELETE_TEAM_MEMBERSHIP:
                 return 'mutation deleteTeamMembership($teamId: String!, $membershipId: String!){
-                    teamsDeleteMembership(teamId: $teamId, membershipId: $membershipId)
+                    teamsDeleteMembership(teamId: $teamId, membershipId: $membershipId) {
+                        status
+                    }
                 }';
             case self::$GET_FUNCTION:
                 return 'query getFunction($functionId: String!) { 
@@ -1159,7 +1290,9 @@ trait Base
                 }';
             case self::$DELETE_FUNCTION:
                 return 'mutation deleteFunction($functionId: String!) {
-                    functionsDelete(functionId: $functionId)
+                    functionsDelete(functionId: $functionId) {
+                        status
+                    }
                 }';
             case self::$CREATE_VARIABLE:
                 return 'mutation createVariable($functionId: String!, $key: String!, $value: String!) {
@@ -1198,7 +1331,9 @@ trait Base
                 }';
             case self::$DELETE_VARIABLE:
                 return 'mutation deleteVariable($functionId: String!, $variableId: String!) {
-                    functionsDeleteVariable(functionId: $functionId, variableId: $variableId)
+                    functionsDeleteVariable(functionId: $functionId, variableId: $variableId) {
+                        status
+                    }
                 }';
             case self::$CREATE_DEPLOYMENT:
                 return 'mutation createDeployment($functionId: String!, $entrypoint: String!, $code: InputFile!, $activate: Boolean!) {
@@ -1214,7 +1349,9 @@ trait Base
                 }';
             case self::$DELETE_DEPLOYMENT:
                 return 'mutation deleteDeployment($functionId: String!, $deploymentId: String!) {
-                    functionsDeleteDeployment(functionId: $functionId, deploymentId: $deploymentId)
+                    functionsDeleteDeployment(functionId: $functionId, deploymentId: $deploymentId) {
+                        status
+                    }
                 }';
             case self::$GET_EXECUTION:
                 return 'query getExecution($functionId: String!$executionId: String!) {
@@ -1245,11 +1382,15 @@ trait Base
                 }';
             case self::$DELETE_EXECUTION:
                 return 'mutation deleteExecution($functionId: String!, $executionId: String!) {
-                    functionsDeleteExecution(functionId: $functionId, executionId: $executionId)
+                    functionsDeleteExecution(functionId: $functionId, executionId: $executionId) {
+                        status
+                    }
                 }';
             case self::$RETRY_BUILD:
                 return 'mutation retryBuild($functionId: String!, $deploymentId: String!, $buildId: String!) {
-                    functionsRetryBuild(functionId: $functionId, deploymentId: $deploymentId, buildId: $buildId)
+                    functionsCreateBuild(functionId: $functionId, deploymentId: $deploymentId, buildId: $buildId) {
+                        status
+                    }
                 }';
             case self::$CREATE_BUCKET:
                 return 'mutation createBucket($bucketId: String!, $name: String!, $fileSecurity: Boolean, $permissions: [String!]) {
@@ -1292,7 +1433,9 @@ trait Base
                 }';
             case self::$DELETE_BUCKET:
                 return 'mutation deleteBucket($bucketId: String!) {
-                    storageDeleteBucket(bucketId: $bucketId)
+                    storageDeleteBucket(bucketId: $bucketId) {
+                        status
+                    }
                 }';
             case self::$CREATE_FILE:
                 return 'mutation createFile($bucketId: String!, $fileId: String!, $file: InputFile!, $permissions: [String!]) {
@@ -1321,15 +1464,21 @@ trait Base
                 }';
             case self::$GET_FILE_PREVIEW:
                 return 'query getFilePreview($bucketId: String!, $fileId: String!) {
-                    storageGetFilePreview(bucketId: $bucketId, fileId: $fileId)
+                    storageGetFilePreview(bucketId: $bucketId, fileId: $fileId) {
+                        status
+                    }
                 }';
             case self::$GET_FILE_DOWNLOAD:
                 return 'query getFileDownload($bucketId: String!, $fileId: String!) {
-                    storageGetFileDownload(bucketId: $bucketId, fileId: $fileId)
+                    storageGetFileDownload(bucketId: $bucketId, fileId: $fileId) {
+                        status
+                    }
                 }';
             case self::$GET_FILE_VIEW:
                 return 'query getFileView($bucketId: String!, $fileId: String!) {
-                    storageGetFileView(bucketId: $bucketId, fileId: $fileId)
+                    storageGetFileView(bucketId: $bucketId, fileId: $fileId) {
+                        status
+                    }
                 }';
             case self::$UPDATE_FILE:
                 return 'mutation updateFile($bucketId: String!, $fileId: String!, $permissions: [String!]) {
@@ -1340,7 +1489,9 @@ trait Base
                 }';
             case self::$DELETE_FILE:
                 return 'mutation deleteFile($bucketId: String!, $fileId: String!) {
-                    storageDeleteFile(bucketId: $bucketId, fileId: $fileId)
+                    storageDeleteFile(bucketId: $bucketId, fileId: $fileId) {
+                        status
+                    }
                 }';
             case self::$GET_HTTP_HEALTH:
                 return 'query getHttpHealth {
@@ -1424,9 +1575,7 @@ trait Base
                         name
                         documentSecurity
                         attributes {
-                            key
-                            type
-                            status
+                            ...attributeProperties
                         }
                         indexes {
                             key
@@ -1477,7 +1626,7 @@ trait Base
                             data
                         }
                     }
-                }';
+                }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
         }
 
         throw new \InvalidArgumentException('Invalid query type');

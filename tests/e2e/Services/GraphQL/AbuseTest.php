@@ -16,6 +16,15 @@ class AbuseTest extends Scope
     use SideServer;
     use Base;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (App::isDevelopment()) {
+            $this->markTestSkipped('Skipping abuse test in development environment');
+        }
+    }
+
     public function testComplexQueryBlocked()
     {
         $projectId = $this->getProject()['$id'];
