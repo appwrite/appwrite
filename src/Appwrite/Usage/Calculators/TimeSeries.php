@@ -280,7 +280,7 @@ class TimeSeries extends Calculator
             'table' => 'appwrite_usage_project_{scope}_compute_time',
             'groupBy' => ['functionId'],
         ],
-        
+
         // counters
         'users.$all.count.total' => [
             'table' => 'appwrite_usage_users_{scope}_count_total',
@@ -497,6 +497,5 @@ class TimeSeries extends Calculator
                 }
             }
         }
-
     }
 }

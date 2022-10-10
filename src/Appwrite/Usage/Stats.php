@@ -109,10 +109,10 @@ class Stats
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
                 $this->statsd->increment($metric . $tags);
-                if($metric == $usersMetrics[0]) {
+                if ($metric == $usersMetrics[0]) {
                     $this->statsd->increment('users.{scope}.count.total' . $tags);
                 }
-                if($metric == $usersMetrics[3]) {
+                if ($metric == $usersMetrics[3]) {
                     $this->statsd->decrement('users.{scope}.count.total' . $tags);
                 }
             }
@@ -139,24 +139,24 @@ class Stats
                 $dbTags = $tags . ",collectionId=" . ($this->params['collectionId'] ?? '') . ",databaseId=" . ($this->params['databaseId'] ?? '');
                 $this->statsd->increment($metric . $dbTags);
 
-                if($metric == $dbMetrics[0]) {
+                if ($metric == $dbMetrics[0]) {
                     $this->statsd->increment('databases.{scope}.count.total' . $dbTags);
                 }
-                if($metric == $dbMetrics[3]) {
+                if ($metric == $dbMetrics[3]) {
                     $this->statsd->decrement('databases.{scope}.count.total' . $dbTags);
                 }
 
-                if($metric == $dbMetrics[4]) {
+                if ($metric == $dbMetrics[4]) {
                     $this->statsd->increment('collections.{scope}.count.total' . $dbTags);
                 }
-                if($metric == $dbMetrics[7]) {
+                if ($metric == $dbMetrics[7]) {
                     $this->statsd->decrement('collections.{scope}.count.total' . $dbTags);
                 }
 
-                if($metric == $dbMetrics[8]) {
+                if ($metric == $dbMetrics[8]) {
                     $this->statsd->increment('documents.{scope}.count.total' . $dbTags);
                 }
-                if($metric == $dbMetrics[11]) {
+                if ($metric == $dbMetrics[11]) {
                     $this->statsd->decrement('documents.{scope}.count.total' . $dbTags);
                 }
             }
@@ -179,17 +179,17 @@ class Stats
                 $storageTags = $tags . ",bucketId=" . ($this->params['bucketId'] ?? '');
                 $this->statsd->increment($metric . $storageTags);
 
-                if($metric == $storageMertics[0]) {
+                if ($metric == $storageMertics[0]) {
                     $this->statsd->increment('buckets.{scope}.count.total' . $storageTags);
                 }
-                if($metric == $storageMertics[3]) {
+                if ($metric == $storageMertics[3]) {
                     $this->statsd->decrement('buckets.{scope}.count.total' . $storageTags);
                 }
 
-                if($metric == $storageMertics[4]) {
+                if ($metric == $storageMertics[4]) {
                     $this->statsd->increment('files.{scope}.count.total' . $storageTags);
                 }
-                if($metric == $storageMertics[7]) {
+                if ($metric == $storageMertics[7]) {
                     $this->statsd->decrement('files.{scope}.count.total' . $storageTags);
                 }
             }
