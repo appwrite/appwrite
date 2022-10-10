@@ -10,6 +10,12 @@ class Attribute extends Model
     public function __construct()
     {
         $this
+            ->addRule('$id', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Attribute unique ID.',
+                'default' => '',
+                'example' => '5e3d45e0d6c2b',
+            ])
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute Key.',

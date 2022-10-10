@@ -46,6 +46,7 @@ use Appwrite\Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Database\Validator\Queries\Documents;
+use Appwrite\Utopia\Database\Validator\Query\Cursor;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
 
@@ -1347,22 +1348,43 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('queries', [], new Queries(new Limit(), new Offset(), new Cursor()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
+        // Handle Queries
+        $queries = Query::parseQueries($queries);
+
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $keyId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('attributes', $keyId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Attribute '{$keyId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attributes = $collection->getAttribute('attributes');
+        $queries[] = Query::equal('collectionId', [$collection->getId()]);
+
+        $attributes = $dbForProject->find('attributes', $queries);
 
         $response->dynamic(new Document([
             'total' => \count($attributes),
