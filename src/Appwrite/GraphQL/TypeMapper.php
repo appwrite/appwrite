@@ -132,11 +132,6 @@ class TypeMapper
             : [static::$models[$modelNames]];
 
         foreach ($models as $model) {
-//            if (empty($responseModel->getRules())) {
-//                \var_dump('No rules: ' . $responseModel->getType());
-//                continue;
-//            }
-
             $type = TypeMapper::fromResponseModel(\ucfirst($model->getType()));
             $description = $route->getDesc();
             $params = [];
@@ -203,6 +198,14 @@ class TypeMapper
                 'type' => Type::string(),
                 'description' => 'Additional data',
                 'resolve' => static fn($object, $args, $context, $info) => \json_encode($object, JSON_FORCE_OBJECT),
+            ];
+        }
+
+        if (!$model->isAny() && empty($model->getRules())) {
+            $fields['status'] = [
+                'type' => Type::string(),
+                'description' => 'Status',
+                'resolve' => static fn($object, $args, $context, $info) => 'OK',
             ];
         }
 
