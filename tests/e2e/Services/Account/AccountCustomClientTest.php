@@ -943,7 +943,13 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEquals(true, DateTime::isValid($response['body']['expire']));
 
-        return $data;
+        \sleep(2);
+
+        $smsRequest = $this->getLastRequest();
+
+        return \array_merge($data, [
+            'token' => $smsRequest['data']['message']
+        ]);
     }
 
     /**
@@ -953,6 +959,7 @@ class AccountCustomClientTest extends Scope
     {
         $id = $data['id'] ?? '';
         $session = $data['session'] ?? '';
+        $secret = $data['token'] ?? '';
 
         /**
          * Test for SUCCESS
@@ -964,7 +971,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'userId' => $id,
-            'secret' => Mock::$digits,
+            'secret' => $secret,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -979,7 +986,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'userId' => ID::custom('ewewe'),
-            'secret' => Mock::$digits,
+            'secret' => $secret,
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
