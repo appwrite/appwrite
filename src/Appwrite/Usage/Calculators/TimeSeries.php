@@ -198,12 +198,6 @@ class TimeSeries extends Calculator
         'executions.$all.compute.total' => [
             'table' => 'appwrite_usage_executions_{scope}_compute',
         ],
-        'builds.$all.compute.time' => [
-            'table' => 'appwrite_usage_executions_{scope}_compute_time',
-        ],
-        'executions.$all.compute.time' => [
-            'table' => 'appwrite_usage_executions_{scope}_compute_time',
-        ],
         'builds.$all.compute.total' => [
             'table' => 'appwrite_usage_builds_{scope}_compute',
         ],
@@ -239,14 +233,7 @@ class TimeSeries extends Calculator
             'table' => 'appwrite_usage_builds_{scope}_compute',
             'groupBy' => ['functionId'],
         ],
-        'executions.functionId.compute.time' => [
-            'table' => 'appwrite_usage_executions_{scope}_compute_time',
-            'groupBy' => ['functionId'],
-        ],
-        'builds.functionId.compute.time' => [
-            'table' => 'appwrite_usage_builds_{scope}_compute_time',
-            'groupBy' => ['functionId'],
-        ],
+        
         'executions.functionId.compute.failure' => [
             'table' => 'appwrite_usage_executions_{scope}_compute',
             'groupBy' => ['functionId'],
@@ -274,11 +261,6 @@ class TimeSeries extends Calculator
             'filters' => [
                 'functionBuildStatus' => 'success',
             ],
-        ],
-
-        'project.$all.compute.time' => [ // Built time + execution time
-            'table' => 'appwrite_usage_project_{scope}_compute_time',
-            'groupBy' => ['functionId'],
         ],
 
         // counters
@@ -332,6 +314,27 @@ class TimeSeries extends Calculator
         'files.$bucketId.storage.size' => [
             'table' => 'appwrite_usage_files_{scope}_storage_size',
             'groupBy' => ['bucketId']
+        ],
+
+        'builds.$all.compute.time' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute_time',
+        ],
+        'executions.$all.compute.time' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute_time',
+        ],
+
+        'executions.functionId.compute.time' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute_time',
+            'groupBy' => ['functionId'],
+        ],
+        'builds.functionId.compute.time' => [
+            'table' => 'appwrite_usage_builds_{scope}_compute_time',
+            'groupBy' => ['functionId'],
+        ],
+
+        'project.$all.compute.time' => [ // Built time + execution time
+            'table' => 'appwrite_usage_project_{scope}_compute_time',
+            'groupBy' => ['functionId'],
         ],
     ];
 
