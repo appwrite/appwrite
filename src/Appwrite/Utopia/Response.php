@@ -349,11 +349,6 @@ class Response extends SwooleResponse
         parent::__construct($response);
     }
 
-    public function getSwoole(): SwooleHTTPResponse
-    {
-        return $this->swoole;
-    }
-
     /**
      * HTTP content types
      */

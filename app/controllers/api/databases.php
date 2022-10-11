@@ -2565,7 +2565,6 @@ App::get('/v1/databases/usage')
     });
 
 App::get('/v1/databases/:databaseId/usage')
-    ->alias('/v1/database/usage', ['databaseId' => 'default'])
     ->desc('Get usage stats for the database')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
