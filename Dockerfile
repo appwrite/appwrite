@@ -20,6 +20,7 @@ COPY package-lock.json /usr/local/src/
 COPY package.json /usr/local/src/
 COPY gulpfile.js /usr/local/src/
 COPY public /usr/local/src/public
+COPY console /usr/local/src/console
 
 RUN npm ci
 RUN npm run build
@@ -313,6 +314,7 @@ COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./public/fonts /usr/src/code/public/fonts
 COPY ./public/images /usr/src/code/public/images
+COPY ./console /usr/src/code/console
 COPY ./src /usr/src/code/src
 
 # Set Volumes

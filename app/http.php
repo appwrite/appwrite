@@ -51,7 +51,7 @@ $http->on('AfterReload', function ($server, $workerId) {
     Console::success('Reload completed...');
 });
 
-Files::load(__DIR__ . '/../public');
+Files::load(__DIR__ . '/../console');
 
 include __DIR__ . '/controllers/general.php';
 
