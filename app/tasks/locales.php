@@ -53,7 +53,6 @@ $cli
         $type !== 'json'  && Console::info('To get detailed information about missing translations, run the command with --type=debug parameter. Use --type=json to get JSON formatted results.');
 
         if ($type === 'json') {
-            \var_dump($results);
             Console::log(\json_encode($results));
         }
     });
