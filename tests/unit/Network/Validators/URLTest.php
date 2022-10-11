@@ -43,6 +43,7 @@ class URLTest extends TestCase
         $this->assertEquals(false, $this->url->isValid('htt@s://example.com'));
         $this->assertEquals(true, $this->url->isValid('http://www.example.com/foo%2\u00c2\u00a9zbar'));
         $this->assertEquals(true, $this->url->isValid('http://www.example.com/?q=%3Casdf%3E'));
+        $this->assertEquals(true, $this->url->isValid('https://example.com/foo%2\u00c2\u00ä9zbär'));
     }
 
     public function testIsValidAllowedSchemes(): void
