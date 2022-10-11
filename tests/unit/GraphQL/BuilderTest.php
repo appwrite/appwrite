@@ -1,15 +1,11 @@
 <?php
 
-namespace Appwrite\Tests;
+namespace Tests\Unit\GraphQL;
 
-use Appwrite\Event\Event;
-use Appwrite\GraphQL\SchemaBuilder;
-use Appwrite\GraphQL\TypeRegistry;
+use Appwrite\GraphQL\TypeMapper;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
-use Utopia\App;
 
 class BuilderTest extends TestCase
 {
@@ -18,7 +14,7 @@ class BuilderTest extends TestCase
     public function setUp(): void
     {
         $this->response = new Response(new SwooleResponse());
-        TypeRegistry::init($this->response->getModels());
+        TypeMapper::init($this->response->getModels());
     }
 
     /**
@@ -27,6 +23,7 @@ class BuilderTest extends TestCase
     public function testCreateTypeMapping()
     {
         $model = $this->response->getModel(Response::MODEL_COLLECTION);
-        $typeMapping = TypeRegistry::fromModel($model->getType());
+        $type = TypeMapper::fromResponseModel(\ucfirst($model->getType()));
+        $this->assertEquals('Collection', $type->name);
     }
 }
