@@ -1,3 +1,7 @@
+# Unreleased Version
+## Features
+- Add LINE OAuth2 Provider [#4426](https://github.com/appwrite/appwrite/pull/4426)
+
 # Version 1.0.2
 ## Bugs
 - Fixed nullable values in functions variables [#3885](https://github.com/appwrite/appwrite/pull/3885)
