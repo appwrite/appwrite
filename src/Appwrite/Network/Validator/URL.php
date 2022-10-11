@@ -49,11 +49,17 @@ class URL extends Validator
      */
     public function isValid($value): bool
     {
-        if (\filter_var($value, FILTER_VALIDATE_URL) === false) {
+        $sanitizedURL = '';
+
+        foreach (str_split($value) as $character) {
+            $sanitizedURL .= (ord($character) > 127) ? rawurlencode($character) : $character;
+        }
+
+        if (\filter_var($sanitizedURL, FILTER_VALIDATE_URL) === false) {
             return false;
         }
 
-        if (!empty($this->allowedSchemes) && !\in_array(\parse_url($value, PHP_URL_SCHEME), $this->allowedSchemes)) {
+        if (!empty($this->allowedSchemes) && !\in_array(\parse_url($sanitizedURL, PHP_URL_SCHEME), $this->allowedSchemes)) {
             return false;
         }
 
