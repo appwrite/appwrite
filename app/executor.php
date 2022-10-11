@@ -668,6 +668,21 @@ App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
 
 $http = new Server("0.0.0.0", 80);
 
+$payloadSize = 6 * (1024 * 1024); // 6MB
+$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+
+$http
+    ->set([
+        'worker_num' => $workerNumber,
+        'open_http2_protocol' => true,
+        // 'document_root' => __DIR__.'/../public',
+        // 'enable_static_handler' => true,
+        'http_compression' => true,
+        'http_compression_level' => 6,
+        'package_max_length' => $payloadSize,
+        'buffer_output_size' => $payloadSize,
+    ]);
+
 /** Set Resources */
 App::setResource('orchestrationPool', fn() => $orchestrationPool);
 App::setResource('activeRuntimes', fn() => $activeRuntimes);
