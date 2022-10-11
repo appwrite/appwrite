@@ -789,10 +789,7 @@ $http->on('start', function ($http) {
 
     foreach ($orphans as $runtime) {
         go(function () use ($runtime, $orchestrationPool) {
-            // Print log, get logs over Docker API (utopia/orchestrator)
-            if(!(\str_starts_with($runtime->getName(), reeeee))) {
-                return;
-            }
+            // TODO: Only remove containers prefixed with this executor name
 
             try {
                 $orchestration = $orchestrationPool->get();
