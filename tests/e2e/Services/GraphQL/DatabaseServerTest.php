@@ -458,45 +458,45 @@ class DatabaseServerTest extends Scope
         ];
     }
 
-    /**
-     * @depends testCreateStringAttribute
-     * @depends testCreateIntegerAttribute
-     * @depends testCreateBooleanAttribute
-     * @depends testCreateFloatAttribute
-     * @depends testCreateEmailAttribute
-     * @depends testCreateEnumAttribute
-     * @depends testCreateDatetimeAttribute
-     * @throws Exception
-     */
-    public function testCreateCustomEntity(): array
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_CUSTOM_ENTITY);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'name' => 'John Doe',
-                'age' => 35,
-                'alive' => true,
-                'salary' => 9999.9,
-                'email' => 'johndoe@appwrite.io',
-                'role' => 'crew',
-                'dob' => '2000-01-01T00:00:00Z',
-            ]
-        ];
-
-        $actor = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $actor['body']);
-        $this->assertIsArray($actor['body']['data']);
-        $actor = $actor['body']['data']['actorsCreate'];
-        $this->assertIsArray($actor);
-
-        return $actor;
-    }
+//    /**
+//     * @depends testCreateStringAttribute
+//     * @depends testCreateIntegerAttribute
+//     * @depends testCreateBooleanAttribute
+//     * @depends testCreateFloatAttribute
+//     * @depends testCreateEmailAttribute
+//     * @depends testCreateEnumAttribute
+//     * @depends testCreateDatetimeAttribute
+//     * @throws Exception
+//     */
+//    public function testCreateCustomEntity(): array
+//    {
+//        $projectId = $this->getProject()['$id'];
+//        $query = $this->getQuery(self::$CREATE_CUSTOM_ENTITY);
+//        $gqlPayload = [
+//            'query' => $query,
+//            'variables' => [
+//                'name' => 'John Doe',
+//                'age' => 35,
+//                'alive' => true,
+//                'salary' => 9999.9,
+//                'email' => 'johndoe@appwrite.io',
+//                'role' => 'crew',
+//                'dob' => '2000-01-01T00:00:00Z',
+//            ]
+//        ];
+//
+//        $actor = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+//            'content-type' => 'application/json',
+//            'x-appwrite-project' => $projectId,
+//        ], $this->getHeaders()), $gqlPayload);
+//
+//        $this->assertArrayNotHasKey('errors', $actor['body']);
+//        $this->assertIsArray($actor['body']['data']);
+//        $actor = $actor['body']['data']['actorsCreate'];
+//        $this->assertIsArray($actor);
+//
+//        return $actor;
+//    }
 
     public function testGetDatabases(): void
     {
@@ -752,52 +752,52 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($document['body']['data']['databasesGetDocument']);
     }
 
-    /**
-     * @depends testCreateCustomEntity
-     * @throws Exception
-     */
-    public function testGetCustomEntities($data)
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_CUSTOM_ENTITIES);
-        $gqlPayload = [
-            'query' => $query,
-        ];
-
-        $customEntities = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $customEntities['body']);
-        $this->assertIsArray($customEntities['body']['data']);
-        $this->assertIsArray($customEntities['body']['data']['actorsList']);
-    }
-
-    /**
-     * @depends testCreateCustomEntity
-     * @throws Exception
-     */
-    public function testGetCustomEntity($data)
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_CUSTOM_ENTITY);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'id' => $data['_id'],
-            ]
-        ];
-
-        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $entity['body']);
-        $this->assertIsArray($entity['body']['data']);
-        $this->assertIsArray($entity['body']['data']['actorsGet']);
-    }
+//    /**
+//     * @depends testCreateCustomEntity
+//     * @throws Exception
+//     */
+//    public function testGetCustomEntities($data)
+//    {
+//        $projectId = $this->getProject()['$id'];
+//        $query = $this->getQuery(self::$GET_CUSTOM_ENTITIES);
+//        $gqlPayload = [
+//            'query' => $query,
+//        ];
+//
+//        $customEntities = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+//            'content-type' => 'application/json',
+//            'x-appwrite-project' => $projectId,
+//        ], $this->getHeaders()), $gqlPayload);
+//
+//        $this->assertArrayNotHasKey('errors', $customEntities['body']);
+//        $this->assertIsArray($customEntities['body']['data']);
+//        $this->assertIsArray($customEntities['body']['data']['actorsList']);
+//    }
+//
+//    /**
+//     * @depends testCreateCustomEntity
+//     * @throws Exception
+//     */
+//    public function testGetCustomEntity($data)
+//    {
+//        $projectId = $this->getProject()['$id'];
+//        $query = $this->getQuery(self::$GET_CUSTOM_ENTITY);
+//        $gqlPayload = [
+//            'query' => $query,
+//            'variables' => [
+//                'id' => $data['_id'],
+//            ]
+//        ];
+//
+//        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+//            'content-type' => 'application/json',
+//            'x-appwrite-project' => $projectId,
+//        ], $this->getHeaders()), $gqlPayload);
+//
+//        $this->assertArrayNotHasKey('errors', $entity['body']);
+//        $this->assertIsArray($entity['body']['data']);
+//        $this->assertIsArray($entity['body']['data']['actorsGet']);
+//    }
 
     /**
      * @depends testCreateDatabase
@@ -885,33 +885,33 @@ class DatabaseServerTest extends Scope
         $this->assertStringContainsString('New Document Name', $document['data']);
     }
 
-    /**
-     * @depends testCreateCustomEntity
-     * @throws Exception
-     */
-    public function testUpdateCustomEntity(array $data)
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_CUSTOM_ENTITY);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'id' => $data['_id'],
-                'name' => 'New Custom Entity Name',
-            ]
-        ];
-
-        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertArrayNotHasKey('errors', $entity['body']);
-        $this->assertIsArray($entity['body']['data']);
-        $entity = $entity['body']['data']['actorsUpdate'];
-        $this->assertIsArray($entity);
-        $this->assertStringContainsString('New Custom Entity Name', $entity['name']);
-    }
+//    /**
+//     * @depends testCreateCustomEntity
+//     * @throws Exception
+//     */
+//    public function testUpdateCustomEntity(array $data)
+//    {
+//        $projectId = $this->getProject()['$id'];
+//        $query = $this->getQuery(self::$UPDATE_CUSTOM_ENTITY);
+//        $gqlPayload = [
+//            'query' => $query,
+//            'variables' => [
+//                'id' => $data['_id'],
+//                'name' => 'New Custom Entity Name',
+//            ]
+//        ];
+//
+//        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+//            'content-type' => 'application/json',
+//            'x-appwrite-project' => $projectId,
+//        ], $this->getHeaders()), $gqlPayload);
+//
+//        $this->assertArrayNotHasKey('errors', $entity['body']);
+//        $this->assertIsArray($entity['body']['data']);
+//        $entity = $entity['body']['data']['actorsUpdate'];
+//        $this->assertIsArray($entity);
+//        $this->assertStringContainsString('New Custom Entity Name', $entity['name']);
+//    }
 
     /**
      * @depends testCreateDocument
@@ -939,29 +939,29 @@ class DatabaseServerTest extends Scope
         $this->assertEquals(204, $document['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateCustomEntity
-     * @throws Exception
-     */
-    public function testDeleteCustomEntity(array $data)
-    {
-        $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$DELETE_CUSTOM_ENTITY);
-        $gqlPayload = [
-            'query' => $query,
-            'variables' => [
-                'id' => $data['_id'],
-            ]
-        ];
-
-        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
-
-        $this->assertIsNotArray($entity['body']);
-        $this->assertEquals(204, $entity['headers']['status-code']);
-    }
+//    /**
+//     * @depends testCreateCustomEntity
+//     * @throws Exception
+//     */
+//    public function testDeleteCustomEntity(array $data)
+//    {
+//        $projectId = $this->getProject()['$id'];
+//        $query = $this->getQuery(self::$DELETE_CUSTOM_ENTITY);
+//        $gqlPayload = [
+//            'query' => $query,
+//            'variables' => [
+//                'id' => $data['_id'],
+//            ]
+//        ];
+//
+//        $entity = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+//            'content-type' => 'application/json',
+//            'x-appwrite-project' => $projectId,
+//        ], $this->getHeaders()), $gqlPayload);
+//
+//        $this->assertIsNotArray($entity['body']);
+//        $this->assertEquals(204, $entity['headers']['status-code']);
+//    }
 
     /**
      * @depends testCreateStringAttribute
