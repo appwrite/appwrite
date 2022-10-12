@@ -2,7 +2,7 @@
 
 namespace Appwrite\GraphQL;
 
-use Appwrite\GraphQL\Promises\CoroutinePromise;
+use Appwrite\Promises\Swoole;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -14,17 +14,17 @@ use Utopia\Route;
 class Resolvers
 {
     /**
-     * Create a resolver for a given {@see Route}.
+     * Create a resolver for a given API {@see Route}.
      *
      * @param App $utopia
      * @param ?Route $route
      * @return callable
      */
-    public static function resolveAPIRequest(
+    public static function api(
         App $utopia,
         ?Route $route,
     ): callable {
-        return static fn($type, $args, $context, $info) => new CoroutinePromise(
+        return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $route, $args, $context, $info) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
@@ -57,22 +57,23 @@ class Resolvers
     }
 
     /**
-     * Create a resolver for getting a document in a specified database and collection.
+     * Create a resolver for a document in a specified database and collection with a specific method type.
      *
      * @param App $utopia
      * @param Database $dbForProject
      * @param string $databaseId
      * @param string $collectionId
+     * @param string $methodType
      * @return callable
      */
-    public static function resolveDocument(
+    public static function document(
         App $utopia,
         Database $dbForProject,
         string $databaseId,
         string $collectionId,
         string $methodType,
     ): callable {
-        return [self::class, 'resolveDocument' . \ucfirst($methodType)](
+        return [self::class, 'document' . \ucfirst($methodType)](
             $utopia,
             $dbForProject,
             $databaseId,
@@ -89,13 +90,13 @@ class Resolvers
      * @param string $collectionId
      * @return callable
      */
-    public static function resolveDocumentGet(
+    public static function documentGet(
         App $utopia,
         Database $dbForProject,
         string $databaseId,
         string $collectionId
     ): callable {
-        return static fn($type, $args, $context, $info) => new CoroutinePromise(
+        return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
@@ -120,13 +121,13 @@ class Resolvers
      * @param string $collectionId
      * @return callable
      */
-    public static function resolveDocumentList(
+    public static function documentList(
         App $utopia,
         Database $dbForProject,
         string $databaseId,
         string $collectionId,
     ): callable {
-        return static fn($type, $args, $context, $info) => new CoroutinePromise(
+        return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
@@ -159,13 +160,13 @@ class Resolvers
      * @param string $collectionId
      * @return callable
      */
-    public static function resolveDocumentCreate(
+    public static function documentCreate(
         App $utopia,
         Database $dbForProject,
         string $databaseId,
         string $collectionId,
     ): callable {
-        return static fn($type, $args, $context, $info) => new CoroutinePromise(
+        return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
@@ -204,13 +205,13 @@ class Resolvers
      * @param string $collectionId
      * @return callable
      */
-    public static function resolveDocumentUpdate(
+    public static function documentUpdate(
         App $utopia,
         Database $dbForProject,
         string $databaseId,
         string $collectionId,
     ): callable {
-        return static fn($type, $args, $context, $info) => new CoroutinePromise(
+        return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
@@ -249,13 +250,13 @@ class Resolvers
      * @param string $collectionId
      * @return callable
      */
-    public static function resolveDocumentDelete(
+    public static function documentDelete(
         App $utopia,
         Database $dbForProject,
         string $databaseId,
         string $collectionId
     ): callable {
-        return static fn($type, $args, $context, $info) => new CoroutinePromise(
+        return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
                 $utopia = $utopia->getResource('current', true);
                 $request = $utopia->getResource('request', true);
@@ -279,10 +280,12 @@ class Resolvers
      * @param Response $response
      * @param callable $resolve
      * @param callable $reject
+     * @param callable|null $beforeResolve
+     * @param callable|null $beforeReject
      * @return void
      * @throws Exception
      */
-    public static function resolve(
+    private static function resolve(
         App $utopia,
         Request $request,
         Response $response,
@@ -318,7 +321,7 @@ class Resolvers
             if ($beforeReject) {
                 $payload = $beforeReject($payload);
             }
-            $reject(new GQLException(
+            $reject(new Exception(
                 message: $payload['message'],
                 code: $response->getStatusCode()
             ));

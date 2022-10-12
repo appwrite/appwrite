@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Appwrite\GraphQL\Promises\CoroutinePromiseAdapter;
+use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
@@ -85,7 +85,7 @@ App::post('/v1/graphql/upload')
  *
  * @param Request $request
  * @param Response $response
- * @param CoroutinePromiseAdapter $promiseAdapter
+ * @param Adapter $promiseAdapter
  * @param Type\Schema $schema
  * @return void
  * @throws Exception
@@ -93,7 +93,7 @@ App::post('/v1/graphql/upload')
 function executeRequest(
     Appwrite\Utopia\Request $request,
     Appwrite\Utopia\Response $response,
-    CoroutinePromiseAdapter $promiseAdapter,
+    Adapter $promiseAdapter,
     Type\Schema $schema
 ): void {
     $query = $request->getParams();

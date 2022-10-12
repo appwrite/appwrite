@@ -21,12 +21,6 @@ error_reporting(E_ALL);
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
-use Appwrite\SMS\Adapter\Mock;
-use Appwrite\SMS\Adapter\Telesign;
-use Appwrite\SMS\Adapter\TextMagic;
-use Appwrite\SMS\Adapter\Twilio;
-use Appwrite\SMS\Adapter\Msg91;
-use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
@@ -36,15 +30,20 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\PDO;
-use Appwrite\GraphQL\SchemaBuilder;
-use Appwrite\GraphQL\Promises\CoroutinePromiseAdapter;
+use Appwrite\GraphQL\Promises\Adapter\Swoole;
+use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\SMS\Adapter\Mock;
+use Appwrite\SMS\Adapter\Msg91;
+use Appwrite\SMS\Adapter\Telesign;
+use Appwrite\SMS\Adapter\TextMagic;
+use Appwrite\SMS\Adapter\Twilio;
+use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
-use Utopia\Database\ID;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOConfig;
@@ -58,9 +57,10 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\ID;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
@@ -632,7 +632,7 @@ $register->set('cache', function () {
     return $redis;
 });
 $register->set('promiseAdapter', function () {
-    return new CoroutinePromiseAdapter();
+    return new Swoole();
 });
 
 /*
@@ -1061,5 +1061,5 @@ App::setResource('promiseAdapter', function ($register) {
 }, ['register']);
 
 App::setResource('schema', function ($utopia, $project, $dbForProject) {
-    return SchemaBuilder::buildSchema($utopia, $project->getId(), $dbForProject);
+    return Schema::build($utopia, $project->getId(), $dbForProject);
 }, ['utopia', 'project', 'dbForProject']);
