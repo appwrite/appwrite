@@ -69,7 +69,7 @@ class Schema
      * @return array
      * @throws \Exception
      */
-    public static function api(App $utopia): array
+    protected static function api(App $utopia): array
     {
         Mapper::init($utopia
             ->getResource('response')
@@ -123,7 +123,7 @@ class Schema
      * @return array
      * @throws \Exception
      */
-    public static function collections(
+    protected static function collections(
         App $utopia,
         Database $dbForProject
     ): array {

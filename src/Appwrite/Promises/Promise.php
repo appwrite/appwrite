@@ -132,7 +132,7 @@ abstract class Promise
      */
     protected function setResult(mixed $value): void
     {
-        if (!$value instanceof self) {
+        if (!\is_callable([$value, 'then'])) {
             $this->result = $value;
             return;
         }
