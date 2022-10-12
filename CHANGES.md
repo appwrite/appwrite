@@ -1,7 +1,7 @@
 # Version 1.0.3
 ## Bugs
 - Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)
-- Fix attribute, index, and audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)
+- Fix attribute and index deletion when deleting a collection [#4429](https://github.com/appwrite/appwrite/pull/4429)
 
 # Version 1.0.2
 ## Bugs
