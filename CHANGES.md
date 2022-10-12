@@ -1,3 +1,8 @@
+# Version 1.1.0
+
+## Bugs
+- Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
+
 # Version 1.0.3
 ## Bugs
 - Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)
