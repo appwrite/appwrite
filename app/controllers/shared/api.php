@@ -7,6 +7,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Extend\Exception;
+use Appwrite\GraphQL\Schema;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
@@ -441,6 +442,5 @@ App::shutdown()
     ->inject('register')
     ->inject('project')
     ->action(function (Registry $register, Document $project) {
-        $projectId = $project->getId();
-        $register->set($projectId . 'SchemaDirty', fn() => true);
+        Schema::setDirty($project->getId());
     });

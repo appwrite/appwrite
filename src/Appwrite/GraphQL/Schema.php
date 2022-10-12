@@ -16,7 +16,7 @@ use Utopia\Route;
 class Schema
 {
     protected static ?GQLSchema $schema = null;
-    protected static bool $dirty = false;
+    protected static array $dirty = [];
 
     /**
      * @throws \Exception
@@ -30,7 +30,7 @@ class Schema
             return $utopia;
         });
 
-        if (!self::$dirty && self::$schema) {
+        if (!empty(self::$schema)) {
             return self::$schema;
         }
 
@@ -249,5 +249,10 @@ class Schema
             'query' => $queryFields,
             'mutation' => $mutationFields
         ];
+    }
+
+    public static function setDirty(string $projectId): void
+    {
+        self::$dirty[$projectId] = true;
     }
 }

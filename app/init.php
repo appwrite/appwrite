@@ -1056,7 +1056,6 @@ App::setResource('servers', function () {
 });
 
 App::setResource('promiseAdapter', function ($register) {
-    /** @var Utopia\Registry\Registry $register */
     return $register->get('promiseAdapter');
 }, ['register']);
 
