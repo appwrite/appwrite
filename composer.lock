@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "69eba53723d6196f86161494e8cc7546",
+    "content-hash": "066292e3062dbbc4c8d633ff11f70c65",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2178,24 +2178,24 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.21.1",
+            "version": "dev-feat-allow-mutations",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "c81789b87a917da2daf336738170ebe01f50ea18"
+                "reference": "bf561c125647dcee8d6b3a5b3934c7ece91f326e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/c81789b87a917da2daf336738170ebe01f50ea18",
-                "reference": "c81789b87a917da2daf336738170ebe01f50ea18",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/bf561c125647dcee8d6b3a5b3934c7ece91f326e",
+                "reference": "bf561c125647dcee8d6b3a5b3934c7ece91f326e",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.5.10",
-                "vimeo/psalm": "4.13.1"
+                "phpunit/phpunit": "^9.5.25",
+                "vimeo/psalm": "^4.27.0"
             },
             "type": "library",
             "autoload": {
@@ -2221,9 +2221,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.21.1"
+                "source": "https://github.com/utopia-php/framework/tree/feat-allow-mutations"
             },
-            "time": "2022-09-07T09:56:28+00:00"
+            "time": "2022-10-12T02:02:55+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2611,22 +2611,22 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.3.3",
+            "version": "dev-feat-allow-mutations",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "8312df69233b5dcd3992de88f131f238002749de"
+                "reference": "2c9e77696a4e40003a767c7d65cd5b2573f8b745"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/8312df69233b5dcd3992de88f131f238002749de",
-                "reference": "8312df69233b5dcd3992de88f131f238002749de",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/2c9e77696a4e40003a767c7d65cd5b2573f8b745",
+                "reference": "2c9e77696a4e40003a767c7d65cd5b2573f8b745",
                 "shasum": ""
             },
             "require": {
                 "ext-swoole": "*",
                 "php": ">=8.0",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "dev-feat-allow-mutations"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -2661,9 +2661,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.3.3"
+                "source": "https://github.com/utopia-php/swoole/tree/feat-allow-mutations"
             },
-            "time": "2022-01-20T09:58:43+00:00"
+            "time": "2022-10-12T03:11:03+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -5424,9 +5424,25 @@
             "time": "2022-09-28T08:42:51+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-feat-allow-mutations",
+            "alias": "0.22.1",
+            "alias_normalized": "0.22.1.0"
+        },
+        {
+            "package": "utopia-php/swoole",
+            "version": "dev-feat-allow-mutations",
+            "alias": "0.3.0",
+            "alias_normalized": "0.3.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/framework": 20,
+        "utopia-php/swoole": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
