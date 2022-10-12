@@ -65,6 +65,11 @@ class Mapper
     private static array $models = [];
     private static array $defaultArgs = [];
 
+    private static array $routeBlacklist = [
+        'v1/mock',
+        'v1/graphql',
+    ];
+
     public static function init(array $models): void
     {
         self::$models = $models;
@@ -121,11 +126,10 @@ class Mapper
 
     public static function route(App $utopia, Route $route): iterable
     {
-        if (
-            \str_starts_with($route->getPath(), '/v1/mock/') ||
-            \str_starts_with($route->getPath(), '/v1/graphql')
-        ) {
-            return;
+        foreach (self::$routeBlacklist as $blacklist) {
+            if (\str_starts_with($route->getPath(), $blacklist)) {
+                return;
+            }
         }
 
         $names = $route->getLabel('sdk.response.model', 'none');
