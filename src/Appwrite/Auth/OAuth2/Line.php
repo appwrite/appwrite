@@ -120,20 +120,9 @@ class Line extends OAuth2
      */
     public function getUserEmail(string $accessToken): string
     {
-        $userInfo = [];
-        $userInfo = \json_decode($this->request(
-            'POST',
-            'https://api.line.me/oauth2/v2.1/verify',
-            ['Content-Type: application/x-www-form-urlencoded'],
-            \http_build_query([
-                'id_token' => $this->tokens['id_token'],
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+        $user = $this->getUser($accessToken);
 
-            ])
-        ), true);
-
-        return  $userInfo['email'] ?? '';
+        return  $user['email'] ?? '';
     }
 
     /**
@@ -175,6 +164,22 @@ class Line extends OAuth2
             $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
             $user = $this->request('GET', 'https://api.line.me/oauth2/v2.1/userinfo', $headers);
             $this->user = \json_decode($user, true);
+
+            $emailInfo = \json_decode($this->request(
+                'POST',
+                'https://api.line.me/oauth2/v2.1/verify',
+                ['Content-Type: application/x-www-form-urlencoded'],
+                \http_build_query([
+                    'id_token' => $this->tokens['id_token'],
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+    
+                ])
+            ), true);
+            
+            if(isset($emailInfo['email']))
+            $this->user['email'] = $emailInfo['email']; 
+    
         }
 
         return $this->user;
