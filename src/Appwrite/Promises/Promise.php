@@ -1,18 +1,8 @@
 <?php
 
-namespace Appwrite\GraphQL\Promises;
+namespace Appwrite\Promises;
 
-use GraphQL\Error\InvariantViolation;
-use GraphQL\Executor\Promise\Promise;
-use GraphQL\Utils\Utils;
-use Swoole\Coroutine\Channel;
-
-/**
- * Inspired by https://github.com/streamcommon/promise/blob/master/lib/ExtSwoolePromise.php
- *
- * @package Appwrite\GraphQL
- */
-class CoroutinePromise
+abstract class Promise
 {
     protected const STATE_PENDING = 1;
     protected const STATE_FULFILLED = 0;
@@ -35,22 +25,22 @@ class CoroutinePromise
             $this->setResult($value);
             $this->setState(self::STATE_REJECTED);
         };
-        \go(function () use ($executor, $resolve, $reject) {
-            try {
-                $executor($resolve, $reject);
-            } catch (\Throwable $exception) {
-                $reject($exception);
-            }
-        });
+        $this->execute($executor, $resolve, $reject);
     }
+
+    abstract protected function execute(
+        callable $executor,
+        callable $resolve,
+        callable $reject
+    ): void;
 
     /**
      * Create a new promise from the given callable.
      *
      * @param callable $promise
-     * @return CoroutinePromise
+     * @return self
      */
-    final public static function create(callable $promise): CoroutinePromise
+    public static function create(callable $promise): self
     {
         return new static($promise);
     }
@@ -59,9 +49,9 @@ class CoroutinePromise
      * Resolve promise with given value.
      *
      * @param mixed $value
-     * @return CoroutinePromise
+     * @return self
      */
-    final public static function resolve(mixed $value): CoroutinePromise
+    public static function resolve(mixed $value): self
     {
         return new static(function (callable $resolve) use ($value) {
             $resolve($value);
@@ -72,9 +62,9 @@ class CoroutinePromise
      * Rejects the promise with the given reason.
      *
      * @param mixed $value
-     * @return CoroutinePromise
+     * @return self
      */
-    final public static function reject(mixed $value): CoroutinePromise
+    public static function reject(mixed $value): self
     {
         return new static(function (callable $resolve, callable $reject) use ($value) {
             $reject($value);
@@ -85,9 +75,9 @@ class CoroutinePromise
      * Catch any exception thrown by the executor.
      *
      * @param callable $onRejected
-     * @return CoroutinePromise
+     * @return self
      */
-    final public function catch(callable $onRejected): CoroutinePromise
+    public function catch(callable $onRejected): self
     {
         return $this->then(null, $onRejected);
     }
@@ -97,10 +87,12 @@ class CoroutinePromise
      *
      * @param callable|null $onFulfilled
      * @param callable|null $onRejected
-     * @return CoroutinePromise
+     * @return self
      */
-    public function then(?callable $onFulfilled = null, ?callable $onRejected = null): CoroutinePromise
-    {
+    public function then(
+        ?callable $onFulfilled = null,
+        ?callable $onRejected = null
+    ): self {
         if ($this->isRejected() && $onRejected === null) {
             return $this;
         }
@@ -127,49 +119,10 @@ class CoroutinePromise
     /**
      * Returns a promise that completes when all passed in promises complete.
      *
-     * @param iterable|CoroutinePromise[] $promises
-     * @return CoroutinePromise
+     * @param iterable|self[] $promises
+     * @return self
      */
-    public static function all(iterable $promises): CoroutinePromise
-    {
-        return self::create(function (callable $resolve, callable $reject) use ($promises) {
-            $ticks = count($promises);
-
-            $firstError = null;
-            $channel = new Channel($ticks);
-            $result = [];
-            $key = 0;
-
-            foreach ($promises as $promise) {
-                if (!$promise instanceof CoroutinePromise) {
-                    $channel->close();
-                    throw new InvariantViolation('Expected instance of CoroutinePromise, got ' . Utils::printSafe($promise));
-                }
-                $promise->then(function ($value) use ($key, &$result, $channel) {
-                    $result[$key] = $value;
-                    $channel->push(true);
-                    return $value;
-                }, function ($error) use ($channel, &$firstError) {
-                    $channel->push(true);
-                    if ($firstError === null) {
-                        $firstError = $error;
-                    }
-                });
-                $key++;
-            }
-            while ($ticks--) {
-                $channel->pop();
-            }
-            $channel->close();
-
-            if ($firstError !== null) {
-                $reject($firstError);
-                return;
-            }
-
-            $resolve($result);
-        });
-    }
+    abstract public static function all(iterable $promises): self;
 
     /**
      * Set resolved result
@@ -177,18 +130,20 @@ class CoroutinePromise
      * @param mixed $value
      * @return void
      */
-    private function setResult(mixed $value): void
+    protected function setResult(mixed $value): void
     {
-        if (!$value instanceof Promise) {
+        if (!$value instanceof self) {
             $this->result = $value;
             return;
         }
 
         $resolved = false;
+
         $callable = function ($value) use (&$resolved) {
             $this->setResult($value);
             $resolved = true;
         };
+
         $value->then($callable, $callable);
 
         while (!$resolved) {
@@ -202,7 +157,7 @@ class CoroutinePromise
      * @param integer $state
      * @return void
      */
-    final protected function setState(int $state): void
+    protected function setState(int $state): void
     {
         $this->state = $state;
     }
@@ -212,7 +167,7 @@ class CoroutinePromise
      *
      * @return boolean
      */
-    final protected function isPending(): bool
+    protected function isPending(): bool
     {
         return $this->state == self::STATE_PENDING;
     }
@@ -222,7 +177,7 @@ class CoroutinePromise
      *
      * @return boolean
      */
-    final protected function isFulfilled(): bool
+    protected function isFulfilled(): bool
     {
         return $this->state == self::STATE_FULFILLED;
     }
@@ -232,7 +187,7 @@ class CoroutinePromise
      *
      * @return boolean
      */
-    final protected function isRejected(): bool
+    protected function isRejected(): bool
     {
         return $this->state == self::STATE_REJECTED;
     }
