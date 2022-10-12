@@ -27,6 +27,11 @@ class Request extends UtopiaRequest
         parent::__construct($request);
     }
 
+    public function clone(): Request
+    {
+        return new self($this->swoole);
+    }
+
     public function getSwoole(): SwooleRequest
     {
         return $this->swoole;
