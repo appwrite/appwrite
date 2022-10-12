@@ -2,6 +2,11 @@
 ## Features
 - Added LINE OAuth2 Provider [#4426](https://github.com/appwrite/appwrite/pull/4426)
 
+# Version 1.0.3
+## Bugs
+- Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)
+- Fix attribute and index deletion when deleting a collection [#4429](https://github.com/appwrite/appwrite/pull/4429)
+
 # Version 1.0.2
 ## Bugs
 - Fixed nullable values in functions variables [#3885](https://github.com/appwrite/appwrite/pull/3885)
