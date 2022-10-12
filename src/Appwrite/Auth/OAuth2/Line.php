@@ -173,13 +173,13 @@ class Line extends OAuth2
                     'id_token' => $this->tokens['id_token'],
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
-    
+
                 ])
             ), true);
-            
-            if(isset($emailInfo['email']))
-            $this->user['email'] = $emailInfo['email']; 
-    
+
+            if (isset($emailInfo['email'])) {
+                $this->user['email'] = $emailInfo['email'];
+            }
         }
 
         return $this->user;
