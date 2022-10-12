@@ -2,10 +2,10 @@
 
 namespace Appwrite\GraphQL;
 
-use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use GraphQL\Error\ClientAware;
 
-class GQLException extends Exception implements ClientAware
+class Exception extends AppwriteException implements ClientAware
 {
     public function isClientSafe(): bool
     {
