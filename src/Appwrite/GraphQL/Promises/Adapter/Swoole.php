@@ -3,13 +3,14 @@
 namespace Appwrite\GraphQL\Promises\Adapter;
 
 use Appwrite\GraphQL\Promises\Adapter;
+use Appwrite\Promises\Swoole as SwoolePromise;
 use GraphQL\Executor\Promise\Promise as GQLPromise;
 
 class Swoole extends Adapter
 {
     public function create(callable $resolver): GQLPromise
     {
-        $promise = new Swoole(function ($resolve, $reject) use ($resolver) {
+        $promise = new SwoolePromise(function ($resolve, $reject) use ($resolver) {
             $resolver($resolve, $reject);
         });
 
@@ -18,7 +19,7 @@ class Swoole extends Adapter
 
     public function createFulfilled($value = null): GQLPromise
     {
-        $promise = new Swoole(function ($resolve, $reject) use ($value) {
+        $promise = new SwoolePromise(function ($resolve, $reject) use ($value) {
             $resolve($value);
         });
 
@@ -27,7 +28,7 @@ class Swoole extends Adapter
 
     public function createRejected($reason): GQLPromise
     {
-        $promise = new Swoole(function ($resolve, $reject) use ($reason) {
+        $promise = new SwoolePromise(function ($resolve, $reject) use ($reason) {
             $reject($reason);
         });
 
@@ -36,6 +37,6 @@ class Swoole extends Adapter
 
     public function all(array $promisesOrValues): GQLPromise
     {
-        return new GQLPromise(Swoole::all($promisesOrValues), $this);
+        return new GQLPromise(SwoolePromise::all($promisesOrValues), $this);
     }
 }

@@ -26,7 +26,7 @@ class Resolvers
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $route, $args, $context, $info) {
-                $utopia = $utopia->getResource('current', true);
+                $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
@@ -98,7 +98,7 @@ class Resolvers
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
-                $utopia = $utopia->getResource('current', true);
+                $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
@@ -129,7 +129,7 @@ class Resolvers
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
-                $utopia = $utopia->getResource('current', true);
+                $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
@@ -168,7 +168,7 @@ class Resolvers
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
-                $utopia = $utopia->getResource('current', true);
+                $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
@@ -213,7 +213,7 @@ class Resolvers
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
-                $utopia = $utopia->getResource('current', true);
+                $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
@@ -258,7 +258,7 @@ class Resolvers
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $dbForProject, $databaseId, $collectionId, $type, $args) {
-                $utopia = $utopia->getResource('current', true);
+                $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
                 $swoole = $request->getSwoole();
@@ -321,7 +321,7 @@ class Resolvers
             if ($beforeReject) {
                 $payload = $beforeReject($payload);
             }
-            $reject(new Exception(
+            $reject(new GQLException(
                 message: $payload['message'],
                 code: $response->getStatusCode()
             ));

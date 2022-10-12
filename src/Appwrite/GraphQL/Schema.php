@@ -26,7 +26,7 @@ class Schema
         string $projectId,
         Database $dbForProject
     ): GQLSchema {
-        App::setResource('utopia:self', static function () use ($utopia) {
+        App::setResource('utopia:graphql', static function () use ($utopia) {
             return $utopia;
         });
 

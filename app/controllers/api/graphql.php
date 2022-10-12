@@ -91,8 +91,8 @@ App::post('/v1/graphql/upload')
  * @throws Exception
  */
 function executeRequest(
-    Appwrite\Utopia\Request $request,
-    Appwrite\Utopia\Response $response,
+    Request $request,
+    Response $response,
     Adapter $promiseAdapter,
     Type\Schema $schema
 ): void {
@@ -109,10 +109,10 @@ function executeRequest(
     $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
 
     if (\str_starts_with($contentType, 'application/graphql')) {
-        $query = parseGraphqlRequest($request);
+        $query = parseGraphql($request);
     }
     if (\str_starts_with($contentType, 'multipart/form-data')) {
-        $query = parseMultipartRequest($query, $request);
+        $query = parseMultipart($query, $request);
     }
     if (!empty($query) && !isset($query[0])) {
         $query = [$query];
@@ -174,7 +174,7 @@ function executeRequest(
  * @param Request $request
  * @return array
  */
-function parseGraphqlRequest(Request $request): array
+function parseGraphql(Request $request): array
 {
     return [ 'query' => $request->getSwoole()->rawContent() ];
 }
@@ -186,7 +186,7 @@ function parseGraphqlRequest(Request $request): array
  * @param Request $request
  * @return array
  */
-function parseMultipartRequest(array $query, Request $request): array
+function parseMultipart(array $query, Request $request): array
 {
     $operations = \json_decode($query['operations'], true);
     $map = \json_decode($query['map'], true);
