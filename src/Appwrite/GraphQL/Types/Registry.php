@@ -1,18 +1,10 @@
 <?php
 
-namespace Appwrite\GraphQL;
+namespace Appwrite\GraphQL\Types;
 
-use Appwrite\GraphQL\Types\InputFile;
-use Appwrite\GraphQL\Types\Json;
-use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
-use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
-use GraphQL\Type\Definition\UnionType;
-use Utopia\CLI\Console;
-use Utopia\Database\Database;
 
-class TypeRegistry
+class Registry
 {
     private static array $register = [];
 

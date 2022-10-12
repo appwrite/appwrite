@@ -1,9 +1,11 @@
 <?php
 
-namespace Appwrite\GraphQL;
+namespace Appwrite\GraphQL\Types;
 
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Event\Validator\Event;
+use Appwrite\GraphQL\Resolvers;
+use Appwrite\GraphQL\Types;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain;
 use Appwrite\Network\Validator\Email;
@@ -58,7 +60,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-class TypeMapper
+class Mapper
 {
     private static array $models = [];
     private static array $defaultArgs = [];
@@ -99,7 +101,7 @@ class TypeMapper
         ];
 
         foreach ($defaultTypes as $type => $default) {
-            TypeRegistry::set($type, $default);
+            Registry::set($type, $default);
         }
     }
 
@@ -117,22 +119,22 @@ class TypeMapper
         return [];
     }
 
-    public static function fromRoute(App $utopia, Route $route): iterable
+    public static function route(App $utopia, Route $route): iterable
     {
-        if (\str_starts_with($route->getPath(), '/v1/mock/')) {
-            return;
-        }
-        if ($route->getLabel('sdk.methodType', '') === 'webAuth') {
+        if (
+            \str_starts_with($route->getPath(), '/v1/mock/') ||
+            \str_starts_with($route->getPath(), '/v1/graphql')
+        ) {
             return;
         }
 
-        $modelNames = $route->getLabel('sdk.response.model', 'none');
-        $models = \is_array($modelNames)
-            ? \array_map(static fn($m) => static::$models[$m], $modelNames)
-            : [static::$models[$modelNames]];
+        $names = $route->getLabel('sdk.response.model', 'none');
+        $models = \is_array($names)
+            ? \array_map(static fn($m) => static::$models[$m], $names)
+            : [static::$models[$names]];
 
         foreach ($models as $model) {
-            $type = TypeMapper::fromResponseModel(\ucfirst($model->getType()));
+            $type = Mapper::fromResponseModel(\ucfirst($model->getType()));
             $description = $route->getDesc();
             $params = [];
             $list = false;
@@ -141,7 +143,7 @@ class TypeMapper
                 if ($name === 'queries') {
                     $list = true;
                 }
-                $parameterType = TypeMapper::fromRouteParameter(
+                $parameterType = Mapper::fromRouteParameter(
                     $utopia,
                     $parameter['validator'],
                     !$parameter['optional'],
@@ -160,7 +162,7 @@ class TypeMapper
                 'type' => $type,
                 'description' => $description,
                 'args' => $params,
-                'resolve' => Resolvers::resolveAPIRequest($utopia, $route)
+                'resolve' => Resolvers::api($utopia, $route)
             ];
 
             if ($list) {
@@ -185,8 +187,8 @@ class TypeMapper
      */
     public static function fromResponseModel(string $name): Type
     {
-        if (TypeRegistry::has($name)) {
-            return TypeRegistry::get($name);
+        if (Registry::has($name)) {
+            return Registry::get($name);
         }
 
         $fields = [];
@@ -237,7 +239,7 @@ class TypeMapper
             'fields' => $fields,
         ]);
 
-        TypeRegistry::set($name, $type);
+        Registry::set($name, $type);
 
         return $type;
     }
@@ -371,8 +373,8 @@ class TypeMapper
     {
         $type = $rule['type'];
 
-        if (TypeRegistry::has($type)) {
-            return TypeRegistry::get($type);
+        if (Registry::has($type)) {
+            return Registry::get($type);
         }
 
         $complexModel = self::$models[$type];
@@ -383,8 +385,8 @@ class TypeMapper
     {
         $unionName = \ucfirst($name);
 
-        if (TypeRegistry::has($unionName)) {
-            return TypeRegistry::get($unionName);
+        if (Registry::has($unionName)) {
+            return Registry::get($unionName);
         }
 
         $types = [];
@@ -400,7 +402,7 @@ class TypeMapper
             },
         ]);
 
-        TypeRegistry::set($unionName, $unionType);
+        Registry::set($unionName, $unionType);
 
         return $unionType;
     }
