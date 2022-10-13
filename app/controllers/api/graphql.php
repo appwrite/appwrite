@@ -23,7 +23,9 @@ App::get('/v1/graphql')
     ->label('sdk.method', 'query')
     ->label('sdk.methodType', 'graphql')
     ->label('sdk.description', '/docs/references/graphql/query.md')
-    ->label('sdk.parameters', ['query' => ['default' => '', 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false]])
+    ->label('sdk.parameters', [
+        'query' => ['default' => '', 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+    ])
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ANY)
@@ -44,7 +46,9 @@ App::post('/v1/graphql')
     ->label('sdk.method', 'mutate')
     ->label('sdk.methodType', 'graphql')
     ->label('sdk.description', '/docs/references/graphql/mutate.md')
-    ->label('sdk.parameters', ['query' => ['default' => '', 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false]])
+    ->label('sdk.parameters', [
+        'query' => ['default' => '', 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+    ])
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ANY)
@@ -55,30 +59,6 @@ App::post('/v1/graphql')
     ->inject('promiseAdapter')
     ->inject('schema')
     ->action(Closure::fromCallable('executeRequest'));
-
-App::post('/v1/graphql/upload')
-    ->desc('GraphQL Upload Endpoint')
-    ->groups(['graphql'])
-    ->label('scope', 'graphql')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'graphql')
-    ->label('sdk.method', 'upload')
-    ->label('sdk.methodType', 'graphql')
-    ->label('sdk.description', '/docs/references/graphql/upload.md')
-    ->label('sdk.methodType', 'upload')
-    ->label('sdk.parameters', ['query' => ['default' => '', 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false]])
-    ->label('sdk.request.type', 'multipart/form-data')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
-    ->label('abuse-limit', 60)
-    ->label('abuse-time', 60)
-    ->inject('request')
-    ->inject('response')
-    ->inject('promiseAdapter')
-    ->inject('schema')
-    ->action(Closure::fromCallable('executeRequest'));
-
 
 /**
  * Execute a GraphQL request
@@ -97,12 +77,11 @@ function executeRequest(
     Type\Schema $schema
 ): void {
     $query = $request->getParams();
+    $contentType = $request->getHeader('content-type');
 
     if ($request->getHeader('x-sdk-graphql') == 'true') {
-        $query = \json_decode($query['query'], true);
+        $query = $query['query'];
     }
-
-    $contentType = $request->getHeader('content-type');
 
     $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
     $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
@@ -178,7 +157,7 @@ function executeRequest(
  */
 function parseGraphql(Request $request): array
 {
-    return [ 'query' => $request->getRawContent() ];
+    return [ 'query' => $request->getRawPayload() ];
 }
 
 /**
@@ -211,7 +190,7 @@ function parseMultipart(array $query, Request $request): array
 }
 
 /**
- * Process an array of results for output
+ * Process an array of results for output.
  *
  * @param $result
  * @param $debugFlags
@@ -221,10 +200,10 @@ function processResult($result, $debugFlags): array
 {
     if (!isset($result[1])) {
         return $result[0]->toArray($debugFlags);
-    } else {
-        return \array_merge_recursive(...\array_map(
-            static fn ($item) => $item->toArray($debugFlags),
-            $result
-        ));
     }
+
+    return \array_merge_recursive(...\array_map(
+        static fn ($item) => $item->toArray($debugFlags),
+        $result
+    ));
 }
