@@ -25,11 +25,11 @@ App::post('/v1/syncs')
         $token = $request->getHeader('authorization');
         $token = str_replace(["Bearer"," "], "", $token);
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10);
-//        try {
-//            $payload = $jwt->decode($token);
-//        } catch (JWTException $error) {
-//            throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
-//        }
+        try {
+            $payload = $jwt->decode($token);
+        } catch (JWTException $error) {
+            throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
+        }
 
         $syncIn = new SyncIn();
         foreach ($keys as $key) {

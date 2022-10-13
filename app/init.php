@@ -759,24 +759,6 @@ App::setResource('clients', function ($request, $console, $project) use ($regist
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
-    $register->set('syncOut', function () {
-        return new SyncOut();
-    });
-
-    cache::on(cache::EVENT_PURGE, function ($key) use ($register) {
-        $register
-            ->get('syncOut')
-            ->addKey($key)
-            ->trigger();
-    });
-
-    cache::on(cache::EVENT_SAVE, function ($key) use ($register) {
-        $register
-            ->get('syncOut')
-            ->addKey($key)
-            ->trigger();
-    });
-
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
@@ -945,25 +927,59 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function ($db, $cache, Document $project) {
+$register->set('syncOut', function () {
+    return new SyncOut();
+});
+
+App::setResource('dbForProject', function ($db, $cache, Document $project, $register) {
+
     $cache = new Cache(new RedisCache($cache));
+
+    $cache->attach(cache::EVENT_SAVE, function ($key) use ($register) {
+        $register
+            ->get('syncOut')
+            ->addKey($key)
+            ->trigger();
+    });
+
+    $cache->attach(cache::EVENT_PURGE, function ($key) use ($register) {
+        $register
+            ->get('syncOut')
+            ->addKey($key)
+            ->trigger();
+    });
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getInternalId()}");
 
     return $database;
-}, ['db', 'cache', 'project']);
+}, ['db', 'cache', 'project', 'register']);
 
-App::setResource('dbForConsole', function ($db, $cache) {
+App::setResource('dbForConsole', function ($db, $cache, $register) {
+
     $cache = new Cache(new RedisCache($cache));
+
+    $cache->attach(cache::EVENT_SAVE, function ($key) use ($register) {
+        $register
+            ->get('syncOut')
+            ->addKey($key)
+            ->trigger();
+    });
+
+    $cache->attach(cache::EVENT_PURGE, function ($key) use ($register) {
+        $register
+            ->get('syncOut')
+            ->addKey($key)
+            ->trigger();
+    });
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace('_console');
 
     return $database;
-}, ['db', 'cache']);
+}, ['db', 'cache', 'register']);
 
 
 App::setResource('deviceLocal', function () {
