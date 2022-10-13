@@ -28,6 +28,7 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
 use Utopia\Swoole\Request;
 use Utopia\Swoole\Response;
+use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
@@ -256,6 +257,8 @@ App::post('/v1/runtimes')
                 '/dev/null'
             ] : [];
 
+            $executorName = \explode('-', $runtimeId)[0];
+
             $containerId = $orchestration->run(
                 image: $baseImage,
                 name: $runtimeId,
@@ -265,6 +268,7 @@ App::post('/v1/runtimes')
                 labels: [
                     'openruntimes-id' => $runtimeId,
                     'openruntimes-type' => 'runtime',
+                    'openruntimes-executor' => $executorName,
                     'openruntimes-created' => strval($startTimeUnix),
                     'openruntimes-runtime' => $runtime,
                 ],
@@ -645,22 +649,31 @@ App::post('/v1/execution')
     );
 
 App::get('/v1/health')
+    ->param('name', '', new Text(64), 'Name of the executor.')
     ->desc("Get usage stats of host machine")
     ->inject('response')
-    ->action(function (Response $response) {
+    ->action(function (string $name, Response $response) use ($orchestrationPool) {
+        $systemCores = System::getCPUCores();
+        $systemUsage = System::getCPUUtilisation() / $systemCores;
+        $functionsUsage = [];
+
+        try {
+            $orchestration = $orchestrationPool->get();
+            $runtimes = $orchestration->list(['label' => 'openruntimes-executor=' . $name]);
+            // $cpuUsages = $orchestration->getStats([ 'label' => 'openruntimes-executor=' . $name ]); // TODO: Add duration 4s, add label
+        } catch(\Exception $err) {
+            // TODO: Handle better
+            \var_dump($err);
+        } finally {
+            $orchestrationPool->put($orchestration);
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
             ->json([
                 'status' => 'pass',
-                /*
-                    TODO: Add host machine stats using Utopia/System and Utopia/orchestrator. Something like:
-
-                    'hostUsage' => 0.8,
-                    'functionRuntimeUsages' => [
-                        '[FUNCTION_ID]' => 0.2
-                    ]
-                */
-               
+                'hostUsage' => $systemUsage,
+                'functionsUsage' => $functionsUsage
             ]);
     });
 

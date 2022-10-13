@@ -79,7 +79,7 @@ function fetchExecutorsState(RedisPool $redisPool, bool $forceShowError = false)
             try {
                 [$id, $hostname] = \explode('=', $executor);
 
-                $endpoint = 'http://' . $hostname . '/v1/health';
+                $endpoint = 'http://' . $hostname . '/v1/health?name=' . $id;
 
                 $ch = \curl_init();
 

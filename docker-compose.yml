@@ -483,6 +483,8 @@ services:
         - DEBUG=false
         - TESTING=true
         - VERSION=dev
+    ports:
+      - 23421:80
     networks:
       appwrite:
       runtimes:
