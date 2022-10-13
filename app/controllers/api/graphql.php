@@ -165,7 +165,9 @@ function executeRequest(
     );
     $wg->wait();
 
-    $response->json($output);
+    $response
+        ->setStatusCode(Response::STATUS_CODE_OK)
+        ->json($output);
 }
 
 /**
