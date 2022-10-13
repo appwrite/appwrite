@@ -289,7 +289,7 @@ class Resolvers
         ?callable $beforeReject = null,
     ): void {
         // Drop json content type so post args are used directly
-        if ($request->getHeader('content-type') === 'application/json') {
+        if (\str_starts_with($request->getHeader('content-type'), 'application/json')) {
             $request->removeHeader('content-type');
         }
 
