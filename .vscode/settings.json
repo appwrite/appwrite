@@ -1,0 +1,10 @@
+{
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "css.validate": false,
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.wordWrapColumn": 120
+}
