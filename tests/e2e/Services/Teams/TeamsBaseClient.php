@@ -32,6 +32,7 @@ trait TeamsBaseClient
         $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
         $this->assertContains('owner', $response['body']['memberships'][0]['roles']);
         $this->assertContains('player', $response['body']['memberships'][0]['roles']);
+        $this->assertEmpty($response['body']['memberships'][0]['secret']);
 
         $membershipId = $response['body']['memberships'][0]['$id'];
 
@@ -205,6 +206,7 @@ trait TeamsBaseClient
         $this->assertCount(2, $response['body']['roles']);
         $this->assertEquals(false, DateTime::isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
+        $this->assertEmpty($response['body']['secret']);
 
         $lastEmail = $this->getLastEmail();
 

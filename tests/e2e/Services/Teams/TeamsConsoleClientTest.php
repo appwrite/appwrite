@@ -101,6 +101,7 @@ class TeamsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']['secret']);
 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',

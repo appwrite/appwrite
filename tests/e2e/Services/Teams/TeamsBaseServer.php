@@ -59,6 +59,7 @@ trait TeamsBaseServer
         $this->assertCount(2, $response['body']['roles']);
         $this->assertEquals(true, DateTime::isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(true, $response['body']['confirm']);
+        $this->assertNotEmpty(true, $response['body']['secret']);
 
         /**
          * Test for FAILURE
@@ -110,6 +111,7 @@ trait TeamsBaseServer
         $this->assertCount(2, $response['body']['roles']);
         $this->assertEquals(true, DateTime::isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
+        $this->assertNotEmpty(true, $response['body']['secret']);
 
         $userUid = $response['body']['userId'];
         $membershipUid = $response['body']['$id'];
@@ -211,7 +213,7 @@ trait TeamsBaseServer
         $this->assertEquals($roles[0], $response['body']['roles'][0]);
         $this->assertEquals($roles[1], $response['body']['roles'][1]);
         $this->assertEquals($roles[2], $response['body']['roles'][2]);
-
+        $this->assertNotEmpty(true, $response['body']['secret']);
 
         /**
          * Test for FAILURE
