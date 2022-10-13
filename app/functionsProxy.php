@@ -12,11 +12,14 @@ use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
+use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
+
+Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
 // Redis setup
 $redisHost = App::getEnv('_APP_REDIS_HOST', '');
@@ -189,6 +192,21 @@ go(function () use ($redisPool) {
 Swoole\Event::wait();
 
 $http = new Server("0.0.0.0", 80);
+
+$payloadSize = 6 * (1024 * 1024); // 6MB
+$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+
+$http
+    ->set([
+        'worker_num' => $workerNumber,
+        'open_http2_protocol' => true,
+        // 'document_root' => __DIR__.'/../public',
+        // 'enable_static_handler' => true,
+        'http_compression' => true,
+        'http_compression_level' => 6,
+        'package_max_length' => $payloadSize,
+        'buffer_output_size' => $payloadSize,
+    ]);
 
 $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter) {
     $secretKey = $request->header['x-appwrite-executor-key'] ?? '';
