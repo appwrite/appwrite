@@ -32,11 +32,6 @@ class Request extends UtopiaRequest
         return new self($this->swoole);
     }
 
-    public function getSwoole(): SwooleRequest
-    {
-        return $this->swoole;
-    }
-
     /**
      * Get Params
      *

@@ -178,7 +178,7 @@ function executeRequest(
  */
 function parseGraphql(Request $request): array
 {
-    return [ 'query' => $request->getSwoole()->rawContent() ];
+    return [ 'query' => $request->getRawContent() ];
 }
 
 /**
