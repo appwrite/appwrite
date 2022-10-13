@@ -78,7 +78,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.28.*",
+        "appwrite/sdk-generator": "dev-feat-graphql-method-type as 0.28.1",
         "ext-fileinfo": "*",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",
