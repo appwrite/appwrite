@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Teams;
 
+use Appwrite\Auth\Auth;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -115,6 +116,18 @@ trait TeamsBaseServer
 
         $userUid = $response['body']['userId'];
         $membershipUid = $response['body']['$id'];
+        $membershipSecret = $response['body']['secret'];
+
+        // Ensure secret is present on GET too, but hashed
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $membershipUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($membershipUid, $response['body']['$id']);
+        $this->assertNotEmpty(true, $response['body']['secret']);
+        $this->assertEquals(Auth::hash($membershipSecret), $response['body']['secret']);
 
         // $response = $this->client->call(Client::METHOD_GET, '/users/'.$userUid, array_merge([
         //     'content-type' => 'application/json',
