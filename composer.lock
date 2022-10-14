@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "60436077b574163b67a5d7cd221443cd",
+    "content-hash": "899a96df3f03fb61e9fedd0cc70367c8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2396,16 +2396,16 @@
         },
         {
             "name": "utopia-php/orchestration",
-            "version": "0.6.0",
+            "version": "dev-feat-usage-stats",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/orchestration.git",
-                "reference": "94263976413871efb6b16157a7101a81df3b6d78"
+                "reference": "e3434f1d5b7f7fada785281901350ead2ce10465"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/94263976413871efb6b16157a7101a81df3b6d78",
-                "reference": "94263976413871efb6b16157a7101a81df3b6d78",
+                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/e3434f1d5b7f7fada785281901350ead2ce10465",
+                "reference": "e3434f1d5b7f7fada785281901350ead2ce10465",
                 "shasum": ""
             },
             "require": {
@@ -2445,9 +2445,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/orchestration/issues",
-                "source": "https://github.com/utopia-php/orchestration/tree/0.6.0"
+                "source": "https://github.com/utopia-php/orchestration/tree/feat-usage-stats"
             },
-            "time": "2022-07-13T16:47:18+00:00"
+            "time": "2022-10-14T07:14:57+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -5365,11 +5365,18 @@
             "version": "dev-feat-upgrade-system-version",
             "alias": "0.11.0",
             "alias_normalized": "0.11.0.0"
+        },
+        {
+            "package": "utopia-php/orchestration",
+            "version": "dev-feat-usage-stats",
+            "alias": "0.6.0",
+            "alias_normalized": "0.6.0.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "appwrite/php-runtimes": 20
+        "appwrite/php-runtimes": 20,
+        "utopia-php/orchestration": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

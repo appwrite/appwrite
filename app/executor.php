@@ -654,13 +654,16 @@ App::get('/v1/health')
     ->inject('response')
     ->action(function (string $name, Response $response) use ($orchestrationPool) {
         $systemCores = System::getCPUCores();
-        $systemUsage = System::getCPUUtilisation() / $systemCores;
+        $systemUsage = System::getCPUUtilisation() / $systemCores / 100;
         $functionsUsage = [];
 
         try {
             $orchestration = $orchestrationPool->get();
-            $runtimes = $orchestration->list(['label' => 'openruntimes-executor=' . $name]);
-            // $cpuUsages = $orchestration->getStats([ 'label' => 'openruntimes-executor=' . $name ]); // TODO: Add duration 4s, add label
+            $containerUsages = $orchestration->getStats(filters: [ 'label' => 'openruntimes-executor=' . $name ], cycles: 3);
+
+            foreach ($containerUsages as $containerUsage) {
+                $functionsUsage[$containerUsage['name']] = $containerUsage['cpu'];
+            }
         } catch(\Exception $err) {
             // TODO: Handle better
             \var_dump($err);
