@@ -37,7 +37,7 @@ class UsageBased extends Adapter
         // TODO: @Meldiron Proper functionality
         // TODO: @Meldiron Use this adapter and test it
 
-        $executor = $executors[\array_rand($executors)] ?? null;        
+        $executor = $executors[\array_rand($executors)] ?? null;
         return $executor ?? null;
     }
 }

@@ -664,7 +664,7 @@ App::get('/v1/health')
             foreach ($containerUsages as $containerUsage) {
                 $functionsUsage[$containerUsage['name']] = $containerUsage['cpu'];
             }
-        } catch(\Exception $err) {
+        } catch (\Exception $err) {
             // TODO: @Meldiron Handle better
             \var_dump($err);
         } finally {
