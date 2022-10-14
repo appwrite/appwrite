@@ -23,7 +23,7 @@ class BuilderTest extends TestCase
     public function testCreateTypeMapping()
     {
         $model = $this->response->getModel(Response::MODEL_COLLECTION);
-        $type = Mapper::fromResponseModel(\ucfirst($model->getType()));
+        $type = Mapper::model(\ucfirst($model->getType()));
         $this->assertEquals('Collection', $type->name);
     }
 }
