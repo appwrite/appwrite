@@ -11,6 +11,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Validator\WhiteList;
+use Throwable;
 
 class Usage extends Task
 {
@@ -73,13 +74,14 @@ class Usage extends Task
 
         $database = $this->getDatabase($register, '_console');
         $influxDB = $this->getInfluxDB($register);
+        $logError = fn(Throwable $error, string $action = 'syncUsageStats') => $this->logError($register, $error, $action);
 
         switch ($type) {
             case 'timeseries':
-                $this->aggregateTimeseries($database, $influxDB, $this->logError);
+                $this->aggregateTimeseries($database, $influxDB, $logError);
                 break;
             case 'database':
-                $this->aggregateDatabase($database, $this->logError);
+                $this->aggregateDatabase($database, $logError);
                 break;
             default:
                 Console::error("Unsupported usage aggregation type");
