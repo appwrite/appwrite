@@ -1059,6 +1059,49 @@ App::setResource('promiseAdapter', function ($register) {
     return $register->get('promiseAdapter');
 }, ['register']);
 
-App::setResource('schema', function ($utopia, $project, $dbForProject) {
-    return Schema::build($utopia, $project->getId(), $dbForProject);
-}, ['utopia', 'project', 'dbForProject']);
+App::setResource('schema', function ($utopia, $dbForProject) {
+
+    $complexity = function (int $complexity, array $args) {
+        $queries = Query::parseQueries($args['queries'] ?? []);
+        $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+        $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
+
+        return $complexity * $limit;
+    };
+
+    $attributes = function (int $limit, int $offset) use ($dbForProject) {
+        $attrs = Authorization::skip(fn() => $dbForProject->find('attributes', [
+            Query::limit($limit),
+            Query::offset($offset),
+        ]));
+
+        return \array_map(function ($attr) {
+            return $attr->getArrayCopy();
+        }, $attrs);
+    };
+
+    $urls = [
+        'list' => function (string $collectionId, array $args) {
+            return "/v1/database/collections/{$collectionId}/documents";
+        },
+        'create' => function (string $collectionId, array $args) {
+            return "/v1/database/collections/{$collectionId}/documents";
+        },
+        'read' => function (string $collectionId, array $args) {
+            return "/v1/database/collections/{$collectionId}/documents/{$args['documentId']}";
+        },
+        'update' => function (string $collectionId, array $args) {
+            return "/v1/database/collections/{$collectionId}/documents/{$args['documentId']}";
+        },
+        'delete' => function (string $collectionId, array $args) {
+            return "/v1/database/collections/{$collectionId}/documents/{$args['documentId']}";
+        },
+    ];
+
+    return Schema::build(
+        $utopia,
+        $complexity,
+        $attributes,
+        $urls
+    );
+}, ['utopia', 'dbForProject']);

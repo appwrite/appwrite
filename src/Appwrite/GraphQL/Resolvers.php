@@ -7,8 +7,6 @@ use Appwrite\Promises\Swoole;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Database\Database;
-use Utopia\Database\ID;
 use Utopia\Exception;
 use Utopia\Route;
 
@@ -63,7 +61,6 @@ class Resolvers
      * Create a resolver for a document in a specified database and collection with a specific method type.
      *
      * @param App $utopia
-     * @param Database $dbForProject
      * @param string $databaseId
      * @param string $collectionId
      * @param string $methodType
@@ -93,16 +90,17 @@ class Resolvers
     public static function documentGet(
         App $utopia,
         string $databaseId,
-        string $collectionId
+        string $collectionId,
+        callable $url
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $type, $args) {
+            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $type, $args) {
                 $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
 
                 $request->setMethod('GET');
-                $request->setURI("/v1/database/collections/{$collectionId}/documents/{$args['documentId']}");
+                $request->setURI($url($collectionId, $args));
 
                 self::resolve($utopia, $request, $response, $resolve, $reject);
             }
@@ -121,15 +119,16 @@ class Resolvers
         App $utopia,
         string $databaseId,
         string $collectionId,
+        callable $url
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $type, $args) {
+            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $type, $args) {
                 $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
 
                 $request->setMethod('GET');
-                $request->setURI("/v1/database/collections/{$collectionId}/documents");
+                $request->setURI($url($collectionId, $args));
                 $request->setGet([
                     'queries' => $args['queries'],
                 ]);
@@ -155,21 +154,22 @@ class Resolvers
         App $utopia,
         string $databaseId,
         string $collectionId,
+        callable $url
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $type, $args) {
+            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $type, $args) {
                 $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
 
-                $id = $args['id'] ?? ID::unique();
+                $id = $args['id'] ?? 'unique()';
                 $permissions = $args['permissions'] ?? null;
 
                 unset($args['id']);
                 unset($args['permissions']);
 
                 $request->setMethod('POST');
-                $request->setURI("/v1/databases/$databaseId/collections/$collectionId/documents");
+                $request->setURI($url($collectionId, $args));
 
                 // Order must be the same as the route params
                 $request->setPost([
@@ -197,9 +197,10 @@ class Resolvers
         App $utopia,
         string $databaseId,
         string $collectionId,
+        callable $url
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $type, $args) {
+            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $type, $args) {
                 $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
@@ -211,7 +212,7 @@ class Resolvers
                 unset($args['permissions']);
 
                 $request->setMethod('PATCH');
-                $request->setURI("/v1/databases/$databaseId/collections/$collectionId/documents/$documentId");
+                $request->setURI($url($collectionId, $args));
 
                 // Order must be the same as the route params
                 $request->setPost([
@@ -238,10 +239,11 @@ class Resolvers
     public static function documentDelete(
         App $utopia,
         string $databaseId,
-        string $collectionId
+        string $collectionId,
+        callable $url
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $type, $args) {
+            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $type, $args) {
                 $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
@@ -249,7 +251,7 @@ class Resolvers
                 $documentId = $args['id'];
 
                 $request->setMethod('DELETE');
-                $request->setURI("/v1/databases/$databaseId/collections/$collectionId/documents/$documentId");
+                $request->setURI($url($collectionId, $args));
 
                 self::resolve($utopia, $request, $response, $resolve, $reject);
             }
