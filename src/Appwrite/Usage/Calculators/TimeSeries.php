@@ -299,9 +299,6 @@ class TimeSeries extends Calculator
             'table' => 'appwrite_usage_documents_{scope}_count_total',
             'groupBy' => ['databaseId', 'collectionId']
         ],
-    ];
-
-    protected array $cumulativeMetrics = [
         'deployments.$all.storage.size' => [
             'table' => 'appwrite_usage_deployments_{scope}_storage_size',
         ],
@@ -315,14 +312,14 @@ class TimeSeries extends Calculator
             'table' => 'appwrite_usage_files_{scope}_storage_size',
             'groupBy' => ['bucketId']
         ],
-
+    
         'builds.$all.compute.time' => [
             'table' => 'appwrite_usage_executions_{scope}_compute_time',
         ],
         'executions.$all.compute.time' => [
             'table' => 'appwrite_usage_executions_{scope}_compute_time',
         ],
-
+    
         'executions.functionId.compute.time' => [
             'table' => 'appwrite_usage_executions_{scope}_compute_time',
             'groupBy' => ['functionId'],
@@ -331,7 +328,7 @@ class TimeSeries extends Calculator
             'table' => 'appwrite_usage_builds_{scope}_compute_time',
             'groupBy' => ['functionId'],
         ],
-
+    
         'project.$all.compute.time' => [ // Built time + execution time
             'table' => 'appwrite_usage_project_{scope}_compute_time',
             'groupBy' => ['functionId'],
@@ -484,19 +481,6 @@ class TimeSeries extends Calculator
                     } else {
                         throw $e;
                     }
-                }
-            }
-        }
-
-        // for cumulative metrics only get hourly metrics from timeseries
-        foreach ($this->cumulativeMetrics as $metric => $options) {
-            try {
-                $this->syncFromInfluxDB($metric, $options, $this->periods[0]);
-            } catch (\Exception $e) {
-                if (is_callable($this->errorHandler)) {
-                    call_user_func($this->errorHandler, $e);
-                } else {
-                    throw $e;
                 }
             }
         }
