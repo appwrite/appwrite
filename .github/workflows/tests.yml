@@ -28,8 +28,8 @@ jobs:
         export COMPOSE_DOCKER_CLI_BUILD=1
         export BUILDKIT_PROGRESS=plain
         docker pull composer:2.0
-        docker compose -f docker-compose.yml -f docker-compose.ci.yml build appwrite
-        docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+        docker compose build appwrite
+        docker compose up -d
         sleep 30
     - name: Doctor
       run: docker compose exec -T appwrite doctor
