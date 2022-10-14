@@ -47,7 +47,7 @@ function markOffline(Cache $cache, string $executorId, string $error, bool $forc
 {
     $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
 
-    $cache->save('executors-' . $executorId, ['status' => 'offline']);
+    $cache->save('executors-' . $executorId, ['status' => 'offline', 'stats' => []]);
 
     if (!$data || $data['status'] === 'online' || $forceShowError) {
         Console::warning('Executor "' . $executorId . '" went down! Message:');
@@ -55,11 +55,11 @@ function markOffline(Cache $cache, string $executorId, string $error, bool $forc
     }
 }
 
-function markOnline(cache $cache, string $executorId, bool $forceShowError = false)
+function markOnline(cache $cache, string $executorId, bool $forceShowError = false, mixed $stats = [])
 {
     $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
 
-    $cache->save('executors-' . $executorId, ['status' => 'online']);
+    $cache->save('executors-' . $executorId, ['status' => 'online', 'stats' => $stats]);
 
     if (!$data || $data['status'] === 'offline' || $forceShowError) {
         Console::success('Executor "' . $executorId . '" went online.');
@@ -92,14 +92,14 @@ function fetchExecutorsState(RedisPool $redisPool, bool $forceShowError = false)
                     'x-appwrite-executor-key: ' . App::getEnv('_APP_EXECUTOR_SECRET', '')
                 ]);
 
-                $executorResponse = \curl_exec($ch); // TODO: Use to save usage stats
+                $executorResponse = \curl_exec($ch);
                 $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $error = \curl_error($ch);
 
                 \curl_close($ch);
 
                 if ($statusCode === 200) {
-                    markOnline($cache, $id, $forceShowError);
+                    markOnline($cache, $id, $forceShowError, \json_decode($executorResponse, true));
                 } else {
                     $message = 'Code: ' . $statusCode . ' with response "' . $executorResponse .  '" and error error: ' . $error;
                     markOffline($cache, $id, $message, $forceShowError);

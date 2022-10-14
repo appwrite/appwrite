@@ -10,6 +10,9 @@ class Random extends Adapter
     {
         $executors = $this->getExecutors();
         $executor = $executors[\array_rand($executors)] ?? null;
+
+        \var_dump($executor);
+        
         return $executor ?? null;
     }
 }
