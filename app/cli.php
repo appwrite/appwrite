@@ -12,15 +12,19 @@ Authorization::disable();
 
 $cli = new CLI();
 
+// Administartive commands
 include 'tasks/doctor.php';
 include 'tasks/maintenance.php';
 include 'tasks/install.php';
 include 'tasks/migrate.php';
-include 'tasks/sdks.php';
-include 'tasks/specs.php';
 include 'tasks/ssl.php';
 include 'tasks/vars.php';
 include 'tasks/usage.php';
+
+// Tooling commands
+include 'tasks/sdks.php';
+include 'tasks/specs.php';
+include 'tasks/locales.php';
 
 $cli
     ->task('version')
