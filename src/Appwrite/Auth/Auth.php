@@ -14,6 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Roles;
 
 class Auth
 {
@@ -427,11 +428,11 @@ class Auth
                 $phoneVerified = $user->getAttribute('phoneVerification', false);
 
                 if ($emailVerified || $phoneVerified) {
-                    $roles[] = Role::user($user->getId(), Database::DIMENSION_VERIFIED)->toString();
-                    $roles[] = Role::users(Database::DIMENSION_VERIFIED)->toString();
+                    $roles[] = Role::user($user->getId(), Roles::DIMENSION_VERIFIED)->toString();
+                    $roles[] = Role::users(Roles::DIMENSION_VERIFIED)->toString();
                 } else {
-                    $roles[] = Role::user($user->getId(), Database::DIMENSION_UNVERIFIED)->toString();
-                    $roles[] = Role::users(Database::DIMENSION_UNVERIFIED)->toString();
+                    $roles[] = Role::user($user->getId(), Roles::DIMENSION_UNVERIFIED)->toString();
+                    $roles[] = Role::users(Roles::DIMENSION_UNVERIFIED)->toString();
                 }
             } else {
                 return [Role::guests()->toString()];
