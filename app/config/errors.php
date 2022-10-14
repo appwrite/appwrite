@@ -554,11 +554,6 @@ return [
         'description' => 'Param "query" is not optional.',
         'code' => 400,
     ],
-    Exception::GRAPHQL_INVALID_QUERY => [
-        'name' => Exception::GRAPHQL_INVALID_QUERY,
-        'description' => 'Invalid query.',
-        'code' => 400,
-    ],
     Exception::GRAPHQL_TOO_MANY_QUERIES => [
         'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
         'description' => 'Too many queries.',

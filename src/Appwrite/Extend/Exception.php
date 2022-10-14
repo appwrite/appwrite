@@ -180,7 +180,6 @@ class Exception extends \Exception
 
     /** GraphqQL */
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
-    public const GRAPHQL_INVALID_QUERY             = 'graphql_invalid_query';
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
     protected $type = '';
