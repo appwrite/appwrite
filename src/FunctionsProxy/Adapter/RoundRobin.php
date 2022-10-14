@@ -6,7 +6,7 @@ use FunctionsProxy\Adapter;
 
 class RoundRobin extends Adapter
 {
-    private $currentIndex = 0; // TODO: @Meldiron Put into redis to share across proxies
+    private $currentIndex = 0; // TODO: @Meldiron Put into utopia app resource or/and utopia registry
 
     public function getNextExecutor(): array
     {

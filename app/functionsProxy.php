@@ -47,7 +47,7 @@ function markOffline(Cache $cache, string $executorId, string $error, bool $forc
 {
     $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
 
-    $cache->save('executors-' . $executorId, ['status' => 'offline', 'stats' => []]);
+    $cache->save('executors-' . $executorId, ['status' => 'offline', 'health' => []]);
 
     if (!$data || $data['status'] === 'online' || $forceShowError) {
         Console::warning('Executor "' . $executorId . '" went down! Message:');
@@ -55,11 +55,11 @@ function markOffline(Cache $cache, string $executorId, string $error, bool $forc
     }
 }
 
-function markOnline(cache $cache, string $executorId, bool $forceShowError = false, mixed $stats = [])
+function markOnline(cache $cache, string $executorId, bool $forceShowError = false, mixed $health = [])
 {
     $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
 
-    $cache->save('executors-' . $executorId, ['status' => 'online', 'stats' => $stats]);
+    $cache->save('executors-' . $executorId, ['status' => 'online', 'health' => $health]);
 
     if (!$data || $data['status'] === 'offline' || $forceShowError) {
         Console::success('Executor "' . $executorId . '" went online.');
