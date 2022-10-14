@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "78f080ed8fc791fd632e9a02db593bc4",
+    "content-hash": "b55f1a94691129653bc6ff0ac5f66e13",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2060,16 +2060,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.25.4",
+            "version": "0.25.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "2883de82eee99e5744bf6e4123095a530c48a194"
+                "reference": "6d1c1d46d66553154975a3e8e72d30b5bd2413d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/2883de82eee99e5744bf6e4123095a530c48a194",
-                "reference": "2883de82eee99e5744bf6e4123095a530c48a194",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/6d1c1d46d66553154975a3e8e72d30b5bd2413d9",
+                "reference": "6d1c1d46d66553154975a3e8e72d30b5bd2413d9",
                 "shasum": ""
             },
             "require": {
@@ -2118,9 +2118,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.25.4"
+                "source": "https://github.com/utopia-php/database/tree/0.25.5"
             },
-            "time": "2022-09-14T06:22:33+00:00"
+            "time": "2022-09-30T15:01:32+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2900,16 +2900,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.26.0",
+            "version": "0.28.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "b356ccc0f0188422741fb79f2a52da087809ca26"
+                "reference": "ed8d3daa66589733b49b11c053d524cdf576ffee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b356ccc0f0188422741fb79f2a52da087809ca26",
-                "reference": "b356ccc0f0188422741fb79f2a52da087809ca26",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ed8d3daa66589733b49b11c053d524cdf576ffee",
+                "reference": "ed8d3daa66589733b49b11c053d524cdf576ffee",
                 "shasum": ""
             },
             "require": {
@@ -2944,9 +2944,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.26.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.28.1"
             },
-            "time": "2022-09-13T18:39:36+00:00"
+            "time": "2022-09-22T09:15:54+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5343,16 +5343,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.4.2",
+            "version": "v3.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "e07cdd3d430cd7e453c31b36eb5ad6c0c5e43077"
+                "reference": "c38fd6b0b7f370c198db91ffd02e23b517426b58"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/e07cdd3d430cd7e453c31b36eb5ad6c0c5e43077",
-                "reference": "e07cdd3d430cd7e453c31b36eb5ad6c0c5e43077",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/c38fd6b0b7f370c198db91ffd02e23b517426b58",
+                "reference": "c38fd6b0b7f370c198db91ffd02e23b517426b58",
                 "shasum": ""
             },
             "require": {
@@ -5403,7 +5403,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.4.2"
+                "source": "https://github.com/twigphp/Twig/tree/v3.4.3"
             },
             "funding": [
                 {
@@ -5415,7 +5415,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-08-12T06:47:24+00:00"
+            "time": "2022-09-28T08:42:51+00:00"
         }
     ],
     "aliases": [],
