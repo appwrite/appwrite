@@ -6,13 +6,14 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
 use GraphQL\GraphQL;
-use GraphQL\Type;
+use GraphQL\Type\Schema;
 use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\Validator\JSON;
+use Utopia\Validator\Text;
 
 App::get('/v1/graphql')
     ->desc('GraphQL Endpoint')
@@ -20,22 +21,39 @@ App::get('/v1/graphql')
     ->label('scope', 'graphql')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'graphql')
-    ->label('sdk.method', 'query')
-    ->label('sdk.methodType', 'graphql')
+    ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/graphql/query.md')
-    ->label('sdk.parameters', [
-        'query' => ['default' => '', 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
-    ])
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
+    ->param('query', '', new Text(0), 'The query to execute.')
+    ->param('operationName', '', new Text(256), 'The name of the operation to execute.', true)
+    ->param('variables', '', new Text(0), 'The JSON encoded variables to use in the query.', true)
     ->inject('request')
     ->inject('response')
-    ->inject('promiseAdapter')
     ->inject('schema')
-    ->action(Closure::fromCallable('executeRequest'));
+    ->inject('promiseAdapter')
+    ->action(function (string $query, string $operationName, string $variables, Request $request, Response $response, Schema $schema, Adapter $promiseAdapter) {
+        $query = [
+            'query' => $query,
+        ];
+
+        if (!empty($operationName)) {
+            $query['operationName'] = $operationName;
+        }
+
+        if (!empty($variables)) {
+            $query['variables'] = \json_decode($variables, true);
+        }
+
+        $output = execute($schema, $promiseAdapter, $query);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->json($output);
+    });
 
 App::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
@@ -43,11 +61,11 @@ App::post('/v1/graphql')
     ->label('scope', 'graphql')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'graphql')
-    ->label('sdk.method', 'mutate')
+    ->label('sdk.method', 'post')
     ->label('sdk.methodType', 'graphql')
     ->label('sdk.description', '/docs/references/graphql/mutate.md')
     ->label('sdk.parameters', [
-        'query' => ['default' => '', 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
+        'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false],
     ])
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -56,43 +74,49 @@ App::post('/v1/graphql')
     ->label('abuse-time', 60)
     ->inject('request')
     ->inject('response')
-    ->inject('promiseAdapter')
     ->inject('schema')
-    ->action(Closure::fromCallable('executeRequest'));
+    ->inject('promiseAdapter')
+    ->action(function (Request $request, Response $response, Schema $schema, Adapter $promiseAdapter) {
+        $query = $request->getParams();
+
+        if ($request->getHeader('x-sdk-graphql') == 'true') {
+            $query = $query['query'];
+        }
+
+        $type = $request->getHeader('content-type');
+        if (\str_starts_with($type, 'application/graphql')) {
+            $query = parseGraphql($request);
+        }
+
+        if (\str_starts_with($type, 'multipart/form-data')) {
+            $query = parseMultipart($query, $request);
+        }
+
+        $output = execute($schema, $promiseAdapter, $query);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->json($output);
+    });
 
 /**
  * Execute a GraphQL request
  *
- * @param Request $request
- * @param Response $response
+ * @param Schema $schema
  * @param Adapter $promiseAdapter
- * @param Type\Schema $schema
- * @return void
+ * @param array $query
+ * @return array
  * @throws Exception
  */
-function executeRequest(
-    Request $request,
-    Response $response,
+function execute(
+    Schema $schema,
     Adapter $promiseAdapter,
-    Type\Schema $schema
-): void {
-    $query = $request->getParams();
-    $contentType = $request->getHeader('content-type');
-
-    if ($request->getHeader('x-sdk-graphql') == 'true') {
-        $query = $query['query'];
-    }
-
+    array $query
+): array {
     $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
     $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
     $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
 
-    if (\str_starts_with($contentType, 'application/graphql')) {
-        $query = parseGraphql($request);
-    }
-    if (\str_starts_with($contentType, 'multipart/form-data')) {
-        $query = parseMultipart($query, $request);
-    }
     if (!empty($query) && !isset($query[0])) {
         $query = [$query];
     }
@@ -144,24 +168,22 @@ function executeRequest(
     );
     $wg->wait();
 
-    $response
-        ->setStatusCode(Response::STATUS_CODE_OK)
-        ->json($output);
+    return $output;
 }
 
 /**
- * Parse an application/graphql request
+ * Parse an "application/graphql" type request
  *
  * @param Request $request
  * @return array
  */
 function parseGraphql(Request $request): array
 {
-    return [ 'query' => $request->getRawPayload() ];
+    return ['query' => $request->getRawPayload()];
 }
 
 /**
- * Parse a multipart/form-data request
+ * Parse an "multipart/form-data" type request
  *
  * @param array $query
  * @param Request $request
