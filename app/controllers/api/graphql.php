@@ -220,12 +220,16 @@ function parseMultipart(array $query, Request $request): array
  */
 function processResult($result, $debugFlags): array
 {
+    // Only one query, return the result
     if (!isset($result[1])) {
         return $result[0]->toArray($debugFlags);
     }
 
-    return \array_merge_recursive(...\array_map(
-        static fn ($item) => $item->toArray($debugFlags),
+    // Batched queries, return an array of results
+    return \array_map(
+        static function ($item) use ($debugFlags) {
+            return $item->toArray($debugFlags);
+        },
         $result
-    ));
+    );
 }

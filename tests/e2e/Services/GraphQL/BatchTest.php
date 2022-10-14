@@ -27,12 +27,14 @@ class BatchTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsArray($response['body']['data']);
-        $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
-        $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
-        $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
+        $this->assertIsArray($response['body'][0]['data']);
+        $this->assertIsArray($response['body'][1]['data']);
+        $this->assertArrayNotHasKey('errors', $response['body'][0]);
+        $this->assertArrayNotHasKey('errors', $response['body'][1]);
+        $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
+        $this->assertArrayHasKey('localeListContinents', $response['body'][1]['data']);
+        $this->assertEquals(194, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(7, $response['body'][1]['data']['localeListContinents']['total']);
     }
 
     public function testArrayBatchedQueriesOfSameType()
@@ -48,12 +50,14 @@ class BatchTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsArray($response['body']['data']);
-        $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total'][0]);
-        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total'][1]);
-        $this->assertEquals(388, \count($response['body']['data']['localeListCountries']['countries']));
+        $this->assertIsArray($response['body'][0]['data']);
+        $this->assertIsArray($response['body'][1]['data']);
+        $this->assertArrayNotHasKey('errors', $response['body'][0]);
+        $this->assertArrayNotHasKey('errors', $response['body'][1]);
+        $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
+        $this->assertArrayHasKey('localeListCountries', $response['body'][1]['data']);
+        $this->assertEquals(194, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(194, $response['body'][1]['data']['localeListCountries']['total']);
     }
 
     public function testArrayBatchedMutations()
@@ -90,12 +94,14 @@ class BatchTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsArray($response['body']['data']);
-        $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('accountCreate', $response['body']['data']);
-        $this->assertArrayHasKey('teamsCreate', $response['body']['data']);
-        $this->assertEquals('Tester 1', $response['body']['data']['accountCreate']['name']);
-        $this->assertEquals('Team 1', $response['body']['data']['teamsCreate']['name']);
+        $this->assertIsArray($response['body'][0]['data']);
+        $this->assertIsArray($response['body'][1]['data']);
+        $this->assertArrayNotHasKey('errors', $response['body'][0]);
+        $this->assertArrayNotHasKey('errors', $response['body'][1]);
+        $this->assertArrayHasKey('accountCreate', $response['body'][0]['data']);
+        $this->assertArrayHasKey('teamsCreate', $response['body'][1]['data']);
+        $this->assertEquals('Tester 1', $response['body'][0]['data']['accountCreate']['name']);
+        $this->assertEquals('Team 1', $response['body'][1]['data']['teamsCreate']['name']);
     }
 
     public function testArrayBatchedMutationsOfSameType()
@@ -135,10 +141,12 @@ class BatchTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsArray($response['body']['data']);
-        $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('accountCreate', $response['body']['data']);
-        $this->assertEquals(2, \count($response['body']['data']['accountCreate']['_id']));
+        $this->assertIsArray($response['body'][0]['data']);
+        $this->assertIsArray($response['body'][1]['data']);
+        $this->assertArrayNotHasKey('errors', $response['body'][0]);
+        $this->assertArrayNotHasKey('errors', $response['body'][1]);
+        $this->assertArrayHasKey('accountCreate', $response['body'][0]['data']);
+        $this->assertArrayHasKey('accountCreate', $response['body'][1]['data']);
     }
 
     public function testArrayBatchedMixed()
@@ -167,14 +175,18 @@ class BatchTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsArray($response['body']['data']);
-        $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
-        $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
-        $this->assertArrayHasKey('accountCreate', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
-        $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
-        $this->assertEquals('Tester 1', $response['body']['data']['accountCreate']['name']);
+        $this->assertIsArray($response['body'][0]['data']);
+        $this->assertIsArray($response['body'][1]['data']);
+        $this->assertIsArray($response['body'][2]['data']);
+        $this->assertArrayNotHasKey('errors', $response['body'][0]);
+        $this->assertArrayNotHasKey('errors', $response['body'][1]);
+        $this->assertArrayNotHasKey('errors', $response['body'][2]);
+        $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
+        $this->assertArrayHasKey('localeListContinents', $response['body'][1]['data']);
+        $this->assertArrayHasKey('accountCreate', $response['body'][2]['data']);
+        $this->assertEquals(194, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(7, $response['body'][1]['data']['localeListContinents']['total']);
+        $this->assertEquals('Tester 1', $response['body'][2]['data']['accountCreate']['name']);
     }
 
     public function testArrayBatchedMixedOfSameType()
@@ -204,13 +216,18 @@ class BatchTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsArray($response['body']['data']);
-        $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
-        $this->assertArrayHasKey('accountCreate', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total'][0]);
-        $this->assertEquals(388, \count($response['body']['data']['localeListCountries']['countries']));
-        $this->assertArrayHasKey('_id', $response['body']['data']['accountCreate']);
+        $this->assertIsArray($response['body'][0]['data']);
+        $this->assertIsArray($response['body'][1]['data']);
+        $this->assertIsArray($response['body'][2]['data']);
+        $this->assertArrayNotHasKey('errors', $response['body'][0]);
+        $this->assertArrayNotHasKey('errors', $response['body'][1]);
+        $this->assertArrayNotHasKey('errors', $response['body'][2]);
+        $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
+        $this->assertArrayHasKey('localeListCountries', $response['body'][1]['data']);
+        $this->assertArrayHasKey('accountCreate', $response['body'][2]['data']);
+        $this->assertEquals(194, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(194, $response['body'][1]['data']['localeListCountries']['total']);
+        $this->assertArrayHasKey('_id', $response['body'][2]['data']['accountCreate']);
     }
 
     public function testQueryBatchedQueries()

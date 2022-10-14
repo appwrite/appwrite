@@ -63,12 +63,14 @@ class ContentTypeTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsArray($response['body']['data']);
-        $this->assertArrayNotHasKey('errors', $response['body']);
-        $this->assertArrayHasKey('localeListCountries', $response['body']['data']);
-        $this->assertArrayHasKey('localeListContinents', $response['body']['data']);
-        $this->assertEquals(194, $response['body']['data']['localeListCountries']['total']);
-        $this->assertEquals(7, $response['body']['data']['localeListContinents']['total']);
+        $this->assertIsArray($response['body'][0]['data']);
+        $this->assertIsArray($response['body'][1]['data']);
+        $this->assertArrayNotHasKey('errors', $response['body'][0]);
+        $this->assertArrayNotHasKey('errors', $response['body'][1]);
+        $this->assertArrayHasKey('localeListCountries', $response['body'][0]['data']);
+        $this->assertArrayHasKey('localeListContinents', $response['body'][1]['data']);
+        $this->assertEquals(194, $response['body'][0]['data']['localeListCountries']['total']);
+        $this->assertEquals(7, $response['body'][1]['data']['localeListContinents']['total']);
     }
 
     public function testQueryBatchedJSONContentType()
