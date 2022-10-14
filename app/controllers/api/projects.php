@@ -563,10 +563,6 @@ App::delete('/v1/projects/:projectId')
             ->setDocument($project)
         ;
 
-        if (!$dbForConsole->deleteDocument('teams', $project->getAttribute('teamId', null))) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project team from DB');
-        }
-
         if (!$dbForConsole->deleteDocument('projects', $projectId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
         }
