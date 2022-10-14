@@ -13,7 +13,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Text;
-use Swoole\Event;
 
 class Migrate extends Action
 {
@@ -105,7 +104,7 @@ class Migrate extends Action
             Console::log('Migrated ' . $count . '/' . $totalProjects . ' projects...');
         }
 
-        Event::wait(); // Wait for Coroutines to finish
+        Swoole\Event::wait(); // Wait for Coroutines to finish
         $redis->flushAll();
         Console::success('Data Migration Completed');
     }
