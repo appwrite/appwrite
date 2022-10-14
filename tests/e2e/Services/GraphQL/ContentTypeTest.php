@@ -162,7 +162,7 @@ class ContentTypeTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
 
-        $this->assertEquals('No query passed in the request.', $response['body']['message']);
+        $this->assertEquals('Param "query" is not optional.', $response['body']['message']);
     }
 
     public function testPostEmptyBody()
@@ -173,7 +173,7 @@ class ContentTypeTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), []);
 
-        $this->assertEquals('No query passed in the request.', $response['body']['message']);
+        $this->assertEquals('Param "query" is not optional.', $response['body']['message']);
     }
 
     public function testPostRandomBody()
@@ -184,7 +184,7 @@ class ContentTypeTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), ['foo' => 'bar']);
 
-        $this->assertEquals('Invalid query.', $response['body']['message']);
+        $this->assertEquals('Param "query" is not optional.', $response['body']['message']);
     }
 
     public function testGetNoQuery()
@@ -195,7 +195,7 @@ class ContentTypeTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
 
-        $this->assertEquals('No query passed in the request.', $response['body']['message']);
+        $this->assertEquals('Param "query" is not optional.', $response['body']['message']);
     }
 
     public function testGetEmptyQuery()
@@ -206,17 +206,17 @@ class ContentTypeTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
 
-        $this->assertEquals('Invalid query.', $response['body']['message']);
+        $this->assertEquals('Param "query" is not optional.', $response['body']['message']);
     }
 
     public function testGetRandomParameters()
     {
         $projectId = $this->getProject()['$id'];
-        $response = $this->client->call(Client::METHOD_POST, '/graphql?random=random', \array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/graphql?random=random', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));
 
-        $this->assertEquals('No query passed in the request.', $response['body']['message']);
+        $this->assertEquals('Param "query" is not optional.', $response['body']['message']);
     }
 }

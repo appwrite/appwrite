@@ -104,7 +104,7 @@ function executeRequest(
     }
     foreach ($query as $item) {
         if (empty($item['query'])) {
-            throw new Exception(Exception::GRAPHQL_INVALID_QUERY);
+            throw new Exception(Exception::GRAPHQL_NO_QUERY);
         }
     }
 

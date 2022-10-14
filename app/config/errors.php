@@ -551,7 +551,7 @@ return [
     ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,
-        'description' => 'No query passed in the request.',
+        'description' => 'Param "query" is not optional.',
         'code' => 400,
     ],
     Exception::GRAPHQL_INVALID_QUERY => [
