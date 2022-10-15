@@ -70,12 +70,13 @@ services:
   appwrite:
     container_name: appwrite
     <<: *x-logging
+    image: appwrite-dev
     build:
       context: .
       args:
-        - DEBUG=false
-        - TESTING=true
-        - VERSION=dev
+        DEBUG: false
+        TESTING: true
+        VERSION: dev
     ports: 
       - 9501:80
     networks:
@@ -181,8 +182,8 @@ services:
     entrypoint: realtime
     <<: *x-logging
     container_name: appwrite-realtime
-    build:
-      context: .
+    image: appwrite-dev
+    restart: unless-stopped
     ports: 
       - 9505:80
     labels:
@@ -227,8 +228,7 @@ services:
     entrypoint: worker-audits
     <<: *x-logging
     container_name: appwrite-worker-audits
-    build:
-      context: .
+    image: appwrite-dev
     networks:
       - appwrite
     volumes:
@@ -255,8 +255,7 @@ services:
     entrypoint: worker-webhooks
     <<: *x-logging
     container_name: appwrite-worker-webhooks
-    build:
-      context: .
+    image: appwrite-dev
     networks:
       - appwrite
     volumes:
@@ -282,8 +281,7 @@ services:
     entrypoint: worker-deletes
     <<: *x-logging
     container_name: appwrite-worker-deletes
-    build:
-      context: .
+    image: appwrite-dev
     networks:
       - appwrite
     depends_on:
@@ -318,8 +316,7 @@ services:
     entrypoint: worker-databases
     <<: *x-logging
     container_name: appwrite-worker-databases
-    build:
-      context: .
+    image: appwrite-dev
     networks:
       - appwrite
     volumes: 
@@ -347,8 +344,7 @@ services:
     entrypoint: worker-builds
     <<: *x-logging
     container_name: appwrite-worker-builds
-    build:
-      context: .
+    image: appwrite-dev
     networks:
       - appwrite
     volumes: 
@@ -377,8 +373,7 @@ services:
     entrypoint: worker-certificates
     <<: *x-logging
     container_name: appwrite-worker-certificates
-    build:
-      context: .
+    image: appwrite-dev
     networks:
       - appwrite
     depends_on:
@@ -410,8 +405,7 @@ services:
     entrypoint: worker-functions
     <<: *x-logging
     container_name: appwrite-worker-functions
-    build:
-      context: .
+    image: appwrite-dev
     networks:
       - appwrite
     volumes:
@@ -444,12 +438,7 @@ services:
     <<: *x-logging
     entrypoint: executor
     stop_signal: SIGINT
-    build:
-      context: .
-      args: 
-        - DEBUG=false
-        - TESTING=true
-        - VERSION=dev
+    image: appwrite-dev
     networks:
       appwrite:
       runtimes:
@@ -489,8 +478,7 @@ services:
     entrypoint: worker-mails
     <<: *x-logging
     container_name: appwrite-worker-mails
-    build:
-      context: .
+    image: appwrite-dev
     networks:
       - appwrite
     volumes:
@@ -522,8 +510,7 @@ services:
     entrypoint: worker-messaging
     <<: *x-logging
     container_name: appwrite-worker-messaging
-    build:
-      context: .
+    image: appwrite-dev
     networks:
       - appwrite
     volumes:
@@ -547,8 +534,7 @@ services:
     entrypoint: maintenance
     <<: *x-logging
     container_name: appwrite-maintenance
-    build:
-      context: .
+    image: appwrite-dev
     networks:
       - appwrite
     volumes:
@@ -581,10 +567,7 @@ services:
       - --type=timeseries
     <<: *x-logging
     container_name: appwrite-usage-timeseries
-    build:
-      context: .
-      args:
-        - DEBUG=false
+    image: appwrite-dev
     networks:
       - appwrite
     volumes:
@@ -617,10 +600,7 @@ services:
       - --type=database
     <<: *x-logging
     container_name: appwrite-usage-database
-    build:
-      context: .
-      args:
-        - DEBUG=false
+    image: appwrite-dev
     networks:
       - appwrite
     volumes:
@@ -651,8 +631,7 @@ services:
     entrypoint: schedule
     <<: *x-logging
     container_name: appwrite-schedule
-    build:
-      context: .
+    image: appwrite-dev
     networks:
       - appwrite
     volumes:
@@ -749,7 +728,7 @@ services:
   # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
   # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
   # RedisCommander - A nice UI for exploring Redis data
-  # Resque - A nice UI for exploring Reddis pub/sub, view the different queues workloads, pending and failed tasks
+  # Resque - A nice UI for exploring Redis pub/sub, view the different queues workloads, pending and failed tasks
   # Chronograf - A nice UI for exploring InfluxDB data
   # Webgrind - A nice UI for exploring and debugging code-level stuff
 
