@@ -66,8 +66,10 @@ use Utopia\Storage\Device\Wasabi;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Pools\Connection;
@@ -529,7 +531,7 @@ $register->set('pools', function () {
         'cache' => [
             'type' => 'cache',
             'dsns' => App::getEnv('_APP_CONNECTIONS_CACHE', ''),
-            'multiple' => true,
+            'multiple' => false, // TODO add cache sharding
             'schemes' => ['redis'],
         ],
     ];
@@ -539,14 +541,18 @@ $register->set('pools', function () {
         $dsns = $connection['dsns'] ?? '';
         $multipe = $connection['multiple'] ?? false;
         $schemes = $connection['schemes'] ?? [];
-
-        $variable = explode(',', $connection['dsns'] ?? '');
-        $dsns = [];
+        $config = [];
+        $dsns = explode(',', $connection['dsns'] ?? '');
         
-        foreach ($variable as $dsn) {
+        foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
             $name = ($multipe) ? $key.'_'.$dsn[0] : $key;
-            $dsn = $dsn[1];
+            $dsn = $dsn[1] ?? '';
+            $config[] = $name;
+
+            if(empty($dsn)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
+            }
 
             $dsn = new DSN($dsn);
             $dsnHost = $dsn->getHost();
@@ -555,7 +561,7 @@ $register->set('pools', function () {
             $dsnPass = $dsn->getPassword();
             $dsnScheme = $dsn->getDatabase();
 
-            if(!in_array($dsns[$name]->getScheme(), $schemes)) {
+            if(!in_array($dsn->getScheme(), $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
 
@@ -570,18 +576,20 @@ $register->set('pools', function () {
             switch ($dsn->getScheme()) {
                 case 'mysql':
                 case 'mariadb':
-                    $resource = new PDOProxy("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnScheme};charset=utf8mb4", $dsnUser, $dsnPass, array(
-                        PDO::ATTR_TIMEOUT => 3, // Seconds
-                        PDO::ATTR_PERSISTENT => true,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                        PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-                        PDO::ATTR_EMULATE_PREPARES => true,
-                        PDO::ATTR_STRINGIFY_FETCHES => true
-                    ));
+                    $resource = new PDOProxy(function() use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnScheme) {
+                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnScheme};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                            PDO::ATTR_TIMEOUT => 3, // Seconds
+                            PDO::ATTR_PERSISTENT => true,
+                            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+                            PDO::ATTR_EMULATE_PREPARES => true,
+                            PDO::ATTR_STRINGIFY_FETCHES => true
+                        ));
+                    });
                     break;
                 case 'redis':
                     $resource = new Redis();
-                    $resource->pconnect($dsnHost, $dsnHost);
+                    $resource->pconnect($dsnHost, $dsnPort);
                     if($dsnPass) {
                         $resource->auth($dsnPass);
                     }
@@ -599,7 +607,7 @@ $register->set('pools', function () {
                 case 'database':
                     $adapter = match ($dsn->getScheme()) {
                         'mariadb' => new MariaDB($resource),
-                        'mariadb' => new MySQL($resource),
+                        'mysql' => new MySQL($resource),
                         default => null
                     };
                     
@@ -627,12 +635,20 @@ $register->set('pools', function () {
             }
 
             $pool = new Pool($name, 64, function () use ($adapter) {
-                return new Connection($adapter);
+                return $adapter;
             });
 
             $group->add($pool);
         }
+
+        Config::setParam('pools-'.$key, $config);
     }
+
+    Console::log('Filling pools...');
+
+    $group->fill();
+    
+    Console::success('Pools are ready.');
 
     return $group;
 });
@@ -989,20 +1005,23 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Cache $cache, Document $project) {
+App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
+    if($project->isEmpty() || $project->getId() === 'console') {
+        return $dbForConsole;
+    }
+    
     $dbAdapter = $pools
-        ->get($project->getAttribute('database', 'console'))
+        ->get($project->getAttribute('database'))
         ->pop()
         ->getResource()
     ;
 
     $database = new Database($dbAdapter, $cache);
-
-    $database->setNamespace("_{$project->getInternalId()}");
+    $database->setNamespace('_'.$project->getInternalId());
     $database->setDefaultDatabase('appwrite');
 
     return $database;
-}, ['pools', 'cache', 'project']);
+}, ['pools', 'dbForConsole', 'cache', 'project']);
 
 App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
@@ -1018,6 +1037,17 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     return $database;
 }, ['pools', 'cache']);
+
+App::setResource('cache', function (Group $pools) {
+    $cacheAdapter = $pools
+        ->get('cache')
+        ->pop()
+        ->getResource()
+    ;
+
+    return new Cache(new None());
+    return new Cache($cacheAdapter);
+}, ['pools']);
 
 App::setResource('deviceLocal', function () {
     return new Local();
