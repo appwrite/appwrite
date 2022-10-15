@@ -122,7 +122,7 @@ class Pools
      */
     public function getPDOFromPool(string $name): PDOWrapper
     {
-        $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_DB_PROJECT in .env", 500);
+        $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_CONNECTIONS_DB_PROJECT in .env", 500);
         $pdo = $pool->get();
         return $pdo;
     }
@@ -135,7 +135,7 @@ class Pools
     public function getAnyFromPool(): PDOWrapper
     {
         $name = array_rand($this->pools);
-        $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_DB_PROJECT in .env", 500);
+        $pool = $this->pools[$name] ?? throw new Exception("Database pool with name : $name not found. Check the value of _APP_CONNECTIONS_DB_PROJECT in .env", 500);
         $pdo = $pool->get();
         return $pdo;
     }
