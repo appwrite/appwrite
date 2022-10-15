@@ -136,8 +136,11 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_PROJECT
-      - _APP_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
+      - _APP_CONNECTIONS_PUBSUB
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -180,7 +183,6 @@ services:
     container_name: appwrite-realtime
     build:
       context: .
-    restart: unless-stopped
     ports: 
       - 9505:80
     labels:
@@ -213,8 +215,8 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
-      - _APP_DB_CONSOLE
-      - _APP_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_USAGE_STATS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
@@ -240,8 +242,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_CONSOLE
-      - _APP_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -297,8 +299,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_CONSOLE
-      - _APP_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
       - *x-env-storage
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
@@ -327,8 +329,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_CONSOLE
-      - _APP_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -355,8 +357,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_CONSOLE
-      - _APP_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -386,8 +388,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_CONSOLE
-      - _APP_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -413,8 +415,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_CONSOLE
-      - _APP_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -547,8 +549,8 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_DB_CONSOLE
-      - _APP_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -577,8 +579,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_DB_CONSOLE
-      - _APP_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_USAGE_TIMESERIES_INTERVAL
@@ -612,8 +614,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_DB_CONSOLE
-      - _APP_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_USAGE_TIMESERIES_INTERVAL
@@ -666,7 +668,6 @@ services:
   # smtp:
   #   image: appwrite/smtp:1.2.0
   #   container_name: appwrite-smtp
-  #   restart: unless-stopped
   #   networks:
   #     - appwrite
   #   environment:
@@ -753,7 +754,6 @@ services:
     image: adminer
     container_name: appwrite-adminer
     <<: *x-logging
-    restart: always
     ports:
       - 9506:8080
     networks:
@@ -761,7 +761,6 @@ services:
 
   # redis-commander:
   #   image: rediscommander/redis-commander:latest
-  #   restart: unless-stopped
   #   networks:
   #   - appwrite
   #   environment:
@@ -771,7 +770,6 @@ services:
 
   # resque:
   #   image: appwrite/resque-web:1.1.0
-  #   restart: unless-stopped
   #   networks:
   #     - appwrite
   #   ports:
@@ -785,7 +783,6 @@ services:
   # chronograf:
   #   image: chronograf:1.6
   #   container_name: appwrite-chronograf
-  #   restart: unless-stopped
   #   networks:
   #   - appwrite
   #   volumes:
