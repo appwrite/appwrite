@@ -425,7 +425,7 @@ Database::addFilter(
             'method' => OpenSSL::CIPHER_AES_128_GCM,
             'iv' => \bin2hex($iv),
             'tag' => \bin2hex($tag ?? ''),
-            'version' => '1',
+            'version' => 'v1',
         ]);
     },
     function (mixed $value) {
@@ -853,7 +853,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT($project->getAttribute('jwtSecrets'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         try {
             $payload = $jwt->decode($authJWT);
@@ -917,6 +917,8 @@ App::setResource('console', function () {
         'legalCity' => '',
         'legalAddress' => '',
         'legalTaxId' => '',
+        'databaseSecrets' => ['v1' => App::getEnv('_APP_OPENSSL_KEY_V1')],
+        'jwtSecrets' => App::getEnv('_APP_OPENSSL_KEY_V1'),
         'auths' => [
             'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
         ],
@@ -925,25 +927,78 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function ($db, $cache, Document $project) {
-    $cache = new Cache(new RedisCache($cache));
+function encode(mixed $value, array $secrets): string
+{
+    $version = array_key_last($secrets);
+    $key = $secrets[$version];
+    $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+    $tag = null;
+    return json_encode([
+        'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+        'method' => OpenSSL::CIPHER_AES_128_GCM,
+        'iv' => \bin2hex($iv),
+        'tag' => \bin2hex($tag ?? ''),
+        'version' => $version,
+    ]);
+}
 
-    $database = new Database(new MariaDB($db), $cache);
+function decode(?string $value, array $secrets): mixed
+{
+    if (is_null($value)) {
+        return null;
+    }
+    $value = json_decode($value, true);
+    $version = $value['version'];
+    $key = $secrets[$version];
+
+    return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+}
+
+App::setResource('dbForProject', function ($db, $cache, $project) {
+    $filters = [];
+    if (!$project->isEmpty()) {
+        $secrets = $project->getAttribute('databaseSecrets');
+        $filters['encrypt'] = [
+            'encode' => function ($value) use ($secrets) {
+                return encode($value, $secrets);
+            },
+            'decode' => function ($value) use ($secrets) {
+                return decode($value, $secrets);
+            }
+        ];
+    }
+
+    $cache = new Cache(new RedisCache($cache));
+    $database = new Database(new MariaDB($db), $cache, $filters);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getInternalId()}");
 
     return $database;
 }, ['db', 'cache', 'project']);
 
-App::setResource('dbForConsole', function ($db, $cache) {
+App::setResource('dbForConsole', function ($db, $cache, $console) {
+    $filters = [];
+    if (!$console->isEmpty()) {
+        $secrets = $console->getAttribute('databaseSecrets');
+
+        $filters['encrypt'] = [
+            'encode' => function ($value) use ($secrets) {
+                return encode($value, $secrets);
+            },
+            'decode' => function ($value) use ($secrets) {
+                return decode($value, $secrets);
+            }
+        ];
+    }
+
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database(new MariaDB($db), $cache);
+    $database = new Database(new MariaDB($db), $cache, $filters);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace('_console');
 
     return $database;
-}, ['db', 'cache']);
+}, ['db', 'cache', 'console']);
 
 
 App::setResource('deviceLocal', function () {

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Resque;
 
+use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -223,12 +224,46 @@ abstract class Worker
                 $cache = new Cache(new RedisCache($register->get('cache')));
                 $database = new Database(new MariaDB($register->get('db')), $cache);
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                $database->setNamespace($namespace); // Main DB
 
-                if (!empty($projectId) && !$database->getDocument('projects', $projectId)->isEmpty()) {
-                    throw new \Exception("Project does not exist: {$projectId}");
+                if (!empty($projectId)) {
+                    $database->setNamespace("_console");
+                    $project = $database->getDocument('projects', $projectId);
+                    if (!$project->isEmpty()) {
+                        $secrets = $project->getAttribute('databaseSecrets');
+
+                        $filters['encrypt'] = [
+                            'encode' => function ($value) use ($secrets) {
+                                $version = array_key_last($secrets);
+                                $key = $secrets[$version];
+                                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                                $tag = null;
+                                return json_encode([
+                                    'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                                    'method' => OpenSSL::CIPHER_AES_128_GCM,
+                                    'iv' => \bin2hex($iv),
+                                    'tag' => \bin2hex($tag ?? ''),
+                                    'version' => $version,
+                                ]);
+                            },
+                            'decode' => function ($value) use ($secrets) {
+                                if (is_null($value)) {
+                                    return null;
+                                }
+
+                                $value = json_decode($value, true);
+                                $version = $value['version'];
+                                $key = $secrets[$version];
+
+                                return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+                            }
+                        ];
+
+                        $database = new Database(new MariaDB($register->get('db')), $cache, $filters);
+                        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                    }
                 }
 
+                $database->setNamespace($namespace); // Main DB
                 if ($type === self::DATABASE_CONSOLE && !$database->exists($database->getDefaultDatabase(), '_metadata')) {
                     throw new \Exception('Console project not ready');
                 }

@@ -59,4 +59,20 @@ class OpenSSL
     {
         return \openssl_random_pseudo_bytes($length, $crypto_strong);
     }
+
+    /**
+     * Secret String
+     *
+     * Generate random encryption secret
+     *
+     * @param int $length
+     *
+     * @return string
+     *
+     * @throws \Exception
+     */
+    public static function secretString(int $length = 128): string
+    {
+        return \bin2hex(self::randomPseudoBytes($length));
+    }
 }

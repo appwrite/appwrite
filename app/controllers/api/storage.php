@@ -528,9 +528,16 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 if (empty($data)) {
                     $data = $deviceFiles->read($path);
                 }
-                $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+
+                $fileSecret = OpenSSL::secretString();
                 $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+                $tag = null;
+
+                $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $fileSecret, 0, $iv, $tag);
+
+                $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
+                $openSSLTag = \bin2hex($tag ?? '');
+                $openSSLIV = \bin2hex($iv);
             }
 
             if (!empty($data)) {
@@ -541,13 +548,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
             $sizeActual = $deviceFiles->getFileSize($path);
             $fileHash = $deviceFiles->getFileHash($path);
-
-            if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
-                $openSSLVersion = '1';
-                $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
-                $openSSLTag = \bin2hex($tag);
-                $openSSLIV = \bin2hex($iv);
-            }
 
             try {
                 if ($file->isEmpty()) {
@@ -565,12 +565,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'comment' => '',
                         'chunksTotal' => $chunks,
                         'chunksUploaded' => $chunksUploaded,
-                        'openSSLVersion' => $openSSLVersion,
-                        'openSSLCipher' => $openSSLCipher,
-                        'openSSLTag' => $openSSLTag,
-                        'openSSLIV' => $openSSLIV,
+                        'openSSLCipher' => $openSSLCipher ?? null,
+                        'openSSLTag' => $openSSLTag ?? null,
+                        'openSSLIV' => $openSSLIV ?? null,
                         'search' => implode(' ', [$fileId, $fileName]),
                         'metadata' => $metadata,
+                        'fileSecret' => $fileSecret ?? null,
                     ]);
 
                     $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
@@ -581,12 +581,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('mimeType', $mimeType)
                         ->setAttribute('sizeActual', $sizeActual)
                         ->setAttribute('algorithm', $algorithm)
-                        ->setAttribute('openSSLVersion', $openSSLVersion)
-                        ->setAttribute('openSSLCipher', $openSSLCipher)
-                        ->setAttribute('openSSLTag', $openSSLTag)
-                        ->setAttribute('openSSLIV', $openSSLIV)
+                        ->setAttribute('openSSLCipher', $openSSLCipher ?? null)
+                        ->setAttribute('openSSLTag', $openSSLTag ?? null)
+                        ->setAttribute('openSSLIV', $openSSLIV ?? null)
                         ->setAttribute('metadata', $metadata)
-                        ->setAttribute('chunksUploaded', $chunksUploaded);
+                        ->setAttribute('chunksUploaded', $chunksUploaded)
+                        ->setAttribute('fileSecret', $fileSecret ?? null);
 
                     $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                 }
@@ -616,6 +616,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'chunksUploaded' => $chunksUploaded,
                         'search' => implode(' ', [$fileId, $fileName]),
                         'metadata' => $metadata,
+                        'fileSecret' => $fileSecret ?? null,
                     ]);
 
                     $file = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), $doc);
@@ -890,7 +891,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                $file->getAttribute('fileSecret'),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
@@ -1033,7 +1034,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                $file->getAttribute('fileSecret'),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
@@ -1183,7 +1184,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                $file->getAttribute('fileSecret'),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))

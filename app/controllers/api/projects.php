@@ -28,6 +28,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
+use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -119,6 +120,8 @@ App::post('/v1/projects')
             'keys' => null,
             'domains' => null,
             'auths' => $auths,
+            'databaseSecrets' => [\uniqid() => OpenSSL::secretString()],
+            'jwtSecrets' => OpenSSL::secretString(),
             'search' => implode(' ', [$projectId, $name]),
         ]));
         /** @var array $collections */
@@ -864,6 +867,7 @@ App::post('/v1/projects/:projectId/keys')
             'name' => $name,
             'scopes' => $scopes,
             'expire' => $expire,
+            'secret' => Auth::tokenGenerator(),
             'sdks' => [],
             'accessedAt' => null,
             'secret' => \bin2hex(\random_bytes(128)),

@@ -3,6 +3,7 @@
 use Appwrite\Auth\Auth;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
@@ -95,7 +96,41 @@ $logError = function (Throwable $error, string $action) use ($register) {
 
 $server->error($logError);
 
-function getDatabase(Registry &$register, string $namespace)
+function getFilters(Document $project): array
+{
+    if (!$project->isEmpty()) {
+        $secrets = $project->getAttribute('databaseSecrets');
+
+        $filters['encrypt'] = [
+            'encode' => function ($value) use ($secrets) {
+                $version = array_key_last($secrets);
+                $key = $secrets[$version];
+                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                $tag = null;
+                return json_encode([
+                    'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                    'method' => OpenSSL::CIPHER_AES_128_GCM,
+                    'iv' => \bin2hex($iv),
+                    'tag' => \bin2hex($tag ?? ''),
+                    'version' => $version,
+                ]);
+            },
+            'decode' => function ($value) use ($secrets) {
+                if (is_null($value)) {
+                    return null;
+                }
+                $value = json_decode($value, true);
+                $version = $value['version'];
+                $key = $secrets[$version];
+
+                return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+            }
+        ];
+    }
+    return $filters;
+}
+
+function getDatabase(Registry &$register, string $namespace, ?Document $project = null)
 {
     $attempts = 0;
 
@@ -113,6 +148,13 @@ function getDatabase(Registry &$register, string $namespace)
 
             if (!$database->exists($database->getDefaultDatabase(), 'realtime')) {
                 throw new Exception('Collection not ready');
+            }
+
+            if (!is_null($project)) {
+                $filters = getFilters($project);
+                $database = new Database(new MariaDB($db), $cache, $filters);
+                $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                $database->setNamespace($namespace);
             }
 
             break; // leave loop if successful
@@ -307,7 +349,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
                         [$consoleDatabase, $returnConsoleDatabase] = getDatabase($register, '_console');
                         $project = Authorization::skip(fn() => $consoleDatabase->getDocument('projects', $projectId));
-                        [$database, $returnDatabase] = getDatabase($register, "_{$project->getInternalId()}");
+                        [$database, $returnDatabase] = getDatabase($register, "_{$project->getInternalId()}", $project);
 
                         $user = $database->getDocument('users', $userId);
 
@@ -491,13 +533,17 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $database->setNamespace("_console");
-        $projectId = $realtime->connections[$connection]['projectId'];
 
-        if ($projectId !== 'console') {
-            $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
-            $database->setNamespace("_{$project->getInternalId()}");
+        $projectId = $realtime->connections[$connection]['projectId'];
+        $database->setNamespace("_console");
+        $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
+
+        if ($projectId != 'console') {
+            $filters = getFilters($project);
+            $database = new Database(new MariaDB($db), $cache, $filters);
+            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         }
+        $database->setNamespace("_{$project->getInternalId()}");
 
         /*
          * Abuse Check
