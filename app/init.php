@@ -498,7 +498,6 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
-
 $register->set('pools', function () {
 
     $group= new Group();
@@ -551,7 +550,8 @@ $register->set('pools', function () {
             $config[] = $name;
 
             if(empty($dsn)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
+                //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
+                continue;
             }
 
             $dsn = new DSN($dsn);
@@ -652,7 +652,6 @@ $register->set('pools', function () {
 
     return $group;
 });
-
 $register->set('influxdb', function () {
  // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
@@ -1009,7 +1008,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     if($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
-    
+
     $dbAdapter = $pools
         ->get($project->getAttribute('database'))
         ->pop()

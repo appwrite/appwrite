@@ -5,6 +5,8 @@ namespace Appwrite\Resque;
 use Exception;
 use Appwrite\Database\Pools;
 use Utopia\App;
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
@@ -134,8 +136,14 @@ abstract class Worker
      */
     public function tearDown(): void
     {
+        global $register;
+
         try {
+            $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+            $pools->reclaim();
+            
             $this->shutdown();
+
         } catch (\Throwable $error) {
             foreach (self::$errorCallbacks as $errorCallback) {
                 $errorCallback($error, "shutdown", $this->getName());
@@ -165,22 +173,24 @@ abstract class Worker
     protected function getProjectDB(Document $project): Database
     {
         global $register;
-        $database = $project->getAttribute('database', '');
-        $internalId = $project->getInternalId();
-        if (empty($database)) {
-            throw new \Exception('Database name not provided - cannot get database');
+
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
+        if($project->isEmpty() || $project->getId() === 'console') {
+            return $this->getConsoleDB();
         }
-
-        $cache = $register->get('cache');
-        $dbPool = $register->get('dbPool');
-        $namespace = "_$internalId";
-        $pdo = $dbPool->getPDO($database);
-        $dbForProject = Pools::wait(
-            Pools::getDatabase($pdo, $cache, $namespace),
-            'projects'
-        );
-
-        return $dbForProject;
+    
+        $dbAdapter = $pools
+            ->get($project->getAttribute('database'))
+            ->pop()
+            ->getResource()
+        ;
+    
+        $database = new Database($dbAdapter, $this->getCache());
+        $database->setNamespace('_'.$project->getInternalId());
+        $database->setDefaultDatabase('appwrite');
+    
+        return $database;
     }
 
     /**
@@ -190,21 +200,41 @@ abstract class Worker
     protected function getConsoleDB(): Database
     {
         global $register;
-        $cache = $register->get('cache');
-        $dbPool = $register->get('dbPool');
-        $database = $dbPool->getConsoleDB();
-        if (empty($database)) {
-            throw new \Exception('Database name not provided - cannot get database');
-        }
 
-        $namespace = "_console";
-        $pdo = $dbPool->getPDO($database);
-        $dbForConsole = Pools::wait(
-            Pools::getDatabase($pdo, $cache, $namespace),
-            '_metadata'
-        );
+        $pools = $register->get('pools'); /* @var \Utopia\Pools\Group $pools */
+        
+        $dbAdapter = $pools
+            ->get('console')
+            ->pop()
+            ->getResource()
+        ;
 
-        return $dbForConsole;
+        $database = new Database($dbAdapter, $this->getCache());
+
+        $database->setNamespace('console');
+        $database->setDefaultDatabase('appwrite');
+
+        return $database;
+    }
+
+    /**
+     * Get Cache
+     * @return Cache
+     */
+    protected function getCache(): Cache
+    {
+        global $register;
+
+        $pools = $register->get('pools'); /* @var \Utopia\Pools\Group $pools */
+        
+        $pools
+            ->get('cache')
+            ->pop()
+            ->getResource()
+        ;
+
+        return new Cache(new None());
+        // return new Cache($cacheAdapter);
     }
 
     /**
@@ -226,7 +256,6 @@ abstract class Worker
     {
         return $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
     }
-
 
     /**
      * Get Builds Storage Device

@@ -14,7 +14,7 @@ class DSNTest extends TestCase
         $this->assertEquals("user", $dsn->getUser());
         $this->assertEquals("password", $dsn->getPassword());
         $this->assertEquals("localhost", $dsn->getHost());
-        $this->assertEquals("3306", $dsn->getPort());
+        $this->assertEquals(3306, $dsn->getPort());
         $this->assertEquals("database", $dsn->getDatabase());
         $this->assertEquals("charset=utf8&timezone=UTC", $dsn->getQuery());
 
@@ -23,7 +23,7 @@ class DSNTest extends TestCase
         $this->assertEquals("user", $dsn->getUser());
         $this->assertNull($dsn->getPassword());
         $this->assertEquals("localhost", $dsn->getHost());
-        $this->assertEquals("3306", $dsn->getPort());
+        $this->assertEquals(3306, $dsn->getPort());
         $this->assertEquals("database", $dsn->getDatabase());
         $this->assertEquals("charset=utf8&timezone=UTC", $dsn->getQuery());
 
