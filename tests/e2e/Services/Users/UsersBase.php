@@ -644,6 +644,19 @@ trait UsersBase
         $this->assertIsInt($users['body']['total']);
         $this->assertGreaterThan(0, $users['body']['total']);
 
+        /**
+         * Test for FAILURE
+         */
+        $user = $this->client->call(Client::METHOD_GET, '/users/non_existent', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 404);
+        $this->assertEquals($user['body']['code'], 404);
+        $this->assertEquals($user['body']['message'], 'User with the requested ID could not be found.');
+        $this->assertEquals($user['body']['type'], 'user_not_found');
+
         return $data;
     }
 
