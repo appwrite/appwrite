@@ -9,8 +9,12 @@ use Appwrite\Specification\Specification;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Response as HttpResponse;
 use Utopia\App;
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\MySQL;
+use Utopia\Database\Database;
 use Utopia\Request;
 use Utopia\Validator\WhiteList;
 
@@ -19,16 +23,15 @@ $cli
     ->param('version', 'latest', new Text(16), 'Spec version', true)
     ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
     ->action(function ($version, $mode) use ($register) {
-        $consoleDB = $register->get('dbPool')->getConsoleDB();
-        $redis = $register->get('cache');
         $appRoutes = App::getRoutes();
         $response = new Response(new HttpResponse());
         $mocks = ($mode === 'mocks');
 
+        // Mock dependencies
         App::setResource('request', fn () => new Request());
         App::setResource('response', fn () => $response);
-        App::setResource('consoleDB', fn () => $consoleDB);
-        App::setResource('cache', fn () => $redis);
+        App::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
+        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
         $platforms = [
             'client' => APP_PLATFORM_CLIENT,
