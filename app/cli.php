@@ -29,4 +29,13 @@ $cli
         Console::log(App::getEnv('_APP_VERSION', 'UNKNOWN'));
     });
 
+$cli
+    ->error(function ($error) {
+        if(App::getEnv('_APP_ENV', 'development')) {
+            Console::error($error);
+        } else {
+            Console::error($error->getMessage());
+        }
+    });
+
 $cli->run();
