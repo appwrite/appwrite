@@ -25,9 +25,9 @@ class DSN
     protected string $host;
 
     /**
-     * @var ?string
+     * @var ?int
      */
-    protected ?string $port;
+    protected ?int $port;
 
     /**
      * @var ?string
@@ -58,7 +58,7 @@ class DSN
         $this->user = $parts['user'] ?? null;
         $this->password = $parts['pass'] ?? null;
         $this->host = $parts['host'] ?? null;
-        $this->port = $parts['port'] ?? null;
+        $this->port = (int)$parts['port'] ?? null;
         $this->database = $parts['path'] ?? null;
         $this->query = $parts['query'] ?? null;
     }
@@ -106,9 +106,9 @@ class DSN
     /**
      * Return the port
      *
-     * @return ?string
+     * @return ?int
      */
-    public function getPort(): ?string
+    public function getPort(): ?int
     {
         return $this->port;
     }
