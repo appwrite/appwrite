@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "030dfcfbea2caebad080edbf048b87cf",
+    "content-hash": "f3beee3a829a19e53b311052111bde2c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1897,16 +1897,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.7.0",
+            "version": "0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "cd53431242c88299daea2589e21322abe97682cc"
+                "reference": "212e66100a1f32e674fca5d9bc317cc998303089"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/cd53431242c88299daea2589e21322abe97682cc",
-                "reference": "cd53431242c88299daea2589e21322abe97682cc",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/212e66100a1f32e674fca5d9bc317cc998303089",
+                "reference": "212e66100a1f32e674fca5d9bc317cc998303089",
                 "shasum": ""
             },
             "require": {
@@ -1940,9 +1940,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.7.0"
+                "source": "https://github.com/utopia-php/cache/tree/0.8.0"
             },
-            "time": "2022-10-16T06:04:12+00:00"
+            "time": "2022-10-16T16:48:09+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -2054,12 +2054,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "1ebee3c10a6112ab5665681f2d64f7381d3218b2"
+                "reference": "44ae47dfd49c9c7c0cba29f6867347e25c23b57b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/1ebee3c10a6112ab5665681f2d64f7381d3218b2",
-                "reference": "1ebee3c10a6112ab5665681f2d64f7381d3218b2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/44ae47dfd49c9c7c0cba29f6867347e25c23b57b",
+                "reference": "44ae47dfd49c9c7c0cba29f6867347e25c23b57b",
                 "shasum": ""
             },
             "require": {
@@ -2068,7 +2068,7 @@
                 "ext-redis": "*",
                 "mongodb/mongodb": "1.8.0",
                 "php": ">=8.0",
-                "utopia-php/cache": "0.7.*",
+                "utopia-php/cache": "0.8.*",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
@@ -2100,7 +2100,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-update-cache-lib"
             },
-            "time": "2022-10-16T09:47:14+00:00"
+            "time": "2022-10-16T17:35:26+00:00"
         },
         {
             "name": "utopia-php/domains",

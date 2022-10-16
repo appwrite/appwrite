@@ -658,11 +658,7 @@ $register->set('pools', function () {
         Config::setParam('pools-'.$key, $config);
     }
 
-    Console::log('Filling pools...');
-
     $group->fill();
-    
-    Console::success('Pools are ready.');
 
     return $group;
 });
