@@ -456,10 +456,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             Console::error('[Error] Code: ' . $response['data']['code']);
             Console::error('[Error] Message: ' . $response['data']['message']);
         }
-
-        if ($th instanceof PDOException) {
-            $db = null;
-        }
     } finally {
         /**
          * Put used PDO and Redis Connections back into their pools.
