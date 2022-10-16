@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "666c02369c446a1c5ca77a3de8d98988",
+    "content-hash": "a4744aca2107d437553fe879ae4ce201",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2060,16 +2060,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-events-and-listeners",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "5af85043c88b6b3f087f444d45325c30adeb84c2"
+                "reference": "0644cd8a7efee2fc745ed70dbf2b73a78eeefa52"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/5af85043c88b6b3f087f444d45325c30adeb84c2",
-                "reference": "5af85043c88b6b3f087f444d45325c30adeb84c2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0644cd8a7efee2fc745ed70dbf2b73a78eeefa52",
+                "reference": "0644cd8a7efee2fc745ed70dbf2b73a78eeefa52",
                 "shasum": ""
             },
             "require": {
@@ -2088,6 +2088,7 @@
                 "utopia-php/cli": "^0.11.0",
                 "vimeo/psalm": "4.0.1"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2097,16 +2098,6 @@
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Brandon Leckemby",
-                    "email": "brandon@appwrite.io"
-                }
             ],
             "description": "A simple library to manage application persistency using multiple database adapters",
             "keywords": [
@@ -2118,9 +2109,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-events-and-listeners"
+                "source": "https://github.com/utopia-php/database/tree/0.27.0"
             },
-            "time": "2022-10-14T07:31:42+00:00"
+            "time": "2022-10-16T07:39:26+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3419,25 +3410,30 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.6.1",
+            "version": "1.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "77a32518733312af16a44300404e945338981de3"
+                "reference": "48f445a408c131e38cab1c235aa6d2bb7a0bb20d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/77a32518733312af16a44300404e945338981de3",
-                "reference": "77a32518733312af16a44300404e945338981de3",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/48f445a408c131e38cab1c235aa6d2bb7a0bb20d",
+                "reference": "48f445a408c131e38cab1c235aa6d2bb7a0bb20d",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2 || ^8.0",
+                "php": "^7.4 || ^8.0",
                 "phpdocumentor/reflection-common": "^2.0"
             },
             "require-dev": {
                 "ext-tokenizer": "*",
-                "psalm/phar": "^4.8"
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan": "^1.8",
+                "phpstan/phpstan-phpunit": "^1.1",
+                "phpunit/phpunit": "^9.5",
+                "rector/rector": "^0.13.9",
+                "vimeo/psalm": "^4.25"
             },
             "type": "library",
             "extra": {
@@ -3463,9 +3459,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.6.1"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.6.2"
             },
-            "time": "2022-03-15T21:29:03+00:00"
+            "time": "2022-10-14T12:47:21+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -5361,7 +5357,7 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-feat-events-and-listeners",
+            "version": "dev-main",
             "alias": "0.25.0",
             "alias_normalized": "0.25.0.0"
         }
