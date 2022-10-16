@@ -78,7 +78,6 @@ $cli
             Console::log('🟢 HTTPS force option is enabled');
         }
 
-
         $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
         $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 
@@ -97,6 +96,7 @@ $cli
         }
 
         $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
         $configs = [
             'Console.DB' => Config::getParam('pools-console'),
             'Projects.DB' => Config::getParam('pools-database'),
@@ -104,9 +104,9 @@ $cli
 
         foreach ($configs as $key => $config) {
             foreach ($config as $database) {
-                $adapter = $pools->get($database)->pop()->getResource();
-                
                 try {
+                    $adapter = $pools->get($database)->pop()->getResource();
+
                     if($adapter->ping()) {
                         Console::success('🟢 '.str_pad("{$key}({$database})", 50, '.').'connected');
                     } else {
@@ -127,9 +127,9 @@ $cli
 
         foreach ($configs as $key => $config) {
             foreach ($config as $pool) {
-                $adapter = $pools->get($pool)->pop()->getResource();
-                
                 try {
+                    $adapter = $pools->get($pool)->pop()->getResource();
+
                     if($adapter->ping()) {
                         Console::success('🟢 '.str_pad("{$key}({$pool})", 50, '.').'connected');
                     } else {

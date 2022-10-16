@@ -590,24 +590,30 @@ $register->set('pools', function () {
             switch ($dsn->getScheme()) {
                 case 'mysql':
                 case 'mariadb':
-                    $resource = new PDOProxy(function() use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnScheme) {
-                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnScheme};charset=utf8mb4", $dsnUser, $dsnPass, array(
-                            PDO::ATTR_TIMEOUT => 3, // Seconds
-                            PDO::ATTR_PERSISTENT => true,
-                            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-                            PDO::ATTR_EMULATE_PREPARES => true,
-                            PDO::ATTR_STRINGIFY_FETCHES => true
-                        ));
-                    });
+                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnScheme) {
+                        return new PDOProxy(function() use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnScheme) {
+                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnScheme};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                                PDO::ATTR_TIMEOUT => 3, // Seconds
+                                PDO::ATTR_PERSISTENT => true,
+                                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+                                PDO::ATTR_EMULATE_PREPARES => true,
+                                PDO::ATTR_STRINGIFY_FETCHES => true
+                            ));
+                        });
+                    };
                     break;
                 case 'redis':
-                    $resource = new Redis();
-                    $resource->pconnect($dsnHost, $dsnPort);
-                    if($dsnPass) {
-                        $resource->auth($dsnPass);
-                    }
-                    $resource->setOption(Redis::OPT_READ_TIMEOUT, -1);
+                    $resource = function() use ($dsnHost, $dsnPort, $dsnPass) {
+                        $redis = new Redis();
+                        @$redis->pconnect($dsnHost, $dsnPort);
+                        if($dsnPass) {
+                            $redis->auth($dsnPass);
+                        }
+                        $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+                        
+                        return $redis;
+                    };
                     break;
                 
                 default:
@@ -615,40 +621,37 @@ $register->set('pools', function () {
                     break;
             }
 
-            // Get Adapter
+            $pool = new Pool($name, 64, function () use ($type, $resource, $dsn) {
+                // Get Adapter
+                $adapter = null;
 
-            switch ($type) {
-                case 'database':
-                    $adapter = match ($dsn->getScheme()) {
-                        'mariadb' => new MariaDB($resource),
-                        'mysql' => new MySQL($resource),
-                        default => null
-                    };
+                switch ($type) {
+                    case 'database':
+                        $adapter = match ($dsn->getScheme()) {
+                            'mariadb' => new MariaDB($resource()),
+                            'mysql' => new MySQL($resource()),
+                            default => null
+                        };
+                        
+                        break;
+                    case 'queue':
+                        //$adapter = new Queue($resource);
+                        break;
+                    case 'pubsub':
+                        //$adapter = new PubSub($resource);
+                        break;
+                    case 'cache':
+                        $adapter = match ($dsn->getScheme()) {
+                            'redis' => new RedisCache($resource()),
+                            default => null
+                        };
+                        break;
                     
-                    break;
-                case 'queue':
-                    //$adapter = new Queue($resource);
-                    break;
-                case 'pubsub':
-                    //$adapter = new PubSub($resource);
-                    break;
-                case 'cache':
-                    $adapter = match ($dsn->getScheme()) {
-                        'redis' => new RedisCache($resource),
-                        default => null
-                    };
-                    break;
+                    default:
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
+                        break;
+                }
                 
-                default:
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
-                    break;
-            }
-
-            if(is_null($adapter)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
-            }
-
-            $pool = new Pool($name, 64, function () use ($adapter) {
                 return $adapter;
             });
 
@@ -658,7 +661,11 @@ $register->set('pools', function () {
         Config::setParam('pools-'.$key, $config);
     }
 
-    $group->fill();
+    try {
+        $group->fill();
+    } catch (\Throwable $th) {
+        Console::error('Connection failure: '.$th->getMessage());
+    }
 
     return $group;
 });
