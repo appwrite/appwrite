@@ -2,8 +2,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use FunctionsProxy\Adapter\Random;
-use FunctionsProxy\Adapter\RoundRobin;
+use FunctionsProxy\Adapter\UsageBased;
 use Swoole\Coroutine\Http\Client;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -41,7 +40,7 @@ $redisPool = new RedisPool(
     64
 );
 
-$adapter = new Random($redisPool);
+$adapter = new UsageBased($redisPool); // TODO: @Meldiron allow env variable to switch; log what is picked
 
 function markOffline(Cache $cache, string $executorId, string $error, bool $forceShowError = false)
 {
@@ -218,7 +217,10 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
         throw new Exception('Missing proxy key');
     }
 
-    $executor = $adapter->getNextExecutor();
+
+    $body = \json_decode($request->getContent(), true);
+    $runtimeId = $body['runtimeId'] ?? null;
+    $executor = $adapter->getNextExecutor($runtimeId);
 
     Console::success("Executing on " . $executor['hostname']);
 
@@ -247,7 +249,7 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
 
 $http->on('start', function () use ($redisPool) {
     // Keep updating executors state
-    Timer::tick(30000, function (int $timerId) use ($redisPool) {
+    Timer::tick(15000, function (int $timerId) use ($redisPool) {
         fetchExecutorsState($redisPool, false);
     });
 });

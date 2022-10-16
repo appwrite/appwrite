@@ -650,11 +650,11 @@ App::post('/v1/execution')
 
 App::get('/v1/health')
     ->param('name', '', new Text(64), 'Name of the executor.')
-    ->desc("Get usage stats of host machine")
+    ->desc("Get usage stats of host machine CPU usage from 0 to 100.")
     ->inject('response')
     ->action(function (string $name, Response $response) use ($orchestrationPool) {
         $systemCores = System::getCPUCores();
-        $systemUsage = System::getCPUUtilisation() / $systemCores / 100;
+        $systemUsage = System::getCPUUtilisation() / $systemCores;
         $functionsUsage = [];
 
         try {
@@ -662,7 +662,7 @@ App::get('/v1/health')
             $containerUsages = $orchestration->getStats(filters: [ 'label' => 'openruntimes-executor=' . $name ], cycles: 3);
 
             foreach ($containerUsages as $containerUsage) {
-                $functionsUsage[$containerUsage['name']] = $containerUsage['cpu'];
+                $functionsUsage[$containerUsage['name']] = $containerUsage['cpu'] * 100;
             }
         } catch (\Exception $err) {
             // TODO: @Meldiron Handle better

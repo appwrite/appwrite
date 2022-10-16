@@ -8,7 +8,7 @@ class RoundRobin extends Adapter
 {
     private $currentIndex = 0; // TODO: @Meldiron Put into utopia app resource or/and utopia registry
 
-    public function getNextExecutor(): array
+    public function getNextExecutor(?string $contaierId): array
     {
         $executors = $this->getExecutors();
         $executor = $executors[$this->currentIndex] ?? null;
