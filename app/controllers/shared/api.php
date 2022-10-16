@@ -16,6 +16,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -158,6 +159,38 @@ App::init()
 
         $deletes->setProject($project);
         $database->setProject($project);
+
+        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, function($event, Document $document) {
+            $collection = $document->getCollection();
+            Console::info('collection: ' . $collection);
+            switch($collection)
+            {
+                case 'users':
+                    Console::info('user created');
+                    break;
+                case 'databases':
+                    Console::info('Database created');
+                    break;
+                case 'buckets':
+                    Console::info('bucket created');
+                    break;
+                case 'functions':
+                    Console::info('function created');
+                    break;
+                default:
+                    if(strpos($collection, 'buckets_') === 0) {
+                        // created file for a bucket
+                        Console::info('file created');
+                    } else if (strpos($collection, 'database_') === 0) {
+                        if(strpos($collection, '_collection_') != false) {
+                            Console::info('document created');
+                        } else {
+                            Console::info('Collection created');
+                        }
+                    }
+                    break;
+            }
+        });
 
         $useCache = $route->getLabel('cache', false);
 
