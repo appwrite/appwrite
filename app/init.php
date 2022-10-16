@@ -36,14 +36,20 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\SMS\Adapter\Mock;
-use Appwrite\SMS\Adapter\Msg91;
-use Appwrite\SMS\Adapter\Telesign;
-use Appwrite\SMS\Adapter\TextMagic;
-use Appwrite\SMS\Adapter\Twilio;
-use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
+use Utopia\App;
+use Utopia\Database\ID;
+use Utopia\Logger\Logger;
+use Utopia\Config\Config;
+use Utopia\Locale\Locale;
+use Utopia\Messaging\Adapters\SMS\Mock;
+use Utopia\Messaging\Adapters\SMS\Msg91;
+use Utopia\Messaging\Adapters\SMS\Telesign;
+use Utopia\Messaging\Adapters\SMS\TextMagic;
+use Utopia\Messaging\Adapters\SMS\Twilio;
+use Utopia\Messaging\Adapters\SMS\Vonage;
+use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOConfig;
@@ -191,6 +197,7 @@ Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
 Config::load('variables', __DIR__ . '/config/variables.php');  // List of env variables
+Config::load('regions', __DIR__ . '/config/regions.php'); // List of available regions
 Config::load('avatar-browsers', __DIR__ . '/config/avatars/browsers.php');
 Config::load('avatar-credit-cards', __DIR__ . '/config/avatars/credit-cards.php');
 Config::load('avatar-flags', __DIR__ . '/config/avatars/flags.php');
