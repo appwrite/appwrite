@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b55f1a94691129653bc6ff0ac5f66e13",
+    "content-hash": "a19fd30d9ecff10a0ab60808a1f62495",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2178,24 +2178,24 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.21.1",
+            "version": "0.22.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "c81789b87a917da2daf336738170ebe01f50ea18"
+                "reference": "9f35d36ed4b8fa1c92962c77ef02b49c2f5919df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/c81789b87a917da2daf336738170ebe01f50ea18",
-                "reference": "c81789b87a917da2daf336738170ebe01f50ea18",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/9f35d36ed4b8fa1c92962c77ef02b49c2f5919df",
+                "reference": "9f35d36ed4b8fa1c92962c77ef02b49c2f5919df",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.5.10",
-                "vimeo/psalm": "4.13.1"
+                "phpunit/phpunit": "^9.5.25",
+                "vimeo/psalm": "^4.27.0"
             },
             "type": "library",
             "autoload": {
@@ -2221,9 +2221,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.21.1"
+                "source": "https://github.com/utopia-php/framework/tree/0.22.1"
             },
-            "time": "2022-09-07T09:56:28+00:00"
+            "time": "2022-10-07T14:51:40+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2451,18 +2451,18 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "dev-feat-upgrade-framework",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "4c2fcb8b9f046948ab812552e4e448057efef936"
+                "reference": "5a3640f4f34b394ed34efda351101c7928643819"
             },
             "require": {
                 "ext-json": "*",
                 "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/cli": "0.13.*",
-                "utopia-php/framework": "0.21.*"
+                "utopia-php/framework": "0.22.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -2493,12 +2493,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "Light and Fast Platform Library",
             "keywords": [
                 "cache",
@@ -2507,7 +2501,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-09-01T11:59:42+00:00"
+            "time": "2022-10-16T07:08:51+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -3479,25 +3473,30 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.6.1",
+            "version": "1.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "77a32518733312af16a44300404e945338981de3"
+                "reference": "48f445a408c131e38cab1c235aa6d2bb7a0bb20d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/77a32518733312af16a44300404e945338981de3",
-                "reference": "77a32518733312af16a44300404e945338981de3",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/48f445a408c131e38cab1c235aa6d2bb7a0bb20d",
+                "reference": "48f445a408c131e38cab1c235aa6d2bb7a0bb20d",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2 || ^8.0",
+                "php": "^7.4 || ^8.0",
                 "phpdocumentor/reflection-common": "^2.0"
             },
             "require-dev": {
                 "ext-tokenizer": "*",
-                "psalm/phar": "^4.8"
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan": "^1.8",
+                "phpstan/phpstan-phpunit": "^1.1",
+                "phpunit/phpunit": "^9.5",
+                "rector/rector": "^0.13.9",
+                "vimeo/psalm": "^4.25"
             },
             "type": "library",
             "extra": {
@@ -3523,9 +3522,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.6.1"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.6.2"
             },
-            "time": "2022-03-15T21:29:03+00:00"
+            "time": "2022-10-14T12:47:21+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -5420,9 +5419,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/platform": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
