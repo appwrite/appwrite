@@ -3,7 +3,6 @@
 namespace Appwrite\Resque;
 
 use Exception;
-use Appwrite\Database\Pools;
 use Utopia\App;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
