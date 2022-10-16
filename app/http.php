@@ -91,9 +91,13 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
 
-        $redis->flushAll();
-        Console::success('[Setup] - Creating database: appwrite...');
-        $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        try {
+            $redis->flushAll();
+            Console::success('[Setup] - Creating database: appwrite...');
+            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        } catch (\Exception $e) {
+            Console::error('Failed to create database: ' . $e->getMessage());
+        }
 
         if ($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
             $audit = new Audit($dbForConsole);
