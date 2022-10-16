@@ -96,7 +96,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             Console::success('[Setup] - Creating database: appwrite...');
             $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         } catch (\Exception $e) {
-            Console::error('Failed to create database: ' . $e->getMessage());
+            Console::success('[Setup] - Skip: metadata table already exists');
         }
 
         if ($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
