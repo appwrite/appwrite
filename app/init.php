@@ -18,8 +18,6 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-use Ahc\Jwt\JWT;
-use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\SMS\Adapter\Mock;
@@ -39,6 +37,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\URL\URL as URLURL;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
@@ -63,18 +62,19 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Wasabi;
-use MaxMind\Db\Reader;
-use PHPMailer\PHPMailer\PHPMailer;
-use Swoole\Database\PDOProxy;
-use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
-use Utopia\Pools\Connection;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
+use MaxMind\Db\Reader;
+use PHPMailer\PHPMailer\PHPMailer;
+use Swoole\Database\PDOProxy;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -501,35 +501,50 @@ $register->set('pools', function () {
 
     $group= new Group();
 
+    $fallbackForDB = URLURL::unparse([
+        'scheme' => 'mariadb',
+        'host' => App::getEnv('_APP_DB_HOST', 'mariadb'),
+        'port' => App::getEnv('_APP_DB_PORT', '3306'),
+        'user' => App::getEnv('_APP_DB_USER', ''),
+        'pass' => App::getEnv('_APP_DB_PASS', ''),
+    ]);
+    $fallbackForRedis = URLURL::unparse([
+        'scheme' => 'redis',
+        'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
+        'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
+        'user' => App::getEnv('_APP_REDIS_USER', ''),
+        'pass' => App::getEnv('_APP_REDIS_PASS', ''),
+    ]);
+
     $connections = [
         'console' => [
             'type' => 'database',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', ''),
+            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', ''),
+            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'queue' => [
             'type' => 'queue',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', ''),
+            'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'pubsub' => [
             'type' => 'pubsub',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_PUBSUB', ''),
+            'dsns' => App::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
         ],
         'cache' => [
             'type' => 'cache',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_CACHE', ''),
-            'multiple' => false, // TODO add cache sharding
+            'dsns' => App::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
+            'multiple' => true,
             'schemes' => ['redis'],
         ],
     ];
@@ -666,7 +681,7 @@ $register->set('influxdb', function () {
     return $client;
 });
 $register->set('statsd', function () {
- // Register DB connection
+    // Register DB connection
     $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
     $port = App::getEnv('_APP_STATSD_PORT', 8125);
 
@@ -1037,14 +1052,18 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 }, ['pools', 'cache']);
 
 App::setResource('cache', function (Group $pools) {
-    $cacheAdapter = $pools
-        ->get('cache')
-        ->pop()
-        ->getResource()
-    ;
+    $list = Config::getParam('pools-cache', []);
+    $adapters = [];
+    
+    foreach ($list as $value) {
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource()
+        ;
+    }
 
-    return new Cache(new None());
-    return new Cache($cacheAdapter);
+    return new Cache(new Sharding($adapters));
 }, ['pools']);
 
 App::setResource('deviceLocal', function () {

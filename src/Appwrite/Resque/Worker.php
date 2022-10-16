@@ -4,8 +4,9 @@ namespace Appwrite\Resque;
 
 use Exception;
 use Utopia\App;
-use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
+use Utopia\Config\Config;
+use Utopia\Cache\Adapter\Sharding;
 use Utopia\Database\Database;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
@@ -226,14 +227,18 @@ abstract class Worker
 
         $pools = $register->get('pools'); /* @var \Utopia\Pools\Group $pools */
         
-        $pools
-            ->get('cache')
-            ->pop()
-            ->getResource()
-        ;
-
-        return new Cache(new None());
-        // return new Cache($cacheAdapter);
+        $list = Config::getParam('pools-cache', []);
+        $adapters = [];
+        
+        foreach ($list as $value) {
+            $adapters[] = $pools
+                ->get($value)
+                ->pop()
+                ->getResource()
+            ;
+        }
+    
+        return new Cache(new Sharding($adapters));
     }
 
     /**

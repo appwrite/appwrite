@@ -90,7 +90,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         $collections = Config::getParam('collections', []);
 
         try {
-            // $redis->flushAll();
+            $cache = $app->getResource('cache'); /** @var Utopia\Cache\Cache $cache */
+            $cache->flush();
             Console::success('[Setup] - Creating database: appwrite...');
             $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         } catch (\Exception $e) {
