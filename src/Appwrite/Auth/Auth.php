@@ -337,7 +337,7 @@ class Auth
                 $token->isSet('secret') &&
                 $token->isSet('expire') &&
                 $token->getAttribute('type') == Auth::TOKEN_TYPE_PHONE &&
-                $token->getAttribute('secret') === $secret &&
+                $token->getAttribute('secret') === self::hash($secret) &&
                 DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
                 return (string) $token->getId();

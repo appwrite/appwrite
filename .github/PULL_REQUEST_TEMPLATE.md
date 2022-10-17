@@ -21,6 +21,11 @@ Happy contributing!
 
 (If this PR is related to any other PR or resolves any issue or related to any issue link all related PR and issues here.)
 
+### Have you added your change to the [Changelog](https://github.com/appwrite/appwrite/blob/master/CHANGES.md)?
+
+(The CHANGES.md file tracks all the changes that make it to the `main` branch. Add your change to this file in the following format)
+- One line description of your PR [#pr_number](Link to your PR)
+
 ### Have you read the [Contributing Guidelines on issues](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md)?
 
 (Write your answer here.)

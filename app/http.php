@@ -91,13 +91,13 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
 
-        $redis->flushAll();
-
-        Console::success('[Setup] - Creating database: appwrite...');
-
-        $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-
-        Console::success('[Setup] - Created database: appwrite and metadata tables...');
+        try {
+            $redis->flushAll();
+            Console::success('[Setup] - Creating database: appwrite...');
+            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        } catch (\Exception $e) {
+            Console::success('[Setup] - Skip: metadata table already exists');
+        }
 
         if ($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
             $audit = new Audit($dbForConsole);
