@@ -58,7 +58,7 @@ class DSN
         $this->user = $parts['user'] ?? null;
         $this->password = $parts['pass'] ?? null;
         $this->host = $parts['host'] ?? null;
-        $this->port = (int)$parts['port'] ?? null;
+        $this->port = $parts['port'] ?? null;
         $this->database = $parts['path'] ?? null;
         $this->query = $parts['query'] ?? null;
     }
@@ -110,7 +110,7 @@ class DSN
      */
     public function getPort(): ?int
     {
-        return $this->port;
+        return (int)$this->port;
     }
 
     /**
