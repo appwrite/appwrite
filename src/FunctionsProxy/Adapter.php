@@ -35,17 +35,14 @@ abstract class Adapter
             $executors = \explode(',', App::getEnv('_APP_EXECUTORS', ''));
 
             foreach ($executors as $executor) {
-                [$id, $hostname] = \explode('=', $executor);
-
-                $data = $cache->load('executors-' . $id, 60 * 60 * 24 * 30 * 3); // 3 months
+                $data = $cache->load('executors-' . $executor, 60 * 60 * 24 * 30 * 3); // 3 months
 
                 if ($data === false || $data['status'] !== 'online') {
                     continue;
                 }
 
                 $responseExecutors[] = [
-                    'id' => $id,
-                    'hostname' => $hostname,
+                    'hostname' => $executor,
                     'state' => $data
                 ];
             }

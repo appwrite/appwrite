@@ -466,6 +466,7 @@ services:
 
   appwrite-executor:
     container_name: appwrite-executor
+    hostname: exc1
     <<: *x-logging
     entrypoint: executor
     stop_signal: SIGINT
@@ -510,6 +511,7 @@ services:
 
   appwrite-executor2:
     container_name: appwrite-executor2
+    hostname: exc2
     <<: *x-logging
     entrypoint: executor
     stop_signal: SIGINT

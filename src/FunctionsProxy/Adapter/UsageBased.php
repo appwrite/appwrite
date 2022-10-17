@@ -23,10 +23,10 @@ class UsageBased extends Adapter
 
         // For whatever reason we don't know container yet. We consider all executors ideal
         if (!(isset($contaierId))) {
-            $idealExecutors = \array_map(fn($executor) => $executor['id'], $executors);
+            $idealExecutors = \array_map(fn($executor) => $executor['hostname'], $executors);
         } else {
             foreach ($executors as $executor) {
-                $executorId = $executor['id'] ?? '';
+                $executorId = $executor['hostname'] ?? '';
                 $executorState = $executor['state']['health'] ?? [];
                 $hostUsage = intval($executorState['hostUsage'] ?? 100);
                 $containerUsage = intval(($executorState['functionsUsage'] ?? [])[$executorId . '-' . $contaierId] ?? 100); // Forcing 100 to mark that starting runtime is the least ideal.
@@ -40,14 +40,14 @@ class UsageBased extends Adapter
 
         if (\count($idealExecutors) <= 0) {
             // If no ideal, let's consider all of them ideal. Since there is no prefference.
-            $idealExecutors = \array_map(fn($executor) => $executor['id'], $executors);
+            $idealExecutors = \array_map(fn($executor) => $executor['hostname'], $executors);
         }
 
         // Sort containers based on usage
         $sortedExecutors = [];
 
         foreach ($idealExecutors as $executorId) {
-            $executorIndex = \array_search($executorId, \array_map(fn($executor) => $executor['id'], $executors));
+            $executorIndex = \array_search($executorId, \array_map(fn($executor) => $executor['hostname'], $executors));
             $executor = $executors[$executorIndex];
 
             if (!isset($executor)) {
@@ -73,7 +73,7 @@ class UsageBased extends Adapter
             return null;
         }
 
-        $executorIndex = \array_search($idealExecutorId, \array_map(fn($executor) => $executor['id'], $executors));
+        $executorIndex = \array_search($idealExecutorId, \array_map(fn($executor) => $executor['hostname'], $executors));
         $executor = $executors[$executorIndex];
 
         // Null if can't match executor to ID

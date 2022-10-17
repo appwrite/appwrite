@@ -243,7 +243,7 @@ ENV _APP_SERVER=swoole \
     _APP_EXECUTOR_SECRET=a-random-secret \
     _APP_FUNCTIONS_PROXY_SECRET=a-random-secret \
     _APP_FUNCTIONS_PROXY_HOST=http://appwrite-executor/v1 \
-    _APP_EXECUTORS=main=http://appwrite-executor/v1 \
+    _APP_EXECUTORS=exc1 \
     _APP_EXECUTOR_RUNTIME_NETWORK=appwrite_runtimes \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \

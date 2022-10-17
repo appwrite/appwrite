@@ -179,7 +179,8 @@ App::post('/v1/runtimes')
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
-        // TODO: @Meldiron append prefix into runtimeId
+        $runtimeId = System::getHostname() . '-' . $runtimeId;
+
         if ($activeRuntimes->exists($runtimeId)) {
             if ($activeRuntimes->get($runtimeId)['status'] == 'pending') {
                 throw new \Exception('A runtime with the same ID is already being created. Attempt a execution soon.', 500);
@@ -244,6 +245,7 @@ App::post('/v1/runtimes')
             $vars = \array_merge($vars, [
                 'INTERNAL_RUNTIME_KEY' => $secret,
                 'INTERNAL_RUNTIME_ENTRYPOINT' => $entrypoint,
+                'INERNAL_EXECUTOR_HOSTNAME' => System::getHostname()
             ]);
             $vars = array_map(fn ($v) => strval($v), $vars);
             $orchestration
@@ -272,6 +274,7 @@ App::post('/v1/runtimes')
                     'openruntimes-executor' => $executorName,
                     'openruntimes-created' => strval($startTimeUnix),
                     'openruntimes-runtime' => $runtime,
+                    'openruntimes-hostname' => System::getHostname()
                 ],
                 workdir: $workdir,
                 volumes: [
@@ -409,6 +412,7 @@ App::get('/v1/runtimes/:runtimeId')
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(function ($runtimeId, $activeRuntimes, Response $response) {
+        $runtimeId = System::getHostname() . '-' . $runtimeId;
 
         if (!$activeRuntimes->exists($runtimeId)) {
             throw new Exception('Runtime not found', 404);
@@ -428,6 +432,7 @@ App::delete('/v1/runtimes/:runtimeId')
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(function (string $runtimeId, $orchestrationPool, $activeRuntimes, Response $response) {
+        $runtimeId = System::getHostname() . '-' . $runtimeId;
 
         if (!$activeRuntimes->exists($runtimeId)) {
             throw new Exception('Runtime not found', 404);
@@ -477,14 +482,23 @@ App::post('/v1/execution')
     ->inject('response')
     ->action(
         function (string $runtimeId, array $vars, string $data, $timeout, string $source, string $runtime, string $baseImage, string $entrypoint, $activeRuntimes, Response $response) {
+            $originalRuntimeId = $runtimeId;
+            $runtimeId = System::getHostname() . '-' . $runtimeId;
+
+            $vars = \array_merge($vars, [
+                'INERNAL_EXECUTOR_HOSTNAME' => System::getHostname()
+            ]);
+
             // Prepare runtime
             if (!$activeRuntimes->exists($runtimeId)) {
                 $executor = new Executor('http://localhost/v1');
 
                 for ($i = 0; $i < 5; $i++) {
                     try {
+                        [ $projectId, $deploymentId ] = \explode('-', $originalRuntimeId);
                         $runtimeResponse = $executor->createRuntime(
-                            runtimeId: $runtimeId,
+                            projectId: $projectId,
+                            deploymentId: $deploymentId,
                             source: $source,
                             runtime: $runtime,
                             baseImage: $baseImage,
@@ -650,26 +664,30 @@ App::post('/v1/execution')
     );
 
 App::get('/v1/health')
-    ->param('name', '', new Text(64), 'Name of the executor.')
     ->desc("Get usage stats of host machine CPU usage from 0 to 100.")
     ->inject('response')
-    ->action(function (string $name, Response $response) use ($orchestrationPool) {
+    ->action(function (Response $response) use ($orchestrationPool) {
         // TODO: @Meldiron separate into dedicated http server
-        // TODO: @Meldiron We should know name, no need for param
+
         $systemCores = System::getCPUCores();
         $systemUsage = System::getCPUUtilisation() / $systemCores;
         $functionsUsage = [];
 
         try {
             $orchestration = $orchestrationPool->get();
-            $containerUsages = $orchestration->getStats(filters: [ 'label' => 'openruntimes-executor=' . $name ], cycles: 3);
+            $containerUsages = $orchestration->getStats(filters: [ 'label' => 'openruntimes-hostname=' . System::getHostname() ], cycles: 3);
 
             foreach ($containerUsages as $containerUsage) {
                 $functionsUsage[$containerUsage['name']] = $containerUsage['cpu'] * 100;
             }
-        } catch (\Exception $err) {
-            // TODO: @Meldiron Handle better
-            \var_dump($err);
+        } catch (\Exception $error) {
+            logError($error, "healthError");
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_INTERNAL_SERVER_ERROR)
+                ->json([
+                    'status' => 'fail'
+                ]);
         } finally {
             $orchestrationPool->put($orchestration);
         }
@@ -801,15 +819,13 @@ $http->on('start', function ($http) {
     Console::info('Removing orphan runtimes...');
     try {
         $orchestration = $orchestrationPool->get();
-        $orphans = $orchestration->list(['label' => 'openruntimes-type=runtime']);
+        $orphans = $orchestration->list(['label' => 'openruntimes-hostname=' . System::getHostname()]);
     } finally {
         $orchestrationPool->put($orchestration);
     }
 
     foreach ($orphans as $runtime) {
         go(function () use ($runtime, $orchestrationPool) {
-            // TODO: @Meldiron Only remove containers prefixed with this executor name
-
             try {
                 $orchestration = $orchestrationPool->get();
                 $orchestration->remove($runtime->getName(), true);

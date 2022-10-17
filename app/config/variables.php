@@ -809,9 +809,9 @@ return [
             ],
             [
                 'name' => '_APP_EXECUTORS',
-                'description' => 'List of Appwrite executors to use for executing functions separated by comma.',
+                'description' => 'List of Appwrite executor hostnames to use for executing functions separated by comma.',
                 'introduction' => '0.16.0',
-                'default' => 'exc1=appwrite-executor',
+                'default' => 'exc1,exc2',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

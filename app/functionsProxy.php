@@ -42,26 +42,26 @@ $redisPool = new RedisPool(
 
 $adapter = new UsageBased($redisPool); // TODO: @Meldiron allow env variable to switch; log what is picked
 
-function markOffline(Cache $cache, string $executorId, string $error, bool $forceShowError = false)
+function markOffline(Cache $cache, string $executorHostname, string $error, bool $forceShowError = false)
 {
-    $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
+    $data = $cache->load('executors-' . $executorHostname, 60 * 60 * 24 * 30 * 3); // 3 months
 
-    $cache->save('executors-' . $executorId, ['status' => 'offline', 'health' => []]);
+    $cache->save('executors-' . $executorHostname, ['status' => 'offline', 'health' => []]);
 
     if (!$data || $data['status'] === 'online' || $forceShowError) {
-        Console::warning('Executor "' . $executorId . '" went down! Message:');
+        Console::warning('Executor "' . $executorHostname . '" went down! Message:');
         Console::warning($error);
     }
 }
 
-function markOnline(cache $cache, string $executorId, bool $forceShowError = false, mixed $health = [])
+function markOnline(cache $cache, string $executorHostname, bool $forceShowError = false, mixed $health = [])
 {
-    $data = $cache->load('executors-' . $executorId, 60 * 60 * 24 * 30 * 3); // 3 months
+    $data = $cache->load('executors-' . $executorHostname, 60 * 60 * 24 * 30 * 3); // 3 months
 
-    $cache->save('executors-' . $executorId, ['status' => 'online', 'health' => $health]);
+    $cache->save('executors-' . $executorHostname, ['status' => 'online', 'health' => $health]);
 
     if (!$data || $data['status'] === 'offline' || $forceShowError) {
-        Console::success('Executor "' . $executorId . '" went online.');
+        Console::success('Executor "' . $executorHostname . '" went online.');
     }
 }
 
@@ -76,9 +76,7 @@ function fetchExecutorsState(RedisPool $redisPool, bool $forceShowError = false)
             $cache = new Cache(new Redis($redis));
 
             try {
-                [$id, $hostname] = \explode('=', $executor);
-
-                $endpoint = 'http://' . $hostname . '/v1/health?name=' . $id;
+                $endpoint = 'http://' . $executor . '/v1/health';
 
                 $ch = \curl_init();
 
@@ -98,10 +96,10 @@ function fetchExecutorsState(RedisPool $redisPool, bool $forceShowError = false)
                 \curl_close($ch);
 
                 if ($statusCode === 200) {
-                    markOnline($cache, $id, $forceShowError, \json_decode($executorResponse, true));
+                    markOnline($cache, $executor, $forceShowError, \json_decode($executorResponse, true));
                 } else {
                     $message = 'Code: ' . $statusCode . ' with response "' . $executorResponse .  '" and error error: ' . $error;
-                    markOffline($cache, $id, $message, $forceShowError);
+                    markOffline($cache, $executor, $message, $forceShowError);
                 }
             } catch (\Exception $err) {
                 throw $err;
@@ -218,12 +216,11 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
         throw new Exception('Missing proxy key');
     }
 
-
     $body = \json_decode($request->getContent(), true);
     $runtimeId = $body['runtimeId'] ?? null;
     $executor = $adapter->getNextExecutor($runtimeId);
 
-    Console::success("Executing on " . $executor['id'] . ' (' . $executor['hostname'] . ')');
+    Console::success("Executing on " . $executor['hostname']);
 
     $client = new Client($executor['hostname'], 80);
     $client->setMethod($request->server['request_method'] ?? 'GET');
@@ -231,16 +228,6 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
         'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
     ]));
     $client->setData($request->getContent());
-
-    $body = \json_decode($client->requestBody, true);
-
-    if (\array_key_exists('runtimeId', $body)) {
-        $body['runtimeId'] =  $executor['id'] . '-' . $body['runtimeId'];
-    }
-
-    // TODO: @Meldiron Add variable regarding executor ID
-
-    $client->requestBody = \json_encode($body);
 
     $status = $client->execute($request->server['request_uri'] ?? '/');
 
