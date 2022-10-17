@@ -16,14 +16,17 @@
           element.getAttribute("data-analytics-category") || "undefined";
         let label = element.getAttribute("data-analytics-label") || "undefined";
 
-        fetch('https://growth.appwrite.io/v1/analytics', {
+        fetch('http://localhost:2080/v1/analytics', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            event: label,
+            source: 'console',
             category: category,
+            action: action,
+            label: label,
+            version: null,
             additionalData: null,
             url: window.location.href
           })

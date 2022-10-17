@@ -12,13 +12,13 @@
 
       let project = router.params["project"] || 'None';
 
-      fetch('https://growth.appwrite.io/v1/analytics', {
+      fetch('http://localhost:2080/v1/analytics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          event: 'pageview',
+          action: 'pageview',
           url: window.location.href
         })
       });
