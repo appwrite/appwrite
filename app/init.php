@@ -282,7 +282,7 @@ Database::addFilter(
             ->find('attributes', [
                 Query::equal('collectionInternalId', [$document->getInternalId()]),
                 Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit($database->getAttributeLimit()),
+                Query::limit($database->getLimitForAttributes()),
             ]);
     }
 );
