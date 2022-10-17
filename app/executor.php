@@ -653,6 +653,7 @@ App::get('/v1/health')
     ->desc("Get usage stats of host machine CPU usage from 0 to 100.")
     ->inject('response')
     ->action(function (string $name, Response $response) use ($orchestrationPool) {
+        // TODO: @Meldiron separate into dedicated http server
         $systemCores = System::getCPUCores();
         $systemUsage = System::getCPUUtilisation() / $systemCores;
         $functionsUsage = [];

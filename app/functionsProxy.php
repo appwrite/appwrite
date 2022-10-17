@@ -190,6 +190,7 @@ go(function () use ($redisPool) {
 
 Swoole\Event::wait();
 
+// TODO: @Meldiron Use async-style instead
 $http = new Server("0.0.0.0", 80);
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
@@ -250,6 +251,8 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
 };
 
 $http->on('start', function () use ($redisPool) {
+    // TODO: @Meldiron Allow scaling. Only do this on one machine
+
     // Keep updating executors state
     Timer::tick(15000, function (int $timerId) use ($redisPool) {
         fetchExecutorsState($redisPool, false);
