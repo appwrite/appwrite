@@ -181,7 +181,7 @@ App::init()
                         if (strpos($collection, '_collection_') != false) {
                             $usage
                             ->setParam('databaseId', $document->getAttribute('databaseId'))
-                            ->setParam('collectionId', $document->getAttribute('collectionId'))
+                            ->setParam('collectionId', $document->getAttribute('$collectionId'))
                             ->setParam('files.{scope}.count.total', 1);
                         } else {
                             Console::info('Collection created');
