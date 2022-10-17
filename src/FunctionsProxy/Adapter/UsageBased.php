@@ -17,23 +17,23 @@ class UsageBased extends Adapter
         $idealExecutors = [];
 
         // For whatever reason we don't know container yet. We consider all executors ideal
-        if(!(isset($contaierId))) {
+        if (!(isset($contaierId))) {
             $idealExecutors = \array_map(fn($executor) => $executor['id'], $executors);
         } else {
-            foreach($executors as $executor) {
+            foreach ($executors as $executor) {
                 $executorId = $executor['id'] ?? '';
                 $executorState = $executor['state']['health'] ?? [];
                 $hostUsage = intval($executorState['hostUsage'] ?? 100);
                 $containerUsage = intval(($executorState['functionsUsage'] ?? [])[$executorId . '-' . $contaierId] ?? 100);
 
                 // If host or contianer usage above 80, executor is not ideal
-                if($hostUsage < 80 && $containerUsage < 80) {
+                if ($hostUsage < 80 && $containerUsage < 80) {
                     $idealExecutors[] = $executorId;
                 }
             }
         }
 
-        if(\count($idealExecutors) <= 0) {
+        if (\count($idealExecutors) <= 0) {
             // If no ideal, let's consider all of them ideal. Since there is no prefference.
             $idealExecutors = \array_map(fn($executor) => $executor['id'], $executors);
         }
@@ -43,11 +43,11 @@ class UsageBased extends Adapter
         $hostWeight = 0.3;
         $containerWeight = 0.7;
 
-        foreach($idealExecutors as $executorId) {
+        foreach ($idealExecutors as $executorId) {
             $executorIndex = \array_search($executorId, \array_map(fn($executor) => $executor['id'], $executors));
             $executor = $executors[$executorIndex];
-            
-            if(!isset($executor)) {
+
+            if (!isset($executor)) {
                 continue;
             }
 
@@ -66,7 +66,7 @@ class UsageBased extends Adapter
         $idealExecutorId = $idealExecutors[0] ?? null;
 
         // Null if no executor found
-        if($idealExecutorId === null) {
+        if ($idealExecutorId === null) {
             return null;
         }
 
