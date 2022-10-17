@@ -260,8 +260,6 @@ App::post('/v1/runtimes')
                 '/dev/null'
             ] : [];
 
-            $executorName = \explode('-', $runtimeId)[0];
-
             $containerId = $orchestration->run(
                 image: $baseImage,
                 name: $runtimeId,
@@ -271,10 +269,9 @@ App::post('/v1/runtimes')
                 labels: [
                     'openruntimes-id' => $runtimeId,
                     'openruntimes-type' => 'runtime',
-                    'openruntimes-executor' => $executorName,
+                    'openruntimes-executor' => System::getHostname(),
                     'openruntimes-created' => strval($startTimeUnix),
-                    'openruntimes-runtime' => $runtime,
-                    'openruntimes-hostname' => System::getHostname()
+                    'openruntimes-runtime' => $runtime
                 ],
                 workdir: $workdir,
                 volumes: [
@@ -675,7 +672,7 @@ App::get('/v1/health')
 
         try {
             $orchestration = $orchestrationPool->get();
-            $containerUsages = $orchestration->getStats(filters: [ 'label' => 'openruntimes-hostname=' . System::getHostname() ], cycles: 3);
+            $containerUsages = $orchestration->getStats(filters: [ 'label' => 'openruntimes-executor=' . System::getHostname() ], cycles: 3);
 
             foreach ($containerUsages as $containerUsage) {
                 $functionsUsage[$containerUsage['name']] = $containerUsage['cpu'] * 100;
@@ -819,7 +816,7 @@ $http->on('start', function ($http) {
     Console::info('Removing orphan runtimes...');
     try {
         $orchestration = $orchestrationPool->get();
-        $orphans = $orchestration->list(['label' => 'openruntimes-hostname=' . System::getHostname()]);
+        $orphans = $orchestration->list(['label' => 'openruntimes-executor=' . System::getHostname()]);
     } finally {
         $orchestrationPool->put($orchestration);
     }
