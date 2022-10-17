@@ -1,6 +1,6 @@
 # Version 1.0.4
 
-- Fix project pagination in DB usage collector [#X](X)
+- Fix project pagination in DB usage collector [#4517](https://github.com/appwrite/appwrite/pull/4517)
 
 # Version 1.0.3
 ## Bugs
