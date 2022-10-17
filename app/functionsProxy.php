@@ -222,7 +222,7 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
     $runtimeId = $body['runtimeId'] ?? null;
     $executor = $adapter->getNextExecutor($runtimeId);
 
-    Console::success("Executing on " . $executor['hostname']);
+    Console::success("Executing on " . $executor['id'] . ' (' . $executor['hostname'] . ')');
 
     $client = new Client($executor['hostname'], 80);
     $client->setMethod($request->server['request_method'] ?? 'GET');
@@ -236,6 +236,8 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
     if (\array_key_exists('runtimeId', $body)) {
         $body['runtimeId'] =  $executor['id'] . '-' . $body['runtimeId'];
     }
+
+    // TODO: @Meldiron Add variable regarding executor ID
 
     $client->requestBody = \json_encode($body);
 

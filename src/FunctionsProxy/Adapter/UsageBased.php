@@ -8,6 +8,11 @@ class UsageBased extends Adapter
 {
     public function getNextExecutor(?string $contaierId): array
     {
+        // Adapter configuration
+        $idealMaxUsage = 80; // Means 80%
+        $hostWeight = 0.3;
+        $containerWeight = 0.7; //Weights should add up to 1. For maintanance reasons
+
         $executors = $this->getExecutors();
 
         // Remove offline and unknown-status executors
@@ -24,10 +29,10 @@ class UsageBased extends Adapter
                 $executorId = $executor['id'] ?? '';
                 $executorState = $executor['state']['health'] ?? [];
                 $hostUsage = intval($executorState['hostUsage'] ?? 100);
-                $containerUsage = intval(($executorState['functionsUsage'] ?? [])[$executorId . '-' . $contaierId] ?? 100);
+                $containerUsage = intval(($executorState['functionsUsage'] ?? [])[$executorId . '-' . $contaierId] ?? 100); // Forcing 100 to mark that starting runtime is the least ideal.
 
-                // If host or contianer usage above 80, executor is not ideal
-                if ($hostUsage < 80 && $containerUsage < 80) {
+                // If host or contianer usage above idealMaxUsage, executor is not ideal
+                if ($hostUsage < $idealMaxUsage && $containerUsage < $idealMaxUsage) {
                     $idealExecutors[] = $executorId;
                 }
             }
@@ -40,8 +45,6 @@ class UsageBased extends Adapter
 
         // Sort containers based on usage
         $sortedExecutors = [];
-        $hostWeight = 0.3;
-        $containerWeight = 0.7;
 
         foreach ($idealExecutors as $executorId) {
             $executorIndex = \array_search($executorId, \array_map(fn($executor) => $executor['id'], $executors));
@@ -53,7 +56,7 @@ class UsageBased extends Adapter
 
             $executorState = $executor['state']['health'] ?? [];
             $hostUsage = intval($executorState['hostUsage'] ?? 10);
-            $containerUsage = intval(($executorState['functionsUsage'] ?? [])[$executorId . '-' . $contaierId] ?? 100);
+            $containerUsage = intval(($executorState['functionsUsage'] ?? [])[$executorId . '-' . $contaierId] ?? 0);
 
             $usageIndex = ($hostUsage * $hostWeight) + ($containerUsage * $containerWeight);
 
@@ -63,7 +66,7 @@ class UsageBased extends Adapter
         \asort($sortedExecutors);
 
         // Pick the least used executor
-        $idealExecutorId = $idealExecutors[0] ?? null;
+        $idealExecutorId = \array_keys($sortedExecutors)[0] ?? null;
 
         // Null if no executor found
         if ($idealExecutorId === null) {
