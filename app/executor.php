@@ -672,7 +672,10 @@ App::get('/v1/health')
 
         try {
             $orchestration = $orchestrationPool->get();
-            $containerUsages = $orchestration->getStats(filters: [ 'label' => 'openruntimes-executor=' . System::getHostname() ], cycles: 3);
+            $containerUsages = $orchestration->getStats(
+                filters: [ 'label' => 'openruntimes-executor=' . System::getHostname() ],
+                cycles: 3
+            );
 
             foreach ($containerUsages as $containerUsage) {
                 $functionsUsage[$containerUsage['name']] = $containerUsage['cpu'] * 100;
