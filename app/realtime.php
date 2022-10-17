@@ -384,6 +384,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
     Console::info("Connection open (user: {$connection})");
 
+    App::setResource('pools', fn() => $register->get('pools'));
     App::setResource('request', fn() => $request);
     App::setResource('response', fn() => $response);
 
