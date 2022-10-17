@@ -103,18 +103,13 @@ class Stats
             'users.{scope}.requests.read',
             'users.{scope}.requests.update',
             'users.{scope}.requests.delete',
+            'users.{scope}.count.total',
         ];
 
         foreach ($usersMetrics as $metric) {
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
-                $this->statsd->increment($metric . $tags);
-                if ($metric == $usersMetrics[0]) {
-                    $this->statsd->increment('users.{scope}.count.total' . $tags);
-                }
-                if ($metric == $usersMetrics[3]) {
-                    $this->statsd->decrement('users.{scope}.count.total' . $tags);
-                }
+                $this->statsd->count($metric . $tags, $value);
             }
         }
 
@@ -131,34 +126,16 @@ class Stats
             'documents.{scope}.requests.read',
             'documents.{scope}.requests.update',
             'documents.{scope}.requests.delete',
+            'databases.{scope}.count.total',
+            'collections.{scope}.count.total',
+            'documents.{scope}.count.total'
         ];
 
         foreach ($dbMetrics as $metric) {
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
                 $dbTags = $tags . ",collectionId=" . ($this->params['collectionId'] ?? '') . ",databaseId=" . ($this->params['databaseId'] ?? '');
-                $this->statsd->increment($metric . $dbTags);
-
-                if ($metric == $dbMetrics[0]) {
-                    $this->statsd->increment('databases.{scope}.count.total' . $dbTags);
-                }
-                if ($metric == $dbMetrics[3]) {
-                    $this->statsd->decrement('databases.{scope}.count.total' . $dbTags);
-                }
-
-                if ($metric == $dbMetrics[4]) {
-                    $this->statsd->increment('collections.{scope}.count.total' . $dbTags);
-                }
-                if ($metric == $dbMetrics[7]) {
-                    $this->statsd->decrement('collections.{scope}.count.total' . $dbTags);
-                }
-
-                if ($metric == $dbMetrics[8]) {
-                    $this->statsd->increment('documents.{scope}.count.total' . $dbTags);
-                }
-                if ($metric == $dbMetrics[11]) {
-                    $this->statsd->decrement('documents.{scope}.count.total' . $dbTags);
-                }
+                $this->statsd->count($metric . $dbTags, $value);
             }
         }
 
@@ -171,27 +148,15 @@ class Stats
             'files.{scope}.requests.read',
             'files.{scope}.requests.update',
             'files.{scope}.requests.delete',
+            'buckets.{scope}.count.total',
+            'files.{scope}.count.total'
         ];
 
         foreach ($storageMertics as $metric) {
             $value = $this->params[$metric] ?? 0;
             if ($value >= 1) {
                 $storageTags = $tags . ",bucketId=" . ($this->params['bucketId'] ?? '');
-                $this->statsd->increment($metric . $storageTags);
-
-                if ($metric == $storageMertics[0]) {
-                    $this->statsd->increment('buckets.{scope}.count.total' . $storageTags);
-                }
-                if ($metric == $storageMertics[3]) {
-                    $this->statsd->decrement('buckets.{scope}.count.total' . $storageTags);
-                }
-
-                if ($metric == $storageMertics[4]) {
-                    $this->statsd->increment('files.{scope}.count.total' . $storageTags);
-                }
-                if ($metric == $storageMertics[7]) {
-                    $this->statsd->decrement('files.{scope}.count.total' . $storageTags);
-                }
+                $this->statsd->count($metric . $storageTags, $value);
             }
         }
 
