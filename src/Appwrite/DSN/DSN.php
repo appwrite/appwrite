@@ -27,7 +27,7 @@ class DSN
     /**
      * @var ?int
      */
-    protected ?int $port;
+    protected ?string $port;
 
     /**
      * @var ?string
@@ -106,11 +106,11 @@ class DSN
     /**
      * Return the port
      *
-     * @return ?int
+     * @return ?string
      */
-    public function getPort(): ?int
+    public function getPort(): ?string
     {
-        return (int)$this->port;
+        return $this->port;
     }
 
     /**
