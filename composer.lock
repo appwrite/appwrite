@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "08fdd139ad1285b02c4b4e555679e7de",
+    "content-hash": "0bcc1c352327423d6e64c8859d68cc6b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2394,12 +2394,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/orchestration.git",
-                "reference": "5fb741ea8152167966ec51e17e78cfbc691d1a1f"
+                "reference": "114046b9010ccb331deb7e23ef4aff22f903b890"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/5fb741ea8152167966ec51e17e78cfbc691d1a1f",
-                "reference": "5fb741ea8152167966ec51e17e78cfbc691d1a1f",
+                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/114046b9010ccb331deb7e23ef4aff22f903b890",
+                "reference": "114046b9010ccb331deb7e23ef4aff22f903b890",
                 "shasum": ""
             },
             "require": {
@@ -2441,7 +2441,7 @@
                 "issues": "https://github.com/utopia-php/orchestration/issues",
                 "source": "https://github.com/utopia-php/orchestration/tree/feat-usage-stats"
             },
-            "time": "2022-10-14T19:36:45+00:00"
+            "time": "2022-10-16T14:31:23+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -5356,6 +5356,20 @@
                 }
             ],
             "time": "2022-09-28T08:42:51+00:00"
+        }
+    ],
+    "aliases": [
+        {
+            "package": "appwrite/php-runtimes",
+            "version": "dev-feat-upgrade-system-version",
+            "alias": "0.11.0",
+            "alias_normalized": "0.11.0.0"
+        },
+        {
+            "package": "utopia-php/orchestration",
+            "version": "dev-feat-usage-stats",
+            "alias": "0.6.0",
+            "alias_normalized": "0.6.0.0"
         }
     ],
     "minimum-stability": "stable",
