@@ -635,10 +635,10 @@ $register->set('pools', function () {
                         
                         break;
                     case 'queue':
-                        //$adapter = new Queue($resource);
+                        $adapter = $resource();
                         break;
                     case 'pubsub':
-                        //$adapter = new PubSub($resource);
+                        $adapter = $resource();
                         break;
                     case 'cache':
                         $adapter = match ($dsn->getScheme()) {
