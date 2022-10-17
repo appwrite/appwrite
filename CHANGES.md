@@ -1,3 +1,7 @@
+# Version 1.0.4
+
+- Fix project pagination in DB usage collector [#X](X)
+
 # Version 1.0.3
 ## Bugs
 - Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)
