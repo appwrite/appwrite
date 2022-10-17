@@ -62,7 +62,7 @@ We maintain a [`locale branch`](https://github.com/appwrite/appwrite/tree/locale
 
 2. **en.json**
 
-    [en.json]((https://github.com/appwrite/appwrite/blob/locale/app/config/locale/translations/en.json)) contains the English translation for all the terms that are present in **terms.json**. You can use this file as a reference when making a contribution for your language.
+    [en.json](https://github.com/appwrite/appwrite/blob/locale/app/config/locale/translations/en.json) contains the English translation for all the terms that are present in **terms.json**. You can use this file as a reference when making a contribution for your language.
 
     ```json
     {

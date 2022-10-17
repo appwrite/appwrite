@@ -193,21 +193,24 @@ class DeletesV1 extends Worker
     protected function deleteCollection(Document $document, string $projectId): void
     {
         $collectionId = $document->getId();
-        $databaseId = str_replace('database_', '', $document->getCollection());
+        $databaseId = $document->getAttribute('databaseId');
+        $databaseInternalId = $document->getAttribute('databaseInternalId');
 
         $dbForProject = $this->getProjectDB($projectId);
 
-        $dbForProject->deleteCollection('database_' . $databaseId . '_collection_' . $document->getInternalId());
+        $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $document->getInternalId());
 
         $this->deleteByGroup('attributes', [
+            Query::equal('databaseId', [$databaseId]),
             Query::equal('collectionId', [$collectionId])
         ], $dbForProject);
 
         $this->deleteByGroup('indexes', [
+            Query::equal('databaseId', [$databaseId]),
             Query::equal('collectionId', [$collectionId])
         ], $dbForProject);
 
-        $this->deleteAuditLogsByResource('collection/' . $collectionId, $projectId);
+        $this->deleteAuditLogsByResource('database/' . $databaseId . '/collection/' . $collectionId, $projectId);
     }
 
     /**
@@ -409,6 +412,14 @@ class DeletesV1 extends Worker
     {
         $dbForProject = $this->getProjectDB($projectId);
         $functionId = $document->getId();
+
+        /**
+         * Delete Variables
+         */
+        Console::info("Deleting variables for function " . $functionId);
+        $this->deleteByGroup('variables', [
+            Query::equal('functionId', [$functionId])
+        ], $dbForProject);
 
         /**
          * Delete Deployments

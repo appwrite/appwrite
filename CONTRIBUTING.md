@@ -93,6 +93,7 @@ git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
 
 cd appwrite
 
+docker compose build
 docker compose up -d
 ```
 
