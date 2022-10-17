@@ -606,7 +606,7 @@ $register->set('pools', function () {
                 case 'redis':
                     $resource = function() use ($dsnHost, $dsnPort, $dsnPass) {
                         $redis = new Redis();
-                        @$redis->pconnect($dsnHost, $dsnPort);
+                        @$redis->pconnect($dsnHost, (int)$dsnPort);
                         if($dsnPass) {
                             $redis->auth($dsnPass);
                         }

@@ -201,7 +201,7 @@ abstract class Worker
     {
         global $register;
 
-        $pools = $register->get('pools'); /* @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
         
         $dbAdapter = $pools
             ->get('console')
@@ -225,7 +225,7 @@ abstract class Worker
     {
         global $register;
 
-        $pools = $register->get('pools'); /* @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
         
         $list = Config::getParam('pools-cache', []);
         $adapters = [];
