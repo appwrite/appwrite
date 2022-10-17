@@ -7,7 +7,11 @@ use Appwrite\Database\Pools;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
@@ -106,6 +110,54 @@ $cli
                 ->trigger();
         }
 
+        /**
+         * Get console database
+         * @return Database
+         */
+        function getConsoleDB(): Database
+        {
+            global $register;
+
+            $pools = $register->get('pools'); /* @var \Utopia\Pools\Group $pools */
+            
+            $dbAdapter = $pools
+                ->get('console')
+                ->pop()
+                ->getResource()
+            ;
+
+            $database = new Database($dbAdapter, getCache());
+
+            $database->setNamespace('console');
+            $database->setDefaultDatabase('appwrite');
+
+            return $database;
+        }
+
+        /**
+         * Get Cache
+         * @return Cache
+         */
+        function getCache(): Cache
+        {
+            global $register;
+
+            $pools = $register->get('pools'); /* @var \Utopia\Pools\Group $pools */
+            
+            $list = Config::getParam('pools-cache', []);
+            $adapters = [];
+            
+            foreach ($list as $value) {
+                $adapters[] = $pools
+                    ->get($value)
+                    ->pop()
+                    ->getResource()
+                ;
+            }
+        
+            return new Cache(new Sharding($adapters));
+        }
+
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
@@ -115,16 +167,8 @@ $cli
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
 
-        Console::loop(function () use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
-            $redis = $register->get('cache');
-            $dbPool = $register->get('dbPool');
-
-            $database = $dbPool->getConsoleDB();
-            $pdo = $dbPool->getPDO($database);
-            $database = Pools::wait(
-                Pools::getDatabase($pdo, $redis, '_console'),
-                'certificates',
-            );
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
+            $database = getConsoleDB();
 
             $time = DateTime::now();
 
