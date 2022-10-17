@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "80c8717dd836655d2a135d306ad04de1",
+    "content-hash": "0e0aa8681829f5c1c68b5b80044f12a5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1897,26 +1897,24 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.7.0",
+            "version": "0.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "cd53431242c88299daea2589e21322abe97682cc"
+                "reference": "9889235a6d3da6cbb1f435201529da4d27c30e79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/cd53431242c88299daea2589e21322abe97682cc",
-                "reference": "cd53431242c88299daea2589e21322abe97682cc",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/9889235a6d3da6cbb1f435201529da4d27c30e79",
+                "reference": "9889235a6d3da6cbb1f435201529da4d27c30e79",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
-                "ext-memcached": "*",
                 "ext-redis": "*",
                 "php": ">=8.0"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.13.1"
             },
@@ -1930,6 +1928,12 @@
             "license": [
                 "MIT"
             ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
             "description": "A simple cache library to manage application cache storing, loading and purging",
             "keywords": [
                 "cache",
@@ -1940,9 +1944,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.7.0"
+                "source": "https://github.com/utopia-php/cache/tree/0.6.1"
             },
-            "time": "2022-10-16T06:04:12+00:00"
+            "time": "2022-08-10T08:12:46+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -2050,16 +2054,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-main",
+            "version": "0.27.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "4553c3d150b631f5b79a876343a71f5966681970"
+                "reference": "0644cd8a7efee2fc745ed70dbf2b73a78eeefa52"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/4553c3d150b631f5b79a876343a71f5966681970",
-                "reference": "4553c3d150b631f5b79a876343a71f5966681970",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0644cd8a7efee2fc745ed70dbf2b73a78eeefa52",
+                "reference": "0644cd8a7efee2fc745ed70dbf2b73a78eeefa52",
                 "shasum": ""
             },
             "require": {
@@ -2068,7 +2072,7 @@
                 "ext-redis": "*",
                 "mongodb/mongodb": "1.8.0",
                 "php": ">=8.0",
-                "utopia-php/cache": "0.7.*",
+                "utopia-php/cache": "0.6.*",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
@@ -2078,7 +2082,6 @@
                 "utopia-php/cli": "^0.11.0",
                 "vimeo/psalm": "4.0.1"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2099,9 +2102,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/main"
+                "source": "https://github.com/utopia-php/database/tree/0.27.0"
             },
-            "time": "2022-10-16T11:02:35+00:00"
+            "time": "2022-10-16T07:39:26+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5347,15 +5350,13 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-main",
+            "version": "0.27.0.0",
             "alias": "0.26.0",
             "alias_normalized": "0.26.0.0"
         }
     ],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
