@@ -160,26 +160,25 @@ App::init()
         $deletes->setProject($project);
         $database->setProject($project);
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, function($event, Document $document) use ($usage) {
+        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, function ($event, Document $document) use ($usage) {
             $collection = $document->getCollection();
-            switch($collection)
-            {
+            switch ($collection) {
                 case 'users':
                     $usage->setParam('users.{scope}.count.total', 1);
                     break;
                 case 'databases':
                     $usage->setParam('databases.{scope}.count.total', 1);
                     break;
-                case 'buckets':    
+                case 'buckets':
                     $usage->setParam('buckets.{scope}.count.total', 1);
                     break;
                 default:
-                    if(strpos($collection, 'buckets_') === 0) {
+                    if (strpos($collection, 'buckets_') === 0) {
                         $usage
                             ->setParam('bucketId', $document->getAttribute('bucketId'))
                             ->setParam('files.{scope}.count.total', 1);
-                    } else if (strpos($collection, 'database_') === 0) {
-                        if(strpos($collection, '_collection_') != false) {
+                    } elseif (strpos($collection, 'database_') === 0) {
+                        if (strpos($collection, '_collection_') != false) {
                             $usage
                             ->setParam('databaseId', $document->getAttribute('databaseId'))
                             ->setParam('collectionId', $document->getAttribute('collectionId'))
@@ -192,26 +191,25 @@ App::init()
             }
         });
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, function($event, Document $document) use ($usage) {
+        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, function ($event, Document $document) use ($usage) {
             $collection = $document->getCollection();
-            switch($collection)
-            {
+            switch ($collection) {
                 case 'users':
                     $usage->setParam('users.{scope}.count.total', -1);
                     break;
                 case 'databases':
                     $usage->setParam('databases.{scope}.count.total', -1);
                     break;
-                case 'buckets':    
+                case 'buckets':
                     $usage->setParam('buckets.{scope}.count.total', -1);
                     break;
                 default:
-                    if(strpos($collection, 'buckets_') === 0) {
+                    if (strpos($collection, 'buckets_') === 0) {
                         $usage
                             ->setParam('bucketId', $document->getAttribute('bucketId'))
                             ->setParam('files.{scope}.count.total', -1);
-                    } else if (strpos($collection, 'database_') === 0) {
-                        if(strpos($collection, '_collection_') != false) {
+                    } elseif (strpos($collection, 'database_') === 0) {
+                        if (strpos($collection, '_collection_') != false) {
                             $usage
                             ->setParam('databaseId', $document->getAttribute('databaseId'))
                             ->setParam('collectionId', $document->getAttribute('collectionId'))
