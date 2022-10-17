@@ -1082,20 +1082,57 @@ App::setResource('schema', function ($utopia, $dbForProject) {
     };
 
     $urls = [
-        'list' => function (string $collectionId, array $args) {
-            return "/v1/database/collections/{$collectionId}/documents";
+        'list' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents";
         },
-        'create' => function (string $collectionId, array $args) {
-            return "/v1/database/collections/{$collectionId}/documents";
+        'create' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents";
         },
-        'read' => function (string $collectionId, array $args) {
-            return "/v1/database/collections/{$collectionId}/documents/{$args['documentId']}";
+        'read' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
         },
-        'update' => function (string $collectionId, array $args) {
-            return "/v1/database/collections/{$collectionId}/documents/{$args['documentId']}";
+        'update' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
         },
-        'delete' => function (string $collectionId, array $args) {
-            return "/v1/database/collections/{$collectionId}/documents/{$args['documentId']}";
+        'delete' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+    ];
+    $params = [
+        'list' => function (string $databaseId, string $collectionId, array $args) {
+            return [ 'queries' => $args['queries']];
+        },
+        'create' => function (string $databaseId, string $collectionId, array $args) {
+            $id = $args['id'] ?? 'unique()';
+            $permissions = $args['permissions'] ?? null;
+
+            unset($args['id']);
+            unset($args['permissions']);
+
+            // Order must be the same as the route params
+            return [
+                'databaseId' => $databaseId,
+                'documentId' => $id,
+                'collectionId' => $collectionId,
+                'data' => $args,
+                'permissions' => $permissions,
+            ];
+        },
+        'update' => function (string $databaseId, string $collectionId, array $args) {
+            $documentId = $args['id'];
+            $permissions = $args['permissions'] ?? null;
+
+            unset($args['id']);
+            unset($args['permissions']);
+
+            // Order must be the same as the route params
+            return [
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
+                'documentId' => $documentId,
+                'data' => $args,
+                'permissions' => $permissions,
+            ];
         },
     ];
 
@@ -1103,6 +1140,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         $utopia,
         $complexity,
         $attributes,
-        $urls
+        $urls,
+        $params,
     );
 }, ['utopia', 'dbForProject']);

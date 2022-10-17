@@ -7,6 +7,7 @@ use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema as GQLSchema;
 use Utopia\App;
+use Utopia\Exception;
 use Utopia\Route;
 
 class Schema
@@ -15,13 +16,21 @@ class Schema
     protected static array $dirty = [];
 
     /**
-     * @throws \Exception
+     *
+     * @param App $utopia
+     * @param callable $complexity  Function to calculate complexity
+     * @param callable $attributes  Function to get attributes
+     * @param array $urls           Array of functions to get urls for specific method types
+     * @param array $params         Array of functions to build parameters for specific method types
+     * @return GQLSchema
+     * @throws Exception
      */
     public static function build(
         App $utopia,
         callable $complexity,
         callable $attributes,
-        array $urls
+        array $urls,
+        array $params,
     ): GQLSchema {
         App::setResource('utopia:graphql', static function () use ($utopia) {
             return $utopia;
@@ -39,7 +48,8 @@ class Schema
         //    $utopia,
         //    $complexity,
         //    $attributes,
-        //    $urls
+        //    $urls,
+        //    $params,
         //);
 
         $queries = \array_merge_recursive(
@@ -132,7 +142,8 @@ class Schema
         App $utopia,
         callable $complexity,
         callable $attributes,
-        array $urls
+        array $urls,
+        array $params,
     ): array {
         $collections = [];
         $queryFields = [];
@@ -194,6 +205,7 @@ class Schema
                         $databaseId,
                         $collectionId,
                         $urls['list'],
+                        $params['list'],
                     ),
                     'complexity' => $complexity,
                 ];
@@ -206,6 +218,7 @@ class Schema
                         $databaseId,
                         $collectionId,
                         $urls['create'],
+                        $params['create'],
                     )
                 ];
                 $mutationFields[$collectionId . 'Update'] = [
@@ -222,6 +235,7 @@ class Schema
                         $databaseId,
                         $collectionId,
                         $urls['update'],
+                        $params['update'],
                     )
                 ];
                 $mutationFields[$collectionId . 'Delete'] = [
