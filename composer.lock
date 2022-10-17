@@ -2964,12 +2964,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "44baaa67b1a907dd0140b2a8bd6b950ae2d1c965"
+                "reference": "44439c26074043bf0cd3ecd4a3e51bf4af5d6a52"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/44baaa67b1a907dd0140b2a8bd6b950ae2d1c965",
-                "reference": "44baaa67b1a907dd0140b2a8bd6b950ae2d1c965",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/44439c26074043bf0cd3ecd4a3e51bf4af5d6a52",
+                "reference": "44439c26074043bf0cd3ecd4a3e51bf4af5d6a52",
                 "shasum": ""
             },
             "require": {
@@ -3006,7 +3006,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-graphql-method-type"
             },
-            "time": "2022-10-14T02:36:02+00:00"
+            "time": "2022-10-16T23:23:18+00:00"
         },
         {
             "name": "doctrine/instantiator",
