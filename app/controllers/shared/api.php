@@ -160,30 +160,31 @@ App::init()
         $deletes->setProject($project);
         $database->setProject($project);
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, function($event, Document $document) {
+        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, function($event, Document $document) use ($usage) {
             $collection = $document->getCollection();
             Console::info('collection: ' . $collection);
             switch($collection)
             {
                 case 'users':
-                    Console::info('user created');
+                    $usage->setParam('users.{scope}.count.total', 1);
                     break;
                 case 'databases':
-                    Console::info('Database created');
+                    $usage->setParam('databases.{scope}.count.total', 1);
                     break;
-                case 'buckets':
-                    Console::info('bucket created');
-                    break;
-                case 'functions':
-                    Console::info('function created');
+                case 'buckets':    
+                    $usage->setParam('buckets.{scope}.count.total', 1);
                     break;
                 default:
                     if(strpos($collection, 'buckets_') === 0) {
-                        // created file for a bucket
-                        Console::info('file created');
+                        $usage
+                            ->setParam('bucketId', $document->getAttribute('bucketId'))
+                            ->setParam('files.{scope}.count.total', 1);
                     } else if (strpos($collection, 'database_') === 0) {
                         if(strpos($collection, '_collection_') != false) {
-                            Console::info('document created');
+                            $usage
+                            ->setParam('databaseId', $document->getAttribute('databaseId'))
+                            ->setParam('collectionId', $document->getAttribute('collectionId'))
+                            ->setParam('files.{scope}.count.total', 1);
                         } else {
                             Console::info('Collection created');
                         }
