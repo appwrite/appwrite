@@ -179,6 +179,7 @@ App::post('/v1/runtimes')
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
+        // TODO: @Meldiron append prefix into runtimeId
         if ($activeRuntimes->exists($runtimeId)) {
             if ($activeRuntimes->get($runtimeId)['status'] == 'pending') {
                 throw new \Exception('A runtime with the same ID is already being created. Attempt a execution soon.', 500);
@@ -654,6 +655,7 @@ App::get('/v1/health')
     ->inject('response')
     ->action(function (string $name, Response $response) use ($orchestrationPool) {
         // TODO: @Meldiron separate into dedicated http server
+        // TODO: @Meldiron We should know name, no need for param
         $systemCores = System::getCPUCores();
         $systemUsage = System::getCPUUtilisation() / $systemCores;
         $functionsUsage = [];
