@@ -237,7 +237,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'data' => [
                         'events' => ['stats.connections'],
                         'channels' => ['project'],
-                        'timestamp' => date('c'),
+                        'timestamp' => DateTime::formatTz(DateTime::now()),
                         'payload' => [
                             $projectId => $payload[$projectId]
                         ]
@@ -264,7 +264,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 'data' => [
                     'events' => ['test.event'],
                     'channels' => ['tests'],
-                    'timestamp' => date('c'),
+                    'timestamp' => DateTime::formatTz(DateTime::now()),
                     'payload' => $payload
                 ]
             ];
