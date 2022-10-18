@@ -76,7 +76,7 @@
             "url": "https://github.com/appwrite/runtimes.git",
             "type": "git"
         },
-        { 
+        {
             "url": "https://github.com/shtelzerartem/storage.git",
             "type": "git"
         }

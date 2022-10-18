@@ -36,7 +36,7 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0 \
     PHP_ZSTD_VERSION="4504e4186e79b197cfcb75d4d09aa47ef7d92fe9 " \
-    PHP_SNAPPY_VERSION=0.2.1
+    PHP_SNAPPY_VERSION="bfefe4906e0abb1f6cc19005b35f9af5240d9025"
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -137,8 +137,9 @@ RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
   
 # Snappy Compression
 FROM compile as snappy
-RUN git clone --recursive --depth 1 --branch $PHP_SNAPPY_VERSION https://github.com/kjdev/php-ext-snappy.git \
+RUN git clone --recursive --depth 1 https://github.com/kjdev/php-ext-snappy.git \
   && cd php-ext-snappy \
+  && git checkout $PHP_SNAPPY_VERSION \
   && phpize \
   && ./configure \
   && make && make install
