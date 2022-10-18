@@ -217,6 +217,7 @@ abstract class Worker
         return $database;
     }
 
+    
     /**
      * Get Cache
      * @return Cache
