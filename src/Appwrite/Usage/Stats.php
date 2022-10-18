@@ -108,7 +108,7 @@ class Stats
 
         foreach ($usersMetrics as $metric) {
             $value = $this->params[$metric] ?? 0;
-            if ($value >= 1) {
+            if ($value == 1 || $value == -1) {
                 $this->statsd->count($metric . $tags, $value);
             }
         }
@@ -133,7 +133,7 @@ class Stats
 
         foreach ($dbMetrics as $metric) {
             $value = $this->params[$metric] ?? 0;
-            if ($value >= 1) {
+            if ($value == 1 || $value == -1) {
                 $dbTags = $tags . ",collectionId=" . ($this->params['collectionId'] ?? '') . ",databaseId=" . ($this->params['databaseId'] ?? '');
                 $this->statsd->count($metric . $dbTags, $value);
             }
@@ -154,7 +154,7 @@ class Stats
 
         foreach ($storageMertics as $metric) {
             $value = $this->params[$metric] ?? 0;
-            if ($value >= 1) {
+            if ($value == 1 || $value == -1) {
                 $storageTags = $tags . ",bucketId=" . ($this->params['bucketId'] ?? '');
                 $this->statsd->count($metric . $storageTags, $value);
             }
