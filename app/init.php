@@ -154,6 +154,7 @@ const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
+const DELETE_TYPE_SYNCS = 'syncs';
 // Compression type
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
@@ -930,6 +931,10 @@ $register->set('syncOut', function () {
     return new SyncOut();
 });
 
+$register->set('deletes', function () {
+    return new Delete();
+});
+
 App::setResource('dbForProject', function ($db, $cache, Document $project, $register) {
 
     $cache = new Cache(new RedisCache($cache));
@@ -940,12 +945,19 @@ App::setResource('dbForProject', function ($db, $cache, Document $project, $regi
             ->trigger();
     });
 
-//    $cache->on(cache::EVENT_PURGE, function ($key) use ($register) {
-//        $register
-//            ->get('syncOut')
-//            ->addKey($key)
-//            ->trigger();
-//    });
+    $cache->on(cache::EVENT_PURGE, function ($key) use ($register) {
+        $register
+            ->get('syncOut')
+            ->addKey($key)
+            ->trigger();
+    });
+
+    $cache->on(cache::EVENT_FLUSH, function ($region) use ($register) {
+        $register
+            ->get('deletes')
+            ->setRegion($region)
+            ->trigger();
+    });
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
@@ -958,19 +970,26 @@ App::setResource('dbForConsole', function ($db, $cache, $register) {
 
     $cache = new Cache(new RedisCache($cache));
 
-//    $cache->on(cache::EVENT_SAVE, function ($key) use ($register) {
-//        $register
-//            ->get('syncOut')
-//            ->addKey($key)
-//            ->trigger();
-//    });
-//
-//    $cache->on(cache::EVENT_PURGE, function ($key) use ($register) {
-//        $register
-//            ->get('syncOut')
-//            ->addKey($key)
-//            ->trigger();
-//    });
+    $cache->on(cache::EVENT_SAVE, function ($key) use ($register) {
+        $register
+            ->get('syncOut')
+            ->addKey($key)
+            ->trigger();
+    });
+
+    $cache->on(cache::EVENT_PURGE, function ($key) use ($register) {
+        $register
+            ->get('syncOut')
+            ->addKey($key)
+            ->trigger();
+    });
+
+    $cache->on(cache::EVENT_FLUSH, function ($region) use ($register) {
+        $register
+            ->get('deletes')
+            ->setRegion($region)
+            ->trigger();
+    });
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));

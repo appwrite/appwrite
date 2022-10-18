@@ -18,6 +18,62 @@ $auth = Config::getParam('auth', []);
  */
 
 $collections = [
+    'syncs' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('syncs'),
+        'name' => 'Syncs',
+        'attributes' => [
+            [
+                '$id' => ID::custom('region'),
+                'type' => Database::VAR_STRING,
+                'size' => 256,
+                'required' => true,
+                'signed' => true,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('keys'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => true,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => ID::custom('requestedAt'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
+            [
+                '$id' => ID::custom('status'),
+                'type' => Database::VAR_INTEGER,
+                'size' => 256,
+                'required' => true,
+                'signed' => true,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => ID::custom('_key_requestedAt_status'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['requestedAt', 'status'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+        ],
+    ],
     'databases' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('databases'),

@@ -6,6 +6,7 @@ global $register;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
+use Appwrite\Event\SyncOut;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -54,7 +55,7 @@ $cli
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
-        function notifyDeleteExecutionLogs(int $interval)
+        function notifyDeleteExecutionLogs(int $interval): void
         {
             (new Delete())
                 ->setType(DELETE_TYPE_EXECUTIONS)
@@ -62,7 +63,7 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteAbuseLogs(int $interval)
+        function notifyDeleteAbuseLogs(int $interval): void
         {
             (new Delete())
                 ->setType(DELETE_TYPE_ABUSE)
@@ -70,7 +71,7 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteAuditLogs(int $interval)
+        function notifyDeleteAuditLogs(int $interval): void
         {
             (new Delete())
                 ->setType(DELETE_TYPE_AUDIT)
@@ -78,7 +79,7 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteUsageStats(int $interval30m, int $interval1d)
+        function notifyDeleteUsageStats(int $interval30m, int $interval1d): void
         {
             (new Delete())
                 ->setType(DELETE_TYPE_USAGE)
@@ -87,7 +88,7 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteConnections()
+        function notifyDeleteConnections(): void
         {
             (new Delete())
                 ->setType(DELETE_TYPE_REALTIME)
@@ -95,7 +96,7 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteExpiredSessions()
+        function notifyDeleteExpiredSessions(): void
         {
             (new Delete())
                 ->setType(DELETE_TYPE_SESSIONS)
@@ -103,7 +104,7 @@ $cli
                 ->trigger();
         }
 
-        function renewCertificates($dbForConsole)
+        function renewCertificates($dbForConsole): void
         {
             $time = DateTime::now();
 
@@ -139,6 +140,29 @@ $cli
                 ->trigger();
         }
 
+        function syncRegionalCache($dbForConsole): void
+        {
+            $time = DateTime::now();
+
+            $chunks = $dbForConsole->find('syncs', [
+                Query::notEqual('status', 200),
+                Query::limit(300)
+            ]);
+
+            if (\count($chunks) > 0) {
+                Console::info("[{$time}] Found " . \count($chunks) . " cache chunks to purge.");
+                foreach ($chunks as $chunk) {
+                    $keys = $chunk->getAttribute('keys');
+//                    (new SyncOut())
+ //                       ->setRegion($chunk->getAttribute('region'))
+//                        ->addKey($key)
+//                        ->trigger();
+                }
+            } else {
+                Console::info("[{$time}] No certificates for renewal.");
+            }
+        }
+
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
@@ -147,8 +171,9 @@ $cli
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
+        $regionalCacheSyncRetention = (int) App::getEnv('_APP_MAINTENANCE_CACHE_SYNC', '300'); // 5 minutes
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention, $regionalCacheSyncRetention) {
             $database = getConsoleDB();
 
             $time = DateTime::now();
@@ -162,5 +187,6 @@ $cli
             notifyDeleteExpiredSessions();
             renewCertificates($database);
             notifyDeleteCache($cacheRetention);
+            syncRegionalCache($database);
         }, $interval);
     });

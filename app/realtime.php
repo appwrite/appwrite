@@ -171,6 +171,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
      */
     Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
         $payload = [];
+
         foreach ($stats as $projectId => $value) {
             $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
         }
@@ -187,6 +188,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 
             Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
         } catch (\Throwable $th) {
+
             call_user_func($logError, $th, "updateWorkerDocument");
         } finally {
             call_user_func($returnDatabase);

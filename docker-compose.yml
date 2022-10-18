@@ -259,6 +259,7 @@ services:
     entrypoint: worker-syncs-out
     <<: *x-logging
     container_name: appwrite-worker-syncs-out
+    image: appwrite-dev
     build:
       context: .
     networks:
@@ -266,8 +267,8 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
     depends_on:
+      - mariadb
       - redis
     environment:
         - _APP_ENV
@@ -275,11 +276,17 @@ services:
         - _APP_REDIS_PORT
         - _APP_REDIS_USER
         - _APP_REDIS_PASS
+        - _APP_DB_HOST
+        - _APP_DB_PORT
+        - _APP_DB_SCHEMA
+        - _APP_DB_USER
+        - _APP_DB_PASS
 
   appwrite-worker-syncs-in:
     entrypoint: worker-syncs-in
     <<: *x-logging
     container_name: appwrite-worker-syncs-in
+    image: appwrite-dev
     build:
      context: .
     networks:
@@ -287,7 +294,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
     depends_on:
       - redis
     environment:

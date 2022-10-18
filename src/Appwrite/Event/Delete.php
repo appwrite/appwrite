@@ -13,6 +13,7 @@ class Delete extends Event
     protected ?string $datetime = null;
     protected ?string $dateTime30m = null;
     protected ?string $dateTime1d = null;
+    protected ?string $region = null;
 
 
     public function __construct()
@@ -90,6 +91,16 @@ class Delete extends Event
         $this->document = $document;
 
         return $this;
+    }
+
+    /**
+     * Sets cloud region.
+     *
+     * @param string $region
+     */
+    public function setRegion($region): void
+    {
+        $this->region = $region;
     }
 
     /**

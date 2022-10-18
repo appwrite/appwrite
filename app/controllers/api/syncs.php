@@ -18,13 +18,13 @@ App::post('/v1/syncs')
     ->inject('response')
     ->action(function (array $keys, Request $request, Response $response) {
 
-        if (empty($keys)) {
+        //if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
-        }
+        //}
 
         $token = $request->getHeader('authorization');
         $token = str_replace(["Bearer"," "], "", $token);
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10);
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 600, 10);
         try {
             $payload = $jwt->decode($token);
         } catch (JWTException $error) {

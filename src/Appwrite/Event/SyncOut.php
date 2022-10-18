@@ -7,6 +7,7 @@ use Resque;
 class SyncOut extends Event
 {
     protected string $key = '';
+    protected string $region = '';
 
     public function __construct()
     {
@@ -34,6 +35,29 @@ class SyncOut extends Event
     public function getKey(): string
     {
         return $this->key;
+    }
+
+    /**
+     * Sets cloud region.
+     *
+     * @param string $region
+     * @return self
+     */
+    public function setRegion(string $region): self
+    {
+        $this->host = $region;
+
+        return $this;
+    }
+
+    /**
+     * Returns cloud region.
+     *
+     * @return string
+     */
+    public function getRegion(): string
+    {
+        return $this->region;
     }
 
     /**

@@ -114,6 +114,9 @@ class DeletesV1 extends Worker
             case DELETE_TYPE_CACHE_BY_TIMESTAMP:
                 $this->deleteCacheByDate();
                 break;
+            case DELETE_TYPE_SYNCS:
+                $this->deleteRegionalCache();
+                break;
             default:
                 Console::error('No delete operation for type: ' . $type);
                 break;
@@ -674,5 +677,12 @@ class DeletesV1 extends Worker
         $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
 
         $device->deletePath($document->getId());
+    }
+
+    protected function deleteRegionalCache()
+    {
+        $this->deleteByGroup('syncs', [
+            Query::equal('region', [$this->args['region']])
+        ], $this->getConsoleDB);
     }
 }
