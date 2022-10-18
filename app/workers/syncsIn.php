@@ -27,6 +27,7 @@ class SyncsInV1 extends Worker
     {
         if (!empty($this->args['key'])) {
             //var_dump('Purging -> ' . $this->args['key'] . ' from Redis cache');
+            //$this->getCache()->purge($this->args['key']);
             $this->getCache()->purge($this->args['key']);
         }
     }

@@ -207,6 +207,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
     depends_on:
       - mariadb
       - redis

@@ -933,20 +933,19 @@ $register->set('syncOut', function () {
 App::setResource('dbForProject', function ($db, $cache, Document $project, $register) {
 
     $cache = new Cache(new RedisCache($cache));
-
-    $cache->attach(cache::EVENT_SAVE, function ($key) use ($register) {
+    $cache->on(cache::EVENT_SAVE, function ($key) use ($register) {
         $register
             ->get('syncOut')
             ->addKey($key)
             ->trigger();
     });
 
-    $cache->attach(cache::EVENT_PURGE, function ($key) use ($register) {
-        $register
-            ->get('syncOut')
-            ->addKey($key)
-            ->trigger();
-    });
+//    $cache->on(cache::EVENT_PURGE, function ($key) use ($register) {
+//        $register
+//            ->get('syncOut')
+//            ->addKey($key)
+//            ->trigger();
+//    });
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
@@ -959,19 +958,19 @@ App::setResource('dbForConsole', function ($db, $cache, $register) {
 
     $cache = new Cache(new RedisCache($cache));
 
-    $cache->attach(cache::EVENT_SAVE, function ($key) use ($register) {
-        $register
-            ->get('syncOut')
-            ->addKey($key)
-            ->trigger();
-    });
-
-    $cache->attach(cache::EVENT_PURGE, function ($key) use ($register) {
-        $register
-            ->get('syncOut')
-            ->addKey($key)
-            ->trigger();
-    });
+//    $cache->on(cache::EVENT_SAVE, function ($key) use ($register) {
+//        $register
+//            ->get('syncOut')
+//            ->addKey($key)
+//            ->trigger();
+//    });
+//
+//    $cache->on(cache::EVENT_PURGE, function ($key) use ($register) {
+//        $register
+//            ->get('syncOut')
+//            ->addKey($key)
+//            ->trigger();
+//    });
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
