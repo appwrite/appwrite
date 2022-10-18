@@ -155,7 +155,7 @@ class Stats
 
         foreach ($storageMertics as $metric) {
             $value = $this->params[$metric] ?? 0;
-            if ($value == 1 || $value == -1) {
+            if ($value >= 1 || $value == -1) {
                 $storageTags = $tags . ",bucketId=" . ($this->params['bucketId'] ?? '');
                 $this->statsd->count($metric . $storageTags, $value);
             }
