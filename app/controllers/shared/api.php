@@ -172,17 +172,21 @@ App::init()
                 case 'buckets':
                     $usage->setParam('buckets.{scope}.count.total', 1);
                     break;
+                case 'deployments':
+                    $usage->setParam('deployments.{scope}.storage.size', $document->getAttribute('size'));
+                    break;
                 default:
                     if (strpos($collection, 'buckets_') === 0) {
                         $usage
                             ->setParam('bucketId', $document->getAttribute('bucketId'))
+                            ->setParam('files.{scope}.storage.size', $document->getAttribute('sizeOriginal'))
                             ->setParam('files.{scope}.count.total', 1);
                     } elseif (strpos($collection, 'database_') === 0) {
                         if (strpos($collection, '_collection_') != false) {
                             $usage
-                            ->setParam('databaseId', $document->getAttribute('databaseId'))
-                            ->setParam('collectionId', $document->getAttribute('$collectionId'))
-                            ->setParam('files.{scope}.count.total', 1);
+                                ->setParam('databaseId', $document->getAttribute('databaseId'))
+                                ->setParam('collectionId', $document->getAttribute('$collectionId'))
+                                ->setParam('files.{scope}.count.total', 1);
                         } else {
                             Console::info('Collection created');
                         }

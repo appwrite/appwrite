@@ -149,7 +149,8 @@ class Stats
             'files.{scope}.requests.update',
             'files.{scope}.requests.delete',
             'buckets.{scope}.count.total',
-            'files.{scope}.count.total'
+            'files.{scope}.count.total',
+            'files.{scope}.storage.size'
         ];
 
         foreach ($storageMertics as $metric) {
@@ -183,19 +184,30 @@ class Stats
         $functionBuildTime = ($this->params['buildTime'] ?? 0) * 1000; // ms
         $functionBuildStatus = $this->params['buildStatus'] ?? '';
         $functionCompute = $functionExecutionTime + $functionBuildTime;
+        $functionTags = $tags . ',functionId=' . $functionId;
+        
+        $deploymentSize = $this->params['deployment.{scope}.storage.size'] ?? 0;
+        $storageSize = $this->params['files.{scope}.storage.size'] ?? 0;
+        if($deploymentSize + $storageSize) {
+            $this->statsd->count('project.{scope}.storage.size' . $tags, $deploymentSize + $storageSize);
+        }
+
+        if($deploymentSize > 0) {
+            $this->statsd->count('deployments.{scope}.storage.size' . $functionTags, $deploymentSize);
+        }
 
         if ($functionExecution >= 1) {
-            $this->statsd->increment('executions.{scope}.compute' . $tags . ',functionId=' . $functionId . ',functionStatus=' . $functionExecutionStatus);
+            $this->statsd->increment('executions.{scope}.compute' . $functionTags . ',functionStatus=' . $functionExecutionStatus);
             if ($functionExecutionTime > 0) {
-                $this->statsd->count('executions.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
+                $this->statsd->count('executions.{scope}.compute.time' . $functionTags, $functionExecutionTime);
             }
         }
         if ($functionBuild >= 1) {
-            $this->statsd->increment('builds.{scope}.compute' . $tags . ',functionId=' . $functionId . ',functionBuildStatus=' . $functionBuildStatus);
-            $this->statsd->count('builds.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionBuildTime);
+            $this->statsd->increment('builds.{scope}.compute' . $functionTags . ',functionBuildStatus=' . $functionBuildStatus);
+            $this->statsd->count('builds.{scope}.compute.time' . $functionTags, $functionBuildTime);
         }
         if ($functionBuild + $functionExecution >= 1) {
-            $this->statsd->count('project.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionCompute);
+            $this->statsd->count('project.{scope}.compute.time' . $functionTags, $functionCompute);
         }
 
         $this->reset();

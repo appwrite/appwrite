@@ -333,6 +333,20 @@ class TimeSeries extends Calculator
             'table' => 'appwrite_usage_project_{scope}_compute_time',
             'groupBy' => ['functionId'],
         ],
+
+        'deployments.$all.storage.size' => [
+            'table' => 'appwrite_usage_deployments_{scope}_storage_size'
+        ],
+        'project.$all.storage.size' => [
+            'table' => 'appwrite_usage_project_{scope}_storage_size'
+        ],
+        'files.$all.storage.size' => [
+            'table' => 'appwrite_usage_files_{scope}_storage_size'
+        ],
+        'files.$bucketId.storage.size' => [
+            'table' => 'appwrite_usage_files_{scope}_storage_size',
+            'groupBy' => ['bucketId']
+        ]
     ];
 
     public function __construct(Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
