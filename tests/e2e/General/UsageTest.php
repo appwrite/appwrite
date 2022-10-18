@@ -114,6 +114,7 @@ class UsageTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
+        $requestsCount++;
         $res = $res['body'];
         $this->assertEquals(10, $res['usersCreate'][array_key_last($res['usersCreate'])]['value']);
         $this->validateDates($res['usersCreate']);
@@ -279,6 +280,7 @@ class UsageTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
+        $requestsCount++;
         $res = $res['body'];
         $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
         $this->validateDates($res['storage']);
@@ -303,6 +305,7 @@ class UsageTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
+        $requestsCount++;
         $res = $res['body'];
         $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesStorage'])]['value']);
         $this->assertEquals($filesCount, $res['filesCount'][array_key_last($res['filesCount'])]['value']);
