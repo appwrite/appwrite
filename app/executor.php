@@ -340,7 +340,6 @@ App::post('/v1/runtimes')
                 'duration' => $duration,
             ]);
 
-
             if (!$remove) {
                 $activeRuntimes->set($runtimeId, [
                     'id' => $containerId,
@@ -480,7 +479,7 @@ App::post('/v1/execution')
     ->action(
         function (string $runtimeId, array $vars, string $data, $timeout, string $source, string $runtime, string $baseImage, string $entrypoint, $activeRuntimes, Response $response) {
             $originalRuntimeId = $runtimeId;
-            $runtimeId = System::getHostname() . '-' . $runtimeId;
+            $runtimeId = System::getHostname() . '-' . $runtimeId; // TODO: @Meldiron remove projectId
 
             $vars = \array_merge($vars, [
                 'INERNAL_EXECUTOR_HOSTNAME' => System::getHostname()
@@ -510,9 +509,9 @@ App::post('/v1/execution')
                         if ($i === 4) {
                             throw new Exception('Runtime could not be created in allocated time: ' . $error->getMessage(), 500);
                         }
-                    }
 
-                    \sleep(1);
+                        \sleep(1);
+                    }
                 }
             }
 
@@ -520,7 +519,6 @@ App::post('/v1/execution')
             for ($i = 0; $i < 5; $i++) {
                 if ($activeRuntimes->get($runtimeId)['status'] === 'pending') {
                     Console::info('Waiting for runtime to be ready...');
-                    \sleep(1);
                 } else {
                     break;
                 }
@@ -528,6 +526,8 @@ App::post('/v1/execution')
                 if ($i === 4) {
                     throw new Exception('Runtime failed to launch in allocated time.', 500);
                 }
+
+                \sleep(1);
             }
 
             // Ensure we have secret
@@ -599,13 +599,17 @@ App::post('/v1/execution')
                     break;
                 }
 
-                Console::info('Waiting for runtime to respond...');
+                if ($errNo !== 111) { // Connection Refused - see https://openswoole.com/docs/swoole-error-code
+                    throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 500);
+                }
 
-                \sleep(1);
+                Console::info('Waiting for runtime to respond...');
 
                 if ($i === 4) {
                     throw new Exception('An internal curl error has occurred within the executor! Error Msg: ' . $error, 500);
                 }
+
+                \sleep(1);
             }
 
             // Extract response
@@ -646,10 +650,11 @@ App::post('/v1/execution')
                 'response' => \mb_strcut($res, 0, 1000000), // Limit to 1MB
                 'stdout' => \mb_strcut($stdout, 0, 1000000), // Limit to 1MB
                 'stderr' => \mb_strcut($stderr, 0, 1000000), // Limit to 1MB
-                'duration' => $executionTime,
+                'duration' => $executionTime, // TODO: @Meldiron This is not timeout, but timeout + 2 (probably coming from Executor.php client)
             ];
 
             // Update swoole table
+            $runtime = $activeRuntimes->get($runtimeId);
             $runtime['updated'] = \time();
             $activeRuntimes->set($runtimeId, $runtime);
 
@@ -666,7 +671,7 @@ App::get('/v1/health')
     ->action(function (Response $response) use ($orchestrationPool) {
         // TODO: @Meldiron separate into dedicated http server
 
-        $systemCores = System::getCPUCores();
+        $systemCores = System::getCPUCores(); // TODO: @Meldiron use new method
         $systemUsage = System::getCPUUtilisation() / $systemCores;
         $functionsUsage = [];
 
