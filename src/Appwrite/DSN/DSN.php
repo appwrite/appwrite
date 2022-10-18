@@ -25,7 +25,7 @@ class DSN
     protected string $host;
 
     /**
-     * @var ?int
+     * @var ?string
      */
     protected ?string $port;
 
