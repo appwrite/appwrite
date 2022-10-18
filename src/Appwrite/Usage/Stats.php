@@ -188,7 +188,7 @@ class Stats
         
         $deploymentSize = $this->params['deployment.{scope}.storage.size'] ?? 0;
         $storageSize = $this->params['files.{scope}.storage.size'] ?? 0;
-        if($deploymentSize + $storageSize) {
+        if($deploymentSize + $storageSize > 0) {
             $this->statsd->count('project.{scope}.storage.size' . $tags, $deploymentSize + $storageSize);
         }
 
