@@ -185,14 +185,14 @@ class Stats
         $functionBuildStatus = $this->params['buildStatus'] ?? '';
         $functionCompute = $functionExecutionTime + $functionBuildTime;
         $functionTags = $tags . ',functionId=' . $functionId;
-        
+
         $deploymentSize = $this->params['deployment.{scope}.storage.size'] ?? 0;
         $storageSize = $this->params['files.{scope}.storage.size'] ?? 0;
-        if($deploymentSize + $storageSize > 0) {
+        if ($deploymentSize + $storageSize > 0) {
             $this->statsd->count('project.{scope}.storage.size' . $tags, $deploymentSize + $storageSize);
         }
 
-        if($deploymentSize > 0) {
+        if ($deploymentSize > 0) {
             $this->statsd->count('deployments.{scope}.storage.size' . $functionTags, $deploymentSize);
         }
 
