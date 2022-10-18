@@ -176,7 +176,7 @@ App::init()
                     $usage->setParam('deployments.{scope}.storage.size', $document->getAttribute('size'));
                     break;
                 default:
-                    if (strpos($collection, 'buckets_') === 0) {
+                    if (strpos($collection, 'bucket_') === 0) {
                         $usage
                             ->setParam('bucketId', $document->getAttribute('bucketId'))
                             ->setParam('files.{scope}.storage.size', $document->getAttribute('sizeOriginal'))
@@ -211,7 +211,7 @@ App::init()
                     $usage->setParam('deployments.{scope}.storage.size', -$document->getAttribute('size'));
                     break;
                 default:
-                    if (strpos($collection, 'buckets_') === 0) {
+                    if (strpos($collection, 'bucket_') === 0) {
                         $usage
                             ->setParam('bucketId', $document->getAttribute('bucketId'))
                             ->setParam('files.{scope}.storage.size', -$document->getAttribute('sizeOriginal'))
