@@ -180,9 +180,8 @@ go(function () use ($redisPool) {
     $cache = new Cache(new Redis($redis));
 
     foreach ($executors as $executor) {
-        [$id, $hostname] = \explode('=', $executor);
-        $data = $cache->load('executors-' . $id, 60 * 60 * 24 * 30 * 3); // 3 months
-        Console::log('Executor ' . $id . ' is ' . ($data['status'] ?? 'unknown') . '.');
+        $data = $cache->load('executors-' . $executor, 60 * 60 * 24 * 30 * 3); // 3 months
+        Console::log('Executor ' . $executor . ' is ' . ($data['status'] ?? 'unknown') . '.');
     }
 });
 
@@ -241,7 +240,7 @@ $http->on('start', function () use ($redisPool) {
     // TODO: @Meldiron Allow scaling. Only do this on one machine
 
     // Keep updating executors state
-    Timer::tick(15000, function (int $timerId) use ($redisPool) {
+    Timer::tick(10000, function (int $timerId) use ($redisPool) {
         fetchExecutorsState($redisPool, false);
     });
 });
