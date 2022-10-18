@@ -155,7 +155,7 @@ class Stats
 
         foreach ($storageMertics as $metric) {
             $value = $this->params[$metric] ?? 0;
-            if ($value >= 1 || $value == -1) {
+            if ($value >= 1 || $value == -1 || $value < -1) {
                 $storageTags = $tags . ",bucketId=" . ($this->params['bucketId'] ?? '');
                 $this->statsd->count($metric . $storageTags, $value);
             }
@@ -188,11 +188,11 @@ class Stats
 
         $deploymentSize = $this->params['deployment.{scope}.storage.size'] ?? 0;
         $storageSize = $this->params['files.{scope}.storage.size'] ?? 0;
-        if ($deploymentSize + $storageSize > 0) {
+        if ($deploymentSize + $storageSize > 0 || $deploymentSize + $storageSize <= -1) {
             $this->statsd->count('project.{scope}.storage.size' . $tags, $deploymentSize + $storageSize);
         }
 
-        if ($deploymentSize > 0) {
+        if ($deploymentSize > 0 || $deploymentSize <= -1) {
             $this->statsd->count('deployments.{scope}.storage.size' . $functionTags, $deploymentSize);
         }
 
