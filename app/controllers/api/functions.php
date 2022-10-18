@@ -71,8 +71,13 @@ App::post('/v1/functions')
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+
+        $cron = !empty($schedule) ? new CronExpression($schedule) : null;
+        $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
 
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -86,10 +91,21 @@ App::post('/v1/functions')
             'schedule' => $schedule,
             'scheduleUpdatedAt' => DateTime::now(),
             'schedulePrevious' => null,
-            'scheduleNext' => null,
+            'scheduleNext' => $next,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime])
         ]));
+
+        if ($next) {
+            // Async task reschedule
+            $functionEvent = new Func();
+            $functionEvent
+                ->setFunction($function)
+                ->setType('schedule')
+                ->setUser($user)
+                ->setProject($project)
+                ->schedule(new \DateTime($next));
+        }
 
         $eventsInstance->setParam('functionId', $function->getId());
 
@@ -281,7 +297,7 @@ App::get('/v1/functions/:functionId/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
@@ -384,7 +400,7 @@ App::get('/v1/functions/usage')
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
@@ -442,11 +458,9 @@ App::put('/v1/functions/:functionId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $original = $function->getAttribute('schedule', '');
-        $cron = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
+        $cron = !empty($schedule) ? new CronExpression($schedule) : null;
+        $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
 
-        $scheduleUpdatedAt = $schedule !== $original ? DateTime::now() : $function->getAttribute('scheduleUpdatedAt');
         $enabled ??= $function->getAttribute('enabled', true);
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
@@ -454,14 +468,14 @@ App::put('/v1/functions/:functionId')
             'name' => $name,
             'events' => $events,
             'schedule' => $schedule,
-            'scheduleUpdatedAt' => $scheduleUpdatedAt,
+            'scheduleUpdatedAt' => DateTime::now(),
             'scheduleNext' => $next,
             'timeout' => $timeout,
             'enabled' => $enabled,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
-        if ($next && $schedule !== $original) {
+        if ($next) {
             // Async task reschedule
             $functionEvent = new Func();
             $functionEvent
@@ -519,23 +533,9 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
-        $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
-
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-            'deployment' => $deployment->getId(),
-            'scheduleNext' => $next,
+            'deployment' => $deployment->getId()
         ])));
-
-        if ($next) { // Init first schedule
-            $functionEvent = new Func();
-            $functionEvent
-                ->setType('schedule')
-                ->setFunction($function)
-                ->setProject($project)
-                ->schedule(new \DateTime($next));
-        }
 
         $events
             ->setParam('functionId', $function->getId())
@@ -935,6 +935,67 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         $response->noContent();
     });
 
+App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+    ->groups(['api', 'functions'])
+    ->desc('Create Build')
+    ->label('scope', 'functions.write')
+    ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
+    ->label('audits.event', 'deployment.update')
+    ->label('audits.resource', 'function/{request.functionId}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'createBuild')
+    ->label('sdk.description', '/docs/references/functions/create-build.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
+    ->param('buildId', '', new UID(), 'Build unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('events')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project, Event $events) {
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        if ($deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
+
+        if ($build->isEmpty()) {
+            throw new Exception(Exception::BUILD_NOT_FOUND);
+        }
+
+        if ($build->getAttribute('status') !== 'failed') {
+            throw new Exception(Exception::BUILD_IN_PROGRESS, 'Build not failed');
+        }
+
+        $events
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId());
+
+        // Retry the build
+        $buildEvent = new Build();
+        $buildEvent
+            ->setType(BUILD_TYPE_RETRY)
+            ->setResource($function)
+            ->setDeployment($deployment)
+            ->setProject($project)
+            ->trigger();
+
+        $response->noContent();
+    });
+
+
+
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
@@ -1066,21 +1127,21 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
-            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+            $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
             return $carry;
         }, []);
 
         $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
-            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-            'APPWRITE_FUNCTION_TRIGGER' => 'http',
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-            'APPWRITE_FUNCTION_DATA' => $data,
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
-            'APPWRITE_FUNCTION_JWT' => $jwt,
+            'APPWRITE_FUNCTION_TRIGGER' => 'http',
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_FUNCTION_DATA' => $data ?? '',
+            'APPWRITE_FUNCTION_USER_ID' => $user->getId() ?? '',
+            'APPWRITE_FUNCTION_JWT' => $jwt ?? '',
         ]);
 
         /** Execute function */
@@ -1258,65 +1319,6 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
-App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
-    ->groups(['api', 'functions'])
-    ->desc('Retry Build')
-    ->label('scope', 'functions.write')
-    ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
-    ->label('audits.event', 'deployment.update')
-    ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'retryBuild')
-    ->label('sdk.description', '/docs/references/functions/retry-build.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('deploymentId', '', new UID(), 'Deployment ID.')
-    ->param('buildId', '', new UID(), 'Build unique ID.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project, Event $events) {
-
-        $function = $dbForProject->getDocument('functions', $functionId);
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
-        }
-
-        if ($deployment->isEmpty()) {
-            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
-        }
-
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
-
-        if ($build->isEmpty()) {
-            throw new Exception(Exception::BUILD_NOT_FOUND);
-        }
-
-        if ($build->getAttribute('status') !== 'failed') {
-            throw new Exception(Exception::BUILD_IN_PROGRESS, 'Build not failed');
-        }
-
-        $events
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
-        // Retry the build
-        $buildEvent = new Build();
-        $buildEvent
-            ->setType(BUILD_TYPE_RETRY)
-            ->setResource($function)
-            ->setDeployment($deployment)
-            ->setProject($project)
-            ->trigger();
-
-        $response->noContent();
-    });
-
 // Variables
 
 App::post('/v1/functions/:functionId/variables')
@@ -1332,7 +1334,7 @@ App::post('/v1/functions/:functionId/variables')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', false)
     ->inject('response')
@@ -1384,7 +1386,7 @@ App::get('/v1/functions/:functionId/variables')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE_LIST)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, Response $response, Database $dbForProject) {
@@ -1411,8 +1413,8 @@ App::get('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
-    ->param('variableId', null, new UID(), 'Variable unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject) {
@@ -1447,8 +1449,8 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
-    ->param('variableId', null, new UID(), 'Variable unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', true)
     ->inject('response')
@@ -1499,8 +1501,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.description', '/docs/references/functions/delete-variable.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
-    ->param('variableId', null, new UID(), 'Variable unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject) {

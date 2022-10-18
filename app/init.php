@@ -92,8 +92,8 @@ const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate 
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 500;
-const APP_VERSION_STABLE = '1.0.1';
+const APP_CACHE_BUSTER = 501;
+const APP_VERSION_STABLE = '1.0.3';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -186,7 +186,6 @@ Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
 Config::load('variables', __DIR__ . '/config/variables.php');  // List of env variables
-Config::load('regions', __DIR__ . '/config/regions.php'); // List of available regions
 Config::load('avatar-browsers', __DIR__ . '/config/avatars/browsers.php');
 Config::load('avatar-credit-cards', __DIR__ . '/config/avatars/credit-cards.php');
 Config::load('avatar-flags', __DIR__ . '/config/avatars/flags.php');
@@ -281,7 +280,7 @@ Database::addFilter(
             ->find('attributes', [
                 Query::equal('collectionInternalId', [$document->getInternalId()]),
                 Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit($database->getAttributeLimit()),
+                Query::limit($database->getLimitForAttributes()),
             ]);
     }
 );
@@ -1001,7 +1000,7 @@ App::setResource('sms', function () {
     $secret = $dsn->getPassword();
 
     return match ($dsn->getHost()) {
-        'mock' => new Mock('', ''), // used for tests
+        'mock' => new Mock($user, $secret), // used for tests
         'twilio' => new Twilio($user, $secret),
         'text-magic' => new TextMagic($user, $secret),
         'telesign' => new Telesign($user, $secret),
