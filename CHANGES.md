@@ -3,6 +3,10 @@
 ## Bugs
 - Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
 
+# Version 1.0.4
+## Bugs
+- Fix project pagination in DB usage collector [#4517](https://github.com/appwrite/appwrite/pull/4517)
+
 # Version 1.0.3
 ## Bugs
 - Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)

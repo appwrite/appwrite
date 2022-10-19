@@ -135,7 +135,6 @@ class Database extends Calculator
         $results = [];
         $sum = $limit;
         $latestDocument = null;
-        $this->database->setNamespace('_' . $projectId);
 
         while ($sum === $limit) {
             try {
@@ -143,6 +142,8 @@ class Database extends Calculator
                 if ($latestDocument !== null) {
                     $paginationQueries[] =  Query::cursorAfter($latestDocument);
                 }
+
+                $this->database->setNamespace('_' . $projectId);
                 $results = $this->database->find($collection, \array_merge($paginationQueries, $queries));
             } catch (\Exception $e) {
                 if (is_callable($this->errorHandler)) {
