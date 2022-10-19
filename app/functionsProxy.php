@@ -42,10 +42,11 @@ $redisPool = new RedisPool(
     64
 );
 
-$adapterType = App::getEnv('_APP_FUNCTIONS_PROXY_ADAPTER', 'round-robin');
+$adapterType = App::getEnv('_APP_FUNCTIONS_PROXY_ADAPTER', '');
 $adapter = match ($adapterType) {
     'round-robin' => new RoundRobin($redisPool),
-    'usage-based' => new UsageBased($redisPool)
+    'usage-based' => new UsageBased($redisPool),
+    default => new RoundRobin($redisPool)
 };
 
 Console::info("Using adpater: " . $adapterType);
