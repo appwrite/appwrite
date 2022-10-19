@@ -295,7 +295,7 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_EXECUTOR_SECRET
+      - _APP_FUNCTIONS_PROXY_SECRET
       - _APP_FUNCTIONS_PROXY_HOST
 
   appwrite-worker-databases:
@@ -384,6 +384,27 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
+  appwrite-functions-proxy:
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    entrypoint: functions-proxy
+    <<: *x-logging
+    container_name: appwrite-functions-proxy
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_FUNCTIONS_PROXY_ADAPTER
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_EXECUTORS
+      - _APP_EXECUTOR_SECRET
+      - _APP_FUNCTIONS_PROXY_SECRET
+
   appwrite-worker-functions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: worker-functions
@@ -395,7 +416,6 @@ services:
     depends_on:
       - redis
       - mariadb
-      - appwrite-executor
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -409,7 +429,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_FUNCTIONS_TIMEOUT
-      - _APP_EXECUTOR_SECRET
+      - _APP_FUNCTIONS_PROXY_SECRET
       - _APP_FUNCTIONS_PROXY_HOST
       - _APP_USAGE_STATS
       - DOCKERHUB_PULL_USERNAME
@@ -420,6 +440,7 @@ services:
     entrypoint: executor
     <<: *x-logging
     container_name: appwrite-executor
+    hostname: exc1
     restart: unless-stopped
     stop_signal: SIGINT
     networks:
@@ -437,6 +458,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_VERSION
+      - _APP_WORKER_PER_CORE
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_BUILD_TIMEOUT
       - _APP_FUNCTIONS_CONTAINERS
@@ -707,4 +729,3 @@ volumes:
   appwrite-builds:
   appwrite-influxdb:
   appwrite-config:
-  appwrite-executor:
