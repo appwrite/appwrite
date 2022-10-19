@@ -775,17 +775,17 @@ $http->on('start', function ($http) {
         // Get usage stats of host machine CPU usage from 0 to 100.
         $healthServer->handle('/v1/health', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($orchestrationPool) {
             $orchestration = null;
-            
+
             try {
                 $secretKey = $swooleRequest->header['x-appwrite-executor-key'] ?? '';
                 if (empty($secretKey)) {
                     throw new Exception('Missing executor key', 401);
                 }
-        
+
                 if ($secretKey !== App::getEnv('_APP_EXECUTOR_SECRET', '')) {
                     throw new Exception('Missing executor key', 401);
                 }
-    
+
 
                 $output = [
                     'status' => 'pass'

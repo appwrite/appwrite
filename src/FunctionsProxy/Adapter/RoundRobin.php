@@ -10,7 +10,7 @@ class RoundRobin extends Adapter
 {
     private Atomic $counter;
 
-    function __construct(RedisPool $redisPool)
+    public function __construct(RedisPool $redisPool)
     {
         parent::__construct($redisPool);
         $this->counter = new Atomic(-1);
@@ -22,7 +22,7 @@ class RoundRobin extends Adapter
         $executors = $this->getExecutors();
         $executor = $executors[$index] ?? null;
 
-        if(!$executor) {
+        if (!$executor) {
             $executor = $executors[0];
             $this->counter->cmpset($index, 0);
         }
