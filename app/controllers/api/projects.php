@@ -75,7 +75,7 @@ App::post('/v1/projects')
     ->inject('pools')
     ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
 
-        
+
         $team = $dbForConsole->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {

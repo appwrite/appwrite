@@ -45,7 +45,7 @@ function getConsoleDB(): Database
     global $register;
 
     $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
-    
+
     $dbAdapter = $pools
         ->get('console')
         ->pop()
@@ -65,10 +65,10 @@ function getCache(): Cache
     global $register;
 
     $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
-    
+
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
-    
+
     foreach ($list as $value) {
         $adapters[] = $pools
             ->get($value)
@@ -103,7 +103,7 @@ $cli
 
 $cli
     ->error(function ($error) {
-        if(App::getEnv('_APP_ENV', 'development')) {
+        if (App::getEnv('_APP_ENV', 'development')) {
             Console::error($error);
         } else {
             Console::error($error->getMessage());

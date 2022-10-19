@@ -499,7 +499,7 @@ $register->set('logger', function () {
 });
 $register->set('pools', function () {
 
-    $group= new Group();
+    $group = new Group();
 
     $fallbackForDB = URLURL::unparse([
         'scheme' => 'mariadb',
@@ -556,14 +556,14 @@ $register->set('pools', function () {
         $schemes = $connection['schemes'] ?? [];
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
-        
+
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
-            $name = ($multipe) ? $key.'_'.$dsn[0] : $key;
+            $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
 
-            if(empty($dsn)) {
+            if (empty($dsn)) {
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
             }
@@ -575,15 +575,15 @@ $register->set('pools', function () {
             $dsnPass = $dsn->getPassword();
             $dsnScheme = $dsn->getDatabase();
 
-            if(!in_array($dsn->getScheme(), $schemes)) {
+            if (!in_array($dsn->getScheme(), $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
 
             /**
              * Get Resource
-             * 
+             *
              * Creation could be reused accross connection types like database, cache, queue, etc.
-             * 
+             *
              * Resource assignment to an adapter will happen below.
              */
 
@@ -591,7 +591,7 @@ $register->set('pools', function () {
                 case 'mysql':
                 case 'mariadb':
                     $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnScheme) {
-                        return new PDOProxy(function() use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnScheme) {
+                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnScheme) {
                             return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnScheme};charset=utf8mb4", $dsnUser, $dsnPass, array(
                                 PDO::ATTR_TIMEOUT => 3, // Seconds
                                 PDO::ATTR_PERSISTENT => true,
@@ -604,18 +604,18 @@ $register->set('pools', function () {
                     };
                     break;
                 case 'redis':
-                    $resource = function() use ($dsnHost, $dsnPort, $dsnPass) {
+                    $resource = function () use ($dsnHost, $dsnPort, $dsnPass) {
                         $redis = new Redis();
                         @$redis->pconnect($dsnHost, (int)$dsnPort);
-                        if($dsnPass) {
+                        if ($dsnPass) {
                             $redis->auth($dsnPass);
                         }
                         $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
-                        
+
                         return $redis;
                     };
                     break;
-                
+
                 default:
                     throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid scheme");
                     break;
@@ -632,7 +632,7 @@ $register->set('pools', function () {
                             'mysql' => new MySQL($resource()),
                             default => null
                         };
-                        
+
                         break;
                     case 'queue':
                         $adapter = $resource();
@@ -646,25 +646,25 @@ $register->set('pools', function () {
                             default => null
                         };
                         break;
-                    
+
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                         break;
                 }
-                
+
                 return $adapter;
             });
 
             $group->add($pool);
         }
 
-        Config::setParam('pools-'.$key, $config);
+        Config::setParam('pools-' . $key, $config);
     }
 
     try {
         $group->fill();
     } catch (\Throwable $th) {
-        Console::error('Connection failure: '.$th->getMessage());
+        Console::error('Connection failure: ' . $th->getMessage());
     }
 
     return $group;
@@ -1022,7 +1022,7 @@ App::setResource('console', function () {
 }, []);
 
 App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
-    if($project->isEmpty() || $project->getId() === 'console') {
+    if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
 
@@ -1033,7 +1033,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     ;
 
     $database = new Database($dbAdapter, $cache);
-    $database->setNamespace('_'.$project->getInternalId());
+    $database->setNamespace('_' . $project->getInternalId());
     $database->setDefaultDatabase('appwrite');
 
     return $database;
@@ -1057,7 +1057,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
-    
+
     foreach ($list as $value) {
         $adapters[] = $pools
             ->get($value)

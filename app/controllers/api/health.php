@@ -76,23 +76,23 @@ App::get('/v1/health/db')
                     $adapter = $pools->get($database)->pop()->getResource();
 
                     $checkStart = \microtime(true);
-                    
-                    if($adapter->ping()) {
+
+                    if ($adapter->ping()) {
                         $output[] = new Document([
-                            'name' => $key." ($database)",
+                            'name' => $key . " ($database)",
                             'status' => 'pass',
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
                         $output[] = new Document([
-                            'name' => $key." ($database)",
+                            'name' => $key . " ($database)",
                             'status' => 'fail',
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     }
                 } catch (\Throwable $th) {
                     $output[] = new Document([
-                        'name' => $key." ($database)",
+                        'name' => $key . " ($database)",
                         'status' => 'fail',
                         'ping' => \round((\microtime(true) - $checkStart) / 1000)
                     ]);
@@ -133,23 +133,23 @@ App::get('/v1/health/cache')
                     $adapter = $pools->get($database)->pop()->getResource();
 
                     $checkStart = \microtime(true);
-                    
-                    if($adapter->ping()) {
+
+                    if ($adapter->ping()) {
                         $output[] = new Document([
-                            'name' => $key." ($database)",
+                            'name' => $key . " ($database)",
                             'status' => 'pass',
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
                         $output[] = new Document([
-                            'name' => $key." ($database)",
+                            'name' => $key . " ($database)",
                             'status' => 'fail',
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     }
                 } catch (\Throwable $th) {
                     $output[] = new Document([
-                        'name' => $key." ($database)",
+                        'name' => $key . " ($database)",
                         'status' => 'fail',
                         'ping' => \round((\microtime(true) - $checkStart) / 1000)
                     ]);
@@ -190,23 +190,23 @@ App::get('/v1/health/queue')
                     $adapter = $pools->get($database)->pop()->getResource();
 
                     $checkStart = \microtime(true);
-                    
-                    if($adapter->ping()) {
+
+                    if ($adapter->ping()) {
                         $output[] = new Document([
-                            'name' => $key." ($database)",
+                            'name' => $key . " ($database)",
                             'status' => 'pass',
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
                         $output[] = new Document([
-                            'name' => $key." ($database)",
+                            'name' => $key . " ($database)",
                             'status' => 'fail',
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     }
                 } catch (\Throwable $th) {
                     $output[] = new Document([
-                        'name' => $key." ($database)",
+                        'name' => $key . " ($database)",
                         'status' => 'fail',
                         'ping' => \round((\microtime(true) - $checkStart) / 1000)
                     ]);
@@ -247,23 +247,23 @@ App::get('/v1/health/pubsub')
                     $adapter = $pools->get($database)->pop()->getResource();
 
                     $checkStart = \microtime(true);
-                    
-                    if($adapter->ping()) {
+
+                    if ($adapter->ping()) {
                         $output[] = new Document([
-                            'name' => $key." ($database)",
+                            'name' => $key . " ($database)",
                             'status' => 'pass',
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
                         $output[] = new Document([
-                            'name' => $key." ($database)",
+                            'name' => $key . " ($database)",
                             'status' => 'fail',
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     }
                 } catch (\Throwable $th) {
                     $output[] = new Document([
-                        'name' => $key." ($database)",
+                        'name' => $key . " ($database)",
                         'status' => 'fail',
                         'ping' => \round((\microtime(true) - $checkStart) / 1000)
                     ]);

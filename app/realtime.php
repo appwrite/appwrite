@@ -38,7 +38,7 @@ function getConsoleDB(): Database
     global $register;
 
     $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
-    
+
     $dbAdapter = $pools
         ->get('console')
         ->pop()
@@ -59,7 +59,7 @@ function getProjectDB(Document $project): Database
 
     $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
 
-    if($project->isEmpty() || $project->getId() === 'console') {
+    if ($project->isEmpty() || $project->getId() === 'console') {
         return getConsoleDB();
     }
 
@@ -70,7 +70,7 @@ function getProjectDB(Document $project): Database
     ;
 
     $database = new Database($dbAdapter, getCache());
-    $database->setNamespace('_'.$project->getInternalId());
+    $database->setNamespace('_' . $project->getInternalId());
     $database->setDefaultDatabase('appwrite');
 
     return $database;
@@ -81,10 +81,10 @@ function getCache(): Cache
     global $register;
 
     $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
-    
+
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
-    
+
     foreach ($list as $value) {
         $adapters[] = $pools
             ->get($value)
@@ -168,7 +168,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     go(function () use ($register, $containerId, &$statsDocument) {
         $attempts = 0;
         $database = getConsoleDB();
-        
+
         do {
             try {
                 $attempts++;
@@ -338,7 +338,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $roles = Auth::getRoles($user);
 
                         $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
-                        
+
                         $register->get('pools')->reclaim();
                     }
                 }

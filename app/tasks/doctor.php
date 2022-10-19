@@ -107,13 +107,13 @@ $cli
                 try {
                     $adapter = $pools->get($database)->pop()->getResource();
 
-                    if($adapter->ping()) {
-                        Console::success('🟢 '.str_pad("{$key}({$database})", 50, '.').'connected');
+                    if ($adapter->ping()) {
+                        Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
                     } else {
-                        Console::error('🔴 '.str_pad("{$key}({$database})", 47, '.').'disconnected');
+                        Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
                     }
                 } catch (\Throwable $th) {
-                    Console::error('🔴 '.str_pad("{$key}.({$database})", 47, '.').'disconnected');
+                    Console::error('🔴 ' . str_pad("{$key}.({$database})", 47, '.') . 'disconnected');
                 }
             }
         }
@@ -130,13 +130,13 @@ $cli
                 try {
                     $adapter = $pools->get($pool)->pop()->getResource();
 
-                    if($adapter->ping()) {
-                        Console::success('🟢 '.str_pad("{$key}({$pool})", 50, '.').'connected');
+                    if ($adapter->ping()) {
+                        Console::success('🟢 ' . str_pad("{$key}({$pool})", 50, '.') . 'connected');
                     } else {
-                        Console::error('🔴 '.str_pad("{$key}({$pool})", 47, '.').'disconnected');
+                        Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
                     }
                 } catch (\Throwable $th) {
-                    Console::error('🔴 '.str_pad("{$key}({$pool})", 47, '.').'disconnected');
+                    Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
                 }
             }
         }
@@ -149,12 +149,12 @@ $cli
                 );
 
                 if ((@$antivirus->ping())) {
-                    Console::success('🟢 '.str_pad("Antivirus", 50, '.').'connected');
+                    Console::success('🟢 ' . str_pad("Antivirus", 50, '.') . 'connected');
                 } else {
-                    Console::error('🔴 '.str_pad("Antivirus", 47, '.').'disconnected');
+                    Console::error('🔴 ' . str_pad("Antivirus", 47, '.') . 'disconnected');
                 }
             } catch (\Throwable $th) {
-                Console::error('🔴 '.str_pad("Antivirus", 47, '.').'disconnected');
+                Console::error('🔴 ' . str_pad("Antivirus", 47, '.') . 'disconnected');
             }
         }
 
@@ -167,29 +167,29 @@ $cli
             $mail->AltBody = 'Hello World';
 
             $mail->send();
-            Console::success('🟢 '.str_pad("SMTP", 50, '.').'connected');
+            Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
         } catch (\Throwable $th) {
-            Console::error('🔴 '.str_pad("SMTP", 47, '.').'disconnected');
+            Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
         }
 
         $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
         $port = App::getEnv('_APP_STATSD_PORT', 8125);
 
         if ($fp = @\fsockopen('udp://' . $host, $port, $errCode, $errStr, 2)) {
-            Console::success('🟢 '.str_pad("StatsD", 50, '.').'connected');
+            Console::success('🟢 ' . str_pad("StatsD", 50, '.') . 'connected');
             \fclose($fp);
         } else {
-            Console::error('🔴 '.str_pad("StatsD", 47, '.').'disconnected');
+            Console::error('🔴 ' . str_pad("StatsD", 47, '.') . 'disconnected');
         }
 
         $host = App::getEnv('_APP_INFLUXDB_HOST', '');
         $port = App::getEnv('_APP_INFLUXDB_PORT', '');
 
         if ($fp = @\fsockopen($host, $port, $errCode, $errStr, 2)) {
-            Console::success('🟢 '.str_pad("InfluxDB", 50, '.').'connected');
+            Console::success('🟢 ' . str_pad("InfluxDB", 50, '.') . 'connected');
             \fclose($fp);
         } else {
-            Console::error('🔴 '.str_pad("InfluxDB", 47, '.').'disconnected');
+            Console::error('🔴 ' . str_pad("InfluxDB", 47, '.') . 'disconnected');
         }
 
         \sleep(0.2);

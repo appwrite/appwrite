@@ -141,9 +141,8 @@ abstract class Worker
         try {
             $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
             $pools->reclaim();
-            
-            $this->shutdown();
 
+            $this->shutdown();
         } catch (\Throwable $error) {
             foreach (self::$errorCallbacks as $errorCallback) {
                 $errorCallback($error, "shutdown", $this->getName());
@@ -176,20 +175,20 @@ abstract class Worker
 
         $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
 
-        if($project->isEmpty() || $project->getId() === 'console') {
+        if ($project->isEmpty() || $project->getId() === 'console') {
             return $this->getConsoleDB();
         }
-    
+
         $dbAdapter = $pools
             ->get($project->getAttribute('database'))
             ->pop()
             ->getResource()
         ;
-    
+
         $database = new Database($dbAdapter, $this->getCache());
-        $database->setNamespace('_'.$project->getInternalId());
+        $database->setNamespace('_' . $project->getInternalId());
         $database->setDefaultDatabase('appwrite');
-    
+
         return $database;
     }
 
@@ -202,7 +201,7 @@ abstract class Worker
         global $register;
 
         $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
-        
+
         $dbAdapter = $pools
             ->get('console')
             ->pop()
@@ -217,7 +216,7 @@ abstract class Worker
         return $database;
     }
 
-    
+
     /**
      * Get Cache
      * @return Cache
@@ -227,10 +226,10 @@ abstract class Worker
         global $register;
 
         $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
-        
+
         $list = Config::getParam('pools-cache', []);
         $adapters = [];
-        
+
         foreach ($list as $value) {
             $adapters[] = $pools
                 ->get($value)
@@ -238,7 +237,7 @@ abstract class Worker
                 ->getResource()
             ;
         }
-    
+
         return new Cache(new Sharding($adapters));
     }
 
