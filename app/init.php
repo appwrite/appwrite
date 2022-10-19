@@ -37,7 +37,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\URL\URL as URLURL;
+use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
@@ -501,14 +501,14 @@ $register->set('pools', function () {
 
     $group = new Group();
 
-    $fallbackForDB = URLURL::unparse([
+    $fallbackForDB = AppwriteURL::unparse([
         'scheme' => 'mariadb',
         'host' => App::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => App::getEnv('_APP_DB_PORT', '3306'),
         'user' => App::getEnv('_APP_DB_USER', ''),
         'pass' => App::getEnv('_APP_DB_PASS', ''),
     ]);
-    $fallbackForRedis = URLURL::unparse([
+    $fallbackForRedis = AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
         'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
