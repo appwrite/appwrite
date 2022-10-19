@@ -10,7 +10,8 @@ class RoundRobin extends Adapter
 {
     private Atomic $counter;
 
-    function __construct(RedisPool $redisPool) {
+    function __construct(RedisPool $redisPool)
+    {
         parent::__construct($redisPool);
         $this->counter = new Atomic(-1);
     }
@@ -23,7 +24,7 @@ class RoundRobin extends Adapter
         $executor = $executors[$index];
 
         // Reset from time to time to prevent memory leak / int overflow
-        if($count > 10000) {
+        if ($count > 10000) {
             $this->counter->set(-1);
         }
 

@@ -736,11 +736,10 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_FUNCTIONS_PROXY_HOST',
-                'description' => 'The host used by Appwrite to communicate with the function executor!',
+                'name' => '_APP_EXECUTOR_HOST',
+                'description' => 'Deprecated since 1.2.0, use `_APP_FUNCTIONS_PROXY_HOST` and `_APP_EXECUTORS` instead!',
                 'introduction' => '0.13.0',
                 'default' => 'http://appwrite-executor/v1',
-                'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
@@ -808,10 +807,37 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_FUNCTIONS_PROXY_HOST',
+                'description' => 'The host used by Appwrite to communicate with the functions proxy to execute a function.',
+                'introduction' => '1.2.0',
+                'default' => 'http://appwrite-functions-proxy/v1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_PROXY_SECRET',
+                'description' => 'The secret key used by Appwrite containers to communicate with functions proxy. Make sure to change this!',
+                'introduction' => '1.2.0',
+                'default' => 'your-secret-key',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_EXECUTORS',
                 'description' => 'List of Appwrite executor hostnames to use for executing functions separated by comma.',
-                'introduction' => '0.16.0',
-                'default' => 'exc1,exc2',
+                'introduction' => '1.2.0',
+                'default' => 'exc1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_PROXY_ADAPTER',
+                'description' => 'Select functions proxy adapter depending if performance or efficiency is more important. The default value is \'round-robin\'. List of supported adapters are \'round-robin\', \'usage-based\'.',
+                'introduction' => '1.2.0',
+                'default' => 'round-robin',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

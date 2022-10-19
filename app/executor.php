@@ -184,7 +184,7 @@ App::post('/v1/runtimes')
     ->action(function (string $runtimeId, string $source, string $destination, array $vars, array $commands, string $runtime, string $baseImage, string $entrypoint, bool $remove, string $workdir, $orchestrationPool, $activeRuntimes, Response $response) {
         $activeRuntimeId = $runtimeId; // Used with Swoole table (key)
         $runtimeId = System::getHostname() . '-' . $runtimeId; // Used in Docker (name)
-        
+
         $runtimeHostname = ID::unique();
 
         if ($activeRuntimes->exists($activeRuntimeId)) {
@@ -769,7 +769,7 @@ $http->on('start', function ($http) {
     /**
      * Start separate HTTP server for Health API
      */
-    \go(function() use ($orchestrationPool) {
+    \go(function () use ($orchestrationPool) {
         $healthServer = new Swoole\Coroutine\Http\Server('0.0.0.0', 3000, false);
 
         // Get usage stats of host machine CPU usage from 0 to 100.
@@ -781,24 +781,24 @@ $http->on('start', function ($http) {
                 $output = [
                     'status' => 'pass'
                 ];
-        
+
                 batch([
                     function () use (&$output) {
                         $output['hostUsage'] = System::getCPUUsage(5);
                     },
                     function () use (&$output, &$orchestration, $orchestrationPool) {
                         $functionsUsage = [];
-        
+
                         $orchestration = $orchestrationPool->get();
                         $containerUsages = $orchestration->getStats(
                             filters: [ 'label' => 'openruntimes-executor=' . System::getHostname() ],
                             cycles: 3
                         );
-        
+
                         foreach ($containerUsages as $containerUsage) {
                             $functionsUsage[$containerUsage['name']] = $containerUsage['cpu'] * 100;
                         }
-        
+
                         $output['functionsUsage'] = $functionsUsage;
                     }
                 ]);
@@ -809,7 +809,7 @@ $http->on('start', function ($http) {
                 $swooleResponse->end();
             } catch (\Throwable $th) {
                 logError($th, "healthError");
-    
+
                 $output = [
                     'status' => 'fail',
 
@@ -819,13 +819,13 @@ $http->on('start', function ($http) {
                     'line' => $th->getLine(),
                     'trace' => $th->getTrace()
                 ];
-    
+
                 $swooleResponse->setStatusCode(500);
                 $swooleResponse->header('content-type', 'application/json; charset=UTF-8');
                 $swooleResponse->write(\json_encode($output));
                 $swooleResponse->end();
             } finally {
-                if($orchestration !== null) {
+                if ($orchestration !== null) {
                     $orchestrationPool->put($orchestration);
                 }
             }

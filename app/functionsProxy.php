@@ -41,7 +41,13 @@ $redisPool = new RedisPool(
     64
 );
 
-$adapter = new RoundRobin($redisPool); // TODO: @Meldiron allow env variable to switch; log what is picked
+$adapterType = App::getEnv('_APP_FUNCTIONS_PROXY_ADAPTER', 'round-robin');
+$adapter = match ($adapterType) {
+    'round-robin' => new RoundRobin($redisPool),
+    'usage-based' => new UsageBased($redisPool)
+};
+
+Console::info("Using adpater: " . $adapterType);
 
 function markOffline(Cache $cache, string $executorHostname, string $error, bool $forceShowError = false)
 {
