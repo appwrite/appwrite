@@ -375,7 +375,9 @@ class Response extends SwooleResponse
     /**
      * Get Model Object
      *
+     * @param string $key
      * @return Model
+     * @throws Exception
      */
     public function getModel(string $key): Model
     {
@@ -415,6 +417,7 @@ class Response extends SwooleResponse
      * @param string $model
      *
      * return void
+     * @throws Exception
      */
     public function dynamic(Document $document, string $model): void
     {
@@ -427,11 +430,11 @@ class Response extends SwooleResponse
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
-                $this->json(!empty($output) ? $output : new stdClass());
+                $this->json(!empty($output) ? $output : new \stdClass());
                 break;
 
             case self::CONTENT_TYPE_YAML:
-                $this->yaml(!empty($output) ? $output : new stdClass());
+                $this->yaml(!empty($output) ? $output : new \stdClass());
                 break;
 
             case self::CONTENT_TYPE_NULL:
@@ -441,7 +444,7 @@ class Response extends SwooleResponse
                 if ($model === self::MODEL_NONE) {
                     $this->noContent();
                 } else {
-                    $this->json(!empty($output) ? $output : new stdClass());
+                    $this->json(!empty($output) ? $output : new \stdClass());
                 }
                 break;
         }
@@ -454,6 +457,8 @@ class Response extends SwooleResponse
      * @param string $model
      *
      * return array
+     * @return array
+     * @throws Exception
      */
     public function output(Document $document, string $model): array
     {
@@ -553,6 +558,7 @@ class Response extends SwooleResponse
      * @param array $data
      *
      * @return void
+     * @throws Exception
      */
     public function yaml(array $data): void
     {
