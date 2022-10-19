@@ -7,7 +7,8 @@ use FunctionsProxy\Adapter\UsageBased;
 use Swoole\Coroutine\Http\Client;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
-use Swoole\Http\Server;
+use Swoole\Coroutine\Http\Server;
+use function Swoole\Coroutine\run;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
 use Swoole\Http\Request as SwooleRequest;
@@ -194,24 +195,6 @@ go(function () use ($redisPool) {
 
 Swoole\Event::wait();
 
-// TODO: @Meldiron Use async-style instead
-$http = new Server("0.0.0.0", 80);
-
-$payloadSize = 6 * (1024 * 1024); // 6MB
-$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-
-$http
-    ->set([
-        'worker_num' => $workerNumber,
-        'open_http2_protocol' => true,
-        // 'document_root' => __DIR__.'/../public',
-        // 'enable_static_handler' => true,
-        'http_compression' => true,
-        'http_compression_level' => 6,
-        'package_max_length' => $payloadSize,
-        'buffer_output_size' => $payloadSize,
-    ]);
-
 $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter) {
     $secretKey = $request->header['x-appwrite-executor-key'] ?? '';
 
@@ -243,36 +226,38 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
     $response->end();
 };
 
-$http->on('start', function () use ($redisPool) {
+run(function () use ($redisPool, $run) {
     // TODO: @Meldiron Allow scaling. Only do this on one machine, or only worry about executors on my host machine
 
     // Keep updating executors state
     Timer::tick(10000, function (int $timerId) use ($redisPool) {
         fetchExecutorsState($redisPool, false);
     });
+
+    $server = new Server('0.0.0.0', 80, false);
+
+    $server->handle('/', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($run) {
+        try {
+            call_user_func($run, $swooleRequest, $swooleResponse);
+        } catch (\Throwable $th) {
+            logError($th, "serverError");
+
+            $output = [
+                'message' => 'Error: ' . $th->getMessage(),
+                'code' => 500,
+                'file' => $th->getFile(),
+                'line' => $th->getLine(),
+                'trace' => $th->getTrace()
+            ];
+
+            $swooleResponse->setStatusCode(500);
+            $swooleResponse->header('content-type', 'application/json; charset=UTF-8');
+            $swooleResponse->write(\json_encode($output));
+            $swooleResponse->end();
+        }
+    });
+
+    Console::success("Functions proxy is ready.");
+
+    $server->start();
 });
-
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($run) {
-    try {
-        call_user_func($run, $swooleRequest, $swooleResponse);
-    } catch (\Throwable $th) {
-        logError($th, "serverError");
-
-        $output = [
-            'message' => 'Error: ' . $th->getMessage(),
-            'code' => 500,
-            'file' => $th->getFile(),
-            'line' => $th->getLine(),
-            'trace' => $th->getTrace()
-        ];
-
-        $swooleResponse->setStatusCode(500);
-        $swooleResponse->header('content-type', 'application/json; charset=UTF-8');
-        $swooleResponse->write(\json_encode($output));
-        $swooleResponse->end();
-    }
-});
-
-Console::success("Functions proxy is ready.");
-
-$http->start();
