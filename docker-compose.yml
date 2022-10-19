@@ -472,6 +472,7 @@ services:
     image: appwrite-dev
     ports:
       - 9507:80
+      - 9508:3000
     networks:
       appwrite:
       runtimes:
@@ -516,7 +517,8 @@ services:
     stop_signal: SIGINT
     image: appwrite-dev
     ports:
-      - 9508:80
+      - 9509:80
+      - 9510:3000
     networks:
       appwrite:
       runtimes:

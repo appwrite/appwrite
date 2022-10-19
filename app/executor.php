@@ -35,6 +35,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
+use function Swoole\Coroutine\batch;
 
 Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
@@ -665,47 +666,6 @@ App::post('/v1/execution')
         }
     );
 
-App::get('/v1/health')
-    ->desc("Get usage stats of host machine CPU usage from 0 to 100.")
-    ->inject('response')
-    ->action(function (Response $response) use ($orchestrationPool) {
-        // TODO: @Meldiron separate into dedicated http server
-
-        $systemCores = System::getCPUCores(); // TODO: @Meldiron use new method
-        $systemUsage = System::getCPUUtilisation() / $systemCores;
-        $functionsUsage = [];
-
-        try {
-            $orchestration = $orchestrationPool->get();
-            $containerUsages = $orchestration->getStats(
-                filters: [ 'label' => 'openruntimes-executor=' . System::getHostname() ],
-                cycles: 3
-            );
-
-            foreach ($containerUsages as $containerUsage) {
-                $functionsUsage[$containerUsage['name']] = $containerUsage['cpu'] * 100;
-            }
-        } catch (\Exception $error) {
-            logError($error, "healthError");
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_INTERNAL_SERVER_ERROR)
-                ->json([
-                    'status' => 'fail'
-                ]);
-        } finally {
-            $orchestrationPool->put($orchestration);
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_OK)
-            ->json([
-                'status' => 'pass',
-                'hostUsage' => $systemUsage,
-                'functionsUsage' => $functionsUsage
-            ]);
-    });
-
 App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
 
 $http = new Server("0.0.0.0", 80);
@@ -793,6 +753,74 @@ App::init()
 $http->on('start', function ($http) {
     global $orchestrationPool;
     global $activeRuntimes;
+
+    /**
+     * Start separate HTTP server for Health API
+     */
+    \go(function() use ($orchestrationPool) {
+        $healthServer = new Swoole\Coroutine\Http\Server('0.0.0.0', 3000, false);
+
+        // Get usage stats of host machine CPU usage from 0 to 100.
+        $healthServer->handle('/v1/health', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($orchestrationPool) {
+            // TODO: Check key of request
+            $orchestration = null;
+
+            try {
+                $output = [
+                    'status' => 'pass'
+                ];
+        
+                batch([
+                    function () use (&$output) {
+                        $output['hostUsage'] = System::getCPUUsage(5);
+                    },
+                    function () use (&$output, &$orchestration, $orchestrationPool) {
+                        $functionsUsage = [];
+        
+                        $orchestration = $orchestrationPool->get();
+                        $containerUsages = $orchestration->getStats(
+                            filters: [ 'label' => 'openruntimes-executor=' . System::getHostname() ],
+                            cycles: 3
+                        );
+        
+                        foreach ($containerUsages as $containerUsage) {
+                            $functionsUsage[$containerUsage['name']] = $containerUsage['cpu'] * 100;
+                        }
+        
+                        $output['functionsUsage'] = $functionsUsage;
+                    }
+                ]);
+
+                $swooleResponse->setStatusCode(200);
+                $swooleResponse->header('content-type', 'application/json; charset=UTF-8');
+                $swooleResponse->write(\json_encode($output));
+                $swooleResponse->end();
+            } catch (\Throwable $th) {
+                logError($th, "healthError");
+    
+                $output = [
+                    'status' => 'fail',
+
+                    'message' => 'Error: ' . $th->getMessage(),
+                    'code' => 500,
+                    'file' => $th->getFile(),
+                    'line' => $th->getLine(),
+                    'trace' => $th->getTrace()
+                ];
+    
+                $swooleResponse->setStatusCode(500);
+                $swooleResponse->header('content-type', 'application/json; charset=UTF-8');
+                $swooleResponse->write(\json_encode($output));
+                $swooleResponse->end();
+            } finally {
+                if($orchestration !== null) {
+                    $orchestrationPool->put($orchestration);
+                }
+            }
+        });
+
+        $healthServer->start();
+    });
 
     /**
      * Warmup: make sure images are ready to run fast 🚀

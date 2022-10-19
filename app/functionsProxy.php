@@ -76,7 +76,7 @@ function fetchExecutorsState(RedisPool $redisPool, bool $forceShowError = false)
             $cache = new Cache(new Redis($redis));
 
             try {
-                $endpoint = 'http://' . $executor . '/v1/health';
+                $endpoint = 'http://' . $executor . ':3000/v1/health';
 
                 $ch = \curl_init();
 
