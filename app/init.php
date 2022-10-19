@@ -573,9 +573,10 @@ $register->set('pools', function () {
             $dsnPort = $dsn->getPort();
             $dsnUser = $dsn->getUser();
             $dsnPass = $dsn->getPassword();
-            $dsnScheme = $dsn->getDatabase();
+            $dsnScheme = $dsn->getScheme();
+            $dsnDatabase = $dsn->getDatabase();
 
-            if (!in_array($dsn->getScheme(), $schemes)) {
+            if (!in_array($dsnScheme, $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
 
@@ -587,12 +588,12 @@ $register->set('pools', function () {
              * Resource assignment to an adapter will happen below.
              */
 
-            switch ($dsn->getScheme()) {
+            switch ($dsnScheme) {
                 case 'mysql':
                 case 'mariadb':
-                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnScheme) {
-                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnScheme) {
-                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnScheme};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
                                 PDO::ATTR_TIMEOUT => 3, // Seconds
                                 PDO::ATTR_PERSISTENT => true,
                                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -1034,7 +1035,6 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
 
     $database = new Database($dbAdapter, $cache);
     $database->setNamespace('_' . $project->getInternalId());
-    $database->setDefaultDatabase('appwrite');
 
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
@@ -1049,7 +1049,6 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     $database = new Database($dbAdapter, $cache);
 
     $database->setNamespace('console');
-    $database->setDefaultDatabase('appwrite');
 
     return $database;
 }, ['pools', 'cache']);

@@ -55,7 +55,6 @@ function getConsoleDB(): Database
     $database = new Database($dbAdapter, getCache());
 
     $database->setNamespace('console');
-    $database->setDefaultDatabase('appwrite');
 
     return $database;
 }

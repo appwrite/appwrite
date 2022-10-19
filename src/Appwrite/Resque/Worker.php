@@ -187,7 +187,6 @@ abstract class Worker
 
         $database = new Database($dbAdapter, $this->getCache());
         $database->setNamespace('_' . $project->getInternalId());
-        $database->setDefaultDatabase('appwrite');
 
         return $database;
     }
@@ -211,7 +210,6 @@ abstract class Worker
         $database = new Database($dbAdapter, $this->getCache());
 
         $database->setNamespace('console');
-        $database->setDefaultDatabase('appwrite');
 
         return $database;
     }

@@ -131,7 +131,6 @@ App::post('/v1/projects')
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
-        $dbForProject->setDefaultDatabase('appwrite');
 
         $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 

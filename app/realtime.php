@@ -48,7 +48,6 @@ function getConsoleDB(): Database
     $database = new Database($dbAdapter, getCache());
 
     $database->setNamespace('console');
-    $database->setDefaultDatabase('appwrite');
 
     return $database;
 }
@@ -71,7 +70,6 @@ function getProjectDB(Document $project): Database
 
     $database = new Database($dbAdapter, getCache());
     $database->setNamespace('_' . $project->getInternalId());
-    $database->setDefaultDatabase('appwrite');
 
     return $database;
 }
