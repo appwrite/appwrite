@@ -18,16 +18,15 @@ class RoundRobin extends Adapter
 
     public function getNextExecutor(?string $contaierId): array
     {
-        $count = $this->counter->add();
+        $index = $this->counter->add();
         $executors = $this->getExecutors();
-        $index = $count % \count($executors);
-        $executor = $executors[$index];
+        $executor = $executors[$index] ?? null;
 
-        // Reset from time to time to prevent memory leak / int overflow
-        if ($count > 10000) {
-            $this->counter->set(-1);
+        if(!$executor) {
+            $executor = $executors[0];
+            $this->counter->cmpset($index, 0);
         }
 
-        return ($executor ?? $executor[0]) ?? null;
+        return $executor ?? null;
     }
 }

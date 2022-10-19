@@ -244,7 +244,7 @@ $run = function (SwooleRequest $request, SwooleResponse $response) use ($adapter
 };
 
 $http->on('start', function () use ($redisPool) {
-    // TODO: @Meldiron Allow scaling. Only do this on one machine
+    // TODO: @Meldiron Allow scaling. Only do this on one machine, or only worry about executors on my host machine
 
     // Keep updating executors state
     Timer::tick(10000, function (int $timerId) use ($redisPool) {
