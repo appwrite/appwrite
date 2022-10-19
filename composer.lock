@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "99144076bbefd0a40b38366abdcb616c",
+    "content-hash": "dc9ffcd7d6913dca1b2681075f58f247",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -344,6 +344,79 @@
                 "source": "https://github.com/colinmollenhour/credis/tree/v1.13.1"
             },
             "time": "2022-06-20T22:56:59+00:00"
+        },
+        {
+            "name": "composer/package-versions-deprecated",
+            "version": "1.11.99.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/composer/package-versions-deprecated.git",
+                "reference": "b4f54f74ef3453349c24a845d22392cd31e65f1d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/b4f54f74ef3453349c24a845d22392cd31e65f1d",
+                "reference": "b4f54f74ef3453349c24a845d22392cd31e65f1d",
+                "shasum": ""
+            },
+            "require": {
+                "composer-plugin-api": "^1.1.0 || ^2.0",
+                "php": "^7 || ^8"
+            },
+            "replace": {
+                "ocramius/package-versions": "1.11.99"
+            },
+            "require-dev": {
+                "composer/composer": "^1.9.3 || ^2.0@dev",
+                "ext-zip": "^1.13",
+                "phpunit/phpunit": "^6.5 || ^7"
+            },
+            "type": "composer-plugin",
+            "extra": {
+                "class": "PackageVersions\\Installer",
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PackageVersions\\": "src/PackageVersions"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marco Pivetta",
+                    "email": "ocramius@gmail.com"
+                },
+                {
+                    "name": "Jordi Boggiano",
+                    "email": "j.boggiano@seld.be"
+                }
+            ],
+            "description": "Composer plugin that provides efficient querying for installed package versions (no runtime IO)",
+            "support": {
+                "issues": "https://github.com/composer/package-versions-deprecated/issues",
+                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.5"
+            },
+            "funding": [
+                {
+                    "url": "https://packagist.com",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/composer",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/composer/composer",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-01-17T14:14:24+00:00"
         },
         {
             "name": "dragonmantank/cron-expression",
@@ -805,28 +878,24 @@
         },
         {
             "name": "jean85/pretty-package-versions",
-            "version": "2.0.5",
+            "version": "1.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Jean85/pretty-package-versions.git",
-                "reference": "ae547e455a3d8babd07b96966b17d7fd21d9c6af"
+                "reference": "1e0104b46f045868f11942aea058cd7186d6c303"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Jean85/pretty-package-versions/zipball/ae547e455a3d8babd07b96966b17d7fd21d9c6af",
-                "reference": "ae547e455a3d8babd07b96966b17d7fd21d9c6af",
+                "url": "https://api.github.com/repos/Jean85/pretty-package-versions/zipball/1e0104b46f045868f11942aea058cd7186d6c303",
+                "reference": "1e0104b46f045868f11942aea058cd7186d6c303",
                 "shasum": ""
             },
             "require": {
-                "composer-runtime-api": "^2.0.0",
-                "php": "^7.1|^8.0"
+                "composer/package-versions-deprecated": "^1.8.0",
+                "php": "^7.0|^8.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^2.17",
-                "jean85/composer-provided-replaced-stub-package": "^1.0",
-                "phpstan/phpstan": "^0.12.66",
-                "phpunit/phpunit": "^7.5|^8.5|^9.4",
-                "vimeo/psalm": "^4.3"
+                "phpunit/phpunit": "^6.0|^8.5|^9.2"
             },
             "type": "library",
             "extra": {
@@ -849,7 +918,7 @@
                     "email": "alessandro.lai85@gmail.com"
                 }
             ],
-            "description": "A library to get pretty versions strings of installed dependencies",
+            "description": "A wrapper for ocramius/package-versions to get pretty versions strings",
             "keywords": [
                 "composer",
                 "package",
@@ -858,9 +927,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Jean85/pretty-package-versions/issues",
-                "source": "https://github.com/Jean85/pretty-package-versions/tree/2.0.5"
+                "source": "https://github.com/Jean85/pretty-package-versions/tree/1.6.0"
             },
-            "time": "2021-10-08T21:21:46+00:00"
+            "time": "2021-02-04T16:20:16+00:00"
         },
         {
             "name": "matomo/device-detector",
@@ -933,35 +1002,34 @@
         },
         {
             "name": "mongodb/mongodb",
-            "version": "1.13.0",
+            "version": "1.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mongodb/mongo-php-library.git",
-                "reference": "a9d82890fe0c104cf795e6c759c92484d12c027a"
+                "reference": "953dbc19443aa9314c44b7217a16873347e6840d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mongodb/mongo-php-library/zipball/a9d82890fe0c104cf795e6c759c92484d12c027a",
-                "reference": "a9d82890fe0c104cf795e6c759c92484d12c027a",
+                "url": "https://api.github.com/repos/mongodb/mongo-php-library/zipball/953dbc19443aa9314c44b7217a16873347e6840d",
+                "reference": "953dbc19443aa9314c44b7217a16873347e6840d",
                 "shasum": ""
             },
             "require": {
                 "ext-hash": "*",
                 "ext-json": "*",
-                "ext-mongodb": "^1.14.0",
-                "jean85/pretty-package-versions": "^1.2 || ^2.0.1",
-                "php": "^7.2 || ^8.0",
+                "ext-mongodb": "^1.8.1",
+                "jean85/pretty-package-versions": "^1.2",
+                "php": "^7.0 || ^8.0",
                 "symfony/polyfill-php80": "^1.19"
             },
             "require-dev": {
-                "doctrine/coding-standard": "^9.0",
-                "squizlabs/php_codesniffer": "^3.6",
-                "symfony/phpunit-bridge": "^5.2"
+                "squizlabs/php_codesniffer": "^3.5, <3.5.5",
+                "symfony/phpunit-bridge": "5.x-dev"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.13.x-dev"
+                    "dev-master": "1.8.x-dev"
                 }
             },
             "autoload": {
@@ -996,9 +1064,9 @@
             ],
             "support": {
                 "issues": "https://github.com/mongodb/mongo-php-library/issues",
-                "source": "https://github.com/mongodb/mongo-php-library/tree/1.13.0"
+                "source": "https://github.com/mongodb/mongo-php-library/tree/1.8.0"
             },
-            "time": "2022-07-14T05:07:37+00:00"
+            "time": "2020-11-25T12:26:02+00:00"
         },
         {
             "name": "mustangostang/spyc",
@@ -1673,23 +1741,23 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.13.1",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "4c1b8fe742f17158c59550cdfd9074a94bf474ac"
+                "reference": "1a5da248e74c1bfc39bc440fa949de6935acceeb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/4c1b8fe742f17158c59550cdfd9074a94bf474ac",
-                "reference": "4c1b8fe742f17158c59550cdfd9074a94bf474ac",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/1a5da248e74c1bfc39bc440fa949de6935acceeb",
+                "reference": "1a5da248e74c1bfc39bc440fa949de6935acceeb",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.25.*"
+                "utopia-php/database": "0.26.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1721,9 +1789,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.13.1"
+                "source": "https://github.com/utopia-php/abuse/tree/0.14.0"
             },
-            "time": "2022-09-07T16:02:58+00:00"
+            "time": "2022-10-14T11:26:39+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1782,22 +1850,22 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.14.1",
+            "version": "0.15.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "b011224ed9bfef7e5c849938e65619af28f7cf41"
+                "reference": "937ffd13e7a5ac9ad220b329247569ef2a4881d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/b011224ed9bfef7e5c849938e65619af28f7cf41",
-                "reference": "b011224ed9bfef7e5c849938e65619af28f7cf41",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/937ffd13e7a5ac9ad220b329247569ef2a4881d9",
+                "reference": "937ffd13e7a5ac9ad220b329247569ef2a4881d9",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.25.*"
+                "utopia-php/database": "0.26.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1813,12 +1881,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "A simple audit library to manage application users logs",
             "keywords": [
                 "Audit",
@@ -1829,9 +1891,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.14.1"
+                "source": "https://github.com/utopia-php/audit/tree/0.15.0"
             },
-            "time": "2022-09-07T16:03:16+00:00"
+            "time": "2022-10-14T11:39:18+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1992,16 +2054,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-fix-mongo-appwrite",
+            "version": "0.26.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "08c5215a68508da3963b90ba32d1edb2a26236cc"
+                "reference": "d172af2541137c83a86d066f82f48914b5a3a610"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/08c5215a68508da3963b90ba32d1edb2a26236cc",
-                "reference": "08c5215a68508da3963b90ba32d1edb2a26236cc",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/d172af2541137c83a86d066f82f48914b5a3a610",
+                "reference": "d172af2541137c83a86d066f82f48914b5a3a610",
                 "shasum": ""
             },
             "require": {
@@ -2050,9 +2112,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/fix-mongo-appwrite"
+                "source": "https://github.com/utopia-php/database/tree/0.26.0"
             },
-            "time": "2022-10-05T14:42:04+00:00"
+            "time": "2022-10-03T17:12:01+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2110,26 +2172,25 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-master",
+            "version": "0.21.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "9f35d36ed4b8fa1c92962c77ef02b49c2f5919df"
+                "reference": "c81789b87a917da2daf336738170ebe01f50ea18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/9f35d36ed4b8fa1c92962c77ef02b49c2f5919df",
-                "reference": "9f35d36ed4b8fa1c92962c77ef02b49c2f5919df",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/c81789b87a917da2daf336738170ebe01f50ea18",
+                "reference": "c81789b87a917da2daf336738170ebe01f50ea18",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.5.25",
-                "vimeo/psalm": "^4.27.0"
+                "phpunit/phpunit": "^9.5.10",
+                "vimeo/psalm": "4.13.1"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2154,9 +2215,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.22.1"
+                "source": "https://github.com/utopia-php/framework/tree/0.21.1"
             },
-            "time": "2022-10-07T14:51:40+00:00"
+            "time": "2022-09-07T09:56:28+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2544,16 +2605,16 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "dev-fix-utopia-framework-0-22",
+            "version": "0.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "79d291682876c5812135f65fc94ffeb970d41b1f"
+                "reference": "8312df69233b5dcd3992de88f131f238002749de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/79d291682876c5812135f65fc94ffeb970d41b1f",
-                "reference": "79d291682876c5812135f65fc94ffeb970d41b1f",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/8312df69233b5dcd3992de88f131f238002749de",
+                "reference": "8312df69233b5dcd3992de88f131f238002749de",
                 "shasum": ""
             },
             "require": {
@@ -2594,9 +2655,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/fix-utopia-framework-0-22"
+                "source": "https://github.com/utopia-php/swoole/tree/0.3.3"
             },
-            "time": "2022-10-07T14:58:31+00:00"
+            "time": "2022-01-20T09:58:43+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -3352,25 +3413,30 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.6.1",
+            "version": "1.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "77a32518733312af16a44300404e945338981de3"
+                "reference": "48f445a408c131e38cab1c235aa6d2bb7a0bb20d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/77a32518733312af16a44300404e945338981de3",
-                "reference": "77a32518733312af16a44300404e945338981de3",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/48f445a408c131e38cab1c235aa6d2bb7a0bb20d",
+                "reference": "48f445a408c131e38cab1c235aa6d2bb7a0bb20d",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2 || ^8.0",
+                "php": "^7.4 || ^8.0",
                 "phpdocumentor/reflection-common": "^2.0"
             },
             "require-dev": {
                 "ext-tokenizer": "*",
-                "psalm/phar": "^4.8"
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan": "^1.8",
+                "phpstan/phpstan-phpunit": "^1.1",
+                "phpunit/phpunit": "^9.5",
+                "rector/rector": "^0.13.9",
+                "vimeo/psalm": "^4.25"
             },
             "type": "library",
             "extra": {
@@ -3396,9 +3462,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.6.1"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.6.2"
             },
-            "time": "2022-03-15T21:29:03+00:00"
+            "time": "2022-10-14T12:47:21+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -5293,36 +5359,14 @@
     ],
     "aliases": [
         {
-            "package": "mongodb/mongodb",
-            "version": "1.13.0.0",
-            "alias": "1.8.0",
-            "alias_normalized": "1.8.0.0"
-        },
-        {
             "package": "utopia-php/database",
-            "version": "dev-fix-mongo-appwrite",
-            "alias": "0.25.999999",
-            "alias_normalized": "0.25.999999.0"
-        },
-        {
-            "package": "utopia-php/framework",
-            "version": "9999999-dev",
-            "alias": "0.22.999999",
-            "alias_normalized": "0.22.999999.0"
-        },
-        {
-            "package": "utopia-php/swoole",
-            "version": "dev-fix-utopia-framework-0-22",
-            "alias": "0.3.9999999",
-            "alias_normalized": "0.3.9999999.0"
+            "version": "0.26.0.0",
+            "alias": "dev-fix-mongo-appwrite",
+            "alias_normalized": "dev-fix-mongo-appwrite"
         }
     ],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/framework": 20,
-        "utopia-php/database": 20,
-        "utopia-php/swoole": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
