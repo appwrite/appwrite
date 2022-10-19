@@ -37,7 +37,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
-use Appwrite\Event\SyncIn;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
@@ -154,7 +153,6 @@ const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
-const DELETE_TYPE_SYNCS = 'syncs';
 // Compression type
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
@@ -191,6 +189,7 @@ Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
 Config::load('variables', __DIR__ . '/config/variables.php');  // List of env variables
+Config::load('regions', __DIR__ . '/config/regions.php'); // List of cloud regions
 Config::load('avatar-browsers', __DIR__ . '/config/avatars/browsers.php');
 Config::load('avatar-credit-cards', __DIR__ . '/config/avatars/credit-cards.php');
 Config::load('avatar-flags', __DIR__ . '/config/avatars/flags.php');
@@ -205,6 +204,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+
 
 $user = App::getEnv('_APP_REDIS_USER', '');
 $pass = App::getEnv('_APP_REDIS_PASS', '');
@@ -931,10 +931,6 @@ $register->set('syncOut', function () {
     return new SyncOut();
 });
 
-$register->set('deletes', function () {
-    return new Delete();
-});
-
 App::setResource('dbForProject', function ($db, $cache, Document $project, $register) {
 
     $cache = new Cache(new RedisCache($cache));
@@ -952,12 +948,6 @@ App::setResource('dbForProject', function ($db, $cache, Document $project, $regi
             ->trigger();
     });
 
-    $cache->on(cache::EVENT_FLUSH, function ($region) use ($register) {
-        $register
-            ->get('deletes')
-            ->setRegion($region)
-            ->trigger();
-    });
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
@@ -981,13 +971,6 @@ App::setResource('dbForConsole', function ($db, $cache, $register) {
         $register
             ->get('syncOut')
             ->addKey($key)
-            ->trigger();
-    });
-
-    $cache->on(cache::EVENT_FLUSH, function ($region) use ($register) {
-        $register
-            ->get('deletes')
-            ->setRegion($region)
             ->trigger();
     });
 

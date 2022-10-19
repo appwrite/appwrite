@@ -24,9 +24,18 @@ $collections = [
         'name' => 'Syncs',
         'attributes' => [
             [
-                '$id' => ID::custom('region'),
+                '$id' => ID::custom('regionOrg'),
                 'type' => Database::VAR_STRING,
-                'size' => 256,
+                'size' => 50,
+                'required' => true,
+                'signed' => true,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('regionDest'),
+                'type' => Database::VAR_STRING,
+                'size' => 50,
                 'required' => true,
                 'signed' => true,
                 'array' => false,

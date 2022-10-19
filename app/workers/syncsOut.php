@@ -2,10 +2,13 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Resque\Worker;
+use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Response as ResponseAlias;
 
 require_once __DIR__ . '/../init.php';
 
@@ -14,11 +17,7 @@ Console::success(APP_NAME . ' syncs out worker v1 has started');
 
 class SyncsOutV1 extends Worker
 {
-    private array $regions = [
-       'fra1' => '172.17.0.1',
-       'nyc1' => '172.17.0.1',
-       'blr1' => '172.17.0.1',
-    ];
+    private array $regions;
 
     public function getName(): string
     {
@@ -27,14 +26,15 @@ class SyncsOutV1 extends Worker
 
     public function init(): void
     {
+        $this->regions = Config::getParam('regions', []);
     }
 
     public function run(): void
     {
-        //TODO current region env implementation
-        $currentRegion = 'nyc1';
 
-        $data['keys'][] = $this->args['key'];
+        $currentRegion = App::getEnv('_APP_REGION', 'nyc1');
+
+        $data[] = $this->args['key'];
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 600, 10);
         $token = $jwt->encode($data);
 
@@ -42,16 +42,18 @@ class SyncsOutV1 extends Worker
             $this->regions = $this->regions[$this->args['region']];
         }
 
-        foreach ($this->regions as $region => $host) {
-            if ($currentRegion === $region) {
+        foreach ($this->regions as $code => $region) {
+            if ($currentRegion === $code) {
                 continue;
             }
 
-            $status = $this->send($host, $token, $data);
-            if ($status !== 200) {
+            $status = $this->send($region['domain'] . '/v1/edge', $token, ['keys' => $data]);
+
+            if ($status !== Response::STATUS_CODE_OK) {
                 $this->getConsoleDB()->createDocument('syncs', new Document([
                     'requestedAt' => DateTime::now(),
-                    'region' => $region,
+                    'regionOrg'  => $currentRegion,
+                    'regionDest' => $code,
                     'keys' => $data,
                     'status' => $status,
                 ]));
@@ -59,10 +61,10 @@ class SyncsOutV1 extends Worker
         }
     }
 
-    private function send($host, $token, $data): int
+    private function send($url, $token, $data): int
     {
 
-        $ch = curl_init($host . '/v1/syncs');
+        $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Authorization: Bearer ' . $token,
             'Content-Type: application/json'

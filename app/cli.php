@@ -14,6 +14,7 @@ $cli = new CLI();
 
 include 'tasks/doctor.php';
 include 'tasks/maintenance.php';
+include 'tasks/syncsCloud.php';
 include 'tasks/install.php';
 include 'tasks/migrate.php';
 include 'tasks/sdks.php';

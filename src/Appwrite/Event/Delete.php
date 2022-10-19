@@ -94,16 +94,6 @@ class Delete extends Event
     }
 
     /**
-     * Sets cloud region.
-     *
-     * @param string $region
-     */
-    public function setRegion($region): void
-    {
-        $this->region = $region;
-    }
-
-    /**
      * Returns the resource for the delete event.
      *
      * @return string

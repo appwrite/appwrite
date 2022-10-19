@@ -6,7 +6,6 @@ global $register;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
-use Appwrite\Event\SyncOut;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -140,30 +139,8 @@ $cli
                 ->trigger();
         }
 
-        function syncRegionalCache($dbForConsole): void
-        {
-            $time = DateTime::now();
 
-            $chunks = $dbForConsole->find('syncs', [
-                Query::notEqual('status', 200),
-                Query::limit(300)
-            ]);
-
-            if (\count($chunks) > 0) {
-                Console::info("[{$time}] Found " . \count($chunks) . " cache chunks to purge.");
-                foreach ($chunks as $chunk) {
-                    $keys = $chunk->getAttribute('keys');
-//                    (new SyncOut())
- //                       ->setRegion($chunk->getAttribute('region'))
-//                        ->addKey($key)
-//                        ->trigger();
-                }
-            } else {
-                Console::info("[{$time}] No certificates for renewal.");
-            }
-        }
-
-        // # of days in seconds (1 day = 86400s)
+         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
         $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
@@ -171,9 +148,8 @@ $cli
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
-        $regionalCacheSyncRetention = (int) App::getEnv('_APP_MAINTENANCE_CACHE_SYNC', '300'); // 5 minutes
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention, $regionalCacheSyncRetention) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
             $database = getConsoleDB();
 
             $time = DateTime::now();
@@ -187,6 +163,5 @@ $cli
             notifyDeleteExpiredSessions();
             renewCertificates($database);
             notifyDeleteCache($cacheRetention);
-            syncRegionalCache($database);
         }, $interval);
     });
