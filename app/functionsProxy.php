@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use FunctionsProxy\Adapter\RoundRobin;
 use FunctionsProxy\Adapter\UsageBased;
 use Swoole\Coroutine\Http\Client;
 use Utopia\Logger\Log;
@@ -40,7 +41,7 @@ $redisPool = new RedisPool(
     64
 );
 
-$adapter = new UsageBased($redisPool); // TODO: @Meldiron allow env variable to switch; log what is picked
+$adapter = new RoundRobin($redisPool); // TODO: @Meldiron allow env variable to switch; log what is picked
 
 function markOffline(Cache $cache, string $executorHostname, string $error, bool $forceShowError = false)
 {

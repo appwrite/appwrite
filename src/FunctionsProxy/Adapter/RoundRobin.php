@@ -3,23 +3,30 @@
 namespace FunctionsProxy\Adapter;
 
 use FunctionsProxy\Adapter;
+use Swoole\Database\RedisPool;
+use Swoole\Atomic;
 
 class RoundRobin extends Adapter
 {
-    private $currentIndex = 0; // TODO: @Meldiron Put into utopia app resource or/and utopia registry
+    private Atomic $counter;
+
+    function __construct(RedisPool $redisPool) {
+        parent::__construct($redisPool);
+        $this->counter = new Atomic(-1);
+    }
 
     public function getNextExecutor(?string $contaierId): array
     {
+        $count = $this->counter->add();
         $executors = $this->getExecutors();
-        $executor = $executors[$this->currentIndex] ?? null;
-        $this->currentIndex++;
+        $index = $count % \count($executors);
+        $executor = $executors[$index];
 
-        if (!$executor) {
-            $this->currentIndex = 0;
-            $executor = $executors[$this->currentIndex] ?? null;
-            $this->currentIndex++;
+        // Reset from time to time to prevent memory leak / int overflow
+        if($count > 10000) {
+            $this->counter->set(-1);
         }
 
-        return $executor ?? null;
+        return ($executor ?? $executor[0]) ?? null;
     }
 }
