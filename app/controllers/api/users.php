@@ -888,7 +888,7 @@ App::patch('/v1/users/:userId/phone')
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
         } catch (Duplicate $th) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
 
         $events->setParam('userId', $user->getId());
