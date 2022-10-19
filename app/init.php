@@ -634,6 +634,8 @@ $register->set('pools', function () {
                             default => null
                         };
 
+                        $adapter->setDefaultDatabase($dsn->getDatabase());
+
                         break;
                     case 'queue':
                         $adapter = $resource();
