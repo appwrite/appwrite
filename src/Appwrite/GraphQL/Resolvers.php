@@ -45,10 +45,10 @@ class Resolvers
 
                 switch ($route->getMethod()) {
                     case 'GET':
-                        $request->setGet($args);
+                        $request->setQueryString($args);
                         break;
                     default:
-                        $request->setPost($args);
+                        $request->setPayload($args);
                         break;
                 }
 
@@ -132,7 +132,7 @@ class Resolvers
 
                 $request->setMethod('GET');
                 $request->setURI($url($databaseId, $collectionId, $args));
-                $request->setGet($params($databaseId, $collectionId, $args));
+                $request->setQueryString($params($databaseId, $collectionId, $args));
 
                 $beforeResolve = function ($payload) {
                     return $payload['documents'];
@@ -167,7 +167,7 @@ class Resolvers
 
                 $request->setMethod('POST');
                 $request->setURI($url($databaseId, $collectionId, $args));
-                $request->setPost($params($databaseId, $collectionId, $args));
+                $request->setPayload($params($databaseId, $collectionId, $args));
 
                 self::resolve($utopia, $request, $response, $resolve, $reject);
             }
@@ -198,7 +198,7 @@ class Resolvers
 
                 $request->setMethod('PATCH');
                 $request->setURI($url($databaseId, $collectionId, $args));
-                $request->setPost($params($databaseId, $collectionId, $args));
+                $request->setPayload($params($databaseId, $collectionId, $args));
 
                 self::resolve($utopia, $request, $response, $resolve, $reject);
             }
@@ -259,7 +259,7 @@ class Resolvers
             $request->removeHeader('content-type');
         }
 
-        $request = $request->clone();
+        $request = clone $request;
         $utopia->setResource('request', static fn() => $request);
         $response->setContentType(Response::CONTENT_TYPE_NULL);
 
