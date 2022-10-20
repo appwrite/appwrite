@@ -145,7 +145,7 @@ return [
                 'beta' => false,
                 'dev' => false,
                 'hidden' => true,
-                'family' => APP_PLATFORM_SERVER,
+                'family' => APP_PLATFORM_CLIENT,
                 'prism' => 'graphql',
                 'source' => \realpath(__DIR__ . '/../sdks/client-graphql'),
                 'gitUrl' => '',
