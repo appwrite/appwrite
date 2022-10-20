@@ -35,6 +35,7 @@ foreach (
     realpath(__DIR__ . '/../vendor/symfony'),
     realpath(__DIR__ . '/../vendor/mongodb'),
     realpath(__DIR__ . '/../vendor/utopia-php/websocket'), // TODO: remove workerman autoload
+    realpath(__DIR__ . '/../vendor/workerman/workerman'), // Needed becasue of utopia-php/queue
     ] as $key => $value
 ) {
     if ($value !== false) {
