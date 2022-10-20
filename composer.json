@@ -62,6 +62,7 @@
         "utopia-php/websocket": "0.1.0",
         "utopia-php/image": "0.5.*",
         "utopia-php/orchestration": "dev-feat-usage-stats as 0.6.0",
+        "utopia-php/queue": "dev-qa-fixes as 0.3.0",
         "resque/php-resque": "1.3.6",
         "matomo/device-detector": "6.0.0",
         "dragonmantank/cron-expression": "3.3.1",

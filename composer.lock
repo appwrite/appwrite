@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eeafbe6edd7f9b3c378a76acc7057a3d",
+    "content-hash": "ac6a67bb7898f5597beae32f741b7577",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2563,6 +2563,67 @@
             "time": "2020-10-24T07:04:59+00:00"
         },
         {
+            "name": "utopia-php/queue",
+            "version": "dev-qa-fixes",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/queue.git",
+                "reference": "ef9a636f706b68e70c971d8f09ea9adedead2b9e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/ef9a636f706b68e70c971d8f09ea9adedead2b9e",
+                "reference": "ef9a636f706b68e70c971d8f09ea9adedead2b9e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0",
+                "utopia-php/cli": "0.13.*",
+                "utopia-php/framework": "0.*.*",
+                "workerman/workerman": "^4.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^0.2.3",
+                "phpstan/phpstan": "^1.8",
+                "phpunit/phpunit": "^9.5.5",
+                "swoole/ide-helper": "4.8.8"
+            },
+            "suggest": {
+                "ext-swoole": "Needed to support Swoole.",
+                "workerman/workerman": "Needed to support Workerman."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Queue\\": "src/Queue"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Torsten Dittmann",
+                    "email": "torsten@appwrite.io"
+                }
+            ],
+            "description": "A powerful task queue.",
+            "keywords": [
+                "Tasks",
+                "framework",
+                "php",
+                "queue",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/queue/issues",
+                "source": "https://github.com/utopia-php/queue/tree/qa-fixes"
+            },
+            "time": "2022-10-20T09:26:41+00:00"
+        },
+        {
             "name": "utopia-php/registry",
             "version": "0.5.0",
             "source": {
@@ -2897,6 +2958,69 @@
                 "source": "https://github.com/webmozarts/assert/tree/1.11.0"
             },
             "time": "2022-06-03T18:03:27+00:00"
+        },
+        {
+            "name": "workerman/workerman",
+            "version": "v4.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/walkor/workerman.git",
+                "reference": "83e007acf936e2233ac92d7368b87716f2bae338"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/walkor/workerman/zipball/83e007acf936e2233ac92d7368b87716f2bae338",
+                "reference": "83e007acf936e2233ac92d7368b87716f2bae338",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0"
+            },
+            "suggest": {
+                "ext-event": "For better performance. "
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Workerman\\": "./"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "walkor",
+                    "email": "walkor@workerman.net",
+                    "homepage": "http://www.workerman.net",
+                    "role": "Developer"
+                }
+            ],
+            "description": "An asynchronous event driven PHP framework for easily building fast, scalable network applications.",
+            "homepage": "http://www.workerman.net",
+            "keywords": [
+                "asynchronous",
+                "event-loop"
+            ],
+            "support": {
+                "email": "walkor@workerman.net",
+                "forum": "http://wenda.workerman.net/",
+                "issues": "https://github.com/walkor/workerman/issues",
+                "source": "https://github.com/walkor/workerman",
+                "wiki": "http://doc.workerman.net/"
+            },
+            "funding": [
+                {
+                    "url": "https://opencollective.com/workerman",
+                    "type": "open_collective"
+                },
+                {
+                    "url": "https://www.patreon.com/walkor",
+                    "type": "patreon"
+                }
+            ],
+            "time": "2022-10-09T11:33:14+00:00"
         }
     ],
     "packages-dev": [
@@ -5439,6 +5563,12 @@
             "alias_normalized": "0.6.0.0"
         },
         {
+            "package": "utopia-php/queue",
+            "version": "dev-qa-fixes",
+            "alias": "0.3.0",
+            "alias_normalized": "0.3.0.0"
+        },
+        {
             "package": "utopia-php/system",
             "version": "dev-feat-cpu-usage",
             "alias": "0.5.0",
@@ -5449,7 +5579,8 @@
     "stability-flags": {
         "appwrite/php-runtimes": 20,
         "utopia-php/system": 20,
-        "utopia-php/orchestration": 20
+        "utopia-php/orchestration": 20,
+        "utopia-php/queue": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

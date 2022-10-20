@@ -1119,7 +1119,7 @@ App::post('/v1/functions/:functionId/executions')
                 ->setProject($project)
                 ->setUser($user);
 
-            $event->trigger();
+            $event->triggerQueue();
 
             return $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

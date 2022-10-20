@@ -254,6 +254,7 @@ class Event
 
     /**
      * Execute Event.
+     * Works for Resque workers.
      *
      * @return string|bool
      * @throws InvalidArgumentException
@@ -268,6 +269,8 @@ class Event
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }
+
+    // TODO: @Meldiron implement triggerQueue()
 
     /**
      * Resets event.

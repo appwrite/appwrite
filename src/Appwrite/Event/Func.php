@@ -5,7 +5,10 @@ namespace Appwrite\Event;
 use DateTime;
 use Resque;
 use ResqueScheduler;
+use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection\Redis;
 
 class Func extends Event
 {
@@ -137,6 +140,7 @@ class Func extends Event
 
     /**
      * Executes the function event and sends it to the functions worker.
+     * Works for Resque workers.
      *
      * @return string|bool
      * @throws \InvalidArgumentException
@@ -144,6 +148,31 @@ class Func extends Event
     public function trigger(): string|bool
     {
         return Resque::enqueue($this->queue, $this->class, [
+            'project' => $this->project,
+            'user' => $this->user,
+            'function' => $this->function,
+            'execution' => $this->execution,
+            'type' => $this->type,
+            'jwt' => $this->jwt,
+            'payload' => $this->payload,
+            'data' => $this->data
+        ]);
+    }
+
+    /**
+     * Executes the function event and sends it to the functions worker.
+     * Works for utopia/queue workers.
+     *
+     * @return string|bool
+     * @throws \InvalidArgumentException
+     */
+    public function triggerQueue(): string|bool
+    {
+        $connection = new Redis(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''), App::getEnv('_APP_REDIS_USER', null), App::getEnv('_APP_REDIS_PASS', null));
+        $client = new Client($this->queue, $connection);
+        $client->resetStats(); // TODO: @Meldiron Only reset stats once (in utopia resource?)
+
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'function' => $this->function,
