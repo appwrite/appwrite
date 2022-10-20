@@ -5,7 +5,6 @@ use Utopia\Queue\Message;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Queue\Worker;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
@@ -22,13 +21,13 @@ use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
-require_once __DIR__ . '/../init.php';
+Console::title('Functions V1 Worker');
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
 
-Console::title('Functions V1 Worker');
-Console::success(APP_NAME . ' functions worker v1 has started');
+require_once __DIR__ . '/../init.php';
+require_once __DIR__ . '/../../src/Appwrite/Queue/init.php';
 
 $executor = new Executor(App::getEnv('_APP_FUNCTIONS_PROXY_HOST'));
 
@@ -222,11 +221,11 @@ $execute = function(
 $connection = new Queue\Connection\Redis(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''), App::getEnv('_APP_REDIS_USER', null), App::getEnv('_APP_REDIS_PASS', null));
 $adapter = new Queue\Adapter\Swoole($connection, 12, Event::FUNCTIONS_QUEUE_NAME);
 $server = new Queue\Server($adapter);
-$worker = new Worker();
 
 $server->job()
     ->inject('message')
-    ->action(function (Message $message) use ($execute, $worker) {
+    ->inject('dbForProject')
+    ->action(function (Message $message, Database $dbForProject) use ($execute) {
         $args = $message->getPayload();
 
         $type = $args['type'] ?? '';
@@ -239,8 +238,6 @@ $server->job()
             return;
         }
 
-        $database = $worker->getProjectDB($project->getId());
-
         /**
          * Handle Event execution.
          */
@@ -252,7 +249,7 @@ $server->job()
             /** @var Document[] $functions */
 
             while ($sum >= $limit) {
-                $functions = $database->find('functions', [
+                $functions = $dbForProject->find('functions', [
                     Query::limit($limit),
                     Query::offset($offset),
                     Query::orderAsc('name'),
@@ -270,7 +267,7 @@ $server->job()
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
                     // As event, pass first, most verbose event pattern
-                    call_user_func($execute, $project, $function, $database, 'event', null, $events[0], $payload, null, $user, null);
+                    call_user_func($execute, $project, $function, $dbForProject, 'event', null, $events[0], $payload, null, $user, null);
 
                     Console::success('Triggered function: ' . $events[0]);
                 }
@@ -292,8 +289,8 @@ $server->job()
                 $jwt = $args['jwt'] ?? '';
                 $data = $args['data'] ?? '';
 
-                $function = $database->getDocument('functions', $execution->getAttribute('functionId'));
-                call_user_func($execute, $project, $function, $database, 'http', $execution->getId(), null, null, $data, $user, $jwt);
+                $function = $dbForProject->getDocument('functions', $execution->getAttribute('functionId'));
+                call_user_func($execute, $project, $function, $dbForProject, 'http', $execution->getId(), null, null, $data, $user, $jwt);
                 break;
 
             case 'schedule':
@@ -312,7 +309,7 @@ $server->job()
                  */
 
                 // Reschedule
-                $function = $database->getDocument('functions', $function->getId());
+                $function = $dbForProject->getDocument('functions', $function->getId());
 
                 if (empty($function->getId())) {
                     throw new Exception('Function not found (' . $function->getId() . ')');
@@ -333,7 +330,7 @@ $server->job()
                     ->setAttribute('scheduleNext', $next)
                     ->setAttribute('schedulePrevious', DateTime::now());
 
-                $function = $database->updateDocument(
+                $function = $dbForProject->updateDocument(
                     'functions',
                     $function->getId(),
                     $function
@@ -348,7 +345,7 @@ $server->job()
                     ->schedule(new \DateTime($next));
                 ;
 
-                call_user_func($execute, $project, $function, $database, 'schedule', null, null, null, null, null, null);
+                call_user_func($execute, $project, $function, $dbForProject, 'schedule', null, null, null, null, null, null);
                 break;
         }
     });
@@ -357,12 +354,13 @@ $server->job()
 $server
     ->error()
     ->inject('error')
-    ->action(function ($error) {
-        echo $error->getMessage() . PHP_EOL;
+    ->inject('logger')
+    ->action(function ($error, $logger) {
+        \var_dump("Error occured");
+        call_user_func($logger, $error);
     });
 
 $server
     ->workerStart(function () {
-
     })
     ->start();
