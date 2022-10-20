@@ -1,6 +1,0 @@
-query {
-    databasesList {
-        total
-        databases
-    }
-}

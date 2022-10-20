@@ -1,6 +1,0 @@
-query {
-    usersList {
-        total
-        users
-    }
-}

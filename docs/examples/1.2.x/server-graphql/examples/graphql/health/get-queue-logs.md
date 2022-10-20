@@ -1,5 +1,0 @@
-query {
-    healthGetQueueLogs {
-        size
-    }
-}
