@@ -290,7 +290,7 @@ class Resolvers
 
         foreach ($payload as $key => $value) {
             if (\str_starts_with($key, '$')) {
-                $escapedKey = \str_replace('$', '_', $key);
+                $escapedKey = \str_replace('$', '', $key);
                 $payload[$escapedKey] = $value;
                 unset($payload[$key]);
             }
