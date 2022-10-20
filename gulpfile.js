@@ -1,3 +1,4 @@
+//start of the code
 // Include gulp
 const { src, dest, series } = require('gulp');
 
