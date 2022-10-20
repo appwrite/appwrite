@@ -1,0 +1,6 @@
+query {
+    functionsList {
+        total
+        functions
+    }
+}

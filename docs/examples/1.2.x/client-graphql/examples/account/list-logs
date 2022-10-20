@@ -1,0 +1,6 @@
+query {
+    accountListLogs {
+        total
+        logs
+    }
+}

@@ -1,0 +1,6 @@
+query {
+    localeListCountriesEU {
+        total
+        countries
+    }
+}

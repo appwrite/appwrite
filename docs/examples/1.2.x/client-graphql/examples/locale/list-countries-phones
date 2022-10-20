@@ -1,0 +1,6 @@
+query {
+    localeListCountriesPhones {
+        total
+        phones
+    }
+}

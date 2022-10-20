@@ -1,0 +1,6 @@
+query {
+    graphqlGet(
+        query: "[QUERY]"
+    ) {
+    }
+}

@@ -1,0 +1,6 @@
+mutation {
+    graphqlPost(
+        query: "{}"
+    ) {
+    }
+}
