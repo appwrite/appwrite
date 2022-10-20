@@ -36,6 +36,7 @@ foreach (
     realpath(__DIR__ . '/../vendor/mongodb'),
     realpath(__DIR__ . '/../vendor/utopia-php/websocket'), // TODO: remove workerman autoload
     realpath(__DIR__ . '/../vendor/utopia-php/cache'), // TODO: Remove when memcached ext issue get fixed
+    realpath(__DIR__ . '/../vendor/utopia-php/queue'), // TODO: Remove when memcached ext issue get fixed
     ] as $key => $value
 ) {
     if ($value !== false) {

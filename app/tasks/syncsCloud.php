@@ -3,7 +3,6 @@
 global $cli;
 global $register;
 
-use Appwrite\Event\SyncOut;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -12,6 +11,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Query;
+
 
 function getConsoleDatabase(): Database
 {
@@ -44,37 +44,48 @@ function getConsoleDatabase(): Database
     return $database;
 }
 
+function syncRegionalCache($dbForConsole, $regionOrg): void
+{
+    global $register;
+
+    $time = DateTime::now();
+    $chunks = $dbForConsole->find('syncs', [
+        Query::equal('regionOrg', [$regionOrg]),
+        Query::limit(500)
+    ]);
+
+    if (count($chunks) > 0) {
+        Console::info("[{$time}] Found " . \count($chunks) . " cache key chunks to purge.");
+        foreach ($chunks as $chunk) {
+            $keys =  $chunk->getAttribute('keys');
+            foreach ($keys ?? [] as $key) {
+                $register
+                    ->get('workerSyncOut')
+                    ->resetStats();
+
+                $register
+                    ->get('workerSyncOut')
+                    ->enqueue([
+                        'type' => 'from cloud maintenance',
+                        'value' => [
+                            'region' => $chunk->getAttribute('regionDest'),
+                            'key' => $key
+                        ]
+                    ]);
+            }
+            $dbForConsole->deleteDocument('syncs', $chunk->getId());
+        }
+    } else {
+        Console::info("[{$time}] No cache key chunks where found.");
+    }
+}
+
 $cli
     ->task('syncsCloud')
     ->desc('Schedules cloud sync tasks')
     ->action(function () {
         Console::title('Syncs cloud V1');
         Console::success(APP_NAME . ' Syncs cloud process v1 has started');
-
-        function syncRegionalCache($dbForConsole, $regionOrg): void
-        {
-            $time = DateTime::now();
-            $chunks = $dbForConsole->find('syncs', [
-                Query::equal('regionOrg', [$regionOrg]),
-                Query::limit(500)
-            ]);
-
-            if (count($chunks) > 0) {
-                Console::info("[{$time}] Found " . \count($chunks) . " cache key chunks to purge.");
-                foreach ($chunks as $chunk) {
-                    $keys =  $chunk->getAttribute('keys');
-                    foreach ($keys['keys'] ?? [] as $key) {
-                        (new SyncOut())
-                            ->setRegion($chunk->getAttribute('region'))
-                            ->addKey($key)
-                            ->trigger();
-                    }
-                    $dbForConsole->deleteDocument('syncs', $chunk->getId());
-                }
-            } else {
-                Console::info("[{$time}] No cache key chunks where found.");
-            }
-        }
 
         $interval = (int) App::getEnv('_APP_SYNCS_CLOUD_INTERVAL', '180');
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1ceb54089b20b863e8685e1644ba51f9",
+    "content-hash": "73ea3ea466d02c3c6427d235c11554ff",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2491,6 +2491,67 @@
                 "source": "https://github.com/utopia-php/preloader/tree/0.2.4"
             },
             "time": "2020-10-24T07:04:59+00:00"
+        },
+        {
+            "name": "utopia-php/queue",
+            "version": "0.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/queue.git",
+                "reference": "42b132c6f2431b726c2bc629c386921e4934b863"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/42b132c6f2431b726c2bc629c386921e4934b863",
+                "reference": "42b132c6f2431b726c2bc629c386921e4934b863",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0",
+                "utopia-php/cli": "0.13.*",
+                "utopia-php/framework": "0.*.*"
+            },
+            "require-dev": {
+                "laravel/pint": "^0.2.3",
+                "phpstan/phpstan": "^1.8",
+                "phpunit/phpunit": "^9.5.5",
+                "swoole/ide-helper": "4.8.8",
+                "workerman/workerman": "^4.0"
+            },
+            "suggest": {
+                "ext-swoole": "Needed to support Swoole.",
+                "workerman/workerman": "Needed to support Workerman."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Queue\\": "src/Queue"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Torsten Dittmann",
+                    "email": "torsten@appwrite.io"
+                }
+            ],
+            "description": "A powerful task queue.",
+            "keywords": [
+                "Tasks",
+                "framework",
+                "php",
+                "queue",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/queue/issues",
+                "source": "https://github.com/utopia-php/queue/tree/0.3.0"
+            },
+            "time": "2022-10-19T13:22:07+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5388,5 +5449,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }

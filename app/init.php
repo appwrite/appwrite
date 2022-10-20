@@ -48,6 +48,8 @@ use Utopia\Database\ID;
 use Utopia\Logger\Logger;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
+use Utopia\Queue\Client as clientQueue;
+use Utopia\Queue\Connection\Redis as redisQueue;
 use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -931,23 +933,46 @@ $register->set('syncOut', function () {
     return new SyncOut();
 });
 
+$register->set('workerRedisConnection', function () {
+    return new redisQueue('redis', 6379);
+});
+
+$register->set('workerSyncOut', function () use ($register) {
+    return new clientQueue('syncOut', $register->get('workerRedisConnection'));
+});
+
+
 App::setResource('dbForProject', function ($db, $cache, Document $project, $register) {
 
     $cache = new Cache(new RedisCache($cache));
     $cache->on(cache::EVENT_SAVE, function ($key) use ($register) {
+
         $register
-            ->get('syncOut')
-            ->addKey($key)
-            ->trigger();
+            ->get('workerSyncOut')
+            ->resetStats();
+        $register
+            ->get('workerSyncOut')
+            ->enqueue([
+                'type' => 'saved from init',
+                'value' => [
+                    'key' => $key
+                ]
+            ]);
     });
 
     $cache->on(cache::EVENT_PURGE, function ($key) use ($register) {
         $register
-            ->get('syncOut')
-            ->addKey($key)
-            ->trigger();
+            ->get('workerSyncOut')
+            ->resetStats();
+        $register
+            ->get('workerSyncOut')
+            ->enqueue([
+                'type' => 'purge from init',
+                'value' => [
+                    'key' => $key
+                ]
+            ]);
     });
-
 
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
