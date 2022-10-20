@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "173c9d860d0013e328c3bef1502ccd96",
+    "content-hash": "d1ae54b92f40b76122e3d42bf87b4e67",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2877,16 +2877,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-feat-graphql-method-type",
+            "version": "dev-feat-graphql",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "01232419c20fb80d741200ae1b1fae2646115b77"
+                "reference": "07bef0877274d8db3691b84b0439f1be59bdc46e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/01232419c20fb80d741200ae1b1fae2646115b77",
-                "reference": "01232419c20fb80d741200ae1b1fae2646115b77",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/07bef0877274d8db3691b84b0439f1be59bdc46e",
+                "reference": "07bef0877274d8db3691b84b0439f1be59bdc46e",
                 "shasum": ""
             },
             "require": {
@@ -2921,9 +2921,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/feat-graphql-method-type"
+                "source": "https://github.com/appwrite/sdk-generator/tree/feat-graphql"
             },
-            "time": "2022-10-17T01:43:03+00:00"
+            "time": "2022-10-20T02:51:43+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5403,7 +5403,7 @@
     "aliases": [
         {
             "package": "appwrite/sdk-generator",
-            "version": "dev-feat-graphql-method-type",
+            "version": "dev-feat-graphql",
             "alias": "0.28.1",
             "alias_normalized": "0.28.1.0"
         }
