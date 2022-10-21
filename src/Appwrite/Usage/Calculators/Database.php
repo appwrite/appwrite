@@ -132,7 +132,7 @@ class Database extends Calculator
         $results = [];
         $sum = $limit;
         $latestDocument = null;
-        $this->database->setNamespace('_' . $projectId);
+        $this->database->setNamespace($projectId === 'console' ? $projectId : '_' . $projectId);
 
         while ($sum === $limit) {
             try {
