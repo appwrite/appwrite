@@ -219,7 +219,7 @@ $execute = function(
 };
 
 $connection = new Queue\Connection\Redis(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''), App::getEnv('_APP_REDIS_USER', null), App::getEnv('_APP_REDIS_PASS', null));
-$adapter = new Queue\Adapter\Swoole($connection, 12, Event::FUNCTIONS_QUEUE_NAME);
+$adapter = new Queue\Adapter\Swoole($connection, swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)), Event::FUNCTIONS_QUEUE_NAME);
 $server = new Queue\Server($adapter);
 
 $server->job()

@@ -446,6 +446,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
