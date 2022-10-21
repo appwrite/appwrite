@@ -114,7 +114,7 @@ class V15 extends Migration
             );
 
             if (!is_null($bucket->getAttribute('permission'))) {
-                $bucket->setAttribute('fileSecurity', $bucket->getAttribute('permissions') === 'document');
+                $bucket->setAttribute('fileSecurity', $bucket->getAttribute('permission') === 'file');
             }
 
             if (is_null($bucket->getAttribute('compression'))) {
