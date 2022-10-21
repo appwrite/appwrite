@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "568151395a8877f87d9bdce048adc2dc",
+    "content-hash": "08fdd139ad1285b02c4b4e555679e7de",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1741,23 +1741,23 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.13.1",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "4c1b8fe742f17158c59550cdfd9074a94bf474ac"
+                "reference": "1a5da248e74c1bfc39bc440fa949de6935acceeb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/4c1b8fe742f17158c59550cdfd9074a94bf474ac",
-                "reference": "4c1b8fe742f17158c59550cdfd9074a94bf474ac",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/1a5da248e74c1bfc39bc440fa949de6935acceeb",
+                "reference": "1a5da248e74c1bfc39bc440fa949de6935acceeb",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.25.*"
+                "utopia-php/database": "0.26.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.4",
@@ -1789,9 +1789,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.13.1"
+                "source": "https://github.com/utopia-php/abuse/tree/0.14.0"
             },
-            "time": "2022-09-07T16:02:58+00:00"
+            "time": "2022-10-14T11:26:39+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1850,22 +1850,22 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.14.1",
+            "version": "0.15.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "b011224ed9bfef7e5c849938e65619af28f7cf41"
+                "reference": "937ffd13e7a5ac9ad220b329247569ef2a4881d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/b011224ed9bfef7e5c849938e65619af28f7cf41",
-                "reference": "b011224ed9bfef7e5c849938e65619af28f7cf41",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/937ffd13e7a5ac9ad220b329247569ef2a4881d9",
+                "reference": "937ffd13e7a5ac9ad220b329247569ef2a4881d9",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.25.*"
+                "utopia-php/database": "0.26.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1881,12 +1881,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "A simple audit library to manage application users logs",
             "keywords": [
                 "Audit",
@@ -1897,9 +1891,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.14.1"
+                "source": "https://github.com/utopia-php/audit/tree/0.15.0"
             },
-            "time": "2022-09-07T16:03:16+00:00"
+            "time": "2022-10-14T11:39:18+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2060,16 +2054,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.25.5",
+            "version": "0.26.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "6d1c1d46d66553154975a3e8e72d30b5bd2413d9"
+                "reference": "d172af2541137c83a86d066f82f48914b5a3a610"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/6d1c1d46d66553154975a3e8e72d30b5bd2413d9",
-                "reference": "6d1c1d46d66553154975a3e8e72d30b5bd2413d9",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/d172af2541137c83a86d066f82f48914b5a3a610",
+                "reference": "d172af2541137c83a86d066f82f48914b5a3a610",
                 "shasum": ""
             },
             "require": {
@@ -2118,9 +2112,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.25.5"
+                "source": "https://github.com/utopia-php/database/tree/0.26.0"
             },
-            "time": "2022-09-30T15:01:32+00:00"
+            "time": "2022-10-03T17:12:01+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3419,25 +3413,30 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.6.1",
+            "version": "1.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "77a32518733312af16a44300404e945338981de3"
+                "reference": "48f445a408c131e38cab1c235aa6d2bb7a0bb20d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/77a32518733312af16a44300404e945338981de3",
-                "reference": "77a32518733312af16a44300404e945338981de3",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/48f445a408c131e38cab1c235aa6d2bb7a0bb20d",
+                "reference": "48f445a408c131e38cab1c235aa6d2bb7a0bb20d",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2 || ^8.0",
+                "php": "^7.4 || ^8.0",
                 "phpdocumentor/reflection-common": "^2.0"
             },
             "require-dev": {
                 "ext-tokenizer": "*",
-                "psalm/phar": "^4.8"
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan": "^1.8",
+                "phpstan/phpstan-phpunit": "^1.1",
+                "phpunit/phpunit": "^9.5",
+                "rector/rector": "^0.13.9",
+                "vimeo/psalm": "^4.25"
             },
             "type": "library",
             "extra": {
@@ -3463,9 +3462,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.6.1"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.6.2"
             },
-            "time": "2022-03-15T21:29:03+00:00"
+            "time": "2022-10-14T12:47:21+00:00"
         },
         {
             "name": "phpspec/prophecy",

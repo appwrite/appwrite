@@ -1,1 +1,1 @@
-Get a list of all the user's documents in a given collection. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of documents belonging to the provided collectionId. [Learn more about different API modes](/docs/admin).
+Get a list of all the user's documents in a given collection. You can use the query params to filter your results.
