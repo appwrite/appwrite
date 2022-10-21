@@ -1571,7 +1571,7 @@ App::get('/v1/storage/:bucketId/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
+                    'period' => '1h',
                     'limit' => 48,
                 ],
                 '7d' => [
