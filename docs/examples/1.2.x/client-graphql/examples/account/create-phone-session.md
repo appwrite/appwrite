@@ -1,7 +1,7 @@
 mutation {
     accountCreatePhoneSession(
         userId: "[USER_ID]",
-        phone: 
+        phone: ""
     ) {
         id
         createdAt

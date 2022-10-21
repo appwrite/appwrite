@@ -2,7 +2,7 @@ mutation {
     databasesCreateEnumAttribute(
         databaseId: "[DATABASE_ID]",
         collectionId: "[COLLECTION_ID]",
-        key: ,
+        key: "",
         elements: [],
         required: false
     ) {

@@ -2,7 +2,7 @@ mutation {
     databasesCreateFloatAttribute(
         databaseId: "[DATABASE_ID]",
         collectionId: "[COLLECTION_ID]",
-        key: ,
+        key: "",
         required: false
     ) {
         key

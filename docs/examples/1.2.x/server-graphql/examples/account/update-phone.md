@@ -1,6 +1,6 @@
 mutation {
     accountUpdatePhone(
-        phone: ,
+        phone: "",
         password: "password"
     ) {
         id

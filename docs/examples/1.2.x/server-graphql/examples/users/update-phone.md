@@ -1,7 +1,7 @@
 mutation {
     usersUpdatePhone(
         userId: "[USER_ID]",
-        number: 
+        number: ""
     ) {
         id
         createdAt
