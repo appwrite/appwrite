@@ -1111,6 +1111,7 @@
 - Added new OAuth providers for Google, Bitbucket, and GitLab
 - Added 15 new locales for locale service and email templates (cat, de, es, fi, fr, gr, hi, id, it, nl, pt-br, pt-pt, ro, tr, ua)
 - Improved test coverage for the project and synced DEV & CI environments settings
+- Added a new Italian language to the README.md file
 
 ## Bug Fixes
 
