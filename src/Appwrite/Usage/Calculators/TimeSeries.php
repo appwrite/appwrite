@@ -283,9 +283,8 @@ class TimeSeries extends Calculator
         'collections.$all.count.total' => [
             'table' => 'appwrite_usage_collections_{scope}_count_total',
         ],
-        'documents.databaseId.count.total' => [
+        'documents.$all.count.total' => [
             'table' => 'appwrite_usage_documents_{scope}_count_total',
-            'groupBy' => ['databaseId']
         ],
         'collections.databaseId.count.total' => [
             'table' => 'appwrite_usage_collections_{scope}_count_total',
