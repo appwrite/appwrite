@@ -129,7 +129,7 @@ class ContentTypeTest extends Scope
             'operations' => \json_encode([
                 'query' => $query,
                 'variables' => [
-                    'bucketId' => $bucket['_id'],
+                    'bucketId' => $bucket['id'],
                     'fileId' => ID::unique(),
                     'file' => null,
                     'fileSecurity' => true,

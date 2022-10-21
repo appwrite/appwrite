@@ -163,7 +163,7 @@ class Schema
                 $array = $attr['array'];
                 $required = $attr['required'];
                 $default = $attr['default'];
-                $escapedKey = str_replace('$', '_', $key);
+                $escapedKey = str_replace('$', '', $key);
                 $collections[$collectionId][$escapedKey] = [
                     'type' => Mapper::attribute(
                         $type,

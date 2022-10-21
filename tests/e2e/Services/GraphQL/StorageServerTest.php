@@ -60,7 +60,7 @@ class StorageServerTest extends Scope
             'operations' => \json_encode([
                 'query' => $query,
                 'variables' => [
-                    'bucketId' => $bucket['_id'],
+                    'bucketId' => $bucket['id'],
                     'fileId' => ID::unique(),
                     'file' => null,
                     'fileSecurity' => true,
@@ -121,7 +121,7 @@ class StorageServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'bucketId' => $bucket['_id'],
+                'bucketId' => $bucket['id'],
             ]
         ];
 
@@ -151,7 +151,7 @@ class StorageServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'bucketId' => $bucket['_id'],
+                'bucketId' => $bucket['id'],
             ]
         ];
 
@@ -183,8 +183,8 @@ class StorageServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'bucketId' => $bucket['_id'],
-                'fileId' => $file['_id'],
+                'bucketId' => $bucket['id'],
+                'fileId' => $file['id'],
             ]
         ];
 
@@ -213,7 +213,7 @@ class StorageServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $file['bucketId'],
-                'fileId' => $file['_id'],
+                'fileId' => $file['id'],
                 'width' => 100,
                 'height' => 100,
             ]
@@ -243,7 +243,7 @@ class StorageServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $file['bucketId'],
-                'fileId' => $file['_id'],
+                'fileId' => $file['id'],
             ]
         ];
 
@@ -269,7 +269,7 @@ class StorageServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $file['bucketId'],
-                'fileId' => $file['_id'],
+                'fileId' => $file['id'],
             ]
         ];
 
@@ -294,7 +294,7 @@ class StorageServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'bucketId' => $bucket['_id'],
+                'bucketId' => $bucket['id'],
                 'name' => 'Actors Updated',
                 'fileSecurity' => false,
             ]
@@ -327,7 +327,7 @@ class StorageServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $file['bucketId'],
-                'fileId' => $file['_id'],
+                'fileId' => $file['id'],
                 'permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
@@ -362,7 +362,7 @@ class StorageServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $file['bucketId'],
-                'fileId' => $file['_id'],
+                'fileId' => $file['id'],
             ]
         ];
 
@@ -388,7 +388,7 @@ class StorageServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'bucketId' => $bucket['_id'],
+                'bucketId' => $bucket['id'],
             ]
         ];
 

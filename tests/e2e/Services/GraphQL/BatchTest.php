@@ -111,7 +111,7 @@ class BatchTest extends Scope
         $email2 = 'tester' . \uniqid() . '@example.com';
         $query = 'mutation CreateAccount($userId: String!, $email: String!, $password: String!, $name: String) {
             accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
-                _id
+                id
             }
         }';
 
@@ -200,7 +200,7 @@ class BatchTest extends Scope
             [
                 'query' => 'mutation CreateAccount($userId: String!, $email: String!, $password: String!, $name: String) {
                     accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
-                        _id
+                        id
                     }
                 }',
                 'variables' => [
@@ -227,7 +227,7 @@ class BatchTest extends Scope
         $this->assertArrayHasKey('accountCreate', $response['body'][2]['data']);
         $this->assertEquals(194, $response['body'][0]['data']['localeListCountries']['total']);
         $this->assertEquals(194, $response['body'][1]['data']['localeListCountries']['total']);
-        $this->assertArrayHasKey('_id', $response['body'][2]['data']['accountCreate']);
+        $this->assertArrayHasKey('id', $response['body'][2]['data']['accountCreate']);
     }
 
     public function testQueryBatchedQueries()

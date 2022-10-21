@@ -89,7 +89,7 @@ class UsersTest extends Scope
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersGet']);
-        $this->assertEquals($this->getUser()['$id'], $user['body']['data']['usersGet']['_id']);
+        $this->assertEquals($this->getUser()['$id'], $user['body']['data']['usersGet']['id']);
     }
 
     public function testGetUserPreferences()
@@ -196,7 +196,7 @@ class UsersTest extends Scope
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersUpdateStatus']);
-        $this->assertEquals($this->getUser()['$id'], $user['body']['data']['usersUpdateStatus']['_id']);
+        $this->assertEquals($this->getUser()['$id'], $user['body']['data']['usersUpdateStatus']['id']);
     }
 
     public function testUpdateUserEmailVerification()
@@ -241,7 +241,7 @@ class UsersTest extends Scope
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersUpdatePhoneVerification']);
-        $this->assertEquals($this->getUser()['$id'], $user['body']['data']['usersUpdatePhoneVerification']['_id']);
+        $this->assertEquals($this->getUser()['$id'], $user['body']['data']['usersUpdatePhoneVerification']['id']);
     }
 
     public function testUpdateUserName()

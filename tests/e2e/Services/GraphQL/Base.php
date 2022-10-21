@@ -286,7 +286,7 @@ trait Base
             case self::$CREATE_DATABASE:
                 return 'mutation createDatabase($databaseId: String!, $name: String!) {
                     databasesCreate(databaseId: $databaseId, name: $name) {
-                        _id
+                        id
                         name
                     }
                 }';
@@ -295,7 +295,7 @@ trait Base
                     databasesList {
                         total
                         databases {
-                            _id
+                            id
                             name
                         }
                     }
@@ -303,14 +303,14 @@ trait Base
             case self::$GET_DATABASE:
                 return 'query getDatabase($databaseId: String!) {
                     databasesGet(databaseId: $databaseId) {
-                        _id
+                        id
                         name
                     }
                 }';
             case self::$UPDATE_DATABASE:
                 return 'mutation updateDatabase($databaseId: String!, $name: String!) {
                     databasesUpdate(databaseId: $databaseId, name: $name) {
-                        _id
+                        id
                         name
                     }
                 }';
@@ -323,8 +323,8 @@ trait Base
             case self::$GET_COLLECTION:
                 return 'query getCollection($databaseId: String!, $collectionId: String!) {
                     databasesGetCollection(databaseId: $databaseId, collectionId: $collectionId) {
-                        _id
-                        _permissions
+                        id
+                        permissions
                         documentSecurity
                         name
                     }
@@ -334,8 +334,8 @@ trait Base
                     databasesListCollections(databaseId: $databaseId) {
                         total
                         collections {
-                            _id
-                            _permissions
+                            id
+                            permissions
                             documentSecurity
                             name
                         }
@@ -344,8 +344,8 @@ trait Base
             case self::$CREATE_COLLECTION:
                 return 'mutation createCollection($databaseId: String!, $collectionId: String!, $name: String!, $documentSecurity: Boolean!, $permissions: [String!]!) {
                     databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $name, documentSecurity: $documentSecurity, permissions: $permissions) {
-                        _id
-                        _permissions
+                        id
+                        permissions
                         documentSecurity
                         name
                     }
@@ -353,8 +353,8 @@ trait Base
             case self::$UPDATE_COLLECTION:
                 return 'mutation updateCollection($databaseId: String!, $collectionId: String!, $name: String!, $documentSecurity: Boolean!, $permissions: [String!], $enabled: Boolean){
                     databasesUpdateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $name, documentSecurity: $documentSecurity, permissions: $permissions, enabled: $enabled) {
-                        _id
-                        _permissions
+                        id
+                        permissions
                         documentSecurity
                         name
                     }
@@ -508,9 +508,9 @@ trait Base
             case self::$GET_DOCUMENT:
                 return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!) {
                     databasesGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
-                        _id
-                        _collectionId
-                        _permissions
+                        id
+                        collectionId
+                        permissions
                         data
                     }
                 }';
@@ -519,9 +519,9 @@ trait Base
                     databasesListDocuments(databaseId: $databaseId, collectionId: $collectionId) {
                         total
                         documents {
-                            _id
-                            _collectionId
-                            _permissions
+                            id
+                            collectionId
+                            permissions
                             data
                         }
                     }   
@@ -529,15 +529,15 @@ trait Base
             case self::$CREATE_DOCUMENT:
                 return 'mutation createDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!]){
                     databasesCreateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
-                        _id
-                        _collectionId
-                        _permissions
+                        id
+                        collectionId
+                        permissions
                     }
                 }';
             case self::$CREATE_CUSTOM_ENTITY:
                 return 'mutation createActor($name: String!, $age: Int!, $alive: Boolean!, $salary: Float, $email: String!, $role: String!, $dob: String!, $ip: String, $url: String){
                     actorsCreate(name: $name, age: $age, alive: $alive, salary: $salary, email: $email, role: $role, dob: $dob, ip: $ip, url: $url) {
-                        _id
+                        id
                         name
                         age
                         alive
@@ -549,7 +549,7 @@ trait Base
             case self::$GET_CUSTOM_ENTITIES:
                 return 'query getCustomEntities {
                     actorsList {
-                        _id
+                        id
                         name
                         age
                         alive
@@ -596,8 +596,8 @@ trait Base
             case self::$UPDATE_DOCUMENT:
                 return 'mutation updateDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!]){
                     databasesUpdateDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, data: $data, permissions: $permissions) {
-                        _id
-                        _collectionId
+                        id
+                        collectionId
                         data
                     }
                 }';
@@ -611,7 +611,7 @@ trait Base
             case self::$GET_USER:
                 return 'query getUser($userId : String!) {
                     usersGet(userId : $userId) {
-                        _id
+                        id
                         name
                         registration
                         status
@@ -634,7 +634,7 @@ trait Base
                     usersListSessions(userId : $userId) {
                         total 
                         sessions {
-                            _id
+                            id
                             userId
                         }
                     }
@@ -644,7 +644,7 @@ trait Base
                     usersListMemberships(userId : $userId) {
                         total
                         memberships {
-                            _id
+                            id
                             userId
                             teamId
                         }
@@ -665,7 +665,7 @@ trait Base
                     usersList(queries: $queries, search: $search) {
                         total
                         users {
-                            _id
+                            id
                             name
                             registration
                             status
@@ -677,7 +677,7 @@ trait Base
             case self::$CREATE_USER:
                 return 'mutation createUser($userId: String!, $email: String!, $password: String!, $name: String){
                     usersCreate(userId: $userId, email: $email, password: $password, name: $name) {
-                        _id
+                        id
                         name
                         registration
                         status
@@ -688,7 +688,7 @@ trait Base
             case self::$UPDATE_USER_STATUS:
                 return 'mutation updateUserStatus($userId: String!, $status: Boolean!){
                     usersUpdateStatus(userId: $userId, status: $status) {
-                        _id
+                        id
                         name
                         email
                     }
@@ -696,7 +696,7 @@ trait Base
             case self::$UPDATE_USER_NAME:
                 return 'mutation updateUserName($userId: String!, $name: String!){
                     usersUpdateName(userId: $userId, name: $name) {
-                        _id
+                        id
                         name
                         registration
                         status
@@ -707,7 +707,7 @@ trait Base
             case self::$UPDATE_USER_EMAIL:
                 return 'mutation updateUserEmail($userId: String!, $email: String!){
                     usersUpdateEmail(userId: $userId, email: $email) {
-                        _id
+                        id
                         name
                         registration
                         status
@@ -718,7 +718,7 @@ trait Base
             case self::$UPDATE_USER_PASSWORD:
                 return 'mutation updateUserPassword($userId: String!, $password: String!){
                     usersUpdatePassword(userId: $userId, password: $password) {
-                        _id
+                        id
                         name
                         registration
                         status
@@ -750,7 +750,7 @@ trait Base
             case self::$UPDATE_USER_PHONE_VERIFICATION:
                 return 'mutation updateUserPhoneVerification($userId: String!, $phoneVerification: Boolean!){
                     usersUpdatePhoneVerification(userId: $userId, phoneVerification: $phoneVerification) {
-                        _id
+                        id
                         name
                         email
                     }
@@ -888,7 +888,7 @@ trait Base
             case self::$GET_ACCOUNT:
                 return 'query getAccount {
                     accountGet {
-                        _id
+                        id
                         name
                         email
                         status
@@ -899,7 +899,7 @@ trait Base
             case self::$CREATE_ACCOUNT:
                 return 'mutation createAccount($userId: String!, $email: String!, $password: String!, $name: String){
                     accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
-                        _id
+                        id
                         name
                         registration
                         status
@@ -910,7 +910,7 @@ trait Base
             case self::$UPDATE_ACCOUNT_NAME:
                 return 'mutation updateAccountName($name: String!){
                     accountUpdateName(name: $name) {
-                        _id
+                        id
                         name
                         status
                         email
@@ -920,7 +920,7 @@ trait Base
             case self::$UPDATE_ACCOUNT_EMAIL:
                 return 'mutation updateAccountEmail($email: String!, $password: String!){
                     accountUpdateEmail(email: $email, password: $password) {
-                        _id
+                        id
                         name
                         status
                         email
@@ -929,7 +929,7 @@ trait Base
             case self::$UPDATE_ACCOUNT_PASSWORD:
                 return 'mutation updateAccountPassword($password: String!, $oldPassword: String!){
                     accountUpdatePassword(password: $password, oldPassword: $oldPassword) {
-                        _id
+                        id
                         name
                         status
                         email
@@ -938,7 +938,7 @@ trait Base
             case self::$UPDATE_ACCOUNT_PHONE:
                 return 'mutation updateAccountPhone($phone: String!, $password: String!){
                     accountUpdatePhone(phone: $phone, password: $password) {
-                        _id
+                        id
                         name
                         status
                         email
@@ -948,7 +948,7 @@ trait Base
             case self::$UPDATE_ACCOUNT_PREFS:
                 return 'mutation updateAccountPrefs($userId: String!, $prefs: Json!){
                     accountUpdatePrefs(userId: $userId, prefs: $prefs) {
-                        _id
+                        id
                         name
                         registration
                         status
@@ -966,14 +966,14 @@ trait Base
             case self::$GET_ACCOUNT_SESSION:
                 return 'query getAccountSession($sessionId: String!) {
                     accountGetSession(sessionId: $sessionId) {
-                        _id
+                        id
                         userId
                     }
                 }';
             case self::$CREATE_ACCOUNT_SESSION:
                 return 'mutation createAccountEmailSession($email: String!, $password: String!){
                     accountCreateEmailSession(email: $email, password: $password) {
-                        _id
+                        id
                         userId
                         expire
                         ip
@@ -1011,7 +1011,7 @@ trait Base
             case self::$CREATE_ANONYMOUS_SESSION:
                 return 'mutation createAnonymousSession {
                     accountCreateAnonymousSession {
-                        _id
+                        id
                         userId
                     }
                 }';
@@ -1032,7 +1032,7 @@ trait Base
                     accountListSessions {
                         total
                         sessions {
-                            _id
+                            id
                             userId
                             expire
                         }
@@ -1101,7 +1101,7 @@ trait Base
             case self::$GET_TEAM:
                 return 'query getTeam($teamId: String!){
                     teamsGet(teamId: $teamId) {
-                        _id
+                        id
                         name
                         total
                     }
@@ -1119,7 +1119,7 @@ trait Base
             case self::$CREATE_TEAM:
                 return 'mutation createTeam($teamId: String!, $name: String!, $roles: [String]){
                     teamsCreate(teamId: $teamId, name : $name, roles: $roles) {
-                        _id
+                        id
                         name
                         total
                     }
@@ -1127,7 +1127,7 @@ trait Base
             case self::$UPDATE_TEAM:
                 return 'mutation updateTeam($teamId: String!, $name: String!){
                     teamsUpdate(teamId: $teamId, name : $name) {
-                        _id
+                        id
                         name
                         total
                     }
@@ -1141,7 +1141,7 @@ trait Base
             case self::$GET_TEAM_MEMBERSHIP:
                 return 'query getTeamMembership($teamId: String!, $membershipId: String!){
                     teamsGetMembership(teamId: $teamId, membershipId: $membershipId) {
-                        _id
+                        id
                         teamId
                         userId
                         userName
@@ -1153,7 +1153,7 @@ trait Base
                     teamsListMemberships(teamId: $teamId) {
                         total
                         memberships {
-                            _id
+                            id
                             teamId
                             userId
                             userName
@@ -1164,7 +1164,7 @@ trait Base
             case self::$CREATE_TEAM_MEMBERSHIP:
                 return 'mutation createTeamMembership($teamId: String!, $email: String!, $name: String, $roles: [String!]!, $url: String!){
                     teamsCreateMembership(teamId: $teamId, email: $email, name : $name, roles: $roles, url: $url) {
-                        _id
+                        id
                         userId
                         teamId
                         userName 
@@ -1178,7 +1178,7 @@ trait Base
             case self::$UPDATE_TEAM_MEMBERSHIP_ROLES:
                 return 'mutation updateTeamMembershipRoles($teamId: String!, $membershipId: String!, $roles: [String!]!){
                     teamsUpdateMembershipRoles(teamId: $teamId, membershipId: $membershipId, roles: $roles) {
-                        _id
+                        id
                         userId
                         teamId
                         userName 
@@ -1192,7 +1192,7 @@ trait Base
             case self::$UPDATE_TEAM_MEMBERSHIP_STATUS:
                 return 'mutation updateTeamMembership($teamId: String!, $membershipId: String!, $userId: String!, $secret: String!){
                     teamsUpdateMembershipStatus(teamId: $teamId, membershipId: $membershipId, userId: $userId, secret: $secret ) {
-                        _id
+                        id
                         userId
                         teamId
                         userName 
@@ -1212,7 +1212,7 @@ trait Base
             case self::$GET_FUNCTION:
                 return 'query getFunction($functionId: String!) { 
                     functionsGet(functionId: $functionId) {
-                        _id
+                        id
                         name
                         runtime
                         execute
@@ -1223,7 +1223,7 @@ trait Base
                     functionsList {
                         total
                         functions {
-                            _id
+                            id
                             name
                             runtime
                             execute
@@ -1246,7 +1246,7 @@ trait Base
                     functionsListDeployments(functionId: $functionId) {
                         total
                         deployments {
-                            _id
+                            id
                             buildStdout
                             buildStderr
                         }
@@ -1255,7 +1255,7 @@ trait Base
             case self::$GET_DEPLOYMENT:
                 return 'query getDeployment($functionId: String!, $deploymentId: String!) {
                     functionsGetDeployment(functionId: $functionId, deploymentId: $deploymentId) {
-                        _id
+                        id
                         buildId
                         buildStdout
                         buildStderr
@@ -1264,7 +1264,7 @@ trait Base
             case self::$CREATE_FUNCTION:
                 return 'mutation createFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $events: [String], $schedule: String, $timeout: Int) {
                     functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, events: $events, schedule: $schedule, timeout: $timeout) {
-                        _id
+                        id
                         name
                         runtime
                         execute
@@ -1273,7 +1273,7 @@ trait Base
             case self::$UPDATE_FUNCTION:
                 return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $events: [String], $schedule: String, $timeout: Int) {
                     functionsUpdate(functionId: $functionId, name: $name, execute: $execute, events: $events, schedule: $schedule, timeout: $timeout) {
-                        _id
+                        id
                         name
                         runtime
                         execute
@@ -1282,7 +1282,7 @@ trait Base
             case self::$UPDATE_DEPLOYMENT:
                 return 'mutation updateFunctionDeployment($functionId: String!, $deploymentId: String!) {
                     functionsUpdateDeployment(functionId: $functionId, deploymentId: $deploymentId) {
-                        _id
+                        id
                         name
                         runtime
                         execute
@@ -1297,7 +1297,7 @@ trait Base
             case self::$CREATE_VARIABLE:
                 return 'mutation createVariable($functionId: String!, $key: String!, $value: String!) {
                     functionsCreateVariable(functionId: $functionId, key: $key, value: $value) {
-                        _id
+                        id
                         key
                         value
                     }
@@ -1307,7 +1307,7 @@ trait Base
                     functionsListVariables(functionId: $functionId) {
                         total
                         variables {
-                            _id
+                            id
                             key
                             value
                         }
@@ -1316,7 +1316,7 @@ trait Base
             case self::$GET_VARIABLE:
                 return 'query getVariable($functionId: String!, $variableId: String!) {
                     functionsGetVariable(functionId: $functionId, variableId: $variableId) {
-                        _id
+                        id
                         key
                         value
                     }
@@ -1324,7 +1324,7 @@ trait Base
             case self::$UPDATE_VARIABLE:
                 return 'mutation updateVariable($functionId: String!, $variableId: String!, $key: String!, $value: String) {
                     functionsUpdateVariable(functionId: $functionId, variableId: $variableId, key: $key, value: $value) {
-                        _id
+                        id
                         key
                         value
                     }
@@ -1338,7 +1338,7 @@ trait Base
             case self::$CREATE_DEPLOYMENT:
                 return 'mutation createDeployment($functionId: String!, $entrypoint: String!, $code: InputFile!, $activate: Boolean!) {
                     functionsCreateDeployment(functionId: $functionId, entrypoint: $entrypoint, code: $code, activate: $activate) {
-                        _id
+                        id
                         buildId
                         entrypoint
                         size
@@ -1356,7 +1356,7 @@ trait Base
             case self::$GET_EXECUTION:
                 return 'query getExecution($functionId: String!$executionId: String!) {
                     functionsGetExecution(functionId: $functionId, executionId: $executionId) {
-                        _id
+                        id
                         status
                         stderr
                     }
@@ -1366,7 +1366,7 @@ trait Base
                     functionsListExecutions(functionId: $functionId) {
                         total
                         executions {
-                            _id
+                            id
                             status
                             stderr
                         }
@@ -1375,7 +1375,7 @@ trait Base
             case self::$CREATE_EXECUTION:
                 return 'mutation createExecution($functionId: String!, $data: String, $async: Boolean) {
                     functionsCreateExecution(functionId: $functionId, data: $data, async: $async) {
-                        _id
+                        id
                         status
                         stderr
                     }
@@ -1395,10 +1395,10 @@ trait Base
             case self::$CREATE_BUCKET:
                 return 'mutation createBucket($bucketId: String!, $name: String!, $fileSecurity: Boolean, $permissions: [String!]) {
                     storageCreateBucket(bucketId: $bucketId, name: $name, fileSecurity: $fileSecurity, permissions: $permissions) {
-                        _id
-                        _createdAt
-                        _updatedAt
-                        _permissions
+                        id
+                        createdAt
+                        updatedAt
+                        permissions
                         name
                         enabled
                         fileSecurity
@@ -1409,7 +1409,7 @@ trait Base
                     storageListBuckets {
                         total
                         buckets {
-                            _id
+                            id
                             name
                             enabled
                         }
@@ -1418,7 +1418,7 @@ trait Base
             case self::$GET_BUCKET:
                 return 'query getBucket($bucketId: String!) {
                     storageGetBucket(bucketId: $bucketId) {
-                        _id
+                        id
                         name
                         enabled
                     }
@@ -1426,7 +1426,7 @@ trait Base
             case self::$UPDATE_BUCKET:
                 return 'mutation updateBucket($bucketId: String!, $name: String!, $fileSecurity: Boolean, $permissions: [String!]) {
                     storageUpdateBucket(bucketId: $bucketId, name: $name, fileSecurity: $fileSecurity, permissions: $permissions) {
-                        _id
+                        id
                         name
                         enabled
                     }
@@ -1440,7 +1440,7 @@ trait Base
             case self::$CREATE_FILE:
                 return 'mutation createFile($bucketId: String!, $fileId: String!, $file: InputFile!, $permissions: [String!]) {
                     storageCreateFile(bucketId: $bucketId, fileId: $fileId, file: $file, permissions: $permissions) {
-                        _id
+                        id
                         bucketId
                         name
                     }
@@ -1450,7 +1450,7 @@ trait Base
                     storageListFiles(bucketId: $bucketId) {
                         total
                         files {
-                            _id
+                            id
                             name
                         }
                     }
@@ -1458,7 +1458,7 @@ trait Base
             case self::$GET_FILE:
                 return 'query getFile($bucketId: String!, $fileId: String!) {
                     storageGetFile(bucketId: $bucketId, fileId: $fileId) {
-                        _id
+                        id
                         name
                     }
                 }';
@@ -1483,7 +1483,7 @@ trait Base
             case self::$UPDATE_FILE:
                 return 'mutation updateFile($bucketId: String!, $fileId: String!, $permissions: [String!]) {
                     storageUpdateFile(bucketId: $bucketId, fileId: $fileId, permissions: $permissions) {
-                        _id
+                        id
                         name
                     }
                 }';
@@ -1563,14 +1563,14 @@ trait Base
             case self::$CREATE_DATABASE_STACK:
                 return 'mutation complex($databaseId: String!, $databaseName: String!, $collectionId: String!, $collectionName: String!, $documentSecurity: Boolean!, $collectionPermissions: [String!]!) {
                     databasesCreate(databaseId: $databaseId, name: $databaseName) {
-                        _id
+                        id
                         name
                     }
                     databasesCreateCollection(databaseId: $databaseId, collectionId: $collectionId, name: $collectionName, documentSecurity: $documentSecurity, permissions: $collectionPermissions) {
-                        _id
-                        _createdAt
-                        _updatedAt
-                        _permissions
+                        id
+                        createdAt
+                        updatedAt
+                        permissions
                         databaseId
                         name
                         documentSecurity
@@ -1611,9 +1611,9 @@ trait Base
                         array
                     }
                     usersCreate(userId: "unique()", email: "test1@appwrite.io", password: "password", name: "Tester 1") {
-                        _id
-                        _createdAt
-                        _updatedAt
+                        id
+                        createdAt
+                        updatedAt
                         name
                         phone
                         email

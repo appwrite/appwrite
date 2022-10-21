@@ -52,7 +52,7 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $database['_id'],
+                'databaseId' => $database['id'],
                 'collectionId' => 'actors',
                 'name' => 'Actors',
                 'documentSecurity' => false,
@@ -92,8 +92,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -123,8 +123,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'age',
                 'min' => 18,
                 'max' => 150,
@@ -155,8 +155,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'alive',
                 'required' => true,
             ]
@@ -185,8 +185,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'salary',
                 'min' => 1000.0,
                 'max' => 999999.99,
@@ -218,8 +218,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'email',
                 'required' => true,
             ]
@@ -248,8 +248,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'role',
                 'elements' => [
                     'crew',
@@ -283,8 +283,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'dob',
                 'required' => true,
             ]
@@ -313,8 +313,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'ip',
                 'required' => false,
                 'default' => '::1',
@@ -344,8 +344,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'url',
                 'required' => false,
                 'default' => 'https://appwrite.io',
@@ -379,8 +379,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'index',
                 'type' => 'key',
                 'attributes' => [
@@ -420,8 +420,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -527,7 +527,7 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $database['_id'],
+                'databaseId' => $database['id'],
             ]
         ];
 
@@ -552,7 +552,7 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
+                'databaseId' => $data['database']['id'],
             ]
         ];
 
@@ -577,8 +577,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
             ]
         ];
 
@@ -604,8 +604,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
             ]
         ];
 
@@ -630,8 +630,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'name',
             ]
         ];
@@ -657,8 +657,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
             ]
         ];
 
@@ -683,8 +683,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => $data['index']['key'],
             ]
         ];
@@ -710,8 +710,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
             ]
         ];
 
@@ -736,9 +736,9 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => $data['document']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
+                'documentId' => $data['document']['id'],
             ]
         ];
 
@@ -785,7 +785,7 @@ class DatabaseServerTest extends Scope
 //        $gqlPayload = [
 //            'query' => $query,
 //            'variables' => [
-//                'id' => $data['_id'],
+//                'id' => $data['id'],
 //            ]
 //        ];
 //
@@ -810,7 +810,7 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $database['_id'],
+                'databaseId' => $database['id'],
                 'name' => 'New Database Name',
             ]
         ];
@@ -836,8 +836,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'name' => 'New Collection Name',
                 'documentSecurity' => false,
             ]
@@ -864,9 +864,9 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => $data['document']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
+                'documentId' => $data['document']['id'],
                 'data' => [
                     'name' => 'New Document Name',
                 ],
@@ -896,7 +896,7 @@ class DatabaseServerTest extends Scope
 //        $gqlPayload = [
 //            'query' => $query,
 //            'variables' => [
-//                'id' => $data['_id'],
+//                'id' => $data['id'],
 //                'name' => 'New Custom Entity Name',
 //            ]
 //        ];
@@ -924,9 +924,9 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
-                'documentId' => $data['document']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
+                'documentId' => $data['document']['id'],
             ]
         ];
 
@@ -950,7 +950,7 @@ class DatabaseServerTest extends Scope
 //        $gqlPayload = [
 //            'query' => $query,
 //            'variables' => [
-//                'id' => $data['_id'],
+//                'id' => $data['id'],
 //            ]
 //        ];
 //
@@ -974,8 +974,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
                 'key' => 'name',
             ]
         ];
@@ -1000,8 +1000,8 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['_id'],
-                'collectionId' => $data['collection']['_id'],
+                'databaseId' => $data['database']['id'],
+                'collectionId' => $data['collection']['id'],
             ]
         ];
 
@@ -1025,7 +1025,7 @@ class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $database['_id'],
+                'databaseId' => $database['id'],
             ]
         ];
 

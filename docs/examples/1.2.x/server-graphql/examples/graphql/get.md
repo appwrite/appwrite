@@ -1,6 +1,0 @@
-query {
-    graphqlGet(
-        query: "[QUERY]"
-    ) {
-    }
-}
