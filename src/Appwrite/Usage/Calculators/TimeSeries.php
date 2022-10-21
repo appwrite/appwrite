@@ -343,7 +343,7 @@ class TimeSeries extends Calculator
         'files.$all.storage.size' => [
             'table' => 'appwrite_usage_files_{scope}_storage_size'
         ],
-        'files.$bucketId.storage.size' => [
+        'files.bucketId.storage.size' => [
             'table' => 'appwrite_usage_files_{scope}_storage_size',
             'groupBy' => ['bucketId']
         ]
