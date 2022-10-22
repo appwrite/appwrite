@@ -50,7 +50,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
 #### Audit
 * audits.event - Identify the log in human-readable text.
-* audits.userId - Signals the extraction of $userId in places that it's not available natively.
+* audits.userId - Signals the extraction of userId in places that it's not available natively.
 * audits.resource - Signals the extraction part of the resource.
 
 
@@ -65,7 +65,7 @@ App::post('/v1/account/create')
 * sdk.auth - Array of authentication types is passed in order to impose different authentication methods in different situations.
 * sdk.namespace - Refers to the route namespace.
 * sdk.method - Refers to the sdk method that needs to called.
-* sdk.description - Description of the route,using markdown format.
+* sdk.description - Description of the route, using markdown format.
 * sdk.sdk.response.code - Refers to the route http response status code expected.
 * sdk.auth.response.model - Refers the route http response expected.
 
