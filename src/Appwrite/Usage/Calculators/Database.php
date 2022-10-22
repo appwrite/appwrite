@@ -216,10 +216,8 @@ class Database extends Calculator
      */
     private function count(UtopiaDatabase $database, string $projectId, string $collection, ?string $metric = null): int
     {
-        $this->database->setNamespace('_' . $projectId);
-
         try {
-            $count = $this->database->count($collection);
+            $count = $database->count($collection);
             if (!is_null($metric)) {
                 $this->createPerPeriodMetric($database, $projectId, (string) $metric, $count);
             }

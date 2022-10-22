@@ -303,7 +303,6 @@ class TimeSeries extends Calculator
     private function createOrUpdateMetric(string $projectId, string $time, string $period, string $metric, int $value, int $type): void
     {
         $id = \md5("{$time}_{$period}_{$metric}");
-        $this->database->setNamespace('console');
         $project = $this->database->getDocument('projects', $projectId);
         $database = call_user_func($this->getProjectDB, $project);
 
