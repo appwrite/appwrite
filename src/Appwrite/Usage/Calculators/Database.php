@@ -84,7 +84,7 @@ class Database extends Calculator
      * @throws Authorization
      * @throws Structure
      */
-    protected function createOrUpdateMetric(UtopiaDatabase $database, String $projectId, string $metric, string $period, string $time, int $value): void
+    protected function createOrUpdateMetric(UtopiaDatabase $database, string $projectId, string $metric, string $period, string $time, int $value): void
     {
         $id = \md5("{$time}_{$period}_{$metric}");
 
