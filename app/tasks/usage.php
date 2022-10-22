@@ -9,6 +9,7 @@ use InfluxDB\Database as InfluxDatabase;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database as UtopiaDatabase;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Validator\WhiteList;
@@ -50,10 +51,10 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
     Console::warning($error->getTraceAsString());
 };
 
-function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB, callable $logError): void
+function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB, callable $getProjectDB, callable $logError): void
 {
     $interval = (int) App::getEnv('_APP_USAGE_TIMESERIES_INTERVAL', '30'); // 30 seconds (by default)
-    $usage = new TimeSeries($database, $influxDB, $logError);
+    $usage = new TimeSeries($database, $influxDB, $getProjectDB, $logError);
 
     Console::loop(function () use ($interval, $usage) {
         $now = date('d-m-Y H:i:s', time());
@@ -68,11 +69,11 @@ function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB,
     }, $interval);
 }
 
-function aggregateDatabase(UtopiaDatabase $database, callable $logError): void
+function aggregateDatabase(UtopiaDatabase $database, callable $getProjectDB, callable $logError): void
 {
     $interval = (int) App::getEnv('_APP_USAGE_DATABASE_INTERVAL', '900'); // 15 minutes (by default)
-    $usage = new Database($database, $logError);
-    $aggregrator = new Aggregator($database, $logError);
+    $usage = new Database($database, $getProjectDB, $logError);
+    $aggregrator = new Aggregator($database, $getProjectDB, $logError);
 
     Console::loop(function () use ($interval, $usage, $aggregrator) {
         $now = date('d-m-Y H:i:s', time());
@@ -97,13 +98,14 @@ $cli
 
         $database = getConsoleDB();
         $influxDB = getInfluxDB();
+        $getProjectDB = fn (Document $project) => getProjectDB($project);
 
         switch ($type) {
             case 'timeseries':
-                aggregateTimeseries($database, $influxDB, $logError);
+                aggregateTimeseries($database, $influxDB, $getProjectDB, $logError);
                 break;
             case 'database':
-                aggregateDatabase($database, $logError);
+                aggregateDatabase($database, $getProjectDB, $logError);
                 break;
             default:
                 Console::error("Unsupported usage aggregation type");
