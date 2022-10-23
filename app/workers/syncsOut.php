@@ -132,7 +132,6 @@ function call($regions, $keys): void
 
     foreach ($regions as $code => $region) {
         $status = send($region['domain'] . '/v1/edge', $token, ['keys' => $keys]);
-        var_dump('Sending request...............');
         if ($status !== Response::STATUS_CODE_OK) {
             getDB(DATABASE_CONSOLE)->createDocument('syncs', new Document([
                 'regionOrg' => CURRENT_REGION,
@@ -170,24 +169,12 @@ $server->job()
 
 
         if (!empty($payload['chunk'])) {
-            var_dump('from chunk');
             call($regions, $payload['chunk']);
             return;
         }
 
          $keys[$payload['key']] = null;
         if (count($keys) >= MAX_KEY_COUNT  || ($counter + SUBMITION_INTERVAL) < time()) {
-            var_dump('from key');
-            var_dump([
-                'regions' =>  array_keys($regions),
-                'because_time' => ($counter + SUBMITION_INTERVAL) < time(),
-                'because_count' => count($keys) >= MAX_KEY_COUNT,
-                'count' => count($keys),
-                'counter' => $counter + SUBMITION_INTERVAL,
-                'time' => time(),
-
-
-            ]);
             call($regions, array_keys($keys));
             $counter = time();
             $keys = [];
