@@ -929,10 +929,6 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-$register->set('syncOut', function () {
-    return new SyncOut();
-});
-
 $register->set('workerRedisConnection', function () {
     return new redisQueue('redis', 6379);
 });
@@ -982,21 +978,34 @@ App::setResource('dbForProject', function ($db, $cache, Document $project, $regi
 }, ['db', 'cache', 'project', 'register']);
 
 App::setResource('dbForConsole', function ($db, $cache, $register) {
-
     $cache = new Cache(new RedisCache($cache));
-
     $cache->on(cache::EVENT_SAVE, function ($key) use ($register) {
+
         $register
-            ->get('syncOut')
-            ->addKey($key)
-            ->trigger();
+            ->get('workerSyncOut')
+            ->resetStats();
+        $register
+            ->get('workerSyncOut')
+            ->enqueue([
+                'type' => 'saved from init',
+                'value' => [
+                    'key' => $key
+                ]
+            ]);
     });
 
     $cache->on(cache::EVENT_PURGE, function ($key) use ($register) {
         $register
-            ->get('syncOut')
-            ->addKey($key)
-            ->trigger();
+            ->get('workerSyncOut')
+            ->resetStats();
+        $register
+            ->get('workerSyncOut')
+            ->enqueue([
+                'type' => 'purge from init',
+                'value' => [
+                    'key' => $key
+                ]
+            ]);
     });
 
     $database = new Database(new MariaDB($db), $cache);

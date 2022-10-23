@@ -53,17 +53,6 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => ID::custom('requestedAt'),
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
                 '$id' => ID::custom('status'),
                 'type' => Database::VAR_INTEGER,
                 'size' => 256,
@@ -75,9 +64,9 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_requestedAt_status'),
+                '$id' => ID::custom('_key_status'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['requestedAt', 'status'],
+                'attributes' => ['status'],
                 'lengths' => [],
                 'orders' => [],
             ],
