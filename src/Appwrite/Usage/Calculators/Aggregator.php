@@ -187,7 +187,7 @@ class Aggregator extends Database
         $this->database->setNamespace('_' . $projectId);
         $value = (int) $this->database->sum('stats', 'value', [
             Query::equal('metric', [$metric]),
-            Query::equal('period', ['30m']),
+            Query::equal('period', ['1h']),
             Query::greaterThanEqual('time', $beginOfDay),
             Query::lessThanEqual('time', $endOfDay),
         ]);

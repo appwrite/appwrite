@@ -15,8 +15,8 @@ class Database extends Calculator
 {
     protected array $periods = [
         [
-            'key' => '30m',
-            'multiplier' => 1800,
+            'key' => '1h',
+            'multiplier' => 3600,
         ],
         [
             'key' => '1d',
@@ -48,7 +48,7 @@ class Database extends Calculator
         foreach ($this->periods as $options) {
             $period = $options['key'];
             $date = new \DateTime();
-            if ($period === '30m') {
+            if ($period === '1h') {
                 $minutes = $date->format('i') >= '30' ? "30" : "00";
                 $time = $date->format('Y-m-d H:' . $minutes . ':00');
             } elseif ($period === '1d') {
