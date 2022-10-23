@@ -22,9 +22,9 @@ App::post('/v1/edge')
     ->inject('register')
     ->action(function (array $keys, Request $request, Response $response, Registry $register) {
 
-        //if (empty($keys)) {
+        if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
-        //}
+        }
 
         $token = $request->getHeader('authorization');
         $token = str_replace(["Bearer"," "], "", $token);

@@ -13,6 +13,8 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\Exception\Authorization;
+use Utopia\Database\Exception\Structure;
 use Utopia\Queue;
 use Utopia\Queue\Message;
 
@@ -23,10 +25,12 @@ static $counter;
 
 const DATABASE_PROJECT = 'project';
 const DATABASE_CONSOLE = 'console';
-const SUBMITION_INTERVAL = 10;
-const MAX_KEY_COUNT = 100;
+const SUBMITION_INTERVAL = 20;
+const MAX_KEY_COUNT = 10;
+const MAX_CURL_SEND_ATTEMPTS = 4;
 
 define("CURRENT_REGION", App::getEnv('_APP_REGION', 'nyc1'));
+
 /**
  * Get console database
  * @param string $type One of (internal, external, console)
@@ -39,7 +43,6 @@ function getDB(string $type, string $projectId = '', string $projectInternalId =
 {
     global $register;
 
-    $namespace = '';
     $sleep = DATABASE_RECONNECT_SLEEP; // overwritten when necessary
 
     switch ($type) {
@@ -102,7 +105,7 @@ function send($url, $token, $keys): int
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($keys));
 
-    for ($attempts = 0; $attempts < 5; $attempts++) {
+    for ($attempts = 0; $attempts < MAX_CURL_SEND_ATTEMPTS; $attempts++) {
         curl_exec($ch);
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -116,6 +119,31 @@ function send($url, $token, $keys): int
     return $responseStatus;
 }
 
+/**
+ * @throws Authorization
+ * @throws Structure
+ * @throws Exception
+ */
+function call($regions, $keys): void
+{
+
+    $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 600, 10);
+    $token = $jwt->encode([]);
+
+    foreach ($regions as $code => $region) {
+        $status = send($region['domain'] . '/v1/edge', $token, ['keys' => $keys]);
+        if ($status !== Response::STATUS_CODE_OK) {
+            getDB(DATABASE_CONSOLE)->createDocument('syncs', new Document([
+                'requestedAt' => DateTime::now(),
+                'regionOrg' => CURRENT_REGION,
+                'regionDest' => $code,
+                'keys' => $keys,
+                'status' => $status,
+            ]));
+        }
+    }
+}
+
 $connection = new Queue\Connection\Redis('redis');
 $adapter    = new Queue\Adapter\Swoole($connection, 1, 'syncOut');
 $server     = new Queue\Server($adapter);
@@ -126,49 +154,31 @@ $server->job()
 
         $payload = $message->getPayload()['value'];
         $regions = Config::getParam('regions', true);
+        $regions = array_filter(
+            $regions,
+            fn ($region) => CURRENT_REGION !== $region,
+            ARRAY_FILTER_USE_KEY
+        );
 
         if (!empty($payload['region'])) {
-            $tmp = $regions[$payload['region']];
-            $regions = [];
-            $regions[$payload['region']] = $tmp;
+            $regions = array_filter(
+                $regions,
+                fn ($region) => $payload['region'] === $region,
+                ARRAY_FILTER_USE_KEY
+            );
         }
 
-        $currentRegion = App::getEnv('_APP_REGION', 'nyc1');
-        $keys[$payload['key']] = null;
 
-        if (count($keys) > MAX_KEY_COUNT  || ($counter + SUBMITION_INTERVAL) < time()) {
+        if (!empty($payload['chunk'])) {
+            call($regions, $payload['chunk']);
+            return;
+        }
 
-            $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 600, 10);
-            $token = $jwt->encode([]);
-
-            foreach ($regions as $code => $region) {
-                if (CURRENT_REGION === $code) {
-                    continue;
-                }
-
-                $status = send($region['domain'] . '/v1/edge', $token, ['keys' => array_keys($keys)]);
-
-//                var_dump([
-//                    'keyscount' =>  count($keys),
-//                    'keys' =>  array_keys($keys),
-//                    'timestamp' => date('m/d/Y H:i:s', $counter)
-//                ]);
-
-                if ($status !== Response::STATUS_CODE_OK) {
-                    getDB(DATABASE_CONSOLE)->createDocument('syncs', new Document([
-                        'requestedAt' => DateTime::now(),
-                        'regionOrg'  => $currentRegion,
-                        'regionDest' => $code,
-                        'keys' => array_keys($keys),
-                        'status' => $status,
-                    ]));
-                }
-            }
-
+         $keys[$payload['key']] = null;
+        if (count($keys) >= MAX_KEY_COUNT  || ($counter + SUBMITION_INTERVAL) < time()) {
+            call($regions, array_keys($keys));
             $counter = time();
             $keys = [];
-            //var_dump('new time set -> ' . $counter);
-            //var_dump($keys);
         }
     });
 

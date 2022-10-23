@@ -57,8 +57,6 @@ function syncRegionalCache($dbForConsole, $regionOrg): void
     if (count($chunks) > 0) {
         Console::info("[{$time}] Found " . \count($chunks) . " cache key chunks to purge.");
         foreach ($chunks as $chunk) {
-            $keys =  $chunk->getAttribute('keys');
-            foreach ($keys ?? [] as $key) {
                 $register
                     ->get('workerSyncOut')
                     ->resetStats();
@@ -69,10 +67,10 @@ function syncRegionalCache($dbForConsole, $regionOrg): void
                         'type' => 'from cloud maintenance',
                         'value' => [
                             'region' => $chunk->getAttribute('regionDest'),
-                            'key' => $key
+                            'chunk' => $chunk->getAttribute('keys')
                         ]
                     ]);
-            }
+
             $dbForConsole->deleteDocument('syncs', $chunk->getId());
         }
     } else {
