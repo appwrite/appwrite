@@ -217,16 +217,10 @@ class DeletesV1 extends Worker
      * @param string $datetime1d
      * @param string $datetime1h
      */
-    protected function deleteUsageStats(string $datetime1d, string $datetime1h)
+    protected function deleteUsageStats(string $datetime1h)
     {
-        $this->deleteForProjectIds(function (string $projectId) use ($datetime1d, $datetime1h) {
+        $this->deleteForProjectIds(function (string $projectId) use ($datetime1h) {
             $dbForProject = $this->getProjectDB($projectId);
-            // Delete Usage stats
-            $this->deleteByGroup('stats', [
-                Query::lessThan('time', $datetime1d),
-                Query::equal('period', ['1d']),
-            ], $dbForProject);
-
             $this->deleteByGroup('stats', [
                 Query::lessThan('time', $datetime1h),
                 Query::equal('period', ['1h']),
