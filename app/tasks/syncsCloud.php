@@ -44,7 +44,7 @@ function getConsoleDatabase(): Database
     return $database;
 }
 
-function syncRegionalCache($dbForConsole, $regionOrg): void
+function resendFailedRequest($dbForConsole, $regionOrg): void
 {
     global $register;
 
@@ -92,6 +92,6 @@ $cli
             $time = DateTime::now();
             $currentRegion = App::getEnv('_APP_REGION', 'nyc1');
             Console::info("[{$time}] Notifying workers with cloud tasks every {$interval} seconds");
-            syncRegionalCache($database, $currentRegion);
+            resendFailedRequest($database, $currentRegion);
         }, $interval);
     });

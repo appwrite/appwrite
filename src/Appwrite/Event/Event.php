@@ -35,12 +35,6 @@ class Event
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
     public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
-    public const SYNCS_IN_QUEUE_NAME = 'v1-syncs-in';
-    public const SYNCS_IN_CLASS_NAME = 'SyncsInV1';
-
-    public const SYNCS_OUT_QUEUE_NAME = 'v1-syncs-out';
-    public const SYNCS_OUT_CLASS_NAME = 'SyncsOutV1';
-
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
