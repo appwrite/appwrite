@@ -2,10 +2,6 @@
 
 global $cli, $register;
 
-use Appwrite\Stats\Usage;
-use Appwrite\Stats\UsageDB;
-use Appwrite\Usage\Calculators\Aggregator;
-use Appwrite\Usage\Calculators\Database;
 use Appwrite\Usage\Calculators\TimeSeries;
 use InfluxDB\Database as InfluxDatabase;
 use Utopia\App;
@@ -116,9 +112,8 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
 
 $cli
     ->task('usage')
-    ->param('type', 'timeseries', new WhiteList(['timeseries', 'database']))
     ->desc('Schedules syncing data from influxdb to Appwrite console db')
-    ->action(function (string $type) use ($register, $logError) {
+    ->action(function () use ($register, $logError) {
         Console::title('Usage Aggregation V1');
         Console::success(APP_NAME . ' usage aggregation process v1 has started');
 
