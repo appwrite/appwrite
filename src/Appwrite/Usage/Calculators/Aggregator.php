@@ -9,7 +9,7 @@ use Utopia\Database\Query;
 
 class Aggregator extends Database
 {
-    protected function aggregateDatabaseMetrics(Document $project): void
+    protected function aggregateDatabaseMetrics(UtopiaDatabase $database, Document $project): void
     {
         $databasesGeneralMetrics = [
             'databases.$all.requests.create',
@@ -27,8 +27,8 @@ class Aggregator extends Database
         ];
 
         foreach ($databasesGeneralMetrics as $metric) {
-            $this->aggregateDailyMetric($project, $metric);
-            $this->aggregateMonthlyMetric($project, $metric);
+            $this->aggregateDailyMetric($database, $project, $metric);
+            $this->aggregateMonthlyMetric($database, $project, $metric);
         }
 
         $databasesDatabaseMetrics = [
@@ -42,12 +42,12 @@ class Aggregator extends Database
             'documents.databaseId.requests.delete',
         ];
 
-        $this->foreachDocument($project, 'databases', [], function (Document $database) use ($databasesDatabaseMetrics, $project) {
-            $databaseId = $database->getId();
+        $this->foreachDocument($project, 'databases', [], function (Document $db) use ($databasesDatabaseMetrics, $project, $database) {
+            $databaseId = $db->getId();
             foreach ($databasesDatabaseMetrics as $metric) {
                 $metric = str_replace('databaseId', $databaseId, $metric);
-                $this->aggregateDailyMetric($project, $metric);
-                $this->aggregateMonthlyMetric($project, $metric);
+                $this->aggregateDailyMetric($database, $project, $metric);
+                $this->aggregateMonthlyMetric($database, $project, $metric);
             }
 
             $databasesCollectionMetrics = [
@@ -57,18 +57,18 @@ class Aggregator extends Database
                 'documents.' . $databaseId . '/collectionId.requests.delete',
             ];
 
-            $this->foreachDocument($project, 'database_' . $database->getInternalId(), [], function (Document $collection) use ($databasesCollectionMetrics, $project) {
+            $this->foreachDocument($project, 'database_' . $db->getInternalId(), [], function (Document $collection) use ($databasesCollectionMetrics, $project, $database) {
                 $collectionId = $collection->getId();
                 foreach ($databasesCollectionMetrics as $metric) {
                     $metric = str_replace('collectionId', $collectionId, $metric);
-                    $this->aggregateDailyMetric($project, $metric);
-                    $this->aggregateMonthlyMetric($project, $metric);
+                    $this->aggregateDailyMetric($database, $project, $metric);
+                    $this->aggregateMonthlyMetric($database, $project, $metric);
                 }
             });
         });
     }
 
-    protected function aggregateStorageMetrics(Document $project): void
+    protected function aggregateStorageMetrics(UtopiaDatabase $database, Document $project): void
     {
         $storageGeneralMetrics = [
             'buckets.$all.requests.create',
@@ -82,8 +82,8 @@ class Aggregator extends Database
         ];
 
         foreach ($storageGeneralMetrics as $metric) {
-            $this->aggregateDailyMetric($project, $metric);
-            $this->aggregateMonthlyMetric($project, $metric);
+            $this->aggregateDailyMetric($database, $project, $metric);
+            $this->aggregateMonthlyMetric($database, $project, $metric);
         }
 
         $storageBucketMetrics = [
@@ -93,17 +93,17 @@ class Aggregator extends Database
             'files.bucketId.requests.delete',
         ];
 
-        $this->foreachDocument($project, 'buckets', [], function (Document $bucket) use ($storageBucketMetrics, $project) {
+        $this->foreachDocument($project, 'buckets', [], function (Document $bucket) use ($storageBucketMetrics, $project, $database) {
             $bucketId = $bucket->getId();
             foreach ($storageBucketMetrics as $metric) {
                 $metric = str_replace('bucketId', $bucketId, $metric);
-                $this->aggregateDailyMetric($project, $metric);
-                $this->aggregateMonthlyMetric($project, $metric);
+                $this->aggregateDailyMetric($database, $project, $metric);
+                $this->aggregateMonthlyMetric($database, $project, $metric);
             }
         });
     }
 
-    protected function aggregateFunctionMetrics(Document $project): void
+    protected function aggregateFunctionMetrics(UtopiaDatabase $database, Document $project): void
     {
         $functionsGeneralMetrics = [
             'project.$all.compute.total',
@@ -119,8 +119,8 @@ class Aggregator extends Database
         ];
 
         foreach ($functionsGeneralMetrics as $metric) {
-            $this->aggregateDailyMetric($project, $metric);
-            $this->aggregateMonthlyMetric($project, $metric);
+            $this->aggregateDailyMetric($database, $project, $metric);
+            $this->aggregateMonthlyMetric($database, $project, $metric);
         }
 
         $functionMetrics = [
@@ -134,17 +134,17 @@ class Aggregator extends Database
             'builds.functionId.compute.time',
         ];
 
-        $this->foreachDocument($project, 'functions', [], function (Document $function) use ($functionMetrics, $project) {
+        $this->foreachDocument($project, 'functions', [], function (Document $function) use ($functionMetrics, $project, $database) {
             $functionId = $function->getId();
             foreach ($functionMetrics as $metric) {
                 $metric = str_replace('functionId', $functionId, $metric);
-                $this->aggregateDailyMetric($project, $metric);
-                $this->aggregateMonthlyMetric($project, $metric);
+                $this->aggregateDailyMetric($database, $project, $metric);
+                $this->aggregateMonthlyMetric($database, $project, $metric);
             }
         });
     }
 
-    protected function aggregateUsersMetrics(Document $project): void
+    protected function aggregateUsersMetrics(UtopiaDatabase $database, Document $project): void
     {
         $metrics = [
             'users.$all.requests.create',
@@ -156,24 +156,24 @@ class Aggregator extends Database
         ];
 
         foreach ($metrics as $metric) {
-            $this->aggregateDailyMetric($project, $metric);
-            $this->aggregateMonthlyMetric($project, $metric);
+            $this->aggregateDailyMetric($database, $project, $metric);
+            $this->aggregateMonthlyMetric($database, $project, $metric);
         }
     }
 
-    protected function aggregateGeneralMetrics(Document $project): void
+    protected function aggregateGeneralMetrics(UtopiaDatabase $database, Document $project): void
     {
-        $this->aggregateDailyMetric($project, 'project.$all.network.requests');
-        $this->aggregateDailyMetric($project, 'project.$all.network.bandwidth');
-        $this->aggregateDailyMetric($project, 'project.$all.network.inbound');
-        $this->aggregateDailyMetric($project, 'project.$all.network.outbound');
-        $this->aggregateMonthlyMetric($project, 'project.$all.network.requests');
-        $this->aggregateMonthlyMetric($project, 'project.$all.network.bandwidth');
-        $this->aggregateMonthlyMetric($project, 'project.$all.network.inbound');
-        $this->aggregateMonthlyMetric($project, 'project.$all.network.outbound');
+        $this->aggregateDailyMetric($database, $project, 'project.$all.network.requests');
+        $this->aggregateDailyMetric($database, $project, 'project.$all.network.bandwidth');
+        $this->aggregateDailyMetric($database, $project, 'project.$all.network.inbound');
+        $this->aggregateDailyMetric($database, $project, 'project.$all.network.outbound');
+        $this->aggregateMonthlyMetric($database, $project, 'project.$all.network.requests');
+        $this->aggregateMonthlyMetric($database, $project, 'project.$all.network.bandwidth');
+        $this->aggregateMonthlyMetric($database, $project, 'project.$all.network.inbound');
+        $this->aggregateMonthlyMetric($database, $project, 'project.$all.network.outbound');
     }
 
-    protected function aggregateDailyMetric(Document $project, string $metric): void
+    protected function aggregateDailyMetric(UtopiaDatabase $database, Document $project, string $metric): void
     {
         $beginOfDay = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-d\T00:00:00.000'))->format(DateTime::RFC3339);
         $endOfDay = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-d\T23:59:59.999'))->format(DateTime::RFC3339);
@@ -188,7 +188,7 @@ class Aggregator extends Database
         $this->createOrUpdateMetric($database, $project->getId(), $metric, '1d', $beginOfDay, $value);
     }
 
-    protected function aggregateMonthlyMetric(Document $project, string $metric): void
+    protected function aggregateMonthlyMetric(UtopiaDatabase $database, Document $project, string $metric): void
     {
         $beginOfMonth = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-01\T00:00:00.000'))->format(DateTime::RFC3339);
         $endOfMonth = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-t\T23:59:59.999'))->format(DateTime::RFC3339);
@@ -211,11 +211,12 @@ class Aggregator extends Database
     public function collect(): void
     {
         $this->foreachDocument(new Document(['$id' => 'console']), 'projects', [], function (Document $project) {
-            $this->aggregateGeneralMetrics($project);
-            $this->aggregateFunctionMetrics($project);
-            $this->aggregateDatabaseMetrics($project);
-            $this->aggregateStorageMetrics($project);
-            $this->aggregateUsersMetrics($project);
+            $database = call_user_func($this->getProjectDB, $project);
+            $this->aggregateGeneralMetrics($database, $project);
+            $this->aggregateFunctionMetrics($database, $project);
+            $this->aggregateDatabaseMetrics($database, $project);
+            $this->aggregateStorageMetrics($database, $project);
+            $this->aggregateUsersMetrics($database, $project);
         });
     }
 }
