@@ -332,7 +332,7 @@ RUN mkdir -p /storage/uploads && \
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance &&  \
-    chmod +x /usr/local/bin/syncs-cloud && \
+    chmod +x /usr/local/bin/sync-edge && \
     chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
@@ -353,8 +353,8 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-webhooks && \
-    chmod +x /usr/local/bin/worker-syncs-out && \
-    chmod +x /usr/local/bin/worker-syncs-in
+    chmod +x /usr/local/bin/worker-sync-out && \
+    chmod +x /usr/local/bin/worker-sync-in
 
 
 

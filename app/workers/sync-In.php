@@ -9,8 +9,6 @@ use Utopia\Queue\Message;
 
 require_once __DIR__ . '/../init.php';
 
-define("CURRENT_REGION", App::getEnv('_APP_REGION', 'nyc1'));
-
 /**
  * @return RedisCache
  */
@@ -26,12 +24,12 @@ $server = new Queue\Server($adapter);
 
 $server->job()
     ->inject('message')
-    ->action(function (Message $message) use (&$keys, &$counter) {
+    ->action(function (Message $message) {
 
         $payload = $message->getPayload()['value'];
-        if (!empty($payload['key'])) {
-            var_dump('purging ' . $payload['key']);
-            getCache()->purge($payload['key']);
+        foreach ($payload['keys'] ?? [] as $key) {
+                var_dump('purging ' . $key);
+                var_dump(getCache()->purge($key));
         }
     });
 
@@ -40,10 +38,11 @@ $server
     ->inject('error')
     ->action(function ($error) {
         echo $error->getMessage() . PHP_EOL;
+        echo $error->getLine() . PHP_EOL;
     });
 
 $server
     ->workerStart(function () {
-        echo "In region [" . CURRENT_REGION . "] cache purging worker Started" . PHP_EOL;
+        echo "In region [" . App::getEnv('_APP_REGION', 'nyc1') . "] cache purging worker Started" . PHP_EOL;
     })
     ->start();

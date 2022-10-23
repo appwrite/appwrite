@@ -207,7 +207,6 @@ Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
 
-
 $user = App::getEnv('_APP_REDIS_USER', '');
 $pass = App::getEnv('_APP_REDIS_PASS', '');
 if (!empty($user) || !empty($pass)) {
@@ -929,14 +928,13 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-$register->set('workerRedisConnection', function () {
+$register->set('queue', function () {
     return new redisQueue('redis', 6379);
 });
 
-$register->set('workerSyncOut', function () use ($register) {
-    return new clientQueue('syncOut', $register->get('workerRedisConnection'));
+$register->set('syncOut', function () use ($register) {
+    return new clientQueue('syncOut', $register->get('queue'));
 });
-
 
 App::setResource('dbForProject', function ($db, $cache, Document $project, $register) {
 
@@ -944,30 +942,15 @@ App::setResource('dbForProject', function ($db, $cache, Document $project, $regi
     $cache->on(cache::EVENT_SAVE, function ($key) use ($register) {
 
         $register
-            ->get('workerSyncOut')
-            ->resetStats();
-        $register
-            ->get('workerSyncOut')
-            ->enqueue([
-                'type' => 'saved from init',
-                'value' => [
-                    'key' => $key
-                ]
-            ]);
+            ->get('syncOut')
+            ->enqueue(['value' => ['key' => $key]]);
     });
 
     $cache->on(cache::EVENT_PURGE, function ($key) use ($register) {
+
         $register
-            ->get('workerSyncOut')
-            ->resetStats();
-        $register
-            ->get('workerSyncOut')
-            ->enqueue([
-                'type' => 'purge from init',
-                'value' => [
-                    'key' => $key
-                ]
-            ]);
+            ->get('syncOut')
+            ->enqueue(['value' => ['key' => $key]]);
     });
 
     $database = new Database(new MariaDB($db), $cache);
@@ -979,33 +962,17 @@ App::setResource('dbForProject', function ($db, $cache, Document $project, $regi
 
 App::setResource('dbForConsole', function ($db, $cache, $register) {
     $cache = new Cache(new RedisCache($cache));
-    $cache->on(cache::EVENT_SAVE, function ($key) use ($register) {
 
+    $cache->on(cache::EVENT_SAVE, function ($key) use ($register) {
         $register
-            ->get('workerSyncOut')
-            ->resetStats();
-        $register
-            ->get('workerSyncOut')
-            ->enqueue([
-                'type' => 'saved from init',
-                'value' => [
-                    'key' => $key
-                ]
-            ]);
+            ->get('syncOut')
+            ->enqueue(['value' => ['key' => $key]]);
     });
 
     $cache->on(cache::EVENT_PURGE, function ($key) use ($register) {
         $register
-            ->get('workerSyncOut')
-            ->resetStats();
-        $register
-            ->get('workerSyncOut')
-            ->enqueue([
-                'type' => 'purge from init',
-                'value' => [
-                    'key' => $key
-                ]
-            ]);
+            ->get('syncOut')
+            ->enqueue(['value' => ['key' => $key]]);
     });
 
     $database = new Database(new MariaDB($db), $cache);

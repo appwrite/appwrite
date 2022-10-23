@@ -2,19 +2,19 @@
 
 return [
     'nyc1' => [
-        'name' => 'North america',
+        'name' => 'New york',
         'default' => true,
         'disabled' => false,
         'domain' => '172.17.0.1',
     ],
-    'blr1' => [
-        'name' => 'Asia',
+    'spg1' => [
+        'name' => 'Singapore',
         'default' => true,
         'disabled' => false,
         'domain' => '172.17.0.1',
     ],
     'fra1' => [
-        'name' => 'Europe',
+        'name' => 'Frankfurt',
         'default' => true,
         'disabled' => false,
         'domain' => '172.17.0.1',

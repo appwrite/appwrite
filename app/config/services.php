@@ -187,8 +187,8 @@ return [
         'icon' => '',
     ],
     'syncs' => [
-        'key' => 'syncs',
-        'name' => 'syncs',
+        'key' => 'edge',
+        'name' => 'edge',
         'subtitle' => 'Appwrite\'s cloud regions syncs Endpoint',
         'description' => 'Cloud edge Endpoint',
         'controller' => 'api/edge.php',

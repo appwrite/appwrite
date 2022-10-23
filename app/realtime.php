@@ -188,7 +188,6 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
 
             Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
         } catch (\Throwable $th) {
-
             call_user_func($logError, $th, "updateWorkerDocument");
         } finally {
             call_user_func($returnDatabase);

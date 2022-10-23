@@ -12,7 +12,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\DateTime;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Queue;
@@ -28,8 +27,6 @@ const DATABASE_CONSOLE = 'console';
 const SUBMITION_INTERVAL = 20;
 const MAX_KEY_COUNT = 10;
 const MAX_CURL_SEND_ATTEMPTS = 4;
-
-define("CURRENT_REGION", App::getEnv('_APP_REGION', 'nyc1'));
 
 /**
  * Get console database
@@ -92,7 +89,13 @@ function getDB(string $type, string $projectId = '', string $projectInternalId =
     return $database;
 }
 
-function send($url, $token, $keys): int
+/**
+ * @param string $url
+ * @param string $token
+ * @param array $keys
+ * @return array\
+ */
+function send(string $url, string $token, array $keys): array
 {
 
     $ch = curl_init($url);
@@ -106,17 +109,23 @@ function send($url, $token, $keys): int
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($keys));
 
     for ($attempts = 0; $attempts < MAX_CURL_SEND_ATTEMPTS; $attempts++) {
-        curl_exec($ch);
-        $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $payload = [
+            'status' => $status,
+            'payload' => json_decode($response, true)
+            ];
 
-        if ($responseStatus === 200) {
-            return $responseStatus;
+        if ($status === 200) {
+            return $payload;
         }
 
         sleep(2);
     }
+
     curl_close($ch);
-    return $responseStatus;
+
+    return $payload;
 }
 
 /**
@@ -131,13 +140,16 @@ function call($regions, $keys): void
     $token = $jwt->encode([]);
 
     foreach ($regions as $code => $region) {
-        $status = send($region['domain'] . '/v1/edge', $token, ['keys' => $keys]);
-        if ($status !== Response::STATUS_CODE_OK) {
+        var_dump('Sending request to ' . $code . '...............');
+        $payload = send($region['domain'] . '/v1/edge/sync', $token, ['keys' => $keys]);
+        var_dump($payload);
+        if ($payload['status'] !== Response::STATUS_CODE_OK) {
             getDB(DATABASE_CONSOLE)->createDocument('syncs', new Document([
-                'regionOrg' => CURRENT_REGION,
-                'regionDest' => $code,
+                'region' => App::getEnv('_APP_REGION', 'nyc1'),
+                'target' => $code,
                 'keys' => $keys,
-                'status' => $status,
+                'status' => $payload['status'],
+                'payload' => $payload['payload'],
             ]));
         }
     }
@@ -155,7 +167,7 @@ $server->job()
         $regions = Config::getParam('regions', true);
         $regions = array_filter(
             $regions,
-            fn ($region) => CURRENT_REGION !== $region,
+            fn ($region) => App::getEnv('_APP_REGION', 'nyc1') !== $region,
             ARRAY_FILTER_USE_KEY
         );
 
@@ -167,14 +179,24 @@ $server->job()
             );
         }
 
-
         if (!empty($payload['chunk'])) {
+            var_dump('from chunk');
             call($regions, $payload['chunk']);
             return;
         }
 
          $keys[$payload['key']] = null;
         if (count($keys) >= MAX_KEY_COUNT  || ($counter + SUBMITION_INTERVAL) < time()) {
+            var_dump('From key');
+            var_dump([
+                'regions' =>  array_keys($regions),
+                'because_time' => ($counter + SUBMITION_INTERVAL) < time(),
+                'because_count' => count($keys) >= MAX_KEY_COUNT,
+                'count' => count($keys),
+                'counter' => $counter + SUBMITION_INTERVAL,
+                'time' => time(),
+                'keys' => array_keys($keys),
+            ]);
             call($regions, array_keys($keys));
             $counter = time();
             $keys = [];
@@ -191,6 +213,6 @@ $server
 
 $server
     ->workerStart(function () {
-        echo "Out region [" . CURRENT_REGION . "] cache purging worker Started" . PHP_EOL;
+        echo "Out region [" . App::getEnv('_APP_REGION', 'nyc1') . "] cache purging worker Started" . PHP_EOL;
     })
     ->start();

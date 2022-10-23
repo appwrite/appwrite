@@ -24,7 +24,7 @@ $collections = [
         'name' => 'Syncs',
         'attributes' => [
             [
-                '$id' => ID::custom('regionOrg'),
+                '$id' => ID::custom('region'),
                 'type' => Database::VAR_STRING,
                 'size' => 50,
                 'required' => true,
@@ -33,7 +33,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('regionDest'),
+                '$id' => ID::custom('target'),
                 'type' => Database::VAR_STRING,
                 'size' => 50,
                 'required' => true,
@@ -60,6 +60,17 @@ $collections = [
                 'signed' => true,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('payload'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => true,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
             ],
         ],
         'indexes' => [

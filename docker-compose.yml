@@ -108,7 +108,6 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
-      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
     depends_on:
       - mariadb
       - redis
@@ -207,7 +206,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
     depends_on:
       - mariadb
       - redis
@@ -255,10 +253,10 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
-  appwrite-worker-syncs-out:
-    entrypoint: worker-syncs-out
+  appwrite-worker-sync-out:
+    entrypoint: worker-sync-out
     <<: *x-logging
-    container_name: appwrite-worker-syncs-out
+    container_name: appwrite-worker-sync-out
     image: appwrite-dev
     build:
       context: .
@@ -282,10 +280,10 @@ services:
         - _APP_DB_USER
         - _APP_DB_PASS
 
-  appwrite-worker-syncs-in:
-    entrypoint: worker-syncs-in
+  appwrite-worker-sync-in:
+    entrypoint: worker-sync-in
     <<: *x-logging
-    container_name: appwrite-worker-syncs-in
+    container_name: appwrite-worker-sync-in
     image: appwrite-dev
     build:
      context: .
@@ -617,10 +615,10 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
 
-  appwrite-syncs-cloud:
-    entrypoint: syncs-cloud
+  appwrite-sync-edge:
+    entrypoint: sync-edge
     <<: *x-logging
-    container_name: appwrite-syncs-cloud
+    container_name: appwrite-sync-edge
     image: appwrite-dev
     networks:
       - appwrite
@@ -641,6 +639,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_SYNC_EDGE_INTERVAL
 
   appwrite-usage-timeseries:
     entrypoint:
