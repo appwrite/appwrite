@@ -217,6 +217,7 @@ class Aggregator extends Database
             $this->aggregateDatabaseMetrics($database, $project);
             $this->aggregateStorageMetrics($database, $project);
             $this->aggregateUsersMetrics($database, $project);
+            $this->register->get('pools')->reclaim();
         });
     }
 }

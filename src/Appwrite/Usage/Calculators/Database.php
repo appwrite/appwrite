@@ -10,9 +10,11 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\Registry\Registry;
 
 class Database extends Calculator
 {
+    protected Registry $register;
     protected array $periods = [
         [
             'key' => '30m',
@@ -24,8 +26,9 @@ class Database extends Calculator
         ],
     ];
 
-    public function __construct(UtopiaDatabase $database, callable $getProjectDB, callable $errorHandler = null)
+    public function __construct(UtopiaDatabase $database, callable $getProjectDB, Registry $register, callable $errorHandler = null)
     {
+        $this->register = $register;
         $this->database = $database;
         $this->getProjectDB = $getProjectDB;
         $this->errorHandler = $errorHandler;
@@ -359,6 +362,7 @@ class Database extends Calculator
             $this->usersStats($database, $project->getId());
             $this->databaseStats($database, $project);
             $this->storageStats($database, $project);
+            $this->register->get('pools')->reclaim();
         });
     }
 }

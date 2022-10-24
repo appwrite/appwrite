@@ -12,6 +12,7 @@ use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
+use Utopia\Registry\Registry;
 use Utopia\Validator\WhiteList;
 
 Authorization::disable();
@@ -69,11 +70,11 @@ function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB,
     }, $interval);
 }
 
-function aggregateDatabase(UtopiaDatabase $database, callable $getProjectDB, callable $logError): void
+function aggregateDatabase(UtopiaDatabase $database, callable $getProjectDB, Registry $register, callable $logError): void
 {
     $interval = (int) App::getEnv('_APP_USAGE_DATABASE_INTERVAL', '900'); // 15 minutes (by default)
-    $usage = new Database($database, $getProjectDB, $logError);
-    $aggregrator = new Aggregator($database, $getProjectDB, $logError);
+    $usage = new Database($database, $getProjectDB, $register, $logError);
+    $aggregrator = new Aggregator($database, $getProjectDB, $register, $logError);
 
     Console::loop(function () use ($interval, $usage, $aggregrator) {
         $now = date('d-m-Y H:i:s', time());
@@ -105,7 +106,7 @@ $cli
                 aggregateTimeseries($database, $influxDB, $getProjectDB, $logError);
                 break;
             case 'database':
-                aggregateDatabase($database, $getProjectDB, $logError);
+                aggregateDatabase($database, $getProjectDB, $register, $logError);
                 break;
             default:
                 Console::error("Unsupported usage aggregation type");
