@@ -47,20 +47,11 @@ function getConsoleDB(): Database
 
     $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
 
-    try {
-        $dbAdapter = $pools
-            ->get('console')
-            ->pop()
-            ->getResource()
-        ;
-    } catch (Throwable $error) {
-        $pools->fill();
-        $dbAdapter = $pools
-            ->get('console')
-            ->pop()
-            ->getResource()
-        ;
-    }
+    $dbAdapter = $pools
+        ->get('console')
+        ->pop()
+        ->getResource()
+    ;
 
     $database = new Database($dbAdapter, getCache());
 
@@ -80,20 +71,11 @@ function getProjectDB(Document $project): Database
         return getConsoleDB();
     }
 
-    try {
-        $dbAdapter = $pools
-            ->get($project->getAttribute('database'))
-            ->pop()
-            ->getResource()
-        ;
-    } catch (Throwable $error) {
-        $pools->fill();
-        $dbAdapter = $pools
-            ->get($project->getAttribute('database'))
-            ->pop()
-            ->getResource()
-        ;
-    }
+    $dbAdapter = $pools
+        ->get($project->getAttribute('database'))
+        ->pop()
+        ->getResource()
+    ;
 
     $database = new Database($dbAdapter, getCache());
     $database->setNamespace('_' . $project->getInternalId());

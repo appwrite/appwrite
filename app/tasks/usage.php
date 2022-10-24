@@ -92,7 +92,7 @@ $cli
     ->task('usage')
     ->param('type', 'timeseries', new WhiteList(['timeseries', 'database']))
     ->desc('Schedules syncing data from influxdb to Appwrite console db')
-    ->action(function (string $type) use ($logError) {
+    ->action(function (string $type) use ($logError, $register) {
         Console::title('Usage Aggregation V1');
         Console::success(APP_NAME . ' usage aggregation process v1 has started');
 
@@ -110,4 +110,5 @@ $cli
             default:
                 Console::error("Unsupported usage aggregation type");
         }
+        $register->get('pools')->reclaim();
     });
