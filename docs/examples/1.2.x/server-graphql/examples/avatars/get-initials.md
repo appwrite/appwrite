@@ -1,5 +1,0 @@
-query {
-    avatarsGetInitials {
-        status
-    }
-}

@@ -1,6 +1,0 @@
-query {
-    accountListLogs {
-        total
-        logs
-    }
-}

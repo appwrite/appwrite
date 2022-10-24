@@ -1,6 +1,0 @@
-query {
-    localeListCountriesEU {
-        total
-        countries
-    }
-}

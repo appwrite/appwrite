@@ -1,6 +1,0 @@
-query {
-    localeListCurrencies {
-        total
-        currencies
-    }
-}

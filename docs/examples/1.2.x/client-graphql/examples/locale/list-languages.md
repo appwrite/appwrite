@@ -1,6 +1,0 @@
-query {
-    localeListLanguages {
-        total
-        languages
-    }
-}

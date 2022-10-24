@@ -1,6 +1,0 @@
-query {
-    localeListCountriesPhones {
-        total
-        phones
-    }
-}

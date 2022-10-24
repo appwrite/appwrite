@@ -1,6 +1,0 @@
-query {
-    localeListCountries {
-        total
-        countries
-    }
-}

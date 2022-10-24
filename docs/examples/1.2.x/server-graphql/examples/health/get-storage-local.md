@@ -1,6 +1,0 @@
-query {
-    healthGetStorageLocal {
-        ping
-        status
-    }
-}

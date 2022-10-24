@@ -1,6 +1,0 @@
-query {
-    teamsList {
-        total
-        teams
-    }
-}

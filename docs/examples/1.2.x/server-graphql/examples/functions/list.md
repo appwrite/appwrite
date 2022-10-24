@@ -1,6 +1,0 @@
-query {
-    functionsList {
-        total
-        functions
-    }
-}

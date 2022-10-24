@@ -1,6 +1,0 @@
-query {
-    accountListSessions {
-        total
-        sessions
-    }
-}

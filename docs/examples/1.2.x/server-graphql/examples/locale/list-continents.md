@@ -1,6 +1,0 @@
-query {
-    localeListContinents {
-        total
-        continents
-    }
-}
