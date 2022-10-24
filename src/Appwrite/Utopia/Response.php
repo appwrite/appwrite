@@ -207,6 +207,7 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_QUEUE = 'healthQueue';
     public const MODEL_HEALTH_TIME = 'healthTime';
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
+    public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
 
     // Deprecated
     public const MODEL_PERMISSIONS = 'permissions';
@@ -268,6 +269,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
+            ->setModel(new BaseList('Status List', self::MODEL_HEALTH_STATUS_LIST, 'statuses', self::MODEL_HEALTH_STATUS))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())

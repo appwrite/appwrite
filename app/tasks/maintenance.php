@@ -3,7 +3,6 @@
 global $cli;
 
 use Appwrite\Auth\Auth;
-use Appwrite\Database\DatabasePool;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
@@ -16,8 +15,6 @@ $cli
     ->task('maintenance')
     ->desc('Schedules maintenance tasks and publishes them to resque')
     ->action(function () {
-        global $register;
-
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
@@ -115,16 +112,8 @@ $cli
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
 
-        Console::loop(function () use ($register, $interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
-            $redis = $register->get('cache');
-            $dbPool = $register->get('dbPool');
-
-            $database = $dbPool->getConsoleDB();
-            $pdo = $dbPool->getPDO($database);
-            $database = DatabasePool::wait(
-                DatabasePool::getDatabase($pdo, $redis, '_console'),
-                'certificates',
-            );
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
+            $database = getConsoleDB();
 
             $time = DateTime::now();
 

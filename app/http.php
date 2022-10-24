@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Appwrite\Database\DatabasePool;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
@@ -23,6 +22,7 @@ use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
+use Utopia\Pools\Group;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
@@ -62,11 +62,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
     go(function () use ($register, $app) {
 
-        $redis = $register->get('redisPool')->get();
-        App::setResource('cache', fn() => $redis);
-
-        $dbPool = $register->get('dbPool');
-        App::setResource('dbPool', fn() => $dbPool);
+        $pools = $register->get('pools'); /** @var Group $pools */
+        App::setResource('pools', fn() => $pools);
 
         // wait for database to be ready
         $attempts = 0;
@@ -93,7 +90,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         $collections = Config::getParam('collections', []);
 
         try {
-            $redis->flushAll();
+            $cache = $app->getResource('cache'); /** @var Utopia\Cache\Cache $cache */
+            $cache->flush();
             Console::success('[Setup] - Creating database: appwrite...');
             $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         } catch (\Exception $e) {
@@ -217,7 +215,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         }
 
-        $dbPool->reset();
+        $pools->reclaim();
 
         Console::success('[Setup] - Server database init completed...');
     });
@@ -250,11 +248,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     $app = new App('UTC');
 
-    $redis = $register->get('redisPool')->get();
-    App::setResource('cache', fn() => $redis);
-
-    $dbPool = $register->get('dbPool');
-    App::setResource('dbPool', fn() => $dbPool);
+    $pools = $register->get('pools');
+    App::setResource('pools', fn() => $pools);
 
     try {
         Authorization::cleanRoles();
@@ -321,13 +316,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         Console::error('[Error] File: ' . $th->getFile());
         Console::error('[Error] Line: ' . $th->getLine());
 
-        /**
-         * Reset Database connection if PDOException was thrown.
-         */
-        if ($th instanceof PDOException) {
-            $db = null;
-        }
-
         $swooleResponse->setStatusCode(500);
 
         $output = ((App::isDevelopment())) ? [
@@ -345,10 +333,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $swooleResponse->end(\json_encode($output));
     } finally {
-        $dbPool->reset();
-        /** @var RedisPool $redisPool */
-        $redisPool = $register->get('redisPool');
-        $redisPool->put($redis);
+        $pools->reclaim();
     }
 });
 

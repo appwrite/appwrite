@@ -2,7 +2,6 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Database\DatabasePool;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Validator\Event;
@@ -29,10 +28,9 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
-use Utopia\Cache\Adapter\Redis;
-use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\MariaDB;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Utopia\Cache\Cache;
+use Utopia\Pools\Group;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -74,8 +72,9 @@ App::post('/v1/projects')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('cache')
-    ->inject('dbPool')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, \Redis $cache, DatabasePool $dbPool) {
+    ->inject('pools')
+    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
+
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -90,12 +89,12 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
+        $databases = Config::getParam('pools-database', []);
+        $database = $databases[array_rand($databases)];
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
-
-        $pdo = $dbPool->getAnyFromPool();
 
         $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
@@ -127,10 +126,12 @@ App::post('/v1/projects')
             'domains' => null,
             'auths' => $auths,
             'search' => implode(' ', [$projectId, $name]),
-            'database' => $pdo->getName()
+            'database' => $database,
         ]));
 
-        $dbForProject = DatabasePool::getDatabase($pdo->getConnection(), $cache, "_{$project->getInternalId()}");
+        $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
+        $dbForProject->setNamespace("_{$project->getInternalId()}");
+
         $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
         $audit = new Audit($dbForProject);

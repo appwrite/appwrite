@@ -7,7 +7,6 @@ use Appwrite\Utopia\Response\Model\Deployment;
 use Cron\CronExpression;
 use Executor\Executor;
 use Appwrite\Usage\Stats;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -15,7 +14,6 @@ use Utopia\Database\ID;
 use Utopia\Storage\Storage;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
-use Utopia\Database\Query;
 
 require_once __DIR__ . '/../init.php';
 
