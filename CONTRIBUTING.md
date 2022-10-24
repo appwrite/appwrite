@@ -1,6 +1,6 @@
 # Contributing
 
-We would ❤️ for you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, new docs as well as updates and tweaks, blog posts, workshops, and more.
+We would ❤️ for you to contribute to Appwrite and help make it better! We want Appwrite contributions to be fun and educational for anyone and everyone. All contributions are welcome including issues, new docs, updates and tweaks, blog posts, workshops, and more.
 
 ## How to Start?
 
@@ -32,7 +32,7 @@ When `TYPE` can be:
 
 **All PRs must include a commit message with the description of the changes made!**
 
-For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
+For the initial start, fork the project and use the git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
 
 1. `git pull`, before creating a new branch, pull the changes from upstream. Your master needs to be up to date.
 
@@ -60,7 +60,7 @@ Now, go a step further by running the linter by the following command to manuall
 composer lint <your file path>
 ```
 
-This will give you a list of errors for you to rectify, if there is an instance you need more information on the errors being displayed you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
+This will give you a list of errors for you to rectify. If there is an instance, you need more information on the errors being displayed, you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
 
 ```bash
 composer lint --report=diff <your file path>
@@ -86,7 +86,7 @@ To set up a working **development environment**, just fork the project git repos
 
 > If you just want to install Appwrite for day-to-day usage and not as a code maintainer use this [installation guide](https://github.com/appwrite/appwrite#installation).
 
-Please note that these instructions are for setting a functional dev environment. If you want to set up an Appwrite instance to integrate into your app, you should probably try and install Appwrite by using the instructions in the [getting started guide](https://appwrite.io/docs/getting-started-for-web) or in the main [README](README.md) file.
+Please note that these instructions are for setting up a functional dev environment. If you want to set up an Appwrite instance to integrate into your app, you should probably try to install Appwrite by using the instructions in the [getting started guide](https://appwrite.io/docs/getting-started-for-web) or in the main [README](README.md) file.
 
 ```bash
 git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
@@ -219,11 +219,11 @@ Although the Appwrite API is a monolithic app, it has a very clear separation of
 
 Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
-Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
+Currently, all the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public ports 80 and 443, which, by default, are used to expose the Appwrite HTTP API.
 
 ## Ports
 
-Appwrite dev version uses ports 80 and 443 as an entry point to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker compose up -d` command.
+The appwrite dev version uses ports 80 and 443 as an entry points to the Appwrite API and console. We also expose multiple ports in the range of 9500-9504 for debugging some of the Appwrite containers on dev mode. If you have any conflicts with the ports running on your system, you can easily replace them by editing Appwrite's docker-compose.yml file and executing `docker compose up -d` command.
 
 ## Technology Stack
 
@@ -247,7 +247,7 @@ Appwrite stack is combined from a variety of open-source technologies and tools.
 
 Appwrite uses a package manager for managing code dependencies for both backend and frontend development. We try our best to avoid creating any unnecessary, and any new dependency to the project is subjected to a lead developer review and approval.
 
-Many of Appwrite's internal modules are also used as dependencies to allow other Appwrite's projects to reuse them and as a way to contribute them back to the community.
+Many of Appwrite's internal modules are also used as dependencies to allow other Appwrite projects to reuse them and as a way to contribute them back to the community.
 
 Appwrite uses [PHP's Composer](https://getcomposer.org/) for managing dependencies on the server-side and [JS NPM](https://www.npmjs.com/) for managing dependencies on the frontend side.
 
@@ -261,7 +261,7 @@ We use prettier for our JS coding standards and auto-formatting our code.
 
 Appwrite is built to scale. Please keep in mind that the Appwrite stack can run in different environments and different scales.
 
-We wish Appwrite will be as easy to set up and in a single, localhost, and easy to grow to a large environment with dozens and even hundreds of instances.
+We wish Appwrite to be as easy to set up in a single, local host and easy to grow to a large environment with dozens and even hundreds of instances.
 
 When contributing code, please take into account the following considerations:
 
@@ -282,7 +282,7 @@ Security and privacy are extremely important to Appwrite, developers, and users 
 
 Please avoid introducing new dependencies to Appwrite without consulting the team. New dependencies can be very helpful but also introduce new security and privacy issues, complexity, and impact total docker image size.
 
-Adding a new dependency should have vital value on the product with minimum possible risk.
+Adding a new dependency should have vital value on the product with a minimum potential risk.
 
 ## Introducing New Features
 
