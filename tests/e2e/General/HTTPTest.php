@@ -124,56 +124,33 @@ class HTTPTest extends Scope
         $this->client->setEndpoint($previousEndpoint);
     }
 
-    // public function testSpecSwagger2()
-    // {
-    //     $response = $this->client->call(Client::METHOD_GET, '/specs/swagger2?platform=client', [
-    //         'content-type' => 'application/json',
-    //     ], []);
-
-    //     if(!file_put_contents(__DIR__ . '/../../resources/swagger2.json', json_encode($response['body']))) {
-    //         throw new Exception('Failed to save spec file');
-    //     }
-
-    //     $client = new Client();
-    //     $client->setEndpoint('https://validator.swagger.io');
-
-    //     /**
-    //      * Test for SUCCESS
-    //      */
-    //     $response = $client->call(Client::METHOD_POST, '/validator/debug', [
-    //         'content-type' => 'application/json',
-    //     ], json_decode(file_get_contents(realpath(__DIR__ . '/../../resources/swagger2.json')), true));
-
-    //     $response['body'] = json_decode($response['body'], true);
-
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertTrue(empty($response['body']));
-
-    //     unlink(realpath(__DIR__ . '/../../resources/swagger2.json'));
-    // }
-
-    public function testSpecOpenAPI3()
+    public function testSpecs()
     {
-        $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=console', [
-            'content-type' => 'application/json',
-        ], []);
-
         $directory = __DIR__ . '/../../../app/config/specs/';
 
         $files = scandir($directory);
         $client = new Client();
         $client->setEndpoint('https://validator.swagger.io');
 
+        $versions = [
+            'latest',
+            '0.15.x',
+            '0.14.x',
+        ];
+
         foreach ($files as $file) {
             if (in_array($file, ['.', '..'])) {
                 continue;
             }
 
-            if (
-                (strpos($file, 'latest') === false) &&
-                (strpos($file, '0.12.x') === false) &&
-                (strpos($file, '0.13.x') === false)
-            ) {
+            $allowed = false;
+            foreach ($versions as $version) {
+                if (\str_contains($file, $version)) {
+                    $allowed = true;
+                    break;
+                }
+            }
+            if (!$allowed) {
                 continue;
             }
 
@@ -186,7 +163,13 @@ class HTTPTest extends Scope
 
             $response['body'] = json_decode($response['body'], true);
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertTrue(empty($response['body']));
+
+            if (!empty($response['body']['schemaValidationMessages'])) {
+                \var_dump($file);
+                \var_dump($response['body']);
+            }
+
+            $this->assertEmpty($response['body']['schemaValidationMessages']);
         }
     }
 
