@@ -600,6 +600,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('database'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('logo'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
