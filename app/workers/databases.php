@@ -98,8 +98,10 @@ class DatabaseV1 extends Worker
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
-            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('error', $th->getMessage()));
+            $dbForProject->updateDocument('attributes', $attribute->getId(), 
+            $attribute
+            ->setAttribute('status', 'failed')
+            ->setAttribute('error', $th->getMessage()));
         } finally {
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
@@ -159,7 +161,11 @@ class DatabaseV1 extends Worker
             $dbForProject->deleteDocument('attributes', $attribute->getId());
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'stuck'));
+            $dbForProject->updateDocument('attributes', $attribute->getId(), 
+            $attribute
+            ->setAttribute('status', 'stuck')
+            ->setAttribute('error', $th->getMessage())
+        );
         } finally {
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
@@ -269,7 +275,11 @@ class DatabaseV1 extends Worker
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'failed'));
+            $dbForProject->updateDocument('indexes', $index->getId(), 
+            $index
+            ->setAttribute('status', 'failed')
+            ->setAttribute('error', $th->getMessage())
+        );
         } finally {
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
@@ -322,7 +332,12 @@ class DatabaseV1 extends Worker
             $dbForProject->deleteDocument('indexes', $index->getId());
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
-            $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'stuck'));
+            $dbForProject->updateDocument('indexes', $index->getId(), 
+            $index
+            ->setAttribute('status', 'stuck')
+            ->setAttribute('error',$th->getMessage())
+        );
+
         } finally {
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
