@@ -36,7 +36,7 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0 \
     PHP_ZSTD_VERSION="4504e4186e79b197cfcb75d4d09aa47ef7d92fe9 "
-    PHP_LZ4_VERSION="8ce521e086fcc4d81c57a60915676673e341ab05"
+    PHP_LZ4_COMMIT="8ce521e086fcc4d81c57a60915676673e341ab05"
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -138,8 +138,9 @@ RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
 
 # LZ4 Compression
 FROM compile AS lz4
-RUN git clone --recursive --depth 1 --branch $PHP_LZ4_VERSION https://github.com/kjdev/php-ext-lz4.git \
+RUN git clone --recursive --depth 1 https://github.com/kjdev/php-ext-lz4.git \
   && cd php-ext-lz4 \
+  && git reset --hard $PHP_LZ4_COMMIT \
   && phpize \
   && ./configure --with-lz4-includedir=/usr \
   && make && make install
