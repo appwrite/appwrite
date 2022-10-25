@@ -672,6 +672,25 @@ class DatabasesCustomServerTest extends Scope
     /**
      * @depends testDeleteAttribute
      */
+    public function testGetIndex(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $index = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['collectionId'] . '/indexes/' . $data['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $index['headers']['status-code']);
+        $this->assertEquals($data['key'], $index['body']['key']);
+
+        return $index;
+    }
+
+    /**
+     * @depends testDeleteAttribute
+     */
     public function testDeleteIndex($data): array
     {
         $databaseId = $data['databaseId'];
