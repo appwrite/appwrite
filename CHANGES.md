@@ -3,6 +3,9 @@
 ## Bugs
 - Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
 
+## Features
+- Add error attribute to Collection Indexes and Attributes [#4575](https://github.com/appwrite/appwrite/pull/4575)
+
 # Version 1.0.3
 ## Bugs
 - Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)
