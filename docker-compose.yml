@@ -273,8 +273,6 @@ services:
     <<: *x-logging
     container_name: appwrite-worker-sync-out
     image: appwrite-dev
-    build:
-      context: .
     networks:
       - appwrite
     volumes:
@@ -294,14 +292,16 @@ services:
         - _APP_DB_SCHEMA
         - _APP_DB_USER
         - _APP_DB_PASS
+        - _APP_CONNECTIONS_DB_PROJECT
+        - _APP_CONNECTIONS_DB_CONSOLE
+        - _APP_CONNECTIONS_CACHE
+        - _APP_CONNECTIONS_QUEUE
 
   appwrite-worker-sync-in:
     entrypoint: worker-sync-in
     <<: *x-logging
     container_name: appwrite-worker-sync-in
     image: appwrite-dev
-    build:
-     context: .
     networks:
       - appwrite
     volumes:
@@ -315,6 +315,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
@@ -681,6 +685,10 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_SYNC_EDGE_INTERVAL
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
 
   appwrite-usage-timeseries:
     entrypoint:

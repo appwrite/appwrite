@@ -6,10 +6,11 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Queue\Client as SyncIn;
+use Utopia\Queue\Connection\Redis as QueueRedis;
 use Utopia\Registry\Registry;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
-use Utopia\Queue\Client;
 
 App::init()
     ->groups(['edge'])
@@ -26,7 +27,6 @@ App::init()
         }
     });
 
-
 App::post('/v1/edge/sync')
     ->desc('Purge cache keys')
     ->groups(['edge'])
@@ -41,12 +41,17 @@ App::post('/v1/edge/sync')
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $connection = $register
-            ->get('queue');
+        $pools = $register->get('pools');
+        $queue = $pools
+            ->get('queue')
+            ->pop()
+            ->getResource()
+        ;
 
-        $client = new Client('syncIn', $connection);
+        $client = new SyncIn('syncIn', new QueueRedis(fn() => $queue));
 
-        $client->enqueue(['value' => ['keys' => $keys]]);
+        $client->
+            enqueue(['value' => ['keys' => $keys]]);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)

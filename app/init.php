@@ -38,8 +38,8 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
-use Utopia\Queue\Client as clientQueue;
-use Utopia\Queue\Connection\Redis as redisQueue;
+use Utopia\Queue\Client as SyncOut;
+use Utopia\Queue\Connection\Redis as QueueRedis;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
@@ -500,6 +500,7 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
+
 $register->set('pools', function () {
 
     $group = new Group();
@@ -638,12 +639,9 @@ $register->set('pools', function () {
                         };
 
                         $adapter->setDefaultDatabase($dsn->getDatabase());
-
-                        break;
-                    case 'queue':
-                        $adapter = $resource();
                         break;
                     case 'pubsub':
+                    case 'queue':
                         $adapter = $resource();
                         break;
                     case 'cache':
@@ -675,6 +673,7 @@ $register->set('pools', function () {
 
     return $group;
 });
+
 $register->set('influxdb', function () {
  // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
@@ -1026,13 +1025,12 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-$register->set('queue', function () {
-    return new redisQueue('redis', 6379);
-});
-
-$register->set('syncOut', function () use ($register) {
-    return new clientQueue('syncOut', $register->get('queue'));
-});
+App::setResource('queue', function (Group $pools) {
+    return $pools
+        ->get('queue')
+        ->pop()
+        ->getResource();
+}, ['pools']);
 
 App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
@@ -1059,13 +1057,12 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     ;
 
     $database = new Database($dbAdapter, $cache);
-
     $database->setNamespace('console');
 
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('cache', function (Group $pools) {
+App::setResource('cache', function (Group $pools, $queue) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -1076,21 +1073,22 @@ App::setResource('cache', function (Group $pools) {
             ->getResource()
         ;
     }
-    $cache = new Cache(new Sharding($adapters));
-    $cache->on(cache::EVENT_SAVE, function ($key) use ($register) {
-        $register
-            ->get('syncOut')
+    $cache  = new Cache(new Sharding($adapters));
+
+    $client = new SyncOut('syncOut', new QueueRedis(fn() => $queue));
+
+    $cache->on(cache::EVENT_SAVE, function ($key) use ($client) {
+        $client
             ->enqueue(['value' => ['key' => $key]]);
     });
 
-    $cache->on(cache::EVENT_PURGE, function ($key) use ($register) {
-        $register
-            ->get('syncOut')
+    $cache->on(cache::EVENT_PURGE, function ($key) use ($client) {
+        $client
             ->enqueue(['value' => ['key' => $key]]);
     });
 
     return $cache;
-}, ['pools']);
+}, ['pools', 'queue']);
 
 App::setResource('deviceLocal', function () {
     return new Local();

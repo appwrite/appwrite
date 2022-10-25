@@ -4,61 +4,25 @@ global $cli;
 global $register;
 
 use Utopia\App;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Query;
-
-
-function getConsoleDatabase(): Database
-{
-    global $register;
-
-    $attempts = 0;
-
-    do {
-        try {
-            $attempts++;
-            $cache = new Cache(new RedisCache($register->get('cache')));
-            $database = new Database(new MariaDB($register->get('db')), $cache);
-            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-            $database->setNamespace('_console'); // Main DB
-
-            if (!$database->exists($database->getDefaultDatabase(), 'certificates')) {
-                throw new \Exception('Console project not ready');
-            }
-
-            break; // leave loop if successful
-        } catch (\Exception $e) {
-            Console::warning("Database not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-            }
-            sleep(DATABASE_RECONNECT_SLEEP);
-        }
-    } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-
-    return $database;
-}
+use Utopia\Queue\Client as SyncIn;
+use Utopia\Queue\Connection\Redis as QueueRedis;
 
 $cli
     ->task('sync-edge')
     ->desc('Schedules edge sync tasks')
-    ->action(function () {
+    ->action(function () use ($register) {
         Console::title('Syncs edges V1');
         Console::success(APP_NAME . ' Syncs cloud process v1 has started');
 
         $interval = (int) App::getEnv('_APP_SYNC_EDGE_INTERVAL', '180');
-
-        Console::loop(function () use ($interval) {
-            $database = getConsoleDatabase();
+          Console::loop(function () use ($interval, $register) {
+            $database = getConsoleDB();
             $time = DateTime::now();
             $region = App::getEnv('_APP_REGION', 'nyc1');
             Console::info("[{$time}] Notifying workers with cloud tasks every {$interval} seconds");
-            global $register;
 
             $time = DateTime::now();
             $chunks = $database->find('syncs', [
@@ -68,9 +32,17 @@ $cli
 
             if (count($chunks) > 0) {
                 Console::info("[{$time}] Found " . \count($chunks) . " cache key chunks to purge.");
+
+                $pools = $register->get('pools');
+                $queue = $pools
+                    ->get('queue')
+                    ->pop()
+                    ->getResource()
+                ;
+
+                $client = new SyncIn('syncIn', new QueueRedis(fn() => $queue));
                 foreach ($chunks as $chunk) {
-                    $register
-                        ->get('syncOut')
+                    $client
                         ->enqueue([
                             'value' => [
                                 'region' => $chunk->getAttribute('regionDest'),
@@ -83,5 +55,5 @@ $cli
             } else {
                 Console::info("[{$time}] No cache key chunks where found.");
             }
-        }, $interval);
+          }, $interval);
     });

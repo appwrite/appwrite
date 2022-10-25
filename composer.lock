@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "73ea3ea466d02c3c6427d235c11554ff",
+    "content-hash": "0b5f0fd08db65ca4c2e2f1a6d33cd299",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2050,16 +2050,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.26.0",
+            "version": "dev-feat-update-cache-lib",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "d172af2541137c83a86d066f82f48914b5a3a610"
+                "reference": "44ae47dfd49c9c7c0cba29f6867347e25c23b57b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/d172af2541137c83a86d066f82f48914b5a3a610",
-                "reference": "d172af2541137c83a86d066f82f48914b5a3a610",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/44ae47dfd49c9c7c0cba29f6867347e25c23b57b",
+                "reference": "44ae47dfd49c9c7c0cba29f6867347e25c23b57b",
                 "shasum": ""
             },
             "require": {
@@ -2068,7 +2068,7 @@
                 "ext-redis": "*",
                 "mongodb/mongodb": "1.8.0",
                 "php": ">=8.0",
-                "utopia-php/cache": "0.6.*",
+                "utopia-php/cache": "0.8.*",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
@@ -2088,16 +2088,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Brandon Leckemby",
-                    "email": "brandon@appwrite.io"
-                }
-            ],
             "description": "A simple library to manage application persistency using multiple database adapters",
             "keywords": [
                 "database",
@@ -2108,9 +2098,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.26.0"
+                "source": "https://github.com/utopia-php/database/tree/feat-update-cache-lib"
             },
-            "time": "2022-10-03T17:12:01+00:00"
+            "time": "2022-10-16T17:35:26+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2440,6 +2430,59 @@
             "time": "2022-07-13T16:47:18+00:00"
         },
         {
+            "name": "utopia-php/pools",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/pools.git",
+                "reference": "5a467a569a80aefc846a97dc195b4adc2fd71805"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/5a467a569a80aefc846a97dc195b4adc2fd71805",
+                "reference": "5a467a569a80aefc846a97dc195b4adc2fd71805",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mongodb": "*",
+                "ext-pdo": "*",
+                "ext-redis": "*",
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.4",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Pools\\": "src/Pools"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Team Appwrite",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "A simple library to manage connection pools",
+            "keywords": [
+                "framework",
+                "php",
+                "pools",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/pools/issues",
+                "source": "https://github.com/utopia-php/pools/tree/0.1.0"
+            },
+            "time": "2022-10-11T19:31:07+00:00"
+        },
+        {
             "name": "utopia-php/preloader",
             "version": "0.2.4",
             "source": {
@@ -2494,16 +2537,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.3.0",
+            "version": "dev-refactor-redis-client",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "42b132c6f2431b726c2bc629c386921e4934b863"
+                "reference": "3e49bcbfc343792ea4899d60b24e7b6b334e5910"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/42b132c6f2431b726c2bc629c386921e4934b863",
-                "reference": "42b132c6f2431b726c2bc629c386921e4934b863",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/3e49bcbfc343792ea4899d60b24e7b6b334e5910",
+                "reference": "3e49bcbfc343792ea4899d60b24e7b6b334e5910",
                 "shasum": ""
             },
             "require": {
@@ -2549,9 +2592,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.3.0"
+                "source": "https://github.com/utopia-php/queue/tree/refactor-redis-client"
             },
-            "time": "2022-10-19T13:22:07+00:00"
+            "time": "2022-10-24T14:29:47+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5418,13 +5461,27 @@
         {
             "package": "utopia-php/cache",
             "version": "dev-feat-redis-sync",
-            "alias": "0.6.1",
-            "alias_normalized": "0.6.1.0"
+            "alias": "0.8.1",
+            "alias_normalized": "0.8.1.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-update-cache-lib",
+            "alias": "0.26.1",
+            "alias_normalized": "0.26.1.0"
+        },
+        {
+            "package": "utopia-php/queue",
+            "version": "dev-refactor-redis-client",
+            "alias": "0.3.0",
+            "alias_normalized": "0.3.0.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/cache": 20
+        "utopia-php/cache": 20,
+        "utopia-php/database": 20,
+        "utopia-php/queue": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

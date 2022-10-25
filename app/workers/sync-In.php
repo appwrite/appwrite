@@ -1,35 +1,55 @@
 <?php
 
-require_once __DIR__ . '/../../vendor/autoload.php';
-
-use Utopia\App;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Queue;
-use Utopia\Queue\Message;
-
 require_once __DIR__ . '/../init.php';
 
-/**
- * @return RedisCache
- */
-function getCache(): RedisCache
-{
-    global $register;
-    return new RedisCache($register->get('cache'));
-}
 
-$connection = new Queue\Connection\Redis('redis');
-$adapter = new Queue\Adapter\Swoole($connection, 1, 'syncIn');
-$server = new Queue\Server($adapter);
+use Utopia\App;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Cache;
+use Utopia\Config\Config;
+use Utopia\Queue;
+use Utopia\Queue\Message;
+use Utopia\Queue\Server;
+
+global $register;
+
+$pools = $register->get('pools');
+$queue = $pools
+    ->get('queue')
+    ->pop()
+    ->getResource()
+;
+
+$connection = new Queue\Connection\Redis(fn() => $queue);
+$adapter    = new Queue\Adapter\Swoole($connection, 1, 'syncIn');
+$server     = new Queue\Server($adapter);
+
+Server::setResource('cache', function () use ($register) {
+
+    $pools = $register->get('pools');
+    $list = Config::getParam('pools-cache', []);
+    $adapters = [];
+
+    foreach ($list as $value) {
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource()
+        ;
+    }
+
+    return new Cache(new Sharding($adapters));
+});
 
 $server->job()
     ->inject('message')
-    ->action(function (Message $message) {
+    ->inject('cache')
+    ->action(function (Message $message, Cache $cache) {
 
         $payload = $message->getPayload()['value'];
         foreach ($payload['keys'] ?? [] as $key) {
-                var_dump('purging ' . $key);
-                var_dump(getCache()->purge($key));
+                var_dump('purging -> ' . $key);
+                var_dump($cache->purge($key));
         }
     });
 
