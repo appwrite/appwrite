@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Mail;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
 use Utopia\App;
@@ -374,19 +375,19 @@ class CertificatesV1 extends Worker
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
         // Send mail to administratore mail
-        Resque::enqueue(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME, [
-            'from' => 'console',
-            'project' => 'console',
-            'name' => 'Appwrite Administrator',
-            'recipient' => App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'),
-            'url' => 'https://' . $domain,
-            'locale' => App::getEnv('_APP_LOCALE', 'en'),
-            'type' => MAIL_TYPE_CERTIFICATE,
-
-            'domain' => $domain,
-            'error' => $errorMessage,
-            'attempt' => $attempt
-        ]);
+        $mail = new Mail();
+        $mail
+            ->setType(MAIL_TYPE_CERTIFICATE)
+            ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
+            ->setUrl('https://' . $domain)
+            ->setLocale(App::getEnv('_APP_LOCALE', 'en'))
+            ->setName('Appwrite Administrator')
+            ->setPayload([
+                'domain' => $domain,
+                'error' => $errorMessage,
+                'attempt' => $attempt
+            ])
+            ->trigger();
     }
 
     /**
