@@ -21,7 +21,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Registry\Registry;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -439,8 +438,7 @@ App::shutdown()
 
 App::shutdown()
     ->groups(['schema'])
-    ->inject('register')
     ->inject('project')
-    ->action(function (Registry $register, Document $project) {
+    ->action(function (Document $project) {
         Schema::setDirty($project->getId());
     });
