@@ -4,7 +4,7 @@ The GraphQL services allows you to manipulate your Appwrite instance through a s
 > 
 > The major difference comes from the way the data is returned. GraphQL returns the data in a structured format, giving you only the nodes you ask for, while REST returns the data in a flat format.
 > 
-> GraphQL has a single endpoint for all queries and mutations except file uploads, while the REST API has multiple endpoints for each type of action.
+> GraphQL has a single endpoint for all queries and mutations, while the REST API has multiple endpoints for each type of action.
 > 
 > Both APIs are fully compatible with each other, and you can use them together in the same project.
 > 

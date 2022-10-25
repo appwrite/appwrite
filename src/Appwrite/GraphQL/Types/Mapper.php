@@ -153,6 +153,7 @@ class Mapper
             ];
         }
 
+        // If model has no properties, explicitly add a 'status' field because GraphQL requires at least 1 field per type.
         if (!$model->isAny() && empty($model->getRules())) {
             $fields['status'] = [
                 'type' => Type::string(),
@@ -362,7 +363,7 @@ class Mapper
 
     private static function getUnionImplementation(string $name, array $object): Type
     {
-        // FIXME: Find a different way to do this
+        // TODO: Find a better way to do this
 
         switch ($name) {
             case 'Attributes':
