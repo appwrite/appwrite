@@ -96,6 +96,7 @@ class DatabaseV1 extends Worker
                 throw new Exception('Failed to create Attribute');
             }
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
+           // $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('error', 'available'));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));

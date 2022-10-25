@@ -28,6 +28,12 @@ class Index extends Model
                 'default' => '',
                 'example' => 'available',
             ])
+            ->addRule('error', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Error message',
+                'default' => '',
+                'example' => 'string',
+            ])
             ->addRule('attributes', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Index attributes.',

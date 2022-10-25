@@ -5,7 +5,8 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 class Databases extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
-        'name'
+        'name',
+        'error'
     ];
 
     /**
