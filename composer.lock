@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f0c0b6f8c2a3d8c16a7357f57c2730cc",
+    "content-hash": "568151395a8877f87d9bdce048adc2dc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1903,26 +1903,24 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.7.0",
+            "version": "0.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "cd53431242c88299daea2589e21322abe97682cc"
+                "reference": "9889235a6d3da6cbb1f435201529da4d27c30e79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/cd53431242c88299daea2589e21322abe97682cc",
-                "reference": "cd53431242c88299daea2589e21322abe97682cc",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/9889235a6d3da6cbb1f435201529da4d27c30e79",
+                "reference": "9889235a6d3da6cbb1f435201529da4d27c30e79",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
-                "ext-memcached": "*",
                 "ext-redis": "*",
                 "php": ">=8.0"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.13.1"
             },
@@ -1936,6 +1934,12 @@
             "license": [
                 "MIT"
             ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
             "description": "A simple cache library to manage application cache storing, loading and purging",
             "keywords": [
                 "cache",
@@ -1946,9 +1950,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.7.0"
+                "source": "https://github.com/utopia-php/cache/tree/0.6.1"
             },
-            "time": "2022-10-16T06:04:12+00:00"
+            "time": "2022-08-10T08:12:46+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -2056,16 +2060,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-mysql-varchar-index-length",
+            "version": "0.25.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "6dfc74188e24ffa600f2e0edc505a2f168e8cc04"
+                "reference": "6d1c1d46d66553154975a3e8e72d30b5bd2413d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/6dfc74188e24ffa600f2e0edc505a2f168e8cc04",
-                "reference": "6dfc74188e24ffa600f2e0edc505a2f168e8cc04",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/6d1c1d46d66553154975a3e8e72d30b5bd2413d9",
+                "reference": "6d1c1d46d66553154975a3e8e72d30b5bd2413d9",
                 "shasum": ""
             },
             "require": {
@@ -2074,7 +2078,7 @@
                 "ext-redis": "*",
                 "mongodb/mongodb": "1.8.0",
                 "php": ">=8.0",
-                "utopia-php/cache": "0.7.*",
+                "utopia-php/cache": "0.6.*",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
@@ -2094,6 +2098,16 @@
             "license": [
                 "MIT"
             ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Brandon Leckemby",
+                    "email": "brandon@appwrite.io"
+                }
+            ],
             "description": "A simple library to manage application persistency using multiple database adapters",
             "keywords": [
                 "database",
@@ -2104,9 +2118,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/mysql-varchar-index-length"
+                "source": "https://github.com/utopia-php/database/tree/0.25.5"
             },
-            "time": "2022-10-20T19:41:52+00:00"
+            "time": "2022-09-30T15:01:32+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5349,18 +5363,9 @@
             "time": "2022-09-28T08:42:51+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-mysql-varchar-index-length",
-            "alias": "0.25.7",
-            "alias_normalized": "0.25.7.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
