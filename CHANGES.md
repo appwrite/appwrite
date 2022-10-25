@@ -1,7 +1,7 @@
 # Version 1.1.0
-
 ## Bugs
 - Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
+- Fix `/v1/databases/:databaseId/collections/:collectionId/indexes/:key` endpoint not finding index [#4571](https://github.com/appwrite/appwrite/pull/4571)
 
 # Version 1.0.3
 ## Bugs
