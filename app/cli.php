@@ -12,7 +12,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use InfluxDB\Database as InfluxDatabase;
-use Utopia\Database\Document;
 
 function getInfluxDB(): InfluxDatabase
 {
@@ -56,29 +55,6 @@ function getConsoleDB(): Database
     $database = new Database($dbAdapter, getCache());
 
     $database->setNamespace('console');
-
-    return $database;
-}
-
-
-function getProjectDB(Document $project): Database
-{
-    global $register;
-
-    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
-
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return getConsoleDB();
-    }
-
-    $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource()
-    ;
-
-    $database = new Database($dbAdapter, getCache());
-    $database->setNamespace('_' . $project->getInternalId());
 
     return $database;
 }
