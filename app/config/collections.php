@@ -2230,7 +2230,7 @@ $collections = [
                 '$id' => ID::custom('_key_runtime'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['runtime'],
-                'lengths' => [70],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -2946,7 +2946,7 @@ $collections = [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
-                'lengths' => [768],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -3383,7 +3383,7 @@ $collections = [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
-                'lengths' => [2048],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
