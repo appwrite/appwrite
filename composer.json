@@ -57,6 +57,7 @@
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
         "utopia-php/swoole": "0.3.*",
+        "utopia-php/dsn": "dev-dev",
         "utopia-php/storage": "0.11.*",
         "utopia-php/websocket": "0.1.0",
         "utopia-php/image": "0.5.*",
@@ -73,6 +74,10 @@
     "repositories": [
         {
             "url": "https://github.com/appwrite/runtimes.git",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/dsn.git",
             "type": "git"
         }
     ],

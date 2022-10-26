@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "08fdd139ad1285b02c4b4e555679e7de",
+    "content-hash": "b9786b80c04af9966f4d36c085dd4090",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -693,16 +693,16 @@
         },
         {
             "name": "guzzlehttp/psr7",
-            "version": "2.4.1",
+            "version": "2.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "69568e4293f4fa993f3b0e51c9723e1e17c41379"
+                "reference": "3148458748274be1546f8f2809a6c09fe66f44aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/69568e4293f4fa993f3b0e51c9723e1e17c41379",
-                "reference": "69568e4293f4fa993f3b0e51c9723e1e17c41379",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/3148458748274be1546f8f2809a6c09fe66f44aa",
+                "reference": "3148458748274be1546f8f2809a6c09fe66f44aa",
                 "shasum": ""
             },
             "require": {
@@ -792,7 +792,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/2.4.1"
+                "source": "https://github.com/guzzle/psr7/tree/2.4.2"
             },
             "funding": [
                 {
@@ -808,7 +808,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-08-28T14:45:39+00:00"
+            "time": "2022-10-25T13:49:28+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -2169,6 +2169,53 @@
                 "source": "https://github.com/utopia-php/domains/tree/master"
             },
             "time": "2020-02-23T07:40:02+00:00"
+        },
+        {
+            "name": "utopia-php/dsn",
+            "version": "dev-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/dsn.git",
+                "reference": "9a524236c37474fcb121dc0d9eb13a0bcead9cf6"
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpunit/phpunit": "^9.3",
+                "squizlabs/php_codesniffer": "^3.6",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\DSN\\": "src/DSN"
+                }
+            },
+            "scripts": {
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "test": [
+                    "./vendor/bin/phpunit --configuration phpunit.xml tests"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library for parsing and managing Data Source Names ( DSNs )",
+            "keywords": [
+                "dsn",
+                "framework",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "time": "2022-10-26T03:49:15+00:00"
         },
         {
             "name": "utopia-php/framework",
@@ -5359,7 +5406,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/dsn": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

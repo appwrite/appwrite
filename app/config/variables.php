@@ -481,7 +481,7 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_STORAGE_DEVICE',
+                'name' => '_APP_STORAGE_DEVICE', // TODO : Should we keep it or deprecate it considering we can get the device from the scheme of the DSN
                 'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\', \'S3\', \'DOSpaces\', \'Backblaze\', \'Linode\' and \'Wasabi\'.',
                 'introduction' => '0.13.0',
                 'default' => 'Local',
@@ -489,8 +489,16 @@ return [
                 'question' => '',
             ],
             [
+                'name' => '_APP_STORAGE_CONNECTION',
+                'description' => 'A DSN representing the storage device to connect to. The DSN takes the following format <device>://<access_key>:<access_secret>@<host>:<port>/<bucket>?region=<region>. For example, for S3: \'s3://access_key:access_secret@host:port/bucket?region=us-east-1\'. To use the local filesystem, you can leave this variable empty.',
+                'introduction' => '1.1.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
                 'name' => '_APP_STORAGE_S3_ACCESS_KEY',
-                'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
+                'description' => 'Deprecated since 1.1.0. AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,

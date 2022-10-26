@@ -13,6 +13,7 @@ use Swoole\Timer;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Orchestration\Adapter\DockerCLI;
@@ -119,45 +120,35 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
 
 function getStorageDevice($root): Device
 {
-    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+    $connection = App::getEnv('_APP_STORAGE_CONNECTION', '');
+
+    try {
+        $dsn = new DSN($connection);
+        $device = $dsn->getScheme();
+        $accessKey = $dsn->getUser();
+        $accessSecret = $dsn->getPassword();
+        $bucket = $dsn->getPath();
+        $region = $dsn->getParam('region');
+        $acl = 'private';
+    } catch (\Exception $e) {
+        Console::error($e->getMessage() . 'Defaulting to Local storage.');
+        $device = 'Local';
+    }
+
+    switch ($device) {
         case Storage::DEVICE_LOCAL:
         default:
             return new Local($root);
         case Storage::DEVICE_S3:
-            $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
-            $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
-            $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
-            $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
-            $s3Acl = 'private';
-            return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+            return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
         case Storage::DEVICE_DO_SPACES:
-            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
-            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
-            $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
-            $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
-            $doSpacesAcl = 'private';
-            return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
         case Storage::DEVICE_BACKBLAZE:
-            $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
-            $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
-            $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
-            $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
-            $backblazeAcl = 'private';
-            return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
+            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
         case Storage::DEVICE_LINODE:
-            $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
-            $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
-            $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
-            $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
-            $linodeAcl = 'private';
-            return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
+            return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
         case Storage::DEVICE_WASABI:
-            $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
-            $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
-            $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
-            $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
-            $wasabiAcl = 'private';
-            return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
+            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
     }
 }
 
