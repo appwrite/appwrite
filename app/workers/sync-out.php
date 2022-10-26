@@ -4,6 +4,8 @@ require_once __DIR__ . '/../worker.php';
 
 use Ahc\Jwt\JWT;
 use Appwrite\Utopia\Response;
+use Swoole\Runtime;
+use Swoole\Timer;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -102,6 +104,8 @@ $connection = new Queue\Connection\Redis(fn() => $queue);
 $adapter    = new Queue\Adapter\Swoole($connection, 2, 'syncOut');
 $server     = new Queue\Server($adapter);
 
+
+
 $server->job()
     ->inject('message')
     ->inject('dbForConsole')
@@ -130,22 +134,15 @@ $server->job()
         }
 
          $keys[$payload['key']] = null;
-        if (count($keys) >= MAX_KEY_COUNT  || ($counter + SUBMITION_INTERVAL) < time()) {
-            var_dump([
-                'regions' =>  array_keys($regions),
-                'time_h' => date('m/d/Y H:i:s', $counter),
-                'because_time' => ($counter + SUBMITION_INTERVAL) < time(),
-                'because_count' => count($keys) >= MAX_KEY_COUNT,
-                'count' => count($keys),
-                'counter' => $counter + SUBMITION_INTERVAL,
-                'time' => time(),
-                'keys' => array_keys($keys),
-            ]);
-            call($dbForConsole, $regions, array_keys($keys));
-            $counter = time();
-            $keys = [];
-        }
+
+//        if (count($keys) >= MAX_KEY_COUNT  || ($counter + SUBMITION_INTERVAL) < time()) {
+//            call($dbForConsole, $regions, array_keys($keys));
+//            $counter = time();
+//            $keys = [];
+//        }
     });
+
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 $server
     ->error()
@@ -157,6 +154,10 @@ $server
 
 $server
     ->workerStart(function () {
+        Timer::tick(1000, function () {
+            var_dump(date('m/d/Y H:i:s', time()));
+        });
         echo "Out region [" . App::getEnv('_APP_REGION', 'nyc1') . "] cache purging worker Started" . PHP_EOL;
     })
     ->start();
+
