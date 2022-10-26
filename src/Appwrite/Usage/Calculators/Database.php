@@ -10,9 +10,11 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\Registry\Registry;
 
 class Database extends Calculator
 {
+    protected Registry $register;
     protected array $periods = [
         [
             'key' => '30m',
@@ -24,9 +26,11 @@ class Database extends Calculator
         ],
     ];
 
-    public function __construct(UtopiaDatabase $database, callable $errorHandler = null)
+    public function __construct(UtopiaDatabase $database, callable $getProjectDB, Registry $register, callable $errorHandler = null)
     {
+        $this->register = $register;
         $this->database = $database;
+        $this->getProjectDB = $getProjectDB;
         $this->errorHandler = $errorHandler;
     }
 
@@ -35,7 +39,8 @@ class Database extends Calculator
      *
      * Create given metric for each defined period
      *
-     * @param string $projectId
+     * @param UtopiaDatabase $database
+     * @param Document $project
      * @param string $metric
      * @param int $value
      * @param bool $monthly
@@ -43,7 +48,7 @@ class Database extends Calculator
      * @throws Authorization
      * @throws Structure
      */
-    protected function createPerPeriodMetric(string $projectId, string $metric, int $value, bool $monthly = false): void
+    protected function createPerPeriodMetric(UtopiaDatabase $database, string $projectId, string $metric, int $value, bool $monthly = false): void
     {
         foreach ($this->periods as $options) {
             $period = $options['key'];
@@ -56,13 +61,13 @@ class Database extends Calculator
             } else {
                 throw new Exception("Period type not found", 500);
             }
-            $this->createOrUpdateMetric($projectId, $metric, $period, $time, $value);
+            $this->createOrUpdateMetric($database, $projectId, $metric, $period, $time, $value);
         }
 
         // Required for billing
         if ($monthly) {
             $time = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-01\T00:00:00.000'))->format(DateTime::RFC3339);
-            $this->createOrUpdateMetric($projectId, $metric, '1mo', $time, $value);
+            $this->createOrUpdateMetric($database, $projectId, $metric, '1mo', $time, $value);
         }
     }
 
@@ -71,7 +76,8 @@ class Database extends Calculator
      *
      * Create or update each metric in the stats collection for the given project
      *
-     * @param string $projectId
+     * @param UtopiaDatabase $database
+     * @param String $projectId
      * @param string $metric
      * @param string $period
      * @param string $time
@@ -81,15 +87,14 @@ class Database extends Calculator
      * @throws Authorization
      * @throws Structure
      */
-    protected function createOrUpdateMetric(string $projectId, string $metric, string $period, string $time, int $value): void
+    protected function createOrUpdateMetric(UtopiaDatabase $database, string $projectId, string $metric, string $period, string $time, int $value): void
     {
         $id = \md5("{$time}_{$period}_{$metric}");
-        $this->database->setNamespace('_' . $projectId);
 
         try {
-            $document = $this->database->getDocument('stats', $id);
+            $document = $database->getDocument('stats', $id);
             if ($document->isEmpty()) {
-                $this->database->createDocument('stats', new Document([
+                $database->createDocument('stats', new Document([
                     '$id' => $id,
                     'period' => $period,
                     'time' => $time,
@@ -98,7 +103,7 @@ class Database extends Calculator
                     'type' => 2, // these are cumulative metrics
                 ]));
             } else {
-                $this->database->updateDocument(
+                $database->updateDocument(
                     'stats',
                     $document->getId(),
                     $document->setAttribute('value', $value)
@@ -118,7 +123,7 @@ class Database extends Calculator
      *
      * Call provided callback for each document in the collection
      *
-     * @param string $projectId
+     * @param Document $project
      * @param string $collection
      * @param array $queries
      * @param callable $callback
@@ -126,13 +131,13 @@ class Database extends Calculator
      * @return void
      * @throws Exception
      */
-    protected function foreachDocument(string $projectId, string $collection, array $queries, callable $callback): void
+    protected function foreachDocument(Document $project, string $collection, array $queries, callable $callback): void
     {
         $limit = 50;
         $results = [];
         $sum = $limit;
         $latestDocument = null;
-        $this->database->setNamespace('_' . $projectId);
+        $database = $project->getId() == 'console' ? $this->database : call_user_func($this->getProjectDB, $project);
 
         while ($sum === $limit) {
             try {
@@ -143,7 +148,7 @@ class Database extends Calculator
                 $results = $this->database->find($collection, \array_merge($paginationQueries, $queries));
             } catch (\Exception $e) {
                 if (is_callable($this->errorHandler)) {
-                    call_user_func($this->errorHandler, $e, "fetch_documents_project_{$projectId}_collection_{$collection}");
+                    call_user_func($this->errorHandler, $e, "fetch_documents_project_{$project->getId()}_collection_{$collection}");
                     return;
                 } else {
                     throw $e;
@@ -169,6 +174,7 @@ class Database extends Calculator
      *
      * Calculate sum of an attribute of documents in collection
      *
+     * @param UtopiaDatabase $database
      * @param string $projectId
      * @param string $collection
      * @param string $attribute
@@ -177,16 +183,15 @@ class Database extends Calculator
      * @return int
      * @throws Exception
      */
-    private function sum(string $projectId, string $collection, string $attribute, string $metric = null, int $multiplier = 1): int
+    private function sum(UtopiaDatabase $database, string $projectId, string $collection, string $attribute, string $metric = null, int $multiplier = 1): int
     {
-        $this->database->setNamespace('_' . $projectId);
 
         try {
-            $sum = $this->database->sum($collection, $attribute);
+            $sum = $database->sum($collection, $attribute);
             $sum = (int) ($sum * $multiplier);
 
             if (!is_null($metric)) {
-                $this->createPerPeriodMetric($projectId, $metric, $sum);
+                $this->createPerPeriodMetric($database, $projectId, $metric, $sum);
             }
             return $sum;
         } catch (Exception $e) {
@@ -204,6 +209,7 @@ class Database extends Calculator
      *
      * Count number of documents in collection
      *
+     * @param UtopiaDatabase $database
      * @param string $projectId
      * @param string $collection
      * @param ?string $metric
@@ -211,14 +217,12 @@ class Database extends Calculator
      * @return int
      * @throws Exception
      */
-    private function count(string $projectId, string $collection, ?string $metric = null): int
+    private function count(UtopiaDatabase $database, string $projectId, string $collection, ?string $metric = null): int
     {
-        $this->database->setNamespace('_' . $projectId);
-
         try {
-            $count = $this->database->count($collection);
+            $count = $database->count($collection);
             if (!is_null($metric)) {
-                $this->createPerPeriodMetric($projectId, (string) $metric, $count);
+                $this->createPerPeriodMetric($database, $projectId, (string) $metric, $count);
             }
             return $count;
         } catch (Exception $e) {
@@ -236,14 +240,15 @@ class Database extends Calculator
      *
      * Total sum of storage used by deployments
      *
+     * @param UtopiaDatabase $database
      * @param string $projectId
      *
      * @return int
      * @throws Exception
      */
-    private function deploymentsTotal(string $projectId): int
+    private function deploymentsTotal(UtopiaDatabase $database, string $projectId): int
     {
-        return $this->sum($projectId, 'deployments', 'size', 'deployments.$all.storage.size');
+        return $this->sum($database, $projectId, 'deployments', 'size', 'deployments.$all.storage.size');
     }
 
     /**
@@ -251,14 +256,15 @@ class Database extends Calculator
      *
      * Metric: users.count
      *
+     * @param UtopiaDatabase $database
      * @param string $projectId
      *
      * @return void
      * @throws Exception
      */
-    private function usersStats(string $projectId): void
+    private function usersStats(UtopiaDatabase $database, string $projectId): void
     {
-        $this->count($projectId, 'users', 'users.$all.count.total');
+        $this->count($database, $projectId, 'users', 'users.$all.count.total');
     }
 
     /**
@@ -267,35 +273,36 @@ class Database extends Calculator
      * Metrics: buckets.$all.count.total, files.$all.count.total, files.bucketId,count.total,
      * files.$all.storage.size, files.bucketId.storage.size, project.$all.storage.size
      *
-     * @param string $projectId
+     * @param UtopiaDatabase $database
+     * @param Document $project
      *
      * @return void
      * @throws Authorization
      * @throws Structure
      */
-    private function storageStats(string $projectId): void
+    private function storageStats(UtopiaDatabase $database, Document $project): void
     {
         $projectFilesTotal = 0;
         $projectFilesCount = 0;
 
         $metric = 'buckets.$all.count.total';
-        $this->count($projectId, 'buckets', $metric);
+        $this->count($database, $project->getId(), 'buckets', $metric);
 
-        $this->foreachDocument($projectId, 'buckets', [], function ($bucket) use (&$projectFilesCount, &$projectFilesTotal, $projectId,) {
+        $this->foreachDocument($project, 'buckets', [], function ($bucket) use (&$projectFilesCount, &$projectFilesTotal, $project, $database) {
             $metric = "files.{$bucket->getId()}.count.total";
-            $count = $this->count($projectId, 'bucket_' . $bucket->getInternalId(), $metric);
+            $count = $this->count($database, $project->getId(), 'bucket_' . $bucket->getInternalId(), $metric);
             $projectFilesCount += $count;
 
             $metric = "files.{$bucket->getId()}.storage.size";
-            $sum = $this->sum($projectId, 'bucket_' . $bucket->getInternalId(), 'sizeOriginal', $metric);
+            $sum = $this->sum($database, $project->getId(), 'bucket_' . $bucket->getInternalId(), 'sizeOriginal', $metric);
             $projectFilesTotal += $sum;
         });
 
-        $this->createPerPeriodMetric($projectId, 'files.$all.count.total', $projectFilesCount);
-        $this->createPerPeriodMetric($projectId, 'files.$all.storage.size', $projectFilesTotal);
+        $this->createPerPeriodMetric($database, $project->getId(), 'files.$all.count.total', $projectFilesCount);
+        $this->createPerPeriodMetric($database, $project->getId(), 'files.$all.storage.size', $projectFilesTotal);
 
-        $deploymentsTotal = $this->deploymentsTotal($projectId);
-        $this->createPerPeriodMetric($projectId, 'project.$all.storage.size', $projectFilesTotal + $deploymentsTotal);
+        $deploymentsTotal = $this->deploymentsTotal($database, $project->getId());
+        $this->createPerPeriodMetric($database, $project->getId(), 'project.$all.storage.size', $projectFilesTotal + $deploymentsTotal);
     }
 
     /**
@@ -305,38 +312,39 @@ class Database extends Calculator
      * Metrics: databases.$all.count.total, collections.$all.count.total, collections.databaseId.count.total,
      * documents.$all.count.all, documents.databaseId.count.total, documents.databaseId/collectionId.count.total
      *
-     * @param string $projectId
+     * @param UtopiaDatabase $database
+     * @param Document $project
      *
      * @return void
      * @throws Authorization
      * @throws Structure
      */
-    private function databaseStats(string $projectId): void
+    private function databaseStats(UtopiaDatabase $database, Document $project): void
     {
         $projectDocumentsCount = 0;
         $projectCollectionsCount = 0;
 
-        $this->count($projectId, 'databases', 'databases.$all.count.total');
+        $this->count($database, $project->getId(), 'databases', 'databases.$all.count.total');
 
-        $this->foreachDocument($projectId, 'databases', [], function ($database) use (&$projectDocumentsCount, &$projectCollectionsCount, $projectId) {
+        $this->foreachDocument($project, 'databases', [], function ($database) use (&$projectDocumentsCount, &$projectCollectionsCount, $project) {
             $metric = "collections.{$database->getId()}.count.total";
-            $count = $this->count($projectId, 'database_' . $database->getInternalId(), $metric);
+            $count = $this->count($database, $project->getId(), 'database_' . $database->getInternalId(), $metric);
             $projectCollectionsCount += $count;
             $databaseDocumentsCount = 0;
 
-            $this->foreachDocument($projectId, 'database_' . $database->getInternalId(), [], function ($collection) use (&$projectDocumentsCount, &$databaseDocumentsCount, $projectId, $database) {
+            $this->foreachDocument($project, 'database_' . $database->getInternalId(), [], function ($collection) use (&$projectDocumentsCount, &$databaseDocumentsCount, $project, $database) {
                 $metric = "documents.{$database->getId()}/{$collection->getId()}.count.total";
 
-                $count = $this->count($projectId, 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $metric);
+                $count = $this->count($database, $project->getId(), 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $metric);
                 $projectDocumentsCount += $count;
                 $databaseDocumentsCount += $count;
             });
 
-            $this->createPerPeriodMetric($projectId, "documents.{$database->getId()}.count.total", $databaseDocumentsCount);
+            $this->createPerPeriodMetric($database, $project->getId(), "documents.{$database->getId()}.count.total", $databaseDocumentsCount);
         });
 
-        $this->createPerPeriodMetric($projectId, 'collections.$all.count.total', $projectCollectionsCount);
-        $this->createPerPeriodMetric($projectId, 'documents.$all.count.total', $projectDocumentsCount);
+        $this->createPerPeriodMetric($database, $project->getId(), 'collections.$all.count.total', $projectCollectionsCount);
+        $this->createPerPeriodMetric($database, $project->getId(), 'documents.$all.count.total', $projectDocumentsCount);
     }
 
     /**
@@ -349,12 +357,12 @@ class Database extends Calculator
      */
     public function collect(): void
     {
-        $this->foreachDocument('console', 'projects', [], function (Document $project) {
-            $projectId = $project->getInternalId();
-
-            $this->usersStats($projectId);
-            $this->databaseStats($projectId);
-            $this->storageStats($projectId);
+        $this->foreachDocument(new Document(['$id' => 'console']), 'projects', [], function (Document $project) {
+            $database = call_user_func($this->getProjectDB, $project);
+            $this->usersStats($database, $project->getId());
+            $this->databaseStats($database, $project);
+            $this->storageStats($database, $project);
+            $this->register->get('pools')->reclaim();
         });
     }
 }
