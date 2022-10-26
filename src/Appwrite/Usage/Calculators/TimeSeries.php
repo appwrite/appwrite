@@ -14,7 +14,6 @@ class TimeSeries extends Calculator
     protected Database $database;
     protected $errorHandler;
     private array $latestTime = [];
-    private mixed $getProjectDB;
 
     // all the mertics that we are collecting
     protected array $metrics = [
@@ -279,11 +278,10 @@ class TimeSeries extends Calculator
         'startTime' => '-24 hours',
     ];
 
-    public function __construct(Database $database, InfluxDatabase $influxDB, callable $getProjectDB, callable $errorHandler = null)
+    public function __construct(Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
     {
         $this->database = $database;
         $this->influxDB = $influxDB;
-        $this->getProjectDB = $getProjectDB;
         $this->errorHandler = $errorHandler;
     }
 
@@ -303,11 +301,12 @@ class TimeSeries extends Calculator
     private function createOrUpdateMetric(string $projectId, string $time, string $period, string $metric, int $value, int $type): void
     {
         $id = \md5("{$time}_{$period}_{$metric}");
+        $this->database->setNamespace('_console');
         $project = $this->database->getDocument('projects', $projectId);
-        $database = call_user_func($this->getProjectDB, $project);
+        $this->database->setNamespace('_' . $project->getInternalId());
 
         try {
-            $document = $database->getDocument('stats', $id);
+            $document = $this->database->getDocument('stats', $id);
             if ($document->isEmpty()) {
                 $this->database->createDocument('stats', new Document([
                     '$id' => $id,
@@ -318,7 +317,7 @@ class TimeSeries extends Calculator
                     'type' => $type,
                 ]));
             } else {
-                $database->updateDocument(
+                $this->database->updateDocument(
                     'stats',
                     $document->getId(),
                     $document->setAttribute('value', $value)
