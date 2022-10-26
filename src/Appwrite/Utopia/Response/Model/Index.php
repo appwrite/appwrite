@@ -30,7 +30,7 @@ class Index extends Model
             ])
             ->addRule('error', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Error message',
+                'description' => 'Error message. Displays error generated when failure of creating or deleting an index.',
                 'default' => '',
                 'example' => 'string',
             ])
