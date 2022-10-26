@@ -1,6 +1,8 @@
 <?php
 
 use Appwrite\SDK\Language\GraphQL;
+use Appwrite\SDK\Language\HTTP;
+use Appwrite\SDK\Language\REST;
 use Utopia\Config\Config;
 use Utopia\CLI\Console;
 use Appwrite\Spec\Swagger2;
@@ -165,9 +167,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'graphql':
                         $config = new GraphQL();
                         break;
+                    case 'rest':
+                        $config = new REST();
+                        break;
                     default:
                         throw new Exception('Language "' . $language['key'] . '" not supported');
-                        break;
                 }
 
                 Console::info("Generating {$language['name']} SDK...");
