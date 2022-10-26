@@ -894,6 +894,8 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 }, ['dbForConsole', 'request', 'console']);
 
 App::setResource('console', function () {
+    $hostnames = \explode(',', App::getEnv('_APP_CONSOLE_HOSTNAMES', 'localhost'));
+
     return new Document([
         '$id' => ID::custom('console'),
         '$internalId' => ID::custom('console'),
@@ -904,14 +906,12 @@ App::setResource('console', function () {
         'teamId' => -1,
         'webhooks' => [],
         'keys' => [],
-        'platforms' => [
-            [
-                '$collection' => ID::custom('platforms'),
-                'name' => 'Localhost',
-                'type' => 'web',
-                'hostname' => 'localhost',
-            ], // Current host is added on app init
-        ],
+        'platforms' => \array_map(fn($hostname) => [
+            '$collection' => ID::custom('platforms'),
+            'name' => 'Local - ' . $hostname,
+            'type' => 'web',
+            'hostname' => $hostname,
+        ], $hostnames),
         'legalName' => '',
         'legalCountry' => '',
         'legalState' => '',

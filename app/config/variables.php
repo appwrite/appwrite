@@ -203,7 +203,16 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ]
+            ],
+            [
+                'name' => '_APP_CONSOLE_HOSTNAMES',
+                'description' => 'Comma-separated list of hostnames allowed to communicate with Console API. Configuring this prevents CORS issues during local development of console, or when self-hosting console on a different domain than API. You can use \'*\' wildcard.',
+                'introduction' => '1.1.0',
+                'default' => 'localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [

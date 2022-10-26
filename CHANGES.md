@@ -1,3 +1,7 @@
+# Version 1.1.0
+
+- Variable to configure console hostnames for CORS [#TODO](https://github.com/appwrite/appwrite/pull/TODO)
+
 # Version 1.0.2
 ## Bugs
 - Fixed nullable values in functions variables [#3885](https://github.com/appwrite/appwrite/pull/3885)
