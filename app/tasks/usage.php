@@ -12,7 +12,7 @@ use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL as MariaDB;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;

@@ -7,7 +7,7 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL as MariaDB;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;

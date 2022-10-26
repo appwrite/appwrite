@@ -20,7 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL as MariaDB;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;

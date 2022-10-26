@@ -9,7 +9,7 @@ use Appwrite\Event\Delete;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL as MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Cache\Adapter\Redis as RedisCache;
