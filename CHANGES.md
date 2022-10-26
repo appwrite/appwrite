@@ -1,6 +1,6 @@
 # Version 1.1.0
 
-- Variable to configure console hostnames for CORS [#TODO](https://github.com/appwrite/appwrite/pull/TODO)
+- Variable to configure console hostnames for CORS [#4581](https://github.com/appwrite/appwrite/pull/4581)
 
 # Version 1.0.2
 ## Bugs
