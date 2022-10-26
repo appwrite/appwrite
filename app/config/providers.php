@@ -181,6 +181,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'mastodon' => [
+        'name' => 'Mastodon',
+        'developers' => 'https://docs.joinmastodon.org/methods/apps/oauth/',
+        'icon' => 'icon-mastodon',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => 'mastodon.phtml',
+        'beta' => false,
+        'mock' => false,
+    ],
     'microsoft' => [
         'name' => 'Microsoft',
         'developers' => 'https://developer.microsoft.com/en-us/',

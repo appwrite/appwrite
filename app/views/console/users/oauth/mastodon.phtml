@@ -1,0 +1,15 @@
+<?php
+$provider = $this->getParam('provider', '');
+?>
+
+<label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid">
+Client ID
+<span class="tooltip" data-tooltip="Provided on your Mastodon instance"><i class="icon-info-circled"></i></span>
+</label>
+<input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Appid}}" placeholder="Client ID" />
+<label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>ClientSecret">Client Secret <span class="tooltip" data-tooltip="Provided in the Application you created on your Mastodon instance"><i class="icon-info-circled"></i></span></label>
+<input name="clientSecret" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>ClientSecret" type="password" autocomplete="off" placeholder="Client Secret" />
+<label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Domain">Mastodon Instance Domain<span class="tooltip" data-tooltip="Your Mastodon instance Domain (without 'https://')"><i class="icon-info-circled"></i></span></label>
+<input name="domain" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Domain" type="text" autocomplete="off" placeholder="YOUR_DOMAIN" />
+<?php /*Hidden input for the final secret. Gets filled with a JSON via JS. */ ?>
+<input name="secret" data-forms-oauth-custom="<?php echo $this->escape(ucfirst($provider)); ?>" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="hidden" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Secret}}" />

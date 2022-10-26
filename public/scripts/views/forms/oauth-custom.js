@@ -34,6 +34,10 @@
           "endpoint": "oauth2GitlabEndpoint",
           "clientSecret": "oauth2GitlabClientSecret",
         },
+        "Mastodon": {
+          "clientSecret": "oauth2MastodonClientSecret",
+          "domain": "oauth2MastodonDomain",
+        },
       }
       let provider = element.getAttribute("data-forms-oauth-custom");
       if (!provider || !providers.hasOwnProperty(provider)) { console.error("Provider for custom form not set or unknown") }
