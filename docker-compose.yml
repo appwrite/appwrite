@@ -693,7 +693,7 @@ services:
       - _APP_REDIS_PASS
 
   mariadb:
-    image: mysql:8.0.31 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     networks:
