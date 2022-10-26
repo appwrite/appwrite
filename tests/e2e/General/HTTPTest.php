@@ -163,12 +163,6 @@ class HTTPTest extends Scope
 
             $response['body'] = json_decode($response['body'], true);
             $this->assertEquals(200, $response['headers']['status-code']);
-
-            if (!empty($response['body']['schemaValidationMessages'])) {
-                \var_dump($file);
-                \var_dump($response['body']);
-            }
-
             $this->assertEmpty($response['body']['schemaValidationMessages']);
         }
     }
