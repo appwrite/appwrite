@@ -13,7 +13,7 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Database\Adapter\Mongo\MongoDBAdapter;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 
@@ -27,7 +27,7 @@ function getConsoleDB(): Database
         try {
             $attempts++;
             $cache = new Cache(new RedisCache($register->get('cache')));
-            $database = new Database(new MongoDBAdapter($register->get('db')), $cache);
+            $database = new Database(new Mongo($register->get('db')), $cache);
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace('_console'); // Main DB
 

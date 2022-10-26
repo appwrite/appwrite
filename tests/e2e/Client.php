@@ -223,6 +223,7 @@ class Client
         }
 
         $responseBody   = curl_exec($ch);
+
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -232,6 +233,8 @@ class Client
                     $json = json_decode($responseBody, true);
 
                     if ($json === null) {
+                        var_dump($path);
+                        var_dump($responseBody);
                         throw new Exception('Failed to parse response: ' . $responseBody);
                     }
 

@@ -515,8 +515,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'memberships' => null,
                         'search' => implode(' ', [$userId, $email, $name])
                     ])));
-
-                    var_dump($user->getId());
                 } catch (Duplicate $th) {
                     throw new Exception(Exception::USER_ALREADY_EXISTS);
                 }
@@ -1814,8 +1812,6 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $oauth2->refreshTokens($refreshToken);
 
-                var_dump($oauth2->getAccessToken(''));
-                
                 $session
                     ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                     ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))

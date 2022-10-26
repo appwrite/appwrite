@@ -26,7 +26,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Appwrite\Utopia\Request;
-use Utopia\Database\Adapter\Mongo\MongoDBAdapter;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\WebSocket\Server;
 use Utopia\WebSocket\Adapter;
 
@@ -108,7 +108,7 @@ function getDatabase(Registry &$register, string $namespace)
             $redis = $register->get('redisPool')->get();
 
             $cache = new Cache(new RedisCache($redis));
-            $database = new Database(new MongoDBAdapter($db), $cache);
+            $database = new Database(new Mongo($db), $cache);
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace($namespace);
 
@@ -382,7 +382,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $console = $app->getResource('console');
 
         $cache = new Cache(new RedisCache($redis));
-        $database = new Database(new MongoDBAdapter($db), $cache);
+        $database = new Database(new Mongo($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_{$project->getInternalId()}");
 
@@ -489,7 +489,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $redis = $register->get('redisPool')->get();
 
         $cache = new Cache(new RedisCache($redis));
-        $database = new Database(new MongoDBAdapter($db), $cache);
+        $database = new Database(new Mongo($db), $cache);
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_console");
         $projectId = $realtime->connections[$connection]['projectId'];

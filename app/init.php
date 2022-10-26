@@ -64,9 +64,9 @@ use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
-use Utopia\Database\Adapter\Mongo\MongoClient;
-use Utopia\Database\Adapter\Mongo\MongoClientOptions;
-use Utopia\Database\Adapter\Mongo\MongoDBAdapter;
+use Utopia\Mongo\MongoClient;
+use Utopia\Mongo\MongoClientOptions;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Storage\Device;
@@ -927,7 +927,7 @@ App::setResource('console', function () {
 App::setResource('dbForProject', function ($db, $cache, Document $project) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database(new MongoDBAdapter($db), $cache);
+    $database = new Database(new Mongo($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getInternalId()}");
 
@@ -937,7 +937,7 @@ App::setResource('dbForProject', function ($db, $cache, Document $project) {
 App::setResource('dbForConsole', function ($db, $cache) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database(new MongoDBAdapter($db), $cache);
+    $database = new Database(new Mongo($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace('_console');
 

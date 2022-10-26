@@ -723,13 +723,13 @@ $collections = [
             ],
         ],
         'indexes' => [
-            [
-                '$id' => ID::custom('_key_search'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['search'],
-                'lengths' => [],
-                'orders' => [],
-            ],
+            // [
+            //     '$id' => ID::custom('_key_search'),
+            //     'type' => Database::INDEX_FULLTEXT,
+            //     'attributes' => ['search'],
+            //     'lengths' => [],
+            //     'orders' => [],
+            // ],
             [
                 '$id' => ID::custom('_key_name'),
                 'type' => Database::INDEX_KEY,
@@ -2713,13 +2713,13 @@ $collections = [
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
-            [
-                '$id' => ID::custom('_fulltext_search'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['search'],
-                'lengths' => [],
-                'orders' => [],
-            ],
+            // [
+            //     '$id' => ID::custom('_fulltext_search'),
+            //     'type' => Database::INDEX_FULLTEXT,
+            //     'attributes' => ['search'],
+            //     'lengths' => [],
+            //     'orders' => [],
+            // ],
             [
                 '$id' => ID::custom('_key_trigger'),
                 'type' => Database::INDEX_KEY,
