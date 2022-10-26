@@ -1,15 +1,12 @@
 <?php
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__ . '/../worker.php';
 
 
 use Utopia\App;
-use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Queue;
 use Utopia\Queue\Message;
-use Utopia\Queue\Server;
 
 global $register;
 
@@ -23,23 +20,6 @@ $queue = $pools
 $connection = new Queue\Connection\Redis(fn() => $queue);
 $adapter    = new Queue\Adapter\Swoole($connection, 1, 'syncIn');
 $server     = new Queue\Server($adapter);
-
-Server::setResource('cache', function () use ($register) {
-
-    $pools = $register->get('pools');
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
-    }
-
-    return new Cache(new Sharding($adapters));
-});
 
 $server->job()
     ->inject('message')

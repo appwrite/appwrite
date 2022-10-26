@@ -189,8 +189,8 @@ return [
     'syncs' => [
         'key' => 'edge',
         'name' => 'edge',
-        'subtitle' => 'Appwrite\'s cloud regions syncs Endpoint',
-        'description' => 'Cloud edge Endpoint',
+        'subtitle' => 'Appwrite\'s cache edges sync Endpoint',
+        'description' => 'Cache edges sync Endpoint',
         'controller' => 'api/edge.php',
         'sdk' => false,
         'docs' => false,

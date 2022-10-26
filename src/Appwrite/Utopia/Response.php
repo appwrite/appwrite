@@ -81,6 +81,7 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\EdgeSync;
 
 /**
  * @method Response setStatusCode(int $code = 200)
@@ -200,6 +201,7 @@ class Response extends SwooleResponse
     public const MODEL_DOMAIN_LIST = 'domainList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
+    public const MODEL_EDGE_SYNC = 'edgeSync';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -336,6 +338,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunctions())
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
+            ->setModel(new EdgeSync())
             // Verification
             // Recovery
             // Tests (keep last)

@@ -1,12 +1,10 @@
 <?php
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__ . '/../worker.php';
 
 use Ahc\Jwt\JWT;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -14,16 +12,15 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Queue;
 use Utopia\Queue\Message;
-use Utopia\Queue\Server;
 
+global $register;
 
-static $keys;
-static $counter;
+$keys = [];
+$counter = 0;
 
 const SUBMITION_INTERVAL = 20;
 const MAX_KEY_COUNT = 10;
 const MAX_CURL_SEND_ATTEMPTS = 4;
-
 
 /**
  * @param string $url
@@ -77,21 +74,22 @@ function call($database, $regions, $keys): void
 
     foreach ($regions as $code => $region) {
         var_dump('Sending request to ' . $code . '...............');
-        $payload = send($region['domain'] . '/v1/edge/sync', $token, ['keys' => $keys]);
-        var_dump($payload);
-        if ($payload['status'] !== Response::STATUS_CODE_OK) {
+        $response = send($region['domain'] . '/v1/edge/sync', $token, ['keys' => $keys]);
+        var_dump([
+                'keys' => $keys,
+                'response' => $response
+            ]);
+        if ($response['status'] !== Response::STATUS_CODE_OK) {
             $database->createDocument('syncs', new Document([
                 'region' => App::getEnv('_APP_REGION', 'nyc1'),
                 'target' => $code,
                 'keys' => $keys,
-                'status' => $payload['status'],
-                'payload' => $payload['payload'],
+                'status' => $response['status'],
+                'payload' => $response['payload'],
             ]));
         }
     }
 }
-
-global $register;
 
 $pools = $register->get('pools');
 $queue = $pools
@@ -101,40 +99,8 @@ $queue = $pools
 ;
 
 $connection = new Queue\Connection\Redis(fn() => $queue);
-$adapter    = new Queue\Adapter\Swoole($connection, 1, 'syncOut');
+$adapter    = new Queue\Adapter\Swoole($connection, 2, 'syncOut');
 $server     = new Queue\Server($adapter);
-
-Server::setResource('dbForConsole', function (Cache $cache) use ($register) {
-
-    $pools = $register->get('pools');
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource()
-    ;
-
-    $database = new Database($dbAdapter, $cache);
-    $database->setNamespace('console');
-
-    return $database;
-}, ['cache']);
-
-Server::setResource('cache', function () use ($register) {
-
-    $pools = $register->get('pools');
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
-    }
-
-    return new Cache(new Sharding($adapters));
-});
 
 $server->job()
     ->inject('message')
@@ -145,7 +111,8 @@ $server->job()
         $regions = Config::getParam('regions', true);
         $regions = array_filter(
             $regions,
-            fn ($region) => App::getEnv('_APP_REGION', 'nyc1') !== $region,
+            fn ($region) => App::getEnv('_APP_REGION', 'nyc1') !== $region
+                && $region !== 'default',
             ARRAY_FILTER_USE_KEY
         );
 
@@ -164,9 +131,9 @@ $server->job()
 
          $keys[$payload['key']] = null;
         if (count($keys) >= MAX_KEY_COUNT  || ($counter + SUBMITION_INTERVAL) < time()) {
-            var_dump('From key');
             var_dump([
                 'regions' =>  array_keys($regions),
+                'time_h' => date('m/d/Y H:i:s', $counter),
                 'because_time' => ($counter + SUBMITION_INTERVAL) < time(),
                 'because_count' => count($keys) >= MAX_KEY_COUNT,
                 'count' => count($keys),

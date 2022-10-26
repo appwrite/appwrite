@@ -6,6 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Database\Document;
 use Utopia\Queue\Client as SyncIn;
 use Utopia\Queue\Connection\Redis as QueueRedis;
 use Utopia\Registry\Registry;
@@ -31,7 +32,7 @@ App::post('/v1/edge/sync')
     ->desc('Purge cache keys')
     ->groups(['edge'])
     ->label('scope', 'public')
-    ->param('keys', '', new ArrayList(new Text(100), 1000), 'Cache keys')
+    ->param('keys', '', new ArrayList(new Text(100), 1000), 'Cache keys. an array containing alphanumerical cache keys')
     ->inject('request')
     ->inject('response')
     ->inject('register')
@@ -50,10 +51,9 @@ App::post('/v1/edge/sync')
 
         $client = new SyncIn('syncIn', new QueueRedis(fn() => $queue));
 
-        $client->
-            enqueue(['value' => ['keys' => $keys]]);
+        $client->enqueue(['value' => ['keys' => $keys]]);
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_OK)
-            ->send();
+        $response->dynamic(new Document([
+            'keys' => $keys
+        ]), Response::MODEL_EDGE_SYNC);
     });
