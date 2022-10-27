@@ -312,7 +312,7 @@ class TimeSeries extends Calculator
         try {
             $document = $database->getDocument('stats', $id);
             if ($document->isEmpty()) {
-                $this->database->createDocument('stats', new Document([
+                $database->createDocument('stats', new Document([
                     '$id' => $id,
                     'period' => $period,
                     'time' => $time,
