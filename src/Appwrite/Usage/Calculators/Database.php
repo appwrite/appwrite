@@ -145,7 +145,7 @@ class Database extends Calculator
                 if ($latestDocument !== null) {
                     $paginationQueries[] =  Query::cursorAfter($latestDocument);
                 }
-                $results = $this->database->find($collection, \array_merge($paginationQueries, $queries));
+                $results = $database->find($collection, \array_merge($paginationQueries, $queries));
             } catch (\Exception $e) {
                 if (is_callable($this->errorHandler)) {
                     call_user_func($this->errorHandler, $e, "fetch_documents_project_{$project->getId()}_collection_{$collection}");
