@@ -693,16 +693,16 @@
         },
         {
             "name": "guzzlehttp/psr7",
-            "version": "2.4.1",
+            "version": "2.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "69568e4293f4fa993f3b0e51c9723e1e17c41379"
+                "reference": "67c26b443f348a51926030c83481b85718457d3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/69568e4293f4fa993f3b0e51c9723e1e17c41379",
-                "reference": "69568e4293f4fa993f3b0e51c9723e1e17c41379",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/67c26b443f348a51926030c83481b85718457d3d",
+                "reference": "67c26b443f348a51926030c83481b85718457d3d",
                 "shasum": ""
             },
             "require": {
@@ -792,7 +792,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/2.4.1"
+                "source": "https://github.com/guzzle/psr7/tree/2.4.3"
             },
             "funding": [
                 {
@@ -808,7 +808,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-08-28T14:45:39+00:00"
+            "time": "2022-10-26T14:07:24+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -2050,16 +2050,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.25.5",
+            "version": "dev-feat-update-cache-lib",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "6d1c1d46d66553154975a3e8e72d30b5bd2413d9"
+                "reference": "44ae47dfd49c9c7c0cba29f6867347e25c23b57b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/6d1c1d46d66553154975a3e8e72d30b5bd2413d9",
-                "reference": "6d1c1d46d66553154975a3e8e72d30b5bd2413d9",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/44ae47dfd49c9c7c0cba29f6867347e25c23b57b",
+                "reference": "44ae47dfd49c9c7c0cba29f6867347e25c23b57b",
                 "shasum": ""
             },
             "require": {
@@ -2098,9 +2098,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.25.5"
+                "source": "https://github.com/utopia-php/database/tree/feat-update-cache-lib"
             },
-            "time": "2022-09-30T15:01:32+00:00"
+            "time": "2022-10-16T17:35:26+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5431,5 +5431,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
