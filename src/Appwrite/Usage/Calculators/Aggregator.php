@@ -178,7 +178,6 @@ class Aggregator extends Database
         $beginOfDay = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-d\T00:00:00.000'))->format(DateTime::RFC3339);
         $endOfDay = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-d\T23:59:59.999'))->format(DateTime::RFC3339);
 
-        $database = call_user_func($this->getProjectDB, $project);
         $value = (int) $database->sum('stats', 'value', [
             Query::equal('metric', [$metric]),
             Query::equal('period', ['30m']),
@@ -192,7 +191,6 @@ class Aggregator extends Database
     {
         $beginOfMonth = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-01\T00:00:00.000'))->format(DateTime::RFC3339);
         $endOfMonth = DateTime::createFromFormat('Y-m-d\TH:i:s.v', \date('Y-m-t\T23:59:59.999'))->format(DateTime::RFC3339);
-        $database = call_user_func($this->getProjectDB, $project);
             $value = (int) $database->sum('stats', 'value', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['1d']),
