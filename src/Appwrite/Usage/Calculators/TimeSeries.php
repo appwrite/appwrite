@@ -7,6 +7,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use InfluxDB\Database as InfluxDatabase;
 use DateTime;
+use Utopia\Registry\Registry;
 
 class TimeSeries extends Calculator
 {
@@ -15,6 +16,7 @@ class TimeSeries extends Calculator
     protected $errorHandler;
     private array $latestTime = [];
     private mixed $getProjectDB;
+    private Registry $register;
 
     // all the mertics that we are collecting
     protected array $metrics = [
@@ -279,12 +281,13 @@ class TimeSeries extends Calculator
         'startTime' => '-24 hours',
     ];
 
-    public function __construct(Database $database, InfluxDatabase $influxDB, callable $getProjectDB, callable $errorHandler = null)
+    public function __construct(Database $database, InfluxDatabase $influxDB, callable $getProjectDB, Registry $register, callable $errorHandler = null)
     {
         $this->database = $database;
         $this->influxDB = $influxDB;
         $this->getProjectDB = $getProjectDB;
         $this->errorHandler = $errorHandler;
+        $this->register = $register;
     }
 
     /**
@@ -331,6 +334,7 @@ class TimeSeries extends Calculator
                 throw $e;
             }
         }
+        $this->register->get('pools')->reclaim();
     }
 
     /**
