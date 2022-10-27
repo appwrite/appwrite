@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0b5f0fd08db65ca4c2e2f1a6d33cd299",
+    "content-hash": "d2d51b9a3dcbb3542243d1a68a078ece",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -693,16 +693,16 @@
         },
         {
             "name": "guzzlehttp/psr7",
-            "version": "2.4.1",
+            "version": "2.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "69568e4293f4fa993f3b0e51c9723e1e17c41379"
+                "reference": "3148458748274be1546f8f2809a6c09fe66f44aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/69568e4293f4fa993f3b0e51c9723e1e17c41379",
-                "reference": "69568e4293f4fa993f3b0e51c9723e1e17c41379",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/3148458748274be1546f8f2809a6c09fe66f44aa",
+                "reference": "3148458748274be1546f8f2809a6c09fe66f44aa",
                 "shasum": ""
             },
             "require": {
@@ -792,7 +792,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/2.4.1"
+                "source": "https://github.com/guzzle/psr7/tree/2.4.2"
             },
             "funding": [
                 {
@@ -808,7 +808,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-08-28T14:45:39+00:00"
+            "time": "2022-10-25T13:49:28+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -1901,12 +1901,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "99e7085eb229d0f0159a4f2107ea5ea123f7b32b"
+                "reference": "d0cd43b679fa23dc720c3bb9dff4c47c0eb4790d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/99e7085eb229d0f0159a4f2107ea5ea123f7b32b",
-                "reference": "99e7085eb229d0f0159a4f2107ea5ea123f7b32b",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/d0cd43b679fa23dc720c3bb9dff4c47c0eb4790d",
+                "reference": "d0cd43b679fa23dc720c3bb9dff4c47c0eb4790d",
                 "shasum": ""
             },
             "require": {
@@ -1942,7 +1942,7 @@
                 "issues": "https://github.com/utopia-php/cache/issues",
                 "source": "https://github.com/utopia-php/cache/tree/feat-redis-sync"
             },
-            "time": "2022-10-18T06:58:42+00:00"
+            "time": "2022-10-26T08:25:43+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -2537,16 +2537,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "dev-refactor-redis-client",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "3e49bcbfc343792ea4899d60b24e7b6b334e5910"
+                "reference": "42b132c6f2431b726c2bc629c386921e4934b863"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/3e49bcbfc343792ea4899d60b24e7b6b334e5910",
-                "reference": "3e49bcbfc343792ea4899d60b24e7b6b334e5910",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/42b132c6f2431b726c2bc629c386921e4934b863",
+                "reference": "42b132c6f2431b726c2bc629c386921e4934b863",
                 "shasum": ""
             },
             "require": {
@@ -2592,9 +2592,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/refactor-redis-client"
+                "source": "https://github.com/utopia-php/queue/tree/0.3.0"
             },
-            "time": "2022-10-24T14:29:47+00:00"
+            "time": "2022-10-19T13:22:07+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5469,19 +5469,12 @@
             "version": "dev-feat-update-cache-lib",
             "alias": "0.26.1",
             "alias_normalized": "0.26.1.0"
-        },
-        {
-            "package": "utopia-php/queue",
-            "version": "dev-refactor-redis-client",
-            "alias": "0.3.0",
-            "alias_normalized": "0.3.0.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/cache": 20,
-        "utopia-php/database": 20,
-        "utopia-php/queue": 20
+        "utopia-php/database": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

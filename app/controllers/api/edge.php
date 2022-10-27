@@ -35,21 +35,13 @@ App::post('/v1/edge/sync')
     ->param('keys', '', new ArrayList(new Text(100), 1000), 'Cache keys. an array containing alphanumerical cache keys')
     ->inject('request')
     ->inject('response')
-    ->inject('register')
-    ->action(function (array $keys, Request $request, Response $response, Registry $register) {
+    ->action(function (array $keys, Request $request, Response $response) {
 
-        if (empty($keys)) {
+        //if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
-        }
+        //}
 
-        $pools = $register->get('pools');
-        $queue = $pools
-            ->get('queue')
-            ->pop()
-            ->getResource()
-        ;
-
-        $client = new SyncIn('syncIn', new QueueRedis(fn() => $queue));
+        $client = new SyncIn('syncIn', new QueueRedis(App::getEnv('_APP_REDIS_HOST', 'redis'), App::getEnv('_APP_REDIS_PORT', '6379')));
 
         $client->enqueue(['value' => ['keys' => $keys]]);
 

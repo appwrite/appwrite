@@ -533,12 +533,12 @@ $register->set('pools', function () {
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
-        'queue' => [
-            'type' => 'queue',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
-            'multiple' => false,
-            'schemes' => ['redis'],
-        ],
+//        'queue' => [
+//            'type' => 'queue',
+//            'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
+//            'multiple' => false,
+//            'schemes' => ['redis'],
+//        ],
         'pubsub' => [
             'type' => 'pubsub',
             'dsns' => App::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
@@ -641,9 +641,11 @@ $register->set('pools', function () {
                         $adapter->setDefaultDatabase($dsn->getDatabase());
                         break;
                     case 'pubsub':
-                    case 'queue':
-                        $adapter = $resource();
                         break;
+                        $adapter = $resource();
+//                    case 'queue':
+//                        $adapter = $resource();
+//                        break;
                     case 'cache':
                         $adapter = match ($dsn->getScheme()) {
                             'redis' => new RedisCache($resource()),
@@ -1025,12 +1027,11 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('queue', function (Group $pools) {
-    return $pools
-        ->get('queue')
-        ->pop()
-        ->getResource();
-}, ['pools']);
+//App::setResource('queue', function (Group $pools) {
+//    $pools->get('queue')
+//        ->pop()
+//        ->getResource();
+//}, ['pools']);
 
 App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
@@ -1062,7 +1063,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('cache', function (Group $pools, $queue) {
+App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -1075,7 +1076,7 @@ App::setResource('cache', function (Group $pools, $queue) {
     }
     $cache  = new Cache(new Sharding($adapters));
 
-    $client = new SyncOut('syncOut', new QueueRedis(fn() => $queue));
+    $client = new SyncOut('syncOut', new QueueRedis(App::getEnv('_APP_REDIS_HOST', 'redis'), App::getEnv('_APP_REDIS_PORT', '6379')));
 
     $cache->on(cache::EVENT_SAVE, function ($key) use ($client) {
         $client
@@ -1088,7 +1089,7 @@ App::setResource('cache', function (Group $pools, $queue) {
     });
 
     return $cache;
-}, ['pools', 'queue']);
+}, ['pools']);
 
 App::setResource('deviceLocal', function () {
     return new Local();

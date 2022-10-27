@@ -10,15 +10,8 @@ use Utopia\Queue\Message;
 
 global $register;
 
-$pools = $register->get('pools');
-$queue = $pools
-    ->get('queue')
-    ->pop()
-    ->getResource()
-;
-
-$connection = new Queue\Connection\Redis(fn() => $queue);
-$adapter    = new Queue\Adapter\Swoole($connection, 1, 'syncIn');
+$connection = new Queue\Connection\Redis(App::getEnv('_APP_REDIS_HOST', 'redis'), App::getEnv('_APP_REDIS_PORT', '6379'));
+$adapter    = new Queue\Adapter\Swoole($connection, 2, 'syncIn');
 $server     = new Queue\Server($adapter);
 
 $server->job()

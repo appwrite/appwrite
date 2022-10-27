@@ -45,3 +45,49 @@ Server::setResource('cache', function (Registry $register) {
     return new Cache(new Sharding($adapters));
 }, ['register']);
 
+/**
+ * Get console database
+ * @return Database
+ */
+function getConsoleDB(): Database
+{
+    global $register;
+
+    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
+    $dbAdapter = $pools
+       ->get('console')
+       ->pop()
+       ->getResource()
+    ;
+
+    $database = new Database($dbAdapter, getCache());
+
+    $database->setNamespace('console');
+
+    return $database;
+}
+
+/**
+ * Get Cache
+ * @return Cache
+ */
+function getCache(): Cache
+{
+    global $register;
+
+    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
+    $list = Config::getParam('pools-cache', []);
+    $adapters = [];
+
+    foreach ($list as $value) {
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource()
+        ;
+    }
+
+    return new Cache(new Sharding($adapters));
+}
