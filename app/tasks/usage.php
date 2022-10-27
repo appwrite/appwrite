@@ -52,10 +52,10 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
     Console::warning($error->getTraceAsString());
 };
 
-function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB, callable $getProjectDB, callable $logError): void
+function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB, callable $getProjectDB, Registry $register, callable $logError): void
 {
     $interval = (int) App::getEnv('_APP_USAGE_TIMESERIES_INTERVAL', '30'); // 30 seconds (by default)
-    $usage = new TimeSeries($database, $influxDB, $getProjectDB, $logError);
+    $usage = new TimeSeries($database, $influxDB, $getProjectDB, $register, $logError);
 
     Console::loop(function () use ($interval, $usage) {
         $now = date('d-m-Y H:i:s', time());
@@ -103,7 +103,7 @@ $cli
 
         switch ($type) {
             case 'timeseries':
-                aggregateTimeseries($database, $influxDB, $getProjectDB, $logError);
+                aggregateTimeseries($database, $influxDB, $getProjectDB, $register, $logError);
                 break;
             case 'database':
                 aggregateDatabase($database, $getProjectDB, $register, $logError);
