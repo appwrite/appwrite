@@ -326,21 +326,21 @@ class Database extends Calculator
 
         $this->count($database, $project->getId(), 'databases', 'databases.$all.count.total');
 
-        $this->foreachDocument($project, 'databases', [], function ($database) use (&$projectDocumentsCount, &$projectCollectionsCount, $project) {
-            $metric = "collections.{$database->getId()}.count.total";
-            $count = $this->count($database, $project->getId(), 'database_' . $database->getInternalId(), $metric);
+        $this->foreachDocument($project, 'databases', [], function ($db) use (&$projectDocumentsCount, &$projectCollectionsCount, $project, $database) {
+            $metric = "collections.{$db->getId()}.count.total";
+            $count = $this->count($database, $project->getId(), 'database_' . $db->getInternalId(), $metric);
             $projectCollectionsCount += $count;
             $databaseDocumentsCount = 0;
 
-            $this->foreachDocument($project, 'database_' . $database->getInternalId(), [], function ($collection) use (&$projectDocumentsCount, &$databaseDocumentsCount, $project, $database) {
-                $metric = "documents.{$database->getId()}/{$collection->getId()}.count.total";
+            $this->foreachDocument($project, 'database_' . $db->getInternalId(), [], function ($collection) use (&$projectDocumentsCount, &$databaseDocumentsCount, $project, $db, $database) {
+                $metric = "documents.{$db->getId()}/{$collection->getId()}.count.total";
 
-                $count = $this->count($database, $project->getId(), 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $metric);
+                $count = $this->count($database, $project->getId(), 'database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId(), $metric);
                 $projectDocumentsCount += $count;
                 $databaseDocumentsCount += $count;
             });
 
-            $this->createPerPeriodMetric($database, $project->getId(), "documents.{$database->getId()}.count.total", $databaseDocumentsCount);
+            $this->createPerPeriodMetric($database, $project->getId(), "documents.{$db->getId()}.count.total", $databaseDocumentsCount);
         });
 
         $this->createPerPeriodMetric($database, $project->getId(), 'collections.$all.count.total', $projectCollectionsCount);
