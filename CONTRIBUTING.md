@@ -12,7 +12,7 @@ Help us keep Appwrite open and inclusive. Please read and follow our [Code of Co
 
 ## Submit a Pull Request 🚀
 
-Branch naming convention is as follows
+Branch naming convention is as following
 
 `TYPE-ISSUE_ID-DESCRIPTION`
 
@@ -30,7 +30,7 @@ When `TYPE` can be:
 - **fix** - a bug fix
 - **refactor** - code change that neither fixes a bug nor adds a feature
 
-**All PRs must include a commit message with the description of the changes made!**
+**All PRs must include a commit message with the changes description!**
 
 For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
 
@@ -48,22 +48,22 @@ $ git checkout -b [name_of_your_new_branch]
 
 3. Work - commit - repeat ( be sure to be in your branch )
 
-4. Before you push your changes, make sure your code follows the `PSR12` coding standards, which is the standard Appwrite follows currently. You can easily do this by running the formatter.
+4. Before you push your changes, make sure your code follows the `PSR12` coding standards , which is the standard Appwrite follows currently. You can easily do this by running the formatter.
 
 ```bash
-docker run --rm --interactive --tty --volume $PWD:/app composer format <your file path>
+composer format <your file path>
 ```
 
 Now, go a step further by running the linter by the following command to manually fix the issues the formatter wasn't able to fix.
 
 ```bash
-docker run --rm --interactive --tty --volume $PWD:/app composer lint <your file path>
+composer lint <your file path>
 ```
 
-This will give you a list of errors for you to rectify, if there is an instance you need more information on the errors being displayed you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
+This will give you a list of errors for you to rectify , if there is an instance you need more information on the errors being displayed you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
 
 ```bash
-docker run --rm --interactive --tty --volume $PWD:/app composer lint --report=diff <your file path>
+composer lint --report=diff <your file path>
 ```
 
 5. Push changes to GitHub
@@ -93,7 +93,6 @@ git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
 
 cd appwrite
 
-docker compose build
 docker compose up -d
 ```
 
@@ -117,7 +116,7 @@ After finishing the installation process, you can start writing and editing code
 
 #### Advanced Topics
 
-We love to create issues that are good for beginners and label them as `good first issue` or `hacktoberfest`, but some more advanced topics might require extra knowledge. Below is a list of links you can use to learn more about some of the more advanced topics that will help you master the Appwrite codebase.
+We love to create issues that are good for beginners and label them as `good first issue` or `hacktoberfest`, but some more advanced topics might require extra knowledge. Below is a list of links you can use to learn more about some of the more advance topics that will help you master the Appwrite codebase.
 
 ##### Tools and Libs
 
@@ -190,7 +189,7 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │       ├── Auth
 │       ├── Detector
 │       ├── Docker
-│       ├── DSN
+|       ├── DSN
 │       ├── Event
 │       ├── Extend
 │       ├── GraphQL
@@ -198,12 +197,13 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │       ├── Migration
 │       ├── Network
 │       ├── OpenSSL
+│       ├── Promises
 │       ├── Resque
 │       ├── Specification
-│       ├── Stats
 │       ├── Task
 │       ├── Template
 │       ├── URL
+│       ├── Usage
 │       └── Utopia
 └── tests # End to end & unit tests
     ├── e2e
@@ -221,7 +221,7 @@ Although the Appwrite API is a monolithic app, it has a very clear separation of
 
 Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
-Currently, all the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
+Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
 
 ## Ports
 
@@ -341,7 +341,7 @@ Things to remember when releasing SDKs
 
 Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection.
 
-First, you need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger won't connect. And you also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 
 ### VS Code Launch Configuration
 
@@ -359,17 +359,7 @@ First, you need to set **DEBUG** build arg in **appwrite** service in **docker-c
 
 ### PHPStorm Setup
 
-In settings, go to **PHP** > **Debug**, there under **Xdebug** set the debug port to **9005** and enable the **Can accept external connections** checkbox.
-
-Still in settings, got to **PHP** > **Servers** and select the **+** button to add a new server. Give the server a name and remember this for later. Then enter your host address and port. Next, enable the checkbox for **Use path mappings**. Now enter a mapping for the root of the repository to `/usr/src/code`.
-
-The final step is adding a new environment variable to the Appwrite server. In the **appwrite** service's environment in **docker-compose.yml**, add the following line:
-
-```yaml
-  - PHP_IDE_CONFIG=serverName=YOUR_SERVER_NAME
-```
-
-Replacing `YOUR_SERVER_NAME` with the name of the server you added in the previous step.
+In settings, go to **Languages & Frameworks** > **PHP** > **Debug**, there under **Xdebug** set the debug port to **9005** and enable **can accept external connections** checkbox.
 
 ## Tests
 
@@ -395,12 +385,6 @@ To run end-2-end tests for a specific service use:
 
 ```bash
 docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
-```
-
-To run a single test use:
-
-```bash
-docker compose exec appwrite test /usr/src/code/tests/.../[TestClass] --filter "[TestName]"
 ```
 
 ## Benchmarking
@@ -432,18 +416,18 @@ We use some automation tools to help us keep a healthy codebase.
 
 ```bash
 # Run on all files
-docker run --rm --interactive --tty --volume $PWD:/app composer format
+composer format
 # Run on single file or folder
-docker run --rm --interactive --tty --volume $PWD:/app composer format <your file path>
+composer format <your file path>
 ```
 
 **Run Linter:**
 
 ```bash
 # Run on all files
-docker run --rm --interactive --tty --volume $PWD:/app composer lint
+composer lint
 # Run on single file or folder
-docker run --rm --interactive --tty --volume $PWD:/app composer lint <your file path>
+composer lint <your file path>
 ```
 
 ## Tutorials
@@ -461,7 +445,7 @@ Pull requests are great, but there are many other areas where you can help Appwr
 
 ### Blogging & Speaking
 
-Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention [@appwrite](https://twitter.com/appwrite) on Twitter and/or [email team@appwrite.io](mailto:team@appwrite.io), so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
+Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention [@appwrite](https://twitter.com/appwrite) on Twitter and/or [email team@appwrite.io](mailto:team@appwrite.io) so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
 
 ### Presenting at Meetups
 

@@ -364,7 +364,7 @@ RUN echo extension=yaml.so >> /usr/local/etc/php/conf.d/yaml.ini
 RUN echo extension=maxminddb.so >> /usr/local/etc/php/conf.d/maxminddb.ini
 RUN echo extension=libphp_scrypt.so >> /usr/local/etc/php/conf.d/libphp_scrypt.ini
 RUN echo extension=zstd.so >> /usr/local/etc/php/conf.d/zstd.ini
-RUN if [ "$DEBUG" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.remote_host=host.docker.internal \nyasd.remote_port=9005 \nyasd.log_level=0" >> /usr/local/etc/php/conf.d/yasd.ini; fi
+RUN if [ "$DEBUG" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.init_file=/usr/local/dev/yasd_init.php \nyasd.remote_port=9005 \nyasd.log_level=-1" >> /usr/local/etc/php/conf.d/yasd.ini; fi
 
 RUN if [ "$DEBUG" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/appwrite.ini; fi
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
