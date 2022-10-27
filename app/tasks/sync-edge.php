@@ -16,7 +16,7 @@ $cli
     ->action(function () use ($register) {
         Console::title('Syncs edges V1');
         Console::success(APP_NAME . ' Syncs Edge process v1 has started');
-
+        sleep(3);
         $interval = (int) App::getEnv('_APP_SYNC_EDGE_INTERVAL', '180');
           Console::loop(function () use ($interval, $register) {
             $database = getConsoleDB();

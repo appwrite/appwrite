@@ -9,12 +9,12 @@ use Swoole\Timer;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Queue;
 use Utopia\Queue\Message;
-
 
 $regions = array_filter(
     Config::getParam('regions', []),
@@ -27,10 +27,9 @@ $stack = [
     'regions' => $regions,
     'keys' => [],
 ];
-
 $failures = [];
 
-const MAX_KEY_COUNT = 2;
+const CHUNK_MAX_KEYS = 2;
 const MAX_CURL_SEND_ATTEMPTS = 4;
 
 /**
@@ -77,23 +76,31 @@ function send(string $url, string $token, array $stack): array
  * @throws Structure
  * @throws Exception
  */
-function call($database, $regions, $stack): void
+function call($regions, $stack): void
 {
+
+    global $register;
 
     $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 600, 10);
     $token = $jwt->encode([]);
 
     foreach ($regions as $code => $region) {
-        Console::info("Sending request to  {$code}");
+        $time = DateTime::now();
         $response = send($region['domain'] . '/v1/edge/sync', $token, ['keys' => $stack]);
         if ($response['status'] !== Response::STATUS_CODE_OK) {
-            $database->createDocument('syncs', new Document([
-                'region' => App::getEnv('_APP_REGION', 'nyc1'),
-                'target' => $code,
-                'keys' => $stack,
-                'status' => $response['status'],
-                'payload' => $response['payload'],
-            ]));
+            Console::error("[{$time}] Request to  {$code} has failed");
+            try {
+                $database = getConsoleDB();
+                $database->createDocument('syncs', new Document([
+                    'region' => App::getEnv('_APP_REGION', 'nyc1'),
+                    'target' => $code,
+                    'keys' => $stack,
+                    'status' => $response['status'],
+                    'payload' => $response['payload'],
+                ]));
+            } catch (\Throwable $th) {
+                $register->get('pools')->reclaim();
+            }
         }
     }
 }
@@ -108,7 +115,7 @@ $server->job()
     ->action(function (Message $message) use (&$stack, &$failures) {
 
         $payload = $message->getPayload()['value'] ?? [];
-
+        var_dump($message->getPayload());
         if (!empty($payload['keys'])) {
             $regions = array_filter(
                 Config::getParam('regions', []),
@@ -141,9 +148,10 @@ $server
 
 $server
     ->workerStart(function () use (&$stack, &$failures) {
-        Timer::tick(10000, function () use (&$stack, &$failures) {
+        Timer::tick(1000, function () use (&$stack, &$failures) {
+            $time = DateTime::now();
             if (empty($stack['keys']) && count($failures) === 0) {
-                Console::info("Stack is empty");
+                Console::info("[{$time}] Stack is empty");
                 return;
             }
 
@@ -151,15 +159,17 @@ $server
                 $i = 0;
                 while ($i < count($failures)) {
                     $failure = array_shift($failures);
-                    call(getConsoleDB(), $failure['regions'], $failure['keys']);
+                    Console::info("[{$time}] ReSending " . count($failure['keys']) . " to " . key($failure['regions']));
+                    call($failure['regions'], $failure['keys']);
                     $i++;
                 }
                 return;
             }
 
-            $chunk = array_slice($stack['keys'], 0, MAX_KEY_COUNT);
-            array_splice($stack['keys'], 0, MAX_KEY_COUNT);
-            call(getConsoleDB(), $stack['regions'], $chunk);
+            $chunk = array_slice($stack['keys'], 0, CHUNK_MAX_KEYS);
+            array_splice($stack['keys'], 0, CHUNK_MAX_KEYS);
+            Console::info("[{$time}] Sending " . count($chunk) . " remains " . count($stack['keys']));
+            call($stack['regions'], $chunk);
             $chunk = [];
         });
         echo "Out region [" . App::getEnv('_APP_REGION', 'nyc1') . "] cache purging worker Started" . PHP_EOL;

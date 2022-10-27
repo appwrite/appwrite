@@ -37,9 +37,9 @@ App::post('/v1/edge/sync')
     ->inject('response')
     ->action(function (array $keys, Request $request, Response $response) {
 
-        //if (empty($keys)) {
+        if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
-        //}
+        }
 
         $client = new SyncIn('syncIn', new QueueRedis(App::getEnv('_APP_REDIS_HOST', 'redis'), App::getEnv('_APP_REDIS_PORT', '6379')));
 
