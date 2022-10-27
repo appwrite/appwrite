@@ -2,16 +2,18 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter;
+use Appwrite\GraphQL\Schema;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
 use GraphQL\GraphQL;
-use GraphQL\Type\Schema;
+use GraphQL\Type\Schema as GQLSchema;
 use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
+use Utopia\Database\Document;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 
@@ -35,7 +37,7 @@ App::get('/v1/graphql')
     ->inject('response')
     ->inject('schema')
     ->inject('promiseAdapter')
-    ->action(function (string $query, string $operationName, string $variables, Request $request, Response $response, Schema $schema, Adapter $promiseAdapter) {
+    ->action(function (string $query, string $operationName, string $variables, Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = [
             'query' => $query,
         ];
@@ -76,7 +78,7 @@ App::post('/v1/graphql')
     ->inject('response')
     ->inject('schema')
     ->inject('promiseAdapter')
-    ->action(function (Request $request, Response $response, Schema $schema, Adapter $promiseAdapter) {
+    ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
 
         if ($request->getHeader('x-sdk-graphql') == 'true') {
@@ -102,14 +104,14 @@ App::post('/v1/graphql')
 /**
  * Execute a GraphQL request
  *
- * @param Schema $schema
+ * @param GQLSchema $schema
  * @param Adapter $promiseAdapter
  * @param array $query
  * @return array
  * @throws Exception
  */
 function execute(
-    Schema $schema,
+    GQLSchema $schema,
     Adapter $promiseAdapter,
     array $query
 ): array {
@@ -233,3 +235,10 @@ function processResult($result, $debugFlags): array
         $result
     );
 }
+
+App::shutdown()
+    ->groups(['schema'])
+    ->inject('project')
+    ->action(function (Document $project) {
+        Schema::setDirty($project->getId());
+    });

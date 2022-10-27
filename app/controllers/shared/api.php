@@ -7,7 +7,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Extend\Exception;
-use Appwrite\GraphQL\Schema;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
@@ -434,11 +433,4 @@ App::shutdown()
                 ->setParam('project.{scope}.network.outbound', $response->getSize())
                 ->submit();
         }
-    });
-
-App::shutdown()
-    ->groups(['schema'])
-    ->inject('project')
-    ->action(function (Document $project) {
-        Schema::setDirty($project->getId());
     });
