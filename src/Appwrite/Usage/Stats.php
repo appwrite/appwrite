@@ -76,6 +76,8 @@ class Stats
 
     /**
      * Submit data to StatsD.
+     * Send various metrics to StatsD based on the parameters that are set
+     * @return void
      */
     public function submit(): void
     {

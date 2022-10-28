@@ -10,10 +10,38 @@ use DateTime;
 
 class TimeSeries extends Calculator
 {
+    /**
+     * InfluxDB
+     *
+     * @var InfluxDatabase
+     */
     protected InfluxDatabase $influxDB;
+
+    /**
+     * Utopia Database
+     *
+     * @var Database
+     */
     protected Database $database;
+
+    /**
+     * Error Handler Callback
+     *
+     * @var callable
+     */
     protected $errorHandler;
+
+    /**
+     * Latest times for metric that was synced to the database
+     *
+     * @var array
+     */
     private array $latestTime = [];
+
+    /**
+     * Periods the metrics are collected for
+     * @var array
+     */
     protected array $periods = [
         [
             'key' => '1h',
@@ -24,7 +52,12 @@ class TimeSeries extends Calculator
             'startTime' => '-30 days'
         ]
     ];
-    // all the mertics that we are collecting
+
+    /**
+     * All the metrics that we are collecting
+     * 
+     * @var array
+     */
     protected array $metrics = [
         'project.$all.network.requests' => [
             'table' => 'appwrite_usage_project_{scope}_network_requests',
