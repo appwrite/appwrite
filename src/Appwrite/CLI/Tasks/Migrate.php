@@ -12,6 +12,7 @@ use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
 
 class Migrate extends Action
@@ -26,12 +27,12 @@ class Migrate extends Action
         $this
             ->desc('Migrate Appwrite to new version')
             ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
-            ->callback(fn ($version) => $this->action($version));
+            ->inject('register')
+            ->callback(fn ($version, $register) => $this->action($version, $register));
     }
 
-    public function action($version)
+    public function action(string $version, Registry $register)
     {
-        global $register;
         Authorization::disable();
         if (!array_key_exists($version, Migration::$versions)) {
             Console::error("Version {$version} not found.");
