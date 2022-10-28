@@ -20,7 +20,7 @@ Authorization::disable();
 
 CLI::setResource('register', fn()=>$register);
 
-CLI::setResource('db', function(Registry $register) {
+CLI::setResource('db', function (Registry $register) {
     $attempts = 0;
     $max = 10;
     $sleep = 1;
@@ -53,13 +53,13 @@ CLI::setResource('dbForConsole', function ($db, $cache) {
     return $database;
 }, ['db', 'cache']);
 
-CLI::setResource('influxdb', function(Registry $register){
+CLI::setResource('influxdb', function (Registry $register) {
     /** @var InfluxDB\Client $client */
     $client = $register->get('influxdb');
     $attempts = 0;
     $max = 10;
     $sleep = 1;
-    
+
     do { // check if telegraf database is ready
         try {
             $attempts++;
@@ -78,9 +78,8 @@ CLI::setResource('influxdb', function(Registry $register){
     return $database;
 }, ['register']);
 
-CLI::setResource('logError', function(Registry $register){
-    return function(Throwable $error, string $namespace, string $action) use($register)
-    {
+CLI::setResource('logError', function (Registry $register) {
+    return function (Throwable $error, string $namespace, string $action) use ($register) {
         $logger = $register->get('logger');
 
         if ($logger) {

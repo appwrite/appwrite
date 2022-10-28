@@ -12,5 +12,4 @@ use Throwable;
 
 abstract class Task extends Action
 {
-    
 }
