@@ -137,7 +137,7 @@ function execute(
     $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
 
-    if (App::isProduction()) {
+    if (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         $validations[] = new DisableIntrospection();
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);

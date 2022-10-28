@@ -20,8 +20,8 @@ class AbuseTest extends Scope
     {
         parent::setUp();
 
-        if (App::isDevelopment()) {
-            $this->markTestSkipped('Skipping abuse test in development environment');
+        if (App::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
+            $this->markTestSkipped('Abuse is not enabled.');
         }
     }
 
