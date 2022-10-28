@@ -150,6 +150,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_HOURLY_USAGE
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
 
@@ -549,6 +550,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_HOURLY_USAGE
 
   appwrite-usage:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
