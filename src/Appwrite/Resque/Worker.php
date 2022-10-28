@@ -323,6 +323,13 @@ abstract class Worker
                 $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
                 $wasabiAcl = 'private';
                 return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
+            case Storage::DEVICE_DREAMOBJECTS:
+                $dreamObjectsAccessKey = App::getEnv('_APP_STORAGE_DREAMOBJECTS_ACCESS_KEY', '');
+                $dreamObjectsSecretKey = App::getEnv('_APP_STORAGE_DREAMOBJECTS_SECRET', '');
+                $dreamObjectsRegion = App::getEnv('_APP_STORAGE_DREAMOBJECTS_REGION', '');
+                $dreamObjectsBucket = App::getEnv('_APP_STORAGE_DREAMOBJECTS_BUCKET', '');
+                $dreamObjectsAcl = 'private';
+                return new DreamObjects($root, $dreamObjectsAccessKey, $dreamObjectsSecretKey, $dreamObjectsBucket, $dreamObjectsRegion, $dreamObjectsAcl);
         }
     }
 }
