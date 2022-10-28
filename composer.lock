@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "32ae4fa68179e9a5e4b18840ab9db57f",
+    "content-hash": "f767c5ed523160615244a04e770a7f79",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2390,16 +2390,16 @@
         },
         {
             "name": "utopia-php/orchestration",
-            "version": "dev-feat-cli-update",
+            "version": "0.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/orchestration.git",
-                "reference": "dd6d30e70d3d71e49a10f6281fc8e7c0b9fd901a"
+                "reference": "484df2c9275a77722fe05f3630cf0e346dcb372e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/dd6d30e70d3d71e49a10f6281fc8e7c0b9fd901a",
-                "reference": "dd6d30e70d3d71e49a10f6281fc8e7c0b9fd901a",
+                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/484df2c9275a77722fe05f3630cf0e346dcb372e",
+                "reference": "484df2c9275a77722fe05f3630cf0e346dcb372e",
                 "shasum": ""
             },
             "require": {
@@ -2433,17 +2433,17 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/orchestration/issues",
-                "source": "https://github.com/utopia-php/orchestration/tree/feat-cli-update"
+                "source": "https://github.com/utopia-php/orchestration/tree/0.7.0"
             },
-            "time": "2022-10-28T02:36:14+00:00"
+            "time": "2022-10-28T07:23:38+00:00"
         },
         {
             "name": "utopia-php/platform",
-            "version": "dev-feat-cli-update",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "07e825132492c7d7c9920dbeb527833bda21155d"
+                "reference": "9cebec37b96e9f38c1cc0a68a793304606423897"
             },
             "require": {
                 "ext-json": "*",
@@ -2489,7 +2489,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-10-28T03:15:57+00:00"
+            "time": "2022-10-28T07:26:09+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -5407,10 +5407,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/platform": 20,
-        "utopia-php/orchestration": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
