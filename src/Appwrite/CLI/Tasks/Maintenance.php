@@ -23,45 +23,15 @@ class Maintenance extends Action
         return 'maintenance';
     }
 
-    protected function getConsoleDB(): Database
-    {
-        global $register;
-
-        $attempts = 0;
-
-        do {
-            try {
-                $attempts++;
-                $cache = new Cache(new RedisCache($register->get('cache')));
-                $database = new Database(new MariaDB($register->get('db')), $cache);
-                $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                $database->setNamespace('_console'); // Main DB
-
-                if (!$database->exists($database->getDefaultDatabase(), 'certificates')) {
-                    throw new \Exception('Console project not ready');
-                }
-
-                break; // leave loop if successful
-            } catch (\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-                }
-                sleep(DATABASE_RECONNECT_SLEEP);
-            }
-        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-
-        return $database;
-    }
-
     public function __construct()
     {
         $this
             ->desc('Schedules maintenance tasks and publishes them to resque')
-            ->callback(fn () => $this->action());
+            ->inject('dbForConsole')
+            ->callback(fn (Database $dbForConsole) => $this->action($dbForConsole));
     }
 
-    public function action(): void
+    public function action(Database $dbForConsole): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
@@ -160,9 +130,7 @@ class Maintenance extends Action
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
-            $database = $this->getConsoleDB();
-
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention, $dbForConsole) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -172,7 +140,7 @@ class Maintenance extends Action
             notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
             notifyDeleteConnections();
             notifyDeleteExpiredSessions();
-            renewCertificates($database);
+            renewCertificates($dbForConsole);
             notifyDeleteCache($cacheRetention);
         }, $interval);
     }
