@@ -55,7 +55,7 @@ class TimeSeries extends Calculator
 
     /**
      * All the metrics that we are collecting
-     * 
+     *
      * @var array
      */
     protected array $metrics = [
