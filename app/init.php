@@ -634,6 +634,7 @@ $register->set('pools', function () {
                             default => null
                         };
 
+                        var_dump($dsn->getDatabase());
                         $adapter->setDefaultDatabase($dsn->getDatabase());
 
                         break;

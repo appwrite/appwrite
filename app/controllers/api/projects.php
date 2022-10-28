@@ -131,8 +131,7 @@ App::post('/v1/projects')
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
-
-        $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForProject->create();
 
         $audit = new Audit($dbForProject);
         $audit->setup();
