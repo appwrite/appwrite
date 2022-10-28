@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3bcc6cfb6966fef9fdba36dd31f07b5b",
+    "content-hash": "32ae4fa68179e9a5e4b18840ab9db57f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -693,16 +693,16 @@
         },
         {
             "name": "guzzlehttp/psr7",
-            "version": "2.4.1",
+            "version": "2.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "69568e4293f4fa993f3b0e51c9723e1e17c41379"
+                "reference": "67c26b443f348a51926030c83481b85718457d3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/69568e4293f4fa993f3b0e51c9723e1e17c41379",
-                "reference": "69568e4293f4fa993f3b0e51c9723e1e17c41379",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/67c26b443f348a51926030c83481b85718457d3d",
+                "reference": "67c26b443f348a51926030c83481b85718457d3d",
                 "shasum": ""
             },
             "require": {
@@ -792,7 +792,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/2.4.1"
+                "source": "https://github.com/guzzle/psr7/tree/2.4.3"
             },
             "funding": [
                 {
@@ -808,7 +808,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-08-28T14:45:39+00:00"
+            "time": "2022-10-26T14:07:24+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -1950,16 +1950,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.13.0",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "69e68f8ed525fe162fae950a0507ed28a0f179bc"
+                "reference": "c30ef985a4e739758a0d95eb0706b357b6d8c086"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/69e68f8ed525fe162fae950a0507ed28a0f179bc",
-                "reference": "69e68f8ed525fe162fae950a0507ed28a0f179bc",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/c30ef985a4e739758a0d95eb0706b357b6d8c086",
+                "reference": "c30ef985a4e739758a0d95eb0706b357b6d8c086",
                 "shasum": ""
             },
             "require": {
@@ -1968,7 +1968,7 @@
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "squizlabs/php_codesniffer": "^3.6"
             },
             "type": "library",
             "autoload": {
@@ -1997,9 +1997,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.13.0"
+                "source": "https://github.com/utopia-php/cli/tree/0.14.0"
             },
-            "time": "2022-04-26T08:41:22+00:00"
+            "time": "2022-10-09T10:19:07+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -2390,21 +2390,21 @@
         },
         {
             "name": "utopia-php/orchestration",
-            "version": "0.6.0",
+            "version": "dev-feat-cli-update",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/orchestration.git",
-                "reference": "94263976413871efb6b16157a7101a81df3b6d78"
+                "reference": "dd6d30e70d3d71e49a10f6281fc8e7c0b9fd901a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/94263976413871efb6b16157a7101a81df3b6d78",
-                "reference": "94263976413871efb6b16157a7101a81df3b6d78",
+                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/dd6d30e70d3d71e49a10f6281fc8e7c0b9fd901a",
+                "reference": "dd6d30e70d3d71e49a10f6281fc8e7c0b9fd901a",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/cli": "0.13.*"
+                "utopia-php/cli": "0.14.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -2420,12 +2420,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "Lite & fast micro PHP abstraction library for container orchestration",
             "keywords": [
                 "docker",
@@ -2439,23 +2433,23 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/orchestration/issues",
-                "source": "https://github.com/utopia-php/orchestration/tree/0.6.0"
+                "source": "https://github.com/utopia-php/orchestration/tree/feat-cli-update"
             },
-            "time": "2022-07-13T16:47:18+00:00"
+            "time": "2022-10-28T02:36:14+00:00"
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.2.0",
+            "version": "dev-feat-cli-update",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "5a3640f4f34b394ed34efda351101c7928643819"
+                "reference": "accc17f6dd6ae404f86691e768dd73eecb0778e0"
             },
             "require": {
                 "ext-json": "*",
                 "ext-redis": "*",
                 "php": ">=8.0",
-                "utopia-php/cli": "0.13.*",
+                "utopia-php/cli": "0.14.*",
                 "utopia-php/framework": "0.22.*"
             },
             "require-dev": {
@@ -2495,7 +2489,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-10-16T07:08:51+00:00"
+            "time": "2022-10-28T02:27:04+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -3589,16 +3583,16 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.17",
+            "version": "9.2.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "aa94dc41e8661fe90c7316849907cba3007b10d8"
+                "reference": "12fddc491826940cf9b7e88ad9664cf51f0f6d0a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/aa94dc41e8661fe90c7316849907cba3007b10d8",
-                "reference": "aa94dc41e8661fe90c7316849907cba3007b10d8",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/12fddc491826940cf9b7e88ad9664cf51f0f6d0a",
+                "reference": "12fddc491826940cf9b7e88ad9664cf51f0f6d0a",
                 "shasum": ""
             },
             "require": {
@@ -3654,7 +3648,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.17"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.18"
             },
             "funding": [
                 {
@@ -3662,7 +3656,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-08-30T12:24:04+00:00"
+            "time": "2022-10-27T13:35:33+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -5413,7 +5407,10 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/platform": 20,
+        "utopia-php/orchestration": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
