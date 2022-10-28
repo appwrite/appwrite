@@ -12,6 +12,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Validator\WhiteList;
 use Throwable;
+use Utopia\Registry\Registry;
 
 class Usage extends Task
 {
@@ -23,9 +24,12 @@ class Usage extends Task
     public function __construct()
     {
         $this
-            ->param('type', 'timeseries', new WhiteList(['timeseries', 'database']))
             ->desc('Schedules syncing data from influxdb to Appwrite console db')
-            ->callback(fn ($type) => $this->action($type));
+            ->param('type', 'timeseries', new WhiteList(['timeseries', 'database']))
+            ->inject('dbForConsole')
+            ->inject('influxdb')
+            ->inject('register')
+            ->callback(fn ($type, $dbForConsole, $influxDB, $register) => $this->action($type, $dbForConsole, $influxDB, $register));
     }
 
 
@@ -66,22 +70,19 @@ class Usage extends Task
         }, $interval);
     }
 
-    public function action(string $type)
+    public function action(string $type, UtopiaDatabase $dbForConsole, InfluxDatabase $influxDB, Registry $register)
     {
-        global $register;
         Console::title('Usage Aggregation V1');
         Console::success(APP_NAME . ' usage aggregation process v1 has started');
 
-        $database = $this->getDatabase($register, '_console');
-        $influxDB = $this->getInfluxDB($register);
-        $logError = fn(Throwable $error, string $action = 'syncUsageStats') => $this->logError($register, $error, $action);
+        $logError = fn(Throwable $error, string $action = 'syncUsageStats') => $this->logError($register, $error, "usage", $action);
 
         switch ($type) {
             case 'timeseries':
-                $this->aggregateTimeseries($database, $influxDB, $logError);
+                $this->aggregateTimeseries($dbForConsole, $influxDB, $logError);
                 break;
             case 'database':
-                $this->aggregateDatabase($database, $logError);
+                $this->aggregateDatabase($dbForConsole, $logError);
                 break;
             default:
                 Console::error("Unsupported usage aggregation type");

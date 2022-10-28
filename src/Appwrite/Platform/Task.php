@@ -17,7 +17,7 @@ use Throwable;
 
 abstract class Task extends Action
 {
-    protected function logError(Registry $register, Throwable $error, string $action = 'syncUsageStats')
+    protected function logError(Registry $register, Throwable $error, string $namespace, string $action)
     {
         $logger = $register->get('logger');
 
@@ -25,7 +25,7 @@ abstract class Task extends Action
             $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
             $log = new Log();
-            $log->setNamespace("usage");
+            $log->setNamespace($namespace);
             $log->setServer(\gethostname());
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
@@ -50,63 +50,5 @@ abstract class Task extends Action
 
         Console::warning("Failed: {$error->getMessage()}");
         Console::warning($error->getTraceAsString());
-    }
-
-    protected function getDatabase(Registry &$register, string $namespace): Database
-    {
-        $attempts = 0;
-
-        do {
-            try {
-                $attempts++;
-
-                $db = $register->get('db');
-                $redis = $register->get('cache');
-
-                $cache = new Cache(new RedisCache($redis));
-                $database = new Database(new MariaDB($db), $cache);
-                $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                $database->setNamespace($namespace);
-
-                if (!$database->exists($database->getDefaultDatabase(), 'projects')) {
-                    throw new Exception('Projects collection not ready');
-                }
-                break; // leave loop if successful
-            } catch (\Exception$e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-                }
-                sleep(DATABASE_RECONNECT_SLEEP);
-            }
-        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-
-        return $database;
-    }
-
-    protected function getInfluxDB(Registry &$register): InfluxDatabase
-    {
-        /** @var InfluxDB\Client $client */
-        $client = $register->get('influxdb');
-        $attempts = 0;
-        $max = 10;
-        $sleep = 1;
-
-        do { // check if telegraf database is ready
-            try {
-                $attempts++;
-                $database = $client->selectDB('telegraf');
-                if (in_array('telegraf', $client->listDatabases())) {
-                    break; // leave the do-while if successful
-                }
-            } catch (\Throwable$th) {
-                Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= $max) {
-                    throw new \Exception('InfluxDB database not ready yet');
-                }
-                sleep($sleep);
-            }
-        } while ($attempts < $max);
-        return $database;
     }
 }

@@ -50,6 +50,29 @@ CLI::setResource('dbForConsole', function ($db, $cache) {
     return $database;
 }, ['db', 'cache']);
 
+/** @var InfluxDB\Client $client */
+$client = $register->get('influxdb');
+$attempts = 0;
+$max = 10;
+$sleep = 1;
+
+do { // check if telegraf database is ready
+    try {
+        $attempts++;
+        $database = $client->selectDB('telegraf');
+        if (in_array('telegraf', $client->listDatabases())) {
+            break; // leave the do-while if successful
+        }
+    } catch (\Throwable$th) {
+        Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
+        if ($attempts >= $max) {
+            throw new \Exception('InfluxDB database not ready yet');
+        }
+        sleep($sleep);
+    }
+} while ($attempts < $max);
+CLI::setResource('influxdb', fn() => $database);
+
 $cliPlatform = new Tasks();
 $cliPlatform->init(Service::TYPE_CLI);
 
