@@ -75,10 +75,6 @@
         {
             "url": "https://github.com/appwrite/runtimes.git",
             "type": "git"
-        },
-        {
-            "url": "https://github.com/utopia-php/platform.git",
-            "type": "git"
         }
     ],
     "require-dev": {

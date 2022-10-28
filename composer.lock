@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f767c5ed523160615244a04e770a7f79",
+    "content-hash": "1c3cf7fd488e2eb61af0ddad1f43a446",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2445,6 +2445,12 @@
                 "url": "https://github.com/utopia-php/platform.git",
                 "reference": "9cebec37b96e9f38c1cc0a68a793304606423897"
             },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/9cebec37b96e9f38c1cc0a68a793304606423897",
+                "reference": "9cebec37b96e9f38c1cc0a68a793304606423897",
+                "shasum": ""
+            },
             "require": {
                 "ext-json": "*",
                 "ext-redis": "*",
@@ -2462,22 +2468,7 @@
                     "Utopia\\Platform\\": "src/Platform"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Platform"
-                }
-            },
-            "scripts": {
-                "format": [
-                    "vendor/bin/phpcbf"
-                ],
-                "lint": [
-                    "vendor/bin/phpcs"
-                ],
-                "test": [
-                    "docker-compose up -d && sleep 10 && docker-compose exec web vendor/bin/phpunit --configuration phpunit.xml"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2489,6 +2480,10 @@
                 "upf",
                 "utopia"
             ],
+            "support": {
+                "issues": "https://github.com/utopia-php/platform/issues",
+                "source": "https://github.com/utopia-php/platform/tree/0.3.0"
+            },
             "time": "2022-10-28T07:26:09+00:00"
         },
         {
@@ -5431,5 +5426,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
