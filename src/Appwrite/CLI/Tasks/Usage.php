@@ -29,7 +29,8 @@ class Usage extends Task
             ->inject('dbForConsole')
             ->inject('influxdb')
             ->inject('register')
-            ->callback(fn ($type, $dbForConsole, $influxDB, $register) => $this->action($type, $dbForConsole, $influxDB, $register));
+            ->inject('logError')
+            ->callback(fn ($type, $dbForConsole, $influxDB, $register, $logError) => $this->action($type, $dbForConsole, $influxDB, $register, $logError));
     }
 
 
@@ -70,19 +71,19 @@ class Usage extends Task
         }, $interval);
     }
 
-    public function action(string $type, UtopiaDatabase $dbForConsole, InfluxDatabase $influxDB, Registry $register)
+    public function action(string $type, UtopiaDatabase $dbForConsole, InfluxDatabase $influxDB, Registry $register, callable $logError)
     {
         Console::title('Usage Aggregation V1');
         Console::success(APP_NAME . ' usage aggregation process v1 has started');
 
-        $logError = fn(Throwable $error, string $action = 'syncUsageStats') => $this->logError($register, $error, "usage", $action);
+        $errorLogger = fn(Throwable $error, string $action = 'syncUsageStats') => $logError($register, $error, "usage", $action);
 
         switch ($type) {
             case 'timeseries':
-                $this->aggregateTimeseries($dbForConsole, $influxDB, $logError);
+                $this->aggregateTimeseries($dbForConsole, $influxDB, $errorLogger);
                 break;
             case 'database':
-                $this->aggregateDatabase($dbForConsole, $logError);
+                $this->aggregateDatabase($dbForConsole, $errorLogger);
                 break;
             default:
                 Console::error("Unsupported usage aggregation type");
