@@ -12,6 +12,7 @@ use Swoole\Http\Response as HttpResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Registry\Registry;
 use Utopia\Request;
 use Utopia\Validator\WhiteList;
 
@@ -28,13 +29,12 @@ class Specs extends Action
             ->desc('Generate Appwrite API specifications')
             ->param('version', 'latest', new Text(16), 'Spec version', true)
             ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
-            ->callback(fn ($version, $mode) => $this->action($version, $mode));
+            ->inject('register')
+            ->callback(fn (string $version, string $mode, Registry $register) => $this->action($version, $mode, $register));
     }
 
-    public function action(string $version, string $mode): void
+    public function action(string $version, string $mode, Registry $register): void
     {
-        global $register;
-
         $db = $register->get('db');
         $redis = $register->get('cache');
         $appRoutes = App::getRoutes();
