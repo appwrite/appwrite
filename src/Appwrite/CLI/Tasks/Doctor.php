@@ -10,6 +10,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
+use Utopia\Registry\Registry;
 
 class Doctor extends Action
 {
@@ -22,13 +23,12 @@ class Doctor extends Action
     {
         $this
             ->desc('Validate server health')
-            ->callback(fn () => $this->action());
+            ->inject('register')
+            ->callback(fn (Registry $register) => $this->action($register));
     }
 
-    public function action(): void
+    public function action(Registry $register): void
     {
-        global $register;
-
         Console::log("  __   ____  ____  _  _  ____  __  ____  ____     __  __  
  / _\ (  _ \(  _ \/ )( \(  _ \(  )(_  _)(  __)   (  )/  \ 
 /    \ ) __/ ) __/\ /\ / )   / )(   )(   ) _)  _  )((  O )
