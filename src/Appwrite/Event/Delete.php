@@ -60,7 +60,7 @@ class Delete extends Event
      * @param string $datetime
      * @return self
      */
-    public function setHourlyUsageRetentionDatetime(string $datetime): self
+    public function setUsageRetentionHourlyDateTime(string $datetime): self
     {
         $this->hourlyUsageRetentionDatetime = $datetime;
         return $this;

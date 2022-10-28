@@ -78,11 +78,11 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteUsageStats(int $hourlyRetentionInterval)
+        function notifyDeleteUsageStats(int $usageStatsRetentionHourly)
         {
             (new Delete())
                 ->setType(DELETE_TYPE_USAGE)
-                ->setHourlyUsageRetentionDatetime(DateTime::addSeconds(new \DateTime(), -1 * $hourlyRetentionInterval))
+                ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
                 ->trigger();
         }
 
@@ -143,11 +143,11 @@ $cli
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
         $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
         $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
-        $hourlyUsageStatsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_HOURLY_USAGE', '8640000'); //100 days
+        $usageStatsRetentionHourly = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
 
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $hourlyUsageStatsRetention, $cacheRetention) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetentionHourly, $cacheRetention) {
             $database = getConsoleDB();
 
             $time = DateTime::now();
@@ -156,7 +156,7 @@ $cli
             notifyDeleteExecutionLogs($executionLogsRetention);
             notifyDeleteAbuseLogs($abuseLogsRetention);
             notifyDeleteAuditLogs($auditLogRetention);
-            notifyDeleteUsageStats($hourlyUsageStatsRetention);
+            notifyDeleteUsageStats($usageStatsRetentionHourly);
             notifyDeleteConnections();
             notifyDeleteExpiredSessions();
             renewCertificates($database);
