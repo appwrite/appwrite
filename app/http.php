@@ -20,6 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
+use Swoole\Coroutine\Channel;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
@@ -59,9 +60,13 @@ include __DIR__ . '/controllers/general.php';
 
 $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
+    global $http;
 
+    var_dump('Test size is:'.$register->get('test')->length());
+
+    var_dump('Startup is served by:'.$http->worker_id);
     go(function () use ($register, $app) {
-
+        var_dump('Test 2 size is:'.$register->get('test')->length());
         $pools = $register->get('pools'); /** @var Group $pools */
         App::setResource('pools', fn() => $pools);
 
@@ -119,7 +124,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             /**
              * Skip to prevent 0.16 migration issues.
              */
-            if (in_array($key, ['cache', 'variables']) && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
+            if (in_array($key, ['cache', 'variables']) && $dbForConsole->exists($dbForConsole->getDefaultDatabase(), 'bucket_1')) {
                 continue;
             }
 
@@ -155,7 +160,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
+        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists($dbForConsole->getDefaultDatabase(), 'bucket_1')) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForConsole->createDocument('buckets', new Document([
                 '$id' => ID::custom('default'),
@@ -233,6 +238,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
+    var_dump('Test 3 size is:'.$register->get('test')->length());
+    global $http;
+    var_dump('Served by:'.$http->worker_id);
 
     if (Files::isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 365 * 2); // 45 days cache

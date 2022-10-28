@@ -1,5 +1,206 @@
 <?php
 
+use Swoole\Coroutine\Channel;
+use Utopia\Pools\Connection;
+use Utopia\Pools\Pool as PoolsPool;
+
+class Pool extends PoolsPool
+{
+    /**
+     * @var string
+     */
+    protected string $name;
+    
+    /**
+     * @var int
+     */
+    protected int $size = 0;
+
+    /**
+     * @var callable
+     */
+    protected $init = null;
+
+    /**
+     * @var int
+     */
+    protected int $reconnectAttempts = 3;
+
+    /**
+     * @var int
+     */
+    protected int $reconnectSleep = 1; // seconds
+
+    /**
+     * @var Channel
+     */
+    public Channel $channel;
+
+    /**
+     * @var array
+     */
+    protected array $active = [];
+
+    /**
+     * @var string $name
+     * @var int $size
+     * @var callable $init
+     */
+    public function __construct(string $name, int $size, callable $init)
+    {
+        $this->name = $name;
+        $this->size = $size;
+        $this->init = $init;
+        $this->channel = new Channel($size);
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSize(): int
+    {
+        return $this->size;
+    }
+
+    /**
+     * @return int
+     */
+    public function getReconnectAttempts(): int
+    {
+        return $this->reconnectAttempts;
+    }
+
+    /**
+     * @var int $reconnectAttempts
+     * @return self
+     */
+    public function setReconnectAttempts(int $reconnectAttempts): self
+    {
+        $this->reconnectAttempts = $reconnectAttempts;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getReconnectSleep(): int
+    {
+        return $this->reconnectSleep;
+    }
+
+    /**
+     * @var int $reconnectSleep
+     * @return self
+     */
+    public function setReconnectSleep(int $reconnectSleep): self
+    {
+        $this->reconnectSleep = $reconnectSleep;
+        return $this;
+    }
+
+    /**
+     * @return self
+     */
+    public function fill(): self
+    {
+        if(!$this->channel->isEmpty()) {
+            return $this;
+        }
+        for ($i=0; $i < $this->size; $i++) { 
+            $attempts = 0;
+
+            do {
+                try {
+                    $attempts++;
+                    $connection = new Connection(($this->init)());
+                    break; // leave loop if successful
+                } catch (\Exception $e) {
+                    if ($attempts >= $this->getReconnectAttempts()) {
+                        throw new \Exception('Failed to create connection: ' . $e->getMessage());
+                    }
+                    sleep($this->getReconnectSleep());
+                }
+            } while ($attempts < $this->getReconnectAttempts());
+
+            $connection->setID($this->getName().'-'.$i);
+            
+            $this->channel->push($connection);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Connection
+     */
+    public function pop(): Connection
+    {
+        if ($this->channel->isEmpty()) {
+            throw new Exception('Pool is empty');
+        }
+
+        $connection = $this->channel->pop();
+        $this->active[$connection->getID()] = $connection;
+
+        return $connection;
+    }
+
+    /**
+     * @param Connection $connection
+     * @return self
+     */
+    public function push(Connection $connection): self
+    {
+        $this->channel->push($connection);
+        unset($this->active[$connection->getID()]);
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function count(): int
+    {
+        return $this->channel->length();
+    }
+
+    /**
+     * @return self
+     */
+    public function reclaim(): self
+    {
+        foreach ($this->active as $connection) {
+            $this->push($connection);
+        }
+        return $this;
+    }
+    
+    /**
+     * @return bool
+     */
+    public function isEmpty(): bool
+    {
+        return $this->channel->isEmpty();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFull(): bool
+    {
+        return $this->channel->isFull();
+    }
+}
+
 /**
  * Init
  *
@@ -69,7 +270,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Pools\Group;
-use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use MaxMind\Db\Reader;
@@ -498,7 +698,8 @@ $register->set('logger', function () {
     return new Logger($adapter);
 });
 $register->set('pools', function () {
-
+    Console::info('Initializing pools');
+    
     $group = new Group();
 
     $fallbackForDB = AppwriteURL::unparse([
@@ -622,6 +823,9 @@ $register->set('pools', function () {
                     break;
             }
 
+
+            
+
             $pool = new Pool($name, 64, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 $adapter = null;
@@ -634,7 +838,6 @@ $register->set('pools', function () {
                             default => null
                         };
 
-                        var_dump($dsn->getDatabase());
                         $adapter->setDefaultDatabase($dsn->getDatabase());
 
                         break;
@@ -658,7 +861,7 @@ $register->set('pools', function () {
 
                 return $adapter;
             });
-
+var_dump($pool->channel->length());
             $group->add($pool);
         }
 
@@ -667,11 +870,21 @@ $register->set('pools', function () {
 
     try {
         $group->fill();
+        Console::success('Pools have been filled succefully');
     } catch (\Throwable $th) {
         Console::error('Connection failure: ' . $th->getMessage());
     }
 
     return $group;
+});
+$register->set('test', function () {
+    var_dump('[[init test!!]]');
+    $test = new Channel(5);
+    $test->push(1);
+    $test->push(1);
+    $test->push(1);
+    $test->push(1);
+    return $test;
 });
 $register->set('influxdb', function () {
  // Register DB connection
