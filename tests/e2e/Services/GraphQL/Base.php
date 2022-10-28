@@ -182,7 +182,7 @@ trait Base
     public static string $GET_USER_INITIALS = 'get_user_initials';
 
     // Complex queries
-    public static string $CREATE_DATABASE_STACK = 'complex_query';
+    public static string $COMPLEX_QUERY = 'complex_query';
 
     // Fragments
     public static string $FRAGMENT_ATTRIBUTES = '
@@ -1560,7 +1560,7 @@ trait Base
                         status
                     }
                 }';
-            case self::$CREATE_DATABASE_STACK:
+            case self::$COMPLEX_QUERY:
                 return 'mutation complex($databaseId: String!, $databaseName: String!, $collectionId: String!, $collectionName: String!, $documentSecurity: Boolean!, $collectionPermissions: [String!]!) {
                     databasesCreate(databaseId: $databaseId, name: $databaseName) {
                         id
@@ -1610,7 +1610,183 @@ trait Base
                         default
                         array
                     }
-                    usersCreate(userId: "unique()", email: "test1@appwrite.io", password: "password", name: "Tester 1") {
+                    user1: usersCreate(userId: "unique()", email: "test1@appwrite.io", password: "password", name: "Tester 1") {
+                        id
+                        createdAt
+                        updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user2: usersCreate(userId: "unique()", email: "test2@appwrite.io", password: "password", name: "Tester 2") {
+                        id
+                        createdAt
+                        updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user3: usersCreate(userId: "unique()", email: "test3@appwrite.io", password: "password", name: "Tester 3") {
+                        id
+                        createdAt
+                        updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user4: usersCreate(userId: "unique()", email: "test4@appwrite.io", password: "password", name: "Tester 4") {
+                        id
+                        createdAt
+                        updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user5: usersCreate(userId: "unique()", email: "test5@appwrite.io", password: "password", name: "Tester 5") {
+                        id
+                        createdAt
+                        updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user6: usersCreate(userId: "unique()", email: "test6@appwrite.io", password: "password", name: "Tester 6") {
+                        id
+                        createdAt
+                        updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user7: usersCreate(userId: "unique()", email: "test7@appwrite.io", password: "password", name: "Tester 7") {
+                        id
+                        createdAt
+                        updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user8: usersCreate(userId: "unique()", email: "test8@appwrite.io", password: "password", name: "Tester 8") {
+                        id
+                        createdAt
+                        updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user9: usersCreate(userId: "unique()", email: "test9@appwrite.io", password: "password", name: "Tester 9") {
+                        id
+                        createdAt
+                        updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user10: usersCreate(userId: "unique()", email: "test10@appwrite.io", password: "password", name: "Tester 10") {
+                        id
+                        createdAt
+                        updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user11: usersCreate(userId: "unique()", email: "test11@appwrite.io", password: "password", name: "Tester 11") {
+                        id
+                        createdAt
+                        updatedAt
+                        name
+                        phone
+                        email
+                        status
+                        registration
+                        passwordUpdate
+                        emailVerification
+                        phoneVerification
+                        prefs {
+                            data
+                        }
+                    }
+                    user12: usersCreate(userId: "unique()", email: "test12@appwrite.io", password: "password", name: "Tester 5") {
                         id
                         createdAt
                         updatedAt

@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\App;
+use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
@@ -25,10 +26,45 @@ class AbuseTest extends Scope
         }
     }
 
+    public function testRateLimitEnforced()
+    {
+        $data = $this->createCollection();
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$CREATE_DOCUMENT);
+        $max = 120;
+
+        for ($i = 0; $i <= $max + 1; $i++) {
+            $gqlPayload = [
+                'query' => $query,
+                'variables' => [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId,
+                    'documentId' => ID::unique(),
+                    'data' => [
+                        'name' => 'John Doe',
+                    ],
+                ],
+            ];
+
+            $response = $this->client->call(Client::METHOD_POST, '/graphql', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $gqlPayload);
+
+            if ($i < $max) {
+                $this->assertArrayNotHasKey('errors', $response['body']);
+            } else {
+                $this->assertArrayHasKey('errors', $response['body']);
+            }
+        }
+    }
+
     public function testComplexQueryBlocked()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_DATABASE_STACK);
+        $query = $this->getQuery(self::$COMPLEX_QUERY);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -54,15 +90,15 @@ class AbuseTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $max = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 50);
+        $max = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 250);
 
-        $this->assertEquals('Max query complexity should be ' . $max . ' but got 57.', $response['body']['errors'][0]['message']);
+        $this->assertEquals('Max query complexity should be ' . $max . ' but got 259.', $response['body']['errors'][0]['message']);
     }
 
     public function testTooManyQueriesBlocked()
     {
         $projectId = $this->getProject()['$id'];
-        $maxQueries = App::getEnv('_APP_GRAPHQL_MAX_QUERIES', 50);
+        $maxQueries = App::getEnv('_APP_GRAPHQL_MAX_QUERIES', 10);
 
         $query = [];
         for ($i = 0; $i <= $maxQueries + 1; $i++) {
@@ -75,5 +111,74 @@ class AbuseTest extends Scope
         ], $this->getHeaders()), $query);
 
         $this->assertEquals('Too many queries.', $response['body']['message']);
+    }
+
+    private function createCollection()
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$CREATE_DATABASE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => 'actors',
+                'name' => 'AbuseDatabase',
+            ]
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $gqlPayload);
+
+        $databaseId = $response['body']['data']['databasesCreate']['id'];
+
+        $query = $this->getQuery(self::$CREATE_COLLECTION);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $databaseId,
+                'collectionId' => 'actors',
+                'name' => 'Actors',
+                'documentSecurity' => false,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::write(Role::any()),
+                ],
+            ]
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $gqlPayload);
+
+        $collectionId = $response['body']['data']['databasesCreateCollection']['id'];
+
+        $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]
+        ];
+
+        $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $gqlPayload);
+
+        sleep(2);
+
+        return [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+        ];
     }
 }
