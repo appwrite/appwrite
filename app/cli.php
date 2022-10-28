@@ -13,31 +13,33 @@ use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
+use Utopia\Registry\Registry;
 
 Authorization::disable();
 
 CLI::setResource('register', fn()=>$register);
 
-$attempts = 0;
-$max = 10;
-$sleep = 1;
-
-do {
-    try {
-        $attempts++;
-        $db = $register->get('db');
-        $redis = $register->get('cache');
-        break; // leave the do-while if successful
-    } catch (\Exception $e) {
-        Console::warning("Database not ready. Retrying connection ({$attempts})...");
-        if ($attempts >= $max) {
-            throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+CLI::setResource('db', function(Registry $register) {
+    $attempts = 0;
+    $max = 10;
+    $sleep = 1;
+    do {
+        try {
+            $attempts++;
+            $db = $register->get('db');
+            $redis = $register->get('cache');
+            break; // leave the do-while if successful
+        } catch (\Exception $e) {
+            Console::warning("Database not ready. Retrying connection ({$attempts})...");
+            if ($attempts >= $max) {
+                throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+            }
+            sleep($sleep);
         }
-        sleep($sleep);
-    }
-} while ($attempts < $max);
+    } while ($attempts < $max);
+    return $db;
+}, ['register']);
 
-CLI::setResource('db', fn () => $db);
 CLI::setResource('cache', fn () => $redis);
 
 CLI::setResource('dbForConsole', function ($db, $cache) {
@@ -50,28 +52,30 @@ CLI::setResource('dbForConsole', function ($db, $cache) {
     return $database;
 }, ['db', 'cache']);
 
-/** @var InfluxDB\Client $client */
-$client = $register->get('influxdb');
-$attempts = 0;
-$max = 10;
-$sleep = 1;
-
-do { // check if telegraf database is ready
-    try {
-        $attempts++;
-        $database = $client->selectDB('telegraf');
-        if (in_array('telegraf', $client->listDatabases())) {
-            break; // leave the do-while if successful
+CLI::setResource('influxdb', function(Registry $register){
+    /** @var InfluxDB\Client $client */
+    $client = $register->get('influxdb');
+    $attempts = 0;
+    $max = 10;
+    $sleep = 1;
+    
+    do { // check if telegraf database is ready
+        try {
+            $attempts++;
+            $database = $client->selectDB('telegraf');
+            if (in_array('telegraf', $client->listDatabases())) {
+                break; // leave the do-while if successful
+            }
+        } catch (\Throwable$th) {
+            Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
+            if ($attempts >= $max) {
+                throw new \Exception('InfluxDB database not ready yet');
+            }
+            sleep($sleep);
         }
-    } catch (\Throwable$th) {
-        Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
-        if ($attempts >= $max) {
-            throw new \Exception('InfluxDB database not ready yet');
-        }
-        sleep($sleep);
-    }
-} while ($attempts < $max);
-CLI::setResource('influxdb', fn() => $database);
+    } while ($attempts < $max);
+    return $database;
+}, ['register']);
 
 $cliPlatform = new Tasks();
 $cliPlatform->init(Service::TYPE_CLI);
