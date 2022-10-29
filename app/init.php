@@ -698,8 +698,6 @@ $register->set('logger', function () {
     return new Logger($adapter);
 });
 $register->set('pools', function () {
-    Console::info('Initializing pools');
-    
     $group = new Group();
 
     $fallbackForDB = AppwriteURL::unparse([
@@ -870,7 +868,6 @@ $register->set('pools', function () {
 
     try {
         $group->fill();
-        Console::success('Pools have been filled succefully');
     } catch (\Throwable $th) {
         Console::error('Connection failure: ' . $th->getMessage());
     }
