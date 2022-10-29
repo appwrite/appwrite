@@ -861,7 +861,7 @@ $register->set('pools', function () {
 
                 return $adapter;
             });
-var_dump($pool->channel->length());
+
             $group->add($pool);
         }
 
@@ -876,15 +876,6 @@ var_dump($pool->channel->length());
     }
 
     return $group;
-});
-$register->set('test', function () {
-    var_dump('[[init test!!]]');
-    $test = new Channel(5);
-    $test->push(1);
-    $test->push(1);
-    $test->push(1);
-    $test->push(1);
-    return $test;
 });
 $register->set('influxdb', function () {
  // Register DB connection
