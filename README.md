@@ -1,12 +1,11 @@
 > It's going to get cloudy! 🌩 ☂️
 > The Appwrite Cloud is coming soon! You can learn more about our upcoming hosted solution and signup for free credits at: https://appwrite.io/cloud
-
 <br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
     <br />
     <br />
-    <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] app</b>
+    <b>A complete backend solution for [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] apps</b>
     <br />
     <br />
 </p>
@@ -29,7 +28,7 @@ English | [简体中文](README-CN.md)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
-Using Appwrite, you can easily integrate your app with user authentication & multiple sign-in methods, a database for storing and querying users and team data, storage and file management, image manipulation, Cloud Functions, and [more services](https://appwrite.io/docs).
+Using Appwrite, you can seamlessly integrate your app with user authentication and multiple sign-in methods. You can also find database and storage persistence, cloud functions, localization, image manipulation, file management, Cloud services, and [more services](https://appwrite.io/docs).
 
 <p align="center">
     <br />
@@ -40,19 +39,7 @@ Using Appwrite, you can easily integrate your app with user authentication & mul
 
 ![Appwrite](public/images/github.png)
 
-Find out more at: [https://appwrite.io](https://appwrite.io)
-
-Table of Contents:
-
-- [Installation](#installation)
-  - [Unix](#unix)
-  - [Windows](#windows)
-    - [CMD](#cmd)
-    - [PowerShell](#powershell)
-  - [Upgrade from an Older Version](#upgrade-from-an-older-version)
-- [Getting Started](#getting-started)
-  - [Services](#services)
-  - [SDKs](#sdks)
+	@@ -40,16 +56,17 @@ Table of Contents:
     - [Client](#client)
     - [Server](#server)
     - [Community](#community)
@@ -64,14 +51,13 @@ Table of Contents:
 
 ## Installation
 
-Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm, or Rancher.
+Appwrite backend server is designed to run in a container environment. You can get your server up and running with one command from your terminal. You can run Appwrite on your localhost using docker-compose, or on any other container orchestration tool like Kubernetes, Docker Swarm, or Rancher.
 
 The easiest way to start running your Appwrite server is by running our docker-compose file. Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
 
 ### Unix
 
-```bash
-docker run -it --rm \
+	@@ -58,7 +75,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
@@ -79,11 +65,7 @@ docker run -it --rm \
 ```
 
 ### Windows
-
-#### CMD
-
-```cmd
-docker run -it --rm ^
+	@@ -70,49 +87,77 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
@@ -100,17 +82,17 @@ docker run -it --rm `
     appwrite/appwrite:1.0.3
 ```
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after installation completes.
+Once the Docker installation completes, go to http://localhost to access the Appwrite console. Please note that on non-Linux native hosts, the server might take a few minutes to start after installation completes.
 
 For advanced production and custom installation, check out our Docker [environment variables](https://appwrite.io/docs/environment-variables) docs. You can also use our public [docker-compose.yml](https://appwrite.io/install/compose) and [.env](https://appwrite.io/install/env) files to manually set up an environment.
 
 ### Upgrade from an Older Version
 
-If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
+If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding migration, check out the [Installation Docs](https://appwrite.io/docs/installation).
 
 ## One-Click Setups
 
-In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to get up and running with Appwrite quickly without installing Docker on your local machine.
+In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to start running Appwrite quickly without installing Docker on your local machine.
 
 Choose from one of the providers below:
 
@@ -118,15 +100,13 @@ Choose from one of the providers below:
   <tr>
     <td align="center" width="100" height="100">
       <a href="https://marketplace.digitalocean.com/apps/appwrite">
-        <img width="50" height="39" src="![20_55_23 714y33gof_DO_Logo-Blue](https://user-images.githubusercontent.com/36594527/198779516-281370e1-76d1-411f-ad5f-9545eede5c70.png)
-" alt="DigitalOcean Logo" />
+        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
           <br /><sub><b>DigitalOcean</b></sub></a>
         </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
-        <img width="50" height="39" src="![gitpod-dark 72a4e9ee](https://user-images.githubusercontent.com/36594527/198779585-01f89683-65aa-410f-8eb9-9a81e2123985.svg)
-" alt="Gitpod Logo" />
+        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
           <br /><sub><b>Gitpod</b></sub></a>    
       </a>
     </td>
@@ -135,7 +115,12 @@ Choose from one of the providers below:
 
 ## Getting Started
 
-Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
+Get started with Appwrite in just three steps:
+- create a new project
+- choose your platform
+- integrating its SDK into your code.
+
+You can get started with your platform of choice by reading one of our "Getting Started" tutorials:
 
 - [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
 - [Getting Started for Flutter](https://appwrite.io/docs/getting-started-for-flutter)
@@ -158,8 +143,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 
 For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io) and [Discord Server](https://discord.gg/GSeTUeA).
 
-### SDKs
-
+	@@ -121,25 +166,39 @@ For the complete API documentation, visit [https://appwrite.io/docs](https://app
 Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
 
 #### Client
@@ -192,19 +176,14 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 ![Appwrite Architecture](docs/specs/overview.drawio.svg)
 
-Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs (REST, WebSocket, and GraphQL-soon) to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
+Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs (REST, WebSocket, with GraphQL coming soon) to allow you to interact with your resources by leveraging existing knowledge and protocols of choice.
 
-The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in the [contribution guide](CONTRIBUTING.md#architecture-1).
+The Appwrite API layer was designed to be extremely fast. It does this by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in the [contribution guide](CONTRIBUTING.md#architecture-1).
 
 ## Contributing
 
 All code contributions - including those of people having commit access - must go through a pull request and be approved by a core developer before being merged. This is to ensure a proper review of all the code.
-
-We truly ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
-
-## Security
-
-For security issues, kindly email us at [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue on GitHub.
+	@@ -152,7 +211,7 @@ For security issues, kindly email us at [security@appwrite.io](mailto:security@a
 
 ## Follow Us
 
