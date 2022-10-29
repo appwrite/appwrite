@@ -118,13 +118,15 @@ Choose from one of the providers below:
   <tr>
     <td align="center" width="100" height="100">
       <a href="https://marketplace.digitalocean.com/apps/appwrite">
-        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
+        <img width="50" height="39" src="![20_55_23 714y33gof_DO_Logo-Blue](https://user-images.githubusercontent.com/36594527/198779516-281370e1-76d1-411f-ad5f-9545eede5c70.png)
+" alt="DigitalOcean Logo" />
           <br /><sub><b>DigitalOcean</b></sub></a>
         </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
-        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
+        <img width="50" height="39" src="![gitpod-dark 72a4e9ee](https://user-images.githubusercontent.com/36594527/198779585-01f89683-65aa-410f-8eb9-9a81e2123985.svg)
+" alt="Gitpod Logo" />
           <br /><sub><b>Gitpod</b></sub></a>    
       </a>
     </td>
