@@ -20,15 +20,18 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
-use Swoole\Coroutine\Channel;
+use Swoole\Runtime;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
+
+Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+$workerNumber = 1;
 
 $http
     ->set([
@@ -60,13 +63,8 @@ include __DIR__ . '/controllers/general.php';
 
 $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
-    global $http;
 
-    var_dump('Test size is:'.$register->get('test')->length());
-
-    var_dump('Startup is served by:'.$http->worker_id);
     go(function () use ($register, $app) {
-        var_dump('Test 2 size is:'.$register->get('test')->length());
         $pools = $register->get('pools'); /** @var Group $pools */
         App::setResource('pools', fn() => $pools);
 
@@ -238,9 +236,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
-    var_dump('Test 3 size is:'.$register->get('test')->length());
-    global $http;
-    var_dump('Served by:'.$http->worker_id);
 
     if (Files::isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
@@ -253,6 +248,15 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         return;
     }
+
+    $pools = $register->get('pools'); /** @var Group $pools */
+    var_dump('current console connection');
+    var_dump($pools->get('console')->pop()->getID());
+    var_dump('current pool size');
+    var_dump($pools->get('console')->count());
+    // Console::log('sleep start');
+    // System::sleep(3);
+    // Console::log('sleep end');
 
     $app = new App('UTC');
 
