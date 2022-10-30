@@ -28,7 +28,6 @@ CLI::setResource('db', function (Registry $register) {
         try {
             $attempts++;
             $db = $register->get('db');
-            $redis = $register->get('cache');
             break; // leave the do-while if successful
         } catch (\Exception $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -41,7 +40,7 @@ CLI::setResource('db', function (Registry $register) {
     return $db;
 }, ['register']);
 
-CLI::setResource('cache', fn () => $redis);
+CLI::setResource('cache', fn ($register) => $register->get('cache'), ['register']);
 
 CLI::setResource('dbForConsole', function ($db, $cache) {
     $cache = new Cache(new RedisCache($cache));
