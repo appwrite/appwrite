@@ -5,6 +5,8 @@ require_once __DIR__ . '/../worker.php';
 
 use Utopia\App;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
+use Utopia\Database\DateTime;
 use Utopia\Queue;
 use Utopia\Queue\Message;
 
@@ -18,12 +20,14 @@ $server->job()
     ->inject('message')
     ->inject('cache')
     ->action(function (Message $message, Cache $cache) {
-
+        $time = DateTime::now();
         $payload = $message->getPayload()['value'];
+        $cache->setDisableListeners(true);
         foreach ($payload['keys'] ?? [] as $key) {
-                var_dump('purging -> ' . $key);
-                var_dump($cache->purge($key));
+            Console::info("[{$time}] Purging  {$key}");
+            $cache->purge($key);
         }
+        $cache->setDisableListeners(false);
     });
 
 $server
@@ -36,6 +40,6 @@ $server
 
 $server
     ->workerStart(function () {
-        echo "In region [" . App::getEnv('_APP_REGION', 'nyc1') . "] cache purging worker Started" . PHP_EOL;
+        echo "In  [" . App::getEnv('_APP_REGION', 'nyc1') . "] edge cache purging worker Started" . PHP_EOL;
     })
     ->start();

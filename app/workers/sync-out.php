@@ -63,7 +63,7 @@ function send(string $url, string $token, array $stack): array
             return $payload;
         }
 
-        sleep(2);
+        sleep(1);
     }
 
     curl_close($ch);
@@ -115,7 +115,7 @@ $server->job()
     ->action(function (Message $message) use (&$stack, &$failures) {
 
         $payload = $message->getPayload()['value'] ?? [];
-        var_dump($message->getPayload());
+
         if (!empty($payload['keys'])) {
             $regions = array_filter(
                 Config::getParam('regions', []),
@@ -148,7 +148,7 @@ $server
 
 $server
     ->workerStart(function () use (&$stack, &$failures) {
-        Timer::tick(1000, function () use (&$stack, &$failures) {
+        Timer::tick(20000, function () use (&$stack, &$failures) {
             $time = DateTime::now();
             if (empty($stack['keys']) && count($failures) === 0) {
                 Console::info("[{$time}] Stack is empty");
@@ -170,8 +170,9 @@ $server
             array_splice($stack['keys'], 0, CHUNK_MAX_KEYS);
             Console::info("[{$time}] Sending " . count($chunk) . " remains " . count($stack['keys']));
             call($stack['regions'], $chunk);
+            //var_dump($stack['keys']);
             $chunk = [];
         });
-        echo "Out region [" . App::getEnv('_APP_REGION', 'nyc1') . "] cache purging worker Started" . PHP_EOL;
+        echo "Out  [" . App::getEnv('_APP_REGION', 'nyc1') . "] edge cache purging worker Started" . PHP_EOL;
     })
     ->start();

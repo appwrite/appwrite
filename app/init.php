@@ -931,6 +931,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         if ($project->isEmpty()) {
             $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
         } else {
+            var_dump('Save cache invoked');
             $user = $dbForProject->getDocument('users', Auth::$unique);
         }
     } else {

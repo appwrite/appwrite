@@ -108,6 +108,8 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
+      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
+      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - mariadb
       - redis
@@ -279,6 +281,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./vendor/utopia-php/queue:/usr/src/code/vendor/utopia-php/queue
+      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
+      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - mariadb
       - redis
@@ -308,6 +312,8 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
+      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
     environment:
