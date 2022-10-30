@@ -111,7 +111,7 @@ CLI::setResource('logError', function (Registry $register) {
         Console::warning("Failed: {$error->getMessage()}");
         Console::warning($error->getTraceAsString());
     };
-});
+}, ['register']);
 
 $cliPlatform = new Tasks();
 $cliPlatform->init(Service::TYPE_CLI);
