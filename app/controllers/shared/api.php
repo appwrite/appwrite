@@ -50,7 +50,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
 
 $databaseListener = function (string $event, Document $document, Stats $usage) {
     $multiplier = 1;
-    if($event === Database::EVENT_DOCUMENT_DELETE) {
+    if ($event === Database::EVENT_DOCUMENT_DELETE) {
         $multiplier = -1;
     }
 
