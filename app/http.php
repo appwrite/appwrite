@@ -94,7 +94,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         try {
             $redis->flushAll();
             Console::success('[Setup] - Creating database: appwrite...');
-            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $dbForConsole->create();
         } catch (\Exception $e) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }
