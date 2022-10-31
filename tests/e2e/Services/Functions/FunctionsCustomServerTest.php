@@ -569,7 +569,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals(0, $function['body']['buildTime']);
+        $this->assertGreaterThan(0, $function['body']['buildTime']);
 
         /**
          * Test for FAILURE
