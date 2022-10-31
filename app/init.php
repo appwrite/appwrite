@@ -931,7 +931,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         if ($project->isEmpty()) {
             $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
         } else {
-            var_dump('Save cache invoked');
+            //Todo fix cache save re-invoked
             $user = $dbForProject->getDocument('users', Auth::$unique);
         }
     } else {
@@ -1080,11 +1080,18 @@ App::setResource('cache', function (Group $pools) {
     $client = new SyncOut('syncOut', new QueueRedis(App::getEnv('_APP_REDIS_HOST', 'redis'), App::getEnv('_APP_REDIS_PORT', '6379')));
 
     $cache->on(cache::EVENT_SAVE, function ($key) use ($client) {
+        //Todo fix cache re-invoked
+        if ($key === 'cache-console:_metadata:users') {
+            return;
+        }
         $client
             ->enqueue(['value' => ['key' => $key]]);
     });
 
     $cache->on(cache::EVENT_PURGE, function ($key) use ($client) {
+        if ($key === 'cache-console:_metadata:users') {
+            return;
+        }
         $client
             ->enqueue(['value' => ['key' => $key]]);
     });

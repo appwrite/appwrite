@@ -2,14 +2,16 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\DSN\DSN;
 use Appwrite\Extend\Exception;
+use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Queue\Client as SyncIn;
 use Utopia\Queue\Connection\Redis as QueueRedis;
-use Utopia\Registry\Registry;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
@@ -41,7 +43,26 @@ App::post('/v1/edge/sync')
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $client = new SyncIn('syncIn', new QueueRedis(App::getEnv('_APP_REDIS_HOST', 'redis'), App::getEnv('_APP_REDIS_PORT', '6379')));
+        $fallbackForRedis = AppwriteURL::unparse([
+            'scheme' => 'redis',
+            'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
+            'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
+            'user' => App::getEnv('_APP_REDIS_USER', ''),
+            'pass' => App::getEnv('_APP_REDIS_PASS', ''),
+        ]);
+
+        $connection = App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
+        $dsns = explode(',', $connection ?? '');
+
+        if (empty($dsns)) {
+            Console::error("No Dsn found");
+        }
+
+        $dsn = explode('=', $dsns[0]);
+        $dsn = $dsn[1] ?? '';
+        $dsn = new DSN($dsn);
+
+        $client = new SyncIn('syncIn', new QueueRedis($dsn->getHost(), $dsn->getPort()));
 
         $client->enqueue(['value' => ['keys' => $keys]]);
 

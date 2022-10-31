@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../worker.php';
 
-
+use Appwrite\Extend\Exception;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -10,9 +10,14 @@ use Utopia\Database\DateTime;
 use Utopia\Queue;
 use Utopia\Queue\Message;
 
-global $register;
+if (App::getEnv('_APP_REGION', 'default') === 'default') {
+    throw new Exception(Exception::GENERAL_SERVER_ERROR);
+}
 
-$connection = new Queue\Connection\Redis(App::getEnv('_APP_REDIS_HOST', 'redis'), App::getEnv('_APP_REDIS_PORT', '6379'));
+global $register;
+global $dsn;
+
+$connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
 $adapter    = new Queue\Adapter\Swoole($connection, 2, 'syncIn');
 $server     = new Queue\Server($adapter);
 
@@ -33,13 +38,16 @@ $server->job()
 $server
     ->error()
     ->inject('error')
-    ->action(function ($error) {
-        echo $error->getMessage() . PHP_EOL;
-        echo $error->getLine() . PHP_EOL;
+    ->inject('logError')
+    ->action(function ($error, $logError) {
+        Console::error($error->getMessage() . ' ' . $error->getFile() . ' ' . $error->getLine());
+        call_user_func($logError, $error, 'sync-in-worker');
     });
 
 $server
-    ->workerStart(function () {
-        echo "In  [" . App::getEnv('_APP_REGION', 'nyc1') . "] edge cache purging worker Started" . PHP_EOL;
-    })
-    ->start();
+    ->workerStart()
+    ->action(function () {
+        Console::success("In  [" . App::getEnv('_APP_REGION', 'nyc1') . "] edge cache purging worker Started");
+    });
+
+$server->start();

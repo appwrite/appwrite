@@ -3,8 +3,8 @@
 require_once __DIR__ . '/../worker.php';
 
 use Ahc\Jwt\JWT;
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
-use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -16,9 +16,15 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Queue;
 use Utopia\Queue\Message;
 
+if (App::getEnv('_APP_REGION', 'default') === 'default') {
+    throw new Exception(Exception::GENERAL_SERVER_ERROR);
+}
+
+global $dsn;
+
 $regions = array_filter(
     Config::getParam('regions', []),
-    fn ($region) => App::getEnv('_APP_REGION', 'nyc1') !== $region
+    fn ($region) => App::getEnv('_APP_REGION') !== $region
         && $region !== 'default',
     ARRAY_FILTER_USE_KEY
 );
@@ -38,7 +44,7 @@ const MAX_CURL_SEND_ATTEMPTS = 4;
  * @param array $stack
  * @return array
  */
-function send(string $url, string $token, array $stack): array
+function call(string $url, string $token, array $stack): array
 {
     $payload = [];
     $ch = curl_init($url);
@@ -76,7 +82,7 @@ function send(string $url, string $token, array $stack): array
  * @throws Structure
  * @throws Exception
  */
-function call($regions, $stack): void
+function handle($dbForConsole, $regions, $stack): void
 {
 
     global $register;
@@ -86,13 +92,12 @@ function call($regions, $stack): void
 
     foreach ($regions as $code => $region) {
         $time = DateTime::now();
-        $response = send($region['domain'] . '/v1/edge/sync', $token, ['keys' => $stack]);
+        $response = call($region['domain'] . '/v1/edge/sync', $token, ['keys' => $stack]);
         if ($response['status'] !== Response::STATUS_CODE_OK) {
             Console::error("[{$time}] Request to  {$code} has failed");
             try {
-                $database = getConsoleDB();
-                $database->createDocument('syncs', new Document([
-                    'region' => App::getEnv('_APP_REGION', 'nyc1'),
+                $dbForConsole->createDocument('syncs', new Document([
+                    'region' => App::getEnv('_APP_REGION'),
                     'target' => $code,
                     'keys' => $stack,
                     'status' => $response['status'],
@@ -105,13 +110,11 @@ function call($regions, $stack): void
     }
 }
 
-$connection = new Queue\Connection\Redis(App::getEnv('_APP_REDIS_HOST', 'redis'), App::getEnv('_APP_REDIS_PORT', '6379'));
-$adapter    = new Queue\Adapter\Swoole($connection, 1, 'syncOut');
+$connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+$adapter    = new Queue\Adapter\Swoole($connection, 2, 'syncOut');
 $server     = new Queue\Server($adapter);
-
 $server->job()
     ->inject('message')
-    ->inject('dbForConsole')
     ->action(function (Message $message) use (&$stack, &$failures) {
 
         $payload = $message->getPayload()['value'] ?? [];
@@ -136,20 +139,24 @@ $server->job()
         }
     });
 
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-
 $server
     ->error()
     ->inject('error')
-    ->action(function ($error) {
-        echo $error->getMessage() . PHP_EOL;
-        echo $error->getLine() . PHP_EOL;
+    ->inject('errorLog')
+    ->action(function ($error, $errorLog) {
+        var_dump($error);
+        Console::error($error->getMessage() . ' ' . $error->getFile() . ' ' . $error->getLine());
+        call_user_func($errorLog, $error, 'sync-out-worker');
     });
 
 $server
-    ->workerStart(function () use (&$stack, &$failures) {
-        Timer::tick(20000, function () use (&$stack, &$failures) {
+    ->workerStart()
+    ->inject('dbForConsole')
+    ->action(function ($dbForConsole) use (&$stack, &$failures) {
+
+        Timer::tick(5000, function () use ($dbForConsole, &$stack, &$failures) {
             $time = DateTime::now();
+
             if (empty($stack['keys']) && count($failures) === 0) {
                 Console::info("[{$time}] Stack is empty");
                 return;
@@ -160,7 +167,7 @@ $server
                 while ($i < count($failures)) {
                     $failure = array_shift($failures);
                     Console::info("[{$time}] ReSending " . count($failure['keys']) . " to " . key($failure['regions']));
-                    call($failure['regions'], $failure['keys']);
+                    handle($dbForConsole, $failure['regions'], $failure['keys']);
                     $i++;
                 }
                 return;
@@ -169,10 +176,10 @@ $server
             $chunk = array_slice($stack['keys'], 0, CHUNK_MAX_KEYS);
             array_splice($stack['keys'], 0, CHUNK_MAX_KEYS);
             Console::info("[{$time}] Sending " . count($chunk) . " remains " . count($stack['keys']));
-            call($stack['regions'], $chunk);
-            //var_dump($stack['keys']);
+            handle($dbForConsole, $stack['regions'], $chunk);
             $chunk = [];
         });
-        echo "Out  [" . App::getEnv('_APP_REGION', 'nyc1') . "] edge cache purging worker Started" . PHP_EOL;
-    })
-    ->start();
+        Console::success("Out  [" . App::getEnv('_APP_REGION') . "] edge cache purging worker Started");
+    });
+
+  $server->start();

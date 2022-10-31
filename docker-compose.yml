@@ -280,9 +280,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/queue:/usr/src/code/vendor/utopia-php/queue
-      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
-      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - mariadb
       - redis
@@ -301,6 +298,7 @@ services:
         - _APP_CONNECTIONS_DB_CONSOLE
         - _APP_CONNECTIONS_CACHE
         - _APP_CONNECTIONS_QUEUE
+        - _APP_REGION
 
   appwrite-worker-sync-in:
     entrypoint: worker-sync-in
@@ -312,8 +310,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
-      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
     environment:
@@ -326,6 +322,7 @@ services:
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_CACHE
       - _APP_CONNECTIONS_QUEUE
+      - _APP_REGION
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
@@ -696,6 +693,7 @@ services:
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_CACHE
       - _APP_CONNECTIONS_QUEUE
+      - _APP_REGION
 
   appwrite-usage-timeseries:
     entrypoint:
