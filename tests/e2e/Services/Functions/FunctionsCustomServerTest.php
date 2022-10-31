@@ -550,6 +550,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsArray($function['body']['deployments']);
         $this->assertCount(2, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
+        $this->assertGreaterThanOrEqual(2, $function['body']['deployments'][0]['buildTime']);
 
         return $data;
     }
@@ -568,6 +569,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals(0, $function['body']['buildTime']);
 
         /**
          * Test for FAILURE
