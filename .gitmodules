@@ -1,4 +1,4 @@
- [submodule "console"]
-     path = app/console
-     url = https://github.com/appwrite/console.git
-     branch = main
+[submodule "app/console"]
+	path = app/console
+	url = https://github.com/appwrite/console.git
+    branch = main
