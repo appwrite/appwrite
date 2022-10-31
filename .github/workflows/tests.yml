@@ -31,6 +31,8 @@ jobs:
         docker compose build appwrite
         docker compose up -d
         sleep 30
+    - name: logs
+      run: docker compose logs appwrite
     - name: Doctor
       run: docker compose exec -T appwrite doctor
 
