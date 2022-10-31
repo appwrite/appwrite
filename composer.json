@@ -12,7 +12,19 @@
     "scripts": {
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/phpcs",
-        "format": "vendor/bin/phpcbf"
+        "format": "vendor/bin/phpcbf",
+        "benchmark": [
+            "Composer\\Config::disableProcessTimeout",
+            "vendor/bin/phpbench run --report=appwrite"
+        ],
+        "benchmark-tag": [
+            "Composer\\Config::disableProcessTimeout",
+            "vendor/bin/phpbench run --tag=baseline --report=appwrite"
+        ],
+        "benchmark-compare": [
+            "Composer\\Config::disableProcessTimeout",
+            "vendor/bin/phpbench run --ref=baseline --report=appwrite"
+        ]
     },
     "autoload": {
         "psr-4": {
@@ -24,6 +36,7 @@
         "psr-4": {
             "Tests\\E2E\\": "tests/e2e",
             "Tests\\Unit\\": "tests/unit",
+            "Tests\\Benchmarks\\": "tests/benchmarks",
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
@@ -82,7 +95,8 @@
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",
         "swoole/ide-helper": "4.8.9",
-        "textalk/websocket": "1.5.7"
+        "textalk/websocket": "1.5.7",
+        "phpbench/phpbench": "^1.2"
     },
     "provide": {
         "ext-phpiredis": "*"

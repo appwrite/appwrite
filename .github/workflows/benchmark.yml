@@ -1,0 +1,20 @@
+name: "Benchmark"
+
+on: [pull_request]
+
+jobs:
+  benchmark:
+    name: Benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+
+    - run: git checkout HEAD^2
+
+    - name: Run benchmark against baseline
+      run: docker run --rm -v $PWD:/app composer sh -c \
+        "composer install --profile --ignore-platform-reqs && composer benchmark"

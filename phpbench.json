@@ -1,0 +1,16 @@
+{
+  "$schema": "./vendor/phpbench/phpbench/phpbench.schema.json",
+  "runner.path": "tests/benchmarks",
+  "runner.file_pattern": "*Bench.php",
+  "runner.bootstrap": "app/init.php",
+  "runner.revs": 500,
+  "runner.iterations": 3,
+  "runner.warmup": 1,
+  "report.generators": {
+    "appwrite": {
+      "extends": "aggregate",
+      "cols": ["benchmark", "subject", "revs", "its", "worst", "best", "mean", "rstdev"],
+      "break": ["benchmark"]
+    }
+  }
+}
