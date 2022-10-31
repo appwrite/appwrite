@@ -917,6 +917,7 @@ App::setResource('console', function () {
         'legalCity' => '',
         'legalAddress' => '',
         'legalTaxId' => '',
+        'sessionDuration' => 525600, // 1 Year in minutes
         'auths' => [
             'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
         ],

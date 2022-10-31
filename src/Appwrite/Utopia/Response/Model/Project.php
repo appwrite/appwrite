@@ -101,6 +101,12 @@ class Project extends Model
                 'default' => '',
                 'example' => '131102020',
             ])
+            ->addRule('sessionDuration', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Session duration in minutes.',
+                'default' => '',
+                'example' => '30',
+            ])
             ->addRule('authLimit', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Max users allowed. 0 is unlimited.',

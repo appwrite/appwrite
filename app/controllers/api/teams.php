@@ -677,9 +677,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('geodb')
     ->inject('events')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Reader $geodb, Event $events) {
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $events) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -731,7 +732,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $sessionDuration = ($project->getAttribute('sessionDuration', null) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expire = DateTime::addSeconds(new \DateTime(), $sessionDuration);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
             '$id' => ID::unique(),

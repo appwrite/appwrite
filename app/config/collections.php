@@ -634,6 +634,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('sessionDuration'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 32,
+                'signed' => true,
+                'required' => false,
+                'default' => 525600, // 1 Year
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('services'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

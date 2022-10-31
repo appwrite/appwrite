@@ -32,6 +32,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -67,10 +68,11 @@ App::post('/v1/projects')
     ->param('legalCity', '', new Text(256), 'Project legal City. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal Address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
+    ->param('sessionDuration', 525600, new Integer(), 'Session duration in minutes. Defaults to 1 year', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
+    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, int $sessionDuration, Response $response, Database $dbForConsole, Database $dbForProject) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -112,6 +114,7 @@ App::post('/v1/projects')
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => ID::custom($legalTaxId),
+            'sessionDuration' => $sessionDuration,
             'services' => new stdClass(),
             'platforms' => null,
             'authProviders' => [],
@@ -374,14 +377,19 @@ App::patch('/v1/projects/:projectId')
     ->param('legalCity', '', new Text(256), 'Project legal city. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
+    ->param('sessionDuration', null, new Integer(true), 'Project session length in minutes. Max length: 525600 minutes.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, int $sessionDuration, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if ($sessionDuration < 0 || $sessionDuration > 525600) {
+            throw new Exception('Session length must be between 0 and 525600 minutes');
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
@@ -395,6 +403,7 @@ App::patch('/v1/projects/:projectId')
                 ->setAttribute('legalCity', $legalCity)
                 ->setAttribute('legalAddress', $legalAddress)
                 ->setAttribute('legalTaxId', $legalTaxId)
+                ->setAttribute('sessionDuration', $sessionDuration)
                 ->setAttribute('search', implode(' ', [$projectId, $name])));
 
         $response->dynamic($project, Response::MODEL_PROJECT);

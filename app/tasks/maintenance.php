@@ -99,7 +99,7 @@ $cli
         {
             (new Delete())
                 ->setType(DELETE_TYPE_SESSIONS)
-                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * Auth::TOKEN_EXPIRATION_LOGIN_LONG))
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * Auth::TOKEN_EXPIRATION_LOGIN_LONG)) //TODO: Update to use project session expiration instead of default.
                 ->trigger();
         }
 
