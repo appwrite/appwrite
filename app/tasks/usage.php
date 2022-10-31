@@ -121,7 +121,8 @@ $cli
         $influxDB = getInfluxDB($register);
 
         $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
-        $usage = new TimeSeries($database, $influxDB, $logError);
+        $region = App::getEnv('region', 'default');
+        $usage = new TimeSeries($region, $database, $influxDB, $logError);
 
         Console::loop(function () use ($interval, $usage) {
             $now = date('d-m-Y H:i:s', time());

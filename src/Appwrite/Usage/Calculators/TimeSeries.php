@@ -2,6 +2,7 @@
 
 namespace Appwrite\Usage\Calculators;
 
+use Utopia\App;
 use Appwrite\Usage\Calculator;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -381,8 +382,9 @@ class TimeSeries extends Calculator
         ]
     ];
 
-    public function __construct(Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
+    public function __construct(string $region, Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
     {
+        parent::__construct($region);
         $this->database = $database;
         $this->influxDB = $influxDB;
         $this->errorHandler = $errorHandler;
@@ -416,6 +418,7 @@ class TimeSeries extends Calculator
                     'metric' => $metric,
                     'value' => $value,
                     'type' => $type,
+                    'region' => $this->region,
                 ]));
             } else {
                 $this->database->updateDocument(
