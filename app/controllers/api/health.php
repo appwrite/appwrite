@@ -5,7 +5,9 @@ use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Config\Config;
 use Utopia\Database\Document;
+use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
@@ -26,6 +28,7 @@ App::get('/v1/health')
     ->action(function (Response $response) {
 
         $output = [
+            'name' => 'http',
             'status' => 'pass',
             'ping' => 0
         ];
@@ -42,7 +45,6 @@ App::get('/v1/health/version')
     ->label('sdk.response.model', Response::MODEL_HEALTH_VERSION)
     ->inject('response')
     ->action(function (Response $response) {
-
         $response->dynamic(new Document([ 'version' => APP_VERSION_STABLE ]), Response::MODEL_HEALTH_VERSION);
     });
 
@@ -58,30 +60,50 @@ App::get('/v1/health/db')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
-    ->inject('utopia')
-    ->action(function (Response $response, App $utopia) {
+    ->inject('pools')
+    ->action(function (Response $response, Group $pools) {
 
-        $checkStart = \microtime(true);
+        $output = [];
 
-        try {
-            $db = $utopia->getResource('db'); /* @var $db PDO */
-
-            // Run a small test to check the connection
-            $statement = $db->prepare("SELECT 1;");
-
-            $statement->closeCursor();
-
-            $statement->execute();
-        } catch (Exception $_e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Database is not available');
-        }
-
-        $output = [
-            'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+        $configs = [
+            'Console.DB' => Config::getParam('pools-console'),
+            'Projects.DB' => Config::getParam('pools-database'),
         ];
 
-        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
+        foreach ($configs as $key => $config) {
+            foreach ($config as $database) {
+                try {
+                    $adapter = $pools->get($database)->pop()->getResource();
+
+                    $checkStart = \microtime(true);
+
+                    if ($adapter->ping()) {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'pass',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    } else {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'fail',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    }
+                } catch (\Throwable $th) {
+                    $output[] = new Document([
+                        'name' => $key . " ($database)",
+                        'status' => 'fail',
+                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                    ]);
+                }
+            }
+        }
+
+        $response->dynamic(new Document([
+            'statuses' => $output,
+            'total' => count($output),
+        ]), Response::MODEL_HEALTH_STATUS_LIST);
     });
 
 App::get('/v1/health/cache')
@@ -96,23 +118,163 @@ App::get('/v1/health/cache')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
-    ->inject('utopia')
-    ->action(function (Response $response, App $utopia) {
+    ->inject('pools')
+    ->action(function (Response $response, Group $pools) {
 
-        $checkStart = \microtime(true);
+        $output = [];
 
-        $redis = $utopia->getResource('cache');
-
-        if (!$redis->ping(true)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Cache is not available');
-        }
-
-        $output = [
-            'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+        $configs = [
+            'Cache' => Config::getParam('pools-cache'),
         ];
 
-        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
+        foreach ($configs as $key => $config) {
+            foreach ($config as $database) {
+                try {
+                    $adapter = $pools->get($database)->pop()->getResource();
+
+                    $checkStart = \microtime(true);
+
+                    if ($adapter->ping()) {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'pass',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    } else {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'fail',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    }
+                } catch (\Throwable $th) {
+                    $output[] = new Document([
+                        'name' => $key . " ($database)",
+                        'status' => 'fail',
+                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                    ]);
+                }
+            }
+        }
+
+        $response->dynamic(new Document([
+            'statuses' => $output,
+            'total' => count($output),
+        ]), Response::MODEL_HEALTH_STATUS_LIST);
+    });
+
+App::get('/v1/health/queue')
+    ->desc('Get Queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueue')
+    ->label('sdk.description', '/docs/references/health/get-queue.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->inject('response')
+    ->inject('pools')
+    ->action(function (Response $response, Group $pools) {
+
+        $output = [];
+
+        $configs = [
+            'Queue' => Config::getParam('pools-queue'),
+        ];
+
+        foreach ($configs as $key => $config) {
+            foreach ($config as $database) {
+                try {
+                    $adapter = $pools->get($database)->pop()->getResource();
+
+                    $checkStart = \microtime(true);
+
+                    if ($adapter->ping()) {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'pass',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    } else {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'fail',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    }
+                } catch (\Throwable $th) {
+                    $output[] = new Document([
+                        'name' => $key . " ($database)",
+                        'status' => 'fail',
+                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                    ]);
+                }
+            }
+        }
+
+        $response->dynamic(new Document([
+            'statuses' => $output,
+            'total' => count($output),
+        ]), Response::MODEL_HEALTH_STATUS_LIST);
+    });
+
+App::get('/v1/health/pubsub')
+    ->desc('Get PubSub')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getPubSub')
+    ->label('sdk.description', '/docs/references/health/get-pubsub.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->inject('response')
+    ->inject('pools')
+    ->action(function (Response $response, Group $pools) {
+
+        $output = [];
+
+        $configs = [
+            'PubSub' => Config::getParam('pools-pubsub'),
+        ];
+
+        foreach ($configs as $key => $config) {
+            foreach ($config as $database) {
+                try {
+                    $adapter = $pools->get($database)->pop()->getResource();
+
+                    $checkStart = \microtime(true);
+
+                    if ($adapter->ping()) {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'pass',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    } else {
+                        $output[] = new Document([
+                            'name' => $key . " ($database)",
+                            'status' => 'fail',
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        ]);
+                    }
+                } catch (\Throwable $th) {
+                    $output[] = new Document([
+                        'name' => $key . " ($database)",
+                        'status' => 'fail',
+                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                    ]);
+                }
+            }
+        }
+
+        $response->dynamic(new Document([
+            'statuses' => $output,
+            'total' => count($output),
+        ]), Response::MODEL_HEALTH_STATUS_LIST);
     });
 
 App::get('/v1/health/time')

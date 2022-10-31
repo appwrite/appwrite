@@ -20,7 +20,6 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -36,9 +35,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Validator\Text;
-use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\WhiteList;
 
 App::post('/v1/teams')
     ->desc('Create Team')

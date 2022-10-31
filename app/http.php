@@ -22,6 +22,7 @@ use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
+use Utopia\Pools\Group;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
@@ -60,6 +61,10 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function () use ($register, $app) {
+
+        $pools = $register->get('pools'); /** @var Group $pools */
+        App::setResource('pools', fn() => $pools);
+
         // wait for database to be ready
         $attempts = 0;
         $max = 10;
@@ -68,8 +73,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         do {
             try {
                 $attempts++;
-                $db = $register->get('dbPool')->get();
-                $redis = $register->get('redisPool')->get();
+                $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
                 break; // leave the do-while if successful
             } catch (\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -80,21 +84,16 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             }
         } while ($attempts < $max);
 
-        App::setResource('db', fn () => $db);
-        App::setResource('cache', fn () => $redis);
-
-        /** @var Utopia\Database\Database $dbForConsole */
-        $dbForConsole = $app->getResource('dbForConsole');
-
         Console::success('[Setup] - Server database init started...');
 
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
 
         try {
-            $redis->flushAll();
+            $cache = $app->getResource('cache'); /** @var Utopia\Cache\Cache $cache */
+            $cache->flush();
             Console::success('[Setup] - Creating database: appwrite...');
-            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $dbForConsole->create();
         } catch (\Exception $e) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }
@@ -116,6 +115,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             if (!$dbForConsole->getCollection($key)->isEmpty()) {
                 continue;
             }
+
             /**
              * Skip to prevent 0.16 migration issues.
              */
@@ -215,6 +215,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         }
 
+        $pools->reclaim();
+
         Console::success('[Setup] - Server database init completed...');
     });
 
@@ -246,11 +248,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     $app = new App('UTC');
 
-    $db = $register->get('dbPool')->get();
-    $redis = $register->get('redisPool')->get();
-
-    App::setResource('db', fn () => $db);
-    App::setResource('cache', fn () => $redis);
+    $pools = $register->get('pools');
+    App::setResource('pools', fn() => $pools);
 
     try {
         Authorization::cleanRoles();
@@ -317,13 +316,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         Console::error('[Error] File: ' . $th->getFile());
         Console::error('[Error] Line: ' . $th->getLine());
 
-        /**
-         * Reset Database connection if PDOException was thrown.
-         */
-        if ($th instanceof PDOException) {
-            $db = null;
-        }
-
         $swooleResponse->setStatusCode(500);
 
         $output = ((App::isDevelopment())) ? [
@@ -341,13 +333,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $swooleResponse->end(\json_encode($output));
     } finally {
-        /** @var PDOPool $dbPool */
-        $dbPool = $register->get('dbPool');
-        $dbPool->put($db);
-
-        /** @var RedisPool $redisPool */
-        $redisPool = $register->get('redisPool');
-        $redisPool->put($redis);
+        $pools->reclaim();
     }
 });
 

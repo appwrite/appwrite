@@ -1,51 +1,15 @@
 <?php
 
 global $cli;
-global $register;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Database;
-use Utopia\Database\DateTime;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
-
-function getConsoleDB(): Database
-{
-    global $register;
-
-    $attempts = 0;
-
-    do {
-        try {
-            $attempts++;
-            $cache = new Cache(new RedisCache($register->get('cache')));
-            $database = new Database(new MariaDB($register->get('db')), $cache);
-            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-            $database->setNamespace('_console'); // Main DB
-
-            if (!$database->exists($database->getDefaultDatabase(), 'certificates')) {
-                throw new \Exception('Console project not ready');
-            }
-
-            break; // leave loop if successful
-        } catch (\Exception $e) {
-            Console::warning("Database not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-            }
-            sleep(DATABASE_RECONNECT_SLEEP);
-        }
-    } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-
-    return $database;
-}
 
 $cli
     ->task('maintenance')
