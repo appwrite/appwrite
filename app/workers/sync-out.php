@@ -144,7 +144,6 @@ $server
     ->inject('error')
     ->inject('errorLog')
     ->action(function ($error, $errorLog) {
-        var_dump($error);
         Console::error($error->getMessage() . ' ' . $error->getFile() . ' ' . $error->getLine());
         call_user_func($errorLog, $error, 'sync-out-worker');
     });
