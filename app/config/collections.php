@@ -2328,6 +2328,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('buildTime'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 'array' => false,
                 '$id' => ID::custom('entrypoint'),
                 'type' => Database::VAR_STRING,
