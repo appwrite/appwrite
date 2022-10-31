@@ -2076,7 +2076,7 @@ $collections = [
                 '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 128,
+                'size' => 2048,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
@@ -2216,7 +2216,7 @@ $collections = [
                 '$id' => ID::custom('_key_name'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['name'],
-                'lengths' => [],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
