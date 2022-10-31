@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fa760a49c4911c4a1a4ae0b8881738aa",
+    "content-hash": "d8785bcc235caa7fe9312614f053d0cd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2172,16 +2172,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.22.1",
+            "version": "dev-feat-multiple-aliases",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "9f35d36ed4b8fa1c92962c77ef02b49c2f5919df"
+                "reference": "37637cb22a30e6660a0886befef4d6a5e657fc48"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/9f35d36ed4b8fa1c92962c77ef02b49c2f5919df",
-                "reference": "9f35d36ed4b8fa1c92962c77ef02b49c2f5919df",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/37637cb22a30e6660a0886befef4d6a5e657fc48",
+                "reference": "37637cb22a30e6660a0886befef4d6a5e657fc48",
                 "shasum": ""
             },
             "require": {
@@ -2201,12 +2201,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "A simple, light and advanced PHP framework",
             "keywords": [
                 "framework",
@@ -2215,9 +2209,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.22.1"
+                "source": "https://github.com/utopia-php/framework/tree/feat-multiple-aliases"
             },
-            "time": "2022-10-07T14:51:40+00:00"
+            "time": "2022-10-20T21:06:21+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5411,9 +5405,18 @@
             "time": "2022-09-28T08:42:51+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-feat-multiple-aliases",
+            "alias": "0.22.9",
+            "alias_normalized": "0.22.9.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/framework": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
