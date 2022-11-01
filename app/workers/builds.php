@@ -183,7 +183,6 @@ class BuildsV1 extends Worker
 
             /* Also update the deployment buildTime */
             $deployment->setAttribute('buildTime', $response['duration']);
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
             Console::success("Build id: $buildId created");
 

@@ -403,11 +403,6 @@ App::error()
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request);
 
-        /** Delegate PDO exceptions to the global handler so the database connection can be returned to the pool */
-        if ($error instanceof PDOException) {
-            throw $error;
-        }
-
         if ($logger) {
             if ($error->getCode() >= 500 || $error->getCode() === 0) {
                 try {
