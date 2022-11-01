@@ -1,0 +1,41 @@
+name: "Benchmark Update Baseline"
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  benchmark-update:
+    name: Benchmark Update Baseline
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 1
+
+      - name: Build & Run Appwrite
+        run:  |
+          export COMPOSE_INTERACTIVE_NO_CLI
+          export DOCKER_BUILDKIT=1
+          export COMPOSE_DOCKER_CLI_BUILD=1
+          export BUILDKIT_PROGRESS=plain
+          docker pull composer:2.0
+          docker compose build appwrite
+          docker compose up -d
+          sleep 30
+
+      - name: Doctor
+        run: docker compose exec -T appwrite doctor
+
+      - name: Run benchmark and update baseline
+        run: docker run --rm -v $PWD:/app composer sh -c \
+          "composer install --profile --ignore-platform-reqs && composer benchmark-tag"
+
+      - name: Commit updated baseline benchmark
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Update benchmark baseline

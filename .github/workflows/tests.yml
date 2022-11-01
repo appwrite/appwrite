@@ -3,21 +3,23 @@ name: "Tests"
 on: [pull_request]
 jobs:
   tests:
-    name: Unit & E2E
+    name: Lint, Test, Benchmark
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    - name: Checkout Repository
+      uses: actions/checkout@v3
       with:
-        # We must fetch at least the immediate parents so that if this is
-        # a pull request then we can checkout the head.
         fetch-depth: 2
 
-    # If this run was triggered by a pull request event, then checkout
-    # the head of the pull request instead of the merge commit.
-    - run: git checkout HEAD^2
-      if: ${{ github.event_name == 'pull_request' }}
+    - name: Checkout Pull Request HEAD
+      run: git checkout HEAD^2
+
+    - name: Install Dependencies
+      run: docker run --rm -v $PWD:/app composer install --profile --ignore-platform-reqs
+
+    - name: Run Linter
+      run: docker run --rm -v $PWD:/app composer lint
 
     - name: Build Appwrite
       # Upstream bug causes buildkit pulls to fail so prefetch base images
@@ -31,11 +33,15 @@ jobs:
         docker compose build appwrite
         docker compose up -d
         sleep 30
-    - name: Doctor
+
+    - name: Run Doctor
       run: docker compose exec -T appwrite doctor
 
-    - name: Environment Variables
+    - name: Print Environment Variables
       run:  docker compose exec -T appwrite vars
 
     - name: Run Tests
       run: docker compose exec -T appwrite test --debug
+
+    - name: Run Benchmark
+      run: docker run --rm -v $PWD:/app composer benchmark-compare

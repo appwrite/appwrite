@@ -19,11 +19,11 @@
         ],
         "benchmark-tag": [
             "Composer\\Config::disableProcessTimeout",
-            "vendor/bin/phpbench run --tag=baseline --report=appwrite"
+            "vendor/bin/phpbench run --report=appwrite --tag=baseline"
         ],
         "benchmark-compare": [
             "Composer\\Config::disableProcessTimeout",
-            "vendor/bin/phpbench run --ref=baseline --report=appwrite"
+            "vendor/bin/phpbench run --report=appwrite --ref=baseline"
         ]
     },
     "autoload": {
