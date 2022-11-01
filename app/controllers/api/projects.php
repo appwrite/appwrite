@@ -377,7 +377,7 @@ App::patch('/v1/projects/:projectId')
     ->param('legalCity', '', new Text(256), 'Project legal city. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
-    ->param('sessionDuration', null, new Integer(true), 'Project session length in minutes. Max length: 525600 minutes.', true)
+    ->param('sessionDuration', 525600, new Integer(true), 'Project session length in minutes. Max length: 525600 minutes.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, int $sessionDuration, Response $response, Database $dbForConsole) {
