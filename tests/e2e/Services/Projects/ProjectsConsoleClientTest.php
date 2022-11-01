@@ -483,6 +483,15 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $projectId = $response['body']['$id'];
 
+        // Check project is back to normal
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(525600, $response['body']['sessionDuration']); // 1 Year
+
         return ['projectId' => $projectId];
     }
 
