@@ -318,12 +318,12 @@ The Runtimes for all supported cloud functions (multicore builds) can be found a
 
 For generating a new console SDK follow the next steps:
 
-1. Update the console spec file located at `app/config/specs/swagger2-<version-number>.console.json` using Appwrite Tasks. Run the `php app/cli.php specs <version-number> normal` command in a running `appwrite/appwrite` container.
-2. Generate a new SDK using the command `php app/cli.php sdks`
+1. Generate new spec files using the command `docker compose exec appwrite specs <version-number>`
+2. Generate new SDKs using the command `docker compose exec appwrite sdks`
 3. Change your working dir using `cd app/sdks/console-web`
 4. Build the new SDK `npm run build`
-5. Copy `iife/sdk.js` to `appwrite.js`
-6. Go back to the root of the project `run npm run build`
+5. Copy `dist/iife/sdk.js` to `public/scripts/dependencies/appwrite.js`
+6. Go back to the root of the project and run `npm run build`
 
 ## Checklist for Releasing SDKs
 
@@ -332,7 +332,7 @@ Things to remember when releasing SDKs
 - Update the Changelogs in **docs/sdks** (right now only Dart and Flutter are using these)
 - Update **GETTING_STARTED.md** in **docs/sdks** for each SDKs if any changes in the related APIs in there
 - Update SDK versions as required on **app/config/platforms.php**
-- Generate SDKs using the command `php app/cli.php sdks` and follow the instructions
+- Generate SDKs using the command `docker compose exec appwrite sdks` and follow the instructions
 - Release new tags on GitHub repository for each SDKs
 
 ## Debug
@@ -370,41 +370,40 @@ docker compose exec appwrite test
 To run unit tests use:
 
 ```bash
-docker compose exec appwrite test /usr/src/code/tests/unit
+docker compose exec appwrite test tests/unit
 ```
 
 To run end-2-end tests use:
 
 ```bash
-docker compose exec appwrite test /usr/src/code/tests/e2e
+docker compose exec appwrite test tests/e2e
 ```
 
 To run end-2-end tests for a specific service use:
 
 ```bash
-docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]
+docker compose exec appwrite test tests/e2e/Services/[ServiceName]
 ```
 
 ## Benchmarking
 
-You can use WRK Docker image to benchmark the server performance. Benchmarking is extremely useful when you want to compare how the server behaves before and after a change has been applied. Replace [APPWRITE_HOSTNAME_OR_IP] with your Appwrite server hostname or IP. Note that localhost is not accessible from inside the WRK container.
+Benchmarking is extremely useful when you want to compare how the server behaves before and after a change has been applied.
 
-```
-  Options:
-    -c, --connections <N>  Connections to keep open
-    -d, --duration    <T>  Duration of test
-    -t, --threads     <N>  Number of threads to use
+Because benchmarking is dependent on the resources available to the server, results will vary from machine to machine. To combat this, you should first run a benchmark to set a baseline using your machine before making any changes, then run a comparison once you are finished.
 
-    -s, --script      <S>  Load Lua script file
-    -H, --header      <H>  Add header to request
-        --latency          Print latency statistics
-        --timeout     <T>  Socket/request timeout
-    -v, --version          Print version details
-```
+To create the baseline benchmark, run the following command:
 
 ```bash
-docker run --rm skandyla/wrk -t3 -c100 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
+composer benchmark-tag
 ```
+
+To run a comparison benchmark, run the following command:
+
+```bash
+composer benchmark-compare
+```
+
+The comparison benchmark output will show you a % difference in performance between the baseline and the current code.
 
 ## Code Maintenance
 
