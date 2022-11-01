@@ -396,7 +396,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /** @depends testGetProjectUsage */
-    public function testUpdateProjectSessionDuration($data): array
+    public function testUpdateProjectAuthDuration($data): array
     {
         $id = $data['projectId'];
 
@@ -409,7 +409,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'projectId' => ID::unique(),
             'name' => 'Project Test 2',
-            'sessionDuration' => '1', // Set session duration to 1 minute
+            'authDuration' => '1', // Set session duration to 1 minute
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -418,7 +418,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
-        $this->assertEquals(1, $response['body']['sessionDuration']);
+        $this->assertEquals(1, $response['body']['authDuration']);
 
         $projectId = $response['body']['$id'];
 
@@ -490,7 +490,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(525600, $response['body']['sessionDuration']); // 1 Year
+        $this->assertEquals(525600, $response['body']['authDuration']); // 1 Year
 
         return ['projectId' => $projectId];
     }

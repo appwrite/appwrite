@@ -53,7 +53,7 @@ trait ProjectCustom
             'legalCity' => '',
             'legalAddress' => '',
             'legalTaxId' => '',
-            'sessionDuration' => 525600
+            'authDuration' => 525600
         ]);
 
         $this->assertEquals(201, $project['headers']['status-code']);

@@ -186,11 +186,11 @@ App::post('/v1/account/sessions/email')
             throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        $sessionDuration = ($project->getAttribute('sessionDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = ($project->getAttribute('authDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expire = DateTime::addSeconds(new \DateTime(), $sessionDuration);
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
@@ -528,11 +528,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
-        $sessionDuration = ($project->getAttribute('sessionDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = ($project->getAttribute('authDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $sessionDuration);
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $session = new Document(array_merge([
             '$id' => ID::unique(),
@@ -783,11 +783,11 @@ App::put('/v1/account/sessions/magic-url')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $sessionDuration = ($project->getAttribute('sessionDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = ($project->getAttribute('authDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $sessionDuration);
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $session = new Document(array_merge(
             [
@@ -1020,11 +1020,11 @@ App::put('/v1/account/sessions/phone')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $sessionDuration = ($project->getAttribute('sessionDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = ($project->getAttribute('authDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $sessionDuration);
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $session = new Document(array_merge(
             [
@@ -1172,11 +1172,11 @@ App::post('/v1/account/sessions/anonymous')
         ])));
 
         // Create session token
-        $sessionDuration = ($project->getAttribute('sessionDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = ($project->getAttribute('authDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $sessionDuration);
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $session = new Document(array_merge(
             [

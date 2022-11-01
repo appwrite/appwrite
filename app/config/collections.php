@@ -634,7 +634,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('sessionDuration'),
+                '$id' => ID::custom('authDuration'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 32,
