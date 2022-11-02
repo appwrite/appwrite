@@ -8,7 +8,6 @@ use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Queue\Client as SyncIn;
 use Utopia\Queue\Connection\Redis as QueueRedis;
@@ -55,13 +54,12 @@ App::post('/v1/edge/sync')
         $dsns = explode(',', $connection ?? '');
 
         if (empty($dsns)) {
-            Console::error("No Dsn found");
+            throw new Exception(Exception::GENERAL_SERVER_ERROR);
         }
 
         $dsn = explode('=', $dsns[0]);
         $dsn = $dsn[1] ?? '';
         $dsn = new DSN($dsn);
-
         $client = new SyncIn('syncIn', new QueueRedis($dsn->getHost(), $dsn->getPort()));
 
         $client->enqueue(['value' => ['keys' => $keys]]);

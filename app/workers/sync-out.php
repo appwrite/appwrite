@@ -13,14 +13,12 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
+use Utopia\Logger\Log;
 use Utopia\Queue;
 use Utopia\Queue\Message;
 
-if (App::getEnv('_APP_REGION', 'default') === 'default') {
-    throw new Exception(Exception::GENERAL_SERVER_ERROR);
-}
-
-global $dsn;
+global $redisConnection;
+global $workerNumber;
 
 $regions = array_filter(
     Config::getParam('regions', []),
@@ -85,8 +83,6 @@ function call(string $url, string $token, array $stack): array
 function handle($dbForConsole, $regions, $stack): void
 {
 
-    global $register;
-
     $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 600, 10);
     $token = $jwt->encode([]);
 
@@ -95,7 +91,7 @@ function handle($dbForConsole, $regions, $stack): void
         $response = call($region['domain'] . '/v1/edge/sync', $token, ['keys' => $stack]);
         if ($response['status'] !== Response::STATUS_CODE_OK) {
             Console::error("[{$time}] Request to  {$code} has failed");
-            try {
+
                 $dbForConsole->createDocument('syncs', new Document([
                     'region' => App::getEnv('_APP_REGION'),
                     'target' => $code,
@@ -103,16 +99,13 @@ function handle($dbForConsole, $regions, $stack): void
                     'status' => $response['status'],
                     'payload' => $response['payload'],
                 ]));
-            } catch (\Throwable $th) {
-                $register->get('pools')->reclaim();
-            }
         }
     }
 }
 
-$connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
-$adapter    = new Queue\Adapter\Swoole($connection, 2, 'syncOut');
+$adapter    = new Queue\Adapter\Swoole($redisConnection, $workerNumber, 'syncOut');
 $server     = new Queue\Server($adapter);
+
 $server->job()
     ->inject('message')
     ->action(function (Message $message) use (&$stack, &$failures) {
@@ -142,10 +135,45 @@ $server->job()
 $server
     ->error()
     ->inject('error')
-    ->inject('errorLog')
-    ->action(function ($error, $errorLog) {
-        Console::error($error->getMessage() . ' ' . $error->getFile() . ' ' . $error->getLine());
-        call_user_func($errorLog, $error, 'sync-out-worker');
+    ->inject('logger')
+    ->inject('register')
+    ->action(function ($error, $logger, $register) {
+
+        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+        if ($error instanceof PDOException) {
+            throw $error;
+        }
+
+        if ($error->getCode() >= 500 || $error->getCode() === 0) {
+            $log = new Log();
+
+            $log->setNamespace("worker");
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
+            $log->setAction('worker-sync-out');
+            $log->addTag('verboseType', get_class($error));
+            $log->addTag('code', $error->getCode());
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
+            $log->addExtra('roles', \Utopia\Database\Validator\Authorization::$roles);
+
+            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            $logger->addLog($log);
+        }
+
+        Console::error('[Error] Type: ' . get_class($error));
+        Console::error('[Error] Message: ' . $error->getMessage());
+        Console::error('[Error] File: ' . $error->getFile());
+        Console::error('[Error] Line: ' . $error->getLine());
+
+        $register->get('pools')->reclaim();
     });
 
 $server

@@ -9,15 +9,15 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
+use Utopia\Queue;
 use Utopia\Queue\Client as SyncOut;
-use Utopia\Queue\Connection\Redis as QueueRedis;
 
 $cli
     ->task('sync-edge')
     ->desc('Schedules edge sync tasks')
     ->action(function () use ($register) {
         Console::title('Syncs edges V1');
-        Console::success(APP_NAME . ' Sync Edge process v1 has started');
+        Console::success(APP_NAME . ' Sync failed cache purge process v1 has started');
 
         $fallbackForRedis = AppwriteURL::unparse([
             'scheme' => 'redis',
@@ -37,43 +37,52 @@ $cli
         $dsn = explode('=', $dsns[0]);
         $dsn = $dsn[1] ?? '';
         $dsn = new DSN($dsn);
+        $redisConnection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+        $client = new SyncOut('syncOut', $redisConnection);
+
 
         // Todo fix pdo  PDOException
-        //Table 'appwrite.console__metadata' doesn't exist
+        // Table 'appwrite.console__metadata' doesn't exist
         sleep(4);
+
         $interval = (int) App::getEnv('_APP_SYNC_EDGE_INTERVAL', '180');
-          Console::loop(function () use ($interval, $register, $dsn) {
+          Console::loop(function () use ($interval, $register, $client) {
+
             $database = getConsoleDB();
             $time = DateTime::now();
-            $region = App::getEnv('_APP_REGION', 'default');
-            if (App::getEnv('_APP_REGION', 'default') === 'default') {
-                return;
-            }
+            $count = 0;
+            $chunk = 0;
+            $limit = 50;
+            $sum = $limit;
 
-            Console::info("[{$time}] Notifying workers with edges tasks every {$interval} seconds");
+            Console::success("[{$time}] New task every {$interval} seconds");
 
-            $time = DateTime::now();
-            $chunks = $database->find('syncs', [
-                Query::equal('region', [$region]),
-                Query::limit(500)
-            ]);
+            while ($sum === $limit) {
+                $chunk++;
 
-            if (count($chunks) > 0) {
-                $client = new SyncOut('syncOut', new QueueRedis($dsn->getHost(), $dsn->getPort()));
-                foreach ($chunks as $counter => $chunk) {
-                    Console::info("[{$time}] Sending  chunk .$counter. ot of  " . count($chunks) . "  to  {$chunk->getAttribute('target')}");
-                    $client
-                        ->enqueue([
-                            'value' => [
-                                'region' => $chunk->getAttribute('target'),
-                                'keys'  => $chunk->getAttribute('keys')
-                            ]
-                        ]);
+                $results = $database->find('syncs', [
+                    Query::equal('region', [App::getEnv('_APP_REGION')]),
+                    Query::limit($limit)
+                ]);
 
-                    $database->deleteDocument('syncs', $chunk->getId());
+                $sum = count($results);
+                if ($sum > 0) {
+                    foreach ($results as $document) {
+                        Console::info("[{$time}] Enqueueing  keys chunk {$count} to {$document->getAttribute('target')}");
+                        $client
+                            ->enqueue([
+                                'value' => [
+                                    'region' => $document->getAttribute('target'),
+                                    'keys' => $document->getAttribute('keys')
+                                ]
+                            ]);
+
+                        $database->deleteDocument('syncs', $document->getId());
+                        $count++;
+                    }
+                } else {
+                    Console::info("[{$time}] No cache keys where found.");
                 }
-            } else {
-                Console::info("[{$time}] No cache key chunks where found.");
             }
           }, $interval);
     });

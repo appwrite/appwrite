@@ -16,6 +16,7 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
+use Utopia\Queue;
 
 global $register;
 
@@ -51,6 +52,10 @@ Server::setResource('cache', function (Registry $register) {
     }
 
     return new Cache(new Sharding($adapters));
+}, ['register']);
+
+App::setResource('logger', function ($register) {
+    return $register->get('logger');
 }, ['register']);
 
 Server::setResource('ErrorLog', function (Logger $logger) {
@@ -114,10 +119,14 @@ $fallbackForRedis = AppwriteURL::unparse([
 $connection = App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
 $dsns = explode(',', $connection ?? '');
 
-if (empty($dsns)) {
+if (empty($dsns[0])) {
     Console::error("Dsn not found");
 }
 
 $dsn = explode('=', $dsns[0]);
 $dsn = $dsn[1] ?? '';
 $dsn = new DSN($dsn);
+
+$redisConnection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+$workerNumber = 1;

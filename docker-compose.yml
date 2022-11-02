@@ -298,6 +298,7 @@ services:
         - _APP_CONNECTIONS_DB_CONSOLE
         - _APP_CONNECTIONS_CACHE
         - _APP_CONNECTIONS_QUEUE
+        - _APP_WORKER_PER_CORE
         - _APP_REGION
 
   appwrite-worker-sync-in:
@@ -322,6 +323,7 @@ services:
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_CACHE
       - _APP_CONNECTIONS_QUEUE
+      - _APP_WORKER_PER_CORE
       - _APP_REGION
 
   appwrite-worker-webhooks:

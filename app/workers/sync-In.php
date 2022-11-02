@@ -2,23 +2,18 @@
 
 require_once __DIR__ . '/../worker.php';
 
-use Appwrite\Extend\Exception;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
+use Utopia\Logger\Log;
 use Utopia\Queue;
 use Utopia\Queue\Message;
 
-if (App::getEnv('_APP_REGION', 'default') === 'default') {
-    throw new Exception(Exception::GENERAL_SERVER_ERROR);
-}
+global $redisConnection;
+global $workerNumber;
 
-global $register;
-global $dsn;
-
-$connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
-$adapter    = new Queue\Adapter\Swoole($connection, 2, 'syncIn');
+$adapter    = new Queue\Adapter\Swoole($redisConnection, $workerNumber, 'syncIn');
 $server     = new Queue\Server($adapter);
 
 $server->job()
@@ -38,10 +33,41 @@ $server->job()
 $server
     ->error()
     ->inject('error')
-    ->inject('logError')
-    ->action(function ($error, $logError) {
-        Console::error($error->getMessage() . ' ' . $error->getFile() . ' ' . $error->getLine());
-        call_user_func($logError, $error, 'sync-in-worker');
+    ->inject('logger')
+    ->action(function ($error, $logger) {
+        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+        if ($error instanceof PDOException) {
+            throw $error;
+        }
+
+        if ($error->getCode() >= 500 || $error->getCode() === 0) {
+            $log = new Log();
+
+            $log->setNamespace("worker");
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
+            $log->setAction('worker-sync-out');
+            $log->addTag('verboseType', get_class($error));
+            $log->addTag('code', $error->getCode());
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
+            $log->addExtra('roles', \Utopia\Database\Validator\Authorization::$roles);
+
+            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            $logger->addLog($log);
+        }
+
+        Console::error('[Error] Type: ' . get_class($error));
+        Console::error('[Error] Message: ' . $error->getMessage());
+        Console::error('[Error] File: ' . $error->getFile());
+        Console::error('[Error] Line: ' . $error->getLine());
     });
 
 $server
