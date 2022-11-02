@@ -92,7 +92,7 @@ function handle($dbForConsole, $regions, $stack): void
         if ($response['status'] !== Response::STATUS_CODE_OK) {
             Console::error("[{$time}] Request to  {$code} has failed");
 
-                $dbForConsole->createDocument('syncs', new Document([
+                $dbForConsole->createDocument('sync', new Document([
                     'region' => App::getEnv('_APP_REGION'),
                     'target' => $code,
                     'keys' => $stack,
@@ -103,8 +103,8 @@ function handle($dbForConsole, $regions, $stack): void
     }
 }
 
-$adapter    = new Queue\Adapter\Swoole($redisConnection, $workerNumber, 'syncOut');
-$server     = new Queue\Server($adapter);
+$adapter  = new Queue\Adapter\Swoole($redisConnection, $workerNumber, 'syncOut');
+$server   = new Queue\Server($adapter);
 
 $server->job()
     ->inject('message')

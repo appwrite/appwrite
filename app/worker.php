@@ -3,17 +3,14 @@
 require_once __DIR__ . '/init.php';
 
 use Appwrite\DSN\DSN;
+use Appwrite\Extend\Exception;
 use Appwrite\URL\URL as AppwriteURL;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\Queue;
@@ -71,8 +68,8 @@ $fallbackForRedis = AppwriteURL::unparse([
 $connection = App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
 $dsns = explode(',', $connection ?? '');
 
-if (empty($dsns[0])) {
-    Console::error("Dsn not found");
+if (empty($dsns)) {
+    throw new Exception(Exception::GENERAL_SERVER_ERROR);
 }
 
 $dsn = explode('=', $dsns[0]);
