@@ -380,10 +380,10 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         // Map aggregate permissions to into the set of individual permissions they represent.
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
+        $roles = Authorization::getRoles();
 
-        // Add permissions for current the user if none were provided.
-        if ($mode !== APP_MODE_ADMIN && \is_null($permissions)) {
-            $permissions = [];
+        // Add permissions for current the user if none were provided. Skip for API Keys and Admin Mode.
+        if ($mode !== APP_MODE_ADMIN && !Auth::isAppUser($roles) && \is_null($permissions)) {
             if (!empty($user->getId())) {
                 foreach ($allowedPermissions as $permission) {
                     $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
@@ -392,7 +392,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = Authorization::getRoles();
         if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
