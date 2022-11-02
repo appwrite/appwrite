@@ -28,9 +28,8 @@ class Usage extends Task
             ->param('type', 'timeseries', new WhiteList(['timeseries', 'database']))
             ->inject('dbForConsole')
             ->inject('influxdb')
-            ->inject('register')
             ->inject('logError')
-            ->callback(fn ($type, $dbForConsole, $influxDB, $register, $logError) => $this->action($type, $dbForConsole, $influxDB, $register, $logError));
+            ->callback(fn ($type, $dbForConsole, $influxDB, $logError) => $this->action($type, $dbForConsole, $influxDB, $logError));
     }
 
 
@@ -71,12 +70,12 @@ class Usage extends Task
         }, $interval);
     }
 
-    public function action(string $type, UtopiaDatabase $dbForConsole, InfluxDatabase $influxDB, Registry $register, callable $logError)
+    public function action(string $type, UtopiaDatabase $dbForConsole, InfluxDatabase $influxDB, callable $logError)
     {
         Console::title('Usage Aggregation V1');
         Console::success(APP_NAME . ' usage aggregation process v1 has started');
 
-        $errorLogger = fn(Throwable $error, string $action = 'syncUsageStats') => $logError($register, $error, "usage", $action);
+        $errorLogger = fn(Throwable $error, string $action = 'syncUsageStats') => $logError($error, "usage", $action);
 
         switch ($type) {
             case 'timeseries':
