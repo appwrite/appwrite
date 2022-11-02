@@ -2,6 +2,7 @@
 
 ## Bugs
 - Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
+- Fix missing status, buildStderr and buildStderr from get deployment response [#4611](https://github.com/appwrite/appwrite/pull/4611)
 
 # Version 1.0.4
 
