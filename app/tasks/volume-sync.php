@@ -2,14 +2,13 @@
 
 global $cli;
 
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 
 $cli
-    ->task('rsync')
+    ->task('volume-sync')
     ->desc('Runs rsync to sync certificates between the storage mount and traefik.')
     ->param('source', null, new Text(255), 'Source path to sync from.', false)
     ->param('destination', null, new Text(255), 'Destination path to sync to.', false)

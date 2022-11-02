@@ -603,12 +603,11 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
 
-  appwrite-rsync:
-    entrypoint: certificate-sync
+  appwrite-volume-sync:
+    entrypoint: volume-sync
     <<: *x-logging
-    container_name: appwrite-rsync
-    build:
-      context: .
+    container_name: appwrite-volume-sync
+    image: appwrite-dev
     restart: unless-stopped
     command:
       - --source=/data/src/ --destination=/data/dest/ --interval=10
