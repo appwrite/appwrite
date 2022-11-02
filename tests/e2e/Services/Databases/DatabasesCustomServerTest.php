@@ -54,9 +54,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(2, $databases['body']['total']);
 
-        $ids = array_map(function ($database) {
-            return $database['$id'];
-        }, $databases['body']['databases']);
+        $ids = array_column($databases['body']['databases'], '$id');
 
         $this->assertTrue(in_array($test1['body']['$id'], $ids));
 
@@ -119,9 +117,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(2, $databases['body']['total']);
 
-        $ids = array_map(function ($database) {
-            return $database['$id'];
-        }, $databases['body']['databases']);
+        $ids = array_column($databases['body']['databases'], '$id');
 
         $this->assertTrue(in_array($test1['body']['$id'], $ids));
 
@@ -203,9 +199,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(2, $databases['body']['total']);
 
-        $names = array_map(function ($database) {
-            return $database['name'];
-        }, $databases['body']['databases']);
+        $names = array_column($databases['body']['databases'], 'name');
 
         $this->assertTrue(in_array('Test 1', $names));
         $this->assertTrue(in_array('Test 2', $names));
@@ -352,9 +346,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(2, $collections['body']['total']);
 
-        $ids = array_map(function ($collection) {
-            return $collection['$id'];
-        }, $collections['body']['collections']);
+        $ids = array_column($collections['body']['collections'], '$id');
 
         $this->assertTrue(in_array($test1['body']['$id'], $ids));
 
@@ -412,10 +404,8 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(2, $collections['body']['total']);
 
-        
-        $ids = array_map(function ($collection) {
-            return $collection['$id'];
-        }, $collections['body']['collections']);
+
+        $ids = array_column($collections['body']['collections'], '$id');
 
         $this->assertTrue(in_array($base[0]['$id'], $ids));
         $this->assertTrue(in_array($base[1]['$id'], $ids));
@@ -498,9 +488,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(2, $collections['body']['total']);
 
-        $names = array_map(function ($collection) {
-            return $collection['name'];
-        }, $collections['body']['collections']);
+        $names = array_column($collections['body']['collections'], 'name');
 
         $this->assertTrue(in_array('Test 1', $names));
         $this->assertTrue(in_array('Test 2', $names));
@@ -704,9 +692,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertCount(2, $collection['body']['attributes']);
 
-        $keys = array_map(function ($attribute) {
-            return $attribute['key'];
-        }, $collection['body']['attributes']);
+        $keys = array_column($collection['body']['attributes'], 'key');
 
         $this->assertTrue(in_array($firstName['body']['key'], $keys));
         $this->assertTrue(in_array($lastName['body']['key'], $keys));

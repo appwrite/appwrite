@@ -64,8 +64,7 @@ use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
-use Utopia\Mongo\MongoClient;
-use Utopia\Mongo\MongoClientOptions;
+use Utopia\Mongo\Client;
 use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\DatetimeValidator;
@@ -510,15 +509,10 @@ $register->set('dbPool', function () {
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $options = new MongoClientOptions(
-        name: $dbScheme,
-        host: $dbHost,
-        port: (int) $dbPort,
-        username: $dbUser,
-        password: $dbPass
+    $pool = new ConnectionPool(constructor: fn () => 
+        new Client($dbScheme, $dbHost, (int) $dbPort, $dbUser, $dbPass, true), 
+        size: 64
     );
-
-    $pool = new ConnectionPool(constructor: fn () => new MongoClient($options, true), size: 64);
 
     return $pool;
 });
@@ -607,15 +601,7 @@ $register->set('db', function () {
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $options = new MongoClientOptions(
-        name: $dbScheme,
-        host: $dbHost,
-        port: (int) $dbPort,
-        username: $dbUser,
-        password: $dbPass
-    );
-
-    $client = new MongoClient($options, false);
+    $client = new Client($dbScheme, $dbHost, (int) $dbPort, $dbUser, $dbPass, true);
 
     return $client;
 });

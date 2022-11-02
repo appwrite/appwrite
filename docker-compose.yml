@@ -105,6 +105,7 @@ services:
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
       - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
+      - ./vendor/utopia-php/mongo:/usr/src/code/vendor/utopia-php/mongo
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src

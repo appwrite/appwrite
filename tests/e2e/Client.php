@@ -233,8 +233,6 @@ class Client
                     $json = json_decode($responseBody, true);
 
                     if ($json === null) {
-                        var_dump($path);
-                        var_dump($responseBody);
                         throw new Exception('Failed to parse response: ' . $responseBody);
                     }
 

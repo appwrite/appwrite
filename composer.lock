@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5887cfccf17bda97acb267acaf31f0fd",
+    "content-hash": "94abe11dd4177346e2c480ca252690b8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -700,12 +700,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "69568e4293f4fa993f3b0e51c9723e1e17c41379"
+                "reference": "67c26b443f348a51926030c83481b85718457d3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/69568e4293f4fa993f3b0e51c9723e1e17c41379",
-                "reference": "69568e4293f4fa993f3b0e51c9723e1e17c41379",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/67c26b443f348a51926030c83481b85718457d3d",
+                "reference": "67c26b443f348a51926030c83481b85718457d3d",
                 "shasum": ""
             },
             "require": {
@@ -796,7 +796,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/2.4.1"
+                "source": "https://github.com/guzzle/psr7/tree/2.4.3"
             },
             "funding": [
                 {
@@ -812,7 +812,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-08-28T14:45:39+00:00"
+            "time": "2022-10-26T14:07:24+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -2068,12 +2068,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "7a38dd6dabfd70c807b3eb6ef4a80e07e483cfb1"
+                "reference": "f1cafa7015fbbc1bb62cab6adbb26d49ae692b1c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/7a38dd6dabfd70c807b3eb6ef4a80e07e483cfb1",
-                "reference": "7a38dd6dabfd70c807b3eb6ef4a80e07e483cfb1",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f1cafa7015fbbc1bb62cab6adbb26d49ae692b1c",
+                "reference": "f1cafa7015fbbc1bb62cab6adbb26d49ae692b1c",
                 "shasum": ""
             },
             "require": {
@@ -2083,7 +2083,7 @@
                 "php": ">=8.0",
                 "utopia-php/cache": "0.6.*",
                 "utopia-php/framework": "0.*.*",
-                "utopia-php/mongo": "dev-fix-driver-gen-objectid"
+                "utopia-php/mongo": "dev-release"
             },
             "require-dev": {
                 "fakerphp/faker": "^1.14",
@@ -2115,7 +2115,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/fix-mongo-appwrite"
             },
-            "time": "2022-10-19T16:19:24+00:00"
+            "time": "2022-11-02T18:24:07+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2391,11 +2391,11 @@
         },
         {
             "name": "utopia-php/mongo",
-            "version": "dev-fix-driver-gen-objectid",
+            "version": "dev-release",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "ef7b04a1548aa13756604902e2bfa5b9b51ed38e"
+                "reference": "e2704f0a58f33cd845eb8aefd1cabc104525e313"
             },
             "require": {
                 "ext-mongodb": "*",
@@ -2404,6 +2404,8 @@
             },
             "require-dev": {
                 "fakerphp/faker": "^1.14",
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.8.*",
                 "phpunit/phpunit": "^9.4",
                 "swoole/ide-helper": "4.8.0"
             },
@@ -2417,6 +2419,20 @@
                 "psr-4": {
                     "Utopia\\Tests\\": "tests"
                 }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "analyse": [
+                    "vendor/bin/phpstan analyse"
+                ],
+                "format": [
+                    "vendor/bin/pint"
+                ],
+                "lint": [
+                    "vendor/bin/pint --test"
+                ]
             },
             "license": [
                 "MIT"
@@ -2439,7 +2455,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2022-10-18T14:20:33+00:00"
+            "time": "2022-11-02T17:29:09+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -3210,6 +3226,7 @@
                 "ircmaxell/php-yacc": "^0.0.7",
                 "phpunit/phpunit": "^6.5 || ^7.0 || ^8.0 || ^9.0"
             },
+            "default-branch": true,
             "bin": [
                 "bin/php-parse"
             ],
@@ -3609,12 +3626,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "8be4d431796da1afc21bd9d11b73105f17b3522b"
+                "reference": "a358c9d818d521da01361c5ada06ff8031288aaa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/8be4d431796da1afc21bd9d11b73105f17b3522b",
-                "reference": "8be4d431796da1afc21bd9d11b73105f17b3522b",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/a358c9d818d521da01361c5ada06ff8031288aaa",
+                "reference": "a358c9d818d521da01361c5ada06ff8031288aaa",
                 "shasum": ""
             },
             "require": {
@@ -3678,7 +3695,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-10-17T06:29:29+00:00"
+            "time": "2022-11-01T06:33:37+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -4994,12 +5011,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/squizlabs/PHP_CodeSniffer.git",
-                "reference": "d7864cb3d5446565348de80441643bd7c4056215"
+                "reference": "cd5acaa651df870e8a3207926f236400361219e0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/d7864cb3d5446565348de80441643bd7c4056215",
-                "reference": "d7864cb3d5446565348de80441643bd7c4056215",
+                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/cd5acaa651df870e8a3207926f236400361219e0",
+                "reference": "cd5acaa651df870e8a3207926f236400361219e0",
                 "shasum": ""
             },
             "require": {
@@ -5044,7 +5061,7 @@
                 "source": "https://github.com/squizlabs/PHP_CodeSniffer",
                 "wiki": "https://github.com/squizlabs/PHP_CodeSniffer/wiki"
             },
-            "time": "2022-09-26T02:14:32+00:00"
+            "time": "2022-10-21T05:57:32+00:00"
         },
         {
             "name": "swoole/ide-helper",
@@ -5360,12 +5377,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "6ddd95c7096220acfd9d6db1ed3e7de89a27e698"
+                "reference": "ce55cb842e38cbab65708cbdca6fdba1c96b3951"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/6ddd95c7096220acfd9d6db1ed3e7de89a27e698",
-                "reference": "6ddd95c7096220acfd9d6db1ed3e7de89a27e698",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/ce55cb842e38cbab65708cbdca6fdba1c96b3951",
+                "reference": "ce55cb842e38cbab65708cbdca6fdba1c96b3951",
                 "shasum": ""
             },
             "require": {
@@ -5429,15 +5446,15 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-10-05T06:26:51+00:00"
+            "time": "2022-10-22T12:59:12+00:00"
         }
     ],
     "aliases": [
         {
             "package": "utopia-php/database",
             "version": "dev-fix-mongo-appwrite",
-            "alias": "0.26.5",
-            "alias_normalized": "0.26.5.0"
+            "alias": "0.26.999999",
+            "alias_normalized": "0.26.999999.0"
         }
     ],
     "minimum-stability": "dev",
