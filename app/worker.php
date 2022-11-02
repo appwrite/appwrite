@@ -58,56 +58,8 @@ App::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
 
-Server::setResource('ErrorLog', function (Logger $logger) {
-    return function (Throwable $error, $action) use ($logger) {
 
-        if ($logger) {
-            $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-
-            if ($error->getCode() >= 500 || $error->getCode() === 0) {
-                $log = new Log();
-
-                $log->setNamespace("http");
-                $log->setServer(\gethostname());
-                $log->setVersion($version);
-                $log->setType(Log::TYPE_ERROR);
-                $log->setMessage($error->getMessage());
-
-                $log->setAction($action);
-
-                $log->addTag('verboseType', get_class($error));
-                $log->addTag('code', $error->getCode());
-
-                $log->addExtra('file', $error->getFile());
-                $log->addExtra('line', $error->getLine());
-                $log->addExtra('trace', $error->getTraceAsString());
-                $log->addExtra('detailedTrace', $error->getTrace());
-                $log->addExtra('roles', Authorization::$roles);
-
-                $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-                $responseCode = $logger->addLog($log);
-                Console::info('Log pushed with status code: ' . $responseCode);
-            }
-        }
-
-        $code    = $error->getCode();
-        $message = $error->getMessage();
-        $file    = $error->getFile();
-        $line    = $error->getLine();
-        $trace    = $error->getTrace();
-
-        Console::error('[Error] Timestamp: ' . date('c', time()));
-        Console::error('[Error] Type: ' . get_class($error));
-        Console::error('[Error] Message: ' . $message);
-        Console::error('[Error] File: ' . $file);
-        Console::error('[Error] Line: ' . $line);
-        Console::error('[Error] Code: ' . $code);
-        Console::error('[Error] Trace: ' . $trace);
-    };
-});
-
+// Todo better job to inject the client as a resource
 $fallbackForRedis = AppwriteURL::unparse([
     'scheme' => 'redis',
     'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),

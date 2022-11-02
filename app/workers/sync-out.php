@@ -139,6 +139,7 @@ $server
     ->inject('register')
     ->action(function ($error, $logger, $register) {
 
+        // Todo better job of abstracting the error log
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
