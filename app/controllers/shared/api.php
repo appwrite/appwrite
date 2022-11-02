@@ -77,7 +77,7 @@ $databaseListener = function (string $event, Document $document, Stats $usage) {
             } elseif (strpos($collection, 'database_') === 0) {
                 $usage
                     ->setParam('databaseId', $document->getAttribute('databaseId'));
-                if (strpos($collection, '_collection_') != false) {
+                if (strpos($collection, '_collection_') !== false) {
                     $usage
                         ->setParam('collectionId', $document->getAttribute('$collectionId'))
                         ->setParam('documents.{scope}.count.total', 1 * $multiplier);
