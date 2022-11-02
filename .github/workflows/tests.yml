@@ -4,7 +4,7 @@ on: [pull_request]
 jobs:
   tests:
     name: Lint, Test, Benchmark
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout Repository
