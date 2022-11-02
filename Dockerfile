@@ -330,28 +330,7 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
 # Executables
-RUN chmod +x /usr/local/bin/doctor && \
-    chmod +x /usr/local/bin/maintenance && \
-    chmod +x /usr/local/bin/usage && \
-    chmod +x /usr/local/bin/install && \
-    chmod +x /usr/local/bin/migrate && \
-    chmod +x /usr/local/bin/realtime && \
-    chmod +x /usr/local/bin/executor && \
-    chmod +x /usr/local/bin/schedule && \
-    chmod +x /usr/local/bin/sdks && \
-    chmod +x /usr/local/bin/specs && \
-    chmod +x /usr/local/bin/ssl && \
-    chmod +x /usr/local/bin/test && \
-    chmod +x /usr/local/bin/vars && \
-    chmod +x /usr/local/bin/worker-audits && \
-    chmod +x /usr/local/bin/worker-certificates && \
-    chmod +x /usr/local/bin/worker-databases && \
-    chmod +x /usr/local/bin/worker-deletes && \
-    chmod +x /usr/local/bin/worker-functions && \
-    chmod +x /usr/local/bin/worker-builds && \
-    chmod +x /usr/local/bin/worker-mails && \
-    chmod +x /usr/local/bin/worker-messaging && \
-    chmod +x /usr/local/bin/worker-webhooks
+RUN chmod +x /usr/local/bin/*
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/

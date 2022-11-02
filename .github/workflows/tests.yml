@@ -44,4 +44,4 @@ jobs:
       run: docker compose exec -T appwrite test --debug
 
     - name: Run Benchmark
-      run: docker run --rm -v $PWD:/app composer benchmark-compare
+      run: docker compose exec -T appwrite benchmark --ref=baseline

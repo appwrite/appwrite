@@ -15,17 +15,14 @@
         "format": "vendor/bin/phpcbf",
         "benchmark": [
             "Composer\\Config::disableProcessTimeout",
-            "git config --global --add safe.directory /app",
             "vendor/bin/phpbench run --report=appwrite"
         ],
         "benchmark-tag": [
             "Composer\\Config::disableProcessTimeout",
-            "git config --global --add safe.directory /app",
             "vendor/bin/phpbench run --report=appwrite --tag=baseline"
         ],
         "benchmark-compare": [
             "Composer\\Config::disableProcessTimeout",
-            "git config --global --add safe.directory /app",
             "vendor/bin/phpbench run --report=appwrite --ref=baseline"
         ]
     },
