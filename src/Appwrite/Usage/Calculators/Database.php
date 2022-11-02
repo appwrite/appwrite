@@ -3,6 +3,7 @@
 namespace Appwrite\Usage\Calculators;
 
 use Exception;
+use Utopia\App;
 use Appwrite\Usage\Calculator;
 use DateTime;
 use Utopia\Database\Database as UtopiaDatabase;
@@ -24,8 +25,9 @@ class Database extends Calculator
         ],
     ];
 
-    public function __construct(UtopiaDatabase $database, callable $errorHandler = null)
+    public function __construct(string $region, UtopiaDatabase $database, callable $errorHandler = null)
     {
+        parent::__construct($region);
         $this->database = $database;
         $this->errorHandler = $errorHandler;
     }
@@ -95,6 +97,7 @@ class Database extends Calculator
                     'time' => $time,
                     'metric' => $metric,
                     'value' => $value,
+                    'region' => $this->region,
                     'type' => 2, // these are cumulative metrics
                 ]));
             } else {
@@ -132,7 +135,6 @@ class Database extends Calculator
         $results = [];
         $sum = $limit;
         $latestDocument = null;
-        $this->database->setNamespace('_' . $projectId);
 
         while ($sum === $limit) {
             try {
@@ -140,6 +142,8 @@ class Database extends Calculator
                 if ($latestDocument !== null) {
                     $paginationQueries[] =  Query::cursorAfter($latestDocument);
                 }
+
+                $this->database->setNamespace('_' . $projectId);
                 $results = $this->database->find($collection, \array_merge($paginationQueries, $queries));
             } catch (\Exception $e) {
                 if (is_callable($this->errorHandler)) {

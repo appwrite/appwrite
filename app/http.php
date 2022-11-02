@@ -27,7 +27,6 @@ $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-
 $http
     ->set([
         'worker_num' => $workerNumber,
@@ -94,7 +93,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         try {
             $redis->flushAll();
             Console::success('[Setup] - Creating database: appwrite...');
-            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $dbForConsole->create();
         } catch (\Exception $e) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }

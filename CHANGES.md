@@ -4,6 +4,10 @@
 - Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
 - Fix missing status, buildStderr and buildStderr from get deployment response [#4611](https://github.com/appwrite/appwrite/pull/4611)
 
+# Version 1.0.4
+
+- Fix project pagination in DB usage collector [#4517](https://github.com/appwrite/appwrite/pull/4517)
+
 # Version 1.0.3
 ## Bugs
 - Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)

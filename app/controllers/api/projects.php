@@ -58,6 +58,7 @@ App::post('/v1/projects')
     ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('region', '', new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn($config) => !$config['disabled']))), 'Project Region.')
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -70,7 +71,7 @@ App::post('/v1/projects')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -102,6 +103,7 @@ App::post('/v1/projects')
             'name' => $name,
             'teamInternalId' => $team->getInternalId(),
             'teamId' => $team->getId(),
+            'region' => $region,
             'description' => $description,
             'logo' => $logo,
             'url' => $url,
@@ -125,7 +127,7 @@ App::post('/v1/projects')
         $collections = Config::getParam('collections', []);
 
         $dbForProject->setNamespace("_{$project->getInternalId()}");
-        $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForProject->create();
 
         $audit = new Audit($dbForProject);
         $audit->setup();
@@ -442,12 +444,13 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'Provider Name', false)
-    ->param('appId', '', new Text(256), 'Provider app ID. Max length: 256 chars.', true)
-    ->param('secret', '', new text(512), 'Provider secret key. Max length: 512 chars.', true)
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'Provider Name')
+    ->param('appId', null, new Text(256), 'Provider app ID. Max length: 256 chars.', true)
+    ->param('secret', null, new text(512), 'Provider secret key. Max length: 512 chars.', true)
+    ->param('enabled', null, new Boolean(), 'Provider status. Set to \'false\' to disable new session creation.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $provider, string $appId, string $secret, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?bool $enabled, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -456,8 +459,18 @@ App::patch('/v1/projects/:projectId/oauth2')
         }
 
         $providers = $project->getAttribute('authProviders', []);
-        $providers[$provider . 'Appid'] = $appId;
-        $providers[$provider . 'Secret'] = $secret;
+
+        if ($appId !== null) {
+            $providers[$provider . 'Appid'] = $appId;
+        }
+
+        if ($secret !== null) {
+            $providers[$provider . 'Secret'] = $secret;
+        }
+
+        if ($enabled !== null) {
+            $providers[$provider . 'Enabled'] = $enabled;
+        }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('authProviders', $providers));
 
@@ -560,10 +573,6 @@ App::delete('/v1/projects/:projectId')
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project)
         ;
-
-        if (!$dbForConsole->deleteDocument('teams', $project->getAttribute('teamId', null))) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project team from DB');
-        }
 
         if (!$dbForConsole->deleteDocument('projects', $projectId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
