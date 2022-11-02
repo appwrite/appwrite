@@ -17,7 +17,7 @@ class AbuseTest extends Scope
     use ProjectCustom;
     use SideNone;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
 

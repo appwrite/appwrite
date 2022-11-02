@@ -82,7 +82,6 @@ abstract class Base extends Scope
 
     public function createDatabase(array $params = [])
     {
-        // Create database
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -96,8 +95,7 @@ abstract class Base extends Scope
 
     public function createCollection(array $params = [])
     {
-        // Create collection
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . static::$databaseId . '/collections', [
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . static::$databaseId . '/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -110,7 +108,7 @@ abstract class Base extends Scope
                 Permission::write(Role::user($this->getUser()['$id'])),
             ],
         ]);
-        static::$collectionId = $movies['body']['$id'];
+        static::$collectionId = $collection['body']['$id'];
 
         // Create attribute
         $this->client->call(Client::METHOD_POST, '/databases/' . static::$databaseId . '/collections/' . static::$collectionId . '/attributes/string', [
@@ -123,6 +121,7 @@ abstract class Base extends Scope
             'required' => true,
         ]);
 
+        // Wait for attribute to be ready
         sleep(2);
     }
 
@@ -130,7 +129,6 @@ abstract class Base extends Scope
     {
         $count = $params['documents'] ?? 1;
 
-        // Create documents
         for ($i = 0; $i < $count; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/databases/' . static::$databaseId . '/collections/' . static::$collectionId . '/documents', [
                 'content-type' => 'application/json',
