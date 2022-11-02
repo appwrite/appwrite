@@ -382,7 +382,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $permissions = Permission::aggregate($permissions, $allowedPermissions);
 
         // Add permissions for current the user if none were provided.
-        if (\is_null($permissions)) {
+        if ($mode !== APP_MODE_ADMIN && \is_null($permissions)) {
             $permissions = [];
             if (!empty($user->getId())) {
                 foreach ($allowedPermissions as $permission) {
