@@ -3,8 +3,8 @@
   "runner.path": "tests/benchmarks",
   "runner.file_pattern": "*Bench.php",
   "runner.bootstrap": "app/init.php",
-  "runner.revs": 1000,
-  "runner.iterations": 5,
+  "runner.revs": 1,
+  "runner.iterations": 1,
   "runner.warmup": 1,
   "report.generators": {
     "appwrite": {
