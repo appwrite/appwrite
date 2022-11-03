@@ -20,22 +20,21 @@ use Utopia\Pools\Group;
 
 Authorization::disable();
 
-CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole)
-{
-    $getProjectDB = function(Document $project) use($pools, $dbForConsole) {
+CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole) {
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
-    
+
         $dbAdapter = $pools
             ->get($project->getAttribute('database'))
             ->pop()
             ->getResource()
         ;
-    
+
         $database = new Database($dbAdapter, getCache());
         $database->setNamespace('_' . $project->getInternalId());
-    
+
         return $database;
     };
 
@@ -44,7 +43,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole)
 
 CLI::setResource('register', fn()=>$register);
 
-CLI::setResource('cache', function($pools) {
+CLI::setResource('cache', function ($pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -59,7 +58,7 @@ CLI::setResource('cache', function($pools) {
     return new Cache(new Sharding($adapters));
 }, ['pools']);
 
-CLI::setResource('pools', function(Registry $register) {
+CLI::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
