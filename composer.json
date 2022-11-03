@@ -15,15 +15,15 @@
         "format": "vendor/bin/phpcbf",
         "benchmark": [
             "Composer\\Config::disableProcessTimeout",
-            "vendor/bin/phpbench run --report=appwrite"
+            "vendor/bin/phpbench run --report=appwrite --"
         ],
         "benchmark-tag": [
             "Composer\\Config::disableProcessTimeout",
-            "vendor/bin/phpbench run --report=appwrite --tag=baseline"
+            "vendor/bin/phpbench run --report=appwrite --tag=baseline --"
         ],
         "benchmark-compare": [
             "Composer\\Config::disableProcessTimeout",
-            "vendor/bin/phpbench run --report=appwrite --ref=baseline"
+            "vendor/bin/phpbench run --report=appwrite --ref=baseline --"
         ]
     },
     "autoload": {

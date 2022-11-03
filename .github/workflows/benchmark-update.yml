@@ -31,9 +31,10 @@ jobs:
       - name: Doctor
         run: docker compose exec -T appwrite doctor
 
-      - name: Run benchmark and update baseline
-        run: docker run --rm -v $PWD:/app composer sh -c \
-          "composer install --profile --ignore-platform-reqs && composer benchmark-tag"
+      - name: Run Benchmark and Update Baseline
+        run: |
+          rm -rf .phpbench/*
+          docker compose exec -T appwrite benchmark --tag=baseline
 
       - name: Commit updated baseline benchmark
         uses: stefanzweifel/git-auto-commit-action@v4
