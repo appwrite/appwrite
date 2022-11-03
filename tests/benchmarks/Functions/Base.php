@@ -18,7 +18,6 @@ abstract class Base extends Scope
     protected static string $functionId;
     protected static string $deploymentId;
     protected static string $executionId;
-    protected static string $codePath;
 
     #[BeforeMethods(['createFunction', 'prepareDeployment', 'createDeployment', 'patchDeployment'])]
     public function benchExecutionCreate()
@@ -47,8 +46,6 @@ abstract class Base extends Scope
 
     public function prepareDeployment()
     {
-        static::$codePath = realpath(__DIR__ . '/../../resources/functions/php/code.tar.gz');
-
         $stdout = '';
         $stderr = '';
 
@@ -63,13 +60,19 @@ abstract class Base extends Scope
 
     public function createDeployment()
     {
+        $code = realpath(__DIR__ . '/../../resources/functions/php/code.tar.gz');
+
         $response = $this->client->call(Client::METHOD_POST, '/functions/' . static::$functionId . '/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile(static::$codePath, 'application/x-gzip', \basename(static::$codePath)),
+            'code' => new CURLFile(
+                $code,
+                'application/x-gzip',
+                \basename($code)
+            ),
         ]);
 
         static::$deploymentId = $response['body']['$id'];
@@ -87,7 +90,7 @@ abstract class Base extends Scope
                 case '':
                 case 'processing':
                 case 'building':
-                    usleep(500);
+                    usleep(200);
                     break;
                 case 'ready':
                     break 2;
