@@ -664,12 +664,6 @@ $register->set('pools', function () {
         Config::setParam('pools-' . $key, $config);
     }
 
-    try {
-        $group->fill();
-    } catch (\Throwable $th) {
-        Console::error('Connection failure: ' . $th->getMessage());
-    }
-
     return $group;
 });
 $register->set('influxdb', function () {
