@@ -20,27 +20,6 @@ use Utopia\Pools\Group;
 
 Authorization::disable();
 
-CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole) {
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole) {
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForConsole;
-        }
-
-        $dbAdapter = $pools
-            ->get($project->getAttribute('database'))
-            ->pop()
-            ->getResource()
-        ;
-
-        $database = new Database($dbAdapter, getCache());
-        $database->setNamespace('_' . $project->getInternalId());
-
-        return $database;
-    };
-
-    return $getProjectDB;
-}, ['register', 'dbForConsole']);
-
 CLI::setResource('register', fn()=>$register);
 
 CLI::setResource('cache', function ($pools) {
@@ -62,19 +41,40 @@ CLI::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-CLI::setResource('dbForConsole', function ($pools) {
+CLI::setResource('dbForConsole', function ($pools, $cache) {
     $dbAdapter = $pools
         ->get('console')
         ->pop()
         ->getResource()
     ;
 
-    $database = new Database($dbAdapter, getCache());
+    $database = new Database($dbAdapter, $cache);
 
     $database->setNamespace('console');
 
     return $database;
-}, ['pools']);
+}, ['pools', 'cache']);
+
+CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole) {
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return $dbForConsole;
+        }
+
+        $dbAdapter = $pools
+            ->get($project->getAttribute('database'))
+            ->pop()
+            ->getResource()
+        ;
+
+        $database = new Database($dbAdapter, getCache());
+        $database->setNamespace('_' . $project->getInternalId());
+
+        return $database;
+    };
+
+    return $getProjectDB;
+}, ['pools', 'dbForConsole']);
 
 CLI::setResource('influxdb', function (Registry $register) {
     $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
