@@ -28,7 +28,6 @@ $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-$workerNumber = 1;
 
 $http
     ->set([
@@ -245,10 +244,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         return;
     }
-
-    // Console::log('sleep start');
-    // System::sleep(3);
-    // Console::log('sleep end');
 
     $app = new App('UTC');
 
