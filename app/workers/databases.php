@@ -106,8 +106,7 @@ class DatabaseV1 extends Worker
                 ->setAttribute('status', 'failed')
                 ->setAttribute('error', $e->getMessage())
             );
-        }
-        catch(\Throwable $th){
+        } catch (\Throwable $th) {
             Console::error('Internal Error');
                 $dbForProject->updateDocument(
                     'attributes',
@@ -316,7 +315,7 @@ class DatabaseV1 extends Worker
                 ->setAttribute('status', 'failed')
                 ->setAttribute('error', 'Internal Error')
             );
-        }  finally {
+        } finally {
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
                 event: $events[0],
