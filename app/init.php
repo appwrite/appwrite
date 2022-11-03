@@ -65,7 +65,6 @@ use Utopia\Storage\Device\Wasabi;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Pools\Group;
@@ -621,7 +620,7 @@ $register->set('pools', function () {
                     break;
             }
 
-            $pool = new Pool($name, 5, function () use ($type, $resource, $dsn) {
+            $pool = new Pool($name, 64, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 $adapter = null;
 
