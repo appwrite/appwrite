@@ -249,11 +249,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return;
     }
 
-    $pools = $register->get('pools'); /** @var Group $pools */
-    var_dump('current console connection');
-    var_dump($pools->get('console')->pop()->getID());
-    var_dump('current pool size');
-    var_dump($pools->get('console')->count());
     // Console::log('sleep start');
     // System::sleep(3);
     // Console::log('sleep end');
