@@ -55,8 +55,8 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole) {
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole) {
+CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -67,14 +67,14 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole)
             ->getResource()
         ;
 
-        $database = new Database($dbAdapter, getCache());
+        $database = new Database($dbAdapter, $cache);
         $database->setNamespace('_' . $project->getInternalId());
 
         return $database;
     };
 
     return $getProjectDB;
-}, ['pools', 'dbForConsole']);
+}, ['pools', 'dbForConsole', 'cache']);
 
 CLI::setResource('influxdb', function (Registry $register) {
     $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
