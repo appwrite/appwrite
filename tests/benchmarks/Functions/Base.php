@@ -47,13 +47,13 @@ abstract class Base extends Scope
 
     public function prepareDeployment()
     {
-        static::$codePath = realpath(__DIR__ . '/../../resources/functions') . "/php/code.tar.gz";
+        static::$codePath = realpath(__DIR__ . '/../../resources/functions/php/code.tar.gz');
 
         $stdout = '';
         $stderr = '';
 
         Console::execute(
-            'cd ' . realpath(__DIR__ . "/../../resources/functions") . '/' . static::$codePath . "  && \
+            'cd ' . realpath(__DIR__ . "/../../resources/functions/php") . " && \
             tar --exclude code.tar.gz -czf code.tar.gz .",
             '',
             $stdout,
