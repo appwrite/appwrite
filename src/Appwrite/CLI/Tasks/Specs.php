@@ -8,10 +8,15 @@ use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
 use Appwrite\Utopia\Response;
+use Exception;
 use Swoole\Http\Response as HttpResponse;
 use Utopia\App;
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\MySQL;
+use Utopia\Database\Database;
 use Utopia\Registry\Registry;
 use Utopia\Request;
 use Utopia\Validator\WhiteList;
@@ -41,10 +46,11 @@ class Specs extends Action
         $response = new Response(new HttpResponse());
         $mocks = ($mode === 'mocks');
 
+        // Mock dependencies
         App::setResource('request', fn () => new Request());
         App::setResource('response', fn () => $response);
-        App::setResource('db', fn () => $db);
-        App::setResource('cache', fn () => $redis);
+        App::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
+        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
         $platforms = [
             'client' => APP_PLATFORM_CLIENT,
