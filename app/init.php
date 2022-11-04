@@ -77,6 +77,7 @@ use Ahc\Jwt\JWTException;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Queue;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -526,30 +527,35 @@ $register->set('pools', function () {
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
+            'useResource' => true,
         ],
         'database' => [
             'type' => 'database',
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
+            'useResource' => true,
         ],
-//        'queue' => [
-//            'type' => 'queue',
-//            'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
-//            'multiple' => false,
-//            'schemes' => ['redis'],
-//        ],
+        'queue' => [
+            'type' => 'queue',
+            'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
+            'multiple' => false,
+            'schemes' => ['redis'],
+            'useResource' => false,
+        ],
         'pubsub' => [
             'type' => 'pubsub',
             'dsns' => App::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
+            'useResource' => true,
         ],
         'cache' => [
             'type' => 'cache',
             'dsns' => App::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
             'multiple' => true,
             'schemes' => ['redis'],
+            'useResource' => true,
         ],
     ];
 
@@ -558,6 +564,7 @@ $register->set('pools', function () {
         $dsns = $connection['dsns'] ?? '';
         $multipe = $connection['multiple'] ?? false;
         $schemes = $connection['schemes'] ?? [];
+        $useResource = $connection['useResource'] ?? true;
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
 
@@ -580,7 +587,7 @@ $register->set('pools', function () {
             $dsnScheme = $dsn->getScheme();
             $dsnDatabase = $dsn->getDatabase();
 
-            if (!in_array($dsnScheme, $schemes)) {
+            if (!in_array($dsnScheme, $schemes) && $useResource) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
 
@@ -643,9 +650,12 @@ $register->set('pools', function () {
                     case 'pubsub':
                         break;
                         $adapter = $resource();
-//                    case 'queue':
-//                        $adapter = $resource();
-//                        break;
+                    case 'queue':
+                        $adapter = match ($dsn->getScheme()) {
+                            'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
+                            default => 'bla'
+                        };
+                        break;
                     case 'cache':
                         $adapter = match ($dsn->getScheme()) {
                             'redis' => new RedisCache($resource()),
@@ -665,12 +675,6 @@ $register->set('pools', function () {
         }
 
         Config::setParam('pools-' . $key, $config);
-    }
-
-    try {
-        $group->fill();
-    } catch (\Throwable $th) {
-        Console::error('Connection failure: ' . $th->getMessage());
     }
 
     return $group;

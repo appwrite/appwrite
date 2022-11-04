@@ -10,10 +10,10 @@ use Utopia\Logger\Log;
 use Utopia\Queue;
 use Utopia\Queue\Message;
 
-global $redisConnection;
+global $client;
 global $workerNumber;
 
-$adapter    = new Queue\Adapter\Swoole($redisConnection, $workerNumber, 'syncIn');
+$adapter    = new Queue\Adapter\Swoole($client, $workerNumber, 'syncIn');
 $server     = new Queue\Server($adapter);
 
 $server->job()
@@ -44,12 +44,12 @@ $server
         if ($error->getCode() >= 500 || $error->getCode() === 0) {
             $log = new Log();
 
-            $log->setNamespace("worker");
+            $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
-            $log->setAction('worker-sync-out');
+            $log->setAction('appwrite-worker-sync-out');
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
             $log->addExtra('file', $error->getFile());

@@ -280,6 +280,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/pools:/usr/src/code/vendor/utopia-php/pools
     depends_on:
       - mariadb
       - redis

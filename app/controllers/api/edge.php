@@ -9,8 +9,8 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Pools\Group;
 use Utopia\Queue\Client as SyncIn;
-use Utopia\Queue\Connection\Redis as QueueRedis;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
@@ -36,31 +36,14 @@ App::post('/v1/edge/sync')
     ->param('keys', '', new ArrayList(new Text(100), 1000), 'Cache keys. an array containing alphanumerical cache keys')
     ->inject('request')
     ->inject('response')
-    ->action(function (array $keys, Request $request, Response $response) {
+    ->inject('pools')
+    ->action(function (array $keys, Request $request, Response $response, Group $pools) {
 
         if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $fallbackForRedis = AppwriteURL::unparse([
-            'scheme' => 'redis',
-            'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
-            'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
-            'user' => App::getEnv('_APP_REDIS_USER', ''),
-            'pass' => App::getEnv('_APP_REDIS_PASS', ''),
-        ]);
-
-        $connection = App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
-        $dsns = explode(',', $connection ?? '');
-
-        if (empty($dsns)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR);
-        }
-
-        $dsn = explode('=', $dsns[0]);
-        $dsn = $dsn[1] ?? '';
-        $dsn = new DSN($dsn);
-        $client = new SyncIn('syncIn', new QueueRedis($dsn->getHost(), $dsn->getPort()));
+        $client = new SyncIn('syncIn', $pools->get('queue')->pop()->getResource());
 
         $client->enqueue(['value' => ['keys' => $keys]]);
 
