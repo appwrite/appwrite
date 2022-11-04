@@ -3,13 +3,14 @@
   "runner.path": "tests/benchmarks",
   "runner.file_pattern": "*Bench.php",
   "runner.bootstrap": "app/init.php",
-  "runner.revs": 1,
-  "runner.iterations": 1,
+  "runner.revs": 1000,
+  "runner.iterations": 3,
+  "runner.retry_threshold": 5,
   "runner.warmup": 1,
   "report.generators": {
     "appwrite": {
       "extends": "aggregate",
-      "cols": ["benchmark", "subject", "revs", "its", "worst", "best", "mean", "rstdev"],
+      "cols": ["benchmark", "subject", "revs", "its", "worst", "best", "mean", "mode", "rstdev"],
       "break": ["benchmark"]
     }
   }

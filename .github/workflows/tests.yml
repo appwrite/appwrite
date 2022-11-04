@@ -40,8 +40,9 @@ jobs:
     - name: Print Environment Variables
       run:  docker compose exec -T appwrite vars
 
-#    - name: Run Tests
-#      run: docker compose exec -T appwrite test --debug
+    - name: Run Tests
+      run: docker compose exec -T appwrite test --debug
 
     - name: Run Benchmark
-      run: docker compose exec -T appwrite benchmark --ref=baseline
+      continue-on-error: true
+      run: docker compose exec -T appwrite benchmark --ref=baseline --progress=plain
