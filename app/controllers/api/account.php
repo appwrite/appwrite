@@ -453,7 +453,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = Auth::sessionVerify($sessions, Auth::$secret);
+        $current = Auth::sessionVerify($sessions, Auth::$secret, $project->getAttribute('authDuration', 0));
 
         if ($current) { // Delete current session of new one.
             $currentDocument = $dbForProject->getDocument('sessions', $current);
@@ -1332,10 +1332,11 @@ App::get('/v1/account/sessions')
     ->inject('response')
     ->inject('user')
     ->inject('locale')
-    ->action(function (Response $response, Document $user, Locale $locale) {
+    ->inject('project')
+    ->action(function (Response $response, Document $user, Locale $locale, Document $project) {
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = Auth::sessionVerify($sessions, Auth::$secret);
+        $current = Auth::sessionVerify($sessions, Auth::$secret, $project->getAttribute('authDuration', 0));
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -1435,7 +1436,7 @@ App::get('/v1/account/sessions/:sessionId')
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $project->getAttribute('authDuration', 0))
             : $sessionId;
 
         foreach ($sessions as $session) {/** @var Document $session */
@@ -1445,7 +1446,7 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('expire', $session->getAttribute('$createdAt', 0) + $project->getAttribute('authDuration', 0))
+                    ->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $project->getAttribute('authDuration', 0)))
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -1712,11 +1713,12 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('events')
-    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events) {
+    ->inject('project')
+    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events, Document $project) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $project->getAttribute('authDuration', 0))
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -1789,7 +1791,7 @@ App::patch('/v1/account/sessions/:sessionId')
     ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Event $events) {
 
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $project->getAttribute('authDuration', 0))
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -1830,7 +1832,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $dbForProject->deleteCachedDocument('users', $user->getId());
 
-                $session->setAttribute('expire', $session->getAttribute('$createdAt', 0) + $project->getAttribute('authDuration', 0));
+                $session->setAttribute('expire', $session->getCreatedAt() + $project->getAttribute('authDuration', 0));
 
                 $events
                     ->setParam('userId', $user->getId())

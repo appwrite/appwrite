@@ -837,7 +837,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     if (
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
+        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $project->getAttribute('authDuration', 0))
     ) { // Validate user has valid login token
         $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
     }
