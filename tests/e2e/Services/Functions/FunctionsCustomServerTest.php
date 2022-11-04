@@ -570,6 +570,9 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $function['headers']['status-code']);
         $this->assertGreaterThan(0, $function['body']['buildTime']);
+        $this->assertNotEmpty($function['body']['status']);
+        $this->assertNotEmpty($function['body']['buildStdout']);
+        $this->assertArrayHasKey('buildStderr', $function['body']);
 
         /**
          * Test for FAILURE

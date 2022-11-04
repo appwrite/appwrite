@@ -54,6 +54,7 @@
         "utopia-php/framework": "0.23.*",
         "utopia-php/image": "0.5.*",
         "utopia-php/locale": "0.4.*",
+		"utopia-php/logger": "0.3.*",
         "utopia-php/messaging": "0.1.*",
         "utopia-php/orchestration": "0.6.*",
         "utopia-php/preloader": "0.2.*",
