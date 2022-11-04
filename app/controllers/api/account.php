@@ -186,7 +186,7 @@ App::post('/v1/account/sessions/email')
             throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        $duration = ($project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG);
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
@@ -528,7 +528,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
-        $duration = ($project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
@@ -692,6 +692,7 @@ App::post('/v1/account/sessions/magic-url')
             'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_MAGIC_URL,
             'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
+            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
@@ -783,7 +784,7 @@ App::put('/v1/account/sessions/magic-url')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $duration = ($project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
@@ -1020,7 +1021,7 @@ App::put('/v1/account/sessions/phone')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $duration = ($project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
@@ -1172,7 +1173,7 @@ App::post('/v1/account/sessions/anonymous')
         ])));
 
         // Create session token
-        $duration = ($project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
@@ -1832,7 +1833,9 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $dbForProject->deleteCachedDocument('users', $user->getId());
 
-                $session->setAttribute('expire', $session->getCreatedAt() + $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG));
+                $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG)));
+
+                var_dump(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG)));
 
                 $events
                     ->setParam('userId', $user->getId())
@@ -1887,6 +1890,7 @@ App::delete('/v1/account/sessions')
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) {
                 $session->setAttribute('current', true);
+                $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), Auth::TOKEN_EXPIRATION_LOGIN_LONG));
 
                  // If current session delete the cookies too
                 $response

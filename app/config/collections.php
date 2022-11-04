@@ -640,7 +640,7 @@ $collections = [
                 'size' => 32,
                 'signed' => true,
                 'required' => false,
-                'default' => 525600, // 1 Year
+                'default' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year
                 'array' => false,
                 'filters' => [],
             ],

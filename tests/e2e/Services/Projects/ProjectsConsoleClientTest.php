@@ -418,7 +418,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
-        $this->assertEquals(1, $response['body']['authDuration']);
+        $this->assertEquals(60, $response['body']['authDuration']);
 
         $projectId = $response['body']['$id'];
 

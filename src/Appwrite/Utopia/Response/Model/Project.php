@@ -103,7 +103,7 @@ class Project extends Model
             ])
             ->addRule('authDuration', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Session duration in minutes.',
+                'description' => 'Session duration in seconds.',
                 'default' => '',
                 'example' => '30',
             ])

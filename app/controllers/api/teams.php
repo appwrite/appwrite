@@ -732,7 +732,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $authDuration = ($project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $authDuration = $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
@@ -742,7 +742,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'provider' => Auth::SESSION_PROVIDER_EMAIL,
             'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
