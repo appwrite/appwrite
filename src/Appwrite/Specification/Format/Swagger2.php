@@ -365,6 +365,11 @@ class Swagger2 extends Format
                         $node['format'] = 'password';
                         $node['x-example'] = 'password';
                         break;
+                    case 'Appwrite\Auth\Validator\Phone':
+                        $node['type'] = $validator->getType();
+                        $node['format'] = 'phone';
+                        $node['x-example'] = '+12065550100';
+                        break;
                     case 'Utopia\Validator\Range':
                         /** @var \Utopia\Validator\Range $validator */
                         $node['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
