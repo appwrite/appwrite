@@ -55,10 +55,7 @@ App::setResource('logger', function ($register) {
 
 
 $pools = $register->get('pools');
-$client = $pools
-    ->get('queue')
-    ->pop()
-    ->getResource();
+$client = $pools->get('queue')->pop()->getResource();
 
 
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
