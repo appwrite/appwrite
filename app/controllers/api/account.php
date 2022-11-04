@@ -186,7 +186,7 @@ App::post('/v1/account/sessions/email')
             throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
         }
 
-        $duration = ($project->getAttribute('authDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = ($project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
@@ -453,7 +453,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = Auth::sessionVerify($sessions, Auth::$secret, $project->getAttribute('authDuration', 0));
+        $current = Auth::sessionVerify($sessions, Auth::$secret, $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG));
 
         if ($current) { // Delete current session of new one.
             $currentDocument = $dbForProject->getDocument('sessions', $current);
@@ -528,7 +528,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
-        $duration = ($project->getAttribute('authDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = ($project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
@@ -783,7 +783,7 @@ App::put('/v1/account/sessions/magic-url')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $duration = ($project->getAttribute('authDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = ($project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
@@ -1020,7 +1020,7 @@ App::put('/v1/account/sessions/phone')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $duration = ($project->getAttribute('authDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = ($project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
@@ -1172,7 +1172,7 @@ App::post('/v1/account/sessions/anonymous')
         ])));
 
         // Create session token
-        $duration = ($project->getAttribute('authDuration', 0) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $duration = ($project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG) * 60) ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
@@ -1336,7 +1336,7 @@ App::get('/v1/account/sessions')
     ->action(function (Response $response, Document $user, Locale $locale, Document $project) {
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = Auth::sessionVerify($sessions, Auth::$secret, $project->getAttribute('authDuration', 0));
+        $current = Auth::sessionVerify($sessions, Auth::$secret, $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG));
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -1436,7 +1436,7 @@ App::get('/v1/account/sessions/:sessionId')
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $project->getAttribute('authDuration', 0))
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG))
             : $sessionId;
 
         foreach ($sessions as $session) {/** @var Document $session */
@@ -1446,7 +1446,7 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $project->getAttribute('authDuration', 0)))
+                    ->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG)))
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -1718,7 +1718,7 @@ App::delete('/v1/account/sessions/:sessionId')
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $project->getAttribute('authDuration', 0))
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG))
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -1791,7 +1791,7 @@ App::patch('/v1/account/sessions/:sessionId')
     ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Event $events) {
 
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $project->getAttribute('authDuration', 0))
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG))
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -1832,7 +1832,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $dbForProject->deleteCachedDocument('users', $user->getId());
 
-                $session->setAttribute('expire', $session->getCreatedAt() + $project->getAttribute('authDuration', 0));
+                $session->setAttribute('expire', $session->getCreatedAt() + $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG));
 
                 $events
                     ->setParam('userId', $user->getId())
