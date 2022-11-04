@@ -10,6 +10,7 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use InfluxDB\Database as InfluxDatabase;
 
@@ -59,6 +60,33 @@ function getConsoleDB(): Database
     return $database;
 }
 
+/**
+ * Get internal project database
+ * @param Document $project
+ * @return Database
+ */
+function getProjectDB(Document $project): Database
+{
+    global $register;
+
+    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        return getConsoleDB();
+    }
+
+    $dbAdapter = $pools
+        ->get($project->getAttribute('database'))
+        ->pop()
+        ->getResource()
+    ;
+
+    $database = new Database($dbAdapter, getCache());
+    $database->setNamespace('_' . $project->getInternalId());
+
+    return $database;
+}
+
 function getCache(): Cache
 {
     global $register;
@@ -92,6 +120,7 @@ include 'tasks/specs.php';
 include 'tasks/ssl.php';
 include 'tasks/vars.php';
 include 'tasks/usage.php';
+include 'tasks/schedule.php';
 
 $cli
     ->task('version')

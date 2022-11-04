@@ -448,7 +448,8 @@ App::put('/v1/functions/:functionId')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -474,6 +475,36 @@ App::put('/v1/functions/:functionId')
         ])));
 
         if ($next) {
+            $schedule = Authorization::skip(function () use ($dbForConsole, $project, $function) {
+                return $dbForConsole->findOne('schedules', [
+                    Query::equal('type', ['function']),
+                    Query::equal('projectId', [$project->getId()]),
+                    Query::equal('scheduleId', [$function->getId()]),
+                ]);
+            });
+
+            // TODO constrain with unique index ??
+            if (empty($schedule)) {
+                Authorization::skip(
+                    fn() => $dbForConsole->createDocument('schedules', new Document([
+                        'type' => 'function',
+                        'scheduleId' => $function->getId(),
+                        'projectId' => $project->getId(),
+                        'scheduleUpdatedAt' => $function['scheduleUpdatedAt'],
+                        'schedule' => $function['schedule'],
+                        'active' => true,
+                    ]))
+                );
+            } else {
+                $schedule
+                    ->setAttribute('scheduleUpdatedAt', $function['scheduleUpdatedAt'])
+                    ->setAttribute('schedule', $function['schedule'])
+                ;
+                Authorization::skip(function () use ($dbForConsole, $schedule, $function) {
+                    $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+                });
+            }
+
             // Async task reschedule
             $functionEvent = new Func();
             $functionEvent
@@ -560,7 +591,10 @@ App::delete('/v1/functions/:functionId')
     ->inject('dbForProject')
     ->inject('deletes')
     ->inject('events')
-    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $deletes, Event $events) {
+    ->inject('project')
+    ->inject('dbForConsole')
+
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Document $project, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -570,6 +604,25 @@ App::delete('/v1/functions/:functionId')
 
         if (!$dbForProject->deleteDocument('functions', $function->getId())) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove function from DB');
+        }
+
+        $schedule = Authorization::skip(function () use ($dbForConsole, $project, $function) {
+            return  $dbForConsole->findOne('schedules', [
+                Query::equal('type', ['function']),
+                Query::equal('projectId', [$project->getId()]),
+                Query::equal('scheduleId', [$function->getId()]),
+            ]);
+        });
+
+        if (!empty($schedule)) {
+            $schedule
+                ->setAttribute('scheduleUpdatedAt', DateTime::now())
+                ->setAttribute('active', false)
+            ;
+
+            Authorization::skip(function () use ($dbForConsole, $schedule) {
+                 $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+            });
         }
 
         $deletes
