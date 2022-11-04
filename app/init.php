@@ -601,7 +601,7 @@ $register->set('db', function () {
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $client = new Client($dbScheme, $dbHost, (int) $dbPort, $dbUser, $dbPass, true);
+    $client = new Client($dbScheme, $dbHost, (int) $dbPort, $dbUser, $dbPass, false);
 
     return $client;
 });

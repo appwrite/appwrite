@@ -1884,6 +1884,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
+        
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -1939,8 +1940,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
         $data['$permissions'] = $permissions;
 
+        $newDocument = new Document($data);
+
         try {
-            $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data));
+            $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $newDocument);
             $document->setAttribute('$collectionId', $collectionId);
             $document->setAttribute('$databaseId', $databaseId);
         } catch (StructureException $exception) {

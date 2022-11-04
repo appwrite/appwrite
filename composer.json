@@ -52,7 +52,7 @@
         "utopia-php/cache": "0.6.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "dev-fix-mongo-appwrite as 0.26.999999",
+        "utopia-php/database": "dev-fix-mongo-appwrite as 0.26.2",
         "utopia-php/locale": "0.4.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",

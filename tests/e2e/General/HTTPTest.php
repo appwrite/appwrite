@@ -152,43 +152,43 @@ class HTTPTest extends Scope
     //     unlink(realpath(__DIR__ . '/../../resources/swagger2.json'));
     // }
 
-    public function testSpecOpenAPI3()
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=console', [
-            'content-type' => 'application/json',
-        ], []);
+    // public function testSpecOpenAPI3()
+    // {
+    //     $response = $this->client->call(Client::METHOD_GET, '/specs/open-api3?platform=console', [
+    //         'content-type' => 'application/json',
+    //     ], []);
 
-        $directory = __DIR__ . '/../../../app/config/specs/';
+    //     $directory = __DIR__ . '/../../../app/config/specs/';
 
-        $files = scandir($directory);
-        $client = new Client();
-        $client->setEndpoint('https://validator.swagger.io');
+    //     $files = scandir($directory);
+    //     $client = new Client();
+    //     $client->setEndpoint('https://validator.swagger.io');
 
-        foreach ($files as $file) {
-            if (in_array($file, ['.', '..'])) {
-                continue;
-            }
+    //     foreach ($files as $file) {
+    //         if (in_array($file, ['.', '..'])) {
+    //             continue;
+    //         }
 
-            if (
-                (strpos($file, 'latest') === false) &&
-                (strpos($file, '0.12.x') === false) &&
-                (strpos($file, '0.13.x') === false)
-            ) {
-                continue;
-            }
+    //         if (
+    //             (strpos($file, 'latest') === false) &&
+    //             (strpos($file, '0.12.x') === false) &&
+    //             (strpos($file, '0.13.x') === false)
+    //         ) {
+    //             continue;
+    //         }
 
-            /**
-             * Test for SUCCESS
-             */
-            $response = $client->call(Client::METHOD_POST, '/validator/debug', [
-                'content-type' => 'application/json',
-            ], json_decode(file_get_contents($directory . $file), true));
+    //         /**
+    //          * Test for SUCCESS
+    //          */
+    //         $response = $client->call(Client::METHOD_POST, '/validator/debug', [
+    //             'content-type' => 'application/json',
+    //         ], json_decode(file_get_contents($directory . $file), true));
 
-            $response['body'] = json_decode($response['body'], true);
-            $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertTrue(empty($response['body']));
-        }
-    }
+    //         $response['body'] = json_decode($response['body'], true);
+    //         $this->assertEquals(200, $response['headers']['status-code']);
+    //         $this->assertTrue(empty($response['body']));
+    //     }
+    // }
 
     public function testVersions()
     {
