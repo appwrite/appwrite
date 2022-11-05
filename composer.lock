@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "44c45e61fcc2cf8837fbae7df6360a4f",
+    "content-hash": "51f81d435f4b5b7a9a6ea8f81b470353",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5109,10 +5109,10 @@
     ],
     "aliases": [
         {
-            "package": "utopia-php/pools",
-            "version": "dev-feat-optimize-filling",
-            "alias": "0.3.0",
-            "alias_normalized": "0.3.0.0"
+            "package": "utopia-php/database",
+            "version": "0.28.0.0",
+            "alias": "0.26.99",
+            "alias_normalized": "0.26.99.0"
         }
     ],
     "minimum-stability": "stable",
