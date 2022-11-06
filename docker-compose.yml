@@ -686,17 +686,16 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
-  appwrite-schedule-new:
-    entrypoint: schedule-new
+  appwrite-schedule:
+    entrypoint: schedule
     <<: *x-logging
-    container_name: appwrite-schedule-new
+    container_name: appwrite-schedule
     image: appwrite-dev
     networks:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - mariadb
       - redis
@@ -716,26 +715,6 @@ services:
       - _APP_CONNECTIONS_CACHE
       - _APP_CONNECTIONS_QUEUE
       - _APP_REGION
-
-  appwrite-schedule:
-    entrypoint: schedule
-    <<: *x-logging
-    container_name: appwrite-schedule
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-    environment:
-      - _APP_ENV
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_CONNECTIONS_QUEUE
 
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p

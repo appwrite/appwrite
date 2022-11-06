@@ -36,7 +36,6 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
-use Cron\CronExpression;
 use Executor\Executor;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Roles;
@@ -72,10 +71,8 @@ App::post('/v1/functions')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
-
-        $cron = !empty($schedule) ? new CronExpression($schedule) : null;
-        $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -88,22 +85,24 @@ App::post('/v1/functions')
             'events' => $events,
             'schedule' => $schedule,
             'scheduleUpdatedAt' => DateTime::now(),
-            'schedulePrevious' => null,
-            'scheduleNext' => $next,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime])
         ]));
 
-        if ($next) {
-            // Async task reschedule
-            $functionEvent = new Func();
-            $functionEvent
-                ->setFunction($function)
-                ->setType('schedule')
-                ->setUser($user)
-                ->setProject($project)
-                ->schedule(new \DateTime($next));
-        }
+        $log = Authorization::skip(
+            fn() => $dbForConsole->createDocument('schedules', new Document([
+                'region' => App::getEnv('_APP_REGION'), // Todo replace with projects region
+                'resourceType' => 'function',
+                'resourceId' => $function->getId(),
+                'resourceUpdatedAt' => DateTime::now(),
+                'projectId' => $project->getId(),
+                'schedule'  => $function['schedule'],
+                'active' => false,
+            ]))
+        );
+
+        $function->setAttribute('scheduleId', $log->getId());
+        $dbForProject->updateDocument('functions', $function->getId(), $function);
 
         $eventsInstance->setParam('functionId', $function->getId());
 
@@ -457,65 +456,24 @@ App::put('/v1/functions/:functionId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $cron = !empty($schedule) ? new CronExpression($schedule) : null;
-        $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
-
         $enabled ??= $function->getAttribute('enabled', true);
+
+        $log = $schedule
+            ->setAttribute('resourceUpdatedAt', $function['resourceUpdatedAt'])
+            ->setAttribute('schedule', $function['schedule'])
+            ->setAttribute('active', !empty($function->getAttribute('schedule') || !empty($schedule)));
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
             'events' => $events,
+            'scheduleId' => $log->getId(),
             'schedule' => $schedule,
             'scheduleUpdatedAt' => DateTime::now(),
-            'scheduleNext' => $next,
             'timeout' => $timeout,
             'enabled' => $enabled,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
-
-        if ($next) {
-            $schedule = Authorization::skip(function () use ($dbForConsole, $project, $function) {
-                return $dbForConsole->findOne('schedules', [
-                    Query::equal('region', [App::getEnv('_APP_REGION')]), // Todo replace with projects region
-                    Query::equal('type', ['function']),
-                    Query::equal('projectId', [$project->getId()]),
-                    Query::equal('scheduleId', [$function->getId()]),
-                ]);
-            });
-
-            // TODO constrain with unique index ??
-            if (empty($schedule)) {
-                Authorization::skip(
-                    fn() => $dbForConsole->createDocument('schedules', new Document([
-                        'region' => App::getEnv('_APP_REGION'), // Todo replace with projects region
-                        'type' => 'function',
-                        'scheduleId' => $function->getId(),
-                        'projectId' => $project->getId(),
-                        'scheduleUpdatedAt' => $function['scheduleUpdatedAt'],
-                        'schedule' => $function['schedule'],
-                        'active' => true,
-                    ]))
-                );
-            } else {
-                $schedule
-                    ->setAttribute('scheduleUpdatedAt', $function['scheduleUpdatedAt'])
-                    ->setAttribute('schedule', $function['schedule'])
-                ;
-                Authorization::skip(function () use ($dbForConsole, $schedule, $function) {
-                    $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-                });
-            }
-
-            // Async task reschedule
-            $functionEvent = new Func();
-            $functionEvent
-                ->setFunction($function)
-                ->setType('schedule')
-                ->setUser($user)
-                ->setProject($project)
-                ->schedule(new \DateTime($next));
-        }
 
         $eventsInstance->setParam('functionId', $function->getId());
 
@@ -542,7 +500,8 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $events) {
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $events, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -567,6 +526,14 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'deployment' => $deployment->getId()
         ])));
+
+        $log = $dbForProject->getDocument('schedules', $function['resourceId']);
+
+        $log->setAttribute('active', true);
+
+        Authorization::skip(function () use ($dbForConsole, $log) {
+            $dbForConsole->updateDocument('schedules', $log->getId(), $log);
+        });
 
         $events
             ->setParam('functionId', $function->getId())
@@ -595,7 +562,6 @@ App::delete('/v1/functions/:functionId')
     ->inject('events')
     ->inject('project')
     ->inject('dbForConsole')
-
     ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Document $project, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -608,25 +574,16 @@ App::delete('/v1/functions/:functionId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove function from DB');
         }
 
-        $schedule = Authorization::skip(function () use ($dbForConsole, $project, $function) {
-            return  $dbForConsole->findOne('schedules', [
-                Query::equal('region', [App::getEnv('_APP_REGION')]), // Todo replace with projects region
-                Query::equal('type', ['function']),
-                Query::equal('projectId', [$project->getId()]),
-                Query::equal('scheduleId', [$function->getId()]),
-            ]);
+        $log = $dbForProject->getDocument('schedules', $function['resourceId']);
+
+        $log
+            ->setAttribute('resourceUpdatedAt', DateTime::now())
+            ->setAttribute('active', false)
+        ;
+
+        Authorization::skip(function () use ($dbForConsole, $log) {
+            $dbForConsole->updateDocument('schedules', $log->getId(), $log);
         });
-
-        if (!empty($schedule)) {
-            $schedule
-                ->setAttribute('scheduleUpdatedAt', DateTime::now())
-                ->setAttribute('active', false)
-            ;
-
-            Authorization::skip(function () use ($dbForConsole, $schedule) {
-                 $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-            });
-        }
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -664,7 +621,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -815,6 +773,14 @@ App::post('/v1/functions/:functionId/deployments')
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
             }
         }
+
+        $log = $dbForProject->getDocument('schedules', $function['resourceId']);
+
+        $log->setAttribute('active', true);
+
+        Authorization::skip(function () use ($dbForConsole, $log) {
+            $dbForConsole->updateDocument('schedules', $log->getId(), $log);
+        });
 
         $metadata = null;
 

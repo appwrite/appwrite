@@ -16,7 +16,7 @@ const ENQUEUE_TIME_FRAME = 60 * 5; // 5 min
 sleep(4); // Todo prevent PDOException
 
 $cli
-->task('schedule-new')
+->task('schedule')
 ->desc('Function scheduler task')
 ->action(function () use ($register) {
     Console::title('Scheduler V1');
@@ -31,7 +31,7 @@ $cli
             $cron = new CronExpression($function['schedule']);
             $next = DateTime::format($cron->getNextRunDate());
             if ($next < $timeFrame) {
-                $queue[$next][$function['scheduleId']] = $function;
+                $queue[$next][$function['resourceId']] = $function;
             }
         }
     };
@@ -39,8 +39,9 @@ $cli
     $removeFromQueue = function ($scheduleId) use (&$queue) {
         foreach ($queue as $slot => $schedule) {
             foreach ($schedule as $function) {
-                if ($scheduleId === $function['scheduleId']) {
-                    unset($queue[$slot][$function['scheduleId']]);
+                if ($scheduleId === $function['resourceId']) {
+                    Console::error("Unsetting :{$function['resourceId']} from queue slot $slot");
+                    unset($queue[$slot][$function['resourceId']]);
                 }
             }
         }
@@ -60,14 +61,14 @@ $cli
     while ($sum === $limit) {
         $results = $dbForConsole->find('schedules', [
             Query::equal('region', [App::getEnv('_APP_REGION')]),
-            Query::equal('type', ['function']),
+            Query::equal('resourceType', ['function']),
             Query::equal('active', [true]),
             Query::limit($limit)
         ]);
 
         $sum = count($results);
         foreach ($results as $document) {
-            $functions[$document['scheduleId']] = $document;
+            $functions[$document['resourceId']] = $document;
             $count++;
         }
     }
@@ -90,22 +91,22 @@ $cli
                 while ($sum === $limit) {
                     $results = $dbForConsole->find('schedules', [
                         Query::equal('region', [App::getEnv('_APP_REGION')]),
-                        Query::equal('type', ['function']),
-                        Query::greaterThan('scheduleUpdatedAt', $lastUpdate),
+                        Query::equal('resourceType', ['function']),
+                        Query::greaterThan('resourceUpdatedAt', $lastUpdate),
                         Query::limit($limit)
                     ]);
                     $sum = count($results);
                     foreach ($results as $document) {
-                        $org = isset($functions[$document['scheduleId']]) ? strtotime($functions[$document['scheduleId']]['scheduleUpdatedAt']) : null;
-                        $new = strtotime($document['scheduleUpdatedAt']);
+                        $org = isset($functions[$document['resourceId']]) ? strtotime($functions[$document['resourceId']]['resourceUpdatedAt']) : null;
+                        $new = strtotime($document['resourceUpdatedAt']);
                         if ($document['active'] === false) {
-                            Console::error("Removing:  {$document['scheduleId']}");
-                            unset($functions[$document['scheduleId']]);
+                            Console::error("Removing:  {$document['resourceId']}");
+                            unset($functions[$document['resourceId']]);
                         } elseif ($new > $org) {
-                            Console::error("Updating:  {$document['scheduleId']}");
-                            $functions[$document['scheduleId']] =  $document;
+                            Console::error("Updating:  {$document['resourceId']}");
+                            $functions[$document['resourceId']] =  $document;
                         }
-                        $removeFromQueue($document['scheduleId']);
+                        $removeFromQueue($document['resourceId']);
                         $count++;
                     }
                 }
@@ -120,31 +121,40 @@ $cli
                 $now = (new \DateTime())->format('Y-m-d H:i:00.000');
 
                 Console::info("Enqueue proc run at: $time");
+                // Debug
+                foreach ($queue as $slot => $schedule) {
+                    Console::log("Slot: $slot");
+                    foreach ($schedule as $function) {
+                            Console::log("{$function['resourceId']} {$function['schedule']}");
+                    }
+                }
 
                 /**
                  * Lopping time slots
                  */
+
                 foreach ($queue as $slot => $schedule) {
                     if ($now === $slot) {
                         foreach ($schedule as $function) {
                         /**
                          * Enqueue function
                          */
-                            Console::warning("Enqueueing :{$function['scheduleId']}");
+                            Console::warning("Enqueueing :{$function['resourceId']}");
                             $cron = new CronExpression($function['schedule']);
                             $next = DateTime::format($cron->getNextRunDate());
                             /**
                              * If next schedule is in 5-min timeframe
-                             * and it was not removed re-enqueue the function.
+                             * and it was not removed or changed, re-enqueue the function.
                              */
                             if (
                                 $next < $timeFrame &&
-                                !empty($functions[$function['scheduleId']])
+                                !empty($functions[$function['resourceId']] &&
+                                $function['schedule'] === $functions[$function['resourceId']]['schedule'])
                             ) {
-                                Console::warning("re-enqueueing :{$function['scheduleId']}");
-                                $queue[$next][$function['scheduleId']] = $function;
+                                Console::warning("re-enqueueing :{$function['resourceId']}");
+                                $queue[$next][$function['resourceId']] = $function;
                             }
-                            unset($queue[$slot][$function['scheduleId']]); /** removing function from slot */
+                            unset($queue[$slot][$function['resourceId']]); /** removing function from slot */
                         }
                         unset($queue[$slot]); /** removing slot */
                     }
