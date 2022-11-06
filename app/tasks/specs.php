@@ -206,7 +206,7 @@ $cli
                     unset($models[$key]);
                 }
             }
-            // var_dump($models);
+
             $arguments = [new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {

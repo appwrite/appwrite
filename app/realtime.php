@@ -32,7 +32,6 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-
 function getConsoleDB(): Database
 {
     global $register;

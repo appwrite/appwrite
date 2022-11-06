@@ -1575,7 +1575,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             Query::equal('databaseInternalId', [$db->getInternalId()])
         ], 61);
 
-        $limit = 64 - MariaDB::getCountOfDefaultIndexes();
+        $limit = $dbForProject->getLimitForIndexes();
 
         if ($count >= $limit) {
             throw new Exception(Exception::INDEX_LIMIT_EXCEEDED, 'Index limit exceeded');
