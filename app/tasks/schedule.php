@@ -13,6 +13,7 @@ use Swoole\Timer;
 const FUNCTION_VALIDATION_TIMER = 180; //seconds
 const FUNCTION_ENQUEUE_TIMER = 60; //seconds
 const ENQUEUE_TIME_FRAME = 60 * 5; // 5 min
+sleep(4); // Todo prevent PDOException
 
 $cli
 ->task('schedule-new')
@@ -34,6 +35,17 @@ $cli
             }
         }
     };
+
+    $removeFromQueue = function ($scheduleId) use (&$queue) {
+        foreach ($queue as $slot => $schedule) {
+            foreach ($schedule as $function) {
+                if ($scheduleId === $function['scheduleId']) {
+                    unset($queue[$slot][$function['scheduleId']]);
+                }
+            }
+        }
+    };
+
 
     $dbForConsole = getConsoleDB();
     $count = 0;
@@ -64,8 +76,8 @@ $cli
     $lastUpdate =  DateTime::addSeconds(new \DateTime(), -FUNCTION_VALIDATION_TIMER);
 
     Co\run(
-        function () use ($createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
-            Timer::tick(FUNCTION_VALIDATION_TIMER * 1000, function () use ($createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
+        function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
+            Timer::tick(FUNCTION_VALIDATION_TIMER * 1000, function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
                 $time = DateTime::now();
                 $count = 0;
                 $limit = 50;
@@ -93,6 +105,7 @@ $cli
                             Console::error("Updating:  {$document['scheduleId']}");
                             $functions[$document['scheduleId']] =  $document;
                         }
+                        $removeFromQueue($document['scheduleId']);
                         $count++;
                     }
                 }
