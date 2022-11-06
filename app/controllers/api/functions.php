@@ -477,6 +477,7 @@ App::put('/v1/functions/:functionId')
         if ($next) {
             $schedule = Authorization::skip(function () use ($dbForConsole, $project, $function) {
                 return $dbForConsole->findOne('schedules', [
+                    Query::equal('region', [App::getEnv('_APP_REGION')]), // Todo replace with projects region
                     Query::equal('type', ['function']),
                     Query::equal('projectId', [$project->getId()]),
                     Query::equal('scheduleId', [$function->getId()]),
@@ -487,6 +488,7 @@ App::put('/v1/functions/:functionId')
             if (empty($schedule)) {
                 Authorization::skip(
                     fn() => $dbForConsole->createDocument('schedules', new Document([
+                        'region' => App::getEnv('_APP_REGION'), // Todo replace with projects region
                         'type' => 'function',
                         'scheduleId' => $function->getId(),
                         'projectId' => $project->getId(),
@@ -608,6 +610,7 @@ App::delete('/v1/functions/:functionId')
 
         $schedule = Authorization::skip(function () use ($dbForConsole, $project, $function) {
             return  $dbForConsole->findOne('schedules', [
+                Query::equal('region', [App::getEnv('_APP_REGION')]), // Todo replace with projects region
                 Query::equal('type', ['function']),
                 Query::equal('projectId', [$project->getId()]),
                 Query::equal('scheduleId', [$function->getId()]),

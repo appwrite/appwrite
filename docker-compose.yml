@@ -183,6 +183,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
+      - _APP_REGION
 
   appwrite-realtime:
     entrypoint: realtime
@@ -714,6 +715,7 @@ services:
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_CACHE
       - _APP_CONNECTIONS_QUEUE
+      - _APP_REGION
 
   appwrite-schedule:
     entrypoint: schedule
