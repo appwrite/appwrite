@@ -2,12 +2,12 @@
 
 namespace Appwrite\Resque;
 
+use Exception;
 use Utopia\App;
 use Utopia\Cache\Cache;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Cache\Adapter\Sharding;
 use Utopia\Database\Database;
-use Utopia\Database\Adapter\MySQL;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
@@ -16,7 +16,7 @@ use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\S3;
-use Exception;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Worker
@@ -136,7 +136,12 @@ abstract class Worker
      */
     public function tearDown(): void
     {
+        global $register;
+
         try {
+            $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+            $pools->reclaim();
+
             $this->shutdown();
         } catch (\Throwable $error) {
             foreach (self::$errorCallbacks as $errorCallback) {
@@ -158,23 +163,32 @@ abstract class Worker
     {
         \array_push(self::$errorCallbacks, $callback);
     }
+
     /**
      * Get internal project database
-     * @param string $projectId
+     * @param Document $project
      * @return Database
      */
-    protected function getProjectDB(string $projectId): Database
+    protected function getProjectDB(Document $project): Database
     {
-        $consoleDB = $this->getConsoleDB();
+        global $register;
 
-        if ($projectId === 'console') {
-            return $consoleDB;
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return $this->getConsoleDB();
         }
 
-        /** @var Document $project */
-        $project = Authorization::skip(fn() => $consoleDB->getDocument('projects', $projectId));
+        $dbAdapter = $pools
+            ->get($project->getAttribute('database'))
+            ->pop()
+            ->getResource()
+        ;
 
-        return $this->getDB(self::DATABASE_PROJECT, $projectId, $project->getInternalId());
+        $database = new Database($dbAdapter, $this->getCache());
+        $database->setNamespace('_' . $project->getInternalId());
+
+        return $database;
     }
 
     /**
@@ -183,67 +197,46 @@ abstract class Worker
      */
     protected function getConsoleDB(): Database
     {
-        return $this->getDB(self::DATABASE_CONSOLE);
+        global $register;
+
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
+        $dbAdapter = $pools
+            ->get('console')
+            ->pop()
+            ->getResource()
+        ;
+
+        $database = new Database($dbAdapter, $this->getCache());
+
+        $database->setNamespace('console');
+
+        return $database;
     }
 
+
     /**
-     * Get console database
-     * @param string $type One of (internal, external, console)
-     * @param string $projectId of internal or external DB
-     * @return Database
+     * Get Cache
+     * @return Cache
      */
-    private function getDB(string $type, string $projectId = '', string $projectInternalId = ''): Database
+    protected function getCache(): Cache
     {
         global $register;
 
-        $namespace = '';
-        $sleep = DATABASE_RECONNECT_SLEEP; // overwritten when necessary
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
 
-        switch ($type) {
-            case self::DATABASE_PROJECT:
-                if (!$projectId) {
-                    throw new \Exception('ProjectID not provided - cannot get database');
-                }
-                $namespace = "_{$projectInternalId}";
-                break;
-            case self::DATABASE_CONSOLE:
-                $namespace = "_console";
-                $sleep = 5; // ConsoleDB needs extra sleep time to ensure tables are created
-                break;
-            default:
-                throw new \Exception('Unknown database type: ' . $type);
-                break;
+        $list = Config::getParam('pools-cache', []);
+        $adapters = [];
+
+        foreach ($list as $value) {
+            $adapters[] = $pools
+                ->get($value)
+                ->pop()
+                ->getResource()
+            ;
         }
 
-        $attempts = 0;
-
-        do {
-            try {
-                $attempts++;
-                $cache = new Cache(new RedisCache($register->get('cache')));
-                $database = new Database(new MySQL($register->get('db')), $cache);
-                $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                $database->setNamespace($namespace); // Main DB
-
-                if (!empty($projectId) && !$database->getDocument('projects', $projectId)->isEmpty()) {
-                    throw new \Exception("Project does not exist: {$projectId}");
-                }
-
-                if ($type === self::DATABASE_CONSOLE && !$database->exists($database->getDefaultDatabase(), Database::METADATA)) {
-                    throw new \Exception('Console project not ready');
-                }
-
-                break; // leave loop if successful
-            } catch (\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-                }
-                sleep($sleep);
-            }
-        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-
-        return $database;
+        return new Cache(new Sharding($adapters));
     }
 
     /**
@@ -265,7 +258,6 @@ abstract class Worker
     {
         return $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
     }
-
 
     /**
      * Get Builds Storage Device

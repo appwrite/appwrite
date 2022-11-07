@@ -10,6 +10,12 @@ class HealthStatus extends Model
     public function __construct()
     {
         $this
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Name of the service.',
+                'default' => '',
+                'example' => 'database',
+            ])
             ->addRule('ping', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Duration in milliseconds how long the health check took.',

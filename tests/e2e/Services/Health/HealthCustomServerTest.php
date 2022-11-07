@@ -47,9 +47,9 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('pass', $response['body']['status']);
-        $this->assertIsInt($response['body']['ping']);
-        $this->assertLessThan(100, $response['body']['ping']);
+        $this->assertEquals('pass', $response['body']['statuses'][0]['status']);
+        $this->assertIsInt($response['body']['statuses'][0]['ping']);
+        $this->assertLessThan(100, $response['body']['statuses'][0]['ping']);
 
         /**
          * Test for FAILURE
@@ -69,9 +69,53 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('pass', $response['body']['status']);
-        $this->assertIsInt($response['body']['ping']);
-        $this->assertLessThan(100, $response['body']['ping']);
+        $this->assertEquals('pass', $response['body']['statuses'][0]['status']);
+        $this->assertIsInt($response['body']['statuses'][0]['ping']);
+        $this->assertLessThan(100, $response['body']['statuses'][0]['ping']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        return [];
+    }
+
+    public function testQueueSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('pass', $response['body']['statuses'][0]['status']);
+        $this->assertIsInt($response['body']['statuses'][0]['ping']);
+        $this->assertLessThan(100, $response['body']['statuses'][0]['ping']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        return [];
+    }
+
+    public function testPubSubSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/pubsub', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('pass', $response['body']['statuses'][0]['status']);
+        $this->assertIsInt($response['body']['statuses'][0]['ping']);
+        $this->assertLessThan(100, $response['body']['statuses'][0]['ping']);
 
         /**
          * Test for FAILURE
