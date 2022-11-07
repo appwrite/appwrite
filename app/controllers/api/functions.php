@@ -458,22 +458,25 @@ App::put('/v1/functions/:functionId')
 
         $enabled ??= $function->getAttribute('enabled', true);
 
-        $log = $schedule
-            ->setAttribute('resourceUpdatedAt', $function['resourceUpdatedAt'])
-            ->setAttribute('schedule', $function['schedule'])
-            ->setAttribute('active', !empty($function->getAttribute('schedule') || !empty($schedule)));
-
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
             'events' => $events,
-            'scheduleId' => $log->getId(),
             'schedule' => $schedule,
             'scheduleUpdatedAt' => DateTime::now(),
             'timeout' => $timeout,
             'enabled' => $enabled,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
+
+        $log = $dbForConsole->getDocument('schedules', $function['scheduleId']);
+
+        $log
+            ->setAttribute('resourceUpdatedAt', $function['scheduleUpdatedAt'])
+            ->setAttribute('schedule', $function['schedule'])
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+
+        $dbForConsole->updateDocument('schedules', $log->getId(), $log);
 
         $eventsInstance->setParam('functionId', $function->getId());
 
@@ -527,9 +530,15 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             'deployment' => $deployment->getId()
         ])));
 
-        $log = $dbForProject->getDocument('schedules', $function['resourceId']);
+        $log = $dbForConsole->getDocument('schedules', $function['scheduleId']);
 
-        $log->setAttribute('active', true);
+        $active = !empty($function->getAttribute('schedule'));
+
+        if ($active) {
+            $log->setAttribute('resourceUpdatedAt', datetime::now());
+        }
+
+        $log->setAttribute('active', $active);
 
         Authorization::skip(function () use ($dbForConsole, $log) {
             $dbForConsole->updateDocument('schedules', $log->getId(), $log);
@@ -574,7 +583,7 @@ App::delete('/v1/functions/:functionId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove function from DB');
         }
 
-        $log = $dbForProject->getDocument('schedules', $function['resourceId']);
+        $log = $dbForConsole->getDocument('schedules', $function['scheduleId']);
 
         $log
             ->setAttribute('resourceUpdatedAt', DateTime::now())
@@ -774,9 +783,19 @@ App::post('/v1/functions/:functionId/deployments')
             }
         }
 
-        $log = $dbForProject->getDocument('schedules', $function['resourceId']);
+        /**
+         * TODO Should we update also the function collection with the scheduleUpdatedAt attr?
+         */
 
-        $log->setAttribute('active', true);
+        $log = $dbForConsole->getDocument('schedules', $function['scheduleId']);
+
+        $active = !empty($function->getAttribute('schedule'));
+
+        if ($active) {
+            $log->setAttribute('resourceUpdatedAt', datetime::now());
+        }
+
+        $log->setAttribute('active', $active);
 
         Authorization::skip(function () use ($dbForConsole, $log) {
             $dbForConsole->updateDocument('schedules', $log->getId(), $log);

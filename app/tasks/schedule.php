@@ -1,5 +1,6 @@
 <?php
-
+ini_set('memory_limit', -1);
+ini_set('max_execution_time', -1);
 global $cli;
 global $register;
 
@@ -15,6 +16,8 @@ const FUNCTION_ENQUEUE_TIMER = 60; //seconds
 const ENQUEUE_TIME_FRAME = 60 * 5; // 5 min
 sleep(4); // Todo prevent PDOException
 
+
+
 $cli
 ->task('schedule')
 ->desc('Function scheduler task')
@@ -23,6 +26,7 @@ $cli
     Console::success(APP_NAME . ' Scheduler v1 has started');
 
     $createQueue = function () use (&$functions, &$queue) {
+        $loadStart = \microtime(true);
         /**
          * Creating smaller functions list containing 5-min timeframe.
          */
@@ -34,6 +38,9 @@ $cli
                 $queue[$next][$function['resourceId']] = $function;
             }
         }
+        $loadEnd = \microtime(true);
+        Console::error("Queue was built in " . ($loadEnd - $loadStart) . " seconds");
+
     };
 
     $removeFromQueue = function ($scheduleId) use (&$queue) {
@@ -49,12 +56,13 @@ $cli
 
 
     $dbForConsole = getConsoleDB();
-    $count = 0;
-    $limit = 50;
+    $limit = 200;
     $sum = $limit;
     $functions = [];
     $queue = [];
-
+    $count = 0;
+    $loadStart = \microtime(true);
+    $total = 0;
     /**
      * Initial run fill $functions list
      */
@@ -63,17 +71,24 @@ $cli
             Query::equal('region', [App::getEnv('_APP_REGION')]),
             Query::equal('resourceType', ['function']),
             Query::equal('active', [true]),
-            Query::limit($limit)
+            Query::offset($count * $limit),
+            Query::limit($limit),
         ]);
 
         $sum = count($results);
+
+        $total = $total + $sum;
         foreach ($results as $document) {
             $functions[$document['resourceId']] = $document;
-            $count++;
         }
+        $count++;
     }
 
+    $loadEnd = \microtime(true);
+    Console::error("{$total} functions where loaded in " . ($loadEnd - $loadStart) . " seconds");
+
     $createQueue();
+
     $lastUpdate =  DateTime::addSeconds(new \DateTime(), -FUNCTION_VALIDATION_TIMER);
 
     Co\run(
@@ -88,12 +103,13 @@ $cli
                 /**
                  * Updating functions list from DB.
                  */
-                while ($sum === $limit) {
+                while (!empty($sum)) {
                     $results = $dbForConsole->find('schedules', [
                         Query::equal('region', [App::getEnv('_APP_REGION')]),
                         Query::equal('resourceType', ['function']),
                         Query::greaterThan('resourceUpdatedAt', $lastUpdate),
-                        Query::limit($limit)
+                        Query::limit($limit),
+                        Query::offset($count * $limit),
                     ]);
                     $sum = count($results);
                     foreach ($results as $document) {
@@ -107,8 +123,8 @@ $cli
                             $functions[$document['resourceId']] =  $document;
                         }
                         $removeFromQueue($document['resourceId']);
-                        $count++;
                     }
+                    $count++;
                 }
 
                 $lastUpdate = DateTime::now();
