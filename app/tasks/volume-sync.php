@@ -41,6 +41,5 @@ $cli
             Console::execute("rsync -av $source $destination", $stdin, $stdout, $stderr);
             Console::success($stdout);
             Console::error($stderr);
-
         }, $interval);
     });
