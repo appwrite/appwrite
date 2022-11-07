@@ -376,7 +376,7 @@ App::patch('/v1/projects/:projectId')
     ->param('legalCity', '', new Text(256), 'Project legal city. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
-    ->param('authDuration', 525600, new Integer(true), 'Project session length in minutes. Max length: 525600 minutes.', true)
+    ->param('authDuration', 525600, new Range(0, 525600), 'Project session length in minutes. Max length: 525600 minutes.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, int $authDuration, Response $response, Database $dbForConsole) {
@@ -385,10 +385,6 @@ App::patch('/v1/projects/:projectId')
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        if ($authDuration < 0 || $authDuration > 525600) {
-            throw new Exception('Session length must be between 0 and 525600 minutes');
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
