@@ -490,7 +490,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(525600, $response['body']['authDuration']); // 1 Year
+        $this->assertEquals(31536000, $response['body']['authDuration']); // 1 Year
 
         return ['projectId' => $projectId];
     }
