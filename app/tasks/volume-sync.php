@@ -20,7 +20,7 @@ $cli
 
         if (!file_exists($source)) {
             Console::error('Source directory does not exist. Exiting ... ');
-            Console::exit(1);
+            Console::exit(0);
         }
 
         Console::loop(function () use ($interval, $source, $destination) {
