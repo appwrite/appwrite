@@ -35,6 +35,9 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 $realtime = new Realtime();
 
+$dbPool = $register->get('dbPool');
+$redisPool = $register->get('redisPool');
+
 /**
  * Table for statistics across all workers.
  */
@@ -354,15 +357,15 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $dbPool, $redisPool, $stats, &$realtime, $logError) {
     $app = new App('UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
 
     /** @var PDO $db */
-    $db = $register->get('dbPool')->get();
+    $db = $dbPool->get();
     /** @var Redis $redis */
-    $redis = $register->get('redisPool')->get();
+    $redis = $redisPool->get();
 
     Console::info("Connection open (user: {$connection})");
 
@@ -477,8 +480,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         /**
          * Put used PDO and Redis Connections back into their pools.
          */
-        $register->get('dbPool')->put($db);
-        $register->get('redisPool')->put($redis);
+        $dbPool->put($db);
+        $redisPool->put($redis);
     }
 });
 
